@@ -1,0 +1,541 @@
+\section{Introducción a los Sistemas Operativos}
+
+\begin{ejercicio}\label{ej:2.Ejercicio1}
+    Sea un proceso en un SO con su información de contexto, de datos y de código según se muestra en la figura \ref{tab:Ej1} y que ya ha sido atendido en un 50\% y le resta la otra mitad para finalizar su ejecución. Con la idea de optimizar el espacio de memoria para que el SO pudiera disponer de un mayor número de procesos en ésta, ¿podría reducirse el espacio que ocupa en memoria en alguna de las siguientes instancias?
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|}
+            \hline
+            \textbf{Código}& 12922 KB \\\hline
+            \textbf{Pila}& 3002 KB \\\hline
+            \textbf{Datos}& 434 KB \\ \hline
+        \end{tabular}
+        \caption{Información del proceso del ejercicio \ref{ej:2.Ejercicio1}}
+        \label{tab:Ej1}
+    \end{table}
+    
+    \begin{enumerate}[label=(\alph*)]
+      \item La lista de procesos.
+
+      El proceso aún no ha terminado, por lo que no es posible eliminarlo de la lista de procesos. Sí es cierto que los procesos que ya hayan terminado sí podrían eliminarse de la lista de procesos para liberar memoria; pero como este proceso no ha terminado no puede eliminarse de la lista de procesos.
+      
+      \item Información del contexto del proceso.
+
+      El contexto del proceso contiene información importante acerca de este, como todos los registros de control o el PC, por ejemplo. Por tanto, no se puede liberar espacio aquí, ya que se perdería información necesaria para poder continuar con el proceso.
+      
+      \item Tamaño de los datos.
+
+      El proceso no ha terminado, por lo que a priori, sin tener más información del proceso, no podemos eliminar datos que no sabemos si serán necesarios en un futuro. Por tanto, tampoco es posible liberar espacio aquí.
+      
+      \item Tamaño del código.
+
+      El proceso no ha terminado, por lo que si redujésemos el código podríamos caer en el error fatal de que el programa no pudiese continuar, ya que podríamos haber eliminado instrucciones necesarias para el programa.
+
+      El único caso excepcional en el que se podría eliminar parte del código es que el programa no incluyese instrucciones del salto, y justo en este caso sí podríamos quitar parte del programa del principio. No obstante, no sabríamos cuántas instrucciones liminar a priori.
+    \end{enumerate}
+    
+\end{ejercicio}
+
+\begin{ejercicio} \label{ej:2.Ejercicio2}
+    ¿Por qué cuando un proceso está en modo “ejecutándose” y pretende acceder a una dirección de memoria fuera del área asignada, se informa de que se ha producido un error en la ejecución? ¿Quién informa de ello? Razone la respuesta.\\
+
+    El SO se encarga de asignar a cada proceso solo una parte de la memoria a la que puede acceder, ya que en caso contrario se correría el riesgo de que un proceso modificase aspectos importantes en la memoria. Por tanto, no está permitido hacer lo indicado.
+    
+    Hay un dispositivo hardware (MMU, \emph{Memory Management Unit}) encargado de lanzar la excepción correspondiente a este error. La rutina de tratamiento de dicha excepción es la que informará al usuario después de abortar el proceso.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio3}
+    ¿Tiene sentido un modelo de 5 estados de los procesos en un SO monousuario? Razone la respuesta.\\
+
+    Si, ya que aunque haya solo un usuario, este puede querer ejecutar simultáneamente más de un proceso.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio4}
+    Dado un proceso que está en modo “ejecutándose” y pretende acceder a una dirección de memoria fuera del área asignada, lo cual sería un error en la ejecución, ¿a qué modo pasaría dicho proceso? Razone la respuesta.
+    \begin{enumerate}[label=(\alph*)]
+      \item Bloqueado.
+      \item No cambia de modo.
+      \myitem \textbf{Finalizado.}
+      \item Preparado.
+    \end{enumerate}
+
+    Pasaría a modo finalizado, ya que es un error no recuperable. El programa no podrá continuar con su ejecución, y el SO decidirá abortarlo tras el mensaje de error aportado por el MMU.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio5}
+    Un planificador de procesos tiene una tarea concreta dentro de un SO multiprogramado. ¿Tiene sentido disponer de un planificador de procesos en un SO monoprogramado? Razone la respuesta.\\
+
+    No, ya que solo puede ejecutar un programa a la vez. La utilidad del planificador de procesos es cambiar de uno a otro para que la CPU no esté sin realizar cálculos. Sin embargo, si solo hay un programa pierde su utilidad.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio6}
+    Dado un SO multiprogramado, ¿bajo qué circunstancias se podría prescindir del planificador de procesos? Razone la respuesta.\\
+
+    A pesar de ser multiprogramado, cabe la posibilidad de que solo se estén ejecutando, como máximo, tantos procesos como procesadores hay. En ese caso, no sería necesario el planificador de procesos.
+
+    No obstante, esto es una situación excepcional y, por norma general, es necesario.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio7}
+    Diga cuales de las siguientes operaciones pueden realizarse únicamente en modo supervisor, o modo kernel:
+    \begin{enumerate}[label=(\alph*)]
+      \item Consultar la hora del sistema.
+
+      No es necesario, ya que no afecta al resto de procesos.
+      \myitem \textbf{Cambiar la fecha del sistema.}
+
+      Sí es necesario el modo kernel; ya que otros procesos, como la alarma, dependen de la hora.
+      
+      \myitem \textbf{Leer una pista/sector de un disco magnético.}
+      
+      Sí es necesario, ya que es una operación de muy bajo nivel y actúa directamente el SO.
+      
+      \item Generar una interrupción software.
+
+      Las interrupciones software se pueden generar desde ambos modos, tanto modo kernel como modo usuario.
+      
+      \item Generar una interrupción harware.
+
+      En este caso, al estar referidas a dispositivos hardware externos como podrían ser los de Entrada/Salida, tenemos que estos pueden lanzar la excepción independietemente del modo en el que se esté.
+      
+      \myitem \textbf{Modificar la dirección de un vector de la tabla de vectores de interrupción.}
+
+      En este caso es claramente necesario el modo kernel, ya que si se modificase de forma inadecuada no se podría llamar correctamente a dicha interrupción.
+      
+      \myitem \textbf{Deshabilitar las interrupciones.}
+
+      En este caso también es evidente la necesidad de hacerlo desde el modo kernel.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio8}
+    En el caso de un ordenador que se vaya a usar únicamente para un único usuario, ¿qué interés puede tener la existencia de los modos de funcionamiento supervisor/usuario? \\
+
+    El principal interés de esta separación del funcionamiento del sistema en dos modos reside en que el usuario puede, de cierta manera, estar tranquilo, en tanto que sabe que no es capaz de hacer nada que resulte crítico para el correcto funcionamiento del sistema (como borrar archivos que contengan información sobre el arranque, por ejemplo).
+    
+    Además, de ser el ordenador multiprogramado, es necesario que los procesos no interfieran entre ellos y que no se perjudiquen mutuamente. El modo kernel en este caso se encarga de que, por ejemplo, un proceso no pueda modificar la dirección de un vector en la tabla de vectores de interrupciones y así no perjudique al resto de procesos.
+    
+    Así, con esta separación ganamos en seguridad y control para nuestro sistema.
+    
+    \begin{comment}
+    El principal interés de esta separación del funcionamiento del sistema en dos modos reside en que, si el usuario no accede deliberadamente al modo supervisor o kernel; entonces puede, de cierta manera, estar tranquilo, en tanto que sabe que no es capaz de hacer nada que resulte crítico para el correcto funcionamiento del sistema (como borrar archivos que contengan información sobre el arranque, por ejemplo). Sin embargo, este único usuario también podría acceder al modo kernel si lo requiriese para cualquier tarea. 
+    
+    Así, con esta separación ganamos en seguridad y control para nuestro sistema.
+    \end{comment}
+\end{ejercicio}
+
+
+\begin{ejercicio}\label{ej:2.Ejercicio9}
+    Cuestiones sobre procesos, y asignación de CPU:
+    \begin{enumerate}
+        \item ¿Es necesario que lo último que haga todo proceso antes de finalizar sea una llamada al sistema para finalizar? ¿Sigue siendo esto cierto en sistemas monoprogramados?
+
+        Sí, es necesario ya que, en primer lugar, se debe realizar un cambio de contexto para que el proceso finalizado pase a dicho estado, mientras que un estado que se encontrase en ``Preparándose'' pase ahora al modo de ejecución.
+
+        Además, también es necesario para que se libere la memoria que ocupaba el programa finalizado, para así poder cargar en memoria un número mayor de programas.
+
+        En un sistema monoprogramado, si no se avisa al terminar un programa mediante una llamada al SO; entonces el procesador no va a pasar a otro proceso en ningún momento al no saber si se ha liberado la memoria correspondiente.
+    
+
+        \item Cuando el controlador de un dispositivo produce una interrupción ¿se produce necesariamente un cambio de contexto?, ¿y cuando se produce una llamada al sistema?
+
+        En ambos casos, se realizará un cambio de modo a superusuario, ya que el sistema operativo se tendrá que encargar de gestionar tanto de la interrupción como de la llamada al sistema.
+
+        No obstante, no necesariamente ocurrirá un cambio de contexto; de hecho, esta ventaja de poder ejecutar rutinas del SO sin un cambio de contexto en el proceso ejecutándose es muy importante a la hora del diseño de ciertos tipos de Sistemas Operativos (aquellos que no están totalmente implementados con procesos). 
+        Sin embargo, cabe la posibilidad de que la rutina de tratamiento de la interrupción o llamada al sistema explícitamente ejecute un cambio de contexto.
+        
+        \begin{comment}
+        Sí, cuando se produce una interrupción debe efectuarse un cambio de contexto, ya que el sistema operativo pasa a ejecutar una subrutina para gestionar la interrupción, y para eso se requiere un cambio de contexto (Dispatcher). En el caso de una llamada al sistema también debe efectuarse un cambio de contexto, ya que el programa que hace la llamada interrumpe su ejecución para que el sistema operativo ejecute la rutina que realice la tarea solicitada en la llamada, y este salto entre procesos requiere un cambio de contexto.
+        \end{comment}
+
+        \item Cuando un proceso se bloquea, ¿deberá encargarse él directamente de cambiar el valor de su estado en el descriptor de proceso o PCB?
+        
+        No. El bloqueo se deberá a alguna interrupción o llamada al sistema, por lo que el SO se encargará de realizar el cambio de contexto. En este cambio, se actualizarán los estados de los procesos implicados (el que pasa a ``Bloqueado'' y el que pasa a ``Ejecutándose'') y se modificará por tanto el PCB.
+        
+
+        \item Sea un proceso que cambia de Ejecutándose a Bloqueado, ¿puede este cambio provocar un cambio de estado en otros procesos? Si es así, ¿en qué casos?
+        
+        Sí, ya que se llevará a cabo un cambio de contexto y uno de los procesos que estaba en estado de ``Preparado'' pasará a ejecutarse, siempre y cuando los recursos estén disponibles (por ejemplo, si todos los procesos preparados requieren de la impresora, y esta está ocupada, es necesario esperar).
+        
+        \item Idem para el cambio de estado Bloqueado a Ejecutable.
+
+        Al realizarse el cambio de estado de un proceso de ``Bloqueado'' a ``Preparado'', es posible que simplemente entre en la cola de los procesos preparados para su ejecución y que, por tanto, no provoque cambios en los demás. No obstante, si el planificador de procesos decide que el proceso que ha entrado tiene una prioridad más alta que el que se estaba ejecutando, es posible que pase este de ``Preparado'' a ``Ejecutándose'', mientras que el que se estaba ejecutando y era menos importante pase a estado ``Bloqueado''.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio10}
+    En los primeros ordenadores, cada byte de datos leído o escrito, era manejado directamente por la CPU (es decir, no existía DMA Acceso Directo a Memoria). ¿Qué implicaciones tenía esta organización para la multiprogramación? \\
+
+    Al no disponer de un módulo independiente a la CPU que gestionase las operaciones en Entrada/Salida, el procesador estaría ocupado durante todo el desarrollo de éstas, que por norma general suelen ser muy lentas.
+    
+    Por tanto, en el caso de un sistema monoprogramado, durante el tiempo de ejecución de esta entrada y salida de datos el procesador estaría completamente ocioso.
+
+    En el caso de la multiprogramación, aunque se podrían ejecutar otros procesos durante la lectura, en ese tiempo se dispondría de menos capacidad de la CPU; por lo que la cantidad de programas que se podrían ejecutar haciendo uso de multiprogramación se vería bastante limitada. Por tanto, la principal ventaja de la multiprogramación se vería muy limitada.
+    
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio11}
+    ¿Por qué no es el intérprete de órdenes (shell) parte del propio sistema operativo? ¿Qué ventajas aporta el no serlo?\\
+    
+    La independencia del intérprete de órdenes respecto al SO supone diferentes ventajas, ya que siempre se busca minimizar el SO a lo exclusivamente esencial por diferentes motivos. Algunos de los beneficios de reducir el SO al mínimo son:
+    \begin{itemize}
+        \item Un fallo en la ejecución del shell no supondrá un fallo a nivel global en el SO, por lo que este se podrá encargar de gestionar dicho fallo. Los errores del sistema operativo suelen ser fatales, ya que no son de fácil gestión por él mismo.
+
+        \item Al cargar lo mínimo posible en el sistema operativo, tenemos que al arrancar el ordenador este proceso de ejecuta de una manera más rápida y simple. Por tanto, esto aporta velocidad, ligereza y simpleza.
+
+        \item Aporta versatilidad, ya que se puede actualizar el shell sin necesidad de actualizar simultáneamente el SO.
+
+        \item El shell no puede realizar operaciones en modo kernel; algo que sí puede realizar el SO y podría provocar errores si no se gestiona adecuadamente.
+    \end{itemize}    
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio12}
+    Para cada una de las llamadas al sistema siguientes, especificar y explicar si su procesamiento por el sistema operativo implica un cambio de contexto:
+    \begin{enumerate}
+        \item Crear un proceso.
+
+        Se produce un cambio de contexto cuando un proceso que estaba ejecutándose pasa a otro estado, mientras que uno que estaba preparado pasa a ejecutarse.
+        
+        En este caso, si solo se crea el proceso no es necesario el cambio de contexto, ya que pasará a estado preparado pero no empezará a ejecutarse.
+        
+        No obstante, en el caso puntual en el que al crearlo tenga más prioridad que algún proceso que se esté ejecutando, ese proceso pasará a estar preparado; mientras que el que se acaba de crear pasaría a ejecutarse. En este caso, por tanto, sí se produciría el cambio de contexto.
+        
+        \begin{comment}
+        Corrección: No, solo es necesario el kernel si se va a modificar la prioridad.
+        
+        Sí, el procesamiento de la llamada al sistema implica un cambio de contexto, pues siempre que se crea un proceso se creará a su vez un PCB asociado, lo que implica registrar los datos necesarios para la ejecución del proceso, entre ellos el contexto de ejecución.
+        \end{comment}
+
+        \item Abortar un proceso, es decir, terminarlo forzosamente.
+
+        Sí, en este caso se produce un cambio de contexto, ya que al terminarlo forzosamente se liberan los recursos que estaban siendo ocupados por él. Un proceso que estuviese en estado de ``Preparado'' pasaría a ejecutarse gracias a esa liberación de recursos. Por tanto, se produciría un cambio de contexto.
+
+        \begin{comment}      
+        Sí, ya que el SO debe interrumpir la ejecución del proceso y liberar los recursos que estaba utilizando. Además, el SO debe actualizar la lista de procesos en ejecución o en espera para reflejar el cambio en el estado del proceso abortado.
+        \end{comment}
+
+        \item Suspender o bloquear un proceso.
+
+        Sí, ya que el proceso pasaría de estado ``Ejecutándose'' a otro estado, por lo que se liberarían recursos que serían empleados para ejecutar un proceso que estaba preparado en espera. Por tanto, se produce un cambio de contexto.
+        
+        \begin{comment}
+        Sí, ya que el SO debe suspender la ejecución del proceso y colocarlo en una lista de procesos bloqueados o en espera. La suspensión del proceso implica que se debe guardar su estado actual y liberar los recursos que estaba utilizando.
+        \end{comment}
+    
+        \item Reanudar un proceso (inverso al caso anterior).
+
+        También se produce un cambio de contexto, ya que un proceso pasa de estar ``Preparado'' a ejecutarse.
+        \begin{comment}
+        Sí, ya que el SO debe recuperar el estado del proceso previamente suspendido y asignarle los recursos necesarios para su ejecución. Además, el sistema operativo debe actualizar la lista de procesos en ejecución o en espera para reflejar el cambio en el estado del proceso reanudado.
+        \end{comment}
+
+        \item Modificar la prioridad de un proceso.
+
+        No necesariamente implica un cambio de contexto.
+        
+        Si el cambio en la prioridad de un proceso que se esté ejecutando o de uno que esté en espera implica que la prioridad del que está en espera sea mayor que la del que se está ejecutando, entonces la CPU desasignará los recursos del proceso que se estaba ejecutando y los asignará al que estaba preparado. Es decir, un proceso que estaba en ejecución a pasado a estar preparado, mientras que uno preparado ha pasado a ejecutarse, por lo que se ha producido un cambio de contexto.
+
+        No obstante, si el cambio en la prioridad no implica que la prioridad de un proceso en espera sea mayor que la de los que se están ejecutando, entonces no se producen cambios de contexto.
+        
+        \begin{comment}
+        No necesariamente implica un cambio de contexto. Si el cambio en la prioridad del proceso no afecta la asignación de recursos o la planificación del procesador, entonces el procesamiento de esta llamada al sistema no requerirá un cambio de contexto. Sin embargo, si el cambio de prioridad implica que el proceso deba ser movido a una cola de procesos de mayor o menor prioridad, o si se le debe asignar un tiempo de ejecución diferente, entonces se requerirá un cambio de contexto
+        \end{comment}
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio13}
+    ¿Tiene sentido mantener ordenada por prioridades la cola de procesos bloqueados? Si lo tuviera, ¿en qué casos sería útil hacerlo?
+
+    Depende del motivo por el cual estén bloqueados. En el caso de que estén bloqueados por motivos distintos, no tiene sentido ya que volverán a ejecutarse en cuanto termine el motivo por el cual bloqueados.
+
+    En el caso de que estén bloqueados por el mismo motivo, sí tiene sentido; ya que cabe la posibilidad de que un proceso sea más importante que otro y; por tanto, sea necesario que se ejecute en cuanto se termine el motivo por el cual ha sido detenido. Por ejemplo, si varios procesos están bloqueados en espera de la impresora, tiene sentido ordenarnos para determinar cuál va a poder usarla antes.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio14}
+    ¿Por qué se utilizan potencias de dos para los tamaños de página, número de páginas en el espacio lógico de un proceso, y números de marcos de página?
+
+    Se utilizan potencias de 2 porque un ordenador trabaja internamente con números en sistema binario. Además, las potencias de dos son siempre divisibles en potencias de 2 de menor orden, por lo que se puede dividir una página en páginas de menor tamaño sin que quede espacio sin utilizar o fragmentado, evitando así la fragmentación externa.
+    
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio15}
+    Sitúese en un sistema paginado, en donde la memoria real tiene un tamaño de 16 Mbytes, una dirección lógica ocupa 32 bits, de los cuales los 22 de la izquierda constituyen el número de página, y los 10 de la derecha el desplazamiento dentro de la página. Según lo anterior,
+    \begin{enumerate}
+        \item ¿Qué tamaño tiene cada página?
+        
+        El tamaño de página es $2^{10}\;B=1024\;B=1\;KB$. Es en bytes porque la unidad mínima en gestión de memoria es el byte.        
+        
+        \item ¿En cuántos marcos de página se divide la memoria física?
+
+        Como el tamaño del marco de página es el mismo que el tamaño de la página, tengo que el tamaño del marco de página es $1024\;B$.
+        
+        Por tanto, el número de marcos de página es:
+        \begin{equation*}
+            \frac{16\;MB}{1024\;B}=
+            \frac{16\cdot 2^{20}\;B}{1\cdot 2^{10}\;B}
+            =16\cdot 2^{10}
+            = 2^{14} \text{ marcos de página}.
+        \end{equation*}
+
+        \item ¿Qué tamaño deberá tener el campo \textbf{Número de Marco} de la Tabla de Páginas?\\
+        Como tenemos $2^{14}$ marcos de página, necesitamos $14$ bits para representar todos. Por tanto, el tamaño ha de ser $14$ bits.
+
+        \item Además de dicho campo, suponga que la Tabla de Páginas tiene los siguientes campos con los siguientes valores:
+        
+        Protección: 1 bit \qquad (1=Sólo se permite leer; 0=Cualquier tipo de acceso).
+        
+        ¿Cuál es el tamaño de la Tabla de Páginas para un proceso cuyo espacio de memoria lógico es de $103\;KB$?\\
+
+        Como el tamaño de cada página es de $1\;KB$, necesitamos 103 páginas en total. Como el tamaño de cada página es $14+1$ bits, tenemos que el tamaño de la tabla de páginas es:
+        \begin{equation*}
+            103\times(14+1) = 1545\;bits
+        \end{equation*}
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio16}
+    Suponga que la tabla de páginas para el proceso actual se parece a la de la figura. Todos los números son decimales, la numeración comienza en todos los casos desde cero, y todas las direcciones de memoria son direcciones en bytes. El tamaño de página es de 1024 bytes.
+    
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|}
+            \hline
+            \textbf{N. Pág. Virtual} & \textbf{N. Marco de Página} \\ \hline
+            0 & 4 \\
+            1 & 7 \\
+            2 & 1 \\
+            3 & 2 \\
+            4 & 10 \\
+            5 & 0 \\ \hline
+        \end{tabular}
+        \caption{Tabla de Páginas para el proceso del ejercicio \ref{ej:2.Ejercicio16}.}
+        \label{tab:ej16}
+    \end{table}
+
+    ¿Qué direcciones físicas corresponderán con cada una de las siguientes direcciones lógicas del proceso?
+    \begin{enumerate}
+        \item 999\\
+        Calculamos en primer lugar el número de página, el marco y el desplazamiento. Tenemos que:
+        \begin{equation*}
+            999=1024\cdot 0 + 999
+        \end{equation*}
+
+        Como el cociente de $\frac{999}{1024}$ es 0, tenemos que el número de página es el 0. Equivalentemente, el marco de página es el 4.
+
+        Como el resto de $\frac{999}{1024}$ es 999, tenemos que el desplazamiento es 999.
+
+        Por tanto, la dirección física es:
+        \begin{equation*}\begin{split}
+            \text{Dir. Física} &= \text{Num. Marco}\times\text{Tam. Marco } + \text{ Desplazamiento}
+            \\
+            &= 4\cdot 1024 + 999 = 5095
+        \end{split}\end{equation*}
+        Además, la dirección lógica sería $(0,999)$.
+        
+        \item 2121\\
+        Calculamos en primer lugar el número de página, el marco y el desplazamiento. Tenemos que:
+        \begin{equation*}
+            2121=1024\cdot 2 + 73
+        \end{equation*}
+
+        Como el cociente de $\frac{2121}{1024}$ es 2, tenemos que el número de página es el 2. Equivalentemente, el marco de página es el 1.
+
+        Como el resto de $\frac{2121}{1024}$ es 73, tenemos que el desplazamiento es 73.
+
+        Por tanto, la dirección física es:
+        \begin{equation*}\begin{split}
+            \text{Dir. Física} &= \text{Num. Marco}\times\text{Tam. Marco } + \text{ Desplazamiento}
+            \\
+            &= 1\cdot 1024 + 73 = 1097
+        \end{split}\end{equation*}
+        Además, la dirección lógica sería $(2,73)$.
+        
+        \item 5400\\
+        Calculamos en primer lugar el número de página, el marco y el desplazamiento. Tenemos que:
+        \begin{equation*}
+            5400=1024\cdot 5 + 280
+        \end{equation*}
+
+        Como el cociente de $\frac{5400}{1024}$ es 5, tenemos que el número de página es el 5. Equivalentemente, el marco de página es el 0.
+
+        Como el resto de $\frac{5400}{1024}$ es 280, tenemos que el desplazamiento es 280.
+
+        Por tanto, la dirección física es:
+        \begin{equation*}\begin{split}
+            \text{Dir. Física} &= \text{Num. Marco}\times\text{Tam. Marco } + \text{ Desplazamiento}
+            \\
+            &= 0\cdot 1024 + 280 = 280
+        \end{split}\end{equation*}
+        Además, la dirección lógica sería $(5,280)$.
+        
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio17}
+    ¿Qué tipo de fragmentación se produce en un sistema de gestión de memoria paginado? ¿Qué decisiones de diseño se pueden tomar para minimizar dicho problema, y cómo afectan estas decisiones al comportamiento del sistema?\\
+
+    La paginación se realiza en páginas de la misma longitud. Al ejecutar cada proceso, se emplean tantas páginas como sean necesarias según el tamaño del proceso. El problema en este caso es que si el tamaño del proceso no es múltiplo del tamaño de página, se desperdicia memoria, ya que la última página asociada a dicho proceso no estará completa. Esto se denomina \textbf{fragmentación interna}.
+
+    Para minimizar dicho problema, se podría emplear un tamaño de página menor, para así conseguir que la memoria desperdiciada en cada proceso fuese menor. No obstante, esto provocaría que la tabla de páginas aumentase de tamaño, disminuyendo así la eficiencia del programa.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio18}
+    Suponga que un proceso emite una dirección lógica igual a 2453 y que se utiliza la técnica de paginación, con páginas de 1024 palabras:
+    \begin{enumerate}
+        \item Indique el par de valores (número de página, desplazamiento) que corresponde a dicha dirección.
+
+        Tenemos que:
+        \begin{equation*}
+            2453=1024\cdot 2 + 405
+        \end{equation*}
+
+        Como el cociente de $\frac{2453}{1024}$ es 2, y el resto (desplazamiento) es 405, tenemos que la dirección lógica sería $(2,405)$.
+
+        \item ¿Es posible que dicha dirección lógica se traduzca en la dirección física 9322? Razónelo.
+
+        Supongamos que sí. Como el desplazamiento de la memoria lógica es 405, significa que ese marco de página empieza en la dirección física $9322-405=~8917$.
+        En paginación, tenemos que todos los marcos tienen el mismo tamaño. Como 8917 no es múltiplo del tamaño del marco $(1024)$, tenemos que no es posible un marco de página que empiece en ese valor.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio19}
+    Suponga que tenemos 3 procesos ejecutándose concurrentemente en un determinado instante. El sistema operativo utiliza un sistema de memoria con paginación. Se dispone de una memoria física de 131072 bytes (128K). Sabemos que nuestros procesos al ser ejecutados tienen los parámetros que se muestran en la tabla.
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|c|c|}
+            \hline
+            \textbf{Proceso} & \textbf{Código} & \textbf{Pila} &
+            \textbf{Datos}\\ \hline
+            A & 20480 & 14288 & 10240 \\ \hline
+            B & 16384 & 8200 & 8192 \\ \hline
+            C & 18432 & 13288 & 9216 \\ \hline
+        \end{tabular}
+        \caption{Parámetros de los procesos del ejercicio \ref{ej:2.Ejercicio19}.}
+        \label{tab:ej19}
+    \end{table}
+
+    Los datos indican el tamaño en bytes de cada uno de los segmentos que forman parte de la imagen del proceso. Sabiendo que una página no puede contener partes de dos segmentos diferentes (pila, código o datos), hemos de determinar el tamaño de página que debería utilizar nuestro sistema y se barajan dos opciones: páginas de 4096 bytes (4K) o páginas de 512 bytes (1/2K). Se pide:
+    \begin{enumerate}
+        \item ¿Cuál sería la opción más apropiada, $4096\;B=4\;KB$ o $512\;B=0.5\;KB$?. Justifica totalmente la respuesta mostrando todos los cálculos que has necesitado para llegar a dicha conclusión.
+
+        Calculamos el número de marcos de páginas que serían necesarios para cada opción:
+        \begin{equation*}
+            \frac{131072\;B}{4096\;B} = 32 \text{ marcos de página}
+            \qquad
+            \frac{131072\;B}{512\;B} = 256 \text{ marcos de página}
+        \end{equation*}
+
+        Suponiendo la opción de $4096\;B$, el número de páginas de cada parte y cada proceso sería:
+        \begin{table}[H]
+            \centering
+            \begin{tabular}{|c|c|c|c|}
+                \hline
+                \textbf{Proceso} & \textbf{Código} & \textbf{Pila} &
+                \textbf{Datos}\\ \hline
+                A & 5 & 4 & 3 \\ \hline
+                B & 4 & 3 & 2 \\ \hline
+                C & 5 & 4 & 3 \\ \hline
+            \end{tabular}
+        \end{table}
+        
+        
+        En total serían necesarias 33 páginas, pero solo disponemos de 32 de ellas.
+
+        Suponiendo la opción de $512$, el número de páginas de cada parte y cada proceso sería:
+        \begin{table}[H]
+            \centering
+            \begin{tabular}{|c|c|c|c|}
+                \hline
+                \textbf{Proceso} & \textbf{Código} & \textbf{Pila} &
+                \textbf{Datos}\\ \hline
+                A & 40 & 28 & 20 \\ \hline
+                B & 32 & 17 & 16 \\ \hline
+                C & 36 & 26 & 18 \\ \hline
+            \end{tabular}
+        \end{table}
+        
+        En total serían necesarias 233 páginas, por lo que sí nos caben los 3 procesos en memoria física.
+
+        \item ¿Cuál es el formato de cada entrada de la Tabla de Páginas con el tamaño de página elegido? Justifica el tamaño de los campos con direcciones. Puedes añadir los bits que consideres necesarios para el buen funcionamiento del sistema indicando para qué van a ser utilizados.
+
+        Como hay 256 marcos de página, necesitamos 8 bits para codificar el marco de página.
+
+        Respecto a los bits adicionales, sería conveniente incluir 1 bit de protección\footnote{Para codificar si es de lectura o escritura.} y 2 bits para codificar el tipo de página (Código, Pila o Datos).
+        
+        Por tanto, cada entrada de la Tabla contendría el marco de página (8 bits) y los bits adicionales (3 bits).
+
+        \item ¿Cuántas Tablas de Páginas habrá en este sistema?¿Cuántas entradas hay en cada tabla de páginas (filas)?
+
+        Habrá una tabla de página por proceso. Por tanto, habrá 3 Tablas de Páginas.
+
+        Para el proceso $A$, serían necesarias $40+28+20=88$ páginas, por lo que se necesitarían 88 entradas.
+
+        Para el proceso $B$, serían necesarias $32+17+16=65$ páginas, por lo que se necesitarían 65 entradas.
+
+        Para el proceso $C$, serían necesarias $36+26+18=80$ páginas, por lo que se necesitarían 80 entradas.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio20}
+    En la gestión de memoria en un sistema paginado, ¿qué estructura/s de datos necesitará mantener el Sistema Operativo para administrar el espacio libre?
+
+    La estructura de datos que emplea el SO en el caso de un sistema paginado es la Tabla de Páginas.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio21}
+    Estamos trabajando con un sistema operativo que emplea una gestión de memoria paginada. Cada página tiene un tamaño de 2.048 bytes. La memoria física disponible para los procesos es de 8 MBytes. Suponga que primero llega un proceso que necesita 31.566 posiciones de memoria (o bytes) y, después, llega otro proceso que consume 18.432 posiciones cuando se carga en memoria. Se pide calcular la fragmentación interna provocada en cada proceso.\\
+
+    Respecto al proceso $A$, tenemos que el cociente de $\frac{31566}{2048}$ es 15, por lo que se emplearían 15 páginas completas. Además, como el resto es 846, se emplearían $846\;B$ de la página 16, y de esta página se desperdiciarían $2048-846=1202\;B$.
+
+    Respecto al proceso $B$, como la división de $\frac{18432}{2048}=9$ es una división entera, no se produce fragmentación interna, ya que se ocupan 9 páginas completamente.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio22}
+    Considere la siguiente tabla de segmentos:
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|c|}
+            \hline
+            \textbf{Segmento} & \textbf{Dirección base} & \textbf{Longitud} \\ \hline
+            0 & 219 & 600 \\
+            1 & 2300 & 14 \\
+            2 & 90 & 100 \\
+            3 & 1327 & 580 \\
+            4 & 1952 & 96 \\ \hline
+        \end{tabular}
+        \caption{Tabla de segmentos del ejercicio \ref{ej:2.Ejercicio22}.}
+        \label{tab:ej22}
+    \end{table}
+    
+    ¿Qué direcciones físicas corresponden a las direcciones lógicas \textit{(nº de segmento, desplazamiento)} siguientes? Si no puede traducir alguna dirección lógica a física, explique el por qué.
+    \begin{enumerate}
+        \item 0, 430
+        \begin{equation*}\begin{split}
+            \text{Dir. Física} &= \text{Dir. Base} + \text{Desplazamiento} \\
+            &= 219 + 430 = 649
+        \end{split}\end{equation*}
+        \item 1, 10
+        \begin{equation*}
+            \text{Dir. Física} = 2300 + 10 = 2310
+        \end{equation*}
+        \item 3, 400
+        \begin{equation*}
+            \text{Dir. Física} = 1327 + 400 = 1727
+        \end{equation*}
+        \item 4, 112
+        \begin{equation*}
+            \text{Dir. Física} = 1952 + 112 = \text{ERROR}
+        \end{equation*}
+        En este caso no es posible, ya que el desplazamiento (112) es mayor o igual que la longitud del segmento correspondiente (96).
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.Ejercicio23}
+    ¿Qué cambio de contexto tardará menos y por qué?
+    \begin{enumerate}[label=(\alph*)]
+      \myitem \textbf{El producido entre dos hebras del mismo proceso.}
+      \item El producido entre dos hebras de distintos procesos.
+    \end{enumerate}
+
+    Tarda menos en producirse el cambio de contexto entre hebras del mismo proceso, ya que estas comparten el PCB y las direcciones de memorias asocidadas, ya que estas no dependen de la hebra sino del proceso. Por tanto, al tener que cambiar menos información, el cambio de contexto es más rápido al ser del mismo proceso.
+\end{ejercicio}

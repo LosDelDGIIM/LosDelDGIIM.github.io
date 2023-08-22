@@ -1,0 +1,304 @@
+\section{Compilación y Enlazado de Programas}
+
+
+\begin{ejercicio}\label{ej:3.Ejercicio1}
+    Un procesador (CPU) puede interpretar y ejecutar directamente las instrucciones de un programa en:
+    
+    \begin{enumerate}[label=(\alph*)]
+      \item Lenguaje de alto nivel de tipo intérprete.
+      \item Lenguaje ensamblador o en lenguaje máquina, cualquiera de los dos.
+      \myitem \textbf{Sólo lenguaje máquina.} \newline
+      Ya que la CPU no entiende ninguna otra cosa; de hecho, la existencia del propio lenguage máquina no tendría sentido si este no fuese el caso.
+      \item En pseudocódigo o en lenguaje ensamblador.
+    \end{enumerate}
+    
+\end{ejercicio}
+
+\begin{ejercicio} \label{ej:3.Ejercicio2}
+    ¿Es lo mismo un token que un lexema? Muestre algún ejemplo.
+
+
+    No, no es lo mismo. Un token relaciona a un conjunto de lexemas que tienen la misma función sintáctica.
+
+    Por ejemplo, el token IDENT que contiene a todos los identificadores posibles de variables puede estar formado por las combinaciones de letras y números. En este caso, los lexemas asociados a ese token podrían ser \verb|i|, \verb|var| o \verb|lado1|, por ejemplo.
+
+
+    No obstante, para el caso de las palabras reservadas se tiene que hay un token por cada palabra reservada.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:3.Ejercicio3}
+    ¿El compilador es la única utilidad necesaria para generar un programa ejecutable en una computadora?\\
+
+    No, también son necesarias otras. De hecho, con el compilador tan solo se pasa del código fuente a código ensamblador.
+    
+    Otras utilidades necesarias para generar un programa ejecutable son el ensamblador para pasar a código máquina, el enlazador, o el preprocesador.
+
+    
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:3.Ejercicio4}
+    El análisis léxico es una etapa de la compilación cuyo objetivo es:
+    \begin{enumerate}[label=(\alph*)]
+        \item Extraer la estructura de cada sentencia, reconociendo los componentes léxicos (tokens) del lenguaje.
+
+        La segunda parte sí sería correcta, pero el análisis léxico no se encarga de extraer la estructura; ese es el objetivo de la fase de análisis.
+        
+        \myitem \textbf{Descomponer el programa fuente en sus componentes léxicos (tokens).}
+
+        \item Extraer el significado de las distintas construcciones sintácticas y elementos terminales.
+
+        Esta fase es el análisis semántico.
+        
+        \item Sintetizar el programa objeto.
+
+        Esto pertenece a la fase de síntesis.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:3.Ejercicio5}
+    El análisis sintáctico es una etapa de la compilación cuyo objetivo es:
+    \begin{enumerate}[label=(\alph*)]
+        \myitem \textbf{Extraer la estructura de cada sentencia, reconociendo los componentes léxicos (tokens) del lenguaje}.
+        \newline
+        Es esta la única función del analizador sintáctico, el comprobar la correcta estructura de cada una de las sentencias del programa.
+        \item Descomponer el programa fuente en sus componentes léxicos (tokens).
+        \item Extraer el significado de las distintas construcciones sintácticas y elementos terminales.
+        \item Sintetizar el programa objeto.
+       
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:3.Ejercicio6}
+    Para el siguiente código que aparece a la izquierda en lenguaje C++ (fichero \verb|test.cpp|, código fuente \ref{Cod.Ej6}), indique el nombre de la fase en la que el compilador produce el mensaje de error que aparece a la derecha y explique la naturaleza del mismo:
+    \begin{listing}[H]
+        \begin{minted}[
+            frame=lines,
+            framesep=2mm,
+            baselinestretch=1.2,
+            linenos,
+            escapeinside=||,
+        ]{C++}
+int main (void)
+{
+    int i;
+    char* j;
+
+    j = i;
+
+    if (i == 0)
+        i += ;
+        
+    |¬|;
+    
+    return 0;
+}
+        \end{minted}
+        \caption{Fichero \texttt{test.cpp}}
+        \label{Cod.Ej6}
+    \end{listing}
+
+    \begin{enumerate}
+        \item \verb|test.cpp:9: error: expected primary-expression before ‘;’ token|
+
+        Tenemos que se trata de un error sintáctico; ya que aunque todos los lexemas de la línea 9 son válidos (tienen un token asociado) no se puede llegar a esa línea con las reglas de producción. Esto se debe a que falta el $r-value$, es decir, a la derecha del operador binario \verb|+=| falta un valor (dada la naturaleza del mismo precisada en su nombre).
+        
+        \item \verb|test.cpp:6: error: invalid conversion from ‘int’ to ‘char*’|
+        
+        Es un error semántico. Todas las secuencias de la línea tienen asociadas un token preciso y además la estructura de la sentencia (sintaxis) es correcta; sin embargo, intentar hacer una conversión de tipo entero a tipo puntero a carácter no tiene sentido en el lenguaje de programación: esta sentencia es irrealizable y se produce el error mencionado.
+        
+        \item \verb|test.cpp:11: error: stray ‘\302’ in program|
+
+        Se trata de un error léxico, ya que el carácter \verb|¬| no tiene ningún token asociado (no es un identificador, operador, expresión aritmética, palabra clave, etc.) pues no pertenece al alfabeto de la gramática de C++.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:3.Ejercicio7}
+    Muestre un ejemplo a partir de una sentencia en lenguaje C++ en la que un error léxico origine un error sintáctico derivado y otro error léxico que no derive en error sintáctico.
+
+    Consideramos en primer lugar la línea \verb|int mai?n(){| donde suponemos que en la siguiente línea continua el código. Tenemos que se trata de un error léxico, ya que no reconoce \verb|mai?n| como un identificador válido. Además, dará error sintáctico por la falta de la función \verb|main|.
+
+    Consideramos ahora la línea \verb|int ñum;|. Tenemos que se trata de un error léxico ya que la letra \verb|ñ| no pertenece al alfabeto de C++, por lo que no encontrará un token asociado. No obstante, no genera un error sintáctico ya que la sintaxis es correcta, al especificar el tipo, el nombre de la variable y terminar con el \verb|;|.
+
+    \begin{observacion}
+        Estos casos no obstante no son normales, ya que al detectar un error se detiene la compilación. No se ha corregido por tanto en clase.
+    \end{observacion}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:3.Ejercicio8}
+    Muestre un ejemplo a partir una sentencia de en lenguaje C++ en la que un error léxico origine un error sintáctico y semántico derivados y otro error léxico que no los derive.
+
+    Un ejemplo sería declarar una variable de la forma int 1variable = 2; int var = 1variable; 
+    El identificador no es válido y provocaría un error léxico , que derivará en uno sintáctico y en uno semántico, pues se utiliza abajo una variable no declarada. 
+
+    \begin{observacion}
+        Estos casos no obstante no son normales, ya que al detectar un error se detiene la compilación. No se ha corregido por tanto en clase.
+    \end{observacion}
+    
+\end{ejercicio}
+
+
+\begin{ejercicio}\label{ej:3.Ejercicio9}
+    ¿Sería siempre posible realizar la depuración de un archivo objeto? Razone la respuesta.
+
+    No, ya el fichero objeto no es ejecutable. Además, al no haber sido enlazado no contiene la cabecera en la que, por ejemplo, figura dónde empieza el programa, por lo que el depurador no sabría por donde empezar.
+
+    Como caso excepcional, se podría depurar una parte concreta del programa, pero no es útil y en la práctica no se considera este caso. En la mayoría de depuradores no es ni siquiera posible.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:3.Ejercicio10}
+    Dado un programa escrito en lenguaje ensamblador de una arquitectura concreta, ¿sería directamente interpretable ese código por esa computadora? En caso contrario ¿qué habría que hacer?
+
+    No, para que fuese interpretable por parte de la computadora necesitaría traducirse el código a código máquina. De esta traducción se encargaría el ensamblador.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:3.Ejercicio11}
+    ¿Sería necesario usar siempre el enlazador para obtener un programa ejecutable?
+
+    Sí, ya que si no se enlaza la cabecera del archivo no se actualizará, y por tanto no se tendrá la instrucción con la que se desea empezar.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:3.Ejercicio12}
+    Dado un único archivo objeto, ¿podría ser siempre un programa ejecutable y correcto simplemente añadiendo la información de cabecera necesaria?
+
+    En general no, ya que se necesitaría el uso del enlazador porque, aunque haya un solo archivo objeto, puede que haya bibliotecas externas que tengan que ser cargadas. 
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:3.Ejercicio13}
+    Dado un programa ejecutable que requiere de una biblioteca dinámica, ¿por qué no es necesario recompilar el código fuente de dicho programa si se modifica la biblioteca?
+
+    Las bibliotecas dinámicas se integran en el programa en tiempo de ejecución. Por tanto, como el programa compilado no contiene a la biblioteca, no es necesario recompilar para guardar los cambios. En el caso de hacer uso de bibliotecas estáticas, el código obsoleto sí que estaría incluido en el código máquina del programa ejecutable, y por tanto debería recompilarse para actualizarse.
+
+    En único caso en el que la actualización de la biblioteca dinámica haría necesario volver a compilar el programa es que se cambiasen las cabeceras de las funciones.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:3.Ejercicio14}
+    Indique en qué fase del proceso de traducción y ejecución de un programa se realizará cada una de las siguientes tareas:
+
+    \begin{enumerate}
+        \item Enlazar una biblioteca estática: Fase de enlazado.
+        \item Eliminar los comentarios del código fuente: En la compilación, en la fase de análisis léxico.
+        
+        También es válido indicar que ocurre en el preprocesado, dependiendo de la fuente consultada.
+        \item Mensaje de error de que una variable no ha sido declarada: Fase de análisis semántico.
+        
+        En particular, seguramente ocurrirá porque no la encontrase en la tabla de símbolos (cualquier cuestión relacionada con el ámbito será asunto de esta fase).
+        \item Enlazar una biblioteca dinámica: Fase de ejecución. 
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:3.Ejercicio15}
+    Indique en qué fase o fases del proceso de compilación de un lenguaje de programación de alto nivel se detectarían los siguientes errores:
+    \begin{enumerate}
+        \item Una variable no está definida: Fase de análisis semántico.
+        
+        De nuevo, cuestión de ámbito dentro del programa.
+        
+        \item Aparece un carácter o símbolo no esperado: Fase de análisis léxico.
+
+        \item Aparecen dos identificadores consecutivos: Fase de análisis sintáctico.
+
+        \item Aparecen dos funciones denominadas bajo el mismo nombre: Fase de análisis semántico.
+        
+        No obstante, dependiendo del lenguaje puede ser que no diese error, ya que la función puede estar sobrecargada.
+
+        \item Aparece el final de un bloque de sentencias pero no el inicio del mismo: Fase de análisis sintáctico.
+
+        \item Aparece un paréntesis cerrado y no se ha podido emparejar con su correspondiente paréntesis abierto: Fase de análisis sintáctico.
+
+        \item Una llamada a una función que no ha sido definida: Fase de análisis semántico.
+
+        \item En la palabra reservada \verb|main| aparece un carácter extraño no esperado, por ejemplo \verb|mai¿n|: Fase de análisis léxico que derivará en error sintáctico. 
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:3.Ejercicio16}
+    ¿Todo error sintáctico origina un error semántico? En caso contrario, demuéstrelo usando algún contraejemplo.
+
+    No, y como contrajemplo, sea el siguiente programa:
+    \begin{minted}{C++}
+        int num=7;
+        num += ;
+    \end{minted}
+    Tenemos que hay un error sintáctico en la segunda línea al faltar el $r-value$, pero esto no genera ningún error semántico.
+
+    \begin{observacion}
+        Estos casos no obstante no son normales, ya que al detectar un error se detiene la compilación. No se ha corregido por tanto en clase.
+    \end{observacion}
+\end{ejercicio}
+
+
+\begin{ejercicio}\label{EjGramatica}
+    Consideramos la siguiente gramática $G=\{V_T, V_N, S, P\}$ donde el axioma $S=programa$ y $P$ contiene las siguientes reglas de producción:
+    \begin{itemize}
+        \item programa $\longrightarrow$ \{lista\_sentencias\}
+        \item lista\_sentencias $\longrightarrow$ sentencia $|$ sentencia ; lista\_sentencias
+        \item sentencia $\longrightarrow$ identificador $=$ expresión
+        
+        \item identificador $\longrightarrow$ letra $|$ identificador digito $|$ identificador letra
+
+        \item letra $\longrightarrow$ a$|$b$|$c$|$\dots$|$z
+
+        \item digito $\longrightarrow$ 0$|$1$|$2$|$\dots$|$9
+
+        \item expresion $\longrightarrow$ identificador operador identificador $|$ identificador
+
+        \item operador $\longrightarrow$ $+|-|\ast|/$
+    \end{itemize}
+
+    \begin{enumerate}
+        \item Obtener la lista de Tokens
+
+        En primer lugar, obtengo la lista de Tokens:
+        \begin{table}[H]
+            \centering
+            \begin{tabular}{c|c}
+                TOKEN & PATRÓN \\ \hline
+                LLAVE\_AB & $\{$ \\
+                LLAVE\_CE & $\}$ \\
+                PUNTO\_Y\_COMA & $;$ \\
+                ASSIGN & $=$ \\
+                IDENTIF & letra(letra$|$digito)$\ast$ \\
+                OPERADOR & $+|-|\ast|/$
+            \end{tabular}
+            \caption{Lista de Tokens de la gramática del ejercicio \ref{EjGramatica}}
+            \label{tab:EjGramatica}
+        \end{table}
+
+
+        \item Ver si las siguientes sentencias se pueden generar mediante esta gramática:
+        \begin{enumerate}
+            \item $\{8a = b+c\}$
+
+            El proceso de derivación es:
+
+            programa $\longrightarrow$ \{lista\_sentencias\}
+            $\longrightarrow$ \{sentencia\} $\longrightarrow$ \\
+            $\longrightarrow$ \{identificador $=$ expresión\}
+
+            Por tanto, tenemos que no es posible generar dicha sentencia, ya que un identificador ha de empezar por letra.
+            
+            \item $\{\text{suma} +b = a\ast c\}$
+
+            El proceso de derivación es:
+
+            programa $\longrightarrow$ \{lista\_sentencias\}
+            $\longrightarrow$ \{sentencia\} $\longrightarrow$ \\
+            $\longrightarrow$ \{identificador $=$ expresión\}
+
+            Por tanto, tenemos que no es posible generar dicha sentencia, ya que un identificador no puede contener el operador $+$.
+            
+            \item $\{\text{suma} = b\ast z\}$
+
+            El proceso de derivación es:
+
+            programa $\longrightarrow$ \{lista\_sentencias\}
+            $\longrightarrow$ \{sentencia\}
+            $\longrightarrow$ \\  $\longrightarrow$
+            \{identificador $=$ expresión\}
+            $\longrightarrow$ \\ $\longrightarrow$
+            \{identificador $=$ identificador operador identificador\}
+            $\longrightarrow$ \\ $\longrightarrow$
+            \{suma$=b\ast z$\}
+        \end{enumerate}
+    \end{enumerate}
+\end{ejercicio}
