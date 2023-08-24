@@ -3,7 +3,7 @@
 - **Asignatura:** Fundamentos del Sofware.
 - **Curso Académico:** 2022-23.
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
-- **Grupo:** B.
+- **Grupo:** Único.
 - **Profesor:** David Griol Barres.
 - **Descripción:** Repaso del Módulo I (Prácticas 1-4).
 <!--- **Fecha:** 17 de abril de 2023. -->
