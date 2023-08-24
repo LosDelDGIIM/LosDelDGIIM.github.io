@@ -1,4 +1,4 @@
-# Fundamentos del Software. Repaso Módulo I de Prácticas
+# Fundamentos del Software. Repaso Módulo I de Prácticas.
 
 - **Asignatura:** Fundamentos del Sofware.
 - **Curso Académico:** 2022-23.
