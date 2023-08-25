@@ -8,3 +8,5 @@
 - **Descripción:** Examen de Prácticas (a ordenador).
 <!-- - **Fecha:** 9 de mayo de 2023. -->
 <!-- - **Duración:** -->
+
+Para descargar, está disponible el archivo `MP_Ex02.zip`.
