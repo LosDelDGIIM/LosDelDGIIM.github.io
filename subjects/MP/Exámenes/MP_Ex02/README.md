@@ -1,5 +1,8 @@
 # Metodología de la Programación. Examen II (Prácticas).
 
+**Autor:** Arturo Olivares Martos
+***
+
 - **Asignatura:** Metodología de la Programación.
 - **Curso Académico:** 2020-21.
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.

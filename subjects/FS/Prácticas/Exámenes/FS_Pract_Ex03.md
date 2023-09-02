@@ -1,5 +1,8 @@
 # Fundamentos del Software. Examen III de Prácticas.
 
+**Autor:** Arturo Olivares Martos
+***
+
 - **Asignatura:** Fundamentos del Sofware.
 - **Curso Académico:** 2018-19.
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.

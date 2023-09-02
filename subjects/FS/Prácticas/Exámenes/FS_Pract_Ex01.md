@@ -1,5 +1,8 @@
 # Fundamentos del Software. Examen I de Prácticas.
 
+**Autor:** Arturo Olivares Martos
+***
+
 - **Asignatura:** Fundamentos del Sofware.
 - **Curso Académico:** 2022-23.
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
@@ -8,7 +11,6 @@
 - **Descripción:** Examen de Prácticas del Módulo I (Prácticas 1-4).
 - **Fecha:** 18 de abril de 2023.
 <!-- - **Duración:** -->
-
 
 
 

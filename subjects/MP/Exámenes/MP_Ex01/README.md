@@ -1,5 +1,8 @@
 # Metodología de la Programación. Examen I (Prácticas).
 
+**Autor:** Arturo Olivares Martos
+***
+
 - **Asignatura:** Metodología de la Programación.
 - **Curso Académico:** 2022-23.
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
