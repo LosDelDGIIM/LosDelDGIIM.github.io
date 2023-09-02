@@ -1,0 +1,873 @@
+\chapter{Interpolación Polinómica}
+\section*{Problema general de interpolación}
+\noindent
+Sean $n+1$ datos experimentales $\{(x_0, y_0), (x_1, y_1), \ldots, (x_n,y_n)\}$ (con $x_i\neq x_j$ si $i\neq j$).\newline
+El problema general de interpolación consiste en encontrar una función $g(x)$ tal que $g(x_i)=y_i \ \todoi$.\\
+
+\noindent
+Gráficamente, esta condición significa que la curva que representa a $g(x)$ pasa por los puntos previamente especificados.\\
+
+\noindent
+Buscamos funciones $g(x)$ que posean ciertas propiedades como por ejemplo:
+\begin{itemize}
+    \item Que sea fácil de evaluar.
+    \item Simple de calcular.
+    \item Suficientemente regular.
+    \item Fácil de almacenar.
+\end{itemize}
+
+\noindent
+Como podemos observar, los siguientes tipos de funciones cumplen las condiciones indicadas:
+\begin{itemize}
+    \item Interpolación polinomial: $g(x) \in \bb{P}_n$
+    \item Interpolación por funciones spline: $g(x)\in S_n(x_0, x_1, \ldots, x_n)$
+    \item Interpolación trigonométrica: $g(x)\in V=\langle \sin(jx), \cos(jx); j\in\{0,1,\ldots\}\rangle$
+    \item Interpolación racional: $g(x)\in R_{m,n}=\{\frac{p(x)}{q(x)} \mid p(x),q(x) \in \bb{P}_n\}$
+\end{itemize}
+
+\noindent
+La finalidad de encontrar una función $g(x)$ que interpole a otra $f(x)$ en los puntos $x_0, x_1, \ldots, x_n$ es la
+de aproximar la función $f(x)$ en cualquier punto $x \in [a,b]$. Aplicaciones de la interpolación:
+\begin{itemize}
+    \item Trazado de curvas suaves que pasan por una serie de puntos.
+    \item Evaluación de una función complicada $f$.
+    \item Construcción de librerías de funciones matemáticas.
+    \item Aproximación de la derivada (o la integral) de $f(x)$ mediante la derivada (o integral) de $g(x)$.
+    \item $\ldots$
+\end{itemize}
+
+\begin{definicion}
+    Supongamos que se conocen los $n+1$ valores que toma una función $f(x)$ en los puntos $\{x_0, x_1,\ldots, x_n\}$.
+    Se dice que $g(x)$ interpola a $f(x)$ en $\{x_0, x_1,\ldots, x_n\}$ si:
+    $$g(x_i)=f(x_i) \ \todoi$$
+
+    Gráficamente, esta condición significa que las curvas que representan a $f(x)$ y $g(x)$ se cortan en los puntos
+$\{x_0, x_1, \ldots, x_n\}$.
+\end{definicion}
+
+\section{Método de Coeficientes Indeterminados}
+
+\begin{teo}
+    Dados $n+1$ puntos $(x_i,y_i) \ \todoi$, existe un único polinomio de grado menor o igual que $n$, $p_n(x)$ que
+    interpola a estos dados, es decir:
+    $$p_n(x_i)=y_i \ \todoi$$
+\end{teo}
+\begin{proof}
+    Sea $p_n(x)=a_0 + a_1x + \ldots + a_nx^n$. Aplicando que $p_n(x_i)=y_i \ \todoi$ se tiene:
+    $$\left.\begin{array}{ccccccccc}
+            a_0    & +      & a_1x_0 & +      & \ldots & +      & a_nx_0^n & =      & y_0    \\
+            a_0    & +      & a_1x_1 & +      & \ldots & +      & a_nx_1^n & =      & y_1    \\
+            \vdots & \vdots & \vdots & \vdots & \ddots & \vdots & \vdots   & \vdots & \vdots \\
+            a_0    & +      & a_1x_n & +      & \ldots & +      & a_nx_n^n & =      & y_n
+        \end{array}\right\}$$
+
+    \noindent
+    Se trata de ver que el sistema anterior es compatible determinado. El determinante de la matriz de coeficientes
+    del sistema es el \underline{determinante de Vandermonde}:
+    $$V(x_0,x_1,\ldots, x_n) = \left|\begin{array}{ccccc}
+            1      & x_0    & x_0^2  & \ldots & x_0^n  \\
+            1      & x_1    & x_1^2  & \ldots & x_1^n  \\
+            \vdots & \vdots & \vdots & \ddots & \vdots \\
+            1      & x_n    & x_n^2  & \ldots & x_n^n
+        \end{array}\right|$$
+
+    Que verifica:
+    $$V(x_0,x_1,\ldots, x_n) = \prod_{i>j} (x_i-x_j)\neq 0 \Leftrightarrow x_i\neq x_j \ \forall i \neq j$$
+\end{proof}
+
+\begin{ejemplo}
+    Interpolar mediante un polinomio los siguientes puntos:
+    \begin{equation*}
+        \begin{array}{c|ccc}
+            x_i & -1 & 0 & 1 \\ \hline
+            y_i & 2 & 1 & 2
+        \end{array}
+    \end{equation*}
+
+    \begin{itemize}
+        \item Primera solución, usando la base $\{1, x, x^2\}$.
+        
+        Sea el polinomio buscado $p_2(x) = a_0 + a_1x + a_2x^2$. El sistema de ecuaciones que me queda es:
+        \begin{equation*}
+            \left. \begin{array}{c}
+                p_2(-1)=2 \\
+                p_2(0)=1 \\
+                p_2(1)=2 \\
+            \end{array} \right\} \Longrightarrow
+            \left. \begin{array}{cccc}
+                a_0 & -a_1 & +a_2 & =2 \\
+                a_0 &&&=1 \\
+                a_0 & + a_1 &+a_2 &= 2 \\
+            \end{array} \right\} \Longrightarrow
+            \left. \begin{array}{c}
+                a_0=1 \\
+                a_1=0 \\
+                a_2=1 \\
+            \end{array} \right\}
+        \end{equation*}
+        Por tanto, el polinomio buscado es $p_2(x)=1+x^2$.
+
+        \item Segunda solución, usando la base $\{1, x+1, (x+1)x\}$.
+        
+        Sea el polinomio buscado $p_2(x) = b_0 + b_1(x+1) + b_2(x+1)x$. El sistema de ecuaciones que me queda es:
+        \begin{equation*}
+            \left. \begin{array}{c}
+                p_2(-1)=2 \\
+                p_2(0)=1 \\
+                p_2(1)=2 \\
+            \end{array} \right\} \Longrightarrow
+            \left. \begin{array}{cccc}
+                b_0 &  &  & =2 \\
+                b_0 & + b_1&&=1 \\
+                b_0 & + 2b_1 &+2b_2 &= 2 \\
+            \end{array} \right\} \Longrightarrow
+            \left. \begin{array}{c}
+                b_0=2 \\
+                b_1=-1 \\
+                b_2=1 \\
+            \end{array} \right\}
+        \end{equation*}
+        Por tanto, el polinomio buscado es $p_2(x)=2 - (x+1) + (x+1)x$.
+    \end{itemize}
+
+    Tienen distinta expresión al anterior pero son el mismo polinomio.
+\end{ejemplo}
+
+
+\section{Método de Langrange}
+\begin{definicion}[Polinomios de Lagrange]
+    Para $0\leq k \leq n$, se definen los polinomios de Lagrange como:
+    $$l_k(x)=\prod_{i=0~i\neq k}^n \dfrac{x-x_i}{x_k-x_i}$$
+    que son polinomios de grado $n$ y verifican:
+    $$l_k(x_j) = \delta_{kj} = \left\{
+        \begin{array}{cc}
+            1 & k=j     \\
+            0 & k\neq j
+        \end{array}\right.
+    $$
+
+    \noindent
+    Notemos que $\{l_k(x); k\in \{0, 1, \ldots, n\}\}$ constituyen una base de $\bb{P}_n$.
+\end{definicion}
+
+\begin{teo}
+    El polinomio $p_n(x)$ que interpola los datos $\{(x_0,y_0), \ldots, (x_n,y_n)\}$ se escribe como:
+    $$p_n(x) = \sum_{k=0}^n y_kl_k(x)$$
+    y se denomina \underline{fórmula de Lagrange}.
+\end{teo}
+\begin{proof}
+    Demostramos, en primer lugar, que $p_n(x)\in \bb{P}_n$
+    $$l_i(x)\in \bb{P}_i \; \forall i=0, \dots, n \Longrightarrow \sum_{i=0}^n y_il_i(x) \in \bb{P}_n $$
+
+    Demostramos ahora que cumple con las condiciones de interpolación, es decir, que pasa por los puntos indicados.
+    $$p_n(x_j) = \cancel{y_0l_0(x_j)} + \dots + y_jl_j(x_j) + \dots + \cancel{y_nl_n(x_j)} = y_jl_j(x_j) \;\forall j=0, \dots, n$$
+\end{proof}
+\noindent
+Ventajas
+\begin{itemize}
+    \item No hay que resolver un sistema de ecuaciones.
+    \item Los polinomios básicos de Lagrange no depende de nada más que de las abscisas.
+\end{itemize}
+Inconvenientes
+\begin{itemize}
+    \item No es recursiva: si añadimos un nuevo punto hemos de rehacer los cálculos.
+    \item Es inestable numéricamente.
+\end{itemize}
+
+\begin{ejemplo}
+    Interpolar mediante el método de Lagrange los siguientes puntos:
+    \begin{equation*}
+        \begin{array}{c|ccc}
+            x_i & -1 & 0 & 1 \\ \hline
+            y_i & 2 & 1 & 2
+        \end{array}
+    \end{equation*}
+
+    \begin{equation*}
+        l_0(x) = \frac{(x-x_1)(x-x_2)}{(x_0-x_1)(x_0-x_2)} = \frac{(x-0)(x-1)}{(-1-0)(-1-1)} = \frac{x(x-1)}{2}
+    \end{equation*}
+    \begin{equation*}
+        l_1(x) = \frac{(x-x_0)(x-x_2)}{(x_1-x_0)(x_1-x_2)} = \frac{(x+1)(x-1)}{(0+1)(0-1)} = \frac{(x+1)(x-1)}{-1}
+    \end{equation*}
+    \begin{equation*}
+        l_2(x) = \frac{(x-x_0)(x-x_1)}{(x_2-x_0)(x_2-x_1)} = \frac{(x+1)(x-0)}{(1+1)(1-0)} = \frac{x(x+1)}{2}
+    \end{equation*}
+
+    Por tanto, el polinomio queda:
+    \begin{equation*}
+        p_2(x) = 2\frac{x(x-1)}{2} + 1\frac{(x+1)(x-1)}{-1} + 2\frac{(x+1)x}{2}
+    \end{equation*}
+\end{ejemplo}
+
+\section{Método de Newton}
+\noindent
+Dados $n$ puntos, calculamos su polinomio de interpolación y dados $n+1$ volvemos a calcular su polinomio:
+$$\{(x_0,y_0),\ldots, (x_{n-1},y_{n-1})\} \mapsto p_{n-1}(x)$$
+$$\{(x_0,y_0),\ldots, (x_n,y_n)\} \mapsto p_n(x)$$
+
+\noindent
+Definimos una nueva función como la diferencia de ambas:
+$$h(x)=p_n(x)-p_{n-1}(x) \in \bb{P}_n$$
+$$h(x_i) = p_n(x_i) - p_{n-1}(x_i) = y_i - y_i = 0 \ \forall i \in \{0, \ldots, n-1\}$$
+
+\ \\ \noindent
+Por tanto, cada $x_i$ es una raíz de $h(x) \ \forall i \in \{0, \ldots, n-1\}$:
+$$h(x)=D_n(x-x_0)\ldots (x-x_{n-1})$$
+
+$$\left.\begin{array}{l}
+        h(x_n)=p_n(x_n) - p_{n-1}(x_n) = y_n - p_{n-1}(x_n) \\
+        h(x_n)=D_n(x_n-x_0) \ldots (x_n - x_{n-1})
+    \end{array}\right\} \Rightarrow
+    D_n = \dfrac{y_n - p_{n-1}(x_n)}{(x_n-x_0)\ldots(x_n-x_{n-1})}$$
+
+\begin{teo}
+    Sea $p_{n-1}(x)$ el polinomio que interpola los datos $(x_i, y_i)$, $i = 0, \dots, n-1$ y  sea $p_n(x)$ el polinomio que interpola a los mismos datos y además $(x_n, y_n)$. Entonces
+    $$p_{n}(x) = p_{n-1}(x) + D_n(x-x_0)\dots(x-x_{n-1})$$
+    donde
+    $$D_n = \frac{y_n - p_{n-1}(x_n)}{(x_n-x_0)\dots(x_n-x_{n-1})}$$
+\end{teo}
+\begin{proof}
+    Sea $h(x) = p_n(x) - p_{n-1}(x) \in \bb{P}_n$. Tenemos que $$h(x_i)=p_n(x_i) - p_{n-1}(x_i) = y_i - y_i = 0 \;\forall i=0, \dots, n-1$$
+
+    Como el grado máximo de $h$ es $n$, y ya hemos encontrado $n$ raíces distintas, entonces el polinomio queda como:
+    $$h(x)=D_n(x-x_0)\dots(x-x_{n-1})$$
+
+    Calculemos ahora $D_n$. Como el polinomio pasa por $(x_n, y_n)$:
+    \begin{equation*}
+        \left.\begin{array}{l}
+            h(x_n) = p_n(x_n) - p_{n-1}(x_n) = y_n - p_{n-1}(x_n)  \\
+            h(x_n) = D_n(x_n-x_0)\dots(x_n-x_{n-1}) 
+        \end{array}\right\} \Longrightarrow D_n = \frac{y_n - p_{n-1}(x_n)}{(x_n-x_0)\dots(x_n-x_{n-1})}
+    \end{equation*}
+\end{proof}
+\begin{coro}
+    Como consecuencia se tiene:
+    $$p_n(x)=D_0 + D_1(x-x_0) + \ldots + D_n(x-x_0)\ldots (x-x_{n-1})$$
+    Donde cada $D_k$ sólo depende de los puntos $\{(x_0,y_0),\ldots, (x_k,y_k)\}$.
+\end{coro}
+
+\bigskip
+\begin{ejemplo}
+Buscar el polinomio de grado 2 que interpola los puntos:
+$$\begin{array}{c|ccc}
+        x_i & -1 & 0 & 1 \\
+        \hline
+        y_i & 2  & 1 & 2
+    \end{array}$$
+
+$$p_2(x)=D_0 + D_1(x-x_0) + D_2(x-x_0)(x-x_1) = D_0 + D_1(x+1)+D_2(x+1)x$$
+
+Aplicamos las condiciones de interpolación y tenemos que:
+$$\left.\begin{array}{l}
+        p_2(-1)=2 \\
+        p_2(0)=1  \\
+        p_2(1)=2
+    \end{array}\right\} \Rightarrow
+    \left. \begin{array}{ccccccc}
+        D_0 &   &      &   &      & = & 2 \\
+        D_0 & + & D_1  &   &      & = & 1 \\
+        D_0 & + & 2D_1 & + & 2D_2 & = & 2
+    \end{array}\right\}$$
+
+$$p_2(x)=2-(x+1)+(x+1)x$$
+\end{ejemplo}
+
+Notemos que la expresión cambia si alteramos el orden de los puntos (el polinomio no).
+
+\begin{definicion}[Diferencias divididas]
+    Al coeficiente $D_k = f[x_0,\ldots, x_k]$ se le llama la \underline{diferencia dividida de orden $k$}.
+\end{definicion}
+
+\noindent
+Por tanto, el polinomio $p_n(x)$ que interpola los datos $\{(x_0,y_0),\ldots, (x_n,y_n)\}$ se escribe como:
+$$p_n(x) = f[x_0] + f[x_0,x_1](x-x_0) + f[x_0,x_1,x_2](x-x_0)(x-x_1) + \ldots + $$
+$$ + f[x_0,x_1, \ldots, x_n](x-x_0)(x-x_1)\ldots(x-x_{n-1}) = $$
+$$= f[x_0] + \sum_{k=1}^n f[x_0, \ldots, x_k] \prod_{i=0}^{k-1}(x-x_i)$$
+
+\noindent
+Propiedades de las diferencias divididas:
+\begin{itemize}
+    \item \textbf{Simetría:} Si notamos $\pi(x)=(x-x_0)\ldots(x-x_n)$, se tiene que:
+          $$f[x_0, \ldots, x_n] = \sum_{i=0}^n \dfrac{f(x_i)}{\pi'(x_i)}$$
+    \item \textbf{Ley de recurrencia:}
+          $$f[x_0,\ldots, x_n] = \dfrac{f[x_1,\ldots,x_n]-f[x_0,\ldots,x_{n-1}]}{x_n-x_0} ~~~x_0 \neq x_n$$
+          $$f[x_i] = y_i~\todoi$$
+\end{itemize}
+
+\noindent
+Gracias a esta última ley, podemos construir la tabla de las diferencias dividas:
+$$\begin{array}{c|cccc}
+        x_0 & f[x_0] &             &                &                    \\
+            &        & f[x_0,x_1]  &                &                    \\
+        x_1 & f[x_1] &             & f[x_0,x_1,x_2] &                    \\
+            &        & f[x_1,x_2]  &                & f[x_0,x_1,x_2,x_3] \\
+        x_2 & f[x_2] &             & f[x_1,x_2,x_3] &                    \\
+            &        & f[x_2, x_3] &                &                    \\
+        x_3 & f[x_3] &             &                &
+    \end{array}$$
+
+\begin{ejemplo}
+    Interpolar mediante el método de Newton los siguientes puntos:
+    \begin{equation*}
+        \begin{array}{c|ccc}
+            x_i & -1 & 0 & 1 \\ \hline
+            y_i & 2 & 1 & 2
+        \end{array}
+    \end{equation*}
+
+    Usando la Ley de Recurrencia:
+    \begin{equation*}
+        \begin{array}{c|ccc}
+            x_i & f[x_i] \\
+            \\
+            -1 & \textbf{2} \\
+            && f[-1, 0] = \textbf{-1}\\
+            0 & 1 & & f[-1, 0, 1] = \frac{1-(-1)}{1-(-1)} = \textbf{1}\\
+            && f[0, 1] = 1\\
+            1 & 2 \\
+        \end{array}
+    \end{equation*}
+
+    Por tanto, el polinomio queda:
+    \begin{equation*}
+        p_2(x) = 2-(x+1)+(x+1)x
+    \end{equation*}
+\end{ejemplo}
+
+\begin{ejemplo}
+    Interpolar mediante el método de Newton los siguientes puntos:
+    \begin{equation*}
+        \begin{array}{c|cccc}
+            x_i & -1 & 0 & 1 & 2 \\ \hline
+            y_i & 0 & 1 & 2 & 9
+        \end{array}
+    \end{equation*}
+
+    Usando la Ley de Recurrencia:
+    \begin{equation*}
+        \begin{array}{c|cccc}
+            x_i & f[x_i] \\
+            \\
+            -1 & \textbf{0} \\
+            && \textbf{1}\\
+            0 & 1 & & \textbf{0}\\
+            && 1&&\textbf{1}\\
+            1 & 2 && 3\\
+            & & 7\\
+            2 & 9
+        \end{array}
+    \end{equation*}
+
+    Por tanto, el polinomio queda:
+    \begin{equation*}\begin{split}
+        p_3(x) &= 0 + 1(x-(-1)) + 0(x-(-1))(x-0) + 1(x-(-1))(x-0)(x-1) \\
+        &= (x+1)+(x+1)x(x-1)
+    \end{split}\end{equation*}
+\end{ejemplo}
+
+\begin{lema}[Aitken] Sean los datos $(x_0,f(x_0)),\dots,(x_n,f(x_n))$. Denotemos por $p_{x_0,\dots,x_{n-1}}(x)$ el polinomio que interpola los $n$ primeros, y sea $p_{x_1,\dots,x_n}(x)$ el polinomio que interpola los $n$ últimos. Entonces, el polinomio que interpola todos los datos $p_n(x)$ se puede escribir de la forma
+\begin{equation*}
+    \frac{(x-x_0)p_{x_1,\dots,x_n}(x) - (x-x_n)p_{x_0,\dots,x_{n-1}}(x)}{x_n-x_0}
+\end{equation*}
+\end{lema}
+\begin{proof}
+    Definimos $$h(x)=\frac{(x-x_0)p_{x_1,\dots,x_n}(x) - (x-x_n)p_{x_0,\dots,x_{n-1}}(x)}{x_n-x_0}\in \bb{P}_n$$
+
+    Verificamos ahora que se cumplen las condiciones de interpolación.\\
+    Para $i\neq 0,n$,
+    \begin{multline*}
+        h(x_i)=\frac{(x_i-x_0)p_{x_1,\dots,x_n}(x_i) - (x_i-x_n)p_{x_0,\dots,x_{n-1}}(x_i)}{x_n-x_0} =\\=
+        \frac{(x_i-x_0)f(x_i)-(x_i-x_n)f(x_i)}{x_n-x_0} = \frac{(x_n-x_0)f(x_i)}{x_n-x_0} = f(x_i)
+    \end{multline*}
+    Para $i=0$,
+    \begin{multline*}
+        h(x_0)=\frac{(x_0-x_0)p_{x_1,\dots,x_n}(x_0) - (x_0-x_n)p_{x_0,\dots,x_{n-1}}(x_0)}{x_n-x_0} =\\=
+        \frac{- (x_0-x_n)p_{x_0,\dots,x_{n-1}}(x_0)}{x_n-x_0} = p_{x_0,\dots,x_{n-1}}(x_0) = f(x_0)
+    \end{multline*}
+    Para $i=n$,
+    \begin{multline*}
+        h(x_n)=\frac{(x_n-x_0)p_{x_1,\dots,x_n}(x_n) - (x_n-x_n)p_{x_0,\dots,x_{n-1}}(x_n)}{x_n-x_0} =\\=
+        \frac{(x_n-x_0)p_{x_1,\dots,x_n}(x_n)}{x_n-x_0} = p_{x_1,\dots,x_n}(x_n) = f(x_n)
+    \end{multline*}
+\end{proof}
+
+Notemos además que:
+$$p_n(x)=f[x_0] + f[x_0,x_1](x-x_0) + \ldots + f[x_0, \ldots, x_n](x-x_0)\ldots (x-x_{n-1})$$
+El término del coeficiente líder de $p_n(x)$ es $f[x_0, \ldots, x_n]$ para cada $n$:
+$$f[x_0, \ldots, x_n] = \dfrac{f[x_1, \ldots, x_n]-f[x_0, \ldots, x_{n-1}]}{x_n-x_0}$$
+Por tanto, los coeficientes del polinomio de interpolación serán las diferencias dividas.
+
+\bigskip \noindent
+Ventajas de la fórmula de Newton:
+\begin{itemize}
+    \item Los coeficientes de la fórmula, las diferencias divididas, se pueden calcular recurrentemente
+          a partir de la tabla anterior.
+    \item La fórmula es recurrente, si añadimos un punto sólo hay que calcular una nueva diagonal
+          en la tabla de las diferencias divididas.
+    \item La fórmula se puede evaluar mediante un algoritmo análogo al esquema de Horner.
+\end{itemize}
+
+
+
+\begin{ejemplo}
+    Interpolar mediante el lema de Aitken los siguientes puntos:
+    \begin{equation*}
+        \begin{array}{c|ccc}
+            x_i & -1 & 0 & 1 \\ \hline
+            y_i & 2 & 1 & 2
+        \end{array}
+    \end{equation*}
+
+    Usando el Lema de Aitken:
+    \begin{equation*}
+        \begin{array}{c|ccc}
+            x_0=-1 & p_{x_0}(x)=f(x_0)=2 \\
+            && p_{x_0,x_1} = \frac{(x-x_0)P_{x_1}(x)-(x-x_1)P_{x_0}(x)}{x_1-x_0} = \frac{(x+1)1 - x\cdot 2}{1} = -x+1\\
+            x_1=0 & p_{x_1}(x)=f(x_1)=1 & & \Longrightarrow \\
+            && p_{x_1,x_2} = \frac{(x-x_1)P_{x_2}(x)-(x-x_2)P_{x_1}(x)}{x_2-x_1} = \frac{x\cdot 2 - (x-1)1)}{1} = x+1\\
+            x_2=1 & p_{x_2}(x)=f(x_2)=2 \\
+        \end{array}
+    \end{equation*}
+    \begin{multline*}
+        \Longrightarrow P_{x_0, x_1, x_2}(x) = \frac{(x-x_0)P_{x_1,x_2}(x) - (x-x_2)P_{x_0,x_1}(x)}{x_2-x_0} =\\= \frac{(x+1)(x+1)-(x-1)(-x+1)}{2} = x^2+1
+    \end{multline*}
+\end{ejemplo}
+\subsection{Forma de evaluar el polinomio de Newton}
+\textbf{Newton Horner}\par
+Para realizar el menor número de operaciones:
+
+$$p_n(x) = f[x_0] + f[x_0,x_1](x-x_0) + \ldots + f[x_0,\ldots ,x_n](x-x_0)\ldots(x-x_{n-1}) = $$
+$$=f[x_0] + (x-x_0) [f[x_0,x_1] + (x-x_1)[\ldots (x-x_{n-1}) f[x_0, \ldots, x_n] \ldots ]]$$
+
+\bigskip
+Para evaluar nuestro polinomio $p_n(x)$ en el punto $x$:
+
+$$\left.\begin{array}{l}
+        b_n = f[x_0, \ldots, x_n]                            \\
+        b_{n-1} = b_n(x - x_{n-1}) + f[x_0, \ldots, x_{n-1}] \\
+        \vdots                                               \\
+        b_1 = b_2 (x-x_1) + f[x_0, x_1]                      \\
+        p_n(x) = b_0 = b_1 (x-x_0) + f[x_0]
+    \end{array}\right\}$$
+
+\section{El error de interpolación}
+A la hora de interpolar un polinomio, podemos calcular el error que cometemos si conocemos el polinomio
+mediante la fórmula:
+$$E_r (f; x) = |f(x) - p_n(x)|$$
+
+\begin{ejemplo}
+    Calcular el error al aproximar la función $f(x)=e^x$ sabiendo que:
+    \begin{equation*}
+        \begin{array}{c|cc}
+            x_i & 0 & 1 \\ \hline
+            f(x_i) & 1 & e
+        \end{array}
+    \end{equation*}
+
+    Aproximando mediante el método de Newton,
+    \begin{equation*}\begin{split}
+        P_2(x)&
+        = f[x_0] + f[x_0,x_1](x-x_0)
+        = f(x_0) + \frac{f(x_1) - f(x_0)}{x_1 - x_0} (x-x_0) \\
+        &= 1 + \frac{e - 1}{1-0} (x-0)
+        = 1+(e-1)x
+    \end{split}\end{equation*}
+
+    Por tanto, el error dado por la función $E(x)$ es:
+    \begin{equation*}
+        E(x) = |e^x - P_2(x)| = |e^x - 1 - (e-1)x| = |f(x)-f(0) - (e-1)x|
+    \end{equation*}
+    aplicando el Teorema de Lagrange en el intervalo $[\min\{0,x\},\max\{0,x\}]$ (ya que $f(x)$ es continua y derivable en $\bb{R}$) tenemos que:
+    \begin{equation*}
+        \exists \xi \in ]\min\{0,x\},\max\{0,x\}[ \mid f(x)-f(0) = f'(\xi)(x-0) = e^\xi x
+    \end{equation*}
+    
+    Por tanto,
+    \begin{equation*}
+        E(x)=|e^\xi x - (e-1)x| = |x(e^\xi - (e-1))| = |x|\cdot |e^\xi -e+1| \stackrel{(\ast)}{\leq}
+        |x|\cdot |e -e+1| = |x|
+    \end{equation*}
+    donde en $(\ast)$ he aplicado que, como estamos interpolando entre $x_0=0$y $x_1=1$, entonces $x\in[0,1]$. Por tanto, $\xi \in ]\min\{0,x\},\max\{0,x\}[ \subseteq ]0,1[$. Por tanto, $e^\xi \in1,e[$.
+    
+    Por tanto, hemos visto que $E(x)\leq |x|\quad \forall x\in ]0,1[$.
+\end{ejemplo}
+\begin{teo}
+    Sea $f\in C^{n+1}([a,b])$ y sean $x_0,x_1,\dots,x_n\in[a,b]$. Entonces,
+    \begin{equation*}
+        \exists \xi \mid \min\{x,x_0,\dots,x_n \} \leq \xi \leq \max\{x,x_0,\dots,x_n \} 
+    \end{equation*}
+    con:
+    \begin{equation*}
+        f(x)-p_n(x) = \frac{f^{n+1)}(\xi)}{(n+1)!}\prod_{k=0}^n (x-x_k)
+    \end{equation*}
+\end{teo}
+\begin{proof}
+    Supongamos $x=x_j\;(j=0,\dots,n)$. Tenemos que se cumple, ya que el miembro de la izquiera se anula por las condiciones de $p_n$ y el término de la derecha se anula al anularse el productorio.
+
+    Supongamos por tanto $x\neq x_j\;(j=0,\dots,n)$. Tomamos $x\in[a,b]$ fijo. Definimos $$\psi (x) = \prod_{k=0}^n (x-x_k) \in \bb{P}_{n+1}(x)$$
+
+    En el intervalo $[a,b]$, definimos también
+    \begin{equation*}
+        g(t) = [f(t)-p_n(t)]\psi(x) - [f(x)-p_n(x)]\psi(t)
+    \end{equation*}
+    \begin{itemize}
+        \item \underline{Para $t=x$}: tenemos que $g(t)=g(x)=0$.
+        
+        \item \underline{Para $t=x_j\;(j=0,\dots,n)$}: tenemos que $$g(t)=g(x_j)=\cancelto{0}{[f(t)-p_n(t)]}\psi(x) - [f(x)-p_n(x)]\cancelto{0}{\psi(t)} = 0$$
+    \end{itemize}
+
+    Por tanto, tenemos que $g$ se anula en $t=x\neq x_j$ y en $t=x_j$. Por tanto, se anula en $n+2$ puntos. Por el teorema de Rolle, $g'$ se anula en $n+1$ puntos distintos.
+
+    Siguiendo un razonamiento idéntico, y derivando sucesivamente ya que $g\in~C^{n+1}[a,b]$, entonces tenemos que:
+    \begin{itemize}
+        \item $g'$ se anula en $n+1$ puntos distintos.
+        \item $g''$ se anula en $n$ puntos distintos.
+        \item $\vdots$
+        \item $g^{n)}$ se anula en dos puntos distintos.
+        \item $g^{n+1)}$ se anula en un único punto. Sea $\xi \in \bb{R}\mid g^{n+1)}(\xi) = 0$.
+    \end{itemize}
+
+
+    Veamos el valor de $g^{n+1)}$
+    \begin{equation*}
+        g^{n+1)}(t) = [f^{n+1)}(t)-{p_n^{n+1)}}(t)]\psi(x) - [f(x)-p_n(x)]\psi^{n+1)}(t)
+    \end{equation*}
+    donde tenemos que 
+    \begin{equation*}
+        {p_n^{n+1)}}(t) = 0\text{ por ser la derivada de orden $n+1$ de un polinomio de grado $n$.}
+    \end{equation*}
+    \begin{equation*}
+        \psi^{n+1)}(t) = (n+1)!\text{ ya que $\psi (x) \in \bb{P}_{n+1}(x)$ y su coeficiente líder es $1$.}
+    \end{equation*}
+
+    Por tanto, tenemos que
+    \begin{equation*}
+        g^{n+1)}(t) = f^{n+1)}(t)\psi(x) - [f(x)-p_n(x)](n+1)!
+    \end{equation*}
+
+    Tomando $t=\xi$ (único), 
+    \begin{multline*}
+        g^{n+1)}(\xi) = 0 = f^{n+1)}(\xi)\psi(x) - [f(x)-p_n(x)](n+1)!
+        \Longrightarrow\\ \Longrightarrow
+        f(x)-p_n(x) = \frac{f^{n+1)}(\xi)}{(n+1)!}\psi(x) = \frac{f^{n+1)}(\xi)}{(n+1)!}\prod_{k=0}^n (x-x_k)
+    \end{multline*}
+\end{proof}
+
+\begin{ejemplo}
+    Calcular el error al aproximar la función $f(x)=e^x$ sabiendo que:
+    \begin{equation*}
+        \begin{array}{c|cc}
+            x_i & 0 & 1 \\ \hline
+            f(x_i) & 1 & e
+        \end{array}
+    \end{equation*}
+
+    Aproximando mediante el método de Newton,
+    \begin{equation*}\begin{split}
+        P_2(x)&
+        = f[x_0] + f[x_0,x_1](x-x_0)
+        = f(x_0) + \frac{f(x_1) - f(x_0)}{x_1 - x_0} (x-x_0) \\
+        &= 1 + \frac{e - 1}{1-0} (x-0)
+        = 1+(e-1)x
+    \end{split}\end{equation*}
+
+    Por tanto, el error dado por la función $E(x)$ es:
+    \begin{multline*}
+        E(x) = |f(x) - P_1(x)| = \left| \frac{f''(\xi)}{2!} (x-x_0) (x-x_1)\right|
+        = \left |\frac{e^\xi}{2} (x) (x-1)\right|
+        =\\=
+        \frac{e^\xi}{2} \left |(x) (x-1)\right|
+        \stackrel{(1)}{\leq} \frac{e}{2} \left |(x) (x-1)\right|
+        \stackrel{(2)}{\leq} \frac{e}{2}\cdot  \frac{1}{4} = \frac{e}{8}
+    \end{multline*}
+
+    donde en $(1)$ he empleado que $\xi \in [0,1]$ y en $(2)$ he aplicado que $x\in[0,1]$, y representando $|x^2-x|$ lo deduzco.
+\end{ejemplo}
+
+\section{Método de Hermite}
+
+\begin{ejemplo}
+    Estudie para que valores de $a\in \bb{R}$ es unisolvente el siguiente problema de interpolación:\\
+    Encontrar $p\in \bb{P}_2$ tal que:
+    \begin{equation*}
+        \left.\begin{array}{ccc}
+            p(0) &=& \omega_0  \\
+            p'(a) &=& \omega_1  \\
+            p(1) &=& \omega_2  \\
+        \end{array}\right\}
+    \end{equation*}
+
+    Resolvemos mediante el método de coeficientes indeterminados. Sea $p_2(x)=b_0 + b_1x + b_2x^2$.
+    \begin{equation*}
+        \left.\begin{array}{ccc}
+            p(0) &=& \omega_0  \\
+            p'(a) &=& \omega_1  \\
+            p(1) &=& \omega_2  \\
+        \end{array}\right\}
+        \Longrightarrow
+        \left.\begin{array}{rrrrrcc}
+            b_0&&&& &=& \omega_0  \\
+            &&b_1&+&2b_2a &=& \omega_1  \\
+            b_0&+&b_1&+&b_2 &=& \omega_2  \\
+        \end{array}\right\}
+    \end{equation*}
+
+    La solución será única si:
+    \begin{equation*}
+        \left|\begin{array}{ccc}
+            1 & 0 & 0 \\
+            0 & 1 & 2a \\
+            1 & 1 & 1
+        \end{array}\right| \neq 0 \Longleftrightarrow 1-2a \neq 0 \Longleftrightarrow a=\frac{1}{2}
+    \end{equation*}
+
+    Para $a=\frac{1}{2}$, tenemos que para $\omega_1=0$ hay infinitas soluciones, mientras que para $\omega_1\neq 0$ no hay solución.
+\end{ejemplo}
+
+\noindent
+En algunos casos, se proporcionarán datos sobre el valor de la función y sobre derivadas sucesivas
+en los punto de esta.\newline
+Se interpondrá la condición de que si se da como dato $f^{(j)}(x_i)$, entonces se proporcionarán
+en el punto $x_i$ las derivadas sucesivas de orden inferior a $j$.\\
+
+\textbf{Problema clásico}
+$$\begin{array}{c|cccc}
+         & x_0     & x_1     & \ldots & x_n     \\
+        \hline
+         & f(x_0)  & f(x_1)  & \ldots & f(x_n)  \\
+        \hline
+         & f'(x_0) & f'(x_1) & \ldots & f'(x_n)
+    \end{array}$$
+
+\textbf{Problema generalizado}\\
+
+\noindent
+Se nos dan $n+1$ puntos tales que en el punto $x_i$ conocemos: $f(x_i)$, $f'(x_i)$, \ldots, $f^{(k_i)}(x_i)
+    ~~\forall i \in \{0, \ldots, n\}$\\
+
+\noindent
+Por lo que en verdad conocemos $m = k_0 + k_1 + \ldots + k_n + n$ datos.
+
+\begin{observacion}
+Como caso particular, si solo hay un punto, tenemos el polinomio de Taylor.  
+\end{observacion}
+
+\begin{prop}
+    Existe un único polinomio $p(x)$ de grado menor o igual que $m-1$ que interpola los $m$ datos de interpolación
+    de Hermite.
+\end{prop}
+
+\bigskip
+\noindent
+Notemos que:
+$$f[x_0,x_1] = \dfrac{f[x_1]-f[x_0]}{x_1-x_0}$$
+$$\lim_{x_1 \to x_0}f[x_0,x_1] = \lim_{x_1 \to x_0} \dfrac{f[x_1]-f[x_0]}{x_1-x_0} = f'(x_0)$$
+Por lo que tiene sentido hacer la siguiente definición:
+
+\bigskip
+\newtheorem*{defDifDiv}{Definición}
+\begin{defDifDiv}
+    Sea $f \in C^{k+1}([a,b])$ y $x_0 \in [a,b]$. Entonces, definimos:
+    $$f[\underbrace{x_0, x_0, \ldots, x_0}_{(k+1)}] = \dfrac{f^{(k)}(x_0)}{k!}$$
+
+    Notemos que $f[x_0,x_0] = f'(x_0)$
+\end{defDifDiv}
+
+\bigskip
+\begin{teo}
+    Dados los datos de interpolación:
+
+    $$\begin{array}{c|cccc}
+             & x_0     & x_1     & \ldots & x_n     \\
+            \hline
+             & f(x_0)  & f(x_1)  & \ldots & f(x_n)  \\
+            \hline
+             & f'(x_0) & f'(x_1) & \ldots & f'(x_n)
+        \end{array}$$
+
+    Entonces, se tiene que:
+
+    $$p_{2n+1}(x) = f[x_0]+f[x_0,x_0](x-x_0) + f[x_0,x_0,x_1](x-x_0)^2 + $$
+    $$ + f[x_0,x_0,x_1,x_1](x-x_0)^2(x-x_1) + \ldots + $$
+    $$ + f[x_0,x_0,\ldots, x_n,x_n](x-x_0)^2\ldots (x-x_{n-1})^2(x-x_n)$$
+
+    \smallskip
+
+    $$\begin{array}{c|cccc}
+            x_0    & f(x_0) &            &        &                               \\
+                   &        & f'(x_0)    &        &                               \\
+            x_0    & f(x_0) &            &        &                               \\
+                   &        & f[x_0,x_1] &        &                               \\
+            x_1    & f(x_1) &            &        &                               \\
+                   &        & f'(x_1)    &        &                               \\
+            x_1    & f(x_1) &            &        &                               \\
+            \vdots & \vdots & \vdots     &        &                               \\
+            \vdots & \vdots & \vdots     & \ldots & f[x_0, x_0, \ldots, x_n, x_n] \\
+            \vdots & \vdots & \vdots     &        &                               \\
+            x_n    & f(x_n) &            &        &                               \\
+                   &        & f'(x_n)    &        &                               \\
+            x_n    & f(x_n) &            &        &
+        \end{array}$$
+\end{teo}
+
+\begin{ejemplo}
+    Interpolar mediante el método de Hermite clásico los siguientes datos:
+    \begin{equation*}
+        \begin{array}{c|cc}
+            x_i & 0 & 1 \\ \hline
+            f(x_i) & 1 & 2 \\ \hline
+            f'(x_i) & 0 & 3
+        \end{array}
+    \end{equation*}
+
+    Usando la Ley de Recurrencia:
+    \begin{equation*}
+        \begin{array}{c|ccccc}
+            0 & 1 \\
+            && f[0,0]=f'(0)=0 \\ 
+            0 & 1 && 1\\
+            && f[0,1]=1 & & 1\\
+            1 & 2 & & 2 \\
+            && f[1,1]=f'(1)=3\\
+            1 & 2 \\
+        \end{array}
+    \end{equation*}
+
+    Por tanto, el polinomio queda:
+    \begin{equation*}
+        p_3(x) = 1+0(x-0) +1(x-0)^2 +1(x-0)^2(x-1) = 1+x^3
+    \end{equation*}
+\end{ejemplo}
+
+
+\begin{teo}
+    Sea $f\in C^{2n+2}(I)$ y sean $x_0,x_1,\dots,x_n\in I$.
+    
+    Sea $p_{2n+1}(x)\in \bb{P}_{2n+1} \left|\begin{array}{c}
+        f(x_i) = p_{2n+1}(x_i) \\
+        f'(x_i) = p_{2n+1}'(x_i) 
+    \end{array} \quad \forall i=0,\dots,n \right.$
+    
+    Entonces $\exists \xi \in I \mid$
+    \begin{equation*}
+        f(x)-p_{2n+1}(x) = \frac{f^{2n+2)}(\xi)}{(2n+2)!}\prod_{i=0}^n (x-x_i)^2
+    \end{equation*}
+\end{teo}
+\begin{proof}
+    Supongamos $x=x_j\;(j=0,\dots,n)$. Tenemos que se cumple, ya que el miembro de la izquierda se anula por las condiciones de $p_{2n+1}$ y el término de la derecha se anula al anularse el productorio.
+
+    Supongamos por tanto $x\neq x_j\;(j=0,\dots,n)$. Tomamos $x\in I$ fijo. Definimos $$\psi (x) = \prod_{i=0}^n (x-x_i)^2 \in \bb{P}_{2n+2}(x)$$
+
+    En el intervalo $I$, definimos también
+    \begin{equation*}
+        g(t) = [f(t)-p_{2n+1}(t)]\psi(x) - [f(x)-p_{2n+1}(x)]\psi(t)
+    \end{equation*}
+    \begin{itemize}
+        \item \underline{Para $t=x$}: tenemos que $g(t)=g(x)=0$.
+        
+        \item \underline{Para $t=x_j\;(j=0,\dots,n)$}: tenemos que $$g(t)=g(x_j)=\cancelto{0}{[f(t)-p_{2n+1}}(t)]\psi(x) - [f(x)-p_{2n+1}(x)]\cancelto{0}{\psi(t)} = 0$$
+    \end{itemize}
+
+    Por tanto, tenemos que $g$ se anula en $t=x\neq x_j$ y en $t=x_j$; es decir, se anula en $n+2$ puntos. Por el teorema de Rolle, $g'$ se anula en $n+1$ puntos distintos (y todos ellos distintos a $x_i\;\forall i$)\footnote{Ya que Rolle afirma que $\exists x\in ]a,b[ \mid f'(x)=0$. El intervalo al que se refiere Rolle es, por tanto, abierto.}.
+
+    Consideramos ahora $g'(t)$.
+    \begin{equation*}
+        g'(t) = [f'(t)-p'_{2n+1}(t)]\psi(x) - [f(x)-p_{2n+1}(x)]\psi'(t)
+    \end{equation*}
+    $$\psi' (t) = 2\sum_{i=0}^n\left[ (t-x_i)\prod_{\substack{j=0\\i\neq j}}^n (t-x_j)^2\right] \in \bb{P}_{2n+1}$$
+    
+    \begin{itemize}
+        \item \underline{Para $t=x_j\;(j=0,\dots,n)$}: tenemos que $$g'(t)=g'(x_j)=\cancelto{0}{[f'(t)-p'_{2n+1}}(t)]\psi(x) - [f(x)-p_{2n+1}(x)]\cancelto{0}{\psi'(t)} = 0$$
+    \end{itemize}
+    Por tanto, tenemos que $g'$ se anula en $t=x_j$; es decir, se anula en $n+1$ puntos, todos ellos distintos a los ya calculados.
+
+    Por tanto, tenemos que $g'(x)$ se anula en $2n+2$ puntos distintos. Por el Teorema de Rolle, podemos concluir que $g''(x)$ se anula en $2n+1$ puntos distintos, y así sucesivamente. Por tanto, tenemos:
+    \begin{itemize}
+        \item $g'$ se anula en $2n+2$ puntos distintos.
+        \item $g''$ se anula en $2n+1$ puntos distintos.
+        \item $\vdots$
+        \item $g^{2n+1)}$ se anula en dos puntos distintos.
+        \item $g^{2n+2)}$ se anula en un único punto. Sea $\xi \in \bb{R}\mid g^{2n+2)}(\xi) = 0$.
+    \end{itemize}
+
+
+    Veamos el valor de $g^{2n+2)}$
+    \begin{equation*}
+        g^{2n+2)}(t) = [f^{2n+2)}(t)-{p_{2n+1}^{2n+2)}}(t)]\psi(x) - [f(x)-p_{2n+1}(x)]\psi^{2n+2)}(t)
+    \end{equation*}
+    donde tenemos que 
+    \begin{equation*}
+        {p_{n+1}^{2n+2)}}(t) = 0\text{ por ser la derivada de orden $2n+2$ de un polinomio de grado $2n+1$.}
+    \end{equation*}
+    \begin{equation*}
+        \psi^{2n+2)}(t) = (2n+2)!\text{ ya que $\psi (x) \in \bb{P}_{2n+2}(x)$ y su coeficiente líder es $1$.}
+    \end{equation*}
+
+    Por tanto, tenemos que
+    \begin{equation*}
+        g^{2n+2)}(t) = f^{2n+2)}(t)\psi(x) - [f(x)-p_{2n+1}(x)](2n+2)!
+    \end{equation*}
+
+    Tomando $t=\xi$ (único), 
+    \begin{multline*}
+        g^{2n+2)}(\xi) = f^{2n+2)}(\xi)\psi(x) - [f(x)-p_{2n+1}(x)](2n+2)!
+        \Longrightarrow\\ \Longrightarrow
+        f(x)-p_{2n+1}(x) = \frac{f^{2n+2)}(\xi)}{(2n+2)!}\psi(x) = \frac{f^{n+1)}(\xi)}{(n+1)!}\prod_{k=0}^n (x-x_k)^2
+    \end{multline*}
+\end{proof}
+
+\section{Polinomio de Chebyshev}
+\noindent
+Partiendo de la fórmula del coseno para el ángulo suma, tenemos que para $\theta \in [0, \pi]$:
+$$\cos((n+m)\theta) = \cos(n\theta)\cos(m\theta) - \sin(n\theta)\sin(m\theta)$$
+$$\cos((n-m)\theta) = \cos(n\theta)\cos(m\theta) + \sin(n\theta)\sin(m\theta)$$
+De la suma de ambas tenemos que:
+$$\cos((n+m)\theta) + \cos((n-m)\theta) = 2\cos(m\theta)\cos(n\theta)$$
+Haciendo $m=1$:
+$$\cos((n+1)\theta) + \cos((n-1)\theta) = 2\cos(\theta)\cos(n\theta)$$
+Sea $x = \cos\theta \in [-1,1]$, definimos:
+$$T_n(x) = \cos(n\theta) = \cos(n \arccos(x)) \in [-1, 1]$$
+Cada $T_n(x)$ satisface la relación $(n \geq 1)$:
+$$T_{n+1}(x) + T_{n-1}(x) = 2xT_n(x) \Rightarrow T_{n+1}(x) = 2xT_n(x) - T_{n-1}(x)$$
+
+$$T_0(x) = \cos0 = 1$$
+$$T_1(x) = x$$
+$$T_2(x) = 2xT_1(x) - T_0(x) = 2x^2-1$$
+$$T_3(x) = 2xT_2(x) - T_1(x) = 2^2x^3-3x$$
+
+\ \newline
+Notemos que $T_n(x) \in \bb{P}_n$ y que $T_n(x) = 2^{n-1}x^n + \ldots ~~~~\forall n \in \N$\\
+
+\noindent
+Estos son los polinomios de Chebyshev de primera especie.
+
+\bigskip
+\noindent
+Notemos que $T_n(x)$ tiene $n$ ceros distintos en $\left]-1,1\right[$:
+$$\left.\begin{array}{c}
+        T_n(x) = \cos\theta \\
+        \cos\theta = x
+    \end{array}\right\} \Rightarrow \cos(n\theta) = 0 \Leftrightarrow n\theta = \frac{\pi}{2}+k\pi~~\forall
+    k \in \Z$$
+
+$$n\theta = \dfrac{(2k+1)\pi}{2} \Rightarrow \theta = \dfrac{(2k+1)\pi}{2n}~~k \in \Z $$
+
+$k=0 \Rightarrow \theta_0 = \dfrac{\pi}{2n}$\par
+$\theta_1 = \dfrac{3\pi}{2n}$\par
+$\theta_2 = \dfrac{5\pi}{2n}$\par
+\ldots \par
+$\theta_n = \dfrac{(2n+1)\pi}{2n} = \pi + \dfrac{\pi}{2n}$\\
+
+\bigskip
+\noindent
+$T_{n+1}(x)$ tiene $n+1$ raíces. Sean $x_0, x_1, \ldots, x_n$ dichas raíces:
+$$x_k = \cos \dfrac{(2k+1)\pi}{2(n+1)}~~~\forall k \in \{0, \ldots, n\}$$
+$$f(x) - p_n(x) = \dfrac{f^{(n+1)}(\xi)}{(n+1!)} \prod_{i=0}^n (x-x_i)$$
+$$\prod_{k=0}^n (x-x_k) = \dfrac{T_{n+1}(x)}{2^n}$$
+Luego:
+$$|f(x) - p_n(x)| = \dfrac{|f^{(n+1)}(\xi)|}{(2n+1)!} \left| \dfrac{T_{n+1}(x)}{2^n} \right| \leq
+    \dfrac{|f^{(n+1)}(\xi)|}{(n+1)!} \dfrac{1}{2^n}$$
+
+
+\section{Ejercicios}
+Los ejercicios relativos a este tema están disponbles en la sección \ref{sec:Rel3.1}.
