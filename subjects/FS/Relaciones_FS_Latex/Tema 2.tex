@@ -1,0 +1,329 @@
+\chapter{Introducción a los Sistemas Operativos}
+\begin{definicion}[Procesamiento en serie]
+    Se dio a finales de los 40 y a principios de los 50. Se caracteriza por:
+    \begin{itemize}
+        \item Tarjetas perforadas
+        \item No había SO: se cargaba el programa en código máquina utilizando las tarjetas
+        \item Los errores se examinaban a mano $\longrightarrow$ reiniciar desde el principio.
+        \item Los usuarios pedían cita
+    \end{itemize}
+\end{definicion}
+
+\begin{definicion}[Sistemas por lotes (Sistemas Batch)]
+    Se caracteriza por la existencia de un software específico llamado \emph{monitor}.
+    \begin{itemize}
+        \item Agrupación de trabajos similares (evitar los problemas del procesamiento en serie)
+        \item Parte del monitor estaba cargado en memoria (monitor residente) y otras utilizadas se cargaban como subrutinas del programa del usuario.
+    \end{itemize}
+    El proceso seguido era:
+    \begin{enumerate}
+        \item  Monitor lee un trabajo del core.
+        \item El trabajo se carga en memoria.
+        \item El procesador ejecuta el trabajo.
+        \item Vuelta al 1).
+    \end{enumerate}
+    Los problemas eran:
+    \begin{itemize}
+        \item El procesador estaba ocioso
+        \item Recursos infravalorados.
+    \end{itemize}
+\end{definicion}
+
+\begin{definicion}[Multiprogramación]
+    Cuando un proceso se pone en espera, en lugar de estar el procesador inactivo esperando, el SO cambie a otro proceso y lo ejecute (y así sucesivamente). Implica:
+    \begin{itemize}
+        \item Tener cargado en memoria todos los procesos
+        \item Tener una planificación de la CPU (decidir entre varios procesos activos)
+    \end{itemize}
+\end{definicion}
+
+\begin{definicion}[SO de Tiempo Compartido]
+    SO multiprogramado donde se establecen turnos de CPU y el SO va decidiendo que procesos va a ejecutarse en el siguiente ciclo. Logra eficiencia a la hora de ejecutar todos los procesos en el menor tiempo posible.
+    
+    Un ejemplo de tiempo compartido es el DMA, ya que mediante el uso de interrupciones, el controlador del dispositivo de E/S se encarga de la operación de E/S mientras el procesador puede estar encargándose de otros procesos (el controlador va activando interrupciones).
+\end{definicion}
+
+\begin{definicion} [Dispatcher]
+    Es un módulo del SO que se encarga de intercambiar procesos.
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c}
+        \cline{1-1}
+         \hspace{2cm} & Proceso A            \\ \cline{1-1}
+         \hspace{2cm} & \textbf{Dispatcher}  \\ \cline{1-1}
+         \hspace{2cm} & Proceso B            \\ \cline{1-1}
+         \hspace{2cm} & \textbf{Dispatcher}  \\ \cline{1-1}
+         \hspace{2cm} & Proceso A            \\ \cline{1-1}
+        \end{tabular}
+    \end{table}
+\end{definicion}
+
+\begin{definicion}[Proceso]
+    Está formado por un programa ejecutable y datos que necesita el SO para ejecutar el programa. Está relacionado con:
+    \begin{itemize}
+        \item La operación en lotes en sistema multiprogramados (interrupciones).
+
+        \item Tiempo compartido (múltiples procesos ejecutándose utilizando pequeños intervalos de tiempo)
+
+        \item Sistemas de transacciones en tiempo real
+        \begin{itemize}
+            \item Proceso $\longrightarrow$ Uso de transacciones (los procesos se suspenden a través de las por interrupciones, se almacena su estado y el procesador pasa a ejecutar otro proceso) 
+        \end{itemize}
+    \end{itemize}
+
+    Pueden producirse errores relacionados con:
+    \begin{itemize}
+        \item Sincronizaciones inadecuadas (se interrumpe un proceso y no se restaure adecuadamente).
+
+        \item Violaciones de exclusión mutua (hay recursos del sistema que sólo pueden utilizarse por un único proceso simultáneamente).
+
+        \item Operaciones no deterministas de los programas (protección del espacio de memoria de los procesos).
+
+        \item Interbloqueos (que existan varios programas que se estén esperando entre sí debido al uso que se está haciendo de los recursos).
+    \end{itemize}
+
+    Para evitar estos errores, los procesos constan de:
+    \begin{enumerate}
+        \item Un programa ejecutable.
+        \item Datos necesarios que requiere el SO para ejecutarlo (incluyendo el contexto de la ejecución). Se denomina bloque de control de proceso (PCB) formado por:
+        \begin{enumerate}
+            \item Identificador de proceso
+            \item Contexto de ejecución: contenido de los registros del procesador.
+            \item Memoria donde reside el programa y sus datos.
+            \item Información relacionada con recursos del sistema.
+            \item Estado: en que situación se encuentra el proceso en cada momento (modelo de estados).
+            \item Otra información.
+        \end{enumerate}
+    \end{enumerate}
+\end{definicion}
+
+\begin{definicion}[Traza de ejecución (de un proceso)]
+    Es la secuencia de instrucciones que se ejecutan en cada ciclo para ese proceso.
+\end{definicion}
+
+\section{Modelo de dos estados}
+Tiene el inconveniente de que es demasiado simple.
+
+Un proceso puede estar en ejecución o no (los cambios de un estado a otro los realiza el dispatcher).
+
+\section{Modelo de cinco estados}
+    Cabe contemplar que los estados que NO están en ejecución pueden estar:
+    \begin{description}
+        \item[Nuevos] que todavía no han sido aceptados para ejecución. 
+        \item[Preparados] para ejecutarse.
+        \item[Bloqueados] (ej: porque están esperando a que termine una operación de E/S)
+        \item[Terminados] debido a que se han extraídos del conjunto de procesos aceptados para ejecución.
+    \end{description}
+
+\section{Gestión de Procesos}
+\begin{itemize}
+    \item \underline{Lista de procesos}: posiciones de memoria en la que se almacena la dirección de memoria de inicio de cada proceso.
+
+    \item Cada proceso es una estructura de datos para coordinar su ejecución.
+
+    \item El PC almacena la dirección de la siguiente instrucción que debe ejecutarse del proceso que indica el registro ``índice de proceso'' (IP).
+
+    \item El registro base contiene la dirección incial del proceso.
+
+    \item El registro límite incluye el tamaño del proceso
+\end{itemize}
+
+Para crear un proceso, se ha de inicializar el PCB de la siguiente forma:
+\begin{enumerate}
+    \item Asignar un identificador único al proceso.
+    \item Asignar un nuevo PCB.
+    \item Asignar la memoria correspondiente.
+    \item Inicializar PCB.
+    \begin{itemize}
+        \item PCB $\longrightarrow $ Dirección inicial de comienzo del programa.
+        \item SP $\longrightarrow $ Dirección de la pila de sistema.
+        \item Memoria donde reside el programa
+        \item El resto de campos se inicializan a valores por defecto.
+    \end{itemize}
+\end{enumerate}
+
+
+\section{Cambios de modo}
+\begin{definicion} [Cambios de Modo] Cuando se produce el cambio de modo usuario a modo supervisor/kernel o viceversa.
+\end{definicion}
+Tras una interrupción, excepción o llamada al sistema; puede haber un cambio de modo de usuario a kernel.
+\begin{enumerate}
+    \item El hardware guarda automáticamente el PC y PSW como mínimo. El bit de modo cambia a kernel.
+    \item Se determina la ruta del SO que debe ejecutarse y se almacena en el PC la dirección de comienzo.
+    \item Se ejecuta la rutina. Suele empezar por guardar toda la información y terminar restaurándola.
+    \item Volver a la rutina del SO previa. El hardware restaura el PC y PSW.
+\end{enumerate}
+
+\section{Cambios de Contexto}
+\begin{definicion} [Cambio de contexto] Cuando se pasa la ejecución de un proceso a otro.
+\end{definicion}
+Se producen al cambiar de proceso, y son llevados a cabo por el Dispatcher. Los pasos a seguir, tras una interrupción, excepción o llamada al sistema, son:
+\begin{enumerate}
+    \item Guardar los registros en el PCB del proceso ejecutándose.
+    \item Actualizar el campo del estado del proceso al nuevo estado e insertar el PCB en la cola.
+    \item Seleccionar un nuevo proceso de los ``Preparados''. Se encarga el Planificador de la CPU o el \textit{Scheduler}.
+    \item Actualizar el estado del nuevo proceso a ``Ejecutándose'', y sacarlo de ``Preparados''.
+    \item Cargar los registros del procesador con el PCB del proceso.
+\end{enumerate}
+
+
+
+
+Hasta el momento, hemos visto que la tarea fundamental del SO es gestionar procesos:
+\begin{itemize}
+    \item Reservarles recursos
+    \item Permitirles intercambiar información
+    \item Garantizar uso recursos y protección
+    \item Sincronizar recursos
+\end{itemize}
+
+\section{Hebras o Hilos}
+\begin{definicion}[Hebra]
+    Tiene como objetivo separar:
+    \begin{itemize}
+        \item El control de la asignación de los recursos (procesos)
+
+        \item De la ejecución de los programas (división de los procesos en hilos que se pueden ejecutar de forma independiente)       
+    \end{itemize}
+
+    Para ello,
+    \begin{itemize}
+        \item Sigue habiendo un único bloque de control del proceso (PCB) y espacio de direcciones del usuario.
+
+        \item Cada hilo tiene una pila y un bloque de control (TCB, \textit{Thread Control Block})  que contiene valores de los registros, prioridad, resto de información de estado, etc.
+    \end{itemize}
+
+    Por tanto, todos los hilos de un proceso comparten el estado y los recursos asociados al proceso. Por tanto, es necesario planificar la sincronización de las actividades de los hilos.
+\end{definicion}
+
+Con el concepto de hebra, pasamos a \emph{sistemas multihilo}, los cuales separan el punto de control de la asignación de recursos (procesos) y el de ejecución de los programas (cada proceso se divide en hebras, de forma que la ejecución de una hebra se produce de forma independiente al resto de hebras).
+
+\begin{definicion} [Modelo Monohilo]
+    Un único bloque de control (PCB), espacio de direcciones de usuario, pilas de usuario y kernel.
+\end{definicion}
+
+\begin{definicion}[Modelo Multihilo]
+    Hay un único bloque de control del proceso (PCB) y espacio de direcciones del usuario. Cada hilo tiene su propio bloque de control (TCB), sus propias pilas de usuario y kernel.
+\end{definicion}
+
+\subsection{Modelo de 5 estados para hebras}
+\begin{itemize}
+    \item Cuando se crea un espacio, se crea un hilo para dicho proceso.
+
+    \item Posteriormente los hilos pueden generar nuevos hilos para el mismo proceso.
+
+    \item Cada nuevo hilo, se coloca en la cola de \textbf{preparados}.
+
+    \item Cuando un hilo necesita esperar a un evento, se \textbf{bloquea}.
+
+    \item Cuando se produce el evento en espera, el hilo pasa al estado \textbf{preparado}.
+
+    \item Cuando termina la ejecución del hilo, se liberan los registros y pilas asociados.
+\end{itemize}
+
+\subsection{Ventajas de las Hebras}
+\begin{itemize}
+    \item Menor tiempo de creación de una hebra en un proceso ya creado que crear un nuevo proceso.
+
+    \item Menor tiempo de finalización de una hebra que de un proceso.
+
+    \item Menor tiempo de cambio de contexto entre hebras de un mismo proceso.
+
+    \item Facilitan la comunicación entre hebras de un mismo proceso.
+\end{itemize}
+
+\section{Gestión de Memoria}
+El concepto de multiprogramación se basa en compartir la memoria entre todos los procesos de forma eficiente y segura. Es segura, ya que cada proceso debe tener su espacio de memoria.
+
+Normalmente los programadores desconocen a priori en qué posiciones de memoria se va a almacenar el programa durante su ejecución (direcciones absolutas).
+
+Es conveniente poder intercambiar los procesos en la memoria principal para hacer más eficiente el uso del procesador $\longrightarrow$ trabajar con direcciones relativas $\longrightarrow$ hardware del procesador y del SO que se encarga de ir traduciendo de direcciones relativas a direcciones absolutas.
+
+\subsection{Carga de procesos en memoria}
+El primer paso que es necesario para generar un proceso consiste en cargarlo en memoria $\longrightarrow$~\textbf{cargador}.
+\begin{enumerate}
+    \item \underline{Carga absoluta}: Durante la compilación se añaden al código máquina direcciones absolutas de memoria. $\longrightarrow$ El programa no es reubicable (transparencia~34~$\longrightarrow$ X a N).
+
+    \item \underline{Carga reubicable}: La carga del programa puede realizarse en cualquier espacio de la memoria principal. Para ello, el compilador genera direcciones lógicas relativas (de 0 a M).
+    \begin{enumerate}
+        \item \underline{Reubicación estática}: El cargador decide dónde se va a ubicar en memoria el programa y añade la dirección base a las relativas (compilador).
+        \item \underline{Reubicación dinámica en tiempo real}: la traducción a direcciones absolutas se realiza en tiempo de ejecución $\longrightarrow$ es necesario un hardware del procesador.
+    \end{enumerate}
+\end{enumerate}
+
+\subsection{Espacio de direcciones de memoria}
+Pueden ser direcciones lógics o físicas. Diapositiva 37.
+\begin{itemize}
+    \item Las direcciones que genera un procesador son direcciones lógicas (relativas a la posición 0).
+    \item Hay un hardware para traducir las direcciones lógicas a direcciones físicas. Es el MMU: \textit{memory management unit}.
+    \item Mapa de memoria de un ordenador: espacio de memoria direccionable.
+    \item Mapa de memoria de un proceso: Tamaño total de direcciones lógicas del proceso $\longrightarrow$ correspondencia con el tamaño de direcciones físicas.
+\end{itemize}
+
+\subsection{Fragmentación}
+El problema de la fragmentación consiste en dividir el espacio de memoria de los procesos en fragmentos más pequeños que no se tengan que cargar necesariamente en posiciones de memorias contiguas.
+
+Ha de realizarse adecuadamente para evitar la fragmentación tanto interna como externa:
+\begin{itemize}
+    \item \underline{Fragmentación Interna}:
+
+    Espacio inutilizable dentro de un bloque de la memoria.
+    \item \underline{Fragmentación Interna}:
+
+    Espacio inutilizable fuera de un bloque de la memoria.
+\end{itemize}
+
+\begin{enumerate}
+    \item \textbf{Paginación}
+    \begin{itemize}
+        \item El espacio lógico de direcciones de un proceso se divide en elementos del mismo tamaño (páginas).
+        \item El espacio físico en memoria se divide en fragmentos del mismo tamaño (marcos de páginas).
+        \item Tamaño de página $=$ Tamaño de marco de página $=2^n$
+        \item Las direcciones lógicas son $(p,d)$, mientras que las direcciones físicas son~$(m,d)$ donde $p=$número de página, $m=$número de marco, $d=$~desplazamiento.
+    \end{itemize}
+
+    La tabla de páginas contiene la información necesaria para traducir cada dirección lógica a física:
+    \begin{itemize}
+        \item Hay una por proceso.
+        \item Tiene una entrada por página del proceso.
+        \item Tiene los siguientes elementos:
+        \begin{itemize}
+            \item Número de marco asociado a la página
+            \item Bits de protección (modo de acceso autorizado)
+            \item Bits adicionales, de haberlos.
+        \end{itemize}
+    \end{itemize}
+
+    La ejecución de cada instrucción requiere por tanto dos accesos a memoria. En primer lugar, para la traducción, se accede a la tabla de páginas; y en segunda lugar ya se accede a memoria.
+    \begin{itemize}
+        \item El \textbf{RBTP} \textit{(registro base de la tabla de procesos)} está en el PCB del proceso y apunta a la tabla de páginas.
+
+        \item El búfer de traducción adelantada, \textbf{TLB} \textit{(translation look-aside buffer)} resuelve el problema de acceder dos veces a memoria. Es una caché hardware.
+    \end{itemize}
+    
+    \item \textbf{Segmentación}
+
+    Similar a la paginación, solo que en este caso cada página no mide lo mismo.
+
+    La tabla de segmentos contiene:
+    \begin{itemize}
+        \item Número de segmento
+        \item Dirección base, en la que empieza el segmento.
+        \item Longitud del segmento; es decir, desplazamiento máximo.
+        \item Bits de protección:
+        \begin{itemize}
+            \item Bit de presencia: activado si la página se encuentra en memoria.
+            \item Bit de modificado: el contenido de la página se ha modificado desde que se cargó en memoria.
+            \item Bits de protección $RWX$
+            \item Bits de accedido
+        \end{itemize}
+    \end{itemize}
+
+    La tabla de segmentos de encuentra en la memoria principal. Adicionalmente, tenemos:
+    \begin{itemize}
+        \item El \textbf{RBTS} \textit{(registro base de la tabla de segmentos)} está en el PCB del proceso y apunta a la tabla de segmentos.
+
+        \item El \textit{registro Longitud de la Tabla de Segmentos} \textbf{(STLR)}  indica el número de segmentos del proceso. Sirve para comprobar si un segmento $s$ es válido. Se almacena en el PCB.
+    \end{itemize}
+    
+\end{enumerate}

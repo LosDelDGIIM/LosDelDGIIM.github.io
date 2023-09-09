@@ -1,0 +1,372 @@
+\chapter{Compilación y Enlazado de Programas}
+
+\begin{center}
+    Cód. fuente (Leng. alto nivel) $\xrightarrow{(*)}$
+    Cód. objeto (Cód. máquina o ensamblador)
+\end{center}
+
+\begin{definicion} [Compilación] Proceso mediante el cual se pasa de código fuente a código objeto $(*)$. Se emplea para:
+    \begin{itemize}
+        \item Comprobar que no hay errores en el código fuente.
+        \item Generar ficheros objeto.
+    \end{itemize}
+\end{definicion}
+
+\begin{definicion}[Enlazado]
+    Proceso mediante el cual, a partir de los ficheros objeto, se obtienen los ficheros ejecutables.
+\end{definicion}
+\section{Gramática}
+\begin{definicion} [Gramática]
+    La gramática $G=\{V_N, V_T, P, S\}$ está formada por:
+    \begin{enumerate}
+        \item \underline{$V_N$ o símbolos no terminales}:\\
+        Aquellos símbolos auxiliares que podemos usar para operar con la gramática.
+
+        \item \underline{$V_T$ o símbolos terminales}:\\
+        Aquellos símbolos que podemos usar al programar.
+
+        \item \underline{$P$ o reglas de producción}:\\
+        Combinaciones válidas de los símbolos.
+
+        \item \underline{$S$ o axioma}:\\
+        Uno de los símbolos no terminales que se usa como símbolo inicial.
+    \end{enumerate}
+\end{definicion}
+
+\begin{ejemplo}
+    Sea $G=\left(\{0,1\},\{S\}, S, P \right)$, con $P$:
+    \begin{equation*}
+        P=\{S::=\footnote{Aquí se ha empleado la notación de Backus.} \;0 | 1 | 0S1\}
+    \end{equation*}
+    Por tanto, tengo tres reglas de producción.
+
+    \begin{itemize}
+        \item $S\longrightarrow 0$: Sí es válido, usando la primera regla.
+        \item $S\longrightarrow 1$: Sí es válido, usando la segunda regla.
+        \item $S\longrightarrow 101$: No es válido, ya que no es posible que empiece con el 1.
+    \end{itemize}
+\end{ejemplo}
+
+\begin{ejercicio}
+La gramática definida por $G=(\{0,1,2,3,4,5,6,7,8,9\},\{N,C\}, N, P)$, con:
+    \begin{equation*}
+        P = \{N::=NC | C,
+        \quad C::=[0-9]\}
+    \end{equation*}
+
+Esta gramática puede generar los naturales, pero también admite los 0 no significativos. Modificar para que no admita los 0 no significativos.\\
+
+Las reglas de producción serían:
+\begin{equation*}
+        P = \{N::=D | ND | N0,
+        \quad D::=[1-9]\}
+    \end{equation*}
+\end{ejercicio}
+
+\begin{definicion}[Gramática Ambigua] Una gramática es ambigua cuando admite más de un árbol sintáctico para una misma secuencia de símbolos de entrada.
+
+Ejemplo de esto es la precedencia de los operadores en un lenguaje de programación, ya que se usan los paréntesis para evitar la ambigüedad.
+\end{definicion}
+
+\begin{definicion}[Gramática libre de contexto]
+    Se dice que una gramática es libre de contexto cuando en el lado izquierdo de cada regla de producción solo puede haber un símbolo no terminar. Formalmente, cada producción es de la forma:
+    \begin{equation*}
+        A\longrightarrow \alpha \qquad A\in V_N \qquad \alpha \in (V_N\cup V_T)^\ast
+    \end{equation*}
+    donde $(V_N\cup V_T)^\ast$ representa todas las combinaciones posibles de dichos conjuntos.
+
+    Se dice que es libre de contexto porque $A$ se puede sustituir por $\alpha$ independientemente del contexto en el que aparezca.
+\end{definicion}
+
+
+
+
+
+\section{Traducción}
+\begin{definicion}[Traductor]
+    Un traductor es un programa que recibe como entrada un texto en un lenguaje de programación concreto y produce, como salida, un texto en lenguaje máquina equivalente.
+\end{definicion}
+
+Existen dos tipos de traductores, los compiladores y los intérpretes.
+\subsection{Compilador}
+\begin{definicion}[Compilador]
+    Un compilador traduce la especificación de entrada (archivos fuente) a lenguaje máquina incompleto (archivos objeto) y con instrucciones máquina incompletas. Por tanto, se necesita un complemento llamado enlazador.
+\end{definicion}
+\begin{definicion}[Enlazador/Linker]
+    El linker completa los programas ligando las instrucciones máquina necesarias y genera un programa ejecutable para la máquina real.
+\end{definicion}
+
+\subsection{Intérprete}
+\begin{definicion}[Intérprete]
+    Un intérprete hace que un programa fuente escrito en un lenguaje vaya, sentencia a sentencia, traduciéndose y ejecutándose directamente por el computador. Cabe destacar que no se genera ningún archivo objeto ni equivalente al descrito en el compilador.
+\end{definicion}
+
+Algunas ventajas del intérprete son:
+\begin{itemize}
+    \item Es más fácil detectar errores, ya que suele ser posible detenerlo para conocer los valores de las variables. Esto solo sería posible en otro caso con un \textit{debugger}.
+
+    \item Es más pedagógico.
+\end{itemize}
+
+No obstante, los inconvenientes son:
+\begin{itemize}
+    \item Cada vez que se ejecute, se ha de interpretar de nuevo, ya que no se genera archivo objeto. Con un compilador, aunque la traducción sea más lenta, solo ha de realizarse una vez.
+    \item Una instrucción que se encuentre en un bucle se ha de interpretar tantas veces como se ejecute el bucle.
+    \item La optimización solo se puede realizar línea a línea, no se puede realizar a nivel del programa completo.
+\end{itemize}
+
+
+Un ejemplo de intérprete es Bash.
+
+
+\subsection{Fases en el proceso de la traducción}
+En primer lugar, ocurre la fase de análisis del código. Este se realiza en tres pasos: léxico, sintáctico y semántico. Posteriormente, en la fase de síntesis, se optimiza y se genera el código objeto.
+\begin{enumerate}
+    \item \textbf{Fase de Análisis.}
+    \renewcommand{\theenumii}{\theenumi.\arabic{enumii}}
+    \begin{enumerate}
+        \item \underline{Análisis Léxico}
+
+        Para entender esta etapa, son necesarios los siguientes conceptos:
+        
+        \begin{definicion}[Lexema/Palabra] Es un conjunto de caracteres del alfabeto que tienen significado propio. 
+        \end{definicion}
+
+        \begin{definicion}[Token] Es el concepto asociado a un conjunto de lexemas o palabras que, según la gramática del lenguaje fuente, tienen la misma misión sintáctica.
+
+        En el caso del lenguaje español, un token podría ser los determinantes artículos, ya que tienen la misma función sintáctica independientemente de la oración.
+
+        En el caso de un lenguaje de programación, un token podría ser ``identificador'' asociado a los nombres de las variables o funciones u ``operador aritmético'' asociado a estos operadores.
+
+        Los tokens asociados a más de una palabra (la mayoría) deben ir acompañados del lexema reconocido anteriormente. Este es el denominado \underline{atributo}, y es necesario para las fases posteriores de la traducción. Por ejemplo, el token que recoja los operadores es necesario que tenga el atributo del operador en sí, ya que a la hora de la traducción será necesario saber si se trata de una multiplicación o una división, por ejemplo.
+        \end{definicion}
+
+        \begin{definicion}[Patrón]
+            Es una descripción de la forma que pueden tomar los lexemas de un token. Se suelen emplear expresiones regulares.
+            
+            En el caso de una palabra clave como token, el patrón es sólo la secuencia de caracteres que forman dicha palabra clave. Para los identificadores y algunos otros tokens, el patrón es una estructura más compleja (normalmente dada con una expresión regular).
+        \end{definicion}
+        
+
+        \vspace{1cm}
+        Por tanto, la \textbf{función} del analizador léxico es leer el texto de origen, identificar lexemas, asociarles el token al que pertenecen pero, además, debe eliminar los comentarios y caracteres superfluos existentes en el texto de entrada (espacios en blanco, tabuladores y retornos de carro). La equivalencia entre cada lexema con su token se guardan en la \textbf{tabla de símbolos}, que es donde su guarda la información.
+
+        \begin{ejemplo} Ejemplos de tokens son:
+        \begin{itemize}
+            \item \textbf{IF}: lexema asociado \textit{if}.
+            \item \textbf{ELSE}: lexema asociado \textit{else}.
+            \item \textbf{IDENT}: lexemas asociados \textit{pi}, \textit{dato3} o \textit{i}, por ejemplo.
+        \end{itemize}
+
+        Se producirá un \textbf{error léxico} cuando el carácter de la entrada no tenga asociado a ninguno de los patrones disponibles en nuestra lista de tokens. Por ejemplo, un carácter extraño en la formación de una palabra reservada, como \textit{wh\textbf{ñ}le}.
+            
+        \end{ejemplo}
+
+
+
+        \item \underline{Análisis Sintáctico}
+
+        Tiene como objetivo analizar las secuencias de tokens y comprobar que son correctas sintácticamente.
+        
+        A partir de una secuencia de tokens el analizador sintáctico nos devuelve el orden en el que hay que aplicar las producciones de la gramática para obtener la secuencia de entrada; es decir, el árbol sintáctico abstracto en el que aparece el token con el atributo. Este se guarda también en la tabla de símbolos.
+
+        Se produce un \textbf{error sintáctico} cuando no se puede llegar desde el axioma hasta la palabra buscada; es decir, no se puede construir el árbol sintáctico. Ejemplo de esto podría ser, por ejemplo, paréntesis mal balanceados.
+
+
+
+
+        \item \underline{Análisis Semántico}
+
+        La semántica de un lenguaje de programación es el significado dado a las distintas construcciones sintácticas. En los lenguajes de programación, el significado está ligado a la estructura sintáctica de las sentencias.
+
+        En el caso de que no se produzcan errores, actualiza en la tabla de símbolos el árbol semántico abstracto resuelto; es decir, el árbol semántico con los lexemas y su significado.
+
+        Se producen \textbf{errores semánticos} cuando se detectan construcciones sin un significado correcto (p.e. variable no declarada, tipos incompatibles en una asignación, llamada a un procedimiento con número de argumentos incorrectos, \dots).
+    \end{enumerate}
+    \item \textbf{Fase de Síntesis}
+    \begin{enumerate}
+        \item \underline{Generación de código}
+        En esta fase se genera un archivo con un código en lenguaje objeto (generalmente lenguaje máquina) con el mismo significado que el texto fuente.
+
+        Es posible la generación de código intermedio para facilitar el proceso.
+
+        \item \underline{Optimización de código}
+
+        Esta fase existe para mejorar el código mediante comprobaciones locales a un grupo de instrucciones (bloque básico) o a nivel global. Se suele realizar en el código intermedio.
+
+        Ejemplo de esto es una asignación del tipo $b=7.3$ dentro de un bucle $for$. En esta fase se sacará dicha instrucción del bucle.
+    \end{enumerate}
+\end{enumerate}
+
+
+\section{Modelos de Memoria de un Proceso}
+\subsection{Tipos de Datos (desde el punto de vista de su implementación en memoria)}
+
+\begin{itemize}
+    \item Datos estáticos - existen a lo largo de toda la vida del programa.
+    \begin{itemize}
+        \item \underline{Según el ámbito de visibilidad}.
+
+        Las globales a todo el programa se encuentran fuera del main y no dependen de ningún archivo.
+        
+        Las de módulo se especifican con \verb|static| (del módulo en cuestión) o \verb|extern| de otro módulo, siendo un módulo cada uno de los archivos.
+        
+        Las de bloque pertenecen a una parte del programa delimitada por las llaves.
+
+        Los datos estáticos de clase o función pertenecen a cada clase o función en concreto.
+
+        \item \underline{Constantes o variables}.
+
+        Según si se pueden modificar o no. Las constantes se almacenan en un espacio de la memoria de solo lectura, mientras que las variables han de poder modificarse también.
+
+        \item \underline{Con o sin valor inicial}.
+    \end{itemize}
+
+    \item Datos dinámicos asociados a la ejecución de una función:
+
+    Se almacenan en la pila \textit{(stack)} y se crean al ser llamada la función y se destruyen cuando esta termina.
+
+    Corresponde a los datos locales y a los parámetros de una función.
+
+
+    \item Datos dinámicos controlados por el programa.
+
+    Se almacenan en el \textit{heap} (zona de memoria usada tiempo de ejecución para albergar los datos no conocidos en tiempo de compilación). En C++, se controlan mediante los operadores \verb|new| y \verb|delete|. Generalmente se gestionan mediante punteros.
+
+    Su tiempo de vida no esta vinculado a la activación de una función sino bajo el control directo del programa que los crea cuando los necesita.
+\end{itemize}
+
+\begin{definicion}[Código Independiente de la Posición \textit{(PIC, Position Independent Code)}]
+
+Un fragmento de código cumple esta propiedad si puede ejecutarse en cualquier parte de la memoria.
+
+Es necesario que todas sus referencias a instrucciones o datos no sean absolutas sino relativas en función del valor de un registro.
+
+Por ejemplo, una instrucción puede ser \verb|MOV R4, 32+PC|. Dependiendo del valor del \verb|PC|, se almacenará el valor de $R4$ en posiciones distintas.
+\end{definicion}
+
+
+
+\section{Ciclo de Vida de un Programa}
+
+Una vez que el programador ha finalizado la escritura del programa, éste debe pasar por varias fases antes de que pueda ejecutarse. Estas son:
+\begin{enumerate}
+    \item Preprocesado (archivos \verb|.i| en C).
+
+    Se procesan los includes, las directivas de preprocesador, etc.
+
+    \item Compilación (archivos \verb|.s| en C).
+
+    Se genera el código en lenguaje ensamblador.
+
+    \item Ensamblado (archivos \verb|.o| en C).
+
+    El código ensamblador se traduce por el \textit{assembler} a código máquina. Las referencias a símbolos que no están definidos en el módulo quedan pendientes de resolver.
+
+    \item Enlazado (archivos .exe y a.out).
+
+    El enlazador/\textit{linker} se encarga de, a partir de los archivos objeto y las bibliotecas, resolver las referencias pendientes y generar el archivo ejecutable.
+
+    Como diferencia entre los archivos ejecutables y los archivos objeto, tenemos principalmente que el ejecutable contiene una cabecera en la que se indica el punto de inicio del mismo, es decir, la primera dirección que se cargará en el PC.
+
+    \item Carga y ejecución.
+
+    Por tanto el cargador/\textit{loader} es el que ayuda a la asignación y carga del programa como un proceso en MP en estado nuevo.
+\end{enumerate}
+
+\subsection{Compilación}
+En esta fase, el compilador procesa cada uno de los archivos de código fuente para generar el correspondiente archivo objeto. Se realizan las siguientes acciones:
+\begin{enumerate}
+    \item Genera el código objeto y determina cuanto espacio ocupan los diferentes tipos de datos.
+
+    \item Asigna direcciones a los \underline{símbolos estáticos definidos en el módulo}.
+    
+    Estas son consecutivas: en primer lugar van las constantes, luego las variables con valor inicial, y por último las que no tiene valor inicial.
+
+    Como son estáticas y permanecen durante todo el programa, se puede asignar la dirección directamente.
+
+    \item Resuelve las referencias a los \underline{símbolos estáticos externos definidos en el módulo}.
+
+    Al ser estáticos, en el proceso de compilación ya tienen una dirección asignada. Al ser del mismo módulo, no se requiere aún del enlazador.
+
+    Las referencias pueden resolverse mediante un direccionamiento absoluto (será necesario reubicación) o relativo al $PC$ (estaremos ante un PIC).
+
+    \item Las referencias a los símbolos estáticos externos definidos fuera del módulo se resolverán en el enlazado.
+
+    \item Resuelve las referencias a los \underline{símbolos dinámicos almacenados en la pila}.
+
+    Se resuelven mediante direccionamiento relativo a pila. Al no aparecer en el fichero objeto (se generan en tiempo de ejecución), no requieren reubicación.
+
+    \item Resuelve las referencias a los \underline{símbolos dinámicos almacenados en el \textit{heap}}.
+
+    Se resuelven mediante direccionamiento indirecto mediante punteros. Al no aparecer en el fichero objeto (se generan en tiempo de ejecución), no requieren reubicación.
+
+    \item Genera la Tabla de símbolos e información de depuración.
+\end{enumerate}
+
+
+\subsection{Enlazado}
+El enlazador \textit{(linker)} debe agrupar los archivos objetos de la aplicación y las bibliotecas, y resolver las referencias entre ellos. Concretamente, se llevan a cabo las siguientes tareas:
+\begin{enumerate}
+    \item Se completa la etapa de resolución de símbolos.
+
+    \item Se agrupan en regiones las zonas de las mismas características de los módulos .
+
+    Es decir, todas la parte de código de todos los módulos se agrupa en una región; y lo mismo ocurre con datos inicializados y los no inicializados.
+
+    Esto reduce el número de regiones que ha de gestionar el Sistema Operativo.
+
+    \item Se realiza la reubicación de módulos formando regiones, ya que hay que transformar las referencias dentro de un módulo a referencias dentro de las regiones.
+\end{enumerate}
+
+Hay distintos tipos de enlazado, que determinan el ámbito de cada dato.
+\begin{itemize}
+    \item \underline{Enlazado externo.}
+    
+    Cada vez que aparece un identificador con enlazado externo representa el mismo objeto o función a través del total de ficheros y librerías que componen el programa. Por tanto, esto equivale a tener visibilidad global.
+
+    \item \underline{Enlazado interno.}
+    
+    Cada vez que aparece un identificador con enlazado interno representa el mismo objeto o función solo dentro del mismo fichero. Los objetos con el mismo nombre en otros ficheros son objetos distintos. Por tanto, esto equivale a tener visibilidad de fichero.
+
+    \item \underline{Sin enlazado.}
+    
+    Cada identificador sin enlazar representa unidades únicas. Los objetos con el mismo nombre en otros bloques son objetos distintos. Por tanto, esto equivale a tener visibilidad de bloque. Identificadores sin enlazado son:
+    \begin{itemize}
+        \item Cualquier identificador distinto a un objeto o función.
+        \item Parámetros de funciones.
+        \item Objetos de ámbito de bloque (entre llaves) sin el especificador \verb|extern|. 
+    \end{itemize}
+\end{itemize}
+
+
+\section{Bibliotecas}
+\begin{definicion}[Biblioteca] Colección de objetos, normalmente relacionados entre sí. Favorecen modularidad y reusabilidad de código.
+\end{definicion}
+
+Las bibliotecas se pueden clasificar según la forma en la que se enlazan:
+\begin{enumerate}
+    \item \underline{Bibliotecas Estáticas}
+
+    Tienen extensión \verb|.a|, y que se ligan con el programa en el proceso de enlazado. El archivo ejecutable las contiene.
+
+    Algunos inconvenientes que tiene son:
+    \begin{itemize}
+        \item El código de la biblioteca está en todos los ejecutables que la usan, lo que desperdicia disco y memoria principal.
+
+        \item Si actualizamos una biblioteca estática, debemos recompilar los programas que la usan para que se puedan beneficiar de la nueva versión.
+
+        \item Producen ejecutables grandes.
+    \end{itemize}
+
+    \item \underline{Bibliotecas Dinámicas}
+
+    Por norma general, tienen extensión \verb|.so| y se integran con los procesos en tiempo de ejecución. En el proceso de montaje, se incluye un módulo de montaje dinámico (\textit{enlazador dinámico}) que se encarga de cargar y montar las bibliotecas dinámicas usadas por el programa durante su ejecución.
+
+    El archivo correspondiente a una biblioteca dinámica se diferencia de un archivo ejecutable en los siguientes aspectos:
+    \begin{enumerate}
+        \item Contiene información de reubicación.
+        \item Contiene una tabla de símbolos propios de la biblioteca.
+        \item En la cabecera no se almacena información de punto de entrada.
+    \end{enumerate}
+\end{enumerate}

@@ -1,0 +1,167 @@
+\chapter{Introducción a las bases de datos.}
+
+\begin{definicion}[Directorio]
+Archivo especial que permite agrupar archivos según las necesidades de los usuarios.
+\end{definicion}
+
+\begin{definicion}[Archivo] Un archivo es un conjunto de información respecto de un mismo tema. Está compuesto de registros homogéneos que contienen información sobre el tema.
+\end{definicion}
+
+\begin{definicion}[Registro] Estructura dentro del archivo que contiene la información correspondiente a un elemento individual. Se divide en campos.
+\end{definicion}
+
+\begin{definicion}[Campo] Dato que representa una información unitaria o independiente.
+\end{definicion}
+
+\subsection*{Clasificación de archivos según el tipo de registros}
+\begin{enumerate}
+    \item \underline{Longitud fija.}
+    \item \underline{Longitud variable.}
+    \begin{itemize}
+        \item Con delimitador. Estos suelen ser caracteres especiales como el salto de línea.
+        \item Con cabecera: cada registro contiene un campo inicial que almacena el número de bytes del registro.
+    \end{itemize}
+    \item \underline{Longitud indefinida.}
+    
+    El sistema operativo no realiza ninguna gestión sobre la longitud de los registros ya que el archivo no tiene realmente ninguna estructura interna.
+
+    En cada operación de lectura/escritura se transfiere una determinada subcadena del archivo y será el programa de usuario quien indique al SO el principio y final de ese registro.
+\end{enumerate}
+
+\section{Organización de Archivos}
+
+Existen diversas formas de organizar los archivos:
+\subsection{Organización secuencial}
+Los registros están almacenados físicamente de forma contigua.
+
+Tiene como ventajas que es sencilla de usar y usa el espacio de una forma óptima. Además, permite leer los registros de forma secuencial de forma óptima.
+\begin{itemize}
+    \item \underline{Añadir registros}: Solo se puede añadir al final.
+    \item \underline{Consultar registros}: Para consultar el registro $n$, es necesario leer los $n-1$ anteriores.
+    \item \underline{Modificación de registros}: Solo es posible si no se aumenta su longitud
+    \item \underline{Eliminación de registros}: No es posible eliminar un registro del archivo, pero se puede realizar un borrado lógico; es decir, marcarlo de tal forma que al leer se identifique como no válido.
+\end{itemize}
+
+\subsection{Organización secuencial encadenada}
+
+También llamado ``celdas enlazadas''. Junto a cada registro se almacena un puntero con la dirección física del registro siguiente, dando lugar a una cadena de registros.
+
+El último registro de la cadena contiene una marca especial en el lugar del puntero indicando que ya no hay más registros en el archivo.
+
+Permite insertar y borrar registros con facilidad, pero las consultas solo pueden realizarse de forma secuencial.
+\begin{itemize}
+    \item \underline{Añadir registros}: Tras localizar la posición en la que se desea intertar, se siguien los siguientes pasos:
+    \begin{enumerate}
+        \item Escribir el registro en una zona libre de memoria.
+        \item Modificar la dirección a la que apunta el registro anterior al creado.
+        \item Modificar la dirección a la que apunta el creado al siguiente.
+    \end{enumerate}
+    
+    \item \underline{Consultar registros}: Es secuencial. Al leer cada registro se lee la posición del siguiente.
+    
+    \item \underline{Modificación de registros}: Si el cambio no implica un aumento de longitud del registro, éste puede reescribirse en el mismo espacio.
+    
+    En caso contrario, se debe insertar el registro y luego borrar la versión anterior al cambio.
+    
+    \item \underline{Eliminación de registros}: Se asigna al puntero del registro anterior la dirección del registro siguiente.
+\end{itemize}
+
+
+\subsection{Organización secuencial indexada}
+
+Está formado por dos estructuras: zona de registros y zona de índices.
+\begin{itemize}
+    \item \underline{Zona de registros}:
+
+    Zona donde se encuentras los registros del archivo de forma secuencial. Está dividida en tramos, y es necesario que los registros estén ordenados según el valor de una llave.
+
+    \item \underline{Zona de índices}: Zona en la que por cada tramo de la zona de registros hay un registro que contiene:
+    \begin{itemize}
+        \item La dirección del primer registro del tramo.
+        \item La llave del último registro del tramo. Al estar los registros ordenados, esta es la mayor llave del tramo.
+    \end{itemize}
+\end{itemize}
+La gestión de la estructura la realiza el sistema operativo o un software especial, por lo que el usuario de esta estructura no necesita conocer la existencia de ambas zonas, pudiendo contemplar ambas como un todo.
+
+Las operaciones sobre archivos se describen a continuación:
+\begin{itemize}
+    \item \underline{Consulta de registros}: Usando la zona de índices se localiza el tramo, y posteriormente se realiza la búsqueda secuencial en dicho tramo.
+    \item \underline{Inserción, borrado y modificación}: no son posibles.
+\end{itemize}
+
+
+\subsection{Organización directa o aleatoria}
+Es un archivo para el cual existe una función de transformación que genera la dirección de cada registro a partir de un campo que se usa como llave. El nombre de ``aleatorio'' se debe a que normalmente no existe ninguna vinculación aparente entre el orden lógico de los registros y su orden físico. Este tipo de organización es útil para archivos donde los accesos deben realizarse por llave.
+
+Las distintas \underline{funciones de transformación} o \underline{métodos de direccionamiento} son:
+\begin{enumerate}
+    \item \underline{Direccionamiento directo} Solo es factible cuando la llave es numérica y su rango de valores no es mayor que el rango de direcciones en el archivo.
+
+    La dirección es la propia llave.
+
+    Como inconveniente, se puede dar el caso de direcciones sin usar.
+
+    \item \underline{Direccionamiento asociado} Debe construirse una tabla en la que se almacena para cada llave la dirección donde se encuentra el registro correspondiente. Dicha tabla se debe guardar mientras exista el archivo.
+
+    \item \underline{Direccionamiento calculado o \textit{``hashing''}}:
+    La dirección de cada registro se obtiene realizando una transformación sobre la llave. Se usa cuando:
+    \begin{itemize}
+        \item La llave no es numérica. En ese caso, se necesita una conversión previa para obtener un número a partir de ella. Por ejemplo se usa el equivalente decimal al código ASCII del carácter, y ya con dicho código se opera.
+
+        \item La llave es numérica pero toma valores en un rango inadecuado para usarse directamente como dirección.
+    \end{itemize}
+\end{enumerate}
+
+
+Es fundamental elegir adecuadamente la {función de transformación} o {método de} {direccionamiento}, ya que se pueden dar los siguientes casos:
+\begin{enumerate}
+    \item Que haya direcciones que no se corresponden con ninguna llave y, por tanto, habrá zonas de disco sin utilizar.
+
+    \item Que haya direcciones que se correspondan con más de una llave. En este caso se dice que las llaves son \textbf{sinónimas} para esa transformación o que se produce una \textbf{colisión}.
+\end{enumerate}
+
+El problema de los sinónimos se resuelve de la siguiente forma:
+\begin{enumerate}
+    \item Se reserva una zona de desbordamiento gestionada de otra forma (secuencial) donde se guardan los registros cuya dirección ya está ocupada por una clave sinónima.
+
+    \item Los registros cuya dirección ya está ocupada por una clave sinónima se guardan en la próxima dirección de memoria libre.
+\end{enumerate}
+
+Las operaciones sobre archivos se describen a continuación:
+\begin{itemize}
+    \item \underline{Consulta de registros}: Por llave, aplicándole la transformación correspondiente. En el caso de que no se encuentre en su dirección, se procede según se haya resuelto el problema de sinónimos.
+    
+    \item \underline{Borrado}: Ha de ser lógico.
+    
+    \item \underline{Inserción y modificación}: Es posible, realizando la transformación de la llave correspondiente.
+\end{itemize}
+
+
+
+\section{Bases de datos}
+
+Los problemas asociados a las gestiones de archivos mencionadas son:
+\begin{enumerate}
+    \item \underline{Dificultad de mantenimiento.} Si hay dos archivos con información duplicada, si se modifica uno ha de moficarse el otro. En caso contrario, habría información incoherente.
+    \item \underline{Redundancia}. Hay redundancia si un dato se puede deducir a partir de otros datos, y estaríamos en el caso anterior.
+    \item \underline{Rigidez de búsqueda}. La búsqueda ha de realizarse de una forma concreta, sin poder combinarse directa y secuencial.
+    \item \underline{Dependencia con los programas} Si un programa lee dichos archivos y se modifican los archivos, ha de modificarse también el programa.
+    \item \underline{Seguridad}.
+\end{enumerate}
+
+Para resolver dichos problemas, surgen las bases de datos.
+\begin{definicion}[Base de Datos]
+    Sistema formado por un conjunto de datos y un paquete software para gestión de dicho conjunto de datos de tal modo que:
+    \begin{enumerate}
+        \item Se controla el almacenamiento de datos redundantes.
+        \item Los datos resultan independientes de los programas que los usan.
+        \item Las relaciones entre los datos se almacenan junto a ellos.
+        \item Se puede acceder a los datos de diversas formas.
+    \end{enumerate}
+
+    En una base de datos se almacenan además de las entidades, las relaciones existentes entre ellas.
+\end{definicion}
+
+\begin{definicion}[Clave primaria]
+    Se dice que uno o más atributos de una entidad es un identificador o clave primaria si el valor de dichos atributos determina de forma unívoca cada uno de los elementos de dicha entidad, y no existe ningún subconjunto de él que permita identificar a la entidad de manera única.
+\end{definicion}
