@@ -46,7 +46,7 @@
 
 		.int -3000000000, -3000000000, -3000000000, -3000000000
 #else
-	.error 	"Definir TEST entre 1..8"
+	.error 	"Definir TEST entre 1..19"
 #endif
 	
 	.endm
@@ -78,27 +78,30 @@ trabajar:
 	mov     $lista, %rbx
 	mov  longlista, %ecx
 	call suma		# == suma(&lista, longlista);
-	mov  %eax, resultado
-	mov  %esi, (resultado+4)
+	mov  %r8d, resultado
+	mov  %r9d, (resultado+4)
 	ret
 
 suma:
-	mov  $0, %esi # acarreo
-	mov  $0, %eax # resultado
-	mov  $0, %rdx # i=0
+	mov  $0, %r9 # acarreo
+	mov  $0, %r8 # resultado
+	mov  $0, %r10 # i=0
 bucle:
-	add  (%rbx,%rdx,4), %eax # resultado += lista[rdx]
-	adc   $0, %esi
-	inc   %rdx		 # i++
-	cmp   %rdx,%rcx		 # i<longlista
+
+	mov  (%rbx,%r10,4), %eax
+	cltd 	# Extiende el signo a %edx
+	add   %eax, %r8d # resultado += lista[rdx]
+	adc   %edx, %r9d
+	inc   %r10		 # i++
+	cmp   %r10,%rcx		 # i<longlista
 	jne   bucle
 
 	ret
 
 imprim_C:			# requiere libC
 
-	mov   %rsi,%rcx			# 4º. Acarreo
-	mov   %rax,%r8			# 5º. Bits - sig de suma
+	mov   %r9d,%ecx			# 4º. Acarreo
+	# mov   %r8d,%r8d	# 5º. Bits - sig de suma
 	mov   $formato, %rdi	# 1er
 	mov   resultado,%rsi	# 2º
 	mov   resultado,%rdx	# 3º
