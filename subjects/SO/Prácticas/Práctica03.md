@@ -73,48 +73,48 @@ Responde a las siguientes cuestiones y especifica, para cada una, la opción que
 
 2. Ejecuta el guión anterior varias veces en background (segundo plano) y comprueba su prioridad inicial. Cambia la prioridad de dos de ellos, a uno se la aumentas y a otro se la disminuyes, ¿cómo se comporta el sistema para estos procesos?
 
-        En primer lugar lo lanzamos en segundo plano varias veces:
-        ```console
-        # ./prueba_procesos 1000000 &
-        [1] 1305
-        [root@localhost ~]# ./prueba_procesos 1000000 &
-        [2] 1306
-        [root@localhost ~]# ./prueba_procesos 1000000 &
-        [3] 1307
-        ```
+    En primer lugar lo lanzamos en segundo plano varias veces:
+   ```console
+    # ./prueba_procesos 1000000 &
+    [1] 1305
+    [root@localhost ~]# ./prueba_procesos 1000000 &
+    [2] 1306
+    [root@localhost ~]# ./prueba_procesos 1000000 &
+    [3] 1307
+    ```
+    
+    Consolutamos ahora su prioridad inicial:
+    ```console
+    # top 
+    ...
+    PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND                       
+    1305 root      20   0  3120 1088  964 R 34.4  0.1   0:15.93 prueba_procesos               
+    1306 root      20   0  3120 1096  964 R 33.4  0.1   0:16.76 prueba_procesos               
+    1307 root      20   0  3120 1092  964 R 32.1  0.1   0:15.59 prueba_procesos  
+    ...
+    ```
+    
+    Como podemos ver, su prioridad inicial es 20, y no se ha modificado ya que `NI=0`. Modificamos ahora las prioridades:
+    ```console
+    # renice 10 1306
+    1306: old priority 0, new priority 10
+    # renice -10 1307
+    1307: old priority 0, new priority -10
+    ```
+    
+    Vemos ahora la consecuencia que tiene:
+    ```console
+    # top 
+    ...
+    PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND                       
+    1307 root      10 -10  3120 1096  964 R 89.7  0.1   0:56.56 prueba_procesos               
+    1305 root      20   0  3120 1088  964 R  8.9  0.1   0:29.01 prueba_procesos               
+    1306 root      30  10  3120 1088  964 R  1.6  0.1   0:18.24 prueba_procesos
+    ...
+    ```
+    Como podemos ver, se modifica la prioridad. Los que tienen prioridad más baja vemos que usan más procentaje de la CPU y más tiempo de computación también.
 
-        Consolutamos ahora su prioridad inicial:
-        ```console
-        # top 
-        ...
-        PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND                       
-        1305 root      20   0  3120 1088  964 R 34.4  0.1   0:15.93 prueba_procesos               
-        1306 root      20   0  3120 1096  964 R 33.4  0.1   0:16.76 prueba_procesos               
-        1307 root      20   0  3120 1092  964 R 32.1  0.1   0:15.59 prueba_procesos  
-        ...
-        ```
-
-        Como podemos ver, su prioridad inicial es 20, y no se ha modificado ya que `NI=0`. Modificamos ahora las prioridades:
-        ```console
-        # renice 10 1306
-        1306: old priority 0, new priority 10
-        # renice -10 1307
-        1307: old priority 0, new priority -10
-        ```
-
-        Vemos ahora la consecuencia que tiene:
-        ```console
-        # top 
-        ...
-        PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND                       
-        1307 root      10 -10  3120 1096  964 R 89.7  0.1   0:56.56 prueba_procesos               
-        1305 root      20   0  3120 1088  964 R  8.9  0.1   0:29.01 prueba_procesos               
-        1306 root      30  10  3120 1088  964 R  1.6  0.1   0:18.24 prueba_procesos
-        ...
-        ```
-        Como podemos ver, se modifica la prioridad. Los que tienen prioridad más baja vemos que usan más procentaje de la CPU y más tiempo de computación también.
-
-3. Obtén los tiempos de finalización de cada uno de los guiones del apartado anterior.
+5. Obtén los tiempos de finalización de cada uno de los guiones del apartado anterior.
 
         Una vez terminen, se imprime el tiempo de finalización de cada uno en la columna `TIME` de `ps`. No obstante, esto no funciona en el *UML*.
 
