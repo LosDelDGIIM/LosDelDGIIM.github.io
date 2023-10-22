@@ -52,22 +52,71 @@ Responde a las siguientes cuestiones y especifica, para cada una, la opción que
         x=$(( x + 1 ))
     done
 
-    printf "El valor de la variable es %d.\n" $x
+    printf "El valor de la variable es %d.\n\n" $x
+
+    printf "Mi PID es $$.\n\n"
+    ps -ef | grep $$
     ```
+    donde el comando `ps` se ha añadido para resolver el tercer apartado. 
 
     La ejecución es:
     ```console
     $ ./prueba_procesos 1000  
     El valor de la variable es 1000.
+
+    Mi PID es 1321.
+
+    root      1321  1210  0 05:51 tty0     00:00:00 /bin/bash ./prueba_procesos 1000
+    root      1322  1321  0 05:51 tty0     00:00:00 ps -ef
+    root      1323  1321  0 05:51 tty0     00:00:00 grep 1321
     ```
 
 2. Ejecuta el guión anterior varias veces en background (segundo plano) y comprueba su prioridad inicial. Cambia la prioridad de dos de ellos, a uno se la aumentas y a otro se la disminuyes, ¿cómo se comporta el sistema para estos procesos?
 
+        En primer lugar lo lanzamos en segundo plano varias veces:
+        ```console
+        # ./prueba_procesos 1000000 &
+        [1] 1305
+        [root@localhost ~]# ./prueba_procesos 1000000 &
+        [2] 1306
+        [root@localhost ~]# ./prueba_procesos 1000000 &
+        [3] 1307
+        ```
+
+        Consolutamos ahora su prioridad inicial:
+        ```console
+        # top 
+        ...
+        PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND                       
+        1305 root      20   0  3120 1088  964 R 34.4  0.1   0:15.93 prueba_procesos               
+        1306 root      20   0  3120 1096  964 R 33.4  0.1   0:16.76 prueba_procesos               
+        1307 root      20   0  3120 1092  964 R 32.1  0.1   0:15.59 prueba_procesos  
+        ...
+        ```
+
+        Como podemos ver, su prioridad inicial es 20, y no se ha modificado ya que `NI=0`. Modificamos ahora las prioridades:
+        ```console
+        # renice 10 1306
+        1306: old priority 0, new priority 10
+        # renice -10 1307
+        1307: old priority 0, new priority -10
+        ```
+
+        Vemos ahora la consecuencia que tiene:
+        ```console
+        # top 
+        ...
+        PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND                       
+        1307 root      10 -10  3120 1096  964 R 89.7  0.1   0:56.56 prueba_procesos               
+        1305 root      20   0  3120 1088  964 R  8.9  0.1   0:29.01 prueba_procesos               
+        1306 root      30  10  3120 1088  964 R  1.6  0.1   0:18.24 prueba_procesos
+        ...
+        ```
+        Como podemos ver, se modifica la prioridad. Los que tienen prioridad más baja vemos que usan más procentaje de la CPU y más tiempo de computación también.
 
 3. Obtén los tiempos de finalización de cada uno de los guiones del apartado anterior.
 
-DUDA: Cómo hacer
-
+        Una vez terminen, se imprime el tiempo de finalización de cada uno en la columna `TIME` de `ps`. No obstante, esto no funciona en el *UML*.
 
 
 ## Actividad 3.3. Jerarquía e información de procesos
@@ -256,12 +305,8 @@ Esto se debe a que `watch` ejecuta el comando que se le pasa como opción de for
 
 
 ## Actividad 3.6. Utilización de `vmstat`
-Intente reproducir el escenario justo descrito anteriormente supervisando la actividad del sistema mediante la ejecución periódica de vmstat tal cual se ha descrito, y proporcione como muestra la salida almacenada en un archivo de texto.
+Intente reproducir el escenario justo descrito anteriormente supervisando la actividad del sistema mediante la ejecución periódica de `vmstat` tal cual se ha descrito, y proporcione como muestra la salida almacenada en un archivo de texto.
 
-
-
-
-DUDA: ¿Quée?
 
 ## Actividad 3.7. Consulta de metadatos de archivo
 
@@ -422,8 +467,6 @@ Resuelve las siguientes cuestiones relacionadas con la consulta de metadatos del
     Como podemos ver, se están usando 14771 inodos en la partición raíz.
     
     Además, quedan 50765 inodos libres. Por tanto, se podrían crear 50765 archivos nuevos *con metadatos distintos*. Añado este último matiz ya cabe la posibilidad de que haya varias entradas de directorio que hagan referencia a los mismos metadatos y, por tanto, al mismo inodo. Estos son los enlaces duros.
-
-    DUDA: ESTO ES CORRECTO?? Puedo tener entonces infinitos enlaces duros??
    
 3. ¿Cuál es el tamaño del directorio `/etc`? ¿Y el del directorio `/var`? Compara estos tamaños con los de los directorios `/bin`, `/usr` y `/lib`. Anota brevemente tus conclusiones.
 
@@ -451,10 +494,7 @@ Resuelve las siguientes cuestiones relacionadas con la consulta de metadatos del
     ```
     Por tanto, tenemos que hay 5271 bloques de `4 KB` en el subárbol con raíz `/etc`. 
 
-    Para ver el tamaño de bloque, por omisión, del SA, recurrimos a la instrucción `tune2fs -l`. Para ello, necesitamos saber nuestro dispositivo.
-
-
-    DUDA: CÓMO TERMINAR
+    Para ver el tamaño de bloque, por omisión, del SA, recurrimos a la instrucción `tune2fs -l`. Para ello, necesitamos saber nuestro dispositivo, pero en el *UML* no podemos, ya que al hacer `cat /etc/fstab` no nos dice el nombre del dispositivo que está montado en `/`. 
 
 
 ## Actividad 3.10. Creación de enlaces con la orden `ln`
