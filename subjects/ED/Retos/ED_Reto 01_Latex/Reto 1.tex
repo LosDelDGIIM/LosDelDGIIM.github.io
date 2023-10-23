@@ -1,0 +1,330 @@
+\begin{ejercicio}
+    Usando la notación $O$, determinar la eficiencia de las siguientes funciones:
+    \begin{enumerate}[label=\alph*)]
+        \item \
+        \begin{listing}[H]
+            \begin{cppcode}
+void eficiencia1(int n){
+    int x=0; int i,j,k;
+    
+    for(i=1; i<=n; i+=4)
+        for(j=1; j<=n; j+=[n/4])
+            for(k=1; k<=n; k*=2)
+                x++;
+}
+        \end{cppcode}
+        \end{listing}
+
+        Si consideramos cada bucle \verb|for| como una sucesión $k_m , j_o , i_p$ con $m, o, p\in \mathbb{N}$, siendo $m, o, p$ el número de veces que se realiza cada bucle respectivamente, podemos calcular el número de veces que se repite cada uno.
+    
+        \begin{center}
+            \begin{tabular}{l l l c l l l}
+                \textbf{Sucesión}           &&&  \textbf{Condición} &&& \textbf{Veces que se repite}\\
+                $k_m = 2^{(m-1)}$            &&& $k\leq n$           &&& $\log_2(n)+1$\\
+                $j_o = 1 + \frac{n}{4}(o-1)$ &&& $j\leq n$           &&& $\frac{4(n-1)}{n} + 1$\\
+                $i_p = 1+4 (p-1)$            &&& $i\leq n$           &&& $\frac{n-1}{4} +1$\\
+            \end{tabular}
+        \end{center}
+
+        donde la tercera columna la hemos deducido de los siguientes cálculos:
+        \begin{gather*}
+            2^{(m-1)} \leq n \Leftrightarrow (m-1) \log_2(2) \leq \log_2(n) \Leftrightarrow m \leq \log_2(n) +1 \\
+            1+ \frac{n}{4}(o-1) \leq n \Leftrightarrow n(o-1)\leq 4(n-1) \Leftrightarrow o\leq \frac{4(n-1)}{n}+1\\
+            1+4(p-1) \leq n \Leftrightarrow p - 1 \leq \frac{n-1}{4} \Leftrightarrow p \leq \frac{n-1}{4} + 1
+        \end{gather*}
+
+        Veamos cada bucle de más interior a más exterior:
+        \begin{itemize}
+            \item Bucle \verb|for| interior:
+            \begin{equation*}
+                \sum_{m=1}^{\mathclap{\log_2(n)+1}}1 = \log_2(n)+1\in O(\log_2(n))
+            \end{equation*}
+
+            \item Bucle \verb|for| intermedio:
+            \begin{multline*}
+                \sum_{o=1}^{\mathclap{\frac{4(n-1)}{n} + 1}} \log_2(n) = \log_2(n) \sum_{o=1}^{\mathclap{\frac{4(n-1)}{n} + 1}} 1 = \left(\frac{4(n-1)}{n}+1\right) \log_2(n)  =\\= \left( 5 - \frac{4}{n}\right) \log_2(n) \in O(\log_2(n))
+            \end{multline*}
+
+            \item Bucle \verb|for| exterior:
+            \begin{equation*}
+                \sum_{p=1}^{\mathclap{\frac{n-1}{4} +1}} \log_2(n) = \log_2(n)  \sum_{p=1}^{\mathclap{\frac{n-1}{4} +1}} 1 = \log_2(n) \left(\frac{n-1}{4}+1\right) \in O(n \log_2(n))
+            \end{equation*}
+        \end{itemize}
+
+        Por tanto, tenemos que la eficiencia de dicha función es de orden $O(n\log_2(n))$.
+
+        \item \
+        \begin{listing}[H]
+        \begin{cppcode}
+int eficiencia2 (bool existe){
+    int sum2=0; int k,j,n;
+    
+    if (existe)
+        for(k=1; k<=n; k*=4)
+            for(j=1; j<=k; j++)
+                sum2++;
+    else
+        for(k=1; k<=n; k*=4)
+            for(j=1; j<=n; j++)
+                sum2++;
+    
+    return sum2;
+}
+        \end{cppcode}
+        \end{listing}
+
+        Veamos en este caso la eficiencia de dicha función. Vemos por un lado la eficiencia de la sentencia \verb|if| y, posteriormente, la del \verb|else|. 
+        \begin{itemize}
+            \item Empezamos en el caso de la sentencia \verb|if|. De forma análoga al apartado anterior, consideramos cada bucle \verb|for| como una sucesión $k_m , j_o$ con $m, o\in \mathbb{N}$, siendo $m, o$ el número de veces que se realiza cada bucle respectivamente. Calculamos los valores de $m,o$:
+            \begin{center}
+                \begin{tabular}{l l l c l l l}
+                    \textbf{Sucesión}    &&&  \textbf{Condición} &&& \textbf{Veces que se repite}\\
+                    $j_o = o$            &&& $j\leq k$           &&& $ k = o$\\
+                    $k_m = 4^{(m-1)}$    &&& $k\leq n$           &&& $\frac{\log_2(n)}{2} +1$\\
+                \end{tabular}
+            \end{center}
+            donde la tercera columna se ha obtenido mediante los siguientes cálculos:
+            \begin{equation*}
+                4^{(m-1)} \leq n \Leftrightarrow (m-1) log_2 (2^2) \leq \log_2(n) \Leftrightarrow 2(m-1) \leq \log_2(n) \Leftrightarrow m\leq \frac{log_2(n)}{2} +1
+            \end{equation*}
+            
+            Veamos la eficiencia de cada bucle:
+            \begin{itemize}
+                \item Bucle \verb|for| interno:
+                \begin{equation*}
+                    \sum_{o=1}^k 1= k
+                \end{equation*}
+
+                \item Bucle \verb|for| externo:
+                \begin{multline*}
+                    \sum_{k=1}^{\mathclap{\frac{\log_2(n)}{2}+1}} k = \left(\frac{\log_2(n)}{2}+1\right)\cdot \frac{1+\left(\frac{\log_2(n)}{2}+1\right)}{2} =\\= 
+                    \frac{\frac{\log_2(n)}{2}+1}{2} + \frac{\left(\frac{\log_2(n)}{2}+1\right)^2}{2} \in O(\log_2^2(n))
+                \end{multline*}
+            \end{itemize}
+            
+            Por tanto, tenemos que el \verb|if| es de orden $O(\log_2^2(n))$.
+
+
+            \item En este caso estudiamos el cuerpo del \verb|else|.
+            
+            Al igual que antes, consideramos cada bucle \verb|for| como una sucesión $k_m , j_o$ con $m, o\in \mathbb{N}$, siendo $m, o$ el número de veces que se realiza cada bucle respectivamente. Calculamos los valores de $m,o$:
+            \begin{center}
+                \begin{tabular}{l l l c l l l}
+                    \textbf{Sucesión}    &&&  \textbf{Condición} &&& \textbf{Veces que se repite}\\
+                    $j_o = o$            &&& $j\leq n$           &&& $n$\\
+                    $k_m = 4^{(m-1)}$    &&& $k\leq n$           &&& $\frac{\log_2(n)}{2} +1$\\
+                \end{tabular}
+            \end{center}
+            donde la tercera columna se ha obtenido mediante los cálculos del apartado anterior.
+            
+            Veamos la eficiencia de cada bucle:
+            \begin{itemize}
+                \item Bucle \verb|for| interno:
+                \begin{equation*}
+                    \sum_{o=1}^n 1= n
+                \end{equation*}
+
+                \item Bucle \verb|for| externo:
+                \begin{equation*}
+                    \sum_{k=1}^{\mathclap{\frac{\log_2(n)}{2}+1}} n = \left(\frac{\log_2(n)}{2}+1\right)n \in O(n\log_2(n))
+                \end{equation*}
+            \end{itemize}
+            
+            Por tanto, tenemos que el \verb|else| es de orden $O(n\log_2(n))$.
+            \end{itemize}
+
+        Por tanto, como en términos de eficiencia nos ponemos en el peor de los casos, tenemos que esta función es $O(n\log_2(n))$, ya que:
+        \begin{equation*}
+            n\log_2(n)\geq \log_2^2(n) \Longleftrightarrow n\geq \log_2(n), \qquad \forall n> 1
+        \end{equation*}
+        donde lo hemos demostrado para valores mayores que $1$, y la desigualdad final es cierta trivialmente.
+
+
+
+        \item \
+        \begin{table}[H]
+            \begin{minipage}{0.4\linewidth}
+            \centering
+            \begin{cppcode}
+void eficiencia3 (int n){
+    int j; int i=1; int x=0;
+    
+    do{
+        j=1;
+        while (j <= n){
+            j=j*4;
+            x++;
+        }
+        i++;
+    }while (i<=n);
+}
+            \end{cppcode}
+            \end{minipage}%
+            \begin{minipage}{0.2\linewidth}
+            \vline
+            \end{minipage}%
+            \begin{minipage}{0.4\linewidth}
+            \centering
+            \begin{cppcode}
+void eficiencia4 (int n){
+    int j; int i=2; int x=0;
+    
+    do{
+        j=1;
+        while (j <= i){
+            j=j*4;
+            x++;
+        }
+        i++;
+    }while (i<=n);
+}
+            \end{cppcode}
+            \end{minipage}
+            \end{table}
+
+            Empezamos con la función \verb|eficiencia3|:
+
+            Consideramos cada bucle como una sucesión $j_m, i_o$ con $m,o\in \mathbb{N}$, siendo $m,o$ el número de veces que se realiza cada bucle. Calculamos los valores de $m,o$:
+            \begin{center}
+                \begin{tabular}{l l l c l l l}
+                    \textbf{Sucesión}    &&&  \textbf{Condición} &&& \textbf{Veces que se repite}\\
+                    $j_m = 4^{m-1}$            &&& $j\leq n$           &&& $\frac{\log_2(n)}{2}+1$\\
+                    $i_o = o$    &&& $i\leq n$           &&& $n$\\
+                \end{tabular}
+            \end{center}
+            donde la tercera columna se ha obtenido mediante los siguientes cálculos:
+            \begin{equation*}
+                4^{(m-1)} \leq n \Leftrightarrow (m-1) log_2 (2^2) \leq \log_2(n) \Leftrightarrow 2(m-1) \leq \log_2(n) \Leftrightarrow m\leq \frac{log_2(n)}{2} +1
+            \end{equation*}
+            
+            Veamos la eficiencia de cada bucle:
+            \begin{itemize}
+                \item Bucle \verb|while|:
+                \begin{equation*}
+                    \sum_{j=1}^{\frac{\log_2(n)}{2}+1} 1= \frac{\log_2(n)}{2}+1
+                \end{equation*}
+
+                \item Bucle \verb|do-while|:
+                \begin{equation*}
+                    \sum_{i=1}^{n} \frac{\log_2(n)}{2}+1 = \left(\frac{\log_2(n)}{2}+1\right)n \in O(n\log_2(n))
+                \end{equation*}
+            \end{itemize}
+            
+            Por tanto, tenemos que la función \verb|eficiencia3| es de orden $O(n\log_2(n))$.\\
+
+
+
+
+            Continuamos con la función \verb|eficiencia4|:
+
+            Consideramos cada bucle como una sucesión $j_m, i_o$ con $m,o\in \mathbb{N}$, siendo $m,o$ el número de veces que se realiza cada bucle. Calculamos los valores de $m,o$:
+            \begin{center}
+                \begin{tabular}{l l l c l l l}
+                    \textbf{Sucesión}    &&&  \textbf{Condición} &&& \textbf{Veces que se repite}\\
+                    $j_m = 4^{m-1}$            &&& $j\leq i$           &&& $\frac{\log_2(i)}{2}+1$\\
+                    $i_o = o+1$    &&& $i\leq n$           &&& $n-1$\\
+                \end{tabular}
+            \end{center}
+            donde la tercera columna se ha obtenido mediante los siguientes cálculos:
+            \begin{equation*}
+                4^{(m-1)} \leq i \Leftrightarrow (m-1) log_2 (2^2) \leq \log_2(i) \Leftrightarrow 2(m-1) \leq \log_2(i) \Leftrightarrow m\leq \frac{log_2(i)}{2} +1
+            \end{equation*}
+            
+            Veamos la eficiencia de cada bucle:
+            \begin{itemize}
+                \item Bucle \verb|while|:
+                \begin{equation*}
+                    \sum_{j=1}^{\frac{\log_2(i)}{2}+1} 1= \frac{\log_2(i)}{2}+1
+                \end{equation*}
+
+                \item Bucle \verb|do-while|:
+                \begin{multline*}
+                    \sum_{i=2}^{n} \frac{\log_2(i)}{2}+1
+                    = -\frac{\log_2(1)}{2}-1 + \sum_{i=1}^{n} \frac{\log_2(i)}{2}+1 
+                    =\\= -\frac{\log_2(1)}{2}-1 + n\cdot \frac{\frac{\log_2(1)}{2}+1 + \frac{\log_2(n)}{2}+1}{2}
+                    \in O(n\log_2(n))
+                \end{multline*}
+            \end{itemize}
+            
+            Por tanto, tenemos que la función \verb|eficiencia4| es de orden $O(n\log_2(n))$.
+    \end{enumerate}
+\end{ejercicio}
+
+
+
+\begin{ejercicio}
+    Considerar el siguiente segmento de código con el que se pretende buscar un entero $x$ en una lista de enteros \verb|L| de tamaño $n$ (el bucle \verb|for| se ejecuta $n$ veces):
+    \begin{listing}[H]
+    \begin{cppcode}
+void eliminar (Lista L, int x){
+    int aux, p;
+    
+    for (p=primero(L); p!=fin(L);){
+        aux=elemento (p,L);
+        
+        if (aux==x)
+            borrar (p,L);
+        else p++;
+    }
+}
+    \end{cppcode}
+    \end{listing}
+
+    Analizar la eficiencia de la función \verb|eliminar| si:
+    \begin{enumerate}
+        \item \verb|primero| es  $O(1)$ y  \verb|fin|,  \verb|elemento| y  \verb|borrar| son  $O(n)$. ¿Cómo mejorarías esa eficiencia con un solo cambio en el código?
+
+        Con esta estructura y sabiendo que el bucle \verb|for| se realiza \textbf{n} veces y que en el condicional \verb|if/else| la parte menos eficiente es la función borrar (\verb|borrar|~$\in~O(n))$ tenemos que la eficiencia es:
+        \[
+        1+1+ \sum_{i=1}^n (n+n+1+n) = 2 + n(3n+1) = 3n^2 + n + 2 \in O(n^2)
+        \]
+        
+        Por tanto, estamos ante una función de orden $O(n^2)$.
+
+        Además, tenemos que no es posible reducir el orden de eficiencia de la función. Esto se debe a que el cuerpo del bucle, debido a la función \verb|borrar|, es $O(n)$ y no se puede reducir, ya que ha de pertenecer al bucle. Además, como se realizarán $n$ repeticiones, la función será necesariamente $O(n^2)$. Sí es cierto que, al igual que se ha realizado en el apartado 2), se podría sacar la función \verb|fin(L)| del bucle, pero en este caso no mejoraría el orden de la eficiencia.
+
+        \item \verb|primero|, \verb|elemento| y  \verb|borrar| son  $O(1)$ y  \verb|fin| es  $O(n)$. ¿Cómo mejorarías esa eficiencia con un solo cambio en el código?
+
+        Con esta estructura y sabiendo que el bucle \verb|for| se realiza \textbf{n} veces y que en el condicional \verb|if/else| la parte menos eficiente es la función borrar (\verb|borrar|~$\in~O(1))$ tenemos que la eficiencia es:
+        \[
+        1+1+ \sum_{i=1}^n (n+1+1+1) = 2 + n(n+3) = n^2 + 3n + 2 \in O(n^2)
+        \]
+    
+        En este caso valdría con crear una variable auxiliar que almacenase la posición final \verb|pos_final|. Una vez hecho esto valdría con hacer \verb|pos_final--| después de la instrucción \verb|borrar|. Con esto el programa quedaría:
+        
+        \begin{listing}[H]
+        \begin{cppcode}
+void eliminar (Lista L, int x){
+    int aux, p;
+    int pos_final=fin(L);
+    for (p=primero(L); p!=pos_final;){
+        aux=elemento (p,L);
+        if (aux==x){
+            borrar (p,L);
+            pos_final--;
+        }
+        else p++;
+    }
+}
+        \end{cppcode}
+        \caption{Código con las mejoras del apartado 2)}
+        \end{listing}
+
+
+        Con este cambio ahora la eficiencia se calcularía como:
+        \[
+        1+n+1+ \sum_{i=1}^n (1+1+1) = 2 + n + 3n = 4n + 2 \in O(n)
+        \]
+
+        Como podemos ver, la eficiencia se ha mejorado de forma significativa.
+
+        \item Todas las funciones son $O(1)$. ¿Puede en ese caso mejorarse la eficiencia con un solo cambio en el código?
+
+        Con esta estructura y sabiendo que el bucle \verb|for| se realiza \textbf{n} veces y que en el condicional \verb|if/else| la parte menos eficiente es la función borrar (\verb|borrar|~$\in~O(1))$ tenemos que la eficiencia es:
+        \[
+        1+1+ \sum_{i=1}^n (1+1+1+1) = 2 + n(4) = 4n + 2 \in O(n)
+        \]
+        
+        Dado que el propio bucle \verb|for| tiene eficiencia $O(n)$, no es posible mejorar la eficiencia actual del programa sin eliminar el bucle \verb|for|, lo cual haría inservible el programa. Es decir, no se puede mejorar. La única forma de mejorar la eficiencia sería reducir de alguna forma el número de iteraciones, algo que no es posible ya que se han comprobar todos los elementos.
+    \end{enumerate}
+\end{ejercicio}
