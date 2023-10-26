@@ -308,9 +308,9 @@
 
         Sabiendo el `PID`, tenemos que se puede consultar de la siguiente manera:
         ```console
-        # ps -f --pid 1
-        UID        PID  PPID  C STIME TTY          TIME CMD
-        root         1     0  0 17:38 ?        00:00:00 /sbin/init
+        # ps --pid 1 -o pid,%mem,cmd
+        PID %MEM CMD
+            1  0.1 /sbin/init
         ```
 
    - Ver por separado la memoria en caché y en buffers del sistema.
