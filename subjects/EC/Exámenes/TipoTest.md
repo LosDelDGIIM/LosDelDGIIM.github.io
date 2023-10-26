@@ -14,16 +14,16 @@
 - **Profesor:** Ignacio Rojas Ruiz.
 - **Descripción:** Este documento tiene como objetivo servir para estudiar la asignatura de Estructura de Computadores. En él, se pueden encontrar una gran variedad de preguntas de EC de los últimos años.
 
-Las preguntas se encuentran en [esta web](https://losdeldgiim.github.io/subjects/EC/Ex%C3%A1menes/Examenes_Generados/TipoTest.html).
+Las preguntas se encuentran en <a href=https://losdeldgiim.github.io/subjects/EC/Ex%C3%A1menes/Examenes_Generados/TipoTest.html>esta web</a>.
 
-Las explicaciones de cada pregunta se pueden encontrar en el archivo Markdown correspondiente, que se encuentra pinchando [aquí](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/EC/Ex%C3%A1menes/TipoTest.md).
+Las explicaciones de cada pregunta se pueden encontrar en el archivo Markdown correspondiente, que se encuentra pinchando <a href=https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/EC/Ex%C3%A1menes/TipoTest.md>aquí</a>.
 ______
 
 1. Respecto a direccionamiento a memoria en ensamblador IA32 (sintaxis AT&T), de la forma `D(Rb, Ri, S)`, sólo una de las siguientes afirmaciones es FALSA. ¿Cuál?
     - ( )  El desplazamiento D puede ser una constante lineal (1, 2 ó 4 bytes).
     - (x) `EBP` no se puede usar como registro base.
     - ( )  `ESP` no se puede usar como registro índice.
-    - ( )  El factor de escala S pued
+    - ( )  El factor de escala `S` puede ser 1, 2, 4, 8.
 
 2. La extensión de signo a m bits de un número original N de n bits, con m > n, consiste en:
     - ( )  Realizar la operación \\(2^{m– N}\\)
