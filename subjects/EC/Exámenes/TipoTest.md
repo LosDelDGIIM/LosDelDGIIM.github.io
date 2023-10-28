@@ -562,3 +562,209 @@ Probablemente se trate de una instrucción de:
     - ( ) Sólo hay 1 palabra por bloque.
     - ( ) Sólo hay 1 conjunto por cache.
     - ( ) Ninguna de las anteriores.
+
+91. Si almacenamos según el criterio little-endian la palabra de 64 bits `0xFACEB00C` a partir de la dirección `0xCAFEBABE`, el byte `0xCE` quedará almacenado en la dirección:
+
+    - ( ) `0xCAFEBAC1`
+    - (x) `0xCAFEBAC0`
+    - ( ) `0xCAFEBABF`
+    - ( ) `0xCAFEBABE`
+
+92. ¿Qué novedad se desarrolló en la tercera generación de computadores?
+
+    - (x) Los circuitos integrados.
+    - ( ) Los primeros lenguajes de programación de alto nivel.
+    - ( ) Los microprocesadores CISC.
+    - ( ) Los microprocesadores RISC.
+
+93. En x86-64, el registro contrador de programa se denomina:
+
+    - (x) `RIP`
+    - ( ) `EIP`
+    - ( ) `IP`
+    - ( ) `R15`
+
+94. La primera letra (`l`) de la instruccion `lea`:
+
+    - ( ) Indica que la instrucción usa ordenación de bytes little-endian.
+    - ( ) Indica que la instrucción trabaja con un operando destino de 32 bits (`long word`).
+    - ( ) Indica indica que la instrucción afecta a los 16 bits menos significativos del operando destino (`long word`).
+    - (x) Forma parte del nemotécnico de la instrucción.
+
+95. ¿Cuál es la diferencia entre las instrucciones `mov` y `lea`?
+
+    - ( ) `lea` accede a la posición indicada, mientras que `mov` no lo hace.
+    - (x) `mov` accede a la posición indicada, mientras que `lea` no lo hace.
+    - ( ) `lea` puede usarse para copiar un registro a otro, mientras que `mov` no.
+    - ( ) `mov` puede usarse para copiar un registro a otro, mientras que `lea` no.
+
+96. La instrucción `not`:
+
+    - ( ) Realiza el complemento a dos.
+    - (x) Realiza el complemento a uno (cambiar unos por ceros y ceros por unos).
+    - ( ) Realiza la operación `no-or` (or negada).
+    - ( ) Realiza un salto condicional si negativo.
+
+97. La instrucción `JGE / JNL` provoca un salto si:
+
+    - ( ) `SF = 1`
+    - ( ) `CF = 1`
+    - ( ) `SF = 0`
+    - (x) `OF = SF`
+
+98. Un overflow nunca puede ocurrir cuando:
+
+    - ( ) Se suman dos números positivos.
+    - ( ) Se suman dos números negativos.
+    - (x) Se suma un número positivo a un número negativo.
+    - ( ) Se resta un número positivo de un número negativo.
+
+99. Después de ejecutar una instrucción de suma sobre dos números con signo de la que sabemos que no provocará overflow (los dos números son pequeños en valor absoluto), queremos comprobar si el resultado de la suma es menor que 0. ¿Qué flag necesita comprobar la instrucción de salto condicional equivalente a `if (resultado<0) then goto label`?
+
+    - ( ) `CF`
+    - ( ) `OF`
+    - (x) `SF`
+    - ( ) `ZF`
+
+100.  La instrucción `cmovb %edx, %eax`:- (x) Copia en `%eax` el contenido de `%edx` si el indicador de acarreo es 1.
+    - ( ) Copia el byte bajo de `%edx` en el byte bajo de `%eax`.
+    - ( ) Copia en `%eax` el byte de memoria apuntado por la dirección contenida en `%edx`.
+    - ( ) Copia en `%eax` el contenido de `%edx` si `%eax` es menor que `%edx`.
+
+101. ¿Cuál de las siguientes afirmaciones sobre la instrucción `leave` es cierta?
+    - ( ) Se ejecuta justo después de retornar de un procedimiento.
+    - ( ) Equivale a `pop %ebp` seguida de `mov %ebp, %esp`.
+    - ( ) Equivale a `mov %esp, %ebp` seguida de `pop %ebp`.
+    - (x) No es obligatorio usarla. En su lugar puede realizarse una secuencia explícita de operaciones `mov` y `pop`.
+
+102. Para crear espacio en la pila para variables locales sin inicializar suele realizarse la siguiente operación:
+    - ( ) Restar una cantidad positiva a `EBP`.
+    - ( ) Sumar una cantidad positiva a `EBP`.
+    - (x) Restar una cantidad positiva a `ESP`.
+    - ( ) Sumar una cantidad positiva a `ESP`.
+
+103. ¿Cuál de los siguientes lenguajes no permite el paso de parámetros por referencia?
+    - ( ) Pascal.
+    - (x) C.
+    - ( ) C++.
+    - ( ) FORTRAN.
+
+104. En la secuencia de programa siguiente:<br><code>804854e:e8 3d 06 00 00 call 8048b90 (main)<br>8048553:50 pushl %eax</code><br>¿Cuál es el valor que introduce en la pila la instrucción call?
+    - ( ) `804854e`
+    - ( ) `804854f`
+    - ( ) `8048b90`
+    - (x) `8048553`
+
+105. En el fragmento de código:<br><code>804854e:e8 3d 06 00 00 call 8048b90 (main)<br>8048553:50 pushl %eax</code><br>La instrucción `call` suma al contador de programa la cantidad:
+    - (x) `0000063d`
+    - ( ) `08048553`
+    - ( ) `0804854e`
+    - ( ) `50`
+
+106. Es responsabilidad del procedimiento llamado salvaguardar los registros:
+    - (x) `%ebx, %esi, %edi`
+    - ( ) `%eax, %edx, %ecx`
+    - ( ) `%eax, %ebx, %ecx, %edx`
+    - ( ) `%esi, %edi`
+
+107. Al llamar a una función de 2 argumentos `foo(arg1, arg2)`, ¿cuál es el orden correcto en el que se ejecutan las instrucciones? (suponiendo convención de llamada x86 cdecl, y que `foo` requiere ajustar marco de pila, esto es, salvar `%ebp`).
+    - ( ) `push arg1, push arg2, call foo, push %ebp`
+    - ( ) `push arg1, push arg2, push %ebp, call foo`
+    - (x) `push arg2, push arg1, call foo, push %ebp`
+    - ( ) `push arg2, push arg1, push %ebp, call foo`
+
+108. Cuando se ejecuta la instrucción `ret` al final de una subrutina:
+    - ( ) La dirección de comienzo de la pila se transfiere al puntero de pila.
+    - ( ) La dirección de memoria de la instrucción `ret` se transfiere al contador de programa.
+    - (x) La dirección almacenada en la cima de la pila se transfiere al contador de programa.
+    - ( ) La direción almacenada en la cima de la pila se transfiere al puntero de pila.
+
+109. En IA-32 la pila es:
+    - ( ) Un registro de 16 bits en el microprocesador.
+    - ( ) Un registro de 32 bits en el microprocesador.
+    - ( ) Una dirección de memoria de 32 bits almaenada en el contador de programa.
+    - (x) Un conjunto de posiciones de memoria usadas para almacenar información temporal durante la ejecución del programa.
+
+110. En IA-32 el puntero de pila es:
+    - ( ) Un registro de 16 bits en el microprocesador.
+    - (x) Un registro de 32 bits en el microprocesador.
+    - ( ) Una dirección de memoria de 32 bits almacenada en el contador de programa.
+    - ( ) Un conjunto de posiciones de memoria usadas para almacenar información temporal durante la ejecución del programa.
+
+111. ¿Cuál de las siguientes afirmaciones _NO_ es cierta? (entender que x86=IA-32)
+    - ( ) x86-64 proporciona un espacio de memoria virtual mayor que x68.
+    - ( ) Las disciplinas pilas para x86 y x86-64 son diferentes.
+    - ( ) x86 usa `%ebp` como puntero base para el marco de pila.
+    - (x) x86-64 usa `%rbp` como puntero base para el marco de pila.
+
+112. Alguna de las siguientes _NO_ es una operación básica de la unidad de control:
+    - ( ) Transferir un registro a otro.
+    - ( ) (Leer/escribir) un registro (de/a) memoria.
+    - (x) (Guardar/recuperar) registro (en/de) la pila.
+    - ( ) Realizar una operación de la ALU y guardar el resultado en un registro.
+
+113. Un computador tiene una memoria de control de 16000 palabras de 250 bits, de las que 447 son diferentes. ¿Cuántos bits ahorramos usando nanoprogramación en lugar de microprogramación?
+    - (x) 3744250
+    - ( ) 259206
+    - ( ) 287935
+    - ( ) Ninguno de los resultados anteriores es exacto.
+
+114. Un sistema no segmentado tarda 20 ns en procesar una tarea. La misma tarea puede ser procesada en un cauce (pipeline) de 4 segmentos con un ciclo de reloj de 5 ns. Cuando se procesan muchas tareas, la ganancia máxima de velocidad que se obtiene se aproxima a:
+    - ( ) 5.
+    - (x) 4.
+    - ( ) 0.25.
+    - ( ) 20.
+
+115. En la técnica de salto retardado:
+    - (x) El compilador puede reorganizar el código para rellenar los huecos de retardo con instrucciones útiles.
+    - ( ) El compilador no puede insertar operaciones `NOP` en los huecos de retardo.
+    - ( ) El slto se realiza varios ciclos antes de la instrucción de salto.
+    - ( ) Las instrucciones en los huecos de retardo se ejecutan unas veces y otras no.
+
+116. Al método de interacción con los periféricos, en los que el procesador vigila periódicamente el estado de los dispositivos mediante una encuesta activa se le denomina:
+    - ( ) daisy-chain.
+    - ( ) interrupción.
+    - (x) polling.
+    - ( ) DMA.
+
+117. ¿Cuántas señales de control se necesitan como mínimo para implementar un sistema de gestión de interrupciones?
+    - ( ) 1.
+    - (x) 2.
+    - ( ) 3.
+    - ( ) 4.
+
+118. Se dispone de un procesador con una frecuencia de reloj de 1 GHz. Se le conecta un dispositivo que genera 100.000 interrupciones por segundo. La rutina de servicio de interrupción ejecuta 500 instrucciones. El número medio de ciclos por instrucción es 2. ¿Qué porcentaje del tiempo dedica el procesador al dispositivo?
+    - ( ) 1%.
+    - (x) 10%.
+    - ( ) 50%.
+    - ( ) 90%.
+
+119. ¿Cuál de las siguientes afirmaciones acerca de las memorias es _FALSA_?
+    - ( ) La memoria dinámica usa señales de control `RAS#` y `CAS#`.
+    - ( ) Las celdas de memoria dinámica están constituidas por un transistor y un condensador.
+    - (x) Las celdas de memoria estática tienen que ser constantemente refrescadas.
+    - ( ) La memoria estática se emplea en las cachés L1 y L2.
+
+120. ¿Cuál de las siguientes afirmaciones acerca de la jerarquía de memoria es _FALSA_?
+    - ( ) Acceder a los discos es órdenes de magnitud más lento que acceder a la RAM.
+    - ( ) Una memoria principal constituida por la tecnología más rápida es órdenes de magnitud más cara que la DRAM.
+    - (x) La velocidad de acceso Lamemoria principal ha crecido proporcionalmente a la velocidad del procesador.
+    - ( ) Un computador puede tener una pequeña cantidad de memoria rápida además de una gran cantidad de memoria más lenta.
+
+121. En una máquina little-endian con memoria de bytes y representación en complemento a dos que permite accesos a memoria de tamaño byte (1B), media palabra (2B) y palabra (4B), si se almacena en la posición `0xBABC` una palabra de valor -2, ¿qué se obtendría al consultar la media palabra en la posición `0xBABE`?
+    - ( ) 0.
+    - ( ) 1.
+    - (x) -1.
+    - ( ) 2.
+
+122. Según la clasificación `m/n`, las máquinas de acumulador son de tipo:
+    - ( ) `0/0`.
+    - (x) `1/1`.
+    - ( ) `1/2`.
+    - ( ) `2/2` ó `2/3`.
+
+123. Según la clasificación `m/n` las máquinas con arquitectura `R/R` son de tipo:
+    - ( ) `0/0`.
+    - (x) `0/x` con `x=2,3`.
+    - ( ) `x/0` con `x=2,3`.
+    - ( ) `x/x` con `x=2,3`.
