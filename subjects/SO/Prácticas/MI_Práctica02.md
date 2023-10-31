@@ -1,4 +1,4 @@
-# Sistemas Operativos. Práctica 02.
+# Sistemas Operativos.  Módulo I. Práctica 02.
 
 **Autor:** Arturo Olivares Martos
 ***
