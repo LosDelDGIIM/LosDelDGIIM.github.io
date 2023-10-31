@@ -7,6 +7,8 @@
  * La multiintersección de dos colas es una cola que contiene los elementos que están en ambas colas
  * repetidos tantas veces como estén en ambas colas.
  *
+ * Tan solo se pide implementar la función multiinterseccion, el resto del código se proporciona.
+ *
  * Ejemplo de ejecución:
  * @code{.sh}
  * ./Multiinterseccion
@@ -14,6 +16,7 @@
  * q2: [1, 2, 3, 3, 3, 4]
  * Multiinterseccion: [2, 3, 3]
  * @endcode
+ *
  */
 
 #include <iostream>

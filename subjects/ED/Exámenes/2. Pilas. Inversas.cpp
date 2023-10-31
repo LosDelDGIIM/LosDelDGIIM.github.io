@@ -6,6 +6,8 @@
  * Se dice que una pila es inversa a una cola cuando el listado de los elementos de la pila coincide
  * con el listado de los elementos de la cola pero en orden inverso.
  *
+ * Tan solo se pide implementar la función soninversas, el resto del código se proporciona.
+ *
  * Ejemplo de ejecución:
  * @code{.sh}
  * ./Inversas
