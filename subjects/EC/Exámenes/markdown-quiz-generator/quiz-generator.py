@@ -20,7 +20,7 @@ def render_test(file_name: str, markdown_content: str) -> None:
 
     # Elimina las líneas que comienzan con "explicación:"
     markdown_lines = markdown_content.split('\n')
-    markdown_lines = [line for line in markdown_lines if not (line.strip().startswith("**Explicación**:") or line.strip().startswith("*:"))]
+    markdown_lines = [line for line in markdown_lines if not (line.strip().startswith("Explicacion:"))]
     markdown_content = '\n'.join(markdown_lines)
 
     html = markdown.markdown(markdown_content, extensions=extensions, output_format="html5")
