@@ -19,47 +19,61 @@ Las preguntas se encuentran en <a href=https://losdeldgiim.github.io/subjects/EC
 Las explicaciones de cada pregunta se pueden encontrar en el archivo Markdown correspondiente, que se encuentra pinchando <a href=https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/EC/Ex%C3%A1menes/TipoTest.md>aquí</a>.
 ______
 
-1. Respecto a direccionamiento a memoria en ensamblador IA32 (sintaxis AT&T), de la forma `D(Rb, Ri, S)`, sólo una de las siguientes afirmaciones es FALSA. ¿Cuál?
+1. Respecto a direccionamiento a memoria en ensamblador x86-64, de la forma `D(Rb, Ri, S)`, sólo una de las siguientes afirmaciones es FALSA. ¿Cuál?
     - ( )  El desplazamiento D puede ser una constante lineal (1, 2 ó 4 bytes).
-    - (x) `EBP` no se puede usar como registro base.
+    - (x)  `EBP` no se puede usar como registro base.
     - ( )  `ESP` no se puede usar como registro índice.
     - ( )  El factor de escala `S` puede ser 1, 2, 4, 8.
+
+Explicacion: `EBP` sí puede usarse como base, ya que es un registro más. No obstante, `ESP` no puede usarse como índice, ya que es el puntero de pila y y, por tanto, su modificación provocaría graves errores en la ejecución del programa.
 
 2. La extensión de signo a m bits de un número original N de n bits, con m > n, consiste en:
     - ( )  Realizar la operación \\(2^{m– N}\\)
     - ( )  Realizar la operación \\(2^{m– N-1}\\)
-    - (x) Incrementar la cantidad de bits a m preservando el signo y el valor del número.
+    - (x)  Incrementar la cantidad de bits a m preservando el signo y el valor del número.
     - ( )  Incrementar la cantidad de bits a m rellenando con unos por la izquierda.
 
-3. En IA32, ¿cuál de los siguientes fragmentos de programa tiene un efecto sobre los flags distinto al resto?
+Explicacion: No siempre tiene que rellenar con unos, ya que el número original puede ser positivo.
+
+3. En x86-64, ¿cuál de los siguientes fragmentos de programa tiene un efecto sobre los flags distinto al resto?
     - ( )  `sub %edi,%edi` <br> `adc $0xFFFFFFFF, %edi`
-    - (x) `mov $-1, %edi`
+    - (x)  `mov $-1, %edi`
     - ( )  `mov$-1,%edi` <br> `add $0, %edi`
     - ( )  `mov $0, %edi` <br> `sub $1, %edi`
+
+Explicacion: Todas las órdenes descritas ponen a 1 el valor de `SF` excepto la segunda, ya que la orden `mov` tan solo mueve datos, no modifica las banderas.
 
 4. Si `%rsp` vale `0xdeadbeefdeadd0d0`, ¿cuál será su nuevo valor después de que se ejecute `pushq %rbx?`
     - ( )  `0xdeadbeefdeadd0d4`
     - ( )  `0xdeadbeefdeadd0d8`
     - ( )  `0xdeadbeefdeadd0cc`
-    - (x) `0xdeadbeefdeadd0c8`
+    - (x)  `0xdeadbeefdeadd0c8`
 
-5. ¿Cómo se devuelve en ensamblador x86-64 Linux gcc el valor de retorno de una función long int al terminar esta?
+Explicacion: La pila crece hacia posiciones decrecientes. Por tanto, en este caso, el puntero se actualiza a `-8(%rsp)`.
+
+5. ¿Cómo se devuelve en ensamblador x86-64 Linux `gcc` el valor de retorno de una función `long int` al terminar esta?
     - ( )  La instrucción `RET` lo almacena en un registro especial de retorno.
     - ( )  Por convención se guarda en `%eax`.
     - ( )  Se almacena en pila justo encima de los argumentos de la función.
-    - (x) Ninguna de esas formas es correcta.
+    - (x)  Ninguna de esas formas es correcta.
+
+Explicacion: Por convención, y al ser datos de tipo `long`, se guarda en el registro `%rax`.
 
 6. Comparando las convenciones de llamada de gcc Linux IA32 con x86-64 respecto a registros.
     - ( )  En IA32 `%ebx` es salva-invocante, pero en x86-64 `%rbx` es salva-invocado.
-    - (x) En IA32 `%ecs` es salva-invocante, y en x86-64 `%rcd` es salva-invocante también.
+    - (x) En IA32 `%ecx` es salva-invocante, y en x86-64 `%rcx` es salva-invocante también.
     - ( )  En IA32 `%esi` es salva-invocado, y en x86-64 `%rsi` es salva-invocado también.
-    - ( )  En IA32 `%ebp` es especial (marco de pila1), y en x86-64 `%rbp` también.
+    - ( )  En IA32 `%ebp` es especial (marco de pila), y en x86-64 `%rbp` también.
+
+Explicacion: El IA32 actualmente no entra en la asignatura EC.
 
 7. Son funciones de la unidad de control:
     - ( )  La codificación de las instrucciones máquina.
     - ( )  La lectura de memoria principal de la instrucción apuntada por el PC.
-    - (x) El secuenciamiento de las instrucciones máquina.
+    - (x)  El secuenciamiento de las instrucciones máquina.
     - ( )  Todas las respuestas son ciertas.
+
+Explicacion: TERMINAR
 
 8. Respecto a `MBR` y `MAR`
     - ( )  Ambos son accesibles por el programador.
@@ -67,58 +81,75 @@ ______
     - (x) `MAR` requiere menos señales de control que `MBR`.
     - ( )  Ambos permiten guardar información sobre el marco de pila.
 
+Explicacion: TERMINAR
+
 9. Una instrucción máquina puede desglosarse en las siguientes operaciones elementales:<br>
-`sp := ps-1; m[sp] := pc; pc:= x`<br>
+`sp := sp-1; m[sp] := pc; pc:= x`<br>
 Probablemente se trate de una instrucción de:
     - ( )  Apilamiento.
-    - (x) Llamada a subrutina.
+    - (x)  Llamada a subrutina.
     - ( )  Carga total.
     - ( )  Almacenamiento local.
 
-1.  En una unidad de control microprogramada con formato de microinstrucciones vertical, un subcampo que debe especificar 16 señales de control codificadas de tal forma que pueda activarse sólo una o ninguna harbá de tener una anchura mínima de:
+Explicacion: Se está llamando a una subrutina, ya la pila crece guardándose el valor de retorno de `pc`, y el `pc` se actualiza a donde tiene que saltar.
+
+10.  En una unidad de control microprogramada con formato de microinstrucciones vertical, un subcampo que debe especificar 16 señales de control codificadas de tal forma que pueda activarse sólo una o ninguna harbá de tener una anchura mínima de:
     - ( )  4 bits.
-    - (x) 5 bits.
+    - (x)  5 bits.
     - ( )  16 bits.
     - ( )  17 bits.
 
+Explicacion: Son 16 señales más el 0; por lo que son 17. Para codificar 17 posibilidades en binario, en necesiario tener en cuenta que se necesitan \\(\log_2(17)\\) redondeados hacia arriba bits. Es decir, nos hacen falta 5 bits.
 
 
 11. Dado un camino de datos concreto, un posible formato de microprogramación se caracteriza como horizontal o vertical según tenga más o menos (señalar la respuesta falsa)
     - ( ) codificación
     - ( ) solapamiento
     - (x) micro bifurcaciones
-    - ( ) longitud relativa de microinstrucción
+    - ( ) longitud relativa de microinstrucción.
+
+Explicacion: TERMINAR
 
 12. El control residual se utiliza para:
     - ( ) reducir el tiempo de ejecución de las instrucciones máquina
     - ( ) eliminarlos bits residuales de la ejecución de las microinstrucciones
     - (x) reducir el tamaño de la memoria de control
-    - ( ) ninguna de las anteriores es cierta
+    - ( ) ninguna de las anteriores es cierta.
+
+Explicacion: TERMINAR
 
 13. Un procesador está segmentado en las etapas F, D, E, M y W. Cada una de  ellas consume un tiempo t. La aceleración ideal (si no hay riesgos) al ejecutar n instrucciones respecto a un procesador no segmentado será:
-    - (x) 5n/(4+n)_
+    - (x) 5n/(4+n)
     - ( ) (4+n)/5t
     - ( ) 4n/(5+n)
     - ( ) (5+n)/4t
+
+Explicacion: El número de operaciones en un procesador no segmentado sería 5 por el número de instrucciones. No obstante, 
 
 14. En un procesador con segmentación de cauce, aumentar el número de etapas (p.ej. de 2 a 4, o de 4 a 8), tiene en general como consecuencia:
     - (x) Un Incremendo De Las Prestaciones.
     - ( )  Un mayor retraso en la ejecución de los programas debido al incremento del número de etapas.
     - ( ) Una disminución en la posible dependencia de datos.
     - ( ) Una disminución de la máxima frecuencia de reloj a la que puede operar el cauce.
+    
+Explicacion: TERMINAR
 
 15. En la secuencia de instrucciones siguiente, siendo el primer registro el destino, ¿cuántos riesgos se dan?<br>
 `sub r2,r1,r3 or r8,r6,r2`
     - ( ) Un riesgo estructural.
     - (x) Un riesgo por dependencia de datos.
-    - ( ) Un Riesgo Estructural Dos Po dependencia de datos.
+    - ( ) Un Riesgo Estructural Dos Por dependencia de datos.
     - ( ) Dos riesgos por dependencia de datos y uno de control.
 
-16. La precaptación(cola de instrucciones) está relacionada con...
-    - (x) Los riesgos estructurales(intenta evitar el efecto de un fallo de cache)
+Explicacion: TERMINAR
+
+16. La precaptación (cola de instrucciones) está relacionada con...
+    - (x) Los riesgos estructurales (intenta evitar el efecto de un fallo de cache)
     - ( ) Los riesgos de (dependencia de) datos (intenta que el dato esté disponible anticipadamente)
-    - ( ) Los riesgos control(intenta determinar de antemano el flujo de control)
-    - ( ) Los riesgos de transferencia(intenta agrupar las posibles transferencias de un conjunto de instrucciones).
+    - ( ) Los riesgos control (intenta determinar de antemano el flujo de control)
+    - ( ) Los riesgos de transferencia (intenta agrupar las posibles transferencias de un conjunto de instrucciones).
+
+Explicacion: TERMINAR
 
 17. Respecto a la segmentación, ¿cuál de las siguientes afirmaciones es falsa?
     - ( ) La técnica de register forwarding habilita una serie de cambios(buses) que se añaden al cauce para permitir que los resultados de una etapa pasen como entradas a la etapa donde son necesarias.
@@ -126,17 +157,23 @@ Probablemente se trate de una instrucción de:
     - (x) Retrasar la fase de decisión saltar/no saltar de las instrucciones de salto condicional contribuye a mejorar el rendimiento del procesador.
     - ( ) Cuantas más etapas tenga un cauce, más instrucciones se estarán ejecutando en distintas fases y más posibilidades se presentan de que existan riesgos entre ellas.
 
+Explicacion: TERMINAR
+
 18. ¿Cuál de los siguientes modos de direccionamento es menos preferible para un procesador de 32 bits y con tamaño de instrucción de 32 bits?
     - ( ) registro.
     - ( ) indexado.
     - ( ) indirecto a través de registro.
     - (x) directo (o absoluto)
 
+Explicacion: Son referentes al IA32, que actualmente no entra en la asignatura EC.
+
 19. La conexión entre un dispositivo de E/S y el procesador mediante bus:
     - ( ) Es difícil de expandir.
     - (x) Permite conectar en paralelo varios dispositivos.
     - ( ) Requiere mucha circuitería.
     - ( ) Requiere multiplexores y demultiplexores para las señales de datos.
+
+Explicacion: Al ser un único bus, podríamos conectar más dispositivos sin que interfieran estre ellos.
 
 
 20. El fragmento de código ensamblador de un microprocesador de 8 bits:<br><code>lds IOBuf	; Apuntar puntero pila a ...área mem.intermedia<br>ldx Count	; Inicializar x-contador<br>poll lda a Status; Leer estado en A<br>bpl poll	; Signo (A) != 1 => repetir<br>lda a Data	; Leer dato en A<br>psh a		; transferir dato a pila<br>dex 		; decrementar contador x<br>bne poll	; Seguir leyendo si x!=0<br></code><br> Corresponde a:<br>
@@ -145,8 +182,7 @@ Probablemente se trate de una instrucción de:
     - ( ) Entrada programada sin consulta de estado.
     - ( ) Salida programada con consulta de estado.
 
-
-
+Explicacion: TERMINAR:
 
 31. ¿Cuál de las siguientes afirmaciones sobre el benchmark SPEC CPU es falsa?
 
@@ -768,3 +804,512 @@ Probablemente se trate de una instrucción de:
     - (x) `0/x` con `x=2,3`.
     - ( ) `x/0` con `x=2,3`.
     - ( ) `x/x` con `x=2,3`.
+
+
+124. El bus del sistema es 
+	- ( ) el que conecta las distintas partes del sistema:UC,ALU,E/S,M
+	- ( ) en un sistema con bus único, todo el bus salvo la parte relacionada con E/S (SATA, GPU, USB, Ethernet, etc) 
+	- ( ) en un sistema con buses separados,el que conecta el sistema E/S con el resto 
+	- (x) el que conecta CPU-M, ya sea un sistema con bus único o con múltiples buses 
+
+125. Un sistema con direcciones de 8 bits utiliza una puerta NAND conectada a las líneas A7...A5 para atacar la entrada `CS#` (activa baja) de un módulo de memoria. En el mapa de memoria las siguientes posiciones corresponderán a dicho módulo 
+	- ( ) 0x00 a 0x0f y 0x80 a 0x8f 
+	- ( ) 0x00a0x1f 
+	- ( ) 0x70 a 0x7f y 0xf0 a 0xff 
+ 	- (x) 0xe0a0xff 
+
+126. La ecuación básica de rendimiento calcula 
+	- (x) cuánto tiempo tarda en ejecutarse un programa concreto conociendo su número de instrucciones y el número de etapas (promedio) y la frecuencia del procesado 
+	- ( ) cómo de mejor es un procesador frente a otro, conociendo las prestaciones de las respectivas UC, ALU, E/S y M 
+	- ( ) el promedio de las ganancias obtenidas con una serie de programas de punto entero 
+	- ( ) la media geométrica de los cocientes entre los tiempos de ejecución de una serie de programas predeterminados 
+
+127. Por x86-64 se entiende la misma arquitectura de repertorio (ISA) que  
+	- ( ) x86 
+	- ( ) IA-32 
+	- ( ) IA-64 
+	- (x) AMD64
+
+128. ¿Qué combinación de flags aritmético- lógicos corresponde al código de condición b (below)? 
+	- (x) CF 
+	- ( ) OF 
+	- ( ) CFxorOF 
+	- ( ) OFxorSF 
+
+129. En los modos de direccionamiento del tipo Desplazamiento(Base,Indice,Factor Escala), puede usarse como 
+	- (x) desplazamiento,cualquierconstantede1, 2 o 4 bytes (incluso el nombre de una variable,porsudirección) 
+	- ( ) base, cualquiera de los 8 registros enteros salvo %esp 
+	- ( ) índice,tambiéncualquierasalvo%ebp 
+	- ( ) factor de escala, cualquier constante de 1, 2, 4 u 8 bytes 
+    
+130. La diferencia entre las instrucciones test y cmp consiste en que 
+	- ( ) test realiza una operación and lógico, mientras que cmp realiza una resta
+	- ( ) test modifica sólo los flags lógicos (ZF,SF) mientras que cmp modifica los aritmético-lógicos (ZF,SF,CF,OF) 
+	- (x) ambas respuestas son correctas 
+	- ( ) ambas respuestas son incorrectas 
+
+131. Para traducir una construcción if-then- else de lenguaje C a lenguaje ensamblador, gcc utiliza generalmente 
+	- ( ) un salto condicional,según la condición expresada en el código C 
+	- (x) un salto condicional, según la condición opuesta a la del código C, y otro salto incondicional 
+	- ( ) dos saltos condicionales (uno para la parte if y otro para la parte else)
+	- ( ) dos saltos condicionales y dos saltos incondicionales 
+
+132. Para traducir una construcción do-while de lenguaje C a lenguaje ensamblador, gcc utiliza generalmente
+	- ( ) un salto condicional hacia adelante, según la misma condición que en lenguaje C  
+	- (x) un salto condicional hacia atrás, según la misma condición que en lenguaje 
+	- ( ) un salto condicional hacia adelante, según la condición opuesta a la de lenguaje C 
+ 	- ( ) un salto condicional hacia atrás, según la condición opuesta a la de lenguaje C 
+
+133. Alguna de las siguientes señales no sirve de entrada a la unidad de control. ¿Cuál? 
+	- ( ) señal de reloj(CLK) 
+	- ( ) estado de la unidad de proceso (flags Z, S, C, O...) 
+	- ( ) instrucción actual(bitsdelregistroIR) 
+	- (x) contador de programa (bits del registro PC) 
+
+134. Alguna de las siguientes señales no es salida de la unidad de control. ¿Cuál?
+	 - ( ) señales decarga,habilitacióny/o desplazamiento de registros ( Load, Enable, ShiftL, ShiftR) 
+	- ( ) códigos de selección en multiplexores, decodificadores, ALU, etc (00, 01, 10, 11...) 
+	- ( ) señales de lectura y escritura en memoria (RD, WR) 
+	- (x) dirección de la siguiente microinstrucción (bits del campo DIR o Memoria B de Wilkes) 
+
+135. Alguna de las siguientes no es una operación básica de la unidad de control 
+	- ( ) transferir un registro a otro 
+	- ( ) (leer o escribir) un registro (de / a) memoria 
+	- (x) (guardar recuperar)un registro(en/de) la pila 
+	- ( ) realizar operación ALU y guardar resultado en registro
+
+136. Tipos de riesgos que hemos estudiado en cauces segmentados (señalar la opción incorrecta) 
+	- ( ) riesgos estructurales 
+	- ( ) riesgos de (dependencia de) datos 
+	- ( ) riesgos control 
+	- (x) riesgos de transferencia 
+
+137. ¿Cuál de los siguientes modos de direccionamiento es menos preferible para un procesador con segmentación de cauce? 
+	- ( ) registro 
+	- (x) directo 
+	- ( ) indirectoatravésderegistro 
+	- ( ) indexado (o relativo a base, o base+índice) 
+
+138. La ganancia en velocidad ideal de un cauce de K etapas de igual duración T ejecutando un programa de N instrucciones es 
+	- ( ) S=KN/(K-N+1) 
+	- ( ) S = NKT/(N-K+1)T 
+	- (x) S=KN/(K+N-1) 
+ 	- ( ) S = NT/(N+K-1)T 
+
+139. Respecto al salto retardado y al salto anulante, ¿cuál permite que se ejecute la siguiente instrucción, y cuál no? 
+	- ( ) el retardado ejecuta la siguiente instrucción (con el correspondiente retraso), el anulante no la ejecuta (de hecho la anula) 
+	- ( ) el retardado la ejecuta sólo si se cumple la condición de salto, el anulante sólo si no se cumple 
+	- ( )el retardado la ejecuta sólo si no se cumple la condición de salto, el anulante no la ejecuta nunca 
+	- (x) el retardado la ejecuta siempre, el anulante la ejecuta sólo si se cumple la condición de salto 
+
+140. Respecto a las técnicas de direccionamiento por selección lineal, decodificación centralizada y distribuida
+	- ( ) todas ellas impiden que haya cortocircuito en el bus de datos  
+	- ( ) todas ellas impiden que haya cortocircuito en el bus de direcciones  
+	- (x) la selección lineal permitiría escribir un mismo dato a varios puertos E/S 
+	- ( ) usando decodificación centralizada es más fácil realizar expansiones al sistema de E/S 
+
+141. Ventajas de la E/S independiente (separada, aislada) (señalar la opción incorrecta) 
+	- (x) diseño del procesador más sencillo(E/S mapeada añade complejidad al diseño) 
+	- ( ) protección de E/S más fácil (E/S mapeada añade dificultad a la protección de E/S) 
+	- ( ) mayor aprovechamiento del espacio de memoria (E/S mapeada resta espacio a la memoria) 
+	- ( ) decodificación de memoria más elegante, limpia, sencilla (E/S mapeada añade complejidad a la decodificación) 
+
+142. Parecidos y diferencias entre los métodos de E/S (señalar la opción incorrecta) 
+	- ( ) la consulta del estado del dispositivo por parte de la CPU se suele/puede hacer con E/S programada y con E/S por IRQ 
+	- ( ) se suele avisar a la CPU (con una IRQ) de que debe realizar alguna tarea, tanto en E/S por IRQ como en E/S por DMA 
+	- (x) sólo E/S por DMA libera a la CPU de realizar la consulta de estado del dispositivo 
+	- ( ) sólo E/S por DMA libera a la CPU de realizar la transferencia de los datos de E/S 
+
+143. Tipos de interrupción que suelen contemplar las CPUs comerciales actuales (señalar la opción incorrecta) 
+	- ( ) internas (excepciones o traps): generadas internamente por la CPU para indicar una condición que requiere atención (división por cero, codop inválido, etc)
+	- ( ) externas (IRQs hardware): generadas por un dispositivo externo a la CPU, activan la línea INTR# (o equivalente) 
+	- ( ) software:generadas al ejecutar la instrucción INT (o equivalente) 
+	- (x) firmware (faults): generadas por el microcódigo de la CPU ( segmentation fault, page fault, etc) 
+
+144. Técnicas que se pueden usar para determinar la causa de una interrupción (señalar la opción incorrecta) 
+	- ( ) múltiples líneas de interrupción INT1#, INT2#... 
+	- (x) línea de reconocimiento INTA# 
+	- ( ) consulta de estado,o polling 
+	- ( ) interrupciones vectorizadas 
+
+145. Respecto a salvaguardar los registros de la CPU al inicio de una rutina de servicio de interrupción (ISR) 
+	- ( ) no es necesario salvar ninguno más,si el contador de programa y los flags de estado ya los salva la propia CPU como parte del mecanismo de interrupción 
+	- (x) se deben guardar los registros que se modifiquen en la propia ISR. Eso es posible hacerlo porque el propio programador de la ISR conoce qué registros va a modificar 
+	- ( ) se deben guardar los registros salva- invocado (p.ej. EBX, ESI, EDI en el caso de una CPU IA-32), los registros salva- invocante ya los guarda el programa interrumpido 
+	- ( ) se deben guardar todos los registros, para restaurarlos a la salida y así garantizar que el programa interrumpido no sufre ninguna modificación (salvo el inevitable retraso temporal) debido a la interrupción 
+
+146. En EC podemos usar la palabra directo para referirnos a... (señalar la opción incorrecta) 
+	- (x) dispositivo de almacenamiento secuencial directo (DASD) 
+	- ( ) cache con correspondencia directa 
+	- ( ) acceso directo a memoria 
+	- ( ) modo de direccionamiento directo
+
+147. Variación de los parámetros de los distintos niveles en una jerarquía de memoria (señalar la opción incorrecta) 
+	- (x) unidad de transferencia: xi xi+1 
+	- ( ) ancho de banda: bi bi+1 
+	- ( ) tamaño del nivel: si si+1 
+	- ( ) tiempo de acceso: ti ti+1 
+
+148. Las técnicas write-through y write-back están relacionadas con 
+	- (x) coherencia cache 
+	- ( ) métodos de E/S 
+ 	- ( ) arbitraje de buses 
+	- ( ) etapas de la unidad de control 
+
+149. Para diseñar una memoria con ancho de palabra k·m (y mismo no palabras que los módulos) a partir de módulos con ancho de palabra m, se utilizan k módulos 
+	- ( ) repartiendo las líneas de datos entre los k módulos: el primero se conecta a D0...Dk-1, el segundo a Dk...D2k-1, etc 
+	- ( ) repartiendo las líneas de dirección: el 1o se conecta a A0...Ak-1, el 2o a Ak...A2k-1, etc 
+	- (x) repartiendolíneasdatos:el1oseconecta a D0...Dm-1, el 2o a Dm...D2m-1, etc 
+	- ( ) d.repartiendo líneas dirección: el 1o a A0...Am-1, el 2o a Am...A2m-1, etc 
+
+150. En un sistema con direcciones de 32bits, memoria de bytes, cache de 1MB asociativa por conjuntos de 4 vías y líneas de 64B, el campo etiqueta en el formato de dirección cache es de 
+	- ( ) 16bits 
+	- (x) 15bits 
+	- ( ) 12bits
+	- ( ) 10bits 
+
+151. ¿Por qué se impusieron las arquitecturas de registros de propósito general a las arquitecturas basadas en pila? 
+	- ( ) Porque no se puede programar una arquitectura de pila en un lenguaje de alto nivel. 
+	- (x) Porque las basadas en registros son capaces de lograr un mejor rendimiento cuando se asignan variables a registros. 
+	- ( ) Porque la memoria es más cara que los registros. 
+	- ( ) Porque las basadas en registros permiten reducir el tamaño del programa 
+
+152. ¿Cuál de las siguientes afirmaciones es incorrecta? 
+	- ( ) El direccionamiento indexado es útil para manejo de vectores. 
+	- (x) El direccionamiento indirecto indica la dirección del operando. 
+	- ( ) En el direccionamiento implícito no se indica la ubicación del operando 
+	- ( ) En el direccionamiento inmediato el dato se encuentra en la propia instrucción 
+
+153. ¿Cuál de las siguientes afirmaciones sobre el direccionamiento absoluto es falsa? 
+	- ( ) La instrucción contiene la dirección de memoria en la que se encuentra el objeto. 
+	- ( ) El objeto está en una posición de la memoria 
+	- ( ) El rango de posiciones direccionables queda limitado por el tamaño del campo de direccionamiento. 
+	- (x) El tamaño del operando direccionado queda limitado por el no de bits del campo de direccionamiento. 
+
+154. ¿Cuál es la diferencia entre los desplazamientos a la derecha lógico y aritmético? 
+	- ( ) El lógico inserta siempre ceros en el bit más a la derecha 
+	- ( ) El aritmético inserta en el bit más a la derecha una copia del bit de signo 
+	- (x) Insertan de forma distinta el bit más a la izquierda
+	- ( ) Ninguna, la diferencia es entre los desplazamientos a la izquierda 
+
+155. La instrucción seta %al (seta significa set if above): 
+	- (x) Pone AL a 1 si CF=0 y ZF=0 
+	- ( ) Pone AL a 1 si CF=0 o ZF=0 
+	- ( ) Pone AL a 1 si CF=1 y ZF=0 
+	- ( ) Pone AL a 1 si CF=1 o ZF=1 
+
+156. Los arrays bidimensionales en lenguaje C se almacenan en orden... 
+	- ( ) "mayor-de-columna" (column-major) 
+	- (x) "mayor-de-fila" (row-major) 
+	- ( ) "de mayor a menor" (major-to-minor) 
+	- ( ) "de fila a columna" (file-to-column) 
+
+157. ¿Cuál sería el "equivalente x86-64" del "pseudo-código C" rcx = ((int*)rax)[rcx]? 
+	- (x) mov (%rax,%rcx,4),%rcx 
+	- ( ) lea (%rax,%rcx,4),%rcx 
+	- ( ) lea (%rax,4,%rcx),%rcx 
+	- ( ) mov (%rax,4,%rcx),%rcx 
+
+158. El direccionamiento directo a memoria utiliza 
+	- ( ) un registro. 
+	- ( ) dos desplazamientos contenidos en la propia instrucción. 
+	- ( ) un registro y un desplazamiento contenidos en la propia instrucción.
+	- (x) un desplazamiento. 
+
+159. ¿Cuál de las siguientes afirmaciones es falsa? 
+	- ( ) Los programas necesitan una forma de pasar parámetros a las subrutinas y de recibir las salidas de vuelta.
+	- ( ) Las subrutinas necesitan ser capaces de reservar espacio en memoria para las variables locales sin sobrescribir ningún dato usado por el programa que hace la llamada 
+	- (x) Las subrutinas necesitan recibir parámetros desde el programa que hace la llamada que indiquen qué registros pueden alterar y cuáles no. 
+	- ( ) Las subrutinas necesitan algún modo de saber desde dónde han sido llamadas para poder volver al programa que realizó la llamada cuando se completa la subrutina 
+
+160. Respecto a la segmentación: 
+	- ( ) Cuanto más parecidos sean el tiempo de ejecución de una instrucción sin segmentar y el tiempo de una etapa en el procesador segmentado, mayor será la ganancia máxima que se puede obtener. 
+	- ( ) Cuando el número de instrucciones ejecutadas tiende al número de etapas de un procesador segmentado, la ganancia máxima que se puede obtener tiende a infinito. 
+	- (x) Cuanto mayor sea la relación entre el tiempo de ejecución de una instrucción sin segmentar y el tiempo de una etapa en el procesador segmentado, mayor será la ganancia máxima que se puede obtener 
+	- ( ) Cuando el número de instrucciones ejecutadas en un procesador segmentado crece, la ganancia máxima que se puede obtener tiende a 1 
+
+161. Respecto a la segmentación, ¿cuál de las siguientes afirmaciones es falsa? 
+	 - ( ) La técnica de register forwarding habilita una serie de caminos (buses) que se añaden al cauce para permitir que los resultados de una etapa pasen como entradas a la etapa donde son necesarias. 
+	- ( ) La reorganización del código y la introducción de instrucciones nop permite evitar dependencias de datos. 
+	- (x) Retrasar la fase de decisión saltar/no saltar de las instrucciones de salto condicional contribuye a mejorar el rendimiento del procesador. 
+	- ( ) Cuantas más etapas tenga un cauce, más instrucciones se estarán ejecutando en distintas fases y más posibilidades se presentan de que existan riesgos entre ellas. 
+
+162. La precaptación (cola de instrucciones) está relacionada con...  - (x) Los riesgos estructurales (intenta evitar el efecto de un fallo de cache)
+	- ( ) Los riesgos de (dependencia de) datos (intenta que el dato esté disponible anticipadamente) 
+	- ( ) Los riesgos de control (intenta determinar de antemano el flujo de control) 
+	- ( ) Los riesgos de transferencia (intenta agrupar las posibles transferencias de un conjunto de instrucciones) 
+
+163. La predicción de saltos está relacionada con... 
+	- ( ) Los riesgos estructurales (intenta evitar el efecto de un fallo de cache) 
+	- ( ) Los riesgos de (dependencia de) datos (intenta que el dato esté disponible anticipadamente) 
+	- (x) Los riesgos de control (intenta determinar de antemano el flujo de control) 
+	- ( ) Los riesgos de transferencia (intenta agrupar las posibles transferencias de un conjunto de instrucciones) 
+
+164. ¿Cuál de los siguientes modos de direccionamiento es *menos* preferible para un procesador con segmentación de cauce? 
+	- ( ) Registro 
+	- (x) Indirecto a través de memoria 
+	- ( ) Indirecto a través de registro 
+	- ( ) Indexado (o relativo a base, o base+índice) 
+
+165. Si se dice que en un sistema computador cada dirección especifica uno o dos puertos de E/S, se refiere a que: 
+	- ( ) La misma dirección (por ejemplo 0x0210) puede ser una posición de memoria o un puerto de E/S, según IO/M# 
+	- ( ) La misma dirección puede usarse para transferir un byte o una palabra de mayor tamaño (ese byte y el siguiente) 
+	- (x) Un puerto será de sólo lectura, otro de sólo escritura, y ambos se decodifican en la misma dirección 
+	- ( ) La pregunta es capciosa, una dirección puede especificar un puerto, no dos 
+
+166. Respecto a si un computador dispone de E/S independiente (separada) o usa E/S mapeada a memoria:
+	- ( ) Si el encapsulado (chip) del procesador tiene patilla (pin) IO/M# (o patillas equivalentes), eso evidencia que el computador usa E/S mapeada a memoria 
+	- (x) Si el repertorio del procesador tiene instrucciones del tipo IN y OUT, es que el computador dispone de E/S separada 
+	- ( ) Si el encapsulado del procesador no dispone de patilla IO/M# (ni equivalentes), el computador sólo dispone de E/S separada 
+	- ( ) Si el repertorio del procesador tiene instrucciones del tipo LOAD y STORE, el computador sólo dispone de E/S mapeada a memoria 
+
+167. Supongamos dos procesadores con bus de direcciones con idéntico número de líneas. Si uno de ellos emplea E/S mapeada en memoria y el otro E/S independiente, ¿cuál podrá acceder a una mayor cantidad de memoria? 
+	- (x) El que tiene E/S independiente. 
+	- ( ) El que tiene E/S mapeada en memoria 
+	- ( ) Depende del tamaño del bus de direcciones. 
+	- ( ) Ambos podrán acceder a la misma cantidad de memori - ( ) 
+
+168. ¿Cuál de las siguientes afirmaciones es incorrecta? 
+	- ( ) La consulta del estado del dispositivo por parte de la CPU se suele hacer con E/S programada (salvo con dispositivos que siempre están listos para transferir) y con E/S por IRQ (cuando se usa polling para determinar el origen de la IRQ) 
+	- ( ) Se suele avisar a la CPU (mediante una IRQ) de que debe realizar alguna tarea, tanto en E/S por IRQ (obligatoriamente, la tarea es la transferencia) como en E/S por DMA (optativamente, el controlador DMA puede avisar de que acabó) 
+	- (x) Sólo E/S por DMA libera a la CPU de realizar la consulta de estado del dispositivo de E/S 
+	- ( ) Sólo E/S por DMA libera a la CPU de realizar la transferencia de los datos de E/S 
+
+169. El fragmento de código:
+<code>poll: in a, 0x20 <br>cmp a, $0 <br>jnz poll <br>load a, 0x11 <br>out 0x21, a <br></code> corresponde a: 
+	- ( ) E/S programada sin consulta de estado 
+	- (x) E/S programada con consulta de estado 
+	- ( ) E/S por interrupciones 
+	- ( ) E/S por DMA 
+
+170. Un procesador con E/S en el mapa de memoria tiene un bus de direcciones de 10 líneas y uno de datos de 8. El mapa de memoria tiene 512 posiciones para instrucciones, 256 para datos y 256 para E/S, en ese orden. Los rangos de direcciones para esas tres zonas serán: 
+	- (x) 000a1FF,200a2FFy300a3FF. 
+	- ( ) 000a5FF,600a7FFy800a9FF. 
+	- ( ) 000 a 7FF, 800 a BFF y C00 a FFF. 
+	- ( ) 000a9FF,A00aCFFyD00aFFF. 
+
+171. El instrumento GIADA de la sonda espacial ROSETTA (diseñado en Granada) está basado en un microprocesador 8086 y el siguiente mapa de memoria: 
+RAM volátil: 00000 - 0FFFF 
+RAM no volátil: 10000 - 1FFFF 
+ROM: F0000 - FFFFF 
+¿Cuál es el tamaño total de la memoria? 
+	- ( ) 48KB 
+	- (x) 192KB 
+	- ( ) 2MB
+	- ( ) 3MB 
+
+172. Una memoria que está estructurada en palabras de 8 bits tiene una capacidad de 64 Kbits. ¿Cuántas líneas de dirección tiene dicha memoria? 
+	- ( ) 8 
+	- ( ) 12 
+	- (x) 13 
+	- ( ) 24 
+
+173. ¿Cuál de los siguientes es el ejemplo más acertado de localidad espacial? 
+	- (x) Referenciar elementos de un array sucesivamente 
+	- ( ) Iterar repetidamente el cuerpo de un bucle 
+	- ( ) Reservar dinámicamente (malloc) espacio para una estructura o union 
+	- ( ) Referenciar continuamente la misma variable local 
+
+174. ¿Cuál de las siguientes es una idea fundamental de la jerarquía de memoria? 
+	- ( ) Crear una gran cantidad de almacenamiento que sea caro y rápido
+    - ( ) Crear una pequeña cantidad de almacenamiento que sea caro y lento 
+	- (x) Que dispositivos más pequeños y rápidos sirvan de cache para dispositivos más grandes y lentos 
+	- ( ) Que dispositivos más grandes y lentos sirvan de cache para dispositivos más pequeños y rápidos 
+
+175. ¿Cuál de las siguientes afirmaciones acerca de las memorias SRAM es falsa? 
+	- ( ) Los datos almacenados se mantienen por un tiempo indefinido mientras se mantenga la alimentación. 
+	- ( ) El número de transistores necesario para implementar cada celda es mayor que en las memorias RAM dinámicas 
+	- (x) Las operaciones de lectura son destructivas 
+	- ( ) Son más veloces que las memorias RAM dinámicas
+
+176. Se dispone de un circuito integrado que actúa como módulo básico de memoria de 8K × 4. ¿Qué circuitos necesitamos para construir una memoria de 17K × 8? 
+	- ( ) 2 módulos de memoria 
+	- ( ) 2 módulos de memoria y un decodificador. 
+	- ( ) 4 módulos de memori - ( ) 
+	- (x) 4 módulos de memoria y un inversor. 
+
+177. En la cache L1 de instrucciones, la tasa de fallos: 
+	- ( ) Siempre tiende a crecer si el tamaño total de L1 crece. 
+	- (x) Siempre tiende a disminuir si el tamaño total de L1 crece. 
+	- ( ) Siempre tiende a crecer si el número de vías crece. 
+	- ( ) Siempre tiende a disminuir si el número de vías disminuye. 
+
+178. Supongamos que una memoria cache de tamaño 512B con política LRU está inicialmente vacía. Si para la siguiente secuencia de direcciones enviadas a la cache: 0, 2, 4, 8, 16, 32, la tasa de acierto es 0.33, ¿cuál es entonces el tamaño de bloque de la cache? 
+	- ( ) 4B 
+	- (x) 8B 
+	- ( ) 16B 
+	- ( ) Ninguno de los anteriores 
+
+179. Un sistema tiene una cache asociativa por conjuntos de 2-vias con 16 conjuntos y líneas de 64. ¿A qué conjunto le corresponde el byte con dirección 0xdeadbeef? 
+	- ( ) 7 
+	- (x) 11 
+	- ( ) 13 
+	- ( ) 14
+
+170. ¿Cuál es el tamaño de la etiqueta de caché en un ordenador capaz de direccionar por bytes 1 MB de memoria principal y 32 KB de memoria caché y correspondencia asociativa por conjuntos con 32 bytes por línea y 16 líneas por conjunto? 
+	- ( ) 6 bits 
+	- ( ) 7 bits 
+	- ( ) 8 bits 
+	- (x) 9 bits 
+
+181. En el direccionamiento inmediato el operando reside en: 
+	- ( ) en un registro del procesador 
+	- (x) en la instrucción tras el código de operación 
+	- ( ) en memoria, en la dirección indicada 
+	- ( ) en la pila 
+
+182. Una instrucción máquina del tipo "Add M,R" podría formar parte del repertorio de 
+	- ( ) una máquina pila 
+	- ( ) una máquina de acumulador 
+	- ( ) una máquina con arquitectura R/R 
+	- (x) una máquina con arquitectura M/M
+
+183. La traducción a ASM de una función C con prototipo `void fun(<tipo> arg1, <tipo> arg2)`; por parte de gcc empieza con el siguiente texto:<br>
+<code>fun: <br>movl (%rdi), %eax <br>movl (%rsi), %edx ... </code>
+¿Cuál es el posible <tipo> mencionado en el prototipo? 
+	- ( ) `long *`
+	- (x) `unsigned int *`
+	- ( ) `short *`
+	- ( ) `unsigned char *` 
+
+184. Se puede describir paso a paso la ejecución de la instrucción add (%rbx, %rdx,4), %eax; de la siguiente manera (marcar la opción FALSA): 
+	- ( ) primero: se calcula la dirección efectiva EA=RBX+RDX*4a 
+	- (x) segundo: se leen ocho bytes a partir de dicha dirección de memoria 
+	- ( ) tercero: se yuxtaponen los bytes leídos de forma que el de dirección más baja ("el primero leído") sea el menos significativo y el de dirección más alta ("el último leído") sea el más significativo 
+	- ( ) cuarto: se suma el valor obtenido con el registro EAX 
+185. ¿Qué valor contendrá el registro rdx tras ejecutar las dos instrucciones siguientes? 
+movq $-1, %rdx 
+movl $1, %edx 
+	- ( ) 0xFFFF FFFF FFFF 0001 
+	- ( ) 0xFFFF FFFF 0000 0001 
+	- ( ) 0xFFFF 0000 0000 0001 
+	- (x) 0x0000 0000 0000 0001
+186. En el fragmento de código 
+400544:e807000000 callq400550<f> 
+400549:488903 mov %rax,(%rbx) 
+la instrucción call suma al contador de programa la cantidad: 
+	- (x) 0x00000007 
+	- ( ) 0x00400549 
+	- ( ) 0x400544 
+	- ( ) 0x48 
+187. Una función C declarada como int get_var_digit(size_t index, size_t digit) genera como código ensamblador 
+movq var(,%rdi,8), %rax 
+movl (%rax,%rsi,4), %eax 
+ret 
+Se puede adivinar que: 
+	- ( ) var es un array multi-nivel (punteros a enteros) de cuatro filas  
+	- (x) var es un array multi-nivel pero no se pueden adivinar las dimensiones  
+	- ( ) var es un array bidimensional de enteros, con ocho columnas  
+	- ( ) var es un array bidimensional de enteros, con cinco columnas 
+188. En el contexto de microprogramación, el control residual... 
+	- ( ) intenta disminuir la cantidad de "bits residuales", usando las técnicas de codificación y/o solapamiento de campos, como opuestas a la microprogramación directa o "inmediata". 
+	- ( ) se refiere a que cuanto más codificación y/o solapamiento se use, menos capacidad para expresar paralelismo se tiene, siendo ese menor control un "residuo" o consecuencia no deseada de dichas técnicas no "inmediatas" 
+	- ( ) clasifica las microinstrucciones del microcódigo según formen parte de microprogramas ("microinstr. inmediatas") o no ("microinstr. residuales") 
+	- (x) consiste en almacenar señales de control en un "registro de control residual" para usarlas en ciclos posteriores, a diferencia del "control inmediato", en donde los bits se utilizan inmediatamente 
+189. Suponer que un procesador ideal que ejecuta cada instrucción en T segundos se segmenta en cuatro etapas ideales de duración T/4. ¿Cuál razonamiento es correcto? 
+	- ( ) Se espera una reducción de prestaciones porque además de ejecutar las instrucciones hay que segmentarlas (coste de la segmentación) 
+	- ( ) Se espera una reducción de prestaciones porque la duración del ciclo de reloj vendrá impuesta por la etapa más lenta 
+	- ( ) Se espera un aumento de prestaciones debido al efecto de los riesgos (hazards) sobre el avance de las instrucciones en el cauce 
+	- (x) Se espera un aumento de prestaciones debido a que las cuatro etapas solapan su funcionamiento, con una aceleración ideal de 4x 
+190. Un salto condicional del tipo "delayed branch", o salto retardado, ejecuta la(s) instrucción(es) siguiente(s)... 
+	- ( ) sólo si el salto se produce (las ignora si NO se produce), de manera que instrucción(es) en el destino del salto podrían adelantarse tras la propia instrucción de salto 
+	- ( ) sólo si el salto NO se produce (las ignora si se produce), de manera que instrucción(es) en el destino del salto podrían adelantarse tras la propia instrucción de salto 
+	- (x) siempre, de manera que instrucción(es) anterior(es) al salto podrían colocarse tras la propia instrucción de salto
+	- ( ) nunca, de manera que instrucción(es) anterior(es) al salto no podrían colocarse tras la propia instrucción de salto 
+191. Un computador con 20 líneas de dirección y memoria de bytes tiene 640KB de RAM, 128KB de ROM, y utiliza E/S mapeada en memori - ( ) ¿Cuál es el número máximo de periféricos que pueden conectarse, si cada uno de ellos utiliza 32 direcciones? 
+	- ( ) 2^10 
+	- ( ) 2 ^11 
+	- ( ) 2 ^12 
+	- (x) 2 ^13 
+192. La consulta de estado que se puede llevar a cabo en una operación de salida mediante E/S programada sirve para… 
+	- ( ) consultar si el dispositivo tiene algún dato de salida disponible 
+	- (x) consultar si el dispositivo está aún ocupado, por ejemplo con alguna operación de salida 	anterior 
+	- ( ) consultar si el dispositivo funciona correctamente 
+	- ( ) ninguna de las respuestas anteriores es correcta 
+193. ¿Qué conjunto de componentes permite construir una memoria 256Mx32? (sin que sobren componentes) 
+	- ( ) 16 chips 64Mx4 
+	- (x) 32 chips 64Mx4 (256*32==64*4*32) 
+	- ( ) 16 chips 64Mx16 
+	- ( ) Ninguna de las anteriores 
+194. ¿Cuántas líneas de dirección (patillas) son necesarias para direccionar un chip de memoria DRAM de 256K x 4? 
+	- (x) 9 
+	- ( ) 13 
+	- ( ) 19
+	- ( ) 22 
+195. ¿Qué arquitectura es típica en procesadores RISC? 
+	- (x) registro-registro 
+	- ( ) registro-memoria 
+	- ( ) memoria-registro 
+	- ( ) memoria-memoria 
+196. ¿Cuál de las siguientes características es posterior a la segunda generación de computadores? 
+	- ( ) Memoria de núcleos de ferrita 
+	- ( ) Compilador 
+	- (x) Memoria cache 
+	- ( ) Lenguaje ensamblador 
+197. Si el registro rax contiene x, la sentencia en C x &= 0x1; se traducirá a ensamblador como: 
+	- (x) andq $1, %rax 
+	- ( ) orq $0x1, %rax 
+	- ( ) shrq %rax 
+	- ( ) sarq %rax 
+198. Para crear espacio en la pila para variables locales sin inicializar suele realizarse la siguiente operación 
+	- ( ) Restar una cantidad positiva a rbp. 
+	- ( ) Sumar una cantidad positiva a rbp. 
+	- (x) Restar una cantidad positiva a rsp. 
+	- ( ) Sumar una cantidad positiva a rsp.
+199. Si la estructura struct a ocupa un espacio de 26 bytes en memoria, ¿cuántos bytes ocupa la siguiente estructura struct b cuando se compila en 64 bits? 
+	- ( ) 24 
+	- ( ) 58 
+	- (x) 60 (entero ocupa 8) 
+	- ( ) 64 
+200. En la secuencia de programa siguiente:<br>
+<code> 628: e8 cd ff ff ff 	callq	5fa <suma>   <br> 62d: 48 83 c4 20 	add 	$0x20, %rsp </code>
+¿Cuál es el valor que introduce en la pila la instrucción callq? 
+	- ( ) 0xffffffcd 
+	- ( ) 0x5fa 
+	- ( ) 0x628 
+	- (x) 0x62d 
+201. Un archivo .o que contiene código objeto reubicable: 
+	- (x) Contiene instrucciones máquina binarias. 
+	- ( ) Contiene instrucciones máquina y directivas en ensamblador.  
+	- ( ) Puede ejecutarse directamente. 
+	- ( ) Contiene las direcciones definitivas de las variables globales. 
+202. ¿Cuál de las siguientes sentencias sobre la unidad de control es FALSA? 
+	- ( ) Cuanto más horizontal es la microprogramación, más largas son las microinstrucciones 
+	- ( ) Debido al pequeño número de operaciones simples, la sección de control de un procesador RISC puede ser cableada en lugar de microprogramada
+	- (x) El programador de lenguaje ensamblador necesita conocer la microarquitectura del ordenador 
+	- ( ) Es posible realizar el diseño físico de una unidad de control cableada de manera semiautomática 
+203. En una unidad de control microprogramada con formato de microinstrucciones vertical, un subcampo que deba especificar 16 señales de control, codificadas de tal forma que pueda activarse sólo una o ninguna señal de control, habrá de tener una anchura mínima de: 
+	- ( ) 4 bits 
+	- (x) 5 bits (2^4+1bit de control) 
+	- ( ) 16 bits 
+	- ( ) 17 bits 
+204. La técnica de "adelanto de registros" (register forwarding) en un cauce segmentado se usa para limitar el impacto de los riesgos... 
+	- ( ) estructurales 
+	- ( ) organizativos 
+	- ( ) de control 
+	- (x) de datos 
+205. Un sistema no segmentado tarda 10 ns en procesar una tare - ( ) La misma tarea puede ser procesada en un cauce (pipeline) de 4 segmentos con un ciclo de reloj de 4 ns. Cuando se procesan muchas tareas, la ganancia máxima de velocidad que se obtiene se acerca a: 
+	- ( ) 10 
+	- ( ) 4 
+	- ( ) 40 
+	- (x) 2,5(10/4) 
+206. ¿Cuál de las siguientes afirmaciones es cierta? 
+	- ( ) La E/S en memoria emplea la patilla IO/M#.
+	- (x) En E/S independiente, las instrucciones de acceso a memoria suelen ser más largas que las de E/S. 
+	- ( ) La E/S en memoria facilita la protección. 
+	- ( ) En la E/S en memoria las instrucciones de E/S son fácilmente reconocibles. 
+207. La instrucción máquina di (Disable Interrupts), conocida como cli (Clear Interrupt Flag) en x86: 
+	- (x) Desactiva todas las interrupciones enmascarables. 
+	- ( ) Desactiva las interrupciones de inferior o igual prioridad a una dada
+	- ( ) Desactiva determinados niveles de interrupción de forma selectiva
+	- ( ) Desactiva las interrupciones software. 
+208. ¿Cuál de las siguientes afirmaciones sobre la jerarquía de memoria es cierta?  
+	- (x) Para aumentar la eficiencia se transfieren bloques completos.  
+	- ( ) Toda la información que el procesador necesita está en el nivel 1. 
+	- ( ) Si una palabra no se encuentra en el tercer nivel entonces se busca en el segundo nivel. 
+	- ( ) A medida que nos alejamos del procesador, el tamaño de memoria disminuye. 
+209. ¿Cuántas líneas de dirección (patillas) son necesarias para direccionar un chip de memoria DRAM de 4096 x 4? 
+	- (x) 6 (2^12) 
+	- ( ) 10 
+	- ( ) 11 
+	- ( ) 12
