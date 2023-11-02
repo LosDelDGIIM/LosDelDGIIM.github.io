@@ -1,9 +1,13 @@
 <br>
 
-# EC. Preguntas Tipo Test de Teoría.
+# EPreguntas Tipo Test de Teoría + Prácticas.
 
 **Autor:** Jose Juan Urrutia Milán 'JJ'.<br>
 **Autor:** Lucas Hidalgo Herrera.<br>
+**Autor:** Lucas Hidalgo Herrera.<br>
+**Autor:** Roberto González Lugo.<br>
+**Autor:** Elías Monge Sánchez.<br>
+**Autor:** Jesús Muñoz Velasco.<br>
 **Autor:** Arturo Olivares Martos.
 ***
 
@@ -13,6 +17,9 @@
 - **Grupo:** A.
 - **Profesor:** Ignacio Rojas Ruiz.
 - **Descripción:** Este documento tiene como objetivo servir para estudiar la asignatura de Estructura de Computadores. En él, se pueden encontrar una gran variedad de preguntas de EC de los últimos años.
+
+Es importante destacar que hay preguntas de todos los temas de la asignatura. Además, algunas preguntas podrán ser sobre IA32, que actualmente ya no entra prácticamente en la asignatura.
+Por último, puede ser que haya preguntas repetidas. En tal caso, se ruega nos lo comuniquen.
 
 Las preguntas se encuentran en <a href=https://losdeldgiim.github.io/subjects/EC/Ex%C3%A1menes/Examenes_Generados/TipoTest.html>esta web</a>.
 
@@ -59,7 +66,7 @@ Explicacion: La pila crece hacia posiciones decrecientes. Por tanto, en este cas
 
 Explicacion: Por convención, y al ser datos de tipo `long`, se guarda en el registro `%rax`.
 
-6. Comparando las convenciones de llamada de gcc Linux IA32 con x86-64 respecto a registros.
+6. Comparando las convenciones de llamada de gcc Linux IA32 con x86-64 respecto a registros **(IA32 ya no entra)**.
     - ( )  En IA32 `%ebx` es salva-invocante, pero en x86-64 `%rbx` es salva-invocado.
     - (x) En IA32 `%ecx` es salva-invocante, y en x86-64 `%rcx` es salva-invocante también.
     - ( )  En IA32 `%esi` es salva-invocado, y en x86-64 `%rsi` es salva-invocado también.
@@ -73,15 +80,13 @@ Explicacion: El IA32 actualmente no entra en la asignatura EC.
     - (x)  El secuenciamiento de las instrucciones máquina.
     - ( )  Todas las respuestas son ciertas.
 
-Explicacion: TERMINAR
+Explicacion: La EC es la que se encarga de las señales de reloj, etc.
 
 8. Respecto a `MBR` y `MAR`
     - ( )  Ambos son accesibles por el programador.
     - ( )  `MAR` contiene el dato/instrucción que se leerá o escribirá en memoria.
     - (x) `MAR` requiere menos señales de control que `MBR`.
     - ( )  Ambos permiten guardar información sobre el marco de pila.
-
-Explicacion: TERMINAR
 
 9. Una instrucción máquina puede desglosarse en las siguientes operaciones elementales:<br>
 `sp := sp-1; m[sp] := pc; pc:= x`<br>
@@ -99,7 +104,7 @@ Explicacion: Se está llamando a una subrutina, ya la pila crece guardándose el
     - ( )  16 bits.
     - ( )  17 bits.
 
-Explicacion: Son 16 señales más el 0; por lo que son 17. Para codificar 17 posibilidades en binario, en necesiario tener en cuenta que se necesitan \\(\log_2(17)\\) redondeados hacia arriba bits. Es decir, nos hacen falta 5 bits.
+Explicacion: Son 16 señales más el 0; por lo que son 17. Para codificar 17 posibilidades en binario, en necesiario tener en cuenta que se necesitan $log_2(17)$ redondeados hacia arriba bits. Es decir, nos hacen falta 5 bits.
 
 
 11. Dado un camino de datos concreto, un posible formato de microprogramación se caracteriza como horizontal o vertical según tenga más o menos (señalar la respuesta falsa)
@@ -108,15 +113,11 @@ Explicacion: Son 16 señales más el 0; por lo que son 17. Para codificar 17 pos
     - (x) micro bifurcaciones
     - ( ) longitud relativa de microinstrucción.
 
-Explicacion: TERMINAR
-
 12. El control residual se utiliza para:
     - ( ) reducir el tiempo de ejecución de las instrucciones máquina
     - ( ) eliminarlos bits residuales de la ejecución de las microinstrucciones
     - (x) reducir el tamaño de la memoria de control
     - ( ) ninguna de las anteriores es cierta.
-
-Explicacion: TERMINAR
 
 13. Un procesador está segmentado en las etapas F, D, E, M y W. Cada una de  ellas consume un tiempo t. La aceleración ideal (si no hay riesgos) al ejecutar n instrucciones respecto a un procesador no segmentado será:
     - (x) 5n/(4+n)
@@ -128,20 +129,18 @@ Explicacion: El número de operaciones en un procesador no segmentado sería 5 p
 
 14. En un procesador con segmentación de cauce, aumentar el número de etapas (p.ej. de 2 a 4, o de 4 a 8), tiene en general como consecuencia:
     - (x) Un Incremendo De Las Prestaciones.
-    - ( )  Un mayor retraso en la ejecución de los programas debido al incremento del número de etapas.
+    - ( ) Un mayor retraso en la ejecución de los programas debido al incremento del número de etapas.
     - ( ) Una disminución en la posible dependencia de datos.
     - ( ) Una disminución de la máxima frecuencia de reloj a la que puede operar el cauce.
     
-Explicacion: TERMINAR
+Explicacion: Se pueden ejecutar más instrucciones simultáneamente, ya que en cada ciclo de reloj podrá entrar una nueva instrucción al cauce.
 
 15. En la secuencia de instrucciones siguiente, siendo el primer registro el destino, ¿cuántos riesgos se dan?<br>
-`sub r2,r1,r3 or r8,r6,r2`
+<code>sub r2,r1,r3<br>or r8,r6,r2</code><br>
     - ( ) Un riesgo estructural.
     - (x) Un riesgo por dependencia de datos.
     - ( ) Un Riesgo Estructural Dos Por dependencia de datos.
     - ( ) Dos riesgos por dependencia de datos y uno de control.
-
-Explicacion: TERMINAR
 
 16. La precaptación (cola de instrucciones) está relacionada con...
     - (x) Los riesgos estructurales (intenta evitar el efecto de un fallo de cache)
@@ -149,15 +148,11 @@ Explicacion: TERMINAR
     - ( ) Los riesgos control (intenta determinar de antemano el flujo de control)
     - ( ) Los riesgos de transferencia (intenta agrupar las posibles transferencias de un conjunto de instrucciones).
 
-Explicacion: TERMINAR
-
 17. Respecto a la segmentación, ¿cuál de las siguientes afirmaciones es falsa?
     - ( ) La técnica de register forwarding habilita una serie de cambios(buses) que se añaden al cauce para permitir que los resultados de una etapa pasen como entradas a la etapa donde son necesarias.
     - ( ) La reorganizacion del código y la introducción de instrucciones no permite evitar dependencias de datos.
     - (x) Retrasar la fase de decisión saltar/no saltar de las instrucciones de salto condicional contribuye a mejorar el rendimiento del procesador.
     - ( ) Cuantas más etapas tenga un cauce, más instrucciones se estarán ejecutando en distintas fases y más posibilidades se presentan de que existan riesgos entre ellas.
-
-Explicacion: TERMINAR
 
 18. ¿Cuál de los siguientes modos de direccionamento es menos preferible para un procesador de 32 bits y con tamaño de instrucción de 32 bits?
     - ( ) registro.
@@ -173,7 +168,7 @@ Explicacion: Son referentes al IA32, que actualmente no entra en la asignatura E
     - ( ) Requiere mucha circuitería.
     - ( ) Requiere multiplexores y demultiplexores para las señales de datos.
 
-Explicacion: Al ser un único bus, podríamos conectar más dispositivos sin que interfieran estre ellos.
+Explicacion: Se pueden incluir más dispositivos, y mediante puertas lógicas podemos evitar cortocircuitos.
 
 
 20. El fragmento de código ensamblador de un microprocesador de 8 bits:<br><code>lds IOBuf	; Apuntar puntero pila a ...área mem.intermedia<br>ldx Count	; Inicializar x-contador<br>poll lda a Status; Leer estado en A<br>bpl poll	; Signo (A) != 1 => repetir<br>lda a Data	; Leer dato en A<br>psh a		; transferir dato a pila<br>dex 		; decrementar contador x<br>bne poll	; Seguir leyendo si x!=0<br></code><br> Corresponde a:<br>
@@ -182,7 +177,68 @@ Explicacion: Al ser un único bus, podríamos conectar más dispositivos sin que
     - ( ) Entrada programada sin consulta de estado.
     - ( ) Salida programada con consulta de estado.
 
-Explicacion: TERMINAR:
+Explicacion: Vemos que se consulta el estado y, si se da la condición, se sigue leyendo.
+
+21. En la E/S controlada por interrupciones:
+    - (x) Entrada programada con consulta de estado
+    - ( ) Salida programada sin consulta de estado
+    - ( ) Entrada programada sin consulta de estado
+    - ( ) Salida programada con consulta de estado
+
+22. La instrucción máquina DI (Disable Interrupts), conocida como CLI (Clear Interrupt Flag) en x86, se utiliza para desactivar:
+    - (x) Todas Las Interrupciones Enmascarables
+    - ( ) Las interrupciones de inferior o igual prioridad a una dada
+    - ( ) Determinados niveles de interrupción de forma selectiva
+    - ( ) Las interrupciones software
+
+23. Con nueve controladores de interrupciones 8259 se pueden manejar
+exactamente:
+    - ( ) 8 niveles de prioridad
+    - ( ) 16 niveles de prioridad
+    - ( ) 24 niveles de prioridad
+    - (x) Ninguna de las anteriores es cierta
+
+24. ¿Cuál de los siguientes es un registro de un controlador de DMA?
+    - ( ) `IR` (Instruction Register)
+    - ( ) `PC` (Program Counter)
+    - ( ) `SP` (StackPointer)
+    - (x) `WC` (Word Count)
+
+25. Respecto al refresco de memorias DRAM, ¿cuál de las siguientes afirmaciones es falsa?
+    - (x) Una operación de refresco consiste en dar un impulso /CAS junto con una dirección de columna.
+    - ( ) Los chips DRAM refrescan automáticamente la fila accedida en cualquier ciclo de lectura o escritura.
+    - ( ) Se precisa una circuitería auxiliar, externa al chip DRAM o integrada en él, que produzca ciclos de refresco.
+    - ( ) Los ciclos de refresco deben producirse cada pocos ms (milisegundos).
+
+26. La tasa de aciertos \\(A_i\\) del nivel i de una jerarquía de memoria no depende de:
+    - ( ) La capacidad (tamaño) ni del nivel i.
+    - ( ) La estrategia de administración de memoria.
+    - ( ) La unidad de la transferencia de información \\(x_i\\) entre el nivel i y el  \\(i+1\\).
+    - (x) El ancho de banda  \\(b_i\\) del nivel i.
+
+27. La política de correspondencia de una memoria cache con 1 único conjunto es:
+    - ( ) Directa
+    - (x) Totalmente asociativa
+    - ( ) Asociativa por conjuntos con una única línea
+    - ( ) Asociativa por conjuntos de una única vía
+
+28. La política de correspondencia de una memoria cache con la mitad de conjuntos que líneas es:
+    - (x) Asociativa por conjuntos de 2 vías
+    - ( ) Totalmente asociativa de media vía
+    - ( ) Asociativa por conjuntos con 2 líneas
+    - ( ) Directa con 2 líneas
+
+29. Para construir una DRAM de 4GB con pastillas de 512Mx4bit hacen falta
+    - ( ) 8 pastillas
+    - (x) 16 pastillas
+    - ( ) 32 pastillas
+    - ( ) 64 pastillas
+
+30. Para diseñar una memoria con ancho de palabra  \\(k\times m\\) (y mismo no palabras que los módulos) a partir de módulos con ancho de palabra m, se utilizan k módulos
+    - ( ) repartiendo las líneas de datos entre los k módulos: el primero se conecta a D0...Dk-1, el segundo a Dk...D2k-1, etc
+    - ( ) repartiendo las líneas de dirección: el 1o se conecta a A0...Ak-1, el 2o a Ak...A2k-1, etc
+    - (x) repartiendo líneas datos:el 1o se conecta a D0...Dm-1, el 2o a Dm...D2m-1, etc
+    - ( ) repartiendo líneas dirección: el 1o se conecta a A0...Am-1, el 2o a Am...A2m-1, etc
 
 31. ¿Cuál de las siguientes afirmaciones sobre el benchmark SPEC CPU es falsa?
 
@@ -190,6 +246,8 @@ Explicacion: TERMINAR:
     - ( ) Se cronometran unos 12 tests de enteros (CINT2006) y unos 17 tests de punto flotante (CFP2006).
     - ( ) Se usa como referencia un computador UltraSPARC II 300MHz, y para cada test se calcula el cociente entre el tiempo de ejecución en el computador a testear y en el de referencia.
     - (x) El resultado final es la media aritmética de las (12 ó 17) velocidades, bien sea de enteros ó de punto flotante (SPECint2006 ó SPECfp2006).
+
+Explicacion: No es la media aritmética, es la geométrica.
 
 32. ¿En qué generación, dentro de la historia de los computadores digitales, aparecieron la microprogramación, la segmentación de cauce, la memoria cache, los S.O. multiusuario y la memoria virtual?
 
@@ -205,7 +263,7 @@ Explicacion: TERMINAR:
     - ( ) `long long` pasa de 4 B a 8 B.
     - ( ) Ninguna de las anteriores.
 
-34. Con el repertorio IA32, para sumar `%eax` y `%ebx` dejando el resultado en `%ecx` se podría hacer lo siguiente:
+34. Con el repertorio x86-64, para sumar `%eax` y `%ebx` dejando el resultado en `%ecx` se podría hacer lo siguiente:
 
     - ( ) `lea %eax, %ebx, %ecx`
     - (x) `lea (%eax, %ebx, 1), %ecx`
@@ -218,6 +276,8 @@ Explicacion: TERMINAR:
     - (x) `movl %r8, %eax`
     - ( ) `movl (%rdi, %rcx, 4), %edx`
     - ( ) `addq $1, %rcx`
+
+Explicacion: TERMINAR
 
 36. Si la variable `val` está almacenada en `ebx` y la variable `x` está almacenada en `eax`, la sentencia `val ^= x;` se puede traducir a ensamblador como:
 
@@ -233,19 +293,25 @@ Explicacion: TERMINAR:
     - ( ) `or $0b101, %edx`
     - (x) `or $0x20, %edx`
 
-38. Si tenemos un número `n`, de 64 bits, almacenado en la pareja de registros `EDX:EAX` (`EDX` contiene los 32 bits más significativos y `EAX` los 32 bits menos significativos y queremos realizar la división `n / 232` entonces:
+Explicacion: En binario, tenemos que `0x20=0b10 0000`. Notemos que se empieza a contar desde 0.
+
+38. Si tenemos un número `n`, de 64 bits, almacenado en la pareja de registros `EDX:EAX` (`EDX` contiene los 32 bits más significativos y `EAX` los 32 bits menos significativos) y queremos realizar la división \\(n/2^{32}\\) entonces:
 
     - ( ) Podemos quedarnos con `EDX`, pero sólo en el caso de que `n` sea un número sin signo.
     - (x) Podemos quedarnos con `EDX` tanto si `n` es un número con signo como sin signo.
     - ( ) Podemos usar las instrucciones siguientes, pero sólo en el caso de que `n` sea un número con signo: <br><code>mov $0x100000000, %ecx<br>div %ecx</code>
     - ( ) Podemos usar las instrucciones siguientes, tanto si `n` es un número con signo como sin signo: <br><code>mov $0x100000000, %ecx<br>div %ecx</code>
 
-39. ¿Dónde está ubicado el primer argumento a una función (suponer código ensamblador cdecl generado por gcc para Linux/x86) inmediatamente después de ejecutar la instrucción call?
+Explicacion: Al dividir entre $2^{32}$, es como desplazar hacia la derecha 32 bits. Los 32 LSB se perderán, quedando tan solo `EDX`. Además, el signo se mantiene, ya que el `MSB` de `n` sigue siendo el `MSB` de `EDX`. No obstante, el cociente ya está en 32 bits, no en 64.
 
-    - ( ) `%ebp + 0x4`
-    - ( ) `%ebp - 0x4`
-    - (x) `%esp + 0x4`
-    - ( ) `%esp - 0x4`
+39. ¿Dónde está ubicado el séptimo argumento a una función (suponer código ensamblador generado por gcc para x86-64) inmediatamente después de ejecutar la instrucción `call`?
+
+    - ( ) `%rbp + 0x8`
+    - ( ) `%rbp - 0x8`
+    - (x) `%rsp + 0x8`
+    - ( ) `%rsp - 0x8`
+
+Explicacion: Los 6 primeros son registros. El séptimo es el primero en la pila. Como el puntero de pila es `%rsp`, y la pila crece en direcciones decrecientes, tenemos que ha de sumársele 8 para acceder al último valor guardado.
 
 40. Dado el código C siguiente:<br><code>struct data {<br> char str[16];<br>};<br>char *f(struct data *ptr) {<br> return &(ptr->str[2]);<br>}</code><br>La función se traducirá a ensamblador de x86-64 como:
 
@@ -254,6 +320,8 @@ Explicacion: TERMINAR:
     - ( ) `movq 2(%rdi), %rax` <br>`ret`
     - ( ) `leaq (,%rdi,2), %rax` <br>`ret`
 
+Explicacion: A la dirección de memoria de `ptr` (que está en `%rdi`), ha de sumársele 2, ya que los `char` se codifican con un byte. Por tanto, es `2(%rdi)`. Además, como no se quiere obtener el contenido, sino tan solo la dirección (`&`), no usa `movq` sino `leaq`.
+
 41. Respecto a requisitos de alineamiento de structs en gcc/IA32 x86 y x86-64, alguna de las siguientes afirmaciones es falsa:
 
     - (x) En x86 Linux alinea `double` a 4x (Windows no).
@@ -261,12 +329,16 @@ Explicacion: TERMINAR:
     - ( ) En x86-64 Linux alinea `double` a 8x (Windows también).
     - ( ) En x86-64 Linux alinea `float` a 8x (Windows también).
 
+Explicacion: Windows también lo alinea a `4x`.
+
 42. Si la estructura struct `a` ocupa un espacio de 28 bytes en memoria, ¿cuántos bytes ocupa la siguiente estructura struct `b` cuando se compila en 64 bits? <br><code>struct b {<br> struct a a1;<br> int i;<br> struct a a2;<br>};</code>
 
     - ( ) 24 bytes.
     - ( ) 60 bytes.
     - ( ) 64 bytes.
     - (x) 84 bytes.
+
+Explicacion: El offset de `a1` es 0, el de `i` es 28, y el de `a2` ha se ser múltiplo de 28, por lo que es 56. Por tanto, aunque un `int` solo ocupe 4, el resto de bits hasta ocupar 28 no se usan.
 
 43. Respecto a los términos microinstrucción y microcódigo:
 
@@ -282,6 +354,8 @@ Explicacion: TERMINAR:
     - ( ) Las únicas instrucciones en las que algunas de sus fases de ejecución conllevan un acceso a memoria son las instrucciones load y store.
     - ( ) El registro puntero de pila es un registro de propósito general que suele contener tanto direcciones como datos.
 
+Explicacion: El registro de estado contiene todas las banderas, como `ZF, CF, OF, SF` .
+
 45. Un procesador con una unidad de control microprogramada tiene una memoria de control de 300 palabras de 100 bits, de las que 200 son diferentes. Si se rediseñara como unidad de control nanoprogramada, ¿qué tamaño ocuparía la nanomemoria que contiene las microinstrucciones completas sin repeticiones?
 
     - (x) 20000 bits.
@@ -289,12 +363,16 @@ Explicacion: TERMINAR:
     - ( ) 22400 bits.
     - ( ) 30000 bits.
 
+Explicacion: La nanomemoria tendría 200 palabras, y cada una sería una dirección, por lo que ocuparía 100 bits.
+
 46. En el pseudocódigo usado para representar las microinstrucciones, la expresión `goto f(IR)`:
 
     - ( ) Se utiliza para realizar un microsalto condicional en función del registro de estado.
     - ( ) Realiza una llamada a una microsubrutina.
     - (x) Salta a una dirección de memoria de control que depende de la instrucción máquina actual.
     - ( ) Permite saltar a la dirección de memoria de control del principio de un microbucle.
+
+Explicacion: `IR` contiene la instrucción máquina actual, y `f` se supone que es una función que devolverá a qué dirección de memoria ha de saltar.
 
 47. Respecto a la predicción de saltos, alguna de las siguientes afirmaciones es falsa:
 
@@ -310,9 +388,11 @@ Explicacion: TERMINAR:
     - ( ) Por definición, un procesador superescalar debe tener varias unidades funcionales (más de una).
     - ( ) Implícitamente, se presupone que un procesador superescalar emitirá más de una instrucción por ciclo.
 
+Explicacion: En ambos es fundamental.
+
 49. Respecto a los conceptos de interfaz de dispositivo, controlador(a), puerto de E/S:
 
-    - (x) La controladora o interfaz contiene los puetos necesarios para utilizar el dispositivo.
+    - (x) La controladora o interfaz contiene los puertos necesarios para utilizar el dispositivo.
     - ( ) Cada puerto o interfaz es una línea de comunicación con el procesador. El conjunto de ellos forma el controlador.
     - ( ) El puerto, o interfaz, contiene los controladores necesarios para comunicar el dispositivo con el procesador.
     - ( ) El interfaz contiene las controladoras necesarias para conectar los puertos con el procesador.
@@ -331,19 +411,23 @@ Explicacion: TERMINAR:
     - ( ) Empeora las prestaciones globales del sistema respecto a la E/S por interrupciones porque una .instrucción de transferencia individual de datos con la interfaz del periférico (por ej. IN, OUT) es más lenta en E/S programada que en E/S por interrupciones.
     - (x) Empeora las prestaciones globales del sistema respecto a la E/S por interrupciones porque la CPU debe encargarse de la sincronización con la interfaz del periférico haciendo una espera activa.
 
-52. Una puerta `AND` con 16 entradas conectada a un bus de direcciones de 16 bits, con todos los bits negados excepto `A10` y `A6`, permite seleccionar un dispositivo (con CS activa en alta) en la dirección:
+52. Una puerta `AND` con 16 entradas conectada a un bus de direcciones de 16 bits, con todos los bits negados excepto `A10` y `A6`, permite seleccionar un dispositivo (con `CS` activa en alta) en la dirección:
 
     - ( ) `0xFDDF`
     - ( ) `0xFBBF`
     - ( ) `0x0220`
     - (x) `0x0440`
 
-53. Un computador con 15 líneas de direcciones tiene 3 módulos de memoria de 213 palabras y utiliza E/S mapeada en memoria. ¿Cuál es el número máximo de periféricos que pueden conectarse, si cada uno de ellos utiliza 8 direcciones?
+Explicacion: `CS` activa en alta implica que, cuando recibe un `1`, se ha seleccionado dicho dispositivo. Para que una puerta `AND` emita un 1, todas sus entradas han de ser 1. Para los bits negados, ha de ser un 0 el bit correspondiente de la dirección, pero para el 6º y 10º (empezando desde el 0) han de estar a 1. Por tanto, ha de ser `0b 0000 0100 0100 0000 = 0x0440`.
 
-    - (x) 210.
-    - ( ) 212.
-    - ( ) 211.
-    - ( ) 213.
+53. Un computador con 15 líneas de direcciones tiene 3 módulos de memoria de \\(2^{13}\\) palabras y utiliza E/S mapeada en memoria. ¿Cuál es el número máximo de periféricos que pueden conectarse, si cada uno de ellos utiliza 8 direcciones?
+
+    - (x) \\(2^{10}\\).
+    - ( ) \\(2^{12}\\).
+    - ( ) \\(2^{11}\\).
+    - ( ) \\(2^{13}\\).
+
+Explicacion: Si hay 3 módulos de $2^{13}$ palabras, como cada palabra ocupa una dirección, estos ocupan $3\cdot 2^{13}$ direcciones. Por tanto, quedan libre $2^{13}$ direcciones. Como cada periférico ocupa $8=2^3$ direcciones, tenemos espacio para $2^{10}$ periféricos. De esta forma, tendremos: $$3\cdot 2^{13} + 2^{10}\cdot 2^{3}=3\cdot 2^{13} + 2^{13}=(3+1)\cdot 2^{13}=2^{15}$$
 
 54. Un procesador accede en el instante de tiempo `t` a una posición de memoria `d(t)`. Poco tiempo después (en el instante de tiempo `t+k`) accede a la posición anterior `d(t)-1`. Esos dos accesos son un ejemplo de:
 
@@ -359,6 +443,8 @@ Explicacion: TERMINAR:
     - ( ) 10 ns.
     - (x) 12 ns.
 
+Explicacion: Tenemos que el $92%$ de las veces se usa la caché, y el $8%$ restante la memoria principal. Para los casos de la caché, se tarda 4ns, y para los de la MP se tardan 104ns (los 100 de la MP y los 4 de la caché fallida). Por tanto, en total son: $$4\cdot 0.92 + 104\cdot 0.08=12$$
+
 56. Una SRAM de `1Mx4bit` (4Mbit) puede venir organizada en 2048 filas, dedicando por tanto al decodificador de columnas:
 
     - ( ) 6 bits.
@@ -366,12 +452,16 @@ Explicacion: TERMINAR:
     - ( ) 8 bits.
     - (x) 9 bits.
 
+Explicacion: El tamaño de la memoria especificado así implica que hay $1M = 2^{20}$ casillas y cada una ocupa 4 bits (esto último no nos es relevante). Como en total hay $2048=2^{11}$ filas, en total hay $2^{9}$ columnas, por lo que se emplean 9 bits.
+
 57. Un sistema basado en un microprocesador con un bus de datos de `n` bits y un bus de direcciones de 16 bits direcciona la memoria por palabras de `n` bits y dispone de una memoria SRAM formada por dos módulos de `16 K x n` cada uno. ¿Qué porcentaje del mapa de memoria está ocupado por la SRAM?
 
     - ( ) 12.5%
     - ( ) 25%
     - (x) 50%
     - ( ) 100%
+
+Explicacion: Veamos el tamaño de memoria de cada uno de los dos módulos: $$16K\cdot n = 2^4\cdot 2^{10}\cdot n=2^{14}\cdot n$$ Como hay dos módulos, tenemos que la SRAM ocupa $2^{15}\cdot n$ bits. Como el bus de direcciones es de 16 bits, implica que en total el espacio de memoria es de $2^{16}$ direcciones, cada una de $n$ bits. Por tanto, la SRAM ocupa la mitad.
 
 58. Un módulo de memoria de 16 GB está formado por varios chips DRAM de `1024Mx4`. ¿Cuántos chips DRAM necesita el módulo?
 
@@ -408,12 +498,16 @@ Explicacion: TERMINAR:
     - ( ) La unidad de control necesita como entrada el registro contador de programa para saber cuál es la instrucción que debe ejecutar a continuación.
     - ( ) El registro de direcciones de memoria es un registro de propósito general que puede contener tanto direcciones como datos.
 
+Explicacion: La arquitectura Von Neumman consiste en la separación de ALU, UC, E/S, MP, por lo que no es lo descrito. La UC no necesita saber la siguiente instruccón, tan solo activará la señal de reloj cuando toque captarla. El MAR tan solo contiene direcciones, no datos. Por tanto, la correcta es la segunda.
+
 63. En una máquina little-endian con memoria de bytes y representación en complemento a dos que permite accesos a memoria de tamaño byte (1 B), media palabra (2 B) y palabra (4 B), se almacenan a partir de la posición `0xCAFEBAB0` cuatro palabras con valores -1, -2, -3, -4. ¿Qué se obtendría al consultar la media palabra de la posición `0xCAFEBABE`?
 
     - (x) -1.
     - ( ) -4.
     - ( ) No se puede saber, faltan datos.
     - ( ) Ninguna de las anteriores.
+
+Explicacion: Cada palabra guardada ocupa 4 Bytes, por lo que el -4 empieza en la dirección `0xCAFEBABC`. El -4 tenemos que es `-4=0xFFFB`, por lo que en la dirección `0xCAFEBABC` se encuentra la B, y en las tres direcciones siguientes una F. Por tanto, la media palabra que empieza en `0xCAFEBABE` y, por tanto, cupa también `0xCAFEBABF`, es `0xFF=-1`.
 
 64. Se pretende almacenar una palabra de 4 B en una memoria de bytes a partir de una dirección determinada. ¿Cuál de las siguientes es válida, si la palabra debe quedar alineada?
 
@@ -422,12 +516,16 @@ Explicacion: TERMINAR:
     - ( ) `0xCAFEBABE`
     - ( ) `0xABADF00D`
 
+Explicacion: Las palabras han de empezar en múltiplos de 4, por lo que los dos últimos bits de la dirección han de ser 0. Esto tan solo ocurre si los últimos 2 bits son `0b0000=0x0`, `0b0100=0x4`, `0b1000=0x8` o `0b=1100=0xC`. Por tanto, la única dirección que está alineada es la que termina en `C`.
+
 65. En una arquitectura de acumulador, la instrucción `LOAD X`:
 
     - ( ) Transfiere el contenido del registro `X`a la memoria.
     - ( ) Suma `M(x)` al acumulador.
     - ( ) Transfiere el contenido del acumulador a la posición de memoria `X`.
-    - (x) Transfiere el contenido a la posición de memoria `X` al acumulador.
+    - (x) Transfiere el contenido de la posición de memoria `X` al acumulador.
+
+Explicacion: Esta arquitectura es del tipo `1/1`, por lo que todas las instrucciones reciben 1 operando, y es una dirección de memoria. Todo se controla con el acumulador, por lo que cargar la dirección de memoria `X` se ha de hacer en el acumulador.
 
 66. Una instrucción máquina del tipo `Add M,R` podría formar parte del repertorio de:
 
@@ -435,6 +533,8 @@ Explicacion: TERMINAR:
     - ( ) Una máquina de acumulador.
     - ( ) Una máquina con arquitectura R/R.
     - (x) Una máquina con arquitectura M/M.
+
+Explicacion: Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o `M/M`. Como al menos uno de los dos es una dirección de memoria (`M`), tenemos que no puede ser `R/R`.
 
 67. ¿Cuál de los siguientes no es un modo de direccionamiento IA-32?
 
@@ -1262,54 +1362,557 @@ Se puede adivinar que:
 	- (x) 60 (entero ocupa 8) 
 	- ( ) 64 
 200. En la secuencia de programa siguiente:<br>
-<code> 628: e8 cd ff ff ff 	callq	5fa <suma>   <br> 62d: 48 83 c4 20 	add 	$0x20, %rsp </code>
+<code> 628: e8 cd ff ff ff 	callq	5fa <suma>   <br> 62d: 48 83 c4 20 	add 	$0x20, %rsp </code> <br>
 ¿Cuál es el valor que introduce en la pila la instrucción callq? 
 	- ( ) 0xffffffcd 
 	- ( ) 0x5fa 
 	- ( ) 0x628 
 	- (x) 0x62d 
+
 201. Un archivo .o que contiene código objeto reubicable: 
 	- (x) Contiene instrucciones máquina binarias. 
 	- ( ) Contiene instrucciones máquina y directivas en ensamblador.  
 	- ( ) Puede ejecutarse directamente. 
 	- ( ) Contiene las direcciones definitivas de las variables globales. 
+
 202. ¿Cuál de las siguientes sentencias sobre la unidad de control es FALSA? 
 	- ( ) Cuanto más horizontal es la microprogramación, más largas son las microinstrucciones 
 	- ( ) Debido al pequeño número de operaciones simples, la sección de control de un procesador RISC puede ser cableada en lugar de microprogramada
 	- (x) El programador de lenguaje ensamblador necesita conocer la microarquitectura del ordenador 
 	- ( ) Es posible realizar el diseño físico de una unidad de control cableada de manera semiautomática 
+
 203. En una unidad de control microprogramada con formato de microinstrucciones vertical, un subcampo que deba especificar 16 señales de control, codificadas de tal forma que pueda activarse sólo una o ninguna señal de control, habrá de tener una anchura mínima de: 
 	- ( ) 4 bits 
 	- (x) 5 bits (2^4+1bit de control) 
 	- ( ) 16 bits 
 	- ( ) 17 bits 
+
 204. La técnica de "adelanto de registros" (register forwarding) en un cauce segmentado se usa para limitar el impacto de los riesgos... 
 	- ( ) estructurales 
 	- ( ) organizativos 
 	- ( ) de control 
 	- (x) de datos 
+
 205. Un sistema no segmentado tarda 10 ns en procesar una tare - ( ) La misma tarea puede ser procesada en un cauce (pipeline) de 4 segmentos con un ciclo de reloj de 4 ns. Cuando se procesan muchas tareas, la ganancia máxima de velocidad que se obtiene se acerca a: 
 	- ( ) 10 
 	- ( ) 4 
 	- ( ) 40 
 	- (x) 2,5(10/4) 
+
 206. ¿Cuál de las siguientes afirmaciones es cierta? 
 	- ( ) La E/S en memoria emplea la patilla IO/M#.
 	- (x) En E/S independiente, las instrucciones de acceso a memoria suelen ser más largas que las de E/S. 
 	- ( ) La E/S en memoria facilita la protección. 
-	- ( ) En la E/S en memoria las instrucciones de E/S son fácilmente reconocibles. 
-207. La instrucción máquina di (Disable Interrupts), conocida como cli (Clear Interrupt Flag) en x86: 
-	- (x) Desactiva todas las interrupciones enmascarables. 
-	- ( ) Desactiva las interrupciones de inferior o igual prioridad a una dada
-	- ( ) Desactiva determinados niveles de interrupción de forma selectiva
-	- ( ) Desactiva las interrupciones software. 
+	- ( ) En la E/S en memoria las instrucciones de E/S son fácilmente reconocibles.
+
 208. ¿Cuál de las siguientes afirmaciones sobre la jerarquía de memoria es cierta?  
 	- (x) Para aumentar la eficiencia se transfieren bloques completos.  
 	- ( ) Toda la información que el procesador necesita está en el nivel 1. 
 	- ( ) Si una palabra no se encuentra en el tercer nivel entonces se busca en el segundo nivel. 
 	- ( ) A medida que nos alejamos del procesador, el tamaño de memoria disminuye. 
+
 209. ¿Cuántas líneas de dirección (patillas) son necesarias para direccionar un chip de memoria DRAM de 4096 x 4? 
 	- (x) 6 (2^12) 
 	- ( ) 10 
 	- ( ) 11 
 	- ( ) 12
+
+
+
+210. ¿Cuál de las siguientes instrucciones máquina copia en `EAX` la dirección efectiva resultante de la operación EDX*4 + EBX?
+    - ( ) `leal 4(%edx, %edx), %eax`
+    - (x) `leal (%ebx, %edx, 4), %eax`
+    - ( ) `movl 4(%edx, %edx), %eax`
+    - ( ) `movl (%ebx, %edx, 4), %eax`
+
+211. ¿Cuál de las siguientes instrucciones máquina copia en `EAX` el entero almacenado en la posición de memoria cuya dirección efectiva es el resultado de la operación `EDX*4 + EBX`?
+    - ( ) `leal 4(%edx, %edx), %eax`
+    - ( ) `leal (%ebx, %edx, 4), %eax`
+    - ( ) `movl 4(%edx, %edx), %eax`
+    - (x) `movl (%ebx, %edx, 4), %eax`
+
+212. Los switches `–m elf_i386` y `–m elf_x86_64` para trabajar en 32 bits / 64 bits corresponden a la herramienta...
+    - ( ) `gcc`
+    - ( ) `as`
+    - (x) `ld`
+    - ( ) `nm`
+
+213. Si `ECX` vale 0, la instrucción `adc $0,%ecx`
+    - ( ) Pone `CF=1`
+    - (x) Pone `CF=0`
+    - ( ) Cambia `CF`
+    - ( ) No cambia `CF`
+
+214. Dada la siguiente definición de datos:<br>
+     <code>
+     lista:	.int	0x10000000, 0x50000000, <br>
+             0x10000000, 0x20000000  <br>
+     longlista:	.int	(.-lista)/4			<br>
+     resultado:	.quad	0x123456789ABCDEF	<br>
+     formato:	.ascii	"suma=%llu=%llx hex\n\0"	<br>
+     </code><br>
+    La instrucción para copiar la dirección de memoria donde comienza lista en el registro EBX es:
+    - ( ) `movl lista, %ebx`
+    - (x) `movl $lista, %ebx`
+    - ( ) `movl (lista), %ebx`
+    - ( ) `movl $lista, (%ebx)`.
+
+215. Dada la siguiente definición de datos:<br>
+     <code>
+     lista:	.int	0x10000000, 0x50000000, <br>
+             0x10000000, 0x20000000  <br>
+     longlista:	.int	(.-lista)/4			<br>
+     resultado:	.quad	0x123456789ABCDEF	<br>
+     formato:	.ascii	"suma=%llu=%llx hex\n\0"	<br>
+     </code><br> La instrucción `movl longlista, %ecx` copia el siguiente valor:
+    - (x) 4
+    - ( ) 8
+    - ( ) 16
+    - ( ) 32	
+
+216. Dada la siguiente definición de datos:<br>
+     <code>
+     lista:	.int	0x10000000, 0x50000000, <br>
+             0x10000000, 0x20000000  <br>
+     longlista:	.int	(.-lista)/4			<br>
+     resultado:	.quad	0x123456789ABCDEF	<br>
+     formato:	.ascii	"suma=%llu=%llx hex\n\0"	<br>
+     </code><br> 
+     y suponiendo que hemos llamado a una función *suma* que devuelve un número de 64 bits en la pareja 
+     `EDX:EAX`, las instrucciones que copian ese número en *resultado*
+     son:
+     - (x) `movl %eax, resultado movl %edx, resultado+4`
+     - ( ) `movl (%eax), resultado movl (%edx), resultado+4`
+     - ( ) `movl %eax, resultado+4 movl %edx, resultado`
+     - ( ) `movl (%eax), resultado+4`
+
+217. Dada la siguiente definición de datos:<br>
+     <code>
+     lista:	.int	0x10000000, 0x50000000, <br>
+             0x10000000, 0x20000000  <br>
+     longlista:	.int	(.-lista)/4			<br>
+     resultado:	.quad	0x123456789ABCDEF	<br>
+     formato:	.ascii	"suma=%llu=%llx hex\n\0"	<br>
+     </code><br>
+     La llamada correcta a `printf` será:
+    - ( ) <code> push resultado+4    <br>               push resultado      <br>               push $formato       <br>               call printf         <br>               add $12, %esp       <br> </code>
+    - (x) <code> push resultado+4    <br>                 push resultado      <br>                 push resultado+4    <br>                 push resultado      <br>                 push $formato       <br>                 call printf         <br>                 add $20, %esp       <br> </code>
+    - ( ) <code> push resultado      <br>                 push resultado+4    <br>                 push $formato       <br>                 call printf add $12, %esp <br> </code>
+    - ( ) <code> push resultado       <br>                 push resultado+4     <br>                  push resultado       <br>                 push resultado+4     <br>                 push $formato        <br>                 call printf          <br>                 add $20,%esp           <br> </code>
+
+218. En la práctica "media" se pide sumar una lista de enteros **con** signo de 32 bits en una plataforma de 32 bits sin perder precisión, esto es, evitando overflow. ¿Cuál es el menor valor positivo que repetido en los **dos** primeros elementos de la lista causaría overflow con 32 bits al realizar la suma de **esos dos** primeros elementos de la lista?
+    - ( ) `0x0400 0000`
+    - ( ) `0x0800 0000`
+    - (x) `0x4000 0000`
+    - ( ) `0x8000 0000`
+
+219. ¿Cuál de las siguientes afirmaciones es cierta respecto al lenguaje C?
+     - (x) En lenguaje C, al llamar a una subrutina o función se introducen los parámetros en la pila y después se realiza una llamada a la subrutina
+     - ( ) Los parámetros se introducen en la pila en el orden en el que aparecen en la llamada de C, es decir, empezando por el primero y acabando por el último
+     - ( )  Antes de volver de la rutina llamada, el programa en C se encarga de quitar de la pila los parámetros de llamada realizando varios pop
+     - ( )  Pasar a una función un puntero a una variable se traduce en introducir en la pila el valor de la variable
+
+220. ¿Cuál de los siguientes registros tiene que ser salvaguardado (si va a
+    modificarse) dentro de una subrutina según la convención cdecl para IA32?
+     - ( ) `eax`
+     - (x) `ebx`
+     - ( ) `ecx`
+     - ( ) `edx`	
+
+221. ¿En qué registro se pasa el primer argumento a una función en Linux gcc
+    x86-64?
+     - ( ) `ecx`
+     - ( ) `edx`
+     - ( ) `esi`
+     - (x) `edi`
+
+222. La práctica "popcount" debía calcular la suma de bits (peso Hamming) de
+    los elementos de un array. Un estudiante entrega la siguiente versión de
+    popcount3:
+    <code>                                          
+    int popconut3 (unsigned* array, int len) {      <br>
+        int , res = 0;                              <br>
+        unsigned x;                                 <br>
+        for ( i=0; i &lt; len; i++ ) {                   <br>
+            x = array\[i];                           <br>
+            asm("ini3:        \n"                   <br>
+            "shr %\[x]         \n"                   <br>
+            "adc $0, %\[r]     \n"                   <br>
+            "add $0, %\[x]     \n"                   <br>
+            "jne ini3         \n"                   <br>
+                                                    <br>
+            : \[r] "+r" (res)                        <br>
+            : \[x] "r" (x) );                        <br>
+        }                                           <br>
+        return res;                                 <br>
+    }                                               <br>
+    </code>
+
+     Esta función produce siempre el resultado correcto, a pesar de que una instrucción
+     máquina en la sección asm() es distinta a la que se esperaba después de haber
+     estudiado pcount_r en teoría. La instrucción distinta también se podría haber
+     cambiado por...
+ 
+     - ( ) `sar %[x]`
+     - ( ) `adc $0, %[x]`
+     - (x) `test %[x], %[x]`
+     - ( ) `cmp %[x], %[r]`
+
+223. En la práctica de la bomba necesitamos estudiar el código máquina de la
+    bomba del compañero. A veces dicho código no se visualiza directamente en
+    el depurador ddd, y algunas de las técnicas que se pueden probar para
+    conseguir visualizarlo son... (marcar la opción **falsa**)
+     - ( ) comprobar que está activado el panel <br> *View → Machine Code Window*
+     - ( ) escribir info line main en el panel de línea de comandos gdb
+     - (x) recompilar con información de depuración, por si se nos había olvidado, ya que sin `–g` el ejecutable no contiene información de depuración
+     - ( ) asegurarse de que se ha escrito correctamente el nombre del ejecutable
+
+224. En la práctica de la bomba, el primer ejercicio consistía en "saltarse" las
+    "explosiones", para lo cual se puede utilizar...
+     - ( ) objdump o gdb
+     - ( ) gdb o ddd
+     - ( ) ddd o hexedit
+     - ( ) hexedit u objdump
+
+225. En la práctica de la bomba, el segundo ejercicio consistía en crear un
+    ejecutable sin "explosiones", para lo cual se puede utilizar...
+     - ( ) objdump o gdb
+     - (x) gdb o ddd
+     - ( ) ddd o hexedit
+     - ( ) hexedit u objdump
+
+226. En la práctica de la bomba, el tercer ejercicio consistía en usar un editor
+    hexadecimal para crear un ejecutable sin "explosiones". Para saber qué
+    contenidos del fichero hay que modificar, se puede utilizar... (marcar la opción
+    falsa)
+     - ( ) objdump
+     - ( ) gdb
+     - ( ) ddd
+     - (x) hexedit
+
+227. Suponer una memoria cache con las siguientes propiedades: Tamaño: 512
+    bytes. Política de reemplazo: LRU. Estado inicial: vacía (todas las líneas
+    inválidas). Suponer que para la siguiente secuencia de direcciones enviadas a
+    la cache: 0, 2, 4, 8, 16, 32, la tasa de acierto es 0,33. ¿Cuál es el tamaño de
+    bloque de la cache?
+     - ( ) 4 bytes
+     - (x) 8 bytes
+     - ( ) 16 bytes
+     - ( ) Ninguno de los anteriores	
+
+228. Abajo se ofrece el listado de una función para multiplicar matrices C = A x
+    B.<br>
+    <code>
+    void mult_matr(float A\[N]\[N]   <br>
+    float B\[N]\[N], float C\[N]\[N]) { <br>
+    /\*Assume val.ini. C=(0,0...)\*/ <br>
+    int i,j,k; <br>
+    for (i=0; i<N; i++) <br>
+        for (j=0; j<N; i++) <br>
+            for (k=0; k<N; i++) <br>
+                C\[i]\[j] += A\[i]\[k]*B\[k]\[j]; <br>
+    }
+    </code> <br>
+    Suponer que:<br>
+    <ul>
+        <li> El computador tiene una cache de datos de 8 MB, 16-vías, líneas de 64 bytes.</li>
+        <li> N es grande, una fila o columna no cabe completa en cache.</li>
+        <li> El tamaño de los tipos de datos es como en IA32.</li>
+        <li> El compilador optimiza el acceso a C\[i]\[j] en un registro.</li>
+    </ul>
+    Aproximadamente, ¿qué tasa de fallos se podría esperar de esta función para
+    valores grandes de N?
+    - (x) 1/2
+    - ( ) 1/4
+    - ( ) 1/8
+    - ( ) 1/16
+
+229. Sea un computador de 32 bits con una memoria cache L1 para datos de 32
+     KB y líneas de 64 bytes asociativa por conjuntos de 2 vías. Dado el siguiente
+     fragmento de código:<br>
+     <code>
+     int v[262144];<br>
+     for (i=0; i<262144; i+=8) <br>
+         v[i]=9; <br>
+     </code><br> 
+     ¿Cuál será la tasa de fallos aproximada que se obtiene en la ejecución del bucle
+     anterior?
+     - ( ) 0 (ningún fallo)
+     - (x) 1/2 (mitad aciertos, mitad fallos)
+     - ( ) 1/8 (un fallo por cada 8 accesos)
+     - ( ) 1 (todo son fallos)	
+
+230. ¿Qué hace `gcc -O0`?
+     - (x) Compilar sin optimización
+     - ( ) Compilar .c -> .o (fuente C a objeto)
+     - ( ) Compilar .s -> .o (fuente ASM a objeto)
+     - ( ) Compilar .c -> .s (C→ASM sin generar objeto)
+
+231. ¿Qué modificador (switch) de gcc hace falta para compilar una aplicación de
+    32 bits en un sistema de 64 bits?
+     - (x) `-m32`
+     - ( ) `-m64`
+     - ( ) `-march32`
+     - ( ) `-march64`
+
+232. La etiqueta del punto de entrada a un programa ensamblador en el entorno
+   de las prácticas 1 a 4 (GNU/as Linux x86) es:
+     - ( ) `_main`
+     - ( ) `L0`
+     - (x) `_start`
+     - ( ) `_init`
+
+233. La siguiente línea en la sección de datos de un programa en ensamblador de
+IA32<br>
+    `result: .int 0,0`
+     - ( ) Reserva espacio para un único entero, inicializado a 0,0
+     - ( ) Reserva espacio para un entero, inicializado a 0, seguido de un dato de tamaño
+          indefinido, también inicializado a 0
+     - (x) Reserva espacio para dos enteros, inicializados ambos a 0
+     - ( ) Reserva espacio para un único entero, inicializado a 0, en la posición de memoria 0
+
+234. El volcado mostrado abajo se ha obtenido con el comando...<br>
+    <code>
+    00000000 <main>: <br>
+     0: 55             push %ebp <br>
+     1: 89 e5          mov %esp, %ebp   <br>
+     3: 83 e4 f0       and $-16, %esp<br>
+     6: 83 ec 10       sub  $0x10, %esp<br>
+     9: c7 44 24 04 03 movl $3, 4(%esp)<br>
+     e: 00 00 00<br>
+    11: c7 04 24 01 00 movl $0x1, (%esp)<br>
+    16: 00 00<br>
+    18: e8 fc ff ff ff call \<main+0x19><br>
+    1d: c9             leave<br>
+    1e: c3             ret<br>
+    </code>
+     - ( ) `objdump -h p`
+     - ( ) `objdump -d p`
+     - (x) `objdump -d p2.o`
+     - ( ) `objdump -t p2.olibC`
+
+235. En la práctica "media" se desea invocar desde lenguaje ensamblador la
+     función printf() de libC. Eso implica que este programa, como todo programa
+     que use libC,
+     - ( ) es obligatorio que contenga main (y entonces es más cómodo usar gcc para enlazar)
+     - ( ) es obligatorio enlazarlo usando gcc (y entonces es más cómodo que contenga main)
+     - ( ) es ventajoso para ensamblarlo que contenga main, y entonces es conveniente enlazarlo usando gcc (aunque ambas cosas son opcionales)
+     - (x) es ventajoso para enlazarlo usar gcc, y entonces es conveniente que contenga `main` (aunque ambas cosas son opcionales)
+
+236. En la práctica "media" se pide sumar una lista de 32 enteros SIN signo de 32
+     bits en una plataforma de 32 bits sin perder precisión, esto es, evitando perder
+     acarreos. Un estudiante entrega la siguiente versión <br>
+    <code>
+    # $lista en EBX, longlista en ECX <br>
+    suma:<br>
+        mov $0, %eax<br>
+        mov $0, %edx<br>
+        mov $0, %esi<br>
+    bucle:<br>
+        add (%ebx, %edx, 4), %eax<br>
+        jnc seguir<br>
+        inc %edx<br>
+    seguir:<br>
+        inc %esi<br>
+        cmo %esi, %ecx<br>
+        jne bucle<br>
+        ret
+    </code><br>
+    Esta función presenta una única diferencia frente a la solución recomendada en
+    clase, relativa al indexado en el array.
+    Esta función suma:
+     - ( ) Produce siempre el resultado correcto
+     - ( ) allaría con `lista: .int 1,1,1,1, 1,1,1,1, ...`
+     - (x) Fallaría con `lista: .int 1,2,3,4, 1,2,3,4, ...`
+     - ( ) No es correcta pero el error no se manifiesta en los ejemplos propuestos, o se
+           manifiesta en ambos
+
+237. En la práctica "media" se pide sumar una lista de 32 enteros SIN signo de 32
+   bits en una plataforma de 32 bits sin perder precisión, esto es, evitando perder
+   acarreos. De entre los siguientes, ¿cuál es el mínimo valor entero que repetido
+   en toda la lista causaría acarreo con 32 bits (sin signo)? Se usa notación
+   decimal y espacios como separadores de millares/millones/etc.
+     - ( ) 10 000 000
+     - ( ) 100 000 000
+     - (x) 1 000 000 000
+     - ( ) 10 000 000 000
+
+238. En la práctica "media" se pide sumar una lista de 32 enteros CON signo de
+    32 bits en una plataforma de 32 bits sin perder precisión, esto es, evitando
+    desbordamiento. De entre los siguientes, ¿cuál es el valor negativo más pequeño (en valor absoluto) que
+    repetido en toda la lista causaría desbordamiento con 32 bits (en
+    complemento a 2)? Se usa notación decimal y espacios como separadores de
+    millares/millones/etc.
+     - ( ) -10 000 000
+     - (x) -100 000 000
+     - ( ) -1 000 000 000
+     - ( ) -10 000 000 000
+
+239. ¿Cuál es el popcount (peso Hamming, no de bits activados) del número 19?
+     - ( ) 2
+     - (x) 3
+     - ( ) 4
+     - ( ) 5
+    
+240. La práctica "popcount" debía calcular la suma de bits (peso Hamming) de
+    los elementos de un array. Un estudiante entrega la siguiente versión de
+    popcount3:<br>
+     <code>                                          
+     int popconut3 (unsigned* array, int len) {      <br>
+         int , res = 0;                              <br>
+         unsigned x;                                 <br>
+         for ( i=0; i &lt len; i++ ) {               <br>
+             x = array[i];                           <br>
+             asm("ini3:        \n"                   <br>
+             "shr %[x]         \n"                   <br>
+             "adc $0, %[r]     \n"                   <br>
+             "add $0, %[x]     \n"                   <br>
+             "jne ini3         \n"                   <br>
+                                                    <br>
+             : [r] "+r" (res)                        <br>
+             : [x] "r" (x) );                        <br>
+         }                                           <br>
+         return res;                                 <br>
+     }                                               <br>
+     </code><br>
+     Esta función solo tiene una diferencia con la versión "oficial" recomendada en clase. En concreto, una instrucción máquina en la sección **asm()** es distinta. Esta función popcount3:
+     - (x) produce siempre el resultado correcto
+     - ( ) fallaría con **array={0,1,2,3}**
+     - ( ) fallaría con **array={1,2,4,8}**
+     - ( ) no es correcta pero el error no se manifiesta en los ejemplos propuestos, o se manifiesta en ambos
+    
+241. La práctica "popcount" debía calcular la suma de bits (peso Hamming) de
+    los elementos de un array. Un estudiante entrega la siguiente versión de
+    popcount3:<br>
+     <code>                                          
+     int popconut3 (unsigned* array, int len) {      <br>
+         int , res = 0;                              <br>
+         unsigned x;                                 <br>
+         for ( i=0; i &lt len; i++ ) {               <br>
+             x = array[i];                           <br>
+             asm("ini3:        \n"                   <br>
+             "shr %[x]         \n"                   <br>
+             "adc $0, %[r]     \n"                   <br>
+             "add $0, %[x]     \n"                   <br>
+             "jne ini3         \n"                   <br>
+                                                    <br>
+             : [r] "+r" (res)                        <br>
+             : [x] "r" (x) );                        <br>
+         }                                           <br>
+        return res;                                 <br>
+     }                                               <br>
+     </code> <br>
+     Esta función es una mezcla inexplicada de las versiones "oficiales" de **popcount2** y **popcount4**, incluyendo diferencias en 2 tipos de datos, la ausencia de la variable **res** y la diferente posición de la máscara **0xFF**.<br> Esta función popcount3:
+    - ( ) produce siempre el resultado correcto
+    - ( ) fallaría con **array={0,1,2,3}**
+    - ( ) fallaría con **array={1,2,4,8}**
+    - (x) no es correcta pero el error no se manifiesta en los ejemplos propuestos, o se manifiesta en ambos.
+
+242. La práctica "popcount" debía calcular la suma de bits (peso Hamming) de
+    los elementos de un array. Un estudiante entrega la siguiente versión de
+    popcount4:<br>
+     <code>                                          
+     int popconut3 (unsigned* array, int len) {      <br>
+         int , res = 0;                              <br>
+         unsigned x;                                 <br>
+         for ( i=0; i &lt len; i++ ) {               <br>
+             x = array[i];                           <br>
+             asm("ini3:        \n"                   <br>
+             "shr %[x]         \n"                   <br>
+             "adc $0, %[r]     \n"                   <br>
+             "add $0, %[x]     \n"                   <br>
+             "jne ini3         \n"                   <br>
+                                                    <br>
+             : [r] "+r" (res)                        <br>
+             : [x] "r" (x) );                        <br>
+         }                                           <br>
+         return res;                                 <br>
+     }                                               <br>
+     </code><br>Esta función presenta varias diferencias con la versión "oficial" recomendada en clase, incluyendo la ausencia de una variable auxiliar **val** y la diferente posición de los desplazamientos **>>** y máscara **0xFF**. Esta función popcount4:
+     - ( ) produce siempre el resultado correcto
+     - ( ) fallaría con **array={0,1,2,3}**
+     - ( ) fallaría con **array={1,2,4,8}**
+     - (x) no es correcta pero el error no se manifiesta en los ejemplos propuestos, o se manifiesta en ambos
+
+243. La práctica "parity" debía calcular la suma de paridades impar (XOR de
+    todos los bits) de los elementos de un array. Un estudiante entrega la
+    siguiente versión de `parity5`:<br>
+     <code>
+     int parity5 (unsigned * array, int len) { <br>
+         int i, j, result=0;<br>
+         unsigned x;<br>
+         for (i=0; i &lt; len; i++) {<br>
+             x ^= x >> j;<br>
+             result += x & 0x1;<br>
+         }<br>
+         return result;<br>
+     }<br>
+     </code><br>Esta función solo se diferencia de la versión "oficial" recomendada en clase, en las condiciones del bucle **for** interno. Esta función `parity5`:
+     - ( ) Produce siempre el resultado correcto
+     - ( ) Fallaría con array={0,1,2,3}
+     - (x) Fallaría con array={1,2,4,8}
+     - ( ) No es correcta pero el error no se manifiesta en los ejemplos propuestos, o se manifiesta en ambos
+
+244. La función `gettimeofday()` en la práctica de la "bomba digital" se utiliza para
+     - ( ) Para comparar las duraciones de las distintas soluciones del programa
+     - ( ) Para imprimir la fecha y hora
+     - ( ) Para cifrar la contraseña en función de la hora actual
+     - (x) Para cronometrar lo que tarda el usuario en introducir la contraseña
+
+245. Un fragmento de una "bomba" desensamblada es:<br>
+     <code>
+     0x0804873f: call 0x8048504 &lt;scanf> <br>
+     0x08048744: mov 0x24 (%esp), %edx <br>
+     0x08048748: mov 0x804a044, %eax <br>
+     0x0804874d: cmp %eax, %edx <br> 
+     0x0804874f: je 0x8048756 &lt;main+230> <br>
+     0x08048751: call 0x8048604 &lt;boom> <br>
+     0x08048756: ... <br>
+     </code><br>La contraseña/clave en este caso es...
+     - ( ) el string almacenado a partir de la posición de memoria `0x804a044`
+     - ( ) el string almacenado a partir de la posición de memoria `0x24(%esp)`
+     - (x) el entero almacenado a partir de la posición de memoria `0x804a044`
+     - ( ) el entero `0x804a044`
+
+246. Una de las "bombas" utiliza el siguiente bucle para cifrar la cadena con la
+    contraseña introducida por el usuario:<br>
+     <code>
+     80485bb: rolb $0x4, (eax) <br>
+     80485be: add $0x1, %eax <br>
+     80485c1: cmp %edx, %eax <br>
+     80485c3: jne 80485bb &lt; encrypt+0x20>  <br>
+     </code><br>
+     La intrucción **rolb** rota el byte destino hacia la izquierda tantos bits como indica el operando fuente. Si inicialmente `eax` apunta a la cadena del usuario, que se compara con otra cadena `\x16\x26\x27\x16\x36\x16\x46\x16\x26\x27\x16`, almacenada en el código, la contraseña es:
+     - (x) `\x61\x62\x72\x61\x63\x61\x64\x61\x62\x72\x61` (`abracadabra`)
+     - ( ) `\x61\x72\x62\x61\x64\x61\x63\x61\x72\x62\x61` (`arbadacarba`)
+     - ( ) `\x63\x61\x64\x61\x62\x72\x61\x61\x62\x72\x61` (`cadabraabra`)
+     - ( ) `\x61\x62\x72\x61\x61\x62\x72\x61\x63\x61\x64` (`abraabracad`)
+
+247. Una de las "bombas" utiliza el siguiente código para cifrar la clave
+    numérica introducida por el usuario y ahora almacenada en `eax`:<br>
+     <code>
+     804870d: xor $0xfff, %eax <br>
+     8048712: mov $0x2, %ecx <br>
+     8048717: cltd <br>
+     8048718: idiv %ecx <br>
+     804871a: cmp %eax, 0x804a034 <br>
+     </code> <br>Si el entero almacenado a partir de 0x804a034 es 0x7ff, la clave numérica puede ser:
+     - ( ) `0x10094F97 (269045655)`
+     - ( ) `0xfff (4095)`
+     - ( ) `0x7ff (2047)`
+     - (x) `1`
+
+248. En el programa line.cc de la práctica 5, si para cada tamaño de línea (line)
+    recorremos una única vez el vector, la gráfica resultante es decreciente
+    porque:
+     - ( ) Cada vez que line aumenta al doble, el número de aciertos por localidad temporal aumenta, porque ya habíamos accedido a cada posición i del vector cuando lo recorrimos en el punto anterior del eje X.
+     - ( ) Cada vez que line aumenta al doble, el número de aciertos por localidad espacial aumenta, porque ya habíamos accedido a cada posición i-1 del vector cuando lo recorrimos en el punto anterior del eje X.
+     - ( ) Cada vez que line aumenta al doble, se accede con éxito a más posiciones del vector en niveles de la jerarquía de memoria más rápidos.
+     - (x) Cada vez que line aumenta al doble, realizamos la mitad de accesos al vector que para el valor anterior.
+
+249. ¿Cuál de las siguientes afirmaciones sobre el programa size.cc de la
+    práctica 5 es cierta?
+     - ( ) La diferencia de velocidades entre L2 y L3 es mayor que la diferencia de velocidades entre L1 y L2.
+     - ( ) Si continuáramos multiplicando por 2 el tamaño del vector en el eje X obteniendo más puntos de la gráfica, esta continuaría horizontal para cualquier valor más allá de 64 MB.
+     - (x) La gráfica tiene escalones hacia arriba porque en cada punto del eje X accedemos al mismo número de elementos del vector y el número de aciertos por localidad temporal disminuye bruscamente en ciertos puntos al aumentar el tamaño del vector.
+    - ( ) La gráfica tiene tramos horizontales porque el hecho de realizar la mitad de accesos al vector en cada punto de un tramo horizontal respecto al anterior punto de ese mismo tramo horizontal es compensado por el número de fallos creciente en ese mismo tramo horizontal.
