@@ -65,7 +65,6 @@
 
 
 
-
 lista: 	linea0
 		.irpc i,123	# Repite la correspondiente linea 3 veces
 			linea
@@ -86,52 +85,48 @@ main: .global  main
 
 	call trabajar	# subrutina de usuario
 	call imprim_C	# printf()  de libC
-#	call acabar_L	# exit()   del kernel Linux
 	call acabar_C	# exit()    de libC
 	ret
 
 trabajar:
-	mov     $lista, %rbx
-	mov  longlista, %ecx
+	movq	 $lista, %rdi
+	movl  longlista, %esi
+	push %rsi		# Guardamos el valor de %rsi (salva invocante)
 	call suma		# == suma(&lista, longlista);
-	mov  %r8d, %eax
-	mov  %r9d, %edx
-	idiv %ecx
+	pop %rsi		# Obtenemos el valor de %rsi
+	idiv %esi
 	mov	 %eax, media
 	mov  %edx, resto
 	ret
 
 suma:
-	mov  $0, %r9 # acarreo
-	mov  $0, %r8 # resultado
-	mov  $0, %r10 # i=0
+	xor  %r8, %r8 # acarreo
+	xor  %r9, %r9 # resultado
+	xor  %r10, %r10 # i=0
 bucle:
 
-	mov  (%rbx,%r10,4), %eax
-	cltd 	# Extiende el signo a %edx
-	add   %eax, %r8d # resultado += lista[rdx]
-	adc   %edx, %r9d
-	inc   %r10		 # i++
-	cmp   %r10,%rcx		 # i<longlista
+	movl  (%rdi,%r10,4), %eax
+	cltd 	# Extiende el signo a %edx:%eax
+	addl   %eax, %r9d # resultado += lista[rdx]
+	adcl   %edx, %r8d
+	inc    %r10		 # i++
+	xor   %r10,%rsi		 # i<longlista
 	jne   bucle
+
+	movl %r9d, %eax
+	movl %r8d, %edx
 
 	ret
 
 imprim_C:			# requiere libC
 
-	mov   media,%ecx			# 4º. Media hex
-	mov   resto,%r8d	# 5º. Resto hex
+	mov   media,%ecx		# 4º. Media hex
+	mov   resto,%r8d		# 5º. Resto hex
 	mov   $formato, %rdi	# 1er
-	mov   media,%esi	# 2º Media decimal
-	mov   resto,%edx	# 3º Resto decimal
+	mov   media,%esi		# 2º Media decimal
+	mov   resto,%edx		# 3º Resto decimal
 	
 	call  printf
-	ret
-
-acabar_L:
-	mov        $60, %rax
-	mov  	 media, %rdi
-	syscall			# == _exit(resultado)
 	ret
 
 acabar_C:

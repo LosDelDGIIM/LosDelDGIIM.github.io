@@ -60,9 +60,9 @@ longlista: 	.int (.-lista)/4
 resultado: 	.quad 0
 
 
-formato:.ascii	"resultado \t =   %18ld (sgn)\n" # Ocupa mínimo 18 espacios. Unsigned
-		.ascii	"	\t = 0x%18lx (hex)\n"
-		.asciz	"	\t = 0x %08x %08x \n"
+formato:.ascii	"resultado \t =   %18ld (sgn)\n" # Ocupa mínimo 18 espacios. Long Unsigned
+		.ascii	"	\t = 0x%18lx (hex)\n"		 # Long Hexadecimal
+		.asciz	"	\t = 0x %08x %08x \n"		 # 08x. 8 en hex, con 0 a la izquierda si es necesario.
 
 
 .section .text
@@ -70,49 +70,45 @@ main: .global  main
 
 	call trabajar	# subrutina de usuario
 	call imprim_C	# printf()  de libC
-#	call acabar_L	# exit()   del kernel Linux
 	call acabar_C	# exit()    de libC
 	ret
 
 trabajar:
-	mov     $lista, %rbx
-	mov  longlista, %ecx
+	movq	 $lista, %rdi
+	movl  longlista, %esi
 	call suma		# == suma(&lista, longlista);
-	mov  %r8d, resultado
-	mov  %r9d, (resultado+4)
+	movl  %eax, resultado
+	movl  %edx, (resultado+4)
 	ret
 
 suma:
-	mov  $0, %r9 # acarreo
-	mov  $0, %r8 # resultado
-	mov  $0, %r10 # i=0
+	xor  %r8, %r8 # acarreo
+	xor  %r9, %r9 # resultado
+	xor  %r10, %r10 # i=0
 bucle:
 
-	mov  (%rbx,%r10,4), %eax
-	cltd 	# Extiende el signo a %edx
-	add   %eax, %r8d # resultado += lista[rdx]
-	adc   %edx, %r9d
-	inc   %r10		 # i++
-	cmp   %r10,%rcx		 # i<longlista
+	movl  (%rdi,%r10,4), %eax
+	cltd 	# Extiende el signo a %edx:%eax
+	addl   %eax, %r9d # resultado += lista[rdx]
+	adcl   %edx, %r8d
+	inc    %r10		 # i++
+	xor   %r10,%rsi		 # i<longlista
 	jne   bucle
+
+	movl %r9d, %eax
+	movl %r8d, %edx
 
 	ret
 
 imprim_C:			# requiere libC
 
-	mov   %r9d,%ecx			# 4º. Acarreo
-	# mov   %r8d,%r8d	# 5º. Bits - sig de suma
+	mov   %rdx,%rcx			# 4º. Acarreo
+	mov   %r9d,%r8d			# 5º. Bits - sig de suma
 	mov   $formato, %rdi	# 1er
 	mov   resultado,%rsi	# 2º
 	mov   resultado,%rdx	# 3º
 	
 	call  printf
-	ret
-
-acabar_L:
-	mov        $60, %rax
-	mov  resultado, %rdi
-	syscall			# == _exit(resultado)
 	ret
 
 acabar_C:

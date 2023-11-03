@@ -19,17 +19,15 @@ Esta práctica consiste en calcular la media de una lista de $N$ enteros realiza
 
 Este apartado suma 16 números, con control del acarreo para que no se produzca *overflow*.
 
-
 ```asm
 .section .data
 lista: 	.int 	0x10000000,0x10000000,0x10000000,0x10000000
 		.int 	0x10000000,0x10000000,0x10000000,0x10000000
 		.int 	0x10000000,0x10000000,0x10000000,0x10000000
 		.int 	0x10000000,0x10000000,0x10000000,0x10000000
-
 /*
 	Número de elementos de la lista.
-	"." es la dirección actual en memoria, y se resta la posición de lista.
+	"." es la dirección actual por la que se va ensamblando, y se resta la posición de lista.
 	Esto es el número total de posiciones de memoria ocupadas.
 	Se divide entre 4 por ser este el tamaño de un int.
 */
@@ -37,11 +35,9 @@ longlista: 	.int (.-lista)/4
 
 resultado: 	.quad 0
 
-
-formato:.ascii	"resultado \t =   %18lu (uns)\n" # Ocupa mínimo 18 espacios. Unsigned
-		.ascii	"	\t = 0x%18lx (hex)\n"
-		.asciz	"	\t = 0x %08x %08x \n"
-
+formato:.ascii	"resultado \t =   %18lu (uns)\n" # Ocupa mínimo 18 espacios. Long Unsigned
+		.ascii	"	\t = 0x%18lx (hex)\n"		 # Long Hexadecimal
+		.asciz	"	\t = 0x %08x %08x \n"		 # 08x. 8 en hex, con 0 a la izquierda si es necesario.
 
 
 .section .text
@@ -49,54 +45,53 @@ main: .global  main
 
 	call trabajar	# subrutina de usuario
 	call imprim_C	# printf()  de libC
-#	call acabar_L	# exit()   del kernel Linux
 	call acabar_C	# exit()    de libC
 	ret
 
 trabajar:
-	mov	 $lista, %rbx
-	mov  longlista, %ecx
+	movq	 $lista, %rdi
+	movl  longlista, %esi
 	call suma		# == suma(&lista, longlista);
-	mov  %eax, resultado
-	mov  %esi, (resultado+4)
+	movl  %eax, resultado
+	movl  %edx, (resultado+4)
 	ret
 
 suma:
-	mov  $0, %esi # acarreo
-	mov  $0, %eax # resultado
-	mov  $0, %rdx # i=0
+	xor  %rdx, %rdx # acarreo
+	xor  %rax, %rax # resultado
+	xor  %rcx, %rcx # i=0
+
 bucle:
-	add  (%rbx,%rdx,4), %eax 	# resultado += lista[rdx]
-	jc   acarreo		 		# Comprobar acarreo
+	add  (%rdi,%rcx,4), %eax 	# resultado += lista[rcx]
+
+	jnc   fin_acarreo		 		# Comprobar acarreo
+	inc	  %edx
+
 fin_acarreo:
-	inc   %rdx		 			# i++
-	cmp   %rdx,%rcx		 		# i<longlista
+	inc   %rcx		 			# i++
+	xor  %rcx,%rsi		 		# i!=longlista
 	jne   bucle
+
+	/* En vez de establecer como condición de parada i<longlista,
+	se pone i!=longlista debido a que es una orden mucho más rápida.
+	No obstante, esto también sería válido.
+
+	cmpq  %rcx,%rsi		 		# i<longlista
+	jg   bucle
+	 */
+	
 
 	ret
 
-acarreo:
-	inc   %esi
-	jmp   fin_acarreo
-
-
-
-
 imprim_C:			# requiere libC
 
-	mov   %rsi,%rcx			# 4º. Acarreo
+	mov   %rdx,%rcx			# 4º. Acarreo
 	mov   %rax,%r8			# 5º. Bits - sig de suma
 	mov   $formato, %rdi	# 1er
 	mov   resultado,%rsi	# 2º
 	mov   resultado,%rdx	# 3º
 	
 	call  printf
-	ret
-
-acabar_L:
-	mov        $60, %rax
-	mov  resultado, %rdi
-	syscall			# == _exit(resultado)
 	ret
 
 acabar_C:
@@ -154,9 +149,9 @@ longlista: 	.int (.-lista)/4
 resultado: 	.quad 0
 
 
-formato:.ascii	"resultado \t =   %18lu (uns)\n" # Ocupa mínimo 18 espacios. Unsigned
-		.ascii	"	\t = 0x%18lx (hex)\n"
-		.asciz	"	\t = 0x %08x %08x \n"
+formato:.ascii	"resultado \t =   %18lu (uns)\n" # Ocupa mínimo 18 espacios. Long Unsigned
+		.ascii	"	\t = 0x%18lx (hex)\n"		 # Long Hexadecimal
+		.asciz	"	\t = 0x %08x %08x \n"		 # 08x. 8 en hex, con 0 a la izquierda si es necesario.
 
 
 .section .text
@@ -164,46 +159,42 @@ main: .global  main
 
 	call trabajar	# subrutina de usuario
 	call imprim_C	# printf()  de libC
-#	call acabar_L	# exit()   del kernel Linux
 	call acabar_C	# exit()    de libC
 	ret
 
 trabajar:
-	mov     $lista, %rbx
-	mov  longlista, %ecx
+	movq	 $lista, %rdi
+	movl  longlista, %esi
 	call suma		# == suma(&lista, longlista);
-	mov  %eax, resultado
-	mov  %esi, (resultado+4)
+	movl  %eax, resultado
+	movl  %edx, (resultado+4)
 	ret
 
 suma:
-	mov  $0, %esi # acarreo
-	mov  $0, %eax # resultado
-	mov  $0, %rdx # i=0
+	xor  %rdx, %rdx # acarreo
+	xor  %rax, %rax # resultado
+	xor  %rcx, %rcx # i=0
+
 bucle:
-	add  (%rbx,%rdx,4), %eax # resultado += lista[rdx]
-	adc   $0, %esi
-	inc   %rdx		 # i++
-	cmp   %rdx,%rcx		 # i<longlista
+	add  (%rdi,%rcx,4), %eax 	# resultado += lista[rcx]. Suma LSB
+	adc   $0, %edx				# Suma MSB. Supongo lista[rcx] positivo, por lo que extiendo con 0s.
+								# adc también suma CF, contabilizando acarreo.
+
+	inc   %rcx		 			# i++
+	xor  %rcx,%rsi		 		# i<longlista
 	jne   bucle
 
 	ret
 
 imprim_C:			# requiere libC
 
-	mov   %rsi,%rcx			# 4º. Acarreo
+	mov   %rdx,%rcx			# 4º. Acarreo
 	mov   %rax,%r8			# 5º. Bits - sig de suma
 	mov   $formato, %rdi	# 1er
 	mov   resultado,%rsi	# 2º
 	mov   resultado,%rdx	# 3º
 	
 	call  printf
-	ret
-
-acabar_L:
-	mov        $60, %rax
-	mov  resultado, %rdi
-	syscall			# == _exit(resultado)
 	ret
 
 acabar_C:
@@ -236,7 +227,7 @@ for i in $(seq $test_init $test_fin); do
 done
 ```
 
-Para esta versión, bastaría con ejecutar `./test.sh 1 9 2`, ya que hay 9 test y es la versión 2.
+Para esta versión, bastaría con ejecutar `./test.sh 1 8 2`, ya que hay 8 test y es la versión 2.
 
 
 
@@ -307,9 +298,9 @@ longlista: 	.int (.-lista)/4
 resultado: 	.quad 0
 
 
-formato:.ascii	"resultado \t =   %18ld (sgn)\n" # Ocupa mínimo 18 espacios. Unsigned
-		.ascii	"	\t = 0x%18lx (hex)\n"
-		.asciz	"	\t = 0x %08x %08x \n"
+formato:.ascii	"resultado \t =   %18ld (sgn)\n" # Ocupa mínimo 18 espacios. Long Unsigned
+		.ascii	"	\t = 0x%18lx (hex)\n"		 # Long Hexadecimal
+		.asciz	"	\t = 0x %08x %08x \n"		 # 08x. 8 en hex, con 0 a la izquierda si es necesario.
 
 
 .section .text
@@ -317,49 +308,45 @@ main: .global  main
 
 	call trabajar	# subrutina de usuario
 	call imprim_C	# printf()  de libC
-#	call acabar_L	# exit()   del kernel Linux
 	call acabar_C	# exit()    de libC
 	ret
 
 trabajar:
-	mov     $lista, %rbx
-	mov  longlista, %ecx
+	movq	 $lista, %rdi
+	movl  longlista, %esi
 	call suma		# == suma(&lista, longlista);
-	mov  %r8d, resultado
-	mov  %r9d, (resultado+4)
+	movl  %eax, resultado
+	movl  %edx, (resultado+4)
 	ret
 
 suma:
-	mov  $0, %r9 # acarreo
-	mov  $0, %r8 # resultado
-	mov  $0, %r10 # i=0
+	xor  %r8, %r8 # acarreo
+	xor  %r9, %r9 # resultado
+	xor  %r10, %r10 # i=0
 bucle:
 
-	mov  (%rbx,%r10,4), %eax
-	cltd 	# Extiende el signo a %edx
-	add   %eax, %r8d # resultado += lista[rdx]
-	adc   %edx, %r9d
-	inc   %r10		 # i++
-	cmp   %r10,%rcx		 # i<longlista
+	movl  (%rdi,%r10,4), %eax
+	cltd 	# Extiende el signo a %edx:%eax
+	addl   %eax, %r9d # resultado += lista[rdx]
+	adcl   %edx, %r8d
+	inc    %r10		 # i++
+	xor   %r10,%rsi		 # i<longlista
 	jne   bucle
+
+	movl %r9d, %eax
+	movl %r8d, %edx
 
 	ret
 
 imprim_C:			# requiere libC
 
-	mov   %r9d,%ecx			# 4º. Acarreo
-	# mov   %r8d,%r8d	# 5º. Bits - sig de suma
+	mov   %rdx,%rcx			# 4º. Acarreo
+	mov   %r9d,%r8d			# 5º. Bits - sig de suma
 	mov   $formato, %rdi	# 1er
 	mov   resultado,%rsi	# 2º
 	mov   resultado,%rdx	# 3º
 	
 	call  printf
-	ret
-
-acabar_L:
-	mov        $60, %rax
-	mov  resultado, %rdi
-	syscall			# == _exit(resultado)
 	ret
 
 acabar_C:
@@ -371,7 +358,7 @@ acabar_C:
 
 ## 4. Media y resto de N enteros con signo de 32 bits calculada usando registros de 32 bits ($N\approx 16$)
 
-En este caso, la principal diferencia es que se calcula la media. Para ello, es necesario dividir usando la orden `idiv`.
+En este caso, la principal diferencia es que se calcula la media. Para ello, es necesario dividir usando la orden `idiv`. El acarreo se sigue gestionando con otro registro de 32 bits.
 
 ```asm
 .section .data
@@ -441,7 +428,6 @@ En este caso, la principal diferencia es que se calcula la media. Para ello, es 
 
 
 
-
 lista: 	linea0
 		.irpc i,123	# Repite la correspondiente linea 3 veces
 			linea
@@ -462,52 +448,48 @@ main: .global  main
 
 	call trabajar	# subrutina de usuario
 	call imprim_C	# printf()  de libC
-#	call acabar_L	# exit()   del kernel Linux
 	call acabar_C	# exit()    de libC
 	ret
 
 trabajar:
-	mov     $lista, %rbx
-	mov  longlista, %ecx
+	movq	 $lista, %rdi
+	movl  longlista, %esi
+	push %rsi		# Guardamos el valor de %rsi (salva invocante)
 	call suma		# == suma(&lista, longlista);
-	mov  %r8d, %eax
-	mov  %r9d, %edx
-	idiv %ecx
+	pop %rsi		# Obtenemos el valor de %rsi
+	idiv %esi
 	mov	 %eax, media
 	mov  %edx, resto
 	ret
 
 suma:
-	mov  $0, %r9 # acarreo
-	mov  $0, %r8 # resultado
-	mov  $0, %r10 # i=0
+	xor  %r8, %r8 # acarreo
+	xor  %r9, %r9 # resultado
+	xor  %r10, %r10 # i=0
 bucle:
 
-	mov  (%rbx,%r10,4), %eax
-	cltd 	# Extiende el signo a %edx
-	add   %eax, %r8d # resultado += lista[rdx]
-	adc   %edx, %r9d
-	inc   %r10		 # i++
-	cmp   %r10,%rcx		 # i<longlista
+	movl  (%rdi,%r10,4), %eax
+	cltd 	# Extiende el signo a %edx:%eax
+	addl   %eax, %r9d # resultado += lista[rdx]
+	adcl   %edx, %r8d
+	inc    %r10		 # i++
+	xor   %r10,%rsi		 # i<longlista
 	jne   bucle
+
+	movl %r9d, %eax
+	movl %r8d, %edx
 
 	ret
 
 imprim_C:			# requiere libC
 
-	mov   media,%ecx			# 4º. Media hex
-	mov   resto,%r8d	# 5º. Resto hex
+	mov   media,%ecx		# 4º. Media hex
+	mov   resto,%r8d		# 5º. Resto hex
 	mov   $formato, %rdi	# 1er
-	mov   media,%esi	# 2º Media decimal
-	mov   resto,%edx	# 3º Resto decimal
+	mov   media,%esi		# 2º Media decimal
+	mov   resto,%edx		# 3º Resto decimal
 	
 	call  printf
-	ret
-
-acabar_L:
-	mov        $60, %rax
-	mov  	 media, %rdi
-	syscall			# == _exit(resultado)
 	ret
 
 acabar_C:
@@ -606,8 +588,9 @@ media: 	.quad 0
 resto: 	.quad 0
 
 
-formato:.ascii	"media\t= %19d \t resto\t= %19d\n"
-		.ascii	"\t= 0x %016x \t\t= 0x %016x\n"
+// Añado las l en el formato para que me permita imprimir 64 bits.
+formato:.ascii	"media\t= %19ld \t resto\t= %19ld\n"
+		.asciz	"\t= 0x %016lx \t\t= 0x %016lx\n"
 
 
 .section .text
@@ -615,50 +598,46 @@ main: .global  main
 
 	call trabajar	# subrutina de usuario
 	call imprim_C	# printf()  de libC
-#	call acabar_L	# exit()   del kernel Linux
 	call acabar_C	# exit()    de libC
 	ret
 
 trabajar:
-	mov     $lista, %rbx
-	mov  longlista, %ecx
+	movq     $lista, %rdi
+	movl  longlista, %esi
+	push %rsi		# Guardamos el valor de %rsi (salva invocante)
 	call suma		# == suma(&lista, longlista);
-	mov  %r8, %rax
+	pop %rsi		# Obtenemos el valor de %rsi
+	
 	cqto # Extensión de signo a RDX:RAX
-	idivq %rcx
-	mov	 %rax, media
-	mov  %rdx, resto
+	idivq %rsi
+	movq  %rax, media
+	movq  %rdx, resto
 	ret
 
 suma:
-	mov  $0, %r8 # resultado
-	mov  $0, %r10 # i=0
+	xor  %r8, %r8 # resultado
+	xor  %rcx, %rcx # i=0
 bucle:
 
-	mov  (%rbx,%r10,4), %eax
+	movl  (%rdi,%rcx,4), %eax
 	cltq 	# Extiende el signo a %RAX
-	add   %rax, %r8 # resultado += lista[rdx]
-	inc   %r10		 # i++
-	cmp   %r10,%rcx		 # i<longlista
+	addq   %rax, %r8 # resultado += lista[rcx]
+	inc   %rcx		 # i++
+	xor   %rcx,%rsi		 # i<longlista
 	jne   bucle
 
+	movq %r8, %rax
 	ret
 
 imprim_C:			# requiere libC
 
-	mov   media,%rcx			# 4º. Media hex
-	mov   resto,%r8	# 5º. Resto hex
-	mov   $formato, %rdi	# 1er
-	mov   media,%rsi	# 2º Media decimal
-	mov   resto,%rdx	# 3º Resto decimal
+	movq   media,%rcx			# 4º. Media hex
+	movq   resto,%r8				# 5º. Resto hex
+	movq   $formato, %rdi		# 1er
+	movq   media,%rsi		# 2º Media decimal
+	movq   resto,%rdx		# 3º Resto decimal
 	
 	call  printf
-	ret
-
-acabar_L:
-	mov        $60, %rax
-	mov  	 media, %rdi
-	syscall			# == _exit(resultado)
 	ret
 
 acabar_C:

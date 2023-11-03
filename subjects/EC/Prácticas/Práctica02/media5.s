@@ -77,8 +77,9 @@ media: 	.quad 0
 resto: 	.quad 0
 
 
-formato:.ascii	"media\t= %19d \t resto\t= %19d\n"
-		.ascii	"\t= 0x %016x \t\t= 0x %016x\n"
+// Añado las l en el formato para que me permita imprimir 64 bits.
+formato:.ascii	"media\t= %19ld \t resto\t= %19ld\n"
+		.asciz	"\t= 0x %016lx \t\t= 0x %016lx\n"
 
 
 .section .text
@@ -86,50 +87,46 @@ main: .global  main
 
 	call trabajar	# subrutina de usuario
 	call imprim_C	# printf()  de libC
-#	call acabar_L	# exit()   del kernel Linux
 	call acabar_C	# exit()    de libC
 	ret
 
 trabajar:
-	mov     $lista, %rbx
-	mov  longlista, %ecx
+	movq     $lista, %rdi
+	movl  longlista, %esi
+	push %rsi		# Guardamos el valor de %rsi (salva invocante)
 	call suma		# == suma(&lista, longlista);
-	mov  %r8, %rax
+	pop %rsi		# Obtenemos el valor de %rsi
+	
 	cqto # Extensión de signo a RDX:RAX
-	idivq %rcx
-	mov	 %rax, media
-	mov  %rdx, resto
+	idivq %rsi
+	movq  %rax, media
+	movq  %rdx, resto
 	ret
 
 suma:
-	mov  $0, %r8 # resultado
-	mov  $0, %r10 # i=0
+	xor  %r8, %r8 # resultado
+	xor  %rcx, %rcx # i=0
 bucle:
 
-	mov  (%rbx,%r10,4), %eax
+	movl  (%rdi,%rcx,4), %eax
 	cltq 	# Extiende el signo a %RAX
-	add   %rax, %r8 # resultado += lista[rdx]
-	inc   %r10		 # i++
-	cmp   %r10,%rcx		 # i<longlista
+	addq   %rax, %r8 # resultado += lista[rcx]
+	inc   %rcx		 # i++
+	xor   %rcx,%rsi		 # i<longlista
 	jne   bucle
 
+	movq %r8, %rax
 	ret
 
 imprim_C:			# requiere libC
 
-	mov   media,%rcx			# 4º. Media hex
-	mov   resto,%r8	# 5º. Resto hex
-	mov   $formato, %rdi	# 1er
-	mov   media,%rsi	# 2º Media decimal
-	mov   resto,%rdx	# 3º Resto decimal
+	movq   media,%rcx			# 4º. Media hex
+	movq   resto,%r8				# 5º. Resto hex
+	movq   $formato, %rdi		# 1er
+	movq   media,%rsi		# 2º Media decimal
+	movq   resto,%rdx		# 3º Resto decimal
 	
 	call  printf
-	ret
-
-acabar_L:
-	mov        $60, %rax
-	mov  	 media, %rdi
-	syscall			# == _exit(resultado)
 	ret
 
 acabar_C:
