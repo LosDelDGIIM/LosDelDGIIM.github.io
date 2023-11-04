@@ -47,7 +47,7 @@ bucle:
 
 fin_acarreo:
 	inc   %rcx		 			# i++
-	xor  %rcx,%rsi		 		# i!=longlista
+	cmp  %rcx,%rsi		 		# i!=longlista
 	jne   bucle
 
 	/* En vez de establecer como condición de parada i<longlista,

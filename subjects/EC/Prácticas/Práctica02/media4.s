@@ -110,7 +110,7 @@ bucle:
 	addl   %eax, %r9d # resultado += lista[rdx]
 	adcl   %edx, %r8d
 	inc    %r10		 # i++
-	xor   %r10,%rsi		 # i<longlista
+	cmp   %r10d,%esi		 # i<longlista
 	jne   bucle
 
 	movl %r9d, %eax

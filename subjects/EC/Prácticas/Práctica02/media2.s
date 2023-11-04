@@ -69,7 +69,7 @@ bucle:
 								# adc también suma CF, contabilizando acarreo.
 
 	inc   %rcx		 			# i++
-	xor  %rcx,%rsi		 		# i<longlista
+	cmp  %rcx,%rsi		 		# i<longlista
 	jne   bucle
 
 	ret

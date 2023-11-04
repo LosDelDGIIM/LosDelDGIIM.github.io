@@ -69,7 +69,7 @@ bucle:
 
 fin_acarreo:
 	inc   %rcx		 			# i++
-	xor  %rcx,%rsi		 		# i!=longlista
+	cmp  %rcx,%rsi		 		# i!=longlista
 	jne   bucle
 
 	/* En vez de establecer como condición de parada i<longlista,
@@ -181,7 +181,7 @@ bucle:
 								# adc también suma CF, contabilizando acarreo.
 
 	inc   %rcx		 			# i++
-	xor  %rcx,%rsi		 		# i<longlista
+	cmp  %rcx,%rsi		 		# i<longlista
 	jne   bucle
 
 	ret
@@ -330,7 +330,7 @@ bucle:
 	addl   %eax, %r9d # resultado += lista[rdx]
 	adcl   %edx, %r8d
 	inc    %r10		 # i++
-	xor   %r10,%rsi		 # i<longlista
+	cmp   %r10,%rsi		 # i<longlista
 	jne   bucle
 
 	movl %r9d, %eax
@@ -473,7 +473,7 @@ bucle:
 	addl   %eax, %r9d # resultado += lista[rdx]
 	adcl   %edx, %r8d
 	inc    %r10		 # i++
-	xor   %r10,%rsi		 # i<longlista
+	cmp   %r10,%rsi		 # i<longlista
 	jne   bucle
 
 	movl %r9d, %eax
@@ -623,7 +623,7 @@ bucle:
 	cltq 	# Extiende el signo a %RAX
 	addq   %rax, %r8 # resultado += lista[rcx]
 	inc   %rcx		 # i++
-	xor   %rcx,%rsi		 # i<longlista
+	cmp   %rcx,%rsi		 # i<longlista
 	jne   bucle
 
 	movq %r8, %rax

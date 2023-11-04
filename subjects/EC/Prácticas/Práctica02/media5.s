@@ -112,7 +112,7 @@ bucle:
 	cltq 	# Extiende el signo a %RAX
 	addq   %rax, %r8 # resultado += lista[rcx]
 	inc   %rcx		 # i++
-	xor   %rcx,%rsi		 # i<longlista
+	cmp   %rcx,%rsi		 # i<longlista
 	jne   bucle
 
 	movq %r8, %rax
