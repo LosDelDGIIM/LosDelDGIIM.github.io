@@ -1,6 +1,6 @@
 <br>
 
-# EPreguntas Tipo Test de Teoría + Prácticas.
+# EC. Preguntas Tipo Test de Teoría + Prácticas.
 
 **Autor:** Jose Juan Urrutia Milán 'JJ'.<br>
 **Autor:** Lucas Hidalgo Herrera.<br>
@@ -516,11 +516,11 @@ Explicacion: Cada palabra guardada ocupa 4 Bytes, por lo que el -4 empieza en la
     - ( ) `0xCAFEBABE`
     - ( ) `0xABADF00D`
 
-Explicacion: Las palabras han de empezar en múltiplos de 4, por lo que los dos últimos bits de la dirección han de ser 0. Esto tan solo ocurre si los últimos 2 bits son `0b0000=0x0`, `0b0100=0x4`, `0b1000=0x8` o `0b=1100=0xC`. Por tanto, la única dirección que está alineada es la que termina en `C`.
+Explicacion: Las palabras han de empezar en múltiplos de 4, por lo que los dos últimos bits de la dirección han de ser 0. Esto tan solo ocurre si los últimos 4 bits son `0b0000=0x0`, `0b0100=0x4`, `0b1000=0x8` o `0b=1100=0xC`. Por tanto, la única dirección que está alineada es la que termina en `C`.
 
 65. En una arquitectura de acumulador, la instrucción `LOAD X`:
 
-    - ( ) Transfiere el contenido del registro `X`a la memoria.
+    - ( ) Transfiere el contenido del registro `X` a la memoria.
     - ( ) Suma `M(x)` al acumulador.
     - ( ) Transfiere el contenido del acumulador a la posición de memoria `X`.
     - (x) Transfiere el contenido de la posición de memoria `X` al acumulador.
@@ -575,7 +575,7 @@ Explicacion: Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o 
 
     - (x) Tubos de vacío.
     - ( ) Circuitos integrados LSI.
-    - ( ) Amplifficadores operacionales.
+    - ( ) Amplificadores operacionales.
     - ( ) Núcleos de ferrita.
 
 73. En Linux IA-32, si gcc usa la instrucción `leave` se puede asegurar que en ese punto del programa:
@@ -585,6 +585,8 @@ Explicacion: Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o 
     - ( ) Ya no hay variables locales que destruir.
     - ( ) Ya no se hacen llamadas anidadas y por tanto no hay parámetros que ocupen espacio en pila.
 
+Explicacion: Al hacer el `leave`, vas a hacer mover el puntero de pila al antiguo valor de `rbp` y vas a hacer `pop %rbp`. Este es el primer valor que has introducido, por lo que ya has tenido que recuperar los otros registros salva invocados.
+
 74. Usando el repertorio IA-32, para intercambiar el valor de 2 variables (por ejemplo `A: .int 1` y `B: .int 2`) se pueden usar:
 
     - ( ) Dos instrucciones `mov`.
@@ -592,16 +594,20 @@ Explicacion: Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o 
     - ( ) 3 `mov`, no menos (se le llama "intercambio circular").
     - (x) 4 `mov`, no menos (debido a la arquitectura R/M).
 
+Explicacion: Tienes que usar 4, ya que no puedes mover entre dos posiciones de memoria sin pasar por registros.
+
 75. Respecto a registros base e índice en IA-32, la excepción es que:
 
-    - ( ) `EBP` no puede ser registro base.
-    - ( ) `EBP` no puede ser registro índice.
-    - ( ) `ESP` no puede ser registro base.
-    - (x) `ESP` no puede ser registro índice.
+    - ( ) `RBP` no puede ser registro base.
+    - ( ) `RBP` no puede ser registro índice.
+    - ( ) `RSP` no puede ser registro base.
+    - (x) `RSP` no puede ser registro índice.
+
+Explicacion: `RSP` es el puntero de pila. Puede ser usado como registro base, pero no como registro índice.
 
 76. El registro `SP / ESP / RSP`:
 
-    - ( ) Es un registro transparente al suuario y contiene la instrucción que se está ejecutando.
+    - ( ) Es un registro transparente al usuario y contiene la instrucción que se está ejecutando.
     - (x) Es un registro de propósito específico y contiene la dirección de la cima de la pila.
     - ( ) Es un registro transparente al usuario y contiene la dirección de memoria a la que se está accediendo.
     - ( ) Es un registro de propósito específico y contiene la dirección de la siguiente instrucción a ejecutar.
@@ -613,19 +619,26 @@ Explicacion: Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o 
     - (x) El tipo `double` pasa de 4 B a 8 B.
     - ( ) `long double` pasa de 10/12 B a 16 B.
 
-78. ¿Cuál de los siguientes fragmentos de código deja en `%eax`un resultado distinto a los otros tres fragmentos?
+78. ¿Cuál de los siguientes fragmentos de código deja en `%eax` un resultado distinto a los otros tres fragmentos?
 
     - (x) `mov $-1, %edx`<br>`sub %eax, %edx`<br>`mov %edx, %eax`
     - ( ) `not %eax`<br>`add $1, %eax`
     - ( ) `xor %edx, %edx`<br>`sub %eax, %edx`<br>`mov %edx, %eax`
     - ( ) `neg %eax`
 
+Explicacion: `neg` hace una negación aritmética, por lo que aplica el complemento a 2. Esto es hacer el complemento a 1 (negar el valor, `not`), y sumarle 1. Por tanto, tenemos que la negunda y la cuarta opción son equivalentes, ambas guardan en `%eax` su opuesto, es decir `-%eax`. La tercera también hace lo mismo, ya que guarda en `eax` el valor `$0-%eax`. No obstante, la primera opción guarda `-1-%eax`, que es distinto.
+
 79. Si `A` y `B` son dos enteros almacenados respectivamente en `%eax` y `%ebx`, ¿cuál de las siguientes implementaciones de:<br>`if(!A && !B){... then part ...}` es incorrecta?
 
     - ( ) ` or %ebx, %eax`<br>` jne not_true`<br>`  ...then part...`<br>`not_true:`<br>`    ...`
     - ( ) ` cmp $0, %eax`<br>`  jne not_true`<br>`  cmp $0, %ebx`<br>`  jne not_true`<br>`  ...then part...`<br>`not_true`<br>` ...`
     - (x) ` test %ebx, %eax`<br>`   jne not_true`<br>`  ...then part...`<br>`not_true`<br>` ...`
-    - ( ) ` test %eax, %%eax`<br>`  jne not_true`<br>`  test %ebx, %ebx`<br>`   jne not_true`<br>`  ...then part...`<br>`not_true`<br>` ...`
+    - ( ) ` test %eax, %eax`<br>`  jne not_true`<br>`  test %ebx, %ebx`<br>`   jne not_true`<br>`  ...then part...`<br>`not_true`<br>` ...`
+
+Explicacion: Para la primera, hemos de notar que `(!A && !B)=!(A || B)`. Si `A || B` no es nulo, entonces su valor booleano será `true`, por lo que al negarlo será `false`, por lo que habrá que ejecutar esa parte.
+Explicacion: Para la segunda, si `%eax` no es nulo, entonces es `true`. Al negarlo será `false`, por lo que la puerta `AND` llevará a la parte del `false`. Equivalente ocurre con `%ebx`.
+Explicacion: Para la tercera, es incorrecto. Ahí, el `if` que se está ejecutando es `if (A==B)`.
+Explicacion: Para la cuarta, tenemos que es igual que en la segunda; ya que es la forma eficiente de comparar si un registro es nulo.
 
 80. Dada la siguiente declaración en lenguaje C, una estructura de este tipo podría ocupar en un sistema Linux IA-32 o bien en uno x86- 64 un total de:<br><code>struct a {<br> int i;<br> double d;<br> char c;<br> short s;<br>};</code>
 
@@ -634,7 +647,9 @@ Explicacion: Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o 
     - ( ) 22 B.
     - (x) 24 B.
 
-81. En un sistema Linux x86-64, ¿cuál de las siguientes expresiones es equivalente a la expresión `C (x[2] + 4)[3]`? Suponer que previamente se ha declarado `int **x`.
+Explicacion: Se podría pensar que, por el alineamiento, ocupa 32 B. No obstante, tras el `char` no hay 7 Bytes sin usar, ya que el `short` ocupa 4 B, por lo que puede comenzar en el offset `20`.
+
+81. En un sistema Linux x86-64, ¿cuál de las siguientes expresiones es equivalente a la expresión C `(x[2] + 4)[3]`? Suponer que previamente se ha declarado `int **x`.
 
     - ( ) `*((*(x + 16)) + 28)`
     - ( ) `*(((*x) + 2) + 7)`
@@ -656,7 +671,12 @@ Explicacion: Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o 
     - ( ) Longitud relativa de microinstrucción.
 
 84. Motivos que impiden que la ganancia (aceleración) de un cauce
-    segmentado sea ideal (señalar la respuesta falsa): - ( ) Registros de acoplo (coste de la segmentación). - ( ) Fragmentación desigual (duración desigual de etapas). - ( ) Riegos (hazards). - (x) Cola de instrucciones (precaptación).
+    segmentado sea ideal (señalar la respuesta falsa):
+    
+    - ( ) Registros de acoplo (coste de la segmentación).
+    - ( ) Fragmentación desigual (duración desigual de etapas).
+    - ( ) Riegos (hazards)
+    - (x) Cola de instrucciones (precaptación).
 
 85. La técnica de "adelanto de registros" (register forwarding) en un cauce segmentado se usa para limitar el impacto de los riesgos:
 
@@ -669,7 +689,7 @@ Explicacion: Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o 
 
     - ( ) DMA (por acceso directo).
     - ( ) E/S programada.
-    - ( ) E/S cableada (hardwired).
+    - (x) E/S cableada (hardwired).
     - ( ) IRQ (por interrupciones).
 
 87. Para determinar la causa de una interrupción se pueden usar las siguientes técnicas: (señalar la respuesta falsa):
@@ -686,6 +706,8 @@ Explicacion: Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o 
     - ( ) Reduce el tamaño del bus.
     - ( ) Aumenta la tasa de aciertos.
 
+Explicacion: Al usar la cache, de velocidad bastante más rápida, se reduce el tiempo de ejecución.
+
 89. En un sistema Linux IA-32, ¿cuántos enteros se podrían almacenar en una línea de cache, si la cache del procesador fuera de 4 KB, asociativa por conjuntos de 4-vías, y contuviera 4 conjuntos?
 
     - ( ) 16.
@@ -699,12 +721,14 @@ Explicacion: Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o 
     - ( ) Sólo hay 1 conjunto por cache.
     - ( ) Ninguna de las anteriores.
 
-91. Si almacenamos según el criterio little-endian la palabra de 64 bits `0xFACEB00C` a partir de la dirección `0xCAFEBABE`, el byte `0xCE` quedará almacenado en la dirección:
+91. Si almacenamos según el criterio little-endian la palabra de 32 bits `0xFACEB00C` a partir de la dirección `0xCAFEBABE`, el byte `0xCE` quedará almacenado en la dirección:
 
     - ( ) `0xCAFEBAC1`
     - (x) `0xCAFEBAC0`
     - ( ) `0xCAFEBABF`
     - ( ) `0xCAFEBABE`
+
+Explicacion: Contando desde la izquierda, es el tercer byte. Por tanto, ocupará la tercera dirección de memoria.
 
 92. ¿Qué novedad se desarrolló en la tercera generación de computadores?
 
@@ -755,6 +779,8 @@ Explicacion: Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o 
     - (x) Se suma un número positivo a un número negativo.
     - ( ) Se resta un número positivo de un número negativo.
 
+Explicacion: Se debe a que si ambos se pueden representar en memoria, entonces un número menor en valor absoluto también se puede representar.
+
 99. Después de ejecutar una instrucción de suma sobre dos números con signo de la que sabemos que no provocará overflow (los dos números son pequeños en valor absoluto), queremos comprobar si el resultado de la suma es menor que 0. ¿Qué flag necesita comprobar la instrucción de salto condicional equivalente a `if (resultado<0) then goto label`?
 
     - ( ) `CF`
@@ -762,16 +788,19 @@ Explicacion: Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o 
     - (x) `SF`
     - ( ) `ZF`
 
-100.  La instrucción `cmovb %edx, %eax`:- (x) Copia en `%eax` el contenido de `%edx` si el indicador de acarreo es 1.
+100.  La instrucción `cmovb %edx, %eax`:
+    - (x) Copia en `%eax` el contenido de `%edx` si el indicador de acarreo es 1.
     - ( ) Copia el byte bajo de `%edx` en el byte bajo de `%eax`.
     - ( ) Copia en `%eax` el byte de memoria apuntado por la dirección contenida en `%edx`.
     - ( ) Copia en `%eax` el contenido de `%edx` si `%eax` es menor que `%edx`.
 
 101. ¿Cuál de las siguientes afirmaciones sobre la instrucción `leave` es cierta?
     - ( ) Se ejecuta justo después de retornar de un procedimiento.
-    - ( ) Equivale a `pop %ebp` seguida de `mov %ebp, %esp`.
-    - ( ) Equivale a `mov %esp, %ebp` seguida de `pop %ebp`.
+    - ( ) Equivale a `pop %rbp` seguida de `mov %rbp, %rsp`.
+    - ( ) Equivale a `mov %rsp, %rbp` seguida de `pop %rbp`.
     - (x) No es obligatorio usarla. En su lugar puede realizarse una secuencia explícita de operaciones `mov` y `pop`.
+
+Explicacion: `leave` equivale a `mov %rbp, %rsp`, `pop %rbp`, pero no es necesario usarla.
 
 102. Para crear espacio en la pila para variables locales sin inicializar suele realizarse la siguiente operación:
     - ( ) Restar una cantidad positiva a `EBP`.
@@ -791,11 +820,15 @@ Explicacion: Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o 
     - ( ) `8048b90`
     - (x) `8048553`
 
+Explicacion: Vemos que la siguiente instrucción, `pushl`, está en la dirección `8048553`. por tanto, se introduce en la pila para poder volver a ella tras el `ret`.
+
 105. En el fragmento de código:<br><code>804854e:e8 3d 06 00 00 call 8048b90 (main)<br>8048553:50 pushl %eax</code><br>La instrucción `call` suma al contador de programa la cantidad:
     - (x) `0000063d`
     - ( ) `08048553`
     - ( ) `0804854e`
     - ( ) `50`
+
+Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que es a priori la siguiente instrucción que iba a captar. No obstante, la operación `call` loha modificado, y la difereencia es `8048b90-8048553`, que corresponde a la primera opción.
 
 106. Es responsabilidad del procedimiento llamado salvaguardar los registros:
     - (x) `%ebx, %esi, %edi`
@@ -1481,10 +1514,10 @@ Se puede adivinar que:
      y suponiendo que hemos llamado a una función *suma* que devuelve un número de 64 bits en la pareja 
      `EDX:EAX`, las instrucciones que copian ese número en *resultado*
      son:
-     - (x) `movl %eax, resultado movl %edx, resultado+4`
-     - ( ) `movl (%eax), resultado movl (%edx), resultado+4`
-     - ( ) `movl %eax, resultado+4 movl %edx, resultado`
-     - ( ) `movl (%eax), resultado+4`
+     - (x) <code> movl %eax, resultado <br> movl %edx, resultado+4</code>
+     - ( ) <code>movl (%eax), resultado <br>movl (%edx), resultado+4</code>
+     - ( ) <code>movl %eax, resultado+4 <br>movl %edx, resultado</code>
+     - ( ) <code>movl (%eax), resultado+4</code>
 
 217. Dada la siguiente definición de datos:<br>
      <code>
@@ -1497,10 +1530,10 @@ Se puede adivinar que:
      La llamada correcta a `printf` será:
     - ( ) <code> push resultado+4    <br>               push resultado      <br>               push $formato       <br>               call printf         <br>               add $12, %esp       <br> </code>
     - (x) <code> push resultado+4    <br>                 push resultado      <br>                 push resultado+4    <br>                 push resultado      <br>                 push $formato       <br>                 call printf         <br>                 add $20, %esp       <br> </code>
-    - ( ) <code> push resultado      <br>                 push resultado+4    <br>                 push $formato       <br>                 call printf add $12, %esp <br> </code>
+    - ( ) <code> push resultado      <br>                 push resultado+4    <br>                 push $formato       <br>                 call printf <br>add $12, %esp <br> </code>
     - ( ) <code> push resultado       <br>                 push resultado+4     <br>                  push resultado       <br>                 push resultado+4     <br>                 push $formato        <br>                 call printf          <br>                 add $20,%esp           <br> </code>
 
-218. En la práctica "media" se pide sumar una lista de enteros **con** signo de 32 bits en una plataforma de 32 bits sin perder precisión, esto es, evitando overflow. ¿Cuál es el menor valor positivo que repetido en los **dos** primeros elementos de la lista causaría overflow con 32 bits al realizar la suma de **esos dos** primeros elementos de la lista?
+218. En la práctica "media" se pide sumar una lista de enteros **con** signo de 32 bits en una plataforma de 32 bits sin perder precisión, esto es, evitando overflow. ¿Cuál es el menor valor positivo que repetido en los **dos** primeros elementos de la lista causaría overflow con 32 bits al realizar la suma de **esos dos** primeros elementos de la lista? (Entendemos que la lista contiene 4 números, y se va a realizar la suma de la lista 4 veces).
     - ( ) `0x0400 0000`
     - ( ) `0x0800 0000`
     - (x) `0x4000 0000`
@@ -1570,7 +1603,7 @@ Se puede adivinar que:
 224. En la práctica de la bomba, el primer ejercicio consistía en "saltarse" las
     "explosiones", para lo cual se puede utilizar...
      - ( ) objdump o gdb
-     - ( ) gdb o ddd
+     - (x) gdb o ddd
      - ( ) ddd o hexedit
      - ( ) hexedit u objdump
 
@@ -1662,18 +1695,18 @@ Se puede adivinar que:
      - (x) `_start`
      - ( ) `_init`
 
+Explicacion: No es x86-64, que con gcc el punto de entrada es `main`. 
+
 233. La siguiente línea en la sección de datos de un programa en ensamblador de
 IA32<br>
     `result: .int 0,0`
      - ( ) Reserva espacio para un único entero, inicializado a 0,0
-     - ( ) Reserva espacio para un entero, inicializado a 0, seguido de un dato de tamaño
-          indefinido, también inicializado a 0
+     - ( ) Reserva espacio para un entero, inicializado a 0, seguido de un dato de tamaño indefinido, también inicializado a 0
      - (x) Reserva espacio para dos enteros, inicializados ambos a 0
      - ( ) Reserva espacio para un único entero, inicializado a 0, en la posición de memoria 0
 
-234. El volcado mostrado abajo se ha obtenido con el comando...<br>
-    <code>
-    00000000 <main>: <br>
+234. El volcado mostrado abajo se ha obtenido con el comando...<br> <code>
+    00000000 main: <br>
      0: 55             push %ebp <br>
      1: 89 e5          mov %esp, %ebp   <br>
      3: 83 e4 f0       and $-16, %esp<br>
@@ -1694,9 +1727,9 @@ IA32<br>
 235. En la práctica "media" se desea invocar desde lenguaje ensamblador la
      función printf() de libC. Eso implica que este programa, como todo programa
      que use libC,
-     - ( ) es obligatorio que contenga main (y entonces es más cómodo usar gcc para enlazar)
-     - ( ) es obligatorio enlazarlo usando gcc (y entonces es más cómodo que contenga main)
-     - ( ) es ventajoso para ensamblarlo que contenga main, y entonces es conveniente enlazarlo usando gcc (aunque ambas cosas son opcionales)
+     - ( ) es obligatorio que contenga `main` (y entonces es más cómodo usar gcc para enlazar)
+     - ( ) es obligatorio enlazarlo usando gcc (y entonces es más cómodo que contenga `main`)
+     - ( ) es ventajoso para ensamblarlo que contenga `main`, y entonces es conveniente enlazarlo usando gcc (aunque ambas cosas son opcionales)
      - (x) es ventajoso para enlazarlo usar gcc, y entonces es conveniente que contenga `main` (aunque ambas cosas son opcionales)
 
 236. En la práctica "media" se pide sumar una lista de 32 enteros SIN signo de 32
@@ -1714,7 +1747,7 @@ IA32<br>
         inc %edx<br>
     seguir:<br>
         inc %esi<br>
-        cmo %esi, %ecx<br>
+        cmp %esi, %ecx<br>
         jne bucle<br>
         ret
     </code><br>
@@ -1724,8 +1757,9 @@ IA32<br>
      - ( ) Produce siempre el resultado correcto
      - ( ) allaría con `lista: .int 1,1,1,1, 1,1,1,1, ...`
      - (x) Fallaría con `lista: .int 1,2,3,4, 1,2,3,4, ...`
-     - ( ) No es correcta pero el error no se manifiesta en los ejemplos propuestos, o se
-           manifiesta en ambos
+     - ( ) No es correcta pero el error no se manifiesta en los ejemplos propuestos, o se manifiesta en ambos
+
+Explicacion: El problema es que como registro índice usa en la operación suma `%edx`, que es el correspondiente al acarreo. Por tanto, como en el segundo caso los valores de la lista varían, no funcionaría.
 
 237. En la práctica "media" se pide sumar una lista de 32 enteros SIN signo de 32
    bits en una plataforma de 32 bits sin perder precisión, esto es, evitando perder
@@ -1748,7 +1782,7 @@ IA32<br>
      - ( ) -1 000 000 000
      - ( ) -10 000 000 000
 
-239. ¿Cuál es el popcount (peso Hamming, no de bits activados) del número 19?
+239. ¿Cuál es el popcount (peso Hamming, número de bits activados) del número 19?
      - ( ) 2
      - (x) 3
      - ( ) 4
@@ -1775,31 +1809,34 @@ IA32<br>
          return res;                                 <br>
      }                                               <br>
      </code><br>
-     Esta función solo tiene una diferencia con la versión "oficial" recomendada en clase. En concreto, una instrucción máquina en la sección **asm()** es distinta. Esta función popcount3:
+     Esta función solo tiene una diferencia con la versión "oficial" recomendada en clase. En concreto, una instrucción máquina en la sección **asm()** es distinta. Esta función `popcount3`:
      - (x) produce siempre el resultado correcto
      - ( ) fallaría con **array={0,1,2,3}**
      - ( ) fallaría con **array={1,2,4,8}**
      - ( ) no es correcta pero el error no se manifiesta en los ejemplos propuestos, o se manifiesta en ambos
     
+Explicacion: La orden distinta es `add $0, %[x]`, que se usa en la versión "oficial" `test %[x], %[x]`.
+
 241. La práctica "popcount" debía calcular la suma de bits (peso Hamming) de
     los elementos de un array. Un estudiante entrega la siguiente versión de
     popcount3:<br>
      <code>                                          
      int popconut3 (unsigned* array, int len) {      <br>
+         long val = 0;                               <br>
          int , res = 0;                              <br>
          unsigned x;                                 <br>
          for ( i=0; i &lt len; i++ ) {               <br>
              x = array[i];                           <br>
-             asm("ini3:        \n"                   <br>
-             "shr %[x]         \n"                   <br>
-             "adc $0, %[r]     \n"                   <br>
-             "add $0, %[x]     \n"                   <br>
-             "jne ini3         \n"                   <br>
-                                                    <br>
-             : [r] "+r" (res)                        <br>
-             : [x] "r" (x) );                        <br>
+                                                     <br>
+             do {                                    <br>
+                val = x & 0x1;                       <br>
+                x >>= 1;                             <br>
+             } while (x);                            <br>
+             val += (val >> 16);                     <br>
+             val += (val >> 8);                      <br>
          }                                           <br>
-        return res;                                 <br>
+                                                     <br>
+         return val & 0xFF;                          <br>
      }                                               <br>
      </code> <br>
      Esta función es una mezcla inexplicada de las versiones "oficiales" de **popcount2** y **popcount4**, incluyendo diferencias en 2 tipos de datos, la ausencia de la variable **res** y la diferente posición de la máscara **0xFF**.<br> Esta función popcount3:
