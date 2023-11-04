@@ -504,7 +504,7 @@ acabar_C:
 
 ## 5. Media y resto de N enteros calculada en 32 y en 64 bits ($N\approx 16$)
 
-En este caso, la principal diferencia es la extensión de signos no se hace usando nos registros, sino solo uno, usando por tanto la orden `cltq`. Por ello, ya no es necesario controlar el acarreo, ya que los números son de 32 bits pero están en registros de 64.
+En este caso, la principal diferencia es la extensión de signos no se hace usando dos registros, sino solo uno, usando por tanto la orden `cltq`. Por ello, ya no es necesario controlar el acarreo, ya que los números son de 32 bits pero están en registros de 64.
 
 No obstante, a la hora de realizar la división, como reduce el número de bits tenemos que extender el signo a 128 bits, usando `cqto`.
 
