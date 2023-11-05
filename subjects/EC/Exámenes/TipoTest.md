@@ -1165,12 +1165,9 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 	 - ( ) La técnica de register forwarding habilita una serie de caminos (buses) que se añaden al cauce para permitir que los resultados de una etapa pasen como entradas a la etapa donde son necesarias. 
 	- ( ) La reorganización del código y la introducción de instrucciones nop permite evitar dependencias de datos. 
 	- (x) Retrasar la fase de decisión saltar/no saltar de las instrucciones de salto condicional contribuye a mejorar el rendimiento del procesador. 
-	- ( ) Cuantas más etapas tenga un cauce, más instrucciones se estarán ejecutando en distintas fases y más posibilidades se presentan de que existan riesgos entre ellas. 
+	- ( ) Cuantas más etapas tenga un cauce, más instrucciones se estarán ejecutando en distintas fases y más posibilidades se presentan de que existan riesgos entre ellas.
 
-162. La precaptación (cola de instrucciones) está relacionada con...  - (x) Los riesgos estructurales (intenta evitar el efecto de un fallo de cache)
-	- ( ) Los riesgos de (dependencia de) datos (intenta que el dato esté disponible anticipadamente) 
-	- ( ) Los riesgos de control (intenta determinar de antemano el flujo de control) 
-	- ( ) Los riesgos de transferencia (intenta agrupar las posibles transferencias de un conjunto de instrucciones) 
+Explicacion: <!-- 162 Repetida.--> 
 
 163. La predicción de saltos está relacionada con... 
 	- ( ) Los riesgos estructurales (intenta evitar el efecto de un fallo de cache) 
@@ -1200,7 +1197,7 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 	- (x) El que tiene E/S independiente. 
 	- ( ) El que tiene E/S mapeada en memoria 
 	- ( ) Depende del tamaño del bus de direcciones. 
-	- ( ) Ambos podrán acceder a la misma cantidad de memori - ( ) 
+	- ( ) Ambos podrán acceder a la misma cantidad de memoria.
 
 168. ¿Cuál de las siguientes afirmaciones es incorrecta? 
 	- ( ) La consulta del estado del dispositivo por parte de la CPU se suele hacer con E/S programada (salvo con dispositivos que siempre están listos para transferir) y con E/S por IRQ (cuando se usa polling para determinar el origen de la IRQ) 
@@ -1208,7 +1205,7 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 	- (x) Sólo E/S por DMA libera a la CPU de realizar la consulta de estado del dispositivo de E/S 
 	- ( ) Sólo E/S por DMA libera a la CPU de realizar la transferencia de los datos de E/S 
 
-169. El fragmento de código:
+169. El fragmento de código:<br>
 <code>poll: in a, 0x20 <br>cmp a, $0 <br>jnz poll <br>load a, 0x11 <br>out 0x21, a <br></code> corresponde a: 
 	- ( ) E/S programada sin consulta de estado 
 	- (x) E/S programada con consulta de estado 
@@ -1258,7 +1255,7 @@ ROM: F0000 - FFFFF
 176. Se dispone de un circuito integrado que actúa como módulo básico de memoria de 8K × 4. ¿Qué circuitos necesitamos para construir una memoria de 17K × 8? 
 	- ( ) 2 módulos de memoria 
 	- ( ) 2 módulos de memoria y un decodificador. 
-	- ( ) 4 módulos de memori - ( ) 
+	- ( ) 4 módulos de memoria.
 	- (x) 4 módulos de memoria y un inversor. 
 
 177. En la cache L1 de instrucciones, la tasa de fallos: 
@@ -1317,29 +1314,25 @@ movl $1, %edx
 	- ( ) 0xFFFF FFFF 0000 0001 
 	- ( ) 0xFFFF 0000 0000 0001 
 	- (x) 0x0000 0000 0000 0001
-186. En el fragmento de código 
-400544:e807000000 callq400550<f> 
-400549:488903 mov %rax,(%rbx) 
-la instrucción call suma al contador de programa la cantidad: 
+186. En el fragmento de código <br><code>400544:e807000000 callq 400550 f <br> 400549:488903 mov %rax,(%rbx) </code><br> la instrucción `call` suma al contador de programa la cantidad: 
 	- (x) 0x00000007 
 	- ( ) 0x00400549 
 	- ( ) 0x400544 
 	- ( ) 0x48 
-187. Una función C declarada como int get_var_digit(size_t index, size_t digit) genera como código ensamblador 
-movq var(,%rdi,8), %rax 
-movl (%rax,%rsi,4), %eax 
-ret 
+
+187. Una función C declarada como `int get_var_digit(size_t index, size_t digit)` genera como código ensamblador <br><code> movq var(,%rdi,8), %rax <br> movl (%rax,%rsi,4), %eax <br> ret </code><br>
 Se puede adivinar que: 
 	- ( ) var es un array multi-nivel (punteros a enteros) de cuatro filas  
 	- (x) var es un array multi-nivel pero no se pueden adivinar las dimensiones  
 	- ( ) var es un array bidimensional de enteros, con ocho columnas  
 	- ( ) var es un array bidimensional de enteros, con cinco columnas 
+
 188. En el contexto de microprogramación, el control residual... 
 	- ( ) intenta disminuir la cantidad de "bits residuales", usando las técnicas de codificación y/o solapamiento de campos, como opuestas a la microprogramación directa o "inmediata". 
 	- ( ) se refiere a que cuanto más codificación y/o solapamiento se use, menos capacidad para expresar paralelismo se tiene, siendo ese menor control un "residuo" o consecuencia no deseada de dichas técnicas no "inmediatas" 
 	- ( ) clasifica las microinstrucciones del microcódigo según formen parte de microprogramas ("microinstr. inmediatas") o no ("microinstr. residuales") 
 	- (x) consiste en almacenar señales de control en un "registro de control residual" para usarlas en ciclos posteriores, a diferencia del "control inmediato", en donde los bits se utilizan inmediatamente 
-189. Suponer que un procesador ideal que ejecuta cada instrucción en T segundos se segmenta en cuatro etapas ideales de duración T/4. ¿Cuál razonamiento es correcto? 
+189. Suponer que un procesador ideal que ejecuta cada instrucción en `T` segundos se segmenta en cuatro etapas ideales de duración `T/4`. ¿Cuál razonamiento es correcto? 
 	- ( ) Se espera una reducción de prestaciones porque además de ejecutar las instrucciones hay que segmentarlas (coste de la segmentación) 
 	- ( ) Se espera una reducción de prestaciones porque la duración del ciclo de reloj vendrá impuesta por la etapa más lenta 
 	- ( ) Se espera un aumento de prestaciones debido al efecto de los riesgos (hazards) sobre el avance de las instrucciones en el cauce 
@@ -1349,11 +1342,11 @@ Se puede adivinar que:
 	- ( ) sólo si el salto NO se produce (las ignora si se produce), de manera que instrucción(es) en el destino del salto podrían adelantarse tras la propia instrucción de salto 
 	- (x) siempre, de manera que instrucción(es) anterior(es) al salto podrían colocarse tras la propia instrucción de salto
 	- ( ) nunca, de manera que instrucción(es) anterior(es) al salto no podrían colocarse tras la propia instrucción de salto 
-191. Un computador con 20 líneas de dirección y memoria de bytes tiene 640KB de RAM, 128KB de ROM, y utiliza E/S mapeada en memori - ( ) ¿Cuál es el número máximo de periféricos que pueden conectarse, si cada uno de ellos utiliza 32 direcciones? 
-	- ( ) 2^10 
-	- ( ) 2 ^11 
-	- ( ) 2 ^12 
-	- (x) 2 ^13 
+191. Un computador con 20 líneas de dirección y memoria de bytes tiene 640KB de RAM, 128KB de ROM, y utiliza E/S mapeada en memoria. ¿Cuál es el número máximo de periféricos que pueden conectarse, si cada uno de ellos utiliza 32 direcciones? 
+	- ( ) \\(2^{10}\\)
+	- ( ) \\(2^{11}\\)
+	- ( ) \\(2^{12}\\) 
+	- (x) \\(2^{13}\\) 
 192. La consulta de estado que se puede llevar a cabo en una operación de salida mediante E/S programada sirve para… 
 	- ( ) consultar si el dispositivo tiene algún dato de salida disponible 
 	- (x) consultar si el dispositivo está aún ocupado, por ejemplo con alguna operación de salida 	anterior 
@@ -1385,24 +1378,25 @@ Se puede adivinar que:
 	- ( ) shrq %rax 
 	- ( ) sarq %rax 
 198. Para crear espacio en la pila para variables locales sin inicializar suele realizarse la siguiente operación 
-	- ( ) Restar una cantidad positiva a rbp. 
-	- ( ) Sumar una cantidad positiva a rbp. 
-	- (x) Restar una cantidad positiva a rsp. 
-	- ( ) Sumar una cantidad positiva a rsp.
-199. Si la estructura struct a ocupa un espacio de 26 bytes en memoria, ¿cuántos bytes ocupa la siguiente estructura struct b cuando se compila en 64 bits? 
+	- ( ) Restar una cantidad positiva a `rbp`. 
+	- ( ) Sumar una cantidad positiva a `rbp`. 
+	- (x) Restar una cantidad positiva a `rsp`. 
+	- ( ) Sumar una cantidad positiva a `rsp`.
+
+199. Si la estructura struct a ocupa un espacio de 26 bytes en memoria, ¿cuántos bytes ocupa la siguiente estructura struct b cuando se compila en 64 bits? <br><code>struct b{<br> struct a a1; <br> int i; <br> struct a a2; <br> }; </code><br>
 	- ( ) 24 
 	- ( ) 58 
 	- (x) 60 (entero ocupa 8) 
 	- ( ) 64 
 200. En la secuencia de programa siguiente:<br>
-<code> 628: e8 cd ff ff ff 	callq	5fa <suma>   <br> 62d: 48 83 c4 20 	add 	$0x20, %rsp </code> <br>
-¿Cuál es el valor que introduce en la pila la instrucción callq? 
-	- ( ) 0xffffffcd 
-	- ( ) 0x5fa 
-	- ( ) 0x628 
-	- (x) 0x62d 
+<code> 628: e8 cd ff ff ff 	callq	5fa suma   <br> 62d: 48 83 c4 20 	add 	$0x20, %rsp </code> <br>
+¿Cuál es el valor que introduce en la pila la instrucción `callq`? 
+	- ( ) `0xffffffcd` 
+	- ( ) `0x5fa` 
+	- ( ) `0x628` 
+	- (x) `0x62d` 
 
-201. Un archivo .o que contiene código objeto reubicable: 
+201. Un archivo `.o` que contiene código objeto reubicable: 
 	- (x) Contiene instrucciones máquina binarias. 
 	- ( ) Contiene instrucciones máquina y directivas en ensamblador.  
 	- ( ) Puede ejecutarse directamente. 
@@ -1426,7 +1420,7 @@ Se puede adivinar que:
 	- ( ) de control 
 	- (x) de datos 
 
-205. Un sistema no segmentado tarda 10 ns en procesar una tare - ( ) La misma tarea puede ser procesada en un cauce (pipeline) de 4 segmentos con un ciclo de reloj de 4 ns. Cuando se procesan muchas tareas, la ganancia máxima de velocidad que se obtiene se acerca a: 
+205. Un sistema no segmentado tarda 10 ns en procesar una tarea. La misma tarea puede ser procesada en un cauce (pipeline) de 4 segmentos con un ciclo de reloj de 4 ns. Cuando se procesan muchas tareas, la ganancia máxima de velocidad que se obtiene se acerca a: 
 	- ( ) 10 
 	- ( ) 4 
 	- ( ) 40 
@@ -1445,7 +1439,7 @@ Se puede adivinar que:
 	- ( ) A medida que nos alejamos del procesador, el tamaño de memoria disminuye. 
 
 209. ¿Cuántas líneas de dirección (patillas) son necesarias para direccionar un chip de memoria DRAM de 4096 x 4? 
-	- (x) 6 (2^12) 
+	- (x) 6 \\(2^{12}\\) 
 	- ( ) 10 
 	- ( ) 11 
 	- ( ) 12
