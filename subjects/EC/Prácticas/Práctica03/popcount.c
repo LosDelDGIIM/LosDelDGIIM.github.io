@@ -37,7 +37,28 @@ unsigned lista[SIZE]={  0x0,        0x01020408, 0x35906a0c, 0x70b0d0e0,
 #define NBITS 20
 #define SIZE (1<<NBITS)     // tamaño suficiente para tiempo apreciable
 unsigned lista[SIZE];       // unsigned para desplazamiento derecha lógico
-#define RESULT ( NBITS * ( 1 << NBITS-1 ) ) // Hay NBITS Columas, y cada columna tiene SIZE/2 1s.
+#define RESULT ( NBITS * ( 1 << (NBITS-1) ) )
+/*
+Hay NBITS Columas, y cada columna tiene SIZE/2 1s.
+
+Si NBITS es 3, tenems que SIZE=2^3=8 (es decir, hay 8 números). Estos son:
+
+000
+001
+010
+011
+100
+101
+110
+111
+
+Vemos que hay 3 columnas, y en cada columa la mitad son 0s y la mitad son 1s.
+Es decir, hay NBITS Columnas (3) y SIZE/2 (4) 1s en cada columna.
+
+SIZE/2 es lo mismo que SIZE << 1, y por la definición de SIZE
+    se tiene que es (1<<NBITS)<<1= 1 << (NBITS -1)
+
+*/
 /* -------------------------------------------------------------------- */
 #else
 #error "Definir TEST entre 0..4"
