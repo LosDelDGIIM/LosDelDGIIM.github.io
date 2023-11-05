@@ -1947,3 +1947,431 @@ Explicacion: La orden distinta es `add $0, %[x]`, que se usa en la versión "ofi
      - ( ) Si continuáramos multiplicando por 2 el tamaño del vector en el eje X obteniendo más puntos de la gráfica, esta continuaría horizontal para cualquier valor más allá de 64 MB.
      - (x) La gráfica tiene escalones hacia arriba porque en cada punto del eje X accedemos al mismo número de elementos del vector y el número de aciertos por localidad temporal disminuye bruscamente en ciertos puntos al aumentar el tamaño del vector.
     - ( ) La gráfica tiene tramos horizontales porque el hecho de realizar la mitad de accesos al vector en cada punto de un tramo horizontal respecto al anterior punto de ese mismo tramo horizontal es compensado por el número de fallos creciente en ese mismo tramo horizontal.
+
+
+250. El switch de gcc para que únicamente compile de lenguaje C a ensamblador, y no realice ningún paso adicional (ensamblar, enlazar, etc), es...
+
+
+    - ( ) `-c`
+    - (x) `-S`
+    - ( ) `-o`
+    - ( ) `-g`
+
+251. Los switches `--32` y `--64` para trabajar en 32bit/64bit corresponden a la herramienta...
+
+
+    - ( ) gcc
+    - (x) as
+    - ( ) ld
+    - ( ) nm
+
+252. El switch `-l` para indicar librerías **NO** funciona con la herramienta...
+
+
+    - ( ) gcc
+    - (x) as
+    - ( ) ld
+    - ( ) No se puede marcar una y sólo una de las anteriores.
+
+253. ¿Cuál de las siguientes no es una sección de un fichero _ELF_?
+
+
+    - ( ) `.text`
+    - (x) `.static`
+    - ( ) `.data`
+    - ( ) `.bss`
+
+254. ¿Cuál de los siguientes contenidos no está incluido en un fichero _ELF_ ejecutable?
+
+
+    - ( ) Código máquina.
+    - ( ) Variables globales.
+    - (x) Pila del usuario.
+    - ( ) Tabla de símbolos.
+
+255. En la práctica _media_ se programa la suma de una lista de 32 enteros de 4 B para producir un resultado de 8 B, primero sin signo y luego con signo. Si la lista se rellena con el valor que se indica a continuación, ¿en qué caso ambos programas producen el mismo resultado?
+
+
+    - (x) `0x1111 1111`
+    - ( ) `0x9999 9999`
+    - ( ) `0xAAAA AAAA`
+    - ( ) `0xFFFF FFFF`
+
+256. En la práctica _media_ se programa la suma de una lista de 32 enteros de 4 B para producir un resultado de 8 B, primero sin signo y luego con signo. Si la lista se rellena con el valor `0x0400 0000`, ¿en qué se diferencian los resultados de ambos programas?
+
+
+    - (x) Se diferencian.
+    - ( ) En uno ocupa 32 bits, en otro 64 bits.
+    - ( ) En uno interpreta como negativo, en otro como positivo.
+    - ( ) En uno los 32 bits superiores son `0xFFFF FFFF`, en el otro no.
+
+257. En la práctica _media_ se suma una lista de 32 enteros de 4 B con signo para producir una media y un resto usando la instrucción `IDIV`. ¿Cuál de las siguientes afirmaciones es falsa?
+
+
+    - ( ) `IDIV` produce el mismo cociente que el operador `/` en lenguaje C.
+    - ( ) `IDIV` produce el mismo resto que el operador `%` en lenguaje C.
+    - (x) La media se redonde al entero más próximo.
+    - ( ) El resto siempre tiene el mismo signo que la suma.
+
+258. En la práctica _media_ un estudiante usa el siguiente bucle para acumular la suma en `EBP:EDI` antes de calcular la media y el resto:<br><code>bucle:<br> mov (%ebx,%esi,4), %eax<br> cltd<br> add %eax, %edi<br> adc %edx, %ebp<br> jnc nocarry<br> inc %edx<br>nocarry:<br> inc %esi<br> cmp %esi, %ecx<br> jne bucle</code><br>Estando bien programa todo lo además, este código.
+
+
+    - (x) Produce siempre el resultado correcto.
+    - ( ) Fallaría con lista: `.int 0,1,2,3`
+    - ( ) Fallaría con lista: `.int -1,-2,-4,-8`
+    - ( ) No siempre produce el resultado correcto, pero el error no se manifiesta en los ejemplos propuestos, o se manifiesta en ambos.
+
+259. Alguno de los siguientes no es un nombre de registro en una máquina IA32 en modo 32 bits.
+
+
+    - ( ) `ebp`
+    - ( ) `ax`
+    - ( ) `dh`
+    - (x) `sil`
+
+260. Alguno de los siguientes no es un nombre de registro en una máquina x86-64 en modo 64 bits.
+
+
+    - ( ) `r8d`
+    - ( ) `r12w`
+    - (x) `sih`
+    - ( ) `spl`
+
+261. Para comprobar si el entero almacenado en `EAX` es cero (y posiblemente saltar a continuación usando `JZ/JNZ`), gcc genera el código:
+
+
+    - ( ) `cmp %eax, $0`
+    - ( ) `test %eax`
+    - ( ) `cmp %eax`
+    - (x) `test %eax, %eax`
+
+262. La práctica _paridad_ debía calcular la suma de paridades impar (`XOR` de todos los bits) de los elementos de un array. Un estudiante entrega la siguiente versión de _parity3_:<br><code>int parity3(unsigned* array, int len){<br> int i, res=0, val;<br> unsigned x;<br> for(int i=0; i<len; i++){<br> x=array[i];<br> val=0;<br> do{<br> val += x;<br> x >>= 1;<br> } while (x);<br> val &= 0x1;<br> res += val;<br> }<br> return res;<br>}</code><br>Esta función *parity3\*:
+
+
+    - (x) Produce siempre el resultado correcto.
+    - ( ) Fallaría con `array = {0,1,2,3}`.
+    - ( ) Fallaría con `array = {1,2,4,8}`.
+    - ( ) No siempre produce el resultado correcto.
+
+263. Un estudiante entrega la sigueinte versión de _parity4_:<br><code>int parity4(unsigned* array, int len){<br> int val, i, res=0;<br> unsigned x;<br> for(int i=0; i<len; i++){<br> x=array[i];<br> val = 0;<br> asm("\n")<br>"ini3: \n\t"<br> "xor %[x], %[v] \n\t"<br> "shr %[x] \n\t"<br> "test %[x], %[x] \n\t"<br> "jne ini3 \n\t"<br> :[v] "+r" (val)<br> :[x] "r" (x)<br> );<br> val = val & 0x1;<br> res += val;<br> }<br> return res;<br>}</code><br>Esta función *parity4\*:
+
+
+    - (x) Produce siempre el resultado correcto.
+    - ( ) Fallaría con `array = {0,1,2,3}`
+    - ( ) Fallaría con `array = {1,2,4,8}`
+    - ( ) No siempre produce el resultado correcto, pero el error no se manifiesta en los ejemplos propuestos, o se manifiesta en ambos.
+
+264. La sentencia `asm()` del listado anterior tiene las siguientes restricciones:
+
+
+    - ( ) Ninguna.
+    - ( ) Arquitectura de 32 bits.
+    - (x) Dos entradas y una salida.
+    - ( ) Un registro y dos sobrescritos (clobber).
+
+265. Un estudiante entrega la siguiente versión de _parity5_:<br><code>int parity5(unsigned* array, int len){<br> int i,j,res=0;<br> unsigned x;<br> for(i=0; i<len; i++){<br> x=array[i];<br> for(j=sizeof(unsigned)*4; j>0; j=j/2){<br> x^=x>>j;<br> }<br> x = x & 0x1;<br> res += x;<br> }<br> return res;<br>}</code><br>Esta función _parity5_:
+
+
+    - (x) Produce siempre el resultado correcto.
+    - ( ) Fallaría con `array = {0,1,2,3}`
+    - ( ) Fallaría con `array = {1,2,4,8}`
+    - ( ) No siempre produce el resultado correcto, pero el error no se manifiesta en los ejemplos propuestos, o se manifiesta en ambos.
+
+266. Un estudiante entrega la siguiente versión de _parity6_:<br><code>int parity6(unsigned* array, int len){<br> int i,j,res = 0;<br> unsigned x;<br> for(int i = 0; i<len; i++){<br> x=array[i];<br> asm("\n"<br> "mov %[x], %%edx \n\t"<br> "shr $16, %%edx \n\t"<br> "xor %%edx, %[x] \n\t"<br> "mov %[x], %%edx \n\t"<br> "mov %%dh, %%dl \n\t"<br> "xor %%edx, %[x] \n\t"<br> "setpo %%cl \n\t"<br> "movzx %%cl, %[x]"<br> :[x] "+r" (x)<br> :<br> : "edx", "ecx"<br> );<br> res += x;<br> }<br> return res;<br>}</code><br>Esta función *parity6\*:
+
+
+    - (x) Produce siempre el resultado correcto.
+    - ( ) Fallaría con `array = {0,1,2,3}`
+    - ( ) Fallaría con `array = {1,2,4,8}`
+    - ( ) No siempre produce el resultado correcto, pero el error no se manifiesta en los ejemplos propuestos, o se manifiesta en ambos.
+
+267. La sentencia `asm()` del listado anterior tiene las siguientes restricciones:
+
+
+    - ( ) Ninguna.
+    - ( ) Arquitectura de 32 bits.
+    - ( ) Dos entrada y una salida.
+    - (x) Un registro y dos sobrescritos (clobber).
+
+268. En el programa _size_ de la práctica de la cache, si el primer escalón pasa de `tiempo = 1` para todos los tamaños de vector menores o iguales que 32 KB a `tiempo = 3` para los tamaños 64 KB y 128 KB, podemos asegurar que:
+
+
+    - (x) La cache L1 es al menos tres veces más rápida que la cache L2.
+    - ( ) La cache L1 es como mucho tres veces más rápida que la cache L2.
+    - ( ) La cache L2 es al menos el doble de rápida que la memoria principal.
+    - ( ) La cache L2 es como mucho el doble de rápida que la memoria principal.
+
+269. El código del programa _size_ de la práctica de la cache accede al vector saltando...
+
+
+    - ( ) De byte en byte.
+    - (x) De 64 en 64 bytes.
+    - ( ) De 1KB en 1KB.
+    - ( ) De 64KB en 64KB.
+
+270. 1.La dirección efectiva del primer parámetro de llamada a una función en pila suele calcularse desde el código de la función como:
+
+
+    - (x) `EBP+8`
+    - ( ) `EBP-8`
+    - ( ) `EBP+4`
+    - ( ) `EBP-4`
+
+271. El comienzo e un procedimiento que siga la conveción cdecl es:
+
+
+    - ( ) `mov %ebp, %esp; push %ebp`
+    - ( ) `mov %esp, %ebp; push %ebp; push %ebp`
+    - ( ) `mov %ebp, %esp push %ebp`
+    - (x) `mov %esp, %ebp`
+
+272. Considere una función C declarada así:<br>
+     `void fun4arg(int a, int b, int c, int d)`<br>
+    Suponiendo que `fun4arg` se ha compilado para una máquina x86 IA-32 con enteros de 4 bytes, ¿cuál sería la dirección del argumento `b` relativa a `%ebp`, en el marco de la pila de `fun4arg`?
+    - ( ) `%ebp + 8`
+    - (x) `%ebp + 12`
+    - ( ) `%ebp + 16`
+    - ( ) `%ebp + 20`
+
+273. ¿Cuál de las siguientes afirmaciones sobre las caches es _FALSA_?
+
+
+    - (x) Casi ningún procesador actual tiene memoria cache L2.
+    - ( ) Las direcciones a las que accede un programa no son completamente aleatorias, sino que se rigen por ciertos patrones de localidad.
+    - ( ) Un procesador actual tiene varias cachés de nivel 1.
+    - ( ) La caché de nivel 3 no contiene toda la memoria que maneja el programa.
+
+274. En un sistema Linux x86-64, ¿cuál de las siguientes variables ocupa más bytes en memoria?
+
+
+    - ( ) `char a[7]`
+    - ( ) `short b[3]`
+    - (x) `int* c`
+    - ( ) `float d`
+
+275. En la práctica _suma_ se pide sumar una lista de 32 enteros SIN signo de 32bits en una plataforma de 32bits sin perder precisión, esto es, evitando acarreos. ¿Cuál es el mínimo valor entero que repetido en toda la lista causaría acarreo con 32bits (sin signo)?
+
+
+    - ( ) `0xfc00 0000`
+    - ( ) `0xfbff ffff`
+    - (x) `0x0800 0000`
+    - ( ) `0x07ff ffff`
+
+276. En la práctica _suma_ se pide sumar una lista de 32 enteros CON signo de 32bits en una plataforma de 32bits sin perder precisión, esto es, evitando desbordamiento. ¿Cuál es el valor negativo más pequeño (en valor absoluto) que repetido en toda la lista causaría desbordamiento con 32bits (en complemento a 2)?
+
+
+    - ( ) `0xfc00 0000`
+    - (x) `0xfbff ffff`
+    - ( ) `0xf800 0000`
+    - ( ) `0xf800 0001`
+
+277. ¿Qué valor contendrá `edx` tras ejecutar las siguientes instrucciones?<br><code> xor %eax, %eax<br> sub $1, %eax<br> cltd<br> idiv %eax</code><br>
+
+
+    - (x) 0.
+    - ( ) 1.
+    - ( ) -1.
+    - ( ) No puede saberse con los datos del enunciado.
+
+278. La práctica _popcount_ debería calcular la suma de bits de los elementos de un array. Un estudiante entrega lo siguiente:<br><code>int popcount4(unsigned\* array, int len){<br> int i, j, res = 0;<br> for(int i = 0; i < len; ++i){<br> unsigned x = array[i];<br> int n = 0;<br> do{<br> n += x & 0x01010101L;<br> x >>= 1;<br> } while(x);<br><br> for(j = 16; j == 1; j /= 2){<br> n^= (n >>= j);<br> }<br> res += n & 0xff;<br> }<br> return res;<br>}</code><br>Esta función `popcount4`:
+
+
+    - (x) Produce siempre el resultado correcto.
+    - ( ) Fallaría con `array = {0,1,2,3}`
+    - ( ) Fallaría con `array = {1,2,4,8}`
+    - ( ) No es correcta pero el error no se manifiesta en los ejemplos propuestos, o se manifiesta en ambos.
+
+279. La práctica _paridad_ debía calcular la suma de paridades impar (`XOR` de todos los bits) de los elementos de un array. Un estudiante entrega la siguiente versión de `parity6`:<br><code>int parity6(unsigned\* array, int len){<br> int i, result = 0;<br> unsigned x;<br> for(int i=0; i<len; i++){<br> x = array[i];<br> asm("mov %[x], %%edx \n\t"<br> "shr $15, %%edx \n\t"<br> "shr $8, %%edx \n\t"<br> "xor %%edx, %%edx \n\t"<br> "setp %%dl \n\t"<br> "movzx %%dl, %[x] \n\t"<br> : [x] "+r" (x)<br> :<br> : <br> );<br> result += x;<br> }<br> return result;<br>}</code><br>Esta función `parity6`:
+
+
+    - ( ) Produce siempre el resultado correcto.
+    - (x) Fallaría con `array = {0,1,2,3}`
+    - ( ) Fallaría con `array = {1,2,4,8}`
+    - ( ) No es correcta pero el error no se manifiesta en los ejemplos propuestos, o se manifiesta en ambos.
+
+280. En la práctica _paridad_ se pide calcular la suma de paridades de una lista de enteros sin signo. Suponer que un estudiante entrega la siguiente versión:<br><code>int paridad5(unsigned\* array, int len){<br> int i, k, result = 0;<br> unsigned x;<br> for(int i = 0; i < len; i++){<br> x = array[i];<br> for(k = 16; k == 1; k /= 2)<br> x ^= x >> k;<br> result += (x & 0x0x1);<br> }<br> return result;<br>}</code><br>Esta función:
+
+
+    - ( ) Es correcta.
+    - ( ) Fallaría con `array = {0,1,2,3}`
+    - (x) Fallaría con `array = {1,2,4,8}`
+    - ( ) No se puede marcar una y sólo una de las opciones anteriores.
+
+281. Utilizando la sentencia `asm`, las denominadas restricciones que se indican al final de dicha sentencia, involucran a:
+
+
+    - ( ) Solamente las entradas.
+    - ( ) Solamente las salidas.
+    - ( ) Solamente los sobrescritos.
+    - (x) Ninguan de las anteriores es cierta.
+
+282. En la resalización de la práctica de la bomba digital, una parte del código máquina es el siguiente:<br><code> 0x080486e8 (main+120): call 0x8048524 (strncmp)<br> 0x080486ed (main+125): test %eax, %eax<br> 0x080486ef (main+127): je 0x80486f6 (main+134)<br> 0x080486f1 (main+129): call 0x8048604 (boom)</code><br>¿Cuál de los siguientes comandos cambiaría el salto condicional por un salto incondicional?
+
+
+    - ( ) `set $0x080486ef=0xeb`
+    - (x) `set *(char*)0x080486ef=0xeb`
+    - ( ) `set *(char*)0x080486f6=jmp`
+    - ( ) `set %0x080486ef=0xeb`
+
+283. En una bomba como las estudiadas en prácticas, del tipo...<br><code> 0x0804873f (main+207): call 0x8048504 (scanf)<br> 0x08048744 (main+212): mov 0x24(%esp), %edx<br> 0x08048748 (main+216): mov 0x804a044, %eax<br> 0x0804874d (main+221): cmp %eax, %edx<br> 0x0804874f (main+223): je 0x8048756 (main+230)<br> 0x08048751 (main+225): call 0x8048604 (boom)<br> 0x08048756 (main+230): ...</code><br>La contraseña es:
+
+
+    - ( ) El entero `0x804a044`.
+    - (x) El entero almacenado a partir de la posición de memoria `0x804a044`.
+    - ( ) El string almacenado a partir de la posición de memoria `0x24(%esp)`.
+    - ( ) Ninguna de las anteriores.
+
+284. En una bomba como las estudiadas en prácticas, del tipo...<br><code> 0x080486e8 (main+120): call 0x8048524 (strcmp)<br> 0x080486ed (main+125): test %eax, %eax<br> 0x080486ef (main+127): je 0x80486f6 (main+134)<br> 0x080486f1 (main+129): call 0x8048604 (boom)<br> 0x080486f6 (main+134): ...</code><br>La contraseña es:
+
+
+    - ( ) El valor que tenga `%eax`.
+    - ( ) El string almacenado a partir de donde apunta `%eax`.
+    - ( ) El entero almacenado a partir de donde apunta `%eax`.
+    - (x) Ninguna de las anteriores.
+
+285. El servidor de SWAD tiene dos procesadores Xeon E5540 con 4 núcleos cada uno. Cada procesador tiene 4 caches L1 de instrucciones de 32 KB, 4 caches L1 de datos de 32 KB, 4 caches unificadas L2 de 256 KB y una cache unificada L3 de 8MB. Suponga que un proceso swad, que se ejecuta en un núcleo, tiene que ordenar un vector de estudiantes accediendo repetidamente a sus elementos. Cada elemento es una estructura de datos de un estudiante y tiene un tamaño de 4KB. Si representamos en una gráfica las prestaciones en función del número de estudiantes a ordenar, ¿para qué límites teóricos en el número de estudiantes se observarán saltos en las prestaciones debidos a accesos a la jerarquía de memoria?
+
+
+    - ( ) 4 / 32 / 512 estudiantes.
+    - (x) 8 / 64 / 2048 estudiantes.
+    - ( ) 16 / 32 / 64 estudiantes.
+    - ( ) 32 / 256 / 8192 estudiantes.
+
+286. En la práctica de la cache, el código de `line.cc` incluye la sentencia:
+     `for(unsigned line=1; line<=MAXLINE; line<<=1){...}`.
+     ¿Qué objetivo tiene la expresión `line<<=1`?
+
+
+    - ( ) Salir del bucle si el tamaño de línea se volviera menor o igual que 1 para algún elemento del vector.
+    - (x) Duplicar el tamaño del salto en los accesos al vector respecto a la iteración anterior.
+    - ( ) Volver al principio del vector cuando el índice exceda la longitud del vector.
+    - ( ) Sacar un uno (1) por el stream `line`.
+
+287. Sea un computador de 32 bits con una memoria caché L1 para datos de 32 KB y líneas de 64 bytes asociativa por conjuntos de 2 vías. Dado el siguiente fragmento de código:
+     <code>int v[262144];<br> for(int i = 0; i < 262144; i+=2)<br>v[i]=9;</code>
+     ¿Cuál será la tasa de fallos aproximada que se obtiene en la primera ejecución del bucle anterior?
+
+
+    - ( ) 0 (ningún fallo).
+    - ( ) 1/2 (mitad aciertos, mitad fallos).
+    - (x) 1/8 (un fallo por cada 8 accesos).
+    - ( ) 1 (todo son fallos).
+
+Explicacion: 288 repetida
+
+289. Con los mismos supuestos, imaginar que se modifica la última sentencia (el cuerpo anidado) por esta otra:
+     `C[i][j] += A[i][k] * B[j][k];`
+     de manera que se calcule `C = A x Bt` (A por traspuesta de `B`).
+     Aproximadamente, ¿qué tasa de fallos se podría esperar de esta nueva función para valores grandes de `N`?
+
+
+    - (x) 1/16
+    - ( ) 1/8
+    - ( ) 1/4
+    - ( ) 1/2
+
+290. En contraposición a un ejecutable Linux ELF, un fichero objeto (obtenido con `gcc -c`):
+
+
+    - ( ) No contiene tablas de símbolos, que sólo se añaden al ejecutable tras enlazar.
+    - (x) Ubica el código (y los datos) a partir de la posición `0x0`, las direcciones definitivas sólo se calculan tras enlazar.
+    - ( ) Contiene tablas de símbolos, pero sólo para los símbolos locales; p.ej., sólo al enlazar un programa que llame a `printf` se añadirá una entrada a la tabla con la dirección de `printf`.
+    - ( ) No reserva espacio para las direcciones de objetos desconocidos; p.ej., sólo al enlazar un `CALL` a `printf` se insertan los 4B de la dirección de printf entre el codop de `CALL` y el de la siguiente instrucción máquina.
+
+291. Tras ejecutar las tres instrucciones que se muestran desensambladas a continuación, el registro `EAX` toma el valor:
+     <code>08048074 (\_start):<br> 08048074: be 74 80 04 08 mov $\_start, %esi<br> 08048079: 46 inc %esi<br> 0804807a: 8b 06 mov (%esi), %eax</code>
+
+
+    - (x) `0x08048074`
+    - ( ) `0x08048075`
+    - ( ) `0x08048079`
+    - ( ) `0x0804807a`
+
+292. Si `%edx` contiene `0xf000` y `%ecx` contiene `0x0100`, el direccionamiento `0x80(%ecx,%edx,2)` se refiere a la posición:
+
+
+    - ( ) `0xf182`
+    - ( ) `0xf280`
+    - (x) `0x1e180`
+    - ( ) Ninguna de las respuestas anteriores es correcta.
+
+293. ¿Cuál de las siguientes secuencias de instrucciones multiplica `%eax`por 10?
+
+
+    - ( ) `leal (%eax,%eax,2), %eax; sall $2, %eax`
+    - ( ) `imull $0x10, %eax`
+    - ( ) `addl %eax, %eax; shll $5, %eax`
+    - (x) Varias o ninguna de las respuestas anteriores son correctas, no se puede marcar una y sólo una.
+
+294. ¿Cuál de las siguientes secuencias de instrucciones calcula `a=b-a`, suponiendo que `%eax` es `a` y `%ebx` es `b`?
+
+
+    - ( ) `subl %eax, %ebx`
+    - ( ) `subl %ebx, %eax`
+    - ( ) `notl %eax`
+    - (x) Varias o ninguna de las respuestas anteriores son correctas, no se puede marcar una y sólo una.
+
+295. Para desplazar `%eax` a la derecha un número variable de posiciones 32, indicado en `%ebx`, se puede hacer:
+
+
+    - ( ) `sar %ebx, %eax`
+    - ( ) `sar %bl, %eax`
+    - (x) `mov %ebx, %ecx; sar %cl, %eax`
+    - ( ) No se puede, `sar` sólo admite un número fijo de posiciones (debe ser un valor inmediato).
+
+296. Indicar cuál es la dirección de salto (en qué dirección se empiza la subrutina (`main`) para esta instrucción `call`):
+     <code> 0804854e: e8 3d 06 00 00 call (main)<br> 08048553: 50 pushl %eax</code>
+
+
+    - (x) `08048b90`
+    - ( ) `08048b8b`
+    - ( ) `450a854e`
+    - ( ) No se puede deducir de la información proporcionada, faltan datos.
+
+297.  El ajuste de marco de pila que gcc (Linux/IA-32) prepara para todas las funciones consiste en las instrucciones:
+
+
+    - ( ) `movl %ebp, %esp; pushl %ebp`
+    - ( ) `movl %esp, %ebp; pushl %esp`
+    - (x) `pushl %ebp; movl %esp, %ebp`
+    - ( ) `pushl %esp; movl %ebp, %esp`
+
+298. Al traducir de lenguaje C a ensamblador, gcc en máquinas Linux/IA-32 almacena (reserva espacio para) una variable `var` local a una función `fun` en una dirección de memoria referenciable (en lenguaje ensamblador) como:
+
+
+    - ( ) `var` (el nombre de la variable representa su posición de memoria).
+    - (x) `-k(%ebp)`, siendo `k` un número constante positivo relativamente pequeño.
+    - ( ) `k(%ebp)`, siendo `k` un número constante positivo relativamente pequeño.
+    - ( ) `k(%esp)`, siendo `k` un numero constante positivo reslativamente pequeño.
+
+299. En x86-64 se pueden referenciar los registros:
+
+
+    - (x) `%rax, %eax, %ax, %ah, %al`
+    - ( ) `%rsi, %esi, %si, %sih, %sil`
+    - ( ) `%r8, %r8d, %r8w, %r8l`
+    - ( ) `%r12q, %r12d, %r12w, %r12l`
+
+300. Comparando las convenciones de llamada de gcc Linux IA-32 con x86-64 respecto a registros: **(NO ENTRA EN TEMARIO DE EC)**
+
+
+    - ( ) En IA-32 `%ebx` es salva-invocante, pero en x86-64 `%rbx` es salva-invocado.
+    - (x) En IA-32 `%ecx` es salva-invocante, y en x86_64 `%rcx` es salva-invocante también.
+    - ( ) En IA-32 `%esi` es salva-invocado, y en x86_64 `%rsi` es salva-invocado también.
+    - ( ) En IA-32 `%ebp` es especial (marco de pila), y en x86_64 `%rbp` también.
+
+301. Si declaramos `int val[5] = {1,5,2,1,3};` entonces:
+
+
+    - (x) `&val[2]` es de tipo `int*` y vale lo mismo que `val+8`.
+    - ( ) `val+4` es de tipo `int*` y se cumple que `*(val+4)==5`.
+    - ( ) `val+1` es de tipo `int` y vale 2.
+    - ( ) `val[5]` es de tipo `int` y vale 3.
+
+302. Al traducir la sentencia C `r->i = val;` gcc genera el código ASM `mov %edx, 12(%eax)`. Se deduce que:
+
+
+    - ( ) `r`es un puntero que apunta a la posición de memoria 12.
+    - (x) El desplazamiento de `i` en `*r` es 12.
+    - ( ) `i` es un entero que vale 12.
+    - ( ) `val `es un entero que vale 12.
