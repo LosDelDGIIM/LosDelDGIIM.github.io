@@ -4,7 +4,6 @@
 
 **Autor:** Jose Juan Urrutia Milán 'JJ'.<br>
 **Autor:** Lucas Hidalgo Herrera.<br>
-**Autor:** Lucas Hidalgo Herrera.<br>
 **Autor:** Roberto González Lugo.<br>
 **Autor:** Elías Monge Sánchez.<br>
 **Autor:** Jesús Muñoz Velasco.<br>
@@ -26,7 +25,7 @@ Las preguntas se encuentran en <a href=https://losdeldgiim.github.io/subjects/EC
 Las explicaciones de cada pregunta se pueden encontrar en el archivo Markdown correspondiente, que se encuentra pinchando <a href=https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/EC/Ex%C3%A1menes/TipoTest.md>aquí</a>.
 ______
 
-1. Respecto a direccionamiento a memoria en ensamblador x86-64, de la forma `D(Rb, Ri, S)`, sólo una de las siguientes afirmaciones es FALSA. ¿Cuál?
+1. Respecto a direccionamiento a memoria en ensamblador x86-64, de la forma `D(Rb, Ri, S)`, sólo una de las siguientes afirmaciones es **FALSA**. ¿Cuál?
     - ( )  El desplazamiento D puede ser una constante lineal (1, 2 ó 4 bytes).
     - (x)  `EBP` no se puede usar como registro base.
     - ( )  `ESP` no se puede usar como registro índice.
