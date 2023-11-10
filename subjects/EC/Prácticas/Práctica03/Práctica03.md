@@ -93,7 +93,7 @@ int popcount2(unsigned* array, size_t len){
 
 ### 3. Lenguaje ASM. While de 4 instrucciones
 
-Implementa el bucle `while` anterior, pero en ensamblador.
+Implementa el bucle `while` anterior, pero en ensamblador. Hago uso de que `shr` modifica las flags de estado. En concreto, en `CF` se almacena el bit desplazado ("perdido").
 ```asm
 int popcount3(unsigned* array, size_t len){
 
@@ -122,7 +122,7 @@ int popcount3(unsigned* array, size_t len){
 
 ### 4. Lenguaje ASM. While de 3 instrucciones
 
-Implementa el bucle `while` anterior en ensamblador, pero reduce el cuerpo del bucle.
+Implementa el bucle `while` anterior en ensamblador, pero reduce el cuerpo del bucle. Hago uso de que `shr` modifica las flags de estado. En concreto, en `CF` se almacena el bit desplazado ("perdido"), y `ZF` se pone a 1 si el número resultado es el 0.
 ```asm
 int popcount4(unsigned* array, size_t len){
 

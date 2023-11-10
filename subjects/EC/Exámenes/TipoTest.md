@@ -179,10 +179,10 @@ Explicacion: Se pueden incluir más dispositivos, y mediante puertas lógicas po
 Explicacion: Vemos que se consulta el estado y, si se da la condición, se sigue leyendo.
 
 21. En la E/S controlada por interrupciones:
-    - (x) Entrada programada con consulta de estado
-    - ( ) Salida programada sin consulta de estado
-    - ( ) Entrada programada sin consulta de estado
-    - ( ) Salida programada con consulta de estado
+    - ( ) El controlador DMA transfiere bloques de datos por el bus del sistema.
+    - ( ) El controlador de DMA envía una petición de interrupción a la CPU.
+    - ( ) La CPU lee y comprueba el estado de los dispositivos de E/S (en el caso de consulta de estado).
+    - (x) La CPU transfiere el control a una rutina de servicio cuando recibe una interrupción.
 
 22. La instrucción máquina DI (Disable Interrupts), conocida como CLI (Clear Interrupt Flag) en x86, se utiliza para desactivar:
     - (x) Todas Las Interrupciones Enmascarables
@@ -1748,7 +1748,7 @@ IA32<br>
     clase, relativa al indexado en el array.
     Esta función suma:
      - ( ) Produce siempre el resultado correcto
-     - ( ) allaría con `lista: .int 1,1,1,1, 1,1,1,1, ...`
+     - ( ) Fallaría con `lista: .int 1,1,1,1, 1,1,1,1, ...`
      - (x) Fallaría con `lista: .int 1,2,3,4, 1,2,3,4, ...`
      - ( ) No es correcta pero el error no se manifiesta en los ejemplos propuestos, o se manifiesta en ambos
 
@@ -1999,7 +1999,7 @@ Explicacion: La orden distinta es `add $0, %[x]`, que se usa en la versión "ofi
 256. En la práctica _media_ se programa la suma de una lista de 32 enteros de 4 B para producir un resultado de 8 B, primero sin signo y luego con signo. Si la lista se rellena con el valor `0x0400 0000`, ¿en qué se diferencian los resultados de ambos programas?
 
 
-    - (x) Se diferencian.
+    - (x) No se diferencian.
     - ( ) En uno ocupa 32 bits, en otro 64 bits.
     - ( ) En uno interpreta como negativo, en otro como positivo.
     - ( ) En uno los 32 bits superiores son `0xFFFF FFFF`, en el otro no.
@@ -2012,7 +2012,7 @@ Explicacion: La orden distinta es `add $0, %[x]`, que se usa en la versión "ofi
     - (x) La media se redonde al entero más próximo.
     - ( ) El resto siempre tiene el mismo signo que la suma.
 
-258. En la práctica _media_ un estudiante usa el siguiente bucle para acumular la suma en `EBP:EDI` antes de calcular la media y el resto:<br><code>bucle:<br> mov (%ebx,%esi,4), %eax<br> cltd<br> add %eax, %edi<br> adc %edx, %ebp<br> jnc nocarry<br> inc %edx<br>nocarry:<br> inc %esi<br> cmp %esi, %ecx<br> jne bucle</code><br>Estando bien programa todo lo además, este código.
+258. En la práctica _media_ un estudiante usa el siguiente bucle para acumular la suma en `EBP:EDI` antes de calcular la media y el resto:<br><code>bucle:<br> mov (%ebx,%esi,4), %eax<br> cltd<br> add %eax, %edi<br> adc %edx, %ebp<br> jnc nocarry<br> inc %edx<br>nocarry:<br> inc %esi<br> cmp %esi, %ecx<br> jne bucle</code><br>Estando bien programado todo lo además, este código:
 
 
     - (x) Produce siempre el resultado correcto.
