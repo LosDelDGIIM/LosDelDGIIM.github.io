@@ -554,10 +554,26 @@ Tenemos por tanto las siguientes tablas, para cada optimización:
 ![Tiempos de ejecución para la optimización `-O3`](Tablas/TablaO3.png)
 
 En resumen, tenemos la siguiente gráfica, que incluye los tiempos medios de todas las optimizaciones y todas las versiones de `popcount`. Para los tiempos medios se descarta la primera medida, ya que siempre es peor.
+
 ![Tiempos de ejecución medios para cada optimización y cada versión.](Tablas/TablaPOP.png)
 
 La siguiente tabla muestra las ganancias respecto a la mejor optimización de la versión 1 del `popcount`. Vemos que las ganancias son muy significativas, llegando incluso a ser prácticamente 44 veces más rápido.
+
 ![Ganancias respecto de la mejor optimización para la versión 1 del popcount.](Tablas/TablaGAN.png)
 
 
-Tenemos por tanto las siguientes gráficas.
+Tenemos por tanto las siguientes gráficas. En primer lugar, tenemos la gráfica que compara todas las versiones de `popcount` y todas las optimizaciones:
+
+![Gráfica para todas las versiones de popcount](Graficas/GrCompleta.png)
+
+En segundo lugar, tenemos la gráfica que compara las versiones de `popcount` 1-4. Estas son las versiones que están hechas mediante bucles `for` o `while`:
+
+![Gráfica para las versiones 1-4 de popcount](Graficas/Gr1-4.png)
+
+En tercer lugar, tenemos la gráfica que compara las versiones de `popcount` 5-7. Estas son las versiones que están hechas mediante sumas en árbol:
+
+![Gráfica para las versiones 5-7 de popcount](Graficas/Gr5-7.png)
+
+Por último, tenemos la gráfica que compara las versiones de `popcount` 8-10. Estas son las versiones que están hechas mediante el repertorio multimedia:
+
+![Gráfica para las versiones 8-10 de popcount](Graficas/Gr8-10.png)
