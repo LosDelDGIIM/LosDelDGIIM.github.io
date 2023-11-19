@@ -417,7 +417,7 @@ int main(int argc, char *argv[]){
 		strcpy(path_ini, argv[1]);
 
 	// Los permisos buscados son los de ejecución para el grupo y others.
-	const mode_t PERM = S_IXGRP || S_IXOTH;
+	const mode_t PERM = S_IXGRP | S_IXOTH;
 
 	long tot_size = 0;	// Bytes totales que cumplen los permisos especificados
 	long count_files = 0;	// Contador de los archivos que cumplen esos datos
