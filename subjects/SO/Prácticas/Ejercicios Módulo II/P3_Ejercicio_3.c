@@ -47,7 +47,7 @@ int main(int argc, char *argv[]){
 	#endif
 
 	
-	printf("Proceso: %d\t\tPadre: %d\n", getpid(), getppid());
+	printf("Padre: %d\t\tHijo: %d\n", getppid(), getpid());
 
 	exit(EXIT_SUCCESS);
 }

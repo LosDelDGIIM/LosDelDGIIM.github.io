@@ -53,10 +53,11 @@ int main(int argc, char *argv[]){
 
 	if (foreground){
 		wait(NULL);
-		printf("El programa ha terminado de ejecutarse en primer plano.\n");
+		printf("El programa ha terminado de ejecutarse en primer plano.\n\n");
 	}
 	else{
-		printf("El programa se está ejecutando en segundo plano.\n");
+		waitpid(-1, NULL, WNOHANG);
+		printf("El programa se está ejecutando en segundo plano.\n\n");
 	}
 
 	exit(EXIT_SUCCESS);

@@ -276,9 +276,7 @@ int main(int argc, char *argv[]){
 }
 ```
 
-No obstante, la salida no está definida ya que el proceso padre termina antes que sus descendientes lo hagan, por lo que quedan procesos sin padre asociado. Para resolver esto, tendría que usarse la orden `wait()`, que se verá más adelante.
-
-TERMINAR: Es cierto esto??
+No obstante, la salida no está definida ya que el proceso padre termina antes que sus descendientes lo hagan, por lo que quedan _zombies_ (procesos sin padre asociado). Para resolver esto, tendría que usarse la orden `wait()`, que se verá más adelante.
 
 
 ## Ejericio 4
@@ -472,7 +470,9 @@ WEXITSTATUS(wstatus)
 		returns the exit status of the child.  This consists of the least significant 8 bits of the status argument that the child specified in  a call to exit(3) or _exit(2) or as the argument for a return statement in main().  This macro should be employed only if WIFEX‐
 		ITED returned true.
 ```
-Por tanto, vemos que para obtener el estado de finalización, podemos ejecutar `WEXITSTATUS(estado)`, que nos devuelve el estado del hijo. No obstante, como el estado del hijo se almacena en los 8 bits menos significativos, desplazar 8 bits a la derecha para obtener el estado del hijo es otra opción. Esto es lo que se hace con `estado>>8`. TERMINAR
+Por tanto, vemos que para obtener el estado de finalización, podemos ejecutar `WEXITSTATUS(estado)`, que nos devuelve el estado del hijo.
+
+El manual nos informa de que el estado del hijo se almacena en los 8 bits menos significativos, por lo que a priori se puede aplicar la máscara `0xFF` para obtener el estado del hijo. No obstante, en la práctica el manual está el equivocado, ya que el estado de salida se puede obtener con `estado>>8`. Esto se puede deber a diferencias entre _big-endian_ y _little-endian_. Para evitar problemas, se recomienda usar `WEXITSTATUS(estado)` para obtener el estado del hijo. 
 
 
 ## Ejercicio 7
@@ -535,14 +535,18 @@ int main(int argc, char *argv[]){
 
 	if (foreground){
 		wait(NULL);
-		printf("El programa ha terminado de ejecutarse en primer plano.\n");
+		printf("El programa ha terminado de ejecutarse en primer plano.\n\n");
 	}
 	else{
-		printf("El programa se está ejecutando en segundo plano.\n");
+		waitpid(-1, NULL, WNOHANG);
+		printf("El programa se está ejecutando en segundo plano.\n\n");
 	}
 
 	exit(EXIT_SUCCESS);
 }
 ```
+Para ejecutar en segundo plano, se usa la opción `WNOHANG`. Esto, según el manual, hace:
+> WNOHANG
+> 		return immediately if no child has exited.
 
-TERMINAR: Duda de background. No deja el proceso zombie??
+Es decir, el proceso padre no espera a que el hijo termine, sino que sigue su ejecución y, por tanto, finaliza antes que el hijo. Esto es lo que se quiere para que se ejecute en segundo plano. Informa al SO de que se encargue de liberar la memoria del hijo cuando este termine.

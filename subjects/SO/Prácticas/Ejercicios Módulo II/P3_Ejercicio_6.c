@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
 	else if(pid==0) {  //proceso hijo ejecutando el programa
 		if( (execl("/usr/bin/ldd","ldd","./tarea5", NULL)<0)) {
 			perror("\nError en el execl");
-			exit(EXIT_FAILURE);
+			exit(0);
 		}
 	}
 	wait(&estado);
