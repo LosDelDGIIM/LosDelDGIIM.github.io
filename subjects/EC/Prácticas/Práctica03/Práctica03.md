@@ -8,7 +8,7 @@
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
 - **Grupo:** Único.
 - **Profesor:** Ignacio Rojas Ruiz.
-- **Descripción:** Práctica 3 de ED.
+- **Descripción:** Práctica 3 de EC.
 <!--- **Fecha:** 17 de abril de 2023. -->
 <!-- - **Duración:** -->
 
