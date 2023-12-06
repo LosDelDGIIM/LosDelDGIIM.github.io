@@ -10,7 +10,7 @@
 - **Profesor:** Ignacio Rojas Ruiz.
 - **Descripción:** Práctica 4 de EC.
 
-El objetivo del presente documento es documentar cómo desactivar mi bomba, cuyo código en `C` está disponible pinchando [aquí](https://www.google.com) y el ejecutable se encuentra [aquí](https://www.google.com).
+El objetivo del presente documento es documentar cómo desactivar mi bomba, cuyo código en `C` está disponible pinchando [aquí](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/EC/Pr%C3%A1cticas/Pr%C3%A1ctica04/2023_AOM/bomba.c) y el ejecutable se encuentra [aquí](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/EC/Pr%C3%A1cticas/Pr%C3%A1ctica04/2023_AOM/bomba).
 
 En primer lugar, es necesario ejecutar la bomba con `gdb`:
 ```console

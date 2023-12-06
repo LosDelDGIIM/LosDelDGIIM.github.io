@@ -10,7 +10,7 @@
 - **Profesor:** Ignacio Rojas Ruiz.
 - **Descripción:** Práctica 4 de EC.
 
-El objetivo del presente documento es explicar la resolución de una bomba dada por el profesor, disponible pinchando [aquí](https://www.google.com).
+El objetivo del presente documento es explicar la resolución de una bomba dada por el profesor, disponible pinchando [aquí](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/EC/Pr%C3%A1cticas/Pr%C3%A1ctica04/2015_NBA/NBA_2015).
 
 Su contraseña es `Oh, castitas lilium`, y el passcode es `1030`.
 
