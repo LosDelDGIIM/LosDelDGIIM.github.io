@@ -1,0 +1,261 @@
+\section{Procesos y Hebras}
+
+\begin{ejercicio}
+    Cuestiones generales sobre procesos y asignación de CPU:
+    \begin{enumerate}
+        \item ¿Cuáles son los motivos que pueden llevar a la creación de un proceso?
+
+        EL fork
+        
+        \item ¿Es necesario que lo último que haga todo proceso antes de finalizar sea una llamada al sistema para finalizar de forma explícita, por ejemplo \verb|exit()|?
+
+        \verb|sys_exit|.
+        
+        \item Cuando un proceso pasa a estado ``BLOQUEADO'', ¿Quién se encarga de cambiar el valor de su estado en el descriptor de proceso o PCB?
+
+        Dispatcher
+        
+        \item ¿Qué debería hacer cualquier planificador a corto plazo cuando es invocado pero no hay ningún proceso en la cola de ejecutables?
+
+        Estadísticas de sistemas.
+        
+        \item ¿Qué algoritmos de planificación quedan descartados para ser utilizados en sistemas de tiempo compartido?
+
+        FIFO no funciona. Como entren R antes que r, la hemos liado. FCFS
+
+        Los apropiativos tendria cuidado
+    \end{enumerate}
+\end{ejercicio}
+
+
+\begin{ejercicio}
+    Cuestiones sobre el modelo de procesos extendido:
+    \begin{enumerate}
+        \item ¿Qué pasos debe llevar a cabo un SO para poder pasar un proceso de reciente creación de estado ``NUEVO'' a estado ``LISTO''?
+        \item ¿Qué pasos debe llevar a cabo un SO para poder pasar un proceso ejecutándose en CPU a estado ``FINALIZADO''?
+        \item Hemos explicado en clase que la función \verb|context_switch()| realiza siempre dos funcionalidades y que además es necesario que el kernel la llame siempre cuando el proceso en ejecución pasa a estado ``FINALIZADO'' o ``BLOQUEADO''. ¿Qué funcionalidades debe realizar y en qué funciones del SO se llama a esta función?
+        \item Indique el motivo de la aparición de los estados ``SUSPENDIDO-BLOQUEADO'' y ``SUSPENDIDO-LISTO'' en el modelo de procesos extendido.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    ¿Tiene sentido mantener ordenada por prioridades la cola de procesos bloqueados? Si lo tuviera, ¿en qué casos sería útil hacerlo? Piense en la cola de un planificador de E/S, por ejemplo el de HDD, y en la cola de bloqueados en espera del evento ``Fin E/S HDD''.
+\end{ejercicio}
+
+\begin{ejercicio}
+    Explique las diferentes formas que tiene el kernel de ejecutarse en relación al contexto de un proceso y al modo de ejecución del procesador.
+\end{ejercicio}
+
+\begin{ejercicio}
+    Responda a las siguientes cuestiones relacionadas con el concepto de hebra:
+    \begin{enumerate}
+        \item ¿Qué elementos de información es imprescindible que contenga una estructura de datos que permita gestionar hebras en un kernel de SO? Describa las estructuras \verb|task_t| y la \verb|thread_t|.
+        \item En una implementación de hebras con una biblioteca de usuario en la cual cada hebra de usuario tiene una correspondencia N:1 con una hebra kernel, ¿Qué ocurre con la tarea si se realiza una llamada al sistema bloqueante, por ejemplo \verb|read()|?
+        \item ¿Qué ocurriría con la llamada al sistema \verb|read()| con respecto a la tarea de la pregunta anterior si la correspondencia entre hebras usuario y hebras kernel fuese 1:1?
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    ¿Puede el procesador manejar una interrupción mientras está ejecutando un proceso sin hacer \verb|context_switch()| si la política de planificación que utilizamos es no apropiativa? ¿Y si es apropiativa?
+\end{ejercicio}
+
+\begin{ejercicio}
+    Suponga que es responsable de diseñar e implementar un SO que va a utilizar una política de planificación apropiativa (\emph{preemptive}). Suponiendo que el sistema ya funciona perfectamente con multiprogramación pura y que tenemos implementada la función \verb|Planif_CPU()|, ¿qué otras partes del SO habría que modificar para implementar tal sistema? Escriba el código que habría que incorporar a dichas partes para implementar apropiación \emph{(preemption)}.
+\end{ejercicio}
+
+\begin{ejercicio}
+    Para cada una de las siguientes llamadas al sistema explique si su procesamiento por parte
+    del SO requiere la invocación del planificador a corto plazo (\verb|Planif_CPU()|):
+    \begin{enumerate}
+        \item  Crear un proceso, \verb|fork()|.
+        \item  Abortar un proceso, es decir, terminarlo forzosamente, \verb|abort()|.
+        \item  Bloquear (suspender) un proceso, \verb|read()| o \verb|wait()|.
+        \item  Desbloquear (reanudar) un proceso, \verb|RSI| o \verb|exit()| (complementarias a las del caso anterior).
+        \item  Modificar la prioridad de un proceso.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    En el algoritmo de planificación FCFS, el índice de penalización, $P=~\frac{M+r}{r}$, ¿es creciente, decreciente o constante respecto a $r$ (ráfaga de CPU: tiempo de servicio de CPU requerido por un proceso)? Justifique su respuesta.\\
+
+    Al ser FCFS, tenemos que el tiempo de espera M es constante e independiente respecto a $r$. Por tanto, cuanto menor es la ráfaga, mayor es la penalización. Es decir, es decreciente respecto a $r$.
+
+    Matemáticamente, como $M$ es constante, podemos argumentarlo mediante derivación:
+    \begin{equation*}
+        \del{P}{r}(M,r) = \frac{r-(M+r)}{r^2}
+        = -\frac{M}{r^2} < 0
+    \end{equation*}
+    Como la primera derivada es negativa y la función es diferenciable, tenemos que $P$ es decreciente respecto a $r$.
+\end{ejercicio}
+
+\begin{ejercicio}
+    Sea un sistema multiprogramado que utiliza el algoritmo Por Turnos (Round-Robin, RR). Sea $S$ el tiempo que tarda el despachador en cada cambio de contexto. ¿Cuál debe ser el valor de quantum $Q$ para que el porcentaje de uso de la CPU por los procesos de usuario sea del 80\%?
+
+    Necesitamos $Q=4\cdot S$, ya que así por cada cuatro unidades de tiempo que se está ejecutando el proceso, se ejecuta una vez el kernel. Es decir, suponiendo que el proceso se ejecuta todo el tiempo en modo usuario, es necesario que $\nicefrac{4}{5}$ de su tiempo de retorno se ejectuen seguidos sin consumir el ``time slice''; por lo que tendría que usarse $Q=4\cdot S$.
+
+    Otra forma de verlo es, sabiendo que $T=Q+S$ y $Q=0.8T$, tenemos que:
+    \begin{equation*}
+        T=0.8T+S \Longrightarrow 0.2T = S \Longrightarrow T=5S \Longrightarrow Q=4S
+    \end{equation*}
+\end{ejercicio}
+
+\begin{ejercicio}\label{Ej:2.11}
+    Para la siguiente tabla que especifica una determinada configuración de procesos, tiempos de llegada a cola de listos y ráfagas de CPU; responda a las siguientes preguntas y analice los resultados:
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{c|c|c}
+            Proceso & Tiempo de Llegada & Ráfaga CPU \\ \hline \hline
+            A & 4 & 1 \\
+            B & 0 & 5 \\
+            C & 1 & 4 \\
+            D & 8 & 3 \\
+            E & 12 & 2 \\
+        \end{tabular}
+        \caption{Configuración de procesos del Ejericio \ref{Ej:2.11}.}
+        \label{tab:ej2.11}
+    \end{table}
+
+    \begin{observacion}
+       En los diagramas de ocupación de la CPU, las marcas de tiempo deberían ir justo en las líneas verticales, no en las casillas. Por ello, se opta por señalar justo antes de la marca de tiempo $i$ y justo después de la $i$ con $i^-$ e $i^+$ respectivamente.
+    \end{observacion}
+    
+    \begin{enumerate}
+        \item FCFS. Tiempo medio de respuesta, tiempo medio de espera y penalización.
+        \begin{table}[H]
+            \begin{tabular}{ccccccccccccccccc|ccc}
+                                            &                        &                       &                       &                       &                       &                        &                       &                       &                       &                       &                         &                       &                       &                       &                       &    & \textbf{T} & \textbf{M} & \textbf{P} \\ \hline
+            \multicolumn{1}{c|}{\textbf{A}} &                        &                       &                       &                       & L                     & L                      & L                     & L                     & L                     & E                     &                         &                       &                       &                       &                       &    & 6          & 5          & 6          \\ \hline
+            \multicolumn{1}{c|}{\textbf{B}} & E                      & E                     & E                     & E                     & E                     &                        &                       &                       &                       &                       &                         &                       &                       &                       &                       &    & 5          & 0          & 1          \\ \hline
+            \multicolumn{1}{c|}{\textbf{C}} &                        & L                     & L                     & L                     & L                     & E                      & E                     & E                     & E                     &                       &                         &                       &                       &                       &                       &    & 8          & 4          & 2          \\ \hline
+            \multicolumn{1}{c|}{\textbf{D}} &                        &                       &                       &                       &                       &                        &                       &                       & L                     & L                     & E                       & E                     & E                     &                       &                       &    & 5          & 2          & $\nicefrac{5}{3}$        \\ \hline
+            \multicolumn{1}{c|}{\textbf{E}} &                        &                       &                       &                       &                       &                        &                       &                       &                       &                       &                         &                       & L                     & E                     & E                     &    & 3          & 1          & $\nicefrac{3}{2}$        \\ \hline
+            \multicolumn{1}{c|}{}           & \multicolumn{1}{c|}{$0^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$5^-$} & \multicolumn{1}{c|}{$5^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$10^-$} & \multicolumn{1}{c|}{$10^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$15^-$} & $15^+$ &            &            &           
+            \end{tabular}
+
+            \caption{Diagrama de ocupación de memoria para FCFS.}
+        \end{table}
+        Las medias aritméticas son:
+        \begin{equation*}
+            \ol{T} = 5.4 \qquad \ol{M}=2.4
+        \end{equation*}
+
+
+        
+        \item SJF (ráfaga estimada coincide con ráfaga real). Tiempo medio de respuesta, tiempo medio de espera y penalización.
+
+        \begin{table}[H]
+            \begin{tabular}{ccccccccccccccccc|ccc}
+                                            &                        &                       &                       &                       &                       &                        &                       &                       &                       &                       &                         &                       &                       &                       &                       &    & \textbf{T} & \textbf{M} & \textbf{P} \\ \hline
+            \multicolumn{1}{c|}{\textbf{A}} &                        &                       &                       &                       & L                     & E                      &                       &                       &                       &                       &                         &                       &                       &                       &                       &    & 2          & 1          & 2          \\ \hline
+            \multicolumn{1}{c|}{\textbf{B}} & E                      & E                     & E                     & E                     & E                     &                        &                       &                       &                       &                       &                         &                       &                       &                       &                       &    & 5          & 0          & 1          \\ \hline
+            \multicolumn{1}{c|}{\textbf{C}} &                        & L                     & L                     & L                     & L                     & L                      & E                     & E                     & E                     & E                     &                         &                       &                       &                       &                       &    & 9          & 5          & $\nicefrac{9}{4}$        \\ \hline
+            \multicolumn{1}{c|}{\textbf{D}} &                        &                       &                       &                       &                       &                        &                       &                       & L                     & L                     & E                       & E                     & E                     &                       &                       &    & 5          & 2          & $\nicefrac{5}{3}$        \\ \hline
+            \multicolumn{1}{c|}{\textbf{E}} &                        &                       &                       &                       &                       &                        &                       &                       &                       &                       &                         &                       & L                     & E                     & E                     &    & 3          & 1          & $\nicefrac{3}{2}$        \\ \hline
+            \multicolumn{1}{c|}{}           & \multicolumn{1}{c|}{$0^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$5^-$} & \multicolumn{1}{c|}{$5^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$10^-$} & \multicolumn{1}{c|}{$10^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$15^-$} & $15^+$ &            &            &           
+            \end{tabular}
+            \caption{Diagrama de ocupación de memoria para SJB.}
+        \end{table}
+
+        Las medias aritméticas son:
+        \begin{equation*}
+            \ol{T} = 4.8 \qquad \ol{M}=1.8
+        \end{equation*}
+
+        
+        \item SRTF (ráfaga estimada coincide con ráfaga real). Tiempo medio de respuesta, tiempo medio de espera y penalización.
+
+        \begin{table}[H]
+            \begin{tabular}{ccccccccccccccccc|ccc}
+                                            &                        &                       &                       &                       &                       &                        &                       &                       &                       &                       &                         &                       &                       &                       &                       &    & \textbf{T} & \textbf{M} & \textbf{P} \\ \hline
+            \multicolumn{1}{c|}{\textbf{A}} &                        &                       &                       &                       & L                     & E                      &                       &                       &                       &                       &                         &                       &                       &                       &                       &    & 2          & 1          & 2          \\ \hline
+            \multicolumn{1}{c|}{\textbf{B}} & E                      & E                     & E                     & E                     & E                     &                        &                       &                       &                       &                       &                         &                       &                       &                       &                       &    & 5          & 0          & 1          \\ \hline
+            \multicolumn{1}{c|}{\textbf{C}} &                        & L                     & L                     & L                     & L                     & L                      & E                     & E                     & E                     & E                     &                         &                       &                       &                       &                       &    & 9          & 5          & $\nicefrac{9}{4}$        \\ \hline
+            \multicolumn{1}{c|}{\textbf{D}} &                        &                       &                       &                       &                       &                        &                       &                       & L                     & L                     & E                       & E                     & E                     &                       &                       &    & 5          & 2          & $\nicefrac{5}{3}$        \\ \hline
+            \multicolumn{1}{c|}{\textbf{E}} &                        &                       &                       &                       &                       &                        &                       &                       &                       &                       &                         &                       & L                     & E                     & E                     &    & 3          & 1          & $\nicefrac{3}{2}$        \\ \hline
+            \multicolumn{1}{c|}{}           & \multicolumn{1}{c|}{$0^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$5^-$} & \multicolumn{1}{c|}{$5^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$10^-$} & \multicolumn{1}{c|}{$10^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$15^-$} & $15^+$ &            &            &           
+            \end{tabular}
+            \caption{Diagrama de ocupación de memoria para SRTF.}
+        \end{table}
+
+        Las medias aritméticas son:
+        \begin{equation*}
+            \ol{T} = 4.8 \qquad \ol{M}=1.8
+        \end{equation*}
+        
+        \item RR ($q=1$). Tiempo medio de respuesta, tiempo medio de espera y penalización.
+
+        \begin{table}[H]
+            \begin{tabular}{ccccccccccccccccc|ccc}
+                                            &                        &                                &                                &                                &                        &                        &                                &                                &                                &                         &                         &                                &                                &                                &                         &    & \textbf{T} & \textbf{M} & \textbf{P} \\ \hline
+            \multicolumn{1}{c|}{\textbf{A}} &                        &                                &                                &                                & L                      & E                      &                                &                                &                                &                         &                         &                                &                                &                                &                         &    & 2          & 1          & 2          \\ \hline
+            \multicolumn{1}{c|}{\textbf{B}} & E                      & L                              & E                              & L                              & E                      & L                      & L                              & E                              & L                              & L                       & E                       &                                &                                &                                &                         &    & 11         & 6          & $\nicefrac{11}{5}$       \\ \hline
+            \multicolumn{1}{c|}{\textbf{C}} &                        & E                              & L                              & E                              & L                      & L                      & E                              & L                              & E                              &                         &                         &                                &                                &                                &                         &    & 8          & 4          & 2          \\ \hline
+            \multicolumn{1}{c|}{\textbf{D}} &                        &                                &                                &                                &                        &                        &                                &                                & L                              & E                       & L                       & E                              & L                              & E                              &                         &    & 6          & 3          & 2          \\ \hline
+            \multicolumn{1}{c|}{\textbf{E}} &                        &                                &                                &                                &                        &                        &                                &                                &                                &                         &                         &                                & E                              & L                              & E                       &    & 3          & 1          & $\nicefrac{3}{2}$        \\ \hline
+            \multicolumn{1}{c|}{}           & \multicolumn{1}{c|}{$0^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$5^-$} & \multicolumn{1}{c|}{$5^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$10^-$} & \multicolumn{1}{c|}{$10^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$15^-$} & $15^+$ &            &            &           
+            \end{tabular}
+            \caption{Diagrama de ocupación de memoria para RR($q=1$).}
+        \end{table}
+
+        Las medias aritméticas son:
+        \begin{equation*}
+            \ol{T} = 6 \qquad \ol{M}=3
+        \end{equation*}
+
+        \item RR ($q=4$). Tiempo medio de respuesta, tiempo medio de espera y penalización.
+        \begin{table}[H]
+            \begin{tabular}{ccccccccccccccccc|ccc}
+                                            &                        &                                &                                &                                &                        &                        &                                &                                &                                &                         &                         &                                &                                &                                &                         &    & \textbf{T} & \textbf{M} & \textbf{P} \\ \hline
+            \multicolumn{1}{c|}{\textbf{A}} &                        &                                &                                &                                & L                      & L                      & L                              & L                              & E                              &                         &                         &                                &                                &                                &                         &    & 5          & 4          & 5          \\ \hline
+            \multicolumn{1}{c|}{\textbf{B}} & E                      & E                              & E                              & E                              & L                      & L                      & L                              & L                              & L                              & E                       &                         &                                &                                &                                &                         &    & 10         & 5          & 2          \\ \hline
+            \multicolumn{1}{c|}{\textbf{C}} &                        & L                              & L                              & L                              & E                      & E                      & E                              & E                              &                                &                         &                         &                                &                                &                                &                         &    & 7          & 3          & $\nicefrac{7}{4}$        \\ \hline
+            \multicolumn{1}{c|}{\textbf{D}} &                        &                                &                                &                                &                        &                        &                                &                                & L                              & L                       & E                       & E                              & E                              &                                &                         &    & 5          & 2          & $\nicefrac{5}{3}$       \\ \hline
+            \multicolumn{1}{c|}{\textbf{E}} &                        &                                &                                &                                &                        &                        &                                &                                &                                &                         &                         &                                & L                              & E                              & E                       &    & 3          & 1          & $\nicefrac{3}{2}$        \\ \hline
+            \multicolumn{1}{c|}{}           & \multicolumn{1}{c|}{$0^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$5^-$} & \multicolumn{1}{c|}{$5^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$10^-$} & \multicolumn{1}{c|}{$10^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$15^-$} & $15^+$ &            &            &           
+            \end{tabular}
+            \caption{Diagrama de ocupación de memoria para RR($q=4$).}
+        \end{table}
+
+        Las medias aritméticas son:
+        \begin{equation*}
+            \ol{T} = 6 \qquad \ol{M}=3
+        \end{equation*}
+    \end{enumerate}
+\end{ejercicio}
+
+
+\begin{ejercicio}\label{ej2.12}
+    Utilizando los datos de la tabla \ref{tab:ej2.11}, dibuje el diagrama de ocupación de CPU para el caso de un sistema que utiliza un algoritmo de colas múltiples con realimentación con las siguientes colas:
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{c|c|c}
+            Cola & Prioridad & Quantum \\ \hline \hline
+            1 & 1 & 1 \\
+            2 & 2 & 2 \\
+            3 & 3 & 4 \\
+        \end{tabular}
+    \end{table}
+
+    Tenga en cuenta las siguientes suposiciones:
+    \begin{enumerate}
+        \item Todos los procesos inicialmente entran en la cola de mayor prioridad (menor valor numérico).
+        \item Cada cola se gestiona mediante la política RR y la política de planificación entre colas es por prioridades no apropiativa.
+        \item Un proceso en la cola $i$ pasa a la cola $i+1$ si consume un quantum completo sin bloquearse.
+        \item Cuando un proceso llega a la cola de menor prioridad, permanece en ella hasta que finaliza.
+    \end{enumerate}
+    
+    \begin{table}[H]
+        \begin{tabular}{ccccccccccccccccc|ccc}
+                                        &                        &                                &                                &                                &                          &                        &                                &                                &                                &                          &                         &                                &                                &                                &                         &    & \textbf{T} & \textbf{M} & \textbf{P} \\ \hline
+        \multicolumn{1}{c|}{\textbf{A}} &                        &                                &                                &                                & E                        &                        &                                &                                &                                &                          &                         &                                &                                &                                &                         &    & 1          & 0          & 1          \\ \hline
+        \multicolumn{1}{c|}{\textbf{B}} & E                      & {\color[HTML]{F56B00} L}       & E                              & E                              & {\color[HTML]{FE0000} L} & L                      & L                              & E                              & L                              & L                        & L                       & L                              & L                              & L                              & E                       &    & 15         & 10         & 5          \\ \hline
+        \multicolumn{1}{c|}{\textbf{C}} &                        & E                              & {\color[HTML]{F56B00} L}       & L                              & L                        & E                      & E                              & {\color[HTML]{FE0000} L}       & L                              & L                        & L                       & E                              &                                &                                &                         &    & 11         & 7          & $\nicefrac{11}{4}$       \\ \hline
+        \multicolumn{1}{c|}{\textbf{D}} &                        &                                &                                &                                &                          &                        &                                &                                & E                              & {\color[HTML]{F56B00} E} & E                       &                                &                                &                                &                         &    & 3          & 0          & 1          \\ \hline
+        \multicolumn{1}{c|}{\textbf{E}} &                        &                                &                                &                                &                          &                        &                                &                                &                                &                          &                         &                                & E                              & {\color[HTML]{F56B00} E}       &                         &    & 2          & 0          & 1          \\ \hline
+        \multicolumn{1}{c|}{}           & \multicolumn{1}{c|}{$0^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$5^-$} & \multicolumn{1}{c|}{$5^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$10^-$} & \multicolumn{1}{c|}{$10^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$15^-$} & $15^+$ &            &            &           
+        \end{tabular}
+        \caption{Diagrama de ocupación de memoria para el Ejercicio \ref{ej2.12}.}
+    \end{table}
+
+    Notemos que, en naranja, se señala cuando un proceso pasa de la cola $1$ a la cola $2$; mientras que en rojo se señala cuando pasa de la $2$ a la $3$.
+\end{ejercicio}
