@@ -194,13 +194,13 @@ for (int i=0; i<NPROCS; i++){
 		exit(EXIT_FAILURE);
 	}
 
-	if (childpid == 0){
+	if (childpid != 0){ //(childpid)
 		break;
 	}
 }
 ```
 
-En este caso, vemos que el proceso padre crea `NPROCS` hijos, pero cada uno no genera ningún nieto ya que el `break` hace que se salga del bucle. Por tanto, se crea un árbol con el padre como raíz y `NPROCS` hijos.
+En este caso, vemos que el proceso padre crea un hijo y termina su ejecución, ya que se encuentra el `break` y sale del bucle. A su vez, ese hijo crea un solo nieto y termina también su ejecución; y así sucesivamente. Por tanto, en cada generación solo se crea un proceso, pero se aumenta en una generación.
 
 
 La jerarquía de procesos tipo 2 es:
@@ -211,13 +211,14 @@ for (int i=0; i<NPROCS; i++){
 		exit(EXIT_FAILURE);
 	}
 
-	if (childpid != 0){
+	if (childpid == 0){ //(!childpid)
 		break;
 	}
 }
 ```
 
-En este caso, vemos que el proceso padre crea un hijo y termina su ejecución, ya que se encuentra el `break` y sale del bucle. A su vez, ese hijo crea un solo nieto y termina también su ejecución; y así sucesivamente. Por tanto, en cada generación solo se crea un proceso, pero se aumenta en una generación.
+En este caso, vemos que el proceso padre crea `NPROCS` hijos, pero cada uno no genera ningún nieto ya que el `break` hace que se salga del bucle. Por tanto, se crea un árbol con el padre como raíz y `NPROCS` hijos.
+
 
 El programa para probar su ejecución es:
 ```c
@@ -249,7 +250,7 @@ int main(int argc, char *argv[]){
 			exit(EXIT_FAILURE);
 		}
 
-		if (childpid == 0){
+		if (childpid != 0){ // (childpid)
 			break;
 		}
 	}
@@ -263,7 +264,7 @@ int main(int argc, char *argv[]){
 			exit(EXIT_FAILURE);
 		}
 
-		if (childpid != 0){
+		if (childpid == 0){ // (!childpid)
 			break;
 		}
 	}

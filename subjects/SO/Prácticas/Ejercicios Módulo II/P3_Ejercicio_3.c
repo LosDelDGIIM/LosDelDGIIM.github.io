@@ -26,7 +26,7 @@ int main(int argc, char *argv[]){
 			exit(EXIT_FAILURE);
 		}
 
-		if (childpid == 0){
+		if (childpid != 0){ // (childpid)
 			break;
 		}
 	}
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
 			exit(EXIT_FAILURE);
 		}
 
-		if (childpid != 0){
+		if (childpid == 0){ // (!childpid)
 			break;
 		}
 	}
