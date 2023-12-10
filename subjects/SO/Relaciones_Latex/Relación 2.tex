@@ -5,25 +5,50 @@
     \begin{enumerate}
         \item ¿Cuáles son los motivos que pueden llevar a la creación de un proceso?
 
-        EL fork
+        Hay cuatro motivos principales para la creación de un proceso:
+        \begin{enumerate}
+            \item \ul{En sistemas por lotes de trabajo}:
+
+            Cuando, en estos tipos de sistemas, se recibe otro trabajo a ejecutar, se crea un nuevo proceso.
+
+            \item \ul{\emph{Log on} interactivo}:
+
+            Cuando el usuario inicia una terminal, el SO crea un nuevo proceso que ejecuta el \emph{shell} correspondiente.
+
+            \item \ul{Para proporcionar un servicio}:
+
+            El sistema operativo puede crear un proceso para dar servicio a un proceso creado por el usuario. Por ejemplo, el SO puede crear un proceso distinto cuando el proceso del usuario solicita, por ejemplo, imprimir un documento.
+
+            \item \ul{Árbol de procesos}:
+
+            Un proceso existente puede crear otro proceso, manteniendo una relación de padre-hijo y; por consiguiente, creando un árbol de procesos. 
+        \end{enumerate}
         
         \item ¿Es necesario que lo último que haga todo proceso antes de finalizar sea una llamada al sistema para finalizar de forma explícita, por ejemplo \verb|exit()|?
 
-        \verb|sys_exit|.
+        Cuando un proceso termina, es necesario que abandone el procesador y que se llame al \verb|context_switch()|. Por tanto, es necesario que el procesador tenga constancia de el proceso ha terminado, por lo que es necesario una llamada al sistema para indicarlo.
+
+
+        No obstante, la función \verb|exit()| no es la única opción que tenemos. Podemos usar \verb|sys_exit| o, directamente, ajustar los registros necesarios y emplear \verb|syscall|.
         
         \item Cuando un proceso pasa a estado ``BLOQUEADO'', ¿Quién se encarga de cambiar el valor de su estado en el descriptor de proceso o PCB?
 
-        Dispatcher
+        El \verb|context_switch()|, que es la función que llama cuando se produce un cambio de contexto. Dentro de él, \verb|planif_CPU()| no se encarga de esto; sino que actualizar el estado en el PCB del proceso y guardar el contexto también en el PCB es función del activador o \verb|dispatcher|.
         
         \item ¿Qué debería hacer cualquier planificador a corto plazo cuando es invocado pero no hay ningún proceso en la cola de ejecutables?
 
-        Estadísticas de sistemas.
+        Siempre hay un proceso kernel que se introduce.
+
         
-        \item ¿Qué algoritmos de planificación quedan descartados para ser utilizados en sistemas de tiempo compartido?
+        \item ¿Qué algoritmos de planificación quedan descartados para ser utilizados en sistemas de tiempo compartido?\\
 
-        FIFO no funciona. Como entren R antes que r, la hemos liado. FCFS
+        Al ser un sistema de tiempo compartido, puede ser usado por más de un usuario a la vez, por lo que no se puede permitir que un proceso acapare la CPU. Por tanto, las no apropiativas, por norma general se podrían descartar.
 
-        Los apropiativos tendria cuidado
+        Por ejemplo, el algoritmo de planificación FCFS queda descartado, ya que en el caso de que un proceso con una gran ráfaga llegue antes que muchos procesos cortos, el procesador quedará acaparado por un gran tiempo; no permitiendo entonces que sea de tiempo compartido.
+
+        El algoritmo SJB también queda descartado, ya que en un momento dado puede ser que el único proceso disponible tenga una ráfaga grande, pero que posteriormente entren varios de ráfaga pequeña que no puedan disponer de procesador hasta que termine el proceso largo.
+
+        Una buena implementación podría ser mediante RR, ya que así se obliga a que ningún proceso acapare la CPU.
     \end{enumerate}
 \end{ejercicio}
 
@@ -32,35 +57,151 @@
     Cuestiones sobre el modelo de procesos extendido:
     \begin{enumerate}
         \item ¿Qué pasos debe llevar a cabo un SO para poder pasar un proceso de reciente creación de estado ``NUEVO'' a estado ``LISTO''?
+
+        Al estar en estado ``nuevo'', implica que ya tiene creado el PCB. No obstante, todavía no ha sido cargado en memoria. Para pasar un proceso de ``nuevo'' a ``listo'', el cargador debe asignarle espacio en memoria principal y cargarlo.
+
+        En el caso de que no haya suficiente espacio en memoria, el procesador a largo plazo puede decidir no cargarlo en listos y mantenerlo en ``nuevo''. Otra opción es que el planificador a largo plazo considere que es necesario ejecutarlo, pero que el procesador a medio plazo opte por descartarlo a ``listo y suspendido'' por no haber espacio suficiente en memoria.
+
+        
         \item ¿Qué pasos debe llevar a cabo un SO para poder pasar un proceso ejecutándose en CPU a estado ``FINALIZADO''?
+
+        En primer lugar, tras la llamada al sistema \verb|sys_exit|, se han de liberar todos los recursos que estuviese usando, como los dispositivos de E/S o los descriptores de archivo que estuviese usando.
+
+        Además, enviará la señal \verb|SIGCHLD| al padre, avisándole de que ha terminado su ejecución.
+
+        Por último, en el caso de que este tuviese hijos, el padre ha de asignarles un proceso padre a estos. Por norma general, los cuelga del \verb|init| o proceso líder de la sesión.
+
+        Posteriormente, se llama al \verb|context_switch()| para seleccionar otro proceso. El \verb|dispatcher| cambiará su estado a ``finalizado''. Esto indicará al SO que puede eliminar dicho proceso.
+
+        Tras esto, el SO eliminará el proceso, liberando la memoria que tenía asignada y borrándolo de la tabla de procesos.
+
         \item Hemos explicado en clase que la función \verb|context_switch()| realiza siempre dos funcionalidades y que además es necesario que el kernel la llame siempre cuando el proceso en ejecución pasa a estado ``FINALIZADO'' o ``BLOQUEADO''. ¿Qué funcionalidades debe realizar y en qué funciones del SO se llama a esta función?
+
+        El \verb|context_switch()| simplemente llama en primer a \verb|Planif_CPU()|; y dentro de él, el planificador a corto plazo decidirá qué proceso ejecutar.
+        
+        En ese momento, el \verb|dispatcher()| arreglará los estados; es decir, modificará los PCB de ambos procesos, pasando el que se estaba ejecutando al nuevo proceso y el que estaba en la cola de listos a ``ejecutándose''. Además, debe guardar el contexto del proceso que ha dejado de ejecutarse y restaurar el del proceso que pasa a ejecutarse.
+
+        Al \verb|context_siwtch()| se le llama cada vez que hay un cambio de contexto, y esto puede ser:
+        \begin{itemize}
+            \item \verb|sys_exit|.
+
+            Cuando un proceso finaliza, para que el procesador no quede ocioso se llama al \verb|context_switch()|.
+
+            \item Rutinas de E/S.
+
+            Cuando se produce una rutina de E/S (el proceso envía el \verb|IORB| al módulo de E/S), el proceso entra a ``bloqueado'' hasta que el procesador no reciba una interrupción. Por tanto, se ha de llamar al \verb|context_switch()|, para elegir un proceso y ejecutarlo.
+            
+            \item Al final de \verb|wait()|:
+            \begin{itemize}
+                \item Si el padre ha recibido la señal \verb|SIGCHLD|, implica que el hijo ha terminado y, entonces, no se produce un cambio de contexto y continúa con su ejecución.
+
+                \item Si no ha terminado el hijo, se produce un cambio de contexto ya que el padre entra a bloqueados.
+            \end{itemize}
+        \end{itemize}
+
+        Además, en el caso de que el algoritmo de planificación sea apropiativo, tenemos que también se le llama desde las siguientes funciones dependiendo del algoritmo:
+        \begin{itemize}
+            \item \verb|RSI| de reloj, en el caso de RR.
+
+            Cuando un proceso ha agotado su \emph{Quantum} o rodaja de tiempo, debe producirse un cambio de contexto para ver qué proceso ejecutar.
+
+            \item En otros algoritmos, cada vez que un proceso pasa a ``Listos'' se ha de llamar al planificador de la CPU, y en el caso de que decida que se debe realizar una apropiación, se llamará al despachador.
+        \end{itemize}
+	
+        
         \item Indique el motivo de la aparición de los estados ``SUSPENDIDO-BLOQUEADO'' y ``SUSPENDIDO-LISTO'' en el modelo de procesos extendido.
+
+        Puede darse el caso de que todos los procesos no puedan estar cargados a la vez en memoria principal. Uno podría pensar que esto se podría evitar no cargando en memoria principal más procesos cuando esta estuviese prácticamente llena, pero podría darse el caso de que todos los procesos que estuviesen en memoria principal fuesen de tipo E/S (ráfagas cortas, interrumpidos por frecuentes procesos largos de E/S) y, en cierto momento, todos estuviesen bloqueados. Entonces, el procesador estaría ocioso, pero tampoco podrían ejecutarse más programas ya que estos no cabrían en memoria. (Análogamente, el problema podría ser que todos los procesos fuesen de una ráfaga larga, por lo que el módulo de E/S no estaría haciendo nada, y los procesos de E/S estarían esperando cuando podrían estar bloqueados esperando al evento correspondiente).
+
+        Llegados a este punto, aparece la memoria \emph{swap} y el intercambio o \emph{swapping} de procesos entre memoria principal y memoria secundaria. Cuando un proceso no se está ejecutando, parte de su imagen (como su programa o sus datos) pueden ser expulsados de memoria y almacenados en memoria secundaria. El \verb|PCB| nunca podrá ser expulsado (ya que se perdería el control del registro), pero al liberar parte de la memoria principal ya podrían entrar nuevos procesos en memoria. El planificador a largo plazo se tendría que encargar de decidir qué procesos de los ``nuevos'' cargar en memoria (traer a ``listos''), pero sería relevante que fuesen de ráfagas largas y pocas esperas de E/S, para equilibrar la mezcla.
+
+        Es por esto que aparecen los dos nuevos estados. Cuando un proceso está bloqueado y el planificador a medio plazo (que es el encargado del \emph{swapping}) considera que la espera puede ser larga, puede decidir expulsarlo a memoria secundaria. De igual forma, si considera que la llegada del evento puede ser inminente, puede traerlo a memoria principal. De igual forma, si un proceso en ``listos'' va a tardar mucho en ser planificado por el planificador a corto plazo, el planificador a medio plazo puede decidir expulsarlo a memoria secundaria.
     \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
     ¿Tiene sentido mantener ordenada por prioridades la cola de procesos bloqueados? Si lo tuviera, ¿en qué casos sería útil hacerlo? Piense en la cola de un planificador de E/S, por ejemplo el de HDD, y en la cola de bloqueados en espera del evento ``Fin E/S HDD''.
+
+    Mantener una única cola para todos los procesos bloqueados no termina de tener sentido, ya que cuando un evento llegase, se tendría que recorrer la cola entera buscando a los procesos esperando por dicho evento.
+    
+    Por ello, se guarda una cola por cada evento. Además, sí tendría sentido mantener dicha cola ordenada por prioridades, ya que si hay $n$ procesos esperando para usar un dispositivo de E/S (el HDD, por ejemplo), cuando este se libere tan solo podrá usarlo uno, por lo que habrá que planificar cuál es el proceso elegido; y esto se puede hacer mediante planificación mediante prioridades.
 \end{ejercicio}
 
 \begin{ejercicio}
-    Explique las diferentes formas que tiene el kernel de ejecutarse en relación al contexto de un proceso y al modo de ejecución del procesador.
+    Explique las diferentes formas que tiene el kernel de ejecutarse en relación al contexto de un proceso y al modo de ejecución del procesador.\\
+
+    Respecto al modo de ejecución, el código kernel siempre ha de ejecutarse en modo kernel, ya que ejecuta tareas a bajo nivel que requieren de permisos.
+
+    Respecto al contexto, hay dos opciones:
+    \begin{enumerate}
+        \item \ul{Contexto de usuario}:
+
+        Un proceso de usuario ha realizado una llamada al sistema o ha producido una excepción. En ese momento, se ejecuta la llamada al sistema o la \verb|RSE()|, ambas parte del código kernel.
+
+        Lo mismo ocurre con las interrupciones. Aunque estas sean debidas a otro proceso, en ningún momento se llama al \verb|context_switch()|, ya que el proceso ejecutándose sigue ejecutándose. Por tanto, no se produce ningún cambio de contexto y sigue en contexto usuario. 
+
+        \item \ul{Contexto kernel}:
+
+        Los casos restantes en los que se ejecuta código kernel son las tareas del sistema. Estas se ejecutan en procesos independientes a los que ya hay en ejecución, por lo que se considera el contexto kernel.
+
+        \begin{comment}
+        Aunque el caso de las interrupciones pueda parecer que se trata de contexto de usuario; en realidad la interrupción se produce cuando se está ejecutando un programa ajeno a la interrupción; por lo que el contexto no es el del programa. 
+        \end{comment}
+    \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
     Responda a las siguientes cuestiones relacionadas con el concepto de hebra:
     \begin{enumerate}
         \item ¿Qué elementos de información es imprescindible que contenga una estructura de datos que permita gestionar hebras en un kernel de SO? Describa las estructuras \verb|task_t| y la \verb|thread_t|.
+
+        Las estructuras \verb|task_t| y la \verb|thread_t| son el PCB y TCB que emplea linux para gestionar las hebras en los ordenadores multihilo. Describamos dichas estructuras:
+        \begin{itemize}
+            \item \ul{PCB} o \verb|task_t|:
+            \begin{itemize}
+                \item PID, que es un identificador único para el proceso.
+                \item Lista de hebras, donde se identifica también la \emph{Main Thread}.
+                \item Estado del proceso, dentro del modelo multihilo $\{$N,L,EN\_SWAP, EN\_RAM$\}$.
+                \item Zona de memoria del proceso (puntero a la sección de datos y código).
+                \item Controlador de recursos del sistema.
+            \end{itemize}
+
+            \item \ul{TCB} o \verb|thread_t|:
+            \begin{itemize}
+                \item TID, que es un identificador único para cada hebra.
+                \item Estado de la hebra, dentro del modelo de 5 estados $\{$N,F,L,B,E$\}$.
+                \item Zona de memoria de la hebra (puntero a la pila de la hebra y del kernel).
+                \item Contexto de los registros, entre los que se encuentra la palabra de estado de la hebra (TSW) o el PC.
+            \end{itemize}
+
+            Notemos que para las hebras no se distingue si están en RAM o SWAP, sino que se hace a nivel de proceso. Se podría considerar llevarse alguna hebra a SWAP, pero tan solo podrías llevarte ambas pilas; por lo que no se hace, ya que no es eficiente.
+        \end{itemize}
+
+  
         \item En una implementación de hebras con una biblioteca de usuario en la cual cada hebra de usuario tiene una correspondencia N:1 con una hebra kernel, ¿Qué ocurre con la tarea si se realiza una llamada al sistema bloqueante, por ejemplo \verb|read()|?
+
+        Si todas las hebras de usuario se corresponden con una única hebra kernel, en el momento en el que dicha una de las hebras realice una llamada al sistema bloqueante, dicha hebra kernel se bloqueará y, por tanto, la tarea entera estará bloqueada, ya que no tendrá acceso al procesador. Para evitarlo, se puede usar correspondencia 1:1 o híbrida.
+
         \item ¿Qué ocurriría con la llamada al sistema \verb|read()| con respecto a la tarea de la pregunta anterior si la correspondencia entre hebras usuario y hebras kernel fuese 1:1?
+
+        La correspondiente hebra kernel se bloquearía, pero el resto de hebras no estarían bloqueadas y, por tanto, podrían ser elegidas por el planificador a corto plazo.
     \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
-    ¿Puede el procesador manejar una interrupción mientras está ejecutando un proceso sin hacer \verb|context_switch()| si la política de planificación que utilizamos es no apropiativa? ¿Y si es apropiativa?
+    ¿Puede el procesador manejar una interrupción mientras está ejecutando un proceso sin hacer \verb|context_switch()| si la política de planificación que utilizamos es no apropiativa? ¿Y si es apropiativa?\\
+
+    Cuando se maneja una interrupción, aunque se apile la PSW y se cambie el valor del PC, en ningún momento se hace \verb|context_switch()|, ya que el proceso que estaba ejecutándose seguirá ejecutándose al finalizar la RSI y, por tanto, en ningún momento abandona el estado de ``Ejecutándose''.
+
+    Por tanto, ya sea apropiativa o no apropiativa, en ningún momento se hace un \verb|context_switch()|.
 \end{ejercicio}
 
 \begin{ejercicio}
-    Suponga que es responsable de diseñar e implementar un SO que va a utilizar una política de planificación apropiativa (\emph{preemptive}). Suponiendo que el sistema ya funciona perfectamente con multiprogramación pura y que tenemos implementada la función \verb|Planif_CPU()|, ¿qué otras partes del SO habría que modificar para implementar tal sistema? Escriba el código que habría que incorporar a dichas partes para implementar apropiación \emph{(preemption)}.
+    Suponga que es responsable de diseñar e implementar un SO que va a utilizar una política de planificación apropiativa (\emph{preemptive}). Suponiendo que el sistema ya funciona perfectamente con multiprogramación pura y que tenemos implementada la función \verb|Planif_CPU()|, ¿qué otras partes del SO habría que modificar para implementar tal sistema? Escriba el código que habría que incorporar a dichas partes para implementar apropiación \emph{(preemption)}.\\
+
+    Al querer cambiar a una planificación apropiativa, es necesario que cada vez que un proceso cambie su estado a ``listo'', se invoque al planificador y, en su caso, al \verb|dispatcher|.
+
+    Por tanto, cada rutina del kernel que cambiase el estado de cualquier proceso a ``listo'', tendría que ser modificada y recompilada añadiéndole al final una llamada a \verb|Planif_CPU()| y, en el caso de que esta función determine que el proceso que ha pasado a listo ha de ocupar la CPU, una llamada al \verb|dispatcher()|.
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -68,10 +209,35 @@
     del SO requiere la invocación del planificador a corto plazo (\verb|Planif_CPU()|):
     \begin{enumerate}
         \item  Crear un proceso, \verb|fork()|.
+
+        Si usamos una planificación apropiativa, sí sería necesario; ya que puede ser que el nuevo proceso creado sea el elegido por el planificador, pasando el que se estaba ejecutando a ``listos'', y el nuevo proceso a ``ejecutándose''.
+
+        En el caso de que la planificación sea no apropiativa, no sería necesario llamar al planificador a corto plazo; ya que la creación de un proceso nuevo no provoca que el proceso que estaba ejecutándose deje de hacerlo.
+        
         \item  Abortar un proceso, es decir, terminarlo forzosamente, \verb|abort()|.
+
+        En este caso, no habría ninguno proceso ejecutándose. Por tanto, para que el procesador no esté ocioso, se llama al planificador a corto plazo para decidir qué proceso de los listos pasará a ejecutarse.
+
+        
         \item  Bloquear (suspender) un proceso, \verb|read()| o \verb|wait()|.
+
+        En todos esos casos el proceso que estaba ejecutándose pasa a ``bloqueado''. Por tanto, no habría ninguno proceso ejecutándose y; análogamente al caso anterior, se llamaría al planificador a corto plazo.
+        
         \item  Desbloquear (reanudar) un proceso, \verb|RSI| o \verb|exit()| (complementarias a las del caso anterior).
+
+        El caso de \verb|exit()| suponemos que es una errata, ya que no tiene que ver con desbloquear un proceso, sino finalizarlo. Por tanto, ocurriría lo mismo que al abortar un proceso.
+
+        Respecto a desbloquear un proceso, si la política no es apropiativa, entonces no es llamará al planificador porque no se puede cambiar de proceso.
+
+        No obstante, si la política sí es apropiativa, entonces se llamará al planificador para ver si el proceso que ha sido desbloqueado se apropiará del procesador.
+        
         \item  Modificar la prioridad de un proceso.
+
+        Suponemos que se está usando planificación por prioridades, ya que en caso contrario la pregunta carecería de sentido.
+
+        Si la planificación es apropiativa, sí sería necesario; ya que puede ser que al modificar la prioridad de un proceso listo, este deba pasar a ejecutarse, o al revés.
+        
+        En el caso de que la planificación sea no apropiativa, no sería necesario llamar al planificador a corto plazo; ya que no se va a cambiar el proceso que se esté ejecutando en dicho momento.
     \end{enumerate}
 \end{ejercicio}
 
@@ -89,13 +255,13 @@
 \end{ejercicio}
 
 \begin{ejercicio}
-    Sea un sistema multiprogramado que utiliza el algoritmo Por Turnos (Round-Robin, RR). Sea $S$ el tiempo que tarda el despachador en cada cambio de contexto. ¿Cuál debe ser el valor de quantum $Q$ para que el porcentaje de uso de la CPU por los procesos de usuario sea del 80\%?
+    Sea un sistema multiprogramado que utiliza el algoritmo Por Turnos (Round-Robin, RR). Sea $S$ el tiempo que tarda el despachador en cada cambio de contexto. ¿Cuál debe ser el valor de quantum $Q$ para que el porcentaje de uso de la CPU por los procesos de usuario sea del 80\%?\\
 
-    Necesitamos $Q=4\cdot S$, ya que así por cada cuatro unidades de tiempo que se está ejecutando el proceso, se ejecuta una vez el kernel. Es decir, suponiendo que el proceso se ejecuta todo el tiempo en modo usuario, es necesario que $\nicefrac{4}{5}$ de su tiempo de retorno se ejectuen seguidos sin consumir el ``time slice''; por lo que tendría que usarse $Q=4\cdot S$.
+    Necesitamos $Q=4\cdot S$, ya que así por cada cuatro unidades de tiempo que se está ejecutando el proceso, se ejecuta una vez el kernel. Es decir, suponiendo que el proceso se ejecuta todo el tiempo en modo usuario, es necesario que $\nicefrac{4}{5}$ de su tiempo de retorno se ejecuten seguidos sin consumir el ``time slice''; por lo que tendría que usarse $Q=4\cdot S$.
 
-    Otra forma de verlo es, sabiendo que $T=Q+S$ y $Q=0.8T$, tenemos que:
+    Otra forma de verlo es, sabiendo que el tiempo de retorno es $T_{ret}=Q+S$ y $Q=0.8T_{ret}$, tenemos que:
     \begin{equation*}
-        T=0.8T+S \Longrightarrow 0.2T = S \Longrightarrow T=5S \Longrightarrow Q=4S
+        T_{ret}=0.8T_{ret}+S \Longrightarrow 0.2T_{ret} = S \Longrightarrow T_{ret}=5S \Longrightarrow Q=4S
     \end{equation*}
 \end{ejercicio}
 
@@ -243,19 +409,37 @@
         \item Un proceso en la cola $i$ pasa a la cola $i+1$ si consume un quantum completo sin bloquearse.
         \item Cuando un proceso llega a la cola de menor prioridad, permanece en ella hasta que finaliza.
     \end{enumerate}
-    
-    \begin{table}[H]
-        \begin{tabular}{ccccccccccccccccc|ccc}
-                                        &                        &                                &                                &                                &                          &                        &                                &                                &                                &                          &                         &                                &                                &                                &                         &    & \textbf{T} & \textbf{M} & \textbf{P} \\ \hline
-        \multicolumn{1}{c|}{\textbf{A}} &                        &                                &                                &                                & E                        &                        &                                &                                &                                &                          &                         &                                &                                &                                &                         &    & 1          & 0          & 1          \\ \hline
-        \multicolumn{1}{c|}{\textbf{B}} & E                      & {\color[HTML]{F56B00} L}       & E                              & E                              & {\color[HTML]{FE0000} L} & L                      & L                              & E                              & L                              & L                        & L                       & L                              & L                              & L                              & E                       &    & 15         & 10         & 5          \\ \hline
-        \multicolumn{1}{c|}{\textbf{C}} &                        & E                              & {\color[HTML]{F56B00} L}       & L                              & L                        & E                      & E                              & {\color[HTML]{FE0000} L}       & L                              & L                        & L                       & E                              &                                &                                &                         &    & 11         & 7          & $\nicefrac{11}{4}$       \\ \hline
-        \multicolumn{1}{c|}{\textbf{D}} &                        &                                &                                &                                &                          &                        &                                &                                & E                              & {\color[HTML]{F56B00} E} & E                       &                                &                                &                                &                         &    & 3          & 0          & 1          \\ \hline
-        \multicolumn{1}{c|}{\textbf{E}} &                        &                                &                                &                                &                          &                        &                                &                                &                                &                          &                         &                                & E                              & {\color[HTML]{F56B00} E}       &                         &    & 2          & 0          & 1          \\ \hline
-        \multicolumn{1}{c|}{}           & \multicolumn{1}{c|}{$0^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$5^-$} & \multicolumn{1}{c|}{$5^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$10^-$} & \multicolumn{1}{c|}{$10^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$15^-$} & $15^+$ &            &            &           
-        \end{tabular}
-        \caption{Diagrama de ocupación de memoria para el Ejercicio \ref{ej2.12}.}
-    \end{table}
 
-    Notemos que, en naranja, se señala cuando un proceso pasa de la cola $1$ a la cola $2$; mientras que en rojo se señala cuando pasa de la $2$ a la $3$.
+    \begin{description}
+        \item[Planificación entre cola con prioridades apropiativa]:
+        \begin{table}[H]
+            \begin{tabular}{ccccccccccccccccc|ccc}
+                                            &                        &                                &                                &                                &                          &                        &                                &                                &                                &                          &                         &                                &                                &                                &                         &    & \textbf{T} & \textbf{M} & \textbf{P} \\ \hline
+            \multicolumn{1}{c|}{\textbf{A}} &                        &                                &                                &                                & E                        &                        &                                &                                &                                &                          &                         &                                &                                &                                &                         &    & 1          & 0          & 1          \\ \hline
+            \multicolumn{1}{c|}{\textbf{B}} & E                      & {\color[HTML]{F56B00} L}       & E                              & E                              & {\color[HTML]{FE0000} L} & L                      & L                              & E                              & L                              & L                        & L                       & L                              & L                              & L                              & E                       &    & 15         & 10         & 5          \\ \hline
+            \multicolumn{1}{c|}{\textbf{C}} &                        & E                              & {\color[HTML]{F56B00} L}       & L                              & L                        & E                      & E                              & {\color[HTML]{FE0000} L}       & L                              & L                        & L                       & E                              &                                &                                &                         &    & 11         & 7          & $\nicefrac{11}{4}$       \\ \hline
+            \multicolumn{1}{c|}{\textbf{D}} &                        &                                &                                &                                &                          &                        &                                &                                & E                              & {\color[HTML]{F56B00} E} & E                       &                                &                                &                                &                         &    & 3          & 0          & 1          \\ \hline
+            \multicolumn{1}{c|}{\textbf{E}} &                        &                                &                                &                                &                          &                        &                                &                                &                                &                          &                         &                                & E                              & {\color[HTML]{F56B00} E}       &                         &    & 2          & 0          & 1          \\ \hline
+            \multicolumn{1}{c|}{}           & \multicolumn{1}{c|}{$0^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$5^-$} & \multicolumn{1}{c|}{$5^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$10^-$} & \multicolumn{1}{c|}{$10^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$15^-$} & $15^+$ &            &            &           
+            \end{tabular}
+            \caption{\centering Diagrama de ocupación de memoria para el Ejercicio \ref{ej2.12} con planificación entre cola con prioridades apropiativa}
+        \end{table}
+
+        Notemos que, en naranja, se señala cuando un proceso pasa de la cola $1$ a la cola $2$; mientras que en rojo se señala cuando pasa de la $2$ a la $3$.
+
+        \item[Planificación entre cola con prioridades no apropiativa]:
+        \begin{table}[H]
+            \begin{tabular}{ccccccccccccccccc|ccc}
+                 &  &  &  &  &    &  &  &  &  &    &   &  &  &  &   &    & \textbf{T} & \textbf{M} & \textbf{P} \\ \hline
+            \multicolumn{1}{c|}{\textbf{A}} &  &  &  &  & E  &  &  &  &  &    &   &  &  &  &   &    & 1   & 0   & 1   \\ \hline
+            \multicolumn{1}{c|}{\textbf{B}} & E       & {\color[HTML]{F56B00} L}       & E   & E   & {\color[HTML]{FE0000} L} & L       & L   & E   & E   &  & &    &    &    &  &    & 9  & 4  & $\nicefrac{9}{5}$   \\ \hline
+            \multicolumn{1}{c|}{\textbf{C}} &  & E   & {\color[HTML]{F56B00} L}       & L   & L  & E       & E   & {\color[HTML]{FE0000} L}       & L   & L  & L & L   & L  & L & E  &    & 14  & 10   & $\nicefrac{7}{2}$       \\ \hline
+            \multicolumn{1}{c|}{\textbf{D}} &  &  &  &  &    &  &  &  & L   & E & {\color[HTML]{F56B00} E} & E &  &  &   &  & 4   & 1   & $\nicefrac{4}{3}$ \\ \hline
+            \multicolumn{1}{c|}{\textbf{E}} &  &  &  &  &    &  &  &  &  &    &   &  & E   & {\color[HTML]{F56B00} E}       &   &    & 2   & 0   & 1   \\ \hline
+            \multicolumn{1}{c|}{}    & \multicolumn{1}{c|}{$0^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$5^-$} & \multicolumn{1}{c|}{$5^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$10^-$} & \multicolumn{1}{c|}{$10^+$} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{\textit{}} & \multicolumn{1}{c|}{$15^-$} & $15^+$ &     &     &    
+            \end{tabular}
+            \caption{\centering Diagrama de ocupación de memoria para el Ejercicio \ref{ej2.12} con planificación entre cola con prioridades no apropiativa}
+        \end{table}
+
+    \end{description}
 \end{ejercicio}

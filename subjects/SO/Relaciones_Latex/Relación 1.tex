@@ -30,30 +30,92 @@
             Muy similar al modelo de memoria segmentada, aunque este se mantiene por compatibilidad hacia atrás con otras arquitecturas. En este caso hay limitaciones de tamaño tanto para los segmentos como para la memoria total.
         \end{enumerate}
 
-        \item ¿Cómo funciona el mecanismo de tratamiento de interrupciones mediante interrupciones vectorizadas? Explique que parte es realizada por el hardware y que parte por el software.
+        \item ¿Cómo funciona el mecanismo de tratamiento de interrupciones mediante interrupciones vectorizadas? Explique que parte es realizada por el hardware y que parte por el software.\\
+
+        En primer lugar, el módulo de E/S envía la interrupción a la CPU, que la recibe junto con un \verb|id_disp|, para saber qué dispositivo se queda libre.
+
+        En ese momento, el procesador terminará de ejecutar la instrucción por la que estaba, ya que al final del ciclo de cada instrucción hay una fase en la que el procesador comprueba si tiene instrucciones pendientes.
+        
+        En ese momento, el procesador le envía al módulo de E/S una señal avisando de que se ha recibido la señal. Se hace mediante el bus \verb|INTA| (\emph{interruption acknowledgement}).
+
+        Tras enviar dicha señal, se guarda el contexto del proceso que se estaba ejecutando (se apilan la \verb|PSW| y \verb|PC|). Una vez apilada la \verb|PSW|, se cambia el bit de modo a 0, ya que hay que indicar que se entra en el modo kernel. Es importante apilar dicha información, ya que esta será potencialmente modificada en el tratamiento de la interrupción, y será necesario que; al finalizar la \verb|RSI|, el programa continúe por el mismo sitio.
+        
+        Una vez realizado el cambio de modo, se establece el valor del contador de programa al inicio de la \verb|RSI|. Para poder encontrar dicho valor del \verb|PC|, es necesario acceder al vector de interrupciones con el \verb|id_disp|.
+
+        Con el nuevo valor del \verb|PC| establecido, se iniciará la rutina de servicio de la interrupción, que es donde entra el software. En primer lugar, la rutina almacenará en pila el resto de información del proceso, como el \verb|PCB|.
+
+        Posteriormente, se tratará la interrupción, que dependerá de la \verb|RSI| correspondiente. Tras finalizar, se desapilará el \verb|PCB|, restaurándolo. Además, también se restaurará la \verb|PSW| y \verb|PC|. Esto restaura el valor de bit de modo, ya que se cambió a 0 tras apilarse. 
+        
+        Por último, toda interrupción termina con \verb|iret|. Además, al haber restaurado el contador de programa, el programa continuará por la instrucción donde se quedó.
         
         \item Describa detalladamente los pasos que lleva a cabo el SO cuando un programa solicita una llamada al sistema.
+
+        En primer lugar, cuando se hace una llamada al sistema (por ejemplo, \verb|open()|), en el código de dicha función es necesario que se modifiquen los registros con el valor de la llamada al sistema correspondiente (en Linux, se usa el registro \verb|%rax|). Posteriormente, se llamará a \verb|int 0x80h| o \verb|syscall|, produciéndose entonces la llamada al sistema
+        
+        En primer lugar, se almacenará el contexto de los registros del proceso (\verb|PSW|, \verb|PC|, etc.) Posteriormente, se cambiará el bit de modo a kernel, ya que el código de las llamadas al sistema es código kernel. Además, en el manejador de llamadas al sistema se obtendrá del vector de llamadas al sistema el \verb|PC| correspondiente a la llamada que hemos hecho, entrando entonces en dicha función (\verb|sys_read|, por ejemplo).
+
+        Una vez ha terminado la ejecución de la llamada al sistema, el manejador de llamadas volverá a restaurar el contexto apilado, incluyendo entonces el cambio del bit de modo a usuario.
     \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
-    Explique tres responsabilidades asignadas al gestor de memoria de un SO y tres asignadas al gestor de procesos.
+    Explique tres responsabilidades asignadas al gestor de memoria de un SO y tres asignadas al gestor de procesos.\\
+
+    Al gestor de procesos, se le asignan varias tareas. En primer lugar, es el encargado de la creación del PCB asociado a un programa que va a ejecutarse, y el encargado de eliminarlo una vez el programa termine.
+
+    Además, también se encarga de bloquear o reanudar los procesos dependiendo de los eventos que se produzcan.
+
+    Por último, es el responsable de proporcionar recursos para que los procesos se ejecuten de forma sincronizada.\\
+
+    Respecto al gestor de memoria, por ejemplo es el encargado de la protección de las zonas de memoria que han de ser protegidas; como la asociada al kernel o las que solo son de escritura o lectura.
+
+    Además, también se encarga de asignar o liberar la memoria asociada a un proceso en cualquier nivel de la jerarquía. También mantiene dicha información transparente al programador.
+
+    Por último, se encarga de establecer algoritmos que decidan cuándo es necesario expulsar un programa de memoria principal a secundaria o al revés (planificador a medio plazo).
 \end{ejercicio}
 
 \begin{ejercicio}
-    ¿Cómo gestionaría el sistema operativo la posibilidad de anidamiento de interrupciones?
+    ¿Cómo gestionaría el sistema operativo la posibilidad de anidamiento de interrupciones?\\
+
+    Esto no supondría problema, ya que gracias a la gestión de la pila se podría llevar a cabo.
+
+    En primer lugar, mientras se ejecuta la \verb|RSI| de la interrupción $A$, se está ejecutando en modo kernel. Al llegar la interrupción $B$, se lleva a cabo el mismo proceso, tan solo que se apila en la pila del kernel asociada a dicho proceso (la interrupción $A$ se trataba en modo kernel). Al finalizar la \verb|RSI| de la interrupción $B$, se hará una \verb|iret|, por lo que se desapilará la información que se había guardado en la pila del kernel y se continuará con la \verb|RSI| de la interrupción $A$.
 \end{ejercicio}
 
 \begin{ejercicio}
     Contraste las ventajas e inconvenientes de una arquitectura de SO monolítica frente a una arquitectura microkernel.
+
+    En el caso de la arquitectura de SO monolítica, el SO es un único programa, que se ejecuta entero en modo kernel. No se oculta información, por lo que las dependencias entre distintos módulos del SO son complejas y difíciles de entender y modificar para el desarrollador. Además, al ser un único programa cargado en memoria, un fallo en dicho programa provocaría la caída entera del SO. Por último, en el caso de realizar una pequeña actualización en un módulo del kernel, habría que cambiar el programa completo.
+
+    Respecto a la arquitectura microkernel, tenemos que el SO se implementa como diversos módulos separados. Una pequeña parte, la esencial, se implementa como código kernel, por lo que tan solo lo esencial se ejecutará con estos privilegios. El resto, se implementan como módulos independientes con privilegios de usuario.
+    
+    Además, al haber ocultación de la información, no hay dependencias completas entre los distintos módulos, lo que simplifica en gran medida la programación. También hay que tener en cuenta que, al ser módulos independientes, un fallo en uno de los servicios tan solo provoca error ahí, no en el sistema entero. Igualmente, cuando se realiza una actualización, tan solo afecta al correspondiente módulo, no al sistema operativo entero.
+
+    En esta última arquitectura, dos servicios se comunican mediante la parte del sistema en kernel. Cuando una aplicación solicita un servicio al sistema operativo con \verb|send(Server, &d)|, espera a la respuesta con \verb|recieve(Server, &r)|.  Al recibir el microkernel la petición, envía el mensaje \verb|m| al servicio correspondiente, quien contestará al microkernel con los resultados necesarios. El microkernel se los devolverá a la aplicación en \verb|r|.
+
+    El único inconveniente que tiene la arquitectura microkernel es que para una petición se han de realizar dos cambios de modo, pero esto aporta principalmente fiabilidad y extensibilidad, por lo que suele ser preferible.
 \end{ejercicio}
 
 \begin{ejercicio}
     Cuestiones relacionas con virtualización:
     \begin{enumerate}
         \item ¿Qué se entiende actualmente por virtualización mediante hipervisor?
+
+        La virtualización consiste en la abstracción del hardware real de un computador mediante software, de forma que una máquina virtual pueda ejecutarse. El software que permite esta abstracción se denomina hipervisor, y es el encargado de abstraer y, especialmente, gestionar los recursos hardware (CPU, memoria principal, dispositivos, etc.).
+
+        Mediante la virtualización, es posible que en una única máquina real (\emph{host machine}) se ejecuten varias máquinas virtualizadas (\emph{guest machine}). El ratio de consolidación indica el número de máquinas virtuales que puede gestionar un hipervisor.
+
+        Hay dos tipos, como veremos en la siguiente pregunta.
         
         \item ¿Qué clases de hipervisores existen de manera general y que ventajas e inconvenientes plantea una clase con respecto a la otra?
+
+        Hay dos tipos de hipervisores, el tipo 1 y el tipo 2.
+
+        El tipo 1, también conocido como \emph{native} p \emph{bare-metal}, es un hipervisor que se ejecuta directamente sobre el hardware de la \emph{host machine}, sin ninguna capa software entre medias.
+
+        El tipo 2, también conocido como \emph{hosted}, es un hipervisor que se ejecuta sobre el SO convencional de la máquina real. Es decir, es como un programa más que se ejecuta sobre el SO. Un ejemplo de este tipo de hipervisor es \emph{Virtual Box}.
+
+        El tipo 1 tiene como ventaja que dispone de la gestión de todos los recursos para las máquinas virtuales. Además, debido a que hay un SO como capa intermedia en el tipo 2, el tipo 1 es bastante más eficiente. No obstante, tiene como principal desventaja es que en estos casos hay que dedicar la máquina real íntegra para la virtualización, mientras que en el tipo 2 no es necesario que esté la virtualización constantemente.
     \end{enumerate}
 \end{ejercicio}
 
@@ -62,6 +124,12 @@
     \begin{enumerate}
         \item ¿Qué característica distingue esencialmente a un proceso de tiempo real de otro que no lo es?
 
+        Un proceso de tiempo real se distingue de un proceso normal en que, no solo han de garantizar la corrección del resultado lógico (de la ejecución del proceso), sino que también han de gestionar el tiempo empleado en ello.
+
+        Hay dos tipos de procesos de tiempo real, los duros y los suaves. En el primer caso, el proceso tiene que cumplirse de forma obligada en determinado intervalo de tiempo, ya que en caso contrario puede desenvolver en un error fatal del sistema. Los suaves; en cambio tienen asociado un plazo límite deseable, pero tiene sentido seguir planificando dicho proceso si el plazo no se cumple.
+
         \item ¿Cuáles son los factores determinantes del tiempo de respuesta en un RTOS, e.d. define determinismo y reactividad?
+
+        El tiempo de respuesta viene determinado en primer lugar por el determinismo, que consiste en el tiempo que tarda el proceso en detectar una interrupción. Por el otro lado, la reactividad se refiere al tiempo que tarda el proceso en ejecutar la \verb|RSI()| correspondiente.
     \end{enumerate}
 \end{ejercicio}
