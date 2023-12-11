@@ -1096,7 +1096,7 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 
 150. En un sistema con direcciones de 32bits, memoria de bytes, cache de 1MB asociativa por conjuntos de 4 vías y líneas de 64B, el campo etiqueta en el formato de dirección cache es de 
 	- ( ) 16bits 
-	- (x) 15bits 
+	- (x) 14bits 
 	- ( ) 12bits
 	- ( ) 10bits 
 
