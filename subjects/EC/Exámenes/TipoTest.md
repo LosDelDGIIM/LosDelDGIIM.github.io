@@ -106,7 +106,7 @@ Explicacion: Se está llamando a una subrutina, ya la pila crece guardándose el
 Explicacion: Son 16 señales más el 0; por lo que son 17. Para codificar 17 posibilidades en binario, en necesiario tener en cuenta que se necesitan $log_2(17)$ redondeados hacia arriba bits. Es decir, nos hacen falta 5 bits.
 
 
-11. Dado un camino de datos concreto, un posible formato de microprogramación se caracteriza como horizontal o vertical según tenga más o menos (señalar la respuesta falsa)
+11. Dado un camino de datos concreto, un posible formato de microprogramación se caracteriza como horizontal o vertical según tenga más o menos (señalar la respuesta **falsa**)
     - ( ) codificación
     - ( ) solapamiento
     - (x) micro bifurcaciones
@@ -147,7 +147,7 @@ Explicacion: Se pueden ejecutar más instrucciones simultáneamente, ya que en c
     - ( ) Los riesgos control (intenta determinar de antemano el flujo de control)
     - ( ) Los riesgos de transferencia (intenta agrupar las posibles transferencias de un conjunto de instrucciones).
 
-17. Respecto a la segmentación, ¿cuál de las siguientes afirmaciones es falsa?
+17. Respecto a la segmentación, ¿cuál de las siguientes afirmaciones es **falsa**?
     - ( ) La técnica de register forwarding habilita una serie de cambios(buses) que se añaden al cauce para permitir que los resultados de una etapa pasen como entradas a la etapa donde son necesarias.
     - ( ) La reorganizacion del código y la introducción de instrucciones no permite evitar dependencias de datos.
     - (x) Retrasar la fase de decisión saltar/no saltar de las instrucciones de salto condicional contribuye a mejorar el rendimiento del procesador.
@@ -203,7 +203,7 @@ exactamente:
     - ( ) `SP` (StackPointer)
     - (x) `WC` (Word Count)
 
-25. Respecto al refresco de memorias DRAM, ¿cuál de las siguientes afirmaciones es falsa?
+25. Respecto al refresco de memorias DRAM, ¿cuál de las siguientes afirmaciones es **falsa**?
     - (x) Una operación de refresco consiste en dar un impulso /CAS junto con una dirección de columna.
     - ( ) Los chips DRAM refrescan automáticamente la fila accedida en cualquier ciclo de lectura o escritura.
     - ( ) Se precisa una circuitería auxiliar, externa al chip DRAM o integrada en él, que produzca ciclos de refresco.
@@ -233,13 +233,13 @@ exactamente:
     - ( ) 32 pastillas
     - ( ) 64 pastillas
 
-30. Para diseñar una memoria con ancho de palabra  \\(k\times m\\) (y mismo no palabras que los módulos) a partir de módulos con ancho de palabra m, se utilizan k módulos
-    - ( ) repartiendo las líneas de datos entre los k módulos: el primero se conecta a D0...Dk-1, el segundo a Dk...D2k-1, etc
-    - ( ) repartiendo las líneas de dirección: el 1o se conecta a A0...Ak-1, el 2o a Ak...A2k-1, etc
-    - (x) repartiendo líneas datos:el 1o se conecta a D0...Dm-1, el 2o a Dm...D2m-1, etc
-    - ( ) repartiendo líneas dirección: el 1o se conecta a A0...Am-1, el 2o a Am...A2m-1, etc
+30. Para diseñar una memoria con ancho de palabra  \\(k\times m\\) (y mismo no palabras que los módulos) a partir de módulos con ancho de palabra \\(m\\), se utilizan k módulos
+    - ( ) repartiendo las líneas de datos entre los \\(k\\) módulos: el primero se conecta a \\(D_0,\dots , D_{k-1}\\), el segundo a \\(D_k,\dots , D_{2k-1}\\), etc
+    - ( ) repartiendo las líneas de dirección: el primero se conecta a \\(A_0,\dots , A_{k-1}\\), el segundo a \\(A_k,\dots , A_{2k-1}\\), etc
+    - (x) repartiendo líneas datos: el primero se conecta a \\(D_0,\dots , D_{m-1}\\), el segundo a \\(D_m,\dots , D_{2m-1}\\), etc
+    - ( ) repartiendo líneas dirección: el primero se conecta a \\(A_0,\dots , A_{m-1}\\), el segundo a \\(A_m,\dots , A_{2m-1}\\), etc
 
-31. ¿Cuál de las siguientes afirmaciones sobre el benchmark SPEC CPU es falsa?
+31. ¿Cuál de las siguientes afirmaciones sobre el benchmark SPEC CPU es **falsa**?
 
     - ( ) La última versión es SPEC CPU2006 V1.2 de 2011.
     - ( ) Se cronometran unos 12 tests de enteros (CINT2006) y unos 17 tests de punto flotante (CFP2006).
@@ -662,15 +662,8 @@ Explicacion: Se podría pensar que, por el alineamiento, ocupa 32 B. No obstante
     - (x) Un micro-contador de programa atacando a las líneas de dirección de la memoria de control.
     - ( ) Microcódigo de decodificación que analice el codop bit a bit de izquierda a derecha.
 
-83. Dado un camino de datos concreto, un posible formato de microprogramación se caracteriza como horizontal o vertical según tenga más o menos (señalar la respuesta falsa):
-
-    - ( ) Codificación.
-    - ( ) Solapamiento.
-    - (x) Microbifurcaciones.
-    - ( ) Longitud relativa de microinstrucción.
-
 84. Motivos que impiden que la ganancia (aceleración) de un cauce
-    segmentado sea ideal (señalar la respuesta falsa):
+    segmentado sea ideal (señalar la respuesta **falsa**):
     
     - ( ) Registros de acoplo (coste de la segmentación).
     - ( ) Fragmentación desigual (duración desigual de etapas).
@@ -684,14 +677,14 @@ Explicacion: Se podría pensar que, por el alineamiento, ocupa 32 B. No obstante
     - ( ) De control.
     - (x) (Por dependencias) de datos.
 
-86. Las técnicas principales de E/S son (señalar la respuesta falsa):
+86. Las técnicas principales de E/S son (señalar la respuesta **falsa**):
 
     - ( ) DMA (por acceso directo).
     - ( ) E/S programada.
     - (x) E/S cableada (hardwired).
     - ( ) IRQ (por interrupciones).
 
-87. Para determinar la causa de una interrupción se pueden usar las siguientes técnicas: (señalar la respuesta falsa):
+87. Para determinar la causa de una interrupción se pueden usar las siguientes técnicas (señalar la respuesta **falsa**):
 
     - ( ) Múltiples líneas de interrupción: `INT1#, INT2#, ...`.
     - (x) Línea de reconocimiento `INTA#`.
@@ -886,7 +879,7 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 115. En la técnica de salto retardado:
     - (x) El compilador puede reorganizar el código para rellenar los huecos de retardo con instrucciones útiles.
     - ( ) El compilador no puede insertar operaciones `NOP` en los huecos de retardo.
-    - ( ) El slto se realiza varios ciclos antes de la instrucción de salto.
+    - ( ) El salto se realiza varios ciclos antes de la instrucción de salto.
     - ( ) Las instrucciones en los huecos de retardo se ejecutan unas veces y otras no.
 
 116. Al método de interacción con los periféricos, en los que el procesador vigila periódicamente el estado de los dispositivos mediante una encuesta activa se le denomina:
@@ -916,7 +909,7 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 120. ¿Cuál de las siguientes afirmaciones acerca de la jerarquía de memoria es _FALSA_?
     - ( ) Acceder a los discos es órdenes de magnitud más lento que acceder a la RAM.
     - ( ) Una memoria principal constituida por la tecnología más rápida es órdenes de magnitud más cara que la DRAM.
-    - (x) La velocidad de acceso Lamemoria principal ha crecido proporcionalmente a la velocidad del procesador.
+    - (x) memoria principal ha crecido proporcionalmente a la velocidad del procesador.
     - ( ) Un computador puede tener una pequeña cantidad de memoria rápida además de una gran cantidad de memoria más lenta.
 
 121. En una máquina little-endian con memoria de bytes y representación en complemento a dos que permite accesos a memoria de tamaño byte (1B), media palabra (2B) y palabra (4B), si se almacena en la posición `0xBABC` una palabra de valor -2, ¿qué se obtendría al consultar la media palabra en la posición `0xBABE`?
@@ -939,16 +932,16 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 
 
 124. El bus del sistema es 
-	- ( ) el que conecta las distintas partes del sistema:UC,ALU,E/S,M
+	- ( ) el que conecta las distintas partes del sistema: UC,ALU,E/S,M
 	- ( ) en un sistema con bus único, todo el bus salvo la parte relacionada con E/S (SATA, GPU, USB, Ethernet, etc) 
 	- ( ) en un sistema con buses separados,el que conecta el sistema E/S con el resto 
 	- (x) el que conecta CPU-M, ya sea un sistema con bus único o con múltiples buses 
 
 125. Un sistema con direcciones de 8 bits utiliza una puerta NAND conectada a las líneas A7...A5 para atacar la entrada `CS#` (activa baja) de un módulo de memoria. En el mapa de memoria las siguientes posiciones corresponderán a dicho módulo 
 	- ( ) 0x00 a 0x0f y 0x80 a 0x8f 
-	- ( ) 0x00a0x1f 
+	- ( ) 0x00 a 0x1f 
 	- ( ) 0x70 a 0x7f y 0xf0 a 0xff 
- 	- (x) 0xe0a0xff 
+ 	- (x) 0xe0 a 0xff 
 
 126. La ecuación básica de rendimiento calcula 
 	- (x) cuánto tiempo tarda en ejecutarse un programa concreto conociendo su número de instrucciones y el número de etapas (promedio) y la frecuencia del procesado 
@@ -963,20 +956,20 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 	- (x) AMD64
 
 128. ¿Qué combinación de flags aritmético- lógicos corresponde al código de condición b (below)? 
-	- (x) CF 
-	- ( ) OF 
-	- ( ) CFxorOF 
-	- ( ) OFxorSF 
+	- (x) `CF` 
+	- ( ) `OF` 
+	- ( ) `CF xor OF `
+	- ( ) `OF xor SF` 
 
 129. En los modos de direccionamiento del tipo Desplazamiento(Base,Indice,Factor Escala), puede usarse como 
-	- (x) desplazamiento,cualquierconstantede1, 2 o 4 bytes (incluso el nombre de una variable,porsudirección) 
-	- ( ) base, cualquiera de los 8 registros enteros salvo %esp 
-	- ( ) índice,tambiéncualquierasalvo%ebp 
+	- (x) desplazamiento ,cualquier constante de 1, 2 o 4 bytes (incluso el nombre de una variable, por su dirección) 
+	- ( ) base, cualquiera de los 8 registros enteros salvo `%esp `
+	- ( ) índice, también cualquiera salvo `%ebp `
 	- ( ) factor de escala, cualquier constante de 1, 2, 4 u 8 bytes 
     
-130. La diferencia entre las instrucciones test y cmp consiste en que 
-	- ( ) test realiza una operación and lógico, mientras que cmp realiza una resta
-	- ( ) test modifica sólo los flags lógicos (ZF,SF) mientras que cmp modifica los aritmético-lógicos (ZF,SF,CF,OF) 
+130. La diferencia entre las instrucciones `test` y `cmp` consiste en que 
+	- ( ) `test` realiza una operación and lógico, mientras que `cmp` realiza una resta
+	- ( ) `test` modifica sólo los flags lógicos (ZF,SF) mientras que `cmp` modifica los aritmético-lógicos (ZF,SF,CF,OF) 
 	- (x) ambas respuestas son correctas 
 	- ( ) ambas respuestas son incorrectas 
 
@@ -995,20 +988,16 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 133. Alguna de las siguientes señales no sirve de entrada a la unidad de control. ¿Cuál? 
 	- ( ) señal de reloj(CLK) 
 	- ( ) estado de la unidad de proceso (flags Z, S, C, O...) 
-	- ( ) instrucción actual(bitsdelregistroIR) 
+	- ( ) instrucción actual (bits del registro IR) 
 	- (x) contador de programa (bits del registro PC) 
 
 134. Alguna de las siguientes señales no es salida de la unidad de control. ¿Cuál?
-	 - ( ) señales decarga,habilitacióny/o desplazamiento de registros ( Load, Enable, ShiftL, ShiftR) 
+	 - ( ) señales decarga, habilitación y/o desplazamiento de registros (Load, Enable, ShiftL, ShiftR) 
 	- ( ) códigos de selección en multiplexores, decodificadores, ALU, etc (00, 01, 10, 11...) 
 	- ( ) señales de lectura y escritura en memoria (RD, WR) 
 	- (x) dirección de la siguiente microinstrucción (bits del campo DIR o Memoria B de Wilkes) 
 
-135. Alguna de las siguientes no es una operación básica de la unidad de control 
-	- ( ) transferir un registro a otro 
-	- ( ) (leer o escribir) un registro (de / a) memoria 
-	- (x) (guardar recuperar)un registro(en/de) la pila 
-	- ( ) realizar operación ALU y guardar resultado en registro
+Explicacion: <!-- 135 Repetida.-->
 
 136. Tipos de riesgos que hemos estudiado en cauces segmentados (señalar la opción incorrecta) 
 	- ( ) riesgos estructurales 
@@ -1019,7 +1008,7 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 137. ¿Cuál de los siguientes modos de direccionamiento es menos preferible para un procesador con segmentación de cauce? 
 	- ( ) registro 
 	- (x) directo 
-	- ( ) indirectoatravésderegistro 
+	- ( ) indirecto a través de registro 
 	- ( ) indexado (o relativo a base, o base+índice) 
 
 138. La ganancia en velocidad ideal de un cauce de K etapas de igual duración T ejecutando un programa de N instrucciones es 
@@ -1046,11 +1035,7 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 	- ( ) mayor aprovechamiento del espacio de memoria (E/S mapeada resta espacio a la memoria) 
 	- ( ) decodificación de memoria más elegante, limpia, sencilla (E/S mapeada añade complejidad a la decodificación) 
 
-142. Parecidos y diferencias entre los métodos de E/S (señalar la opción incorrecta) 
-	- ( ) la consulta del estado del dispositivo por parte de la CPU se suele/puede hacer con E/S programada y con E/S por IRQ 
-	- ( ) se suele avisar a la CPU (con una IRQ) de que debe realizar alguna tarea, tanto en E/S por IRQ como en E/S por DMA 
-	- (x) sólo E/S por DMA libera a la CPU de realizar la consulta de estado del dispositivo 
-	- ( ) sólo E/S por DMA libera a la CPU de realizar la transferencia de los datos de E/S 
+Explicacion: <!-- 142 Repetida.-->
 
 143. Tipos de interrupción que suelen contemplar las CPUs comerciales actuales (señalar la opción incorrecta) 
 	- ( ) internas (excepciones o traps): generadas internamente por la CPU para indicar una condición que requiere atención (división por cero, codop inválido, etc)
@@ -1058,11 +1043,7 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 	- ( ) software:generadas al ejecutar la instrucción INT (o equivalente) 
 	- (x) firmware (faults): generadas por el microcódigo de la CPU ( segmentation fault, page fault, etc) 
 
-144. Técnicas que se pueden usar para determinar la causa de una interrupción (señalar la opción incorrecta) 
-	- ( ) múltiples líneas de interrupción INT1#, INT2#... 
-	- (x) línea de reconocimiento INTA# 
-	- ( ) consulta de estado,o polling 
-	- ( ) interrupciones vectorizadas 
+Explicacion: <!-- 144 Repetida.-->
 
 145. Respecto a salvaguardar los registros de la CPU al inicio de una rutina de servicio de interrupción (ISR) 
 	- ( ) no es necesario salvar ninguno más,si el contador de programa y los flags de estado ya los salva la propia CPU como parte del mecanismo de interrupción 
@@ -1076,11 +1057,7 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 	- ( ) acceso directo a memoria 
 	- ( ) modo de direccionamiento directo
 
-147. Variación de los parámetros de los distintos niveles en una jerarquía de memoria (señalar la opción incorrecta) 
-	- (x) unidad de transferencia: xi xi+1 
-	- ( ) ancho de banda: bi bi+1 
-	- ( ) tamaño del nivel: si si+1 
-	- ( ) tiempo de acceso: ti ti+1 
+Explicacion: <!-- 147 Incompleta.-->
 
 148. Las técnicas write-through y write-back están relacionadas con 
 	- (x) coherencia cache 
@@ -1088,11 +1065,7 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
  	- ( ) arbitraje de buses 
 	- ( ) etapas de la unidad de control 
 
-149. Para diseñar una memoria con ancho de palabra k·m (y mismo no palabras que los módulos) a partir de módulos con ancho de palabra m, se utilizan k módulos 
-	- ( ) repartiendo las líneas de datos entre los k módulos: el primero se conecta a D0...Dk-1, el segundo a Dk...D2k-1, etc 
-	- ( ) repartiendo las líneas de dirección: el 1o se conecta a A0...Ak-1, el 2o a Ak...A2k-1, etc 
-	- (x) repartiendolíneasdatos:el1oseconecta a D0...Dm-1, el 2o a Dm...D2m-1, etc 
-	- ( ) d.repartiendo líneas dirección: el 1o a A0...Am-1, el 2o a Am...A2m-1, etc 
+Explicacion: <!-- 149 Repetida.-->
 
 150. En un sistema con direcciones de 32bits, memoria de bytes, cache de 1MB asociativa por conjuntos de 4 vías y líneas de 64B, el campo etiqueta en el formato de dirección cache es de 
 	- ( ) 16bits 
@@ -1112,7 +1085,7 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 	- ( ) En el direccionamiento implícito no se indica la ubicación del operando 
 	- ( ) En el direccionamiento inmediato el dato se encuentra en la propia instrucción 
 
-153. ¿Cuál de las siguientes afirmaciones sobre el direccionamiento absoluto es falsa? 
+153. ¿Cuál de las siguientes afirmaciones sobre el direccionamiento absoluto es **falsa**? 
 	- ( ) La instrucción contiene la dirección de memoria en la que se encuentra el objeto. 
 	- ( ) El objeto está en una posición de la memoria 
 	- ( ) El rango de posiciones direccionables queda limitado por el tamaño del campo de direccionamiento. 
@@ -1124,7 +1097,7 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 	- (x) Insertan de forma distinta el bit más a la izquierda
 	- ( ) Ninguna, la diferencia es entre los desplazamientos a la izquierda 
 
-155. La instrucción seta %al (seta significa set if above): 
+155. La instrucción `seta %al` (`seta` significa `set if above`): 
 	- (x) Pone AL a 1 si CF=0 y ZF=0 
 	- ( ) Pone AL a 1 si CF=0 o ZF=0 
 	- ( ) Pone AL a 1 si CF=1 y ZF=0 
@@ -1137,10 +1110,10 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 	- ( ) "de fila a columna" (file-to-column) 
 
 157. ¿Cuál sería el "equivalente x86-64" del "pseudo-código C" rcx = ((int*)rax)[rcx]? 
-	- (x) mov (%rax,%rcx,4),%rcx 
-	- ( ) lea (%rax,%rcx,4),%rcx 
-	- ( ) lea (%rax,4,%rcx),%rcx 
-	- ( ) mov (%rax,4,%rcx),%rcx 
+	- (x) `mov (%rax,%rcx,4),%rcx `
+	- ( ) `lea (%rax,%rcx,4),%rcx` 
+	- ( ) `lea (%rax,4,%rcx),%rcx` 
+	- ( ) `mov (%rax,4,%rcx),%rcx`
 
 158. El direccionamiento directo a memoria utiliza 
 	- ( ) un registro. 
@@ -1148,7 +1121,7 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 	- ( ) un registro y un desplazamiento contenidos en la propia instrucción.
 	- (x) un desplazamiento. 
 
-159. ¿Cuál de las siguientes afirmaciones es falsa? 
+159. ¿Cuál de las siguientes afirmaciones es **falsa**? 
 	- ( ) Los programas necesitan una forma de pasar parámetros a las subrutinas y de recibir las salidas de vuelta.
 	- ( ) Las subrutinas necesitan ser capaces de reservar espacio en memoria para las variables locales sin sobrescribir ningún dato usado por el programa que hace la llamada 
 	- (x) Las subrutinas necesitan recibir parámetros desde el programa que hace la llamada que indiquen qué registros pueden alterar y cuáles no. 
@@ -1160,9 +1133,9 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 	- (x) Cuanto mayor sea la relación entre el tiempo de ejecución de una instrucción sin segmentar y el tiempo de una etapa en el procesador segmentado, mayor será la ganancia máxima que se puede obtener 
 	- ( ) Cuando el número de instrucciones ejecutadas en un procesador segmentado crece, la ganancia máxima que se puede obtener tiende a 1 
 
-161. Respecto a la segmentación, ¿cuál de las siguientes afirmaciones es falsa? 
+161. Respecto a la segmentación, ¿cuál de las siguientes afirmaciones es **falsa**? 
 	 - ( ) La técnica de register forwarding habilita una serie de caminos (buses) que se añaden al cauce para permitir que los resultados de una etapa pasen como entradas a la etapa donde son necesarias. 
-	- ( ) La reorganización del código y la introducción de instrucciones nop permite evitar dependencias de datos. 
+	- ( ) La reorganización del código y la introducción de instrucciones `nop` permite evitar dependencias de datos. 
 	- (x) Retrasar la fase de decisión saltar/no saltar de las instrucciones de salto condicional contribuye a mejorar el rendimiento del procesador. 
 	- ( ) Cuantas más etapas tenga un cauce, más instrucciones se estarán ejecutando en distintas fases y más posibilidades se presentan de que existan riesgos entre ellas.
 
@@ -1198,7 +1171,7 @@ Explicacion: <!-- 162 Repetida.-->
 	- ( ) Depende del tamaño del bus de direcciones. 
 	- ( ) Ambos podrán acceder a la misma cantidad de memoria.
 
-168. ¿Cuál de las siguientes afirmaciones es incorrecta? 
+168. ¿Cuál de las siguientes afirmaciones es **incorrecta**? 
 	- ( ) La consulta del estado del dispositivo por parte de la CPU se suele hacer con E/S programada (salvo con dispositivos que siempre están listos para transferir) y con E/S por IRQ (cuando se usa polling para determinar el origen de la IRQ) 
 	- ( ) Se suele avisar a la CPU (mediante una IRQ) de que debe realizar alguna tarea, tanto en E/S por IRQ (obligatoriamente, la tarea es la transferencia) como en E/S por DMA (optativamente, el controlador DMA puede avisar de que acabó) 
 	- (x) Sólo E/S por DMA libera a la CPU de realizar la consulta de estado del dispositivo de E/S 
@@ -1212,10 +1185,10 @@ Explicacion: <!-- 162 Repetida.-->
 	- ( ) E/S por DMA 
 
 170. Un procesador con E/S en el mapa de memoria tiene un bus de direcciones de 10 líneas y uno de datos de 8. El mapa de memoria tiene 512 posiciones para instrucciones, 256 para datos y 256 para E/S, en ese orden. Los rangos de direcciones para esas tres zonas serán: 
-	- (x) 000a1FF,200a2FFy300a3FF. 
-	- ( ) 000a5FF,600a7FFy800a9FF. 
+	- (x) 0x0 a 1FF, 200 a 2FF y 300 a 3FF. 
+	- ( ) 000 a 5FF, 600 a 7FF y 800 a 9FF. 
 	- ( ) 000 a 7FF, 800 a BFF y C00 a FFF. 
-	- ( ) 000a9FF,A00aCFFyD00aFFF. 
+	- ( ) 000 a 9FF, A00 a CFF y D00 a FFF. 
 
 171. El instrumento GIADA de la sonda espacial ROSETTA (diseñado en Granada) está basado en un microprocesador 8086 y el siguiente mapa de memoria: 
 RAM volátil: 00000 - 0FFFF 
@@ -1245,13 +1218,13 @@ ROM: F0000 - FFFFF
 	- (x) Que dispositivos más pequeños y rápidos sirvan de cache para dispositivos más grandes y lentos 
 	- ( ) Que dispositivos más grandes y lentos sirvan de cache para dispositivos más pequeños y rápidos 
 
-175. ¿Cuál de las siguientes afirmaciones acerca de las memorias SRAM es falsa? 
+175. ¿Cuál de las siguientes afirmaciones acerca de las memorias SRAM es **falsa**? 
 	- ( ) Los datos almacenados se mantienen por un tiempo indefinido mientras se mantenga la alimentación. 
 	- ( ) El número de transistores necesario para implementar cada celda es mayor que en las memorias RAM dinámicas 
 	- (x) Las operaciones de lectura son destructivas 
 	- ( ) Son más veloces que las memorias RAM dinámicas
 
-176. Se dispone de un circuito integrado que actúa como módulo básico de memoria de 8K × 4. ¿Qué circuitos necesitamos para construir una memoria de 17K × 8? 
+176. Se dispone de un circuito integrado que actúa como módulo básico de memoria de 8K × 4. ¿Qué circuitos necesitamos para construir una memoria de 16K × 8? 
 	- ( ) 2 módulos de memoria 
 	- ( ) 2 módulos de memoria y un decodificador. 
 	- ( ) 4 módulos de memoria.
@@ -1269,7 +1242,7 @@ ROM: F0000 - FFFFF
 	- ( ) 16B 
 	- ( ) Ninguno de los anteriores 
 
-179. Un sistema tiene una cache asociativa por conjuntos de 2-vias con 16 conjuntos y líneas de 64. ¿A qué conjunto le corresponde el byte con dirección 0xdeadbeef? 
+179. Un sistema tiene una cache asociativa por conjuntos de 2-vias con 16 conjuntos y líneas de 64B. ¿A qué conjunto le corresponde el byte con dirección `0xdeadbeef`? 
 	- ( ) 7 
 	- (x) 11 
 	- ( ) 13 
@@ -1287,7 +1260,7 @@ ROM: F0000 - FFFFF
 	- ( ) en memoria, en la dirección indicada 
 	- ( ) en la pila 
 
-182. Una instrucción máquina del tipo "Add M,R" podría formar parte del repertorio de 
+182. Una instrucción máquina del tipo `Add M,R` podría formar parte del repertorio de 
 	- ( ) una máquina pila 
 	- ( ) una máquina de acumulador 
 	- ( ) una máquina con arquitectura R/R 
@@ -1301,14 +1274,13 @@ ROM: F0000 - FFFFF
 	- ( ) `short *`
 	- ( ) `unsigned char *` 
 
-184. Se puede describir paso a paso la ejecución de la instrucción add (%rbx, %rdx,4), %eax; de la siguiente manera (marcar la opción FALSA): 
+184. Se puede describir paso a paso la ejecución de la instrucción `add (%rbx, %rdx,4), %eax`; de la siguiente manera (marcar la opción **falsa**): 
 	- ( ) primero: se calcula la dirección efectiva EA=RBX+RDX*4a 
 	- (x) segundo: se leen ocho bytes a partir de dicha dirección de memoria 
 	- ( ) tercero: se yuxtaponen los bytes leídos de forma que el de dirección más baja ("el primero leído") sea el menos significativo y el de dirección más alta ("el último leído") sea el más significativo 
 	- ( ) cuarto: se suma el valor obtenido con el registro EAX 
-185. ¿Qué valor contendrá el registro rdx tras ejecutar las dos instrucciones siguientes? 
-movq $-1, %rdx 
-movl $1, %edx 
+185. ¿Qué valor contendrá el registro `rdx` tras ejecutar las dos instrucciones siguientes? 
+<code>movq $-1, %rdx<br> movl $1, %edx </code>
 	- ( ) 0xFFFF FFFF FFFF 0001 
 	- ( ) 0xFFFF FFFF 0000 0001 
 	- ( ) 0xFFFF 0000 0000 0001 
@@ -1353,7 +1325,7 @@ Se puede adivinar que:
 	- ( ) ninguna de las respuestas anteriores es correcta 
 193. ¿Qué conjunto de componentes permite construir una memoria 256Mx32? (sin que sobren componentes) 
 	- ( ) 16 chips 64Mx4 
-	- (x) 32 chips 64Mx4 (256*32==64*4*32) 
+	- (x) 32 chips 64Mx4 ( \\(256\times 32=64\times 4\times 32\\) ) 
 	- ( ) 16 chips 64Mx16 
 	- ( ) Ninguna de las anteriores 
 194. ¿Cuántas líneas de dirección (patillas) son necesarias para direccionar un chip de memoria DRAM de 256K x 4? 
@@ -1371,11 +1343,11 @@ Se puede adivinar que:
 	- ( ) Compilador 
 	- (x) Memoria cache 
 	- ( ) Lenguaje ensamblador 
-197. Si el registro rax contiene x, la sentencia en C x &= 0x1; se traducirá a ensamblador como: 
-	- (x) andq $1, %rax 
-	- ( ) orq $0x1, %rax 
-	- ( ) shrq %rax 
-	- ( ) sarq %rax 
+197. Si el registro `rax` contiene `x`, la sentencia en `C x &= 0x1`; se traducirá a ensamblador como: 
+	- (x) `andq $1, %rax `
+	- ( ) `orq $0x1, %rax `
+	- ( ) `shrq %rax `
+	- ( ) `sarq %rax `
 198. Para crear espacio en la pila para variables locales sin inicializar suele realizarse la siguiente operación 
 	- ( ) Restar una cantidad positiva a `rbp`. 
 	- ( ) Sumar una cantidad positiva a `rbp`. 
@@ -1401,7 +1373,7 @@ Se puede adivinar que:
 	- ( ) Puede ejecutarse directamente. 
 	- ( ) Contiene las direcciones definitivas de las variables globales. 
 
-202. ¿Cuál de las siguientes sentencias sobre la unidad de control es FALSA? 
+202. ¿Cuál de las siguientes sentencias sobre la unidad de control es **falsa**? 
 	- ( ) Cuanto más horizontal es la microprogramación, más largas son las microinstrucciones 
 	- ( ) Debido al pequeño número de operaciones simples, la sección de control de un procesador RISC puede ser cableada en lugar de microprogramada
 	- (x) El programador de lenguaje ensamblador necesita conocer la microarquitectura del ordenador 
@@ -1423,7 +1395,7 @@ Se puede adivinar que:
 	- ( ) 10 
 	- ( ) 4 
 	- ( ) 40 
-	- (x) 2,5(10/4) 
+	- (x) 2,5 \\((10/4)\\) 
 
 206. ¿Cuál de las siguientes afirmaciones es cierta? 
 	- ( ) La E/S en memoria emplea la patilla IO/M#.
@@ -1438,7 +1410,7 @@ Se puede adivinar que:
 	- ( ) A medida que nos alejamos del procesador, el tamaño de memoria disminuye. 
 
 209. ¿Cuántas líneas de dirección (patillas) son necesarias para direccionar un chip de memoria DRAM de 4096 x 4? 
-	- (x) 6 \\(2^{12}\\) 
+	- (x) 6 \\((2^{12})\\) 
 	- ( ) 10 
 	- ( ) 11 
 	- ( ) 12
@@ -2004,7 +1976,7 @@ Explicacion: La orden distinta es `add $0, %[x]`, que se usa en la versión "ofi
     - ( ) En uno interpreta como negativo, en otro como positivo.
     - ( ) En uno los 32 bits superiores son `0xFFFF FFFF`, en el otro no.
 
-257. En la práctica _media_ se suma una lista de 32 enteros de 4 B con signo para producir una media y un resto usando la instrucción `IDIV`. ¿Cuál de las siguientes afirmaciones es falsa?
+257. En la práctica _media_ se suma una lista de 32 enteros de 4 B con signo para producir una media y un resto usando la instrucción `IDIV`. ¿Cuál de las siguientes afirmaciones es **falsa**?
 
 
     - ( ) `IDIV` produce el mismo cociente que el operador `/` en lenguaje C.
