@@ -34,10 +34,10 @@ Note that the correct answer is specified with an **x** ( x or X, upper or lower
 2. **Multiple selection question**:
 ```text
 3. What are the test automation frameworks developed by MaxSoft?
-    - [x] IntelliAPI
-    - [x] WebBot
-    - [ ] Gauge
-    - [ ] Selenium
+    %- [x] IntelliAPI
+    %- [x] WebBot
+    %- [ ] Gauge
+    %- [ ] Selenium
 ```
 Very similar to the previous one but this type of question allows you to select more than one at a time, they must be in square brackets with an **x** to the correct answers. The result to these types of questions is prorated, that is, you must select only the correct ones so that that question is interpreted as correct.
 
