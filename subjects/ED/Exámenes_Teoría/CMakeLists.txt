@@ -16,3 +16,6 @@ add_executable(2023_Enero_Ej4
 
 add_executable(2023_Enero_Ej5
         2023_Enero_Ej5.cpp)
+
+add_executable(2022_Enero_Ej2
+        2022_Enero_Ej2.cpp)
