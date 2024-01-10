@@ -37,3 +37,15 @@ add_executable(2021_Enero_Ej3
 
 add_executable(2021_Enero_Ej4
         2021_Enero_Ej4.cpp)
+
+add_executable(2023_Febrero_Ej2
+        2023_Febrero_Ej2.cpp)
+
+add_executable(2023_Febrero_Ej3
+        2023_Febrero_Ej3.cpp)
+
+add_executable(2023_Febrero_Ej4
+        2023_Febrero_Ej4.cpp)
+
+add_executable(2023_Febrero_Ej5
+        2023_Febrero_Ej5.cpp)
