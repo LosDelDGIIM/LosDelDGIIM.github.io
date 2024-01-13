@@ -66,11 +66,20 @@ function styleSubjects(){
     });
 }
 
+function aniade_blank(){
+    var yearList = document.getElementById('year-list');
+    var anchors = yearList.getElementsByTagName('a');
+    for (var i=0; i<anchors.length; i++){
+        anchors[i].setAttribute('target', '_blank');
+    }
+}
+
 
 
 
 // Starts every function
 function start(){
+    aniade_blank();
     buttons();
     styleYears();
     styleSubjects();
