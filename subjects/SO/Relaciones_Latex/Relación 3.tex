@@ -1,0 +1,544 @@
+\section{Gestión de Memoria}
+
+\begin{ejercicio}
+Si un computador no posee hardware de reubicación, e implementa intercambio (\textit{swapping}), entonces el gestor de memoria necesita utilizar un cargador para recalcular las direcciones físicas de un proceso. ¿Sería posible para el sistema de intercambio reubicar los segmentos de datos y pila? Explique cómo funcionaría este sistema, o si es imposible que funcione.
+\end{ejercicio}
+
+\begin{ejercicio}
+Considere un sistema con un espacio lógico de memoria de 128K páginas (máximo espacio de memoria virtual) con 8 KB cada una, una memoria física de 64 MB y direccionamiento al nivel de byte. ¿Cuántos bits hay en la dirección lógica? ¿Y en la física?\\
+
+Calculemos en primer lugar cuántas palabras se pueden direccionar en la memoria física:
+\begin{equation*}
+    2^6\cdot 2^{20} \cdot \frac{1~\text{palabra}}{1~B} = 2^{26}~\text{palabras}
+\end{equation*}
+Por tanto, necesitamos 26 bits para direccionar la memoria física.\\
+
+Ahora, para calcular el número de bits necesarios para direccionar la memoria virtual.
+Cada página es de $8~KB=2^{13}$, por lo que el desplazamiento ocupa 13 bits.
+Respecto a la página, como hay $2^{17}$ páginas, necesitamos 17 bits para direccionarlas,
+por lo que en total necesitamos 30 bits para direccionar la memoria virtual.
+\end{ejercicio}
+
+\begin{ejercicio}
+Considérese un sistema con memoria virtual en el que el procesador tiene una tasa de utilización del 15\% y el dispositivo de paginación está ocupado el 97\% del tiempo, ¿qué indican estas medidas? ¿Y si con el mismo porcentaje de uso del procesador el porcentaje de uso del dispositivo de paginación fuera del 15\%?
+\end{ejercicio}
+
+\begin{ejercicio}
+Sea un sistema de memoria virtual paginada con direcciones lógicas de 32 bits que
+proporciona un espacio virtual de \(2^{20}\) páginas y con una memoria física de
+32 Mbytes
+¿cuánta memoria requiere en total un proceso que tenga 453Kbytes,
+incluida su tabla de páginas cuyas entradas son de 32 bits?\\
+
+    Calculemos el tamaño de página del sistema. Como, de los 32 bits de la dirección lógica,
+    20 son para la página, tenemos que el tamaño de página es de $2^{12}~B=4~KB$. Veamos ahora cuántas
+    páginas ocupa el proceso:
+    \begin{equation*}
+        453~KB \cdot \frac{1~\text{página}}{4~KB} = 113.25~\text{páginas}
+    \end{equation*}
+    Es decir, necesita 114 páginas. Por tanto, el tamaño de la tabla de páginas es de $114\cdot 32~b=114\cdot 4~B=456~B$.
+    Por tanto, el tamaño total del proceso es de:
+    \begin{equation*}
+        456~B + 114~\text{páginas} \cdot \frac{2^{12}~B}{1~\text{página}} = 456~B + 114\cdot 2^{12}~B = 456~B + 466944~B = 467400~B
+    \end{equation*}
+\end{ejercicio}
+
+\begin{ejercicio}
+Un ordenador tiene 4 marcos de página. En la siguiente tabla se muestran: el tiempo de carga, el tiempo del último acceso y los bits R y M para cada página (los tiempos están en tics de reloj). Responda a las siguientes cuestiones justificando su respuesta.
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Página & Tiempo de carga & Tiempo última referencia & R (Referencia) & M (Modificación) \\
+\hline
+0 & 126 & 279 & 1 & 0 \\
+1 & 230 & 235 & 1 & 0 \\
+2 & 120 & 272 & 1 & 1 \\
+3 & 160 & 200 & 1 & 1 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{itemize}
+    \item ¿Qué página se sustituye si se usa el algoritmo FIFO?
+    \item ¿Qué página se sustituye si se usa el algoritmo LRU?
+\end{itemize}
+\end{ejercicio}
+
+\begin{ejercicio}
+¿Depende el tamaño del conjunto de trabajo de un proceso directamente del
+tamaño del programa ejecutable asociado a él? Justifique su respuesta.\\
+
+No, ya que el conjunto de trabajo depende de las páginas que se hayan referenciado en un determinado momento.
+Si, por ejemplo, en dicho momento se está ejecutando un bucle, puede ser que el conjunto de trabajo sea muy pequeño,
+porque dicho bucle se encuentre entero en la misma página.
+\end{ejercicio}
+
+\begin{ejercicio}
+¿Por qué una cache (o la TLB) que se accede con direcciones virtuales puede producir
+incoherencias y requiere que el sistema operativo la invalide en cada cambio de
+contexto y, en cambio, una que se accede con direcciones físicas no lo requiere?
+\end{ejercicio}
+
+\begin{ejercicio}
+Un ordenador proporciona un espacio de direccionamiento lógico (virtual) a cada
+proceso de 65536 bytes de espacio dividido en páginas de 4096 bytes.
+Cierto programa tiene un tamaño de región de texto de 32768 bytes, un
+tamaño de región de datos de 16386 bytes y tamaño de región de pila de 15878 bytes.
+¿Cabría este programa en el espacio de direcciones? (Una página no puede ser utilizada
+por regiones distintas). Si no es así, ¿cómo podríamos conseguirlo, dentro del
+esquema de paginación?\\
+
+    Calculamos cuántas páginas ocupa cada región:
+    \begin{itemize}
+        \item Región de texto: $32768~B \cdot \frac{1~\text{página}}{4096~B} = 8~\text{páginas}$
+        \item Región de datos: $16386~B \cdot \frac{1~\text{página}}{4096~B} \approx 4.0004~\text{páginas}$
+        \item Región de pila: $15878~B \cdot \frac{1~\text{página}}{4096~B} \approx 3.8764~\text{páginas}$
+    \end{itemize}
+
+    Por tanto, en total se necesitan $8+5+4=17$ páginas. Como cada página ocupa $4096~B$, el tamaño total del programa es de
+    $17\cdot 4096~B = 69632~B$. Por tanto, vemos claramente que el programa no cabe en el espacio de direcciones.\\
+
+    El espacio que en realidad necesitamos es de $32768~B + 16386~B + 15878~B = 65032~B$, por lo que
+    defectivamente cabe en el espacio de direcciones. El problema con el que nos hemos encontrado 
+    es el de la fragmentación interna. Para solucionarlo, la mejor solución
+    es disminuir el tamaño de página, de forma que la fragmentación interna sea menor.
+\end{ejercicio}
+
+\begin{ejercicio}
+Analice qué puede ocurrir en un sistema que usa paginación por demanda si se recompila un programa mientras este está ejecutando. Proponga soluciones a los problemas que pueden surgir en esta situación.
+\end{ejercicio}
+\begin{ejercicio}
+Para cada uno de los siguientes campos de la tabla de páginas, se debe explicar si es la MMU o el sistema operativo quién los lee y escribe (en este último caso si se activa o desactiva), y en qué momentos:
+\begin{enumerate}
+    \item Número de marco
+    \item Bit de presencia
+    \item Bit de protección
+    \item Bit de modificación
+    \item Bit de referencia
+\end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+Suponga que la tabla de páginas para el proceso actual se parece a la de la figura. Todos los números son decimales, la numeración comienza en todos los casos desde cero, y todas las direcciones de memoria son direcciones en bytes. El tamaño de página es de 1024 bytes.
+
+\begin{center}
+    \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    Nº Página & Bit de validez & Bit de referencia & Bit de modificación & Nº Marco \\
+    \hline
+    0 & 0 & 1 & 0 & 4 \\
+    1 & 1 & 1 & 0 & 7 \\
+    2 & 1 & 0 & 1 & 1 \\
+    3 & 0 & 0 & 0 & - \\
+    4 & 1 & 0 & 0 & 2 \\
+    5 & 1 & 1 & 1 & 0 \\
+    \hline
+    \end{tabular}
+    \end{center}
+
+    ¿Qué direcciones físicas, si existen, corresponderán con cada una de las siguientes direcciones virtuales? (no intente manejar ninguna falta de página, si las hubiese)
+    \begin{enumerate}
+        \item 999
+        
+        En primer, buscamos en qué pagina se encuentra la dirección virtual. Como $999=0\cdot 1024 + 999$, se encuentra en la página 0.
+        Ahora, como el bit de validez es 0, no se encuentra en memoria, por lo que no existe dirección física para ella.
+        
+        \item 2121
+        
+        En primer, buscamos en qué pagina se encuentra la dirección virtual. Como $2121=2\cdot 1024 + 73$, se encuentra en la página 2.
+        En este caso si tiene el bit de validez activado (1), y su marco es el 1.
+        Por tanto, la dirección física es $1\cdot 1024 + 73 = 1097$.
+
+        \item 5400
+        
+        En primer, buscamos en qué pagina se encuentra la dirección virtual. Como $5400=5\cdot 1024 + 280$, se encuentra en la página 5.
+        En este caso si tiene el bit de validez activado (1), y su marco es el 0.
+        Por tanto, la dirección física es $0\cdot 1024 + 280 = 280$.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+Sea la siguiente secuencia de números de página referenciados: 1,2,3,4,1,2,5,1,2,3,4,5. Calcule el número de faltas de página que se producen utilizando el algoritmo FIFO y considerando que el número de marcos de página de que disfruta nuestro proceso es de:
+\begin{enumerate}
+    \item 3 marcos
+    
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c||c|c|c|c|c|c|c|c|c|c|c|c|}
+            \hline
+            Pag. Referenciada & 1 & 2 & 3 & 4 & 1 & 2 & 5 & 1 & 2 & 3 & 4 & 5 \\ \hline \hline
+            Está 1            & 1 & 1 & 1 & - & 1 & 1 & 1 & 1 & 1 & - & - & - \\ \hline
+            Está 2            & - & 2 & 2 & 2 & - & 2 & 2 & 2 & 2 & 2 & - & - \\ \hline
+            Está 3            & - & - & 3 & 3 & 3 & - & - & - & - & 3 & 3 & 3 \\ \hline
+            Está 4            & - & - & - & 4 & 4 & 4 & - & - & - & - & 4 & 4 \\ \hline
+            Está 5            & - & - & - & - & - & - & 5 & 5 & 5 & 5 & 5 & 5 \\ \hline
+            Falta             & $\ast$ & $\ast$ & $\ast$ & $\ast$ & $\ast$ & $\ast$ & $\ast$ &   &   & $\ast$ & $\ast$ &  \\ \hline
+        \end{tabular}
+        \caption{Algoritmo FIFO con 3 marcos}
+    \end{table}
+    En este caso, el número de faltas de página es 9.
+
+
+    \item 4 marcos
+    
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c||c|c|c|c|c|c|c|c|c|c|c|c|}
+            \hline
+            Pag. Referenciada & 1 & 2 & 3 & 4 & 1 & 2 & 5 & 1 & 2 & 3 & 4 & 5 \\ \hline \hline
+            Está 1            & 1 & 1 & 1 & 1 & 1 & 1 & - & 1 & 1 & 1 & 1 & - \\ \hline
+            Está 2            & - & 2 & 2 & 2 & 2 & 2 & 2 & - & 2 & 2 & 2 & 2 \\ \hline
+            Está 3            & - & - & 3 & 3 & 3 & 3 & 3 & 3 & - & 3 & 3 & 3 \\ \hline
+            Está 4            & - & - & - & 4 & 4 & 4 & 4 & 4 & 4 & - & 4 & 4 \\ \hline
+            Está 5            & - & - & - & - & - & - & 5 & 5 & 5 & 5 & - & 5 \\ \hline
+            Falta             & $\ast$ & $\ast$ & $\ast$ & $\ast$ &   &   & $\ast$ & $\ast$ & $\ast$ & $\ast$ & $\ast$ & $\ast$ \\ \hline
+        \end{tabular}
+        \caption{Algoritmo FIFO con 4 marcos}
+    \end{table}
+    En este caso, el número de faltas de página es 10.
+\end{enumerate}
+¿Se corresponde esto con el comportamiento intuitivo de que disminuirá el número de faltas de página al aumentar el tamaño de memoria de que disfruta el proceso?\\
+
+Claramente no, ya que en el segundo caso tenemos más faltas de página que en el primero aun habiendo aumentado el número de marcos.
+Esto se debe a que dicha regla no es cierta siempre, sino que depende de la secuencia de páginas referenciadas. Por norma general, sí que es cierta.
+\end{ejercicio}
+
+
+
+\begin{ejercicio}
+    ¿Por qué la localidad no es un factor que se tiene en cuenta en los sistemas con
+segmentación?
+\end{ejercicio}
+
+
+\begin{ejercicio}
+    En la gestión de memoria en un sistema paginado, ¿qué estructura/s de datos necesitará
+mantener el Sistema Operativo para administrar el espacio libre?
+
+    En paginación, se usan tres estructuras de datos:
+    \begin{itemize}
+        \item {Tabla de páginas}
+        \item {Tabla de marcos de página}
+        \item {Tabla de ubicación en disco}
+    \end{itemize}
+\end{ejercicio}
+
+
+\begin{ejercicio}
+    ¿Cuánto puede avanzar como máximo la aguja del algoritmo de reemplazo de páginas
+del reloj durante la selección de una página?\\
+
+    Como máximo, puede avanzar hasta la página que se está referenciando en ese momento, es decir,
+    tantos pasos como marcos de página haya. Suponiendo que todos los marcos tienen el bit de referencia
+    $R=1$ activado, al avanzar la aguja se irán desactivando los bits de referencia de los marcos que se
+    vayan encontrando, hasta que se encuentre el primero, que ya lo había desactivado, por lo que se
+    detendrá y esa será la página seleccionada para ser sustituida.
+\end{ejercicio}
+
+
+
+\begin{ejercicio} \label{ej:Rel3_Ej16}
+    Situándonos en un sistema paginado, donde cada proceso tiene asignado un número fijo
+de marcos de páginas. Supongamos la siguiente situación: existe un proceso con 7
+páginas y tiene asignados 5 marcos de página. Indica el contenido de la memoria
+después de cada referencia a una página si como algoritmo de sustitución de página
+utilizamos el LRU (la página no referenciada hace más tiempo). La secuencia de
+referencias es la indicada en la Tabla \ref{tab:Rel3_Ej16}.
+
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{c||c|c|c|c|c|c|c|c|c|c|c|c|}
+        Referencias                       & 2 & 1 & 3 & 4 & 1 & 5 & 6 & 4 & 5 & 7 & 4 & \multicolumn{1}{c|}{2} \\ \hline \hline
+        \multirow{5}{*}{Marcos de página} & 2 & 2 & 2 & 2 & 2 & 2 & 6 & 6 & 6 & 6 & 6 & \multicolumn{1}{c|}{6} \\ \cline{2-13} 
+                                        &   & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & \multicolumn{1}{c|}{2} \\ \cline{2-13} 
+                                        &   &   & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 7 & 7 & \multicolumn{1}{c|}{7} \\ \cline{2-13} 
+                                        &   &   &   & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & \multicolumn{1}{c|}{4} \\ \cline{2-13} 
+                                        &   &   &   &   &   & 5 & 5 & 5 & 5 & 5 & 5 & \multicolumn{1}{c|}{5} \\ \hline
+        Falta de Página                   & $\ast$ & $\ast$ & $\ast$ & $\ast$ &   & $\ast$ & $\ast$ &   &   & $\ast$ &   & $\ast$                     
+        \end{tabular}
+        \caption{Ejercicio \ref{ej:Rel3_Ej16}}
+        \label{tab:Rel3_Ej16}
+    \end{table}
+    
+    Se producen 8 faltas de página.
+
+\end{ejercicio}
+
+
+
+\begin{ejercicio}
+    ¿Cuál es la ventaja del algoritmo de frecuencia de faltas de página (FFP) sobre el algoritmo basado en el
+modelo del conjunto de trabajo utilizando el tamaño de ventana $w$? ¿Cuál es la
+desventaja?\\
+
+    La ventaja del algoritmo de faltas de página es que, en el caso de tener muchos marcos de página que lleven tiempo sin referenciarse,
+    el algoritmo liberará bastantes marcos en la siguiente falta de página; mientras que si tenemos pocos marcos de página usados,
+    el algoritmo incrementará el número de marcos de página, logrando siempre un equilibrio.
+    Además, es un modelo bastante más sencillo y menos costoso,
+    ya que tan solo se llama cuando se produce una falta de página, mientras que en el
+    modelo del conjunto de trabajo se llama cada vez que se referencia una página.
+
+
+    La desventaja es que en ciertos momentos, tenemos cargadas en memoria páginas que no se usan,
+    cosa que evitamos con el algoritmo basado en los conjuntos de trabajo.
+\end{ejercicio}
+
+
+
+\begin{ejercicio} \label{ej:Rel3_Ej18}
+    Supongamos que tenemos un proceso ejecutándose en un sistema paginado, con
+gestión de memoria basada en el algoritmo de sustitución frecuencia de faltas de
+página. El proceso tiene 5 páginas ( 0, 1, 2, 3, 4 ). Represente el contenido de la
+memoria real para ese proceso (es decir, indique que páginas tiene cargadas en cada
+momento) y cuándo se produce una falta de página. Suponga que, inicialmente, está
+cargada la página 2, el resto de páginas están en memoria secundaria y que no hay
+restricciones en cuanto al número de marcos de página disponibles. La cadena de
+referencias a página es: 0 3 1 1 1 3 4 4 2 2 4 0 0 0 0 3 y el parámetro es $\tau=3$.
+
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+            Pag. Referenciada & 0 & 3 & 1 & 1 & 1 & 3 & 4 & 4 & 2 & 2 & 4 & 0 & 0 & 0 & 0 & 3 \\ \hline \hline
+            Está 0            & 0 & 0 & 0 & 0 & 0 & 0 & - & - & - & - & - & 0 & 0 & 0 & 0 & 0 \\ \hline
+            Está 1            & - & - & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 \\ \hline
+            Está 2            & 2 & 2 & 2 & 2 & 2 & 2 & - & - & 2 & 2 & 2 & 2 & 2 & 2 & 2 & 2 \\ \hline
+            Está 3            & - & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 \\ \hline
+            Está 4            & - & - & - & - & - & - & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 \\ \hline \hline
+            Falta             & * & * & * &   &   &   & * &   & $\red{\ast}$ &   &   &    &   &   &   & 
+        \end{tabular}
+        \caption{Ejercicio \ref{ej:Rel3_Ej18}}
+        \label{tab:Rel3_Ej18}
+    \end{table}
+
+    Notemos que en $\red{(\ast)}$ no se ha eliminado ninguna página, ya que la anterior falta de página había ocurrido en $t-2$,
+    y la ventana es de $\tau=3$.
+\end{ejercicio}
+
+
+
+\begin{ejercicio} \label{ej:Rel3_Ej19}
+    Describa el funcionamiento del algoritmo de sustitución basado en la frecuencia de
+faltas de página, con los siguientes datos: 4 marcos de página, en $t = 0$ la memoria
+contiene a la página 2. El tamaño de la ventana es $\tau= 3$ y se produce la secuencia de
+referencias de páginas, 1 4 2 2 2 4 5 5 3 3 5 1 1 1 1 4
+
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+        Pag. Referenciada & 1 & 4 & 2 & 2 & 2 & 4 & 5 & 5 & 3 & 3 & 5 & 1 & 1 & 1 & 1 & 4 \\ \hline \hline
+        Marco 0           & 1 & 1 & 1 & 1 & 1 & 1 & 5 & 5 & 5 & 5 & 5 & $\red{!}$ \\ \hline
+        Marco 1           & 2 & 2 & 2 & 2 & 2 & 2 & 2 & 2 & 2 & 2 & 2 & $\red{!}$  \\ \hline
+        Marco 2           & - & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & $\red{!}$  \\ \hline
+        Marco 3           & - & - & - & - & - & - & - & - & 3 & 3 & 3 & $\red{!}$\\ \hline \hline
+        Falta de Página   & * &   &   &   &   &   & * &   & $\red{\ast}$ &   &   & $\red{\ast}$
+        \end{tabular}
+        \caption{Ejercicio \ref{ej:Rel3_Ej19}}
+        \label{tab:Rel3_Ej19}
+    \end{table}
+
+    Notemos que en $\red{(\ast)}$ no se ha eliminado ninguna página, ya que no había transcurrido el tiempo suficiente
+    para que se cumpliera la condición de la ventana $\tau=3$. En el último caso,
+    cabe destacar que no hay marco de página disponible para la página 1, por lo que se produce una falta de página
+    y el proceso se bloquea.
+\end{ejercicio}
+
+
+\begin{ejercicio} \label{ej:Rel3_Ej20}
+    Describa el funcionamiento del algoritmo de sustitución global basado en el algoritmo
+basado en el modelo del conjunto de trabajo, con los siguientes datos: 4 marcos de
+página, en $t= 0$ la memoria contiene a la página 2 que se referenció en dicho instante de
+tiempo. El tamaño de la ventana es $\tau=3$ y se produce la secuencia de referencias de
+páginas, 1 4 4 4 2 4 1 1 3 3 5 5 5 5 1 4
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+        Pag. Referenciada & 1 & 4 & 4 & 4 & 2 & 4 & 1 & 1 & 3 & 3 & 5 & 5 & 5 & 5 & 1 & 4 \\ \hline \hline
+        Marco 0           & 1 & 1 & 1 & 1 & 2 & 2 & 2 & - & 3 & 3 & 3 & 3 & 3 & - & 1 & 1 \\ \hline
+        Marco 1           & 2 & 2 & 2 & - & - & - & 1 & 1 & 1 & 1 & 1 & - & - & - & - & 4 \\ \hline
+        Marco 2           & - & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & - & 5 & 5 & 5 & 5 & 5 & 5 \\ \hline
+        Marco 3           &   &   &   &   &   &   &   &   &   &   &   &   &   &   &   &   \\ \hline \hline
+        Falta de Página   & * &   &   &   & * &   & * &   & * &   & * &   &   &   & * & *
+        \end{tabular}
+        \caption{Ejercicio \ref{ej:Rel3_Ej20}}
+        \label{tab:Rel3_Ej20}
+    \end{table}
+\end{ejercicio}
+
+
+
+\begin{ejercicio}
+    Una computadora con memoria virtual paginada tiene un bit U por página virtual, que se
+pone automáticamente a 1 cuando se realiza un acceso a la página. Existe una
+instrucción \verb|limpiar_U (dir_base_tabla)| que permite poner a 0 el conjunto de los bits U de
+todas las páginas de la tabla de páginas cuya dirección de comienzo pasamos como
+argumento. Explica cómo puede utilizarse este mecanismo para la implementación de un
+algoritmo de sustitución basado en el modelo del conjunto de trabajo.
+\end{ejercicio}
+
+
+\begin{ejercicio}
+    Un Sistema Operativo con memoria virtual paginada tiene el mecanismo \verb|fijar_página(np)|
+cuyo efecto es proteger contra la sustitución al marco de página en que se ubica la página
+virtual \verb|np|. El mecanismo \verb|des_fijar (np)| suprime esta protección.
+
+\begin{enumerate}
+    \item ¿Qué estructura/s de datos son necesarias para la realización de estos mecanismos?
+    \item ¿En qué caso puede ser de utilidad estas primitivas?
+    \item ¿Qué riesgos presentan y qué restricciones deben aportarse a su empleo?
+\end{enumerate}
+\end{ejercicio}
+
+
+\begin{ejercicio}
+    Disponemos de un ordenador que cuenta con las siguientes características: tiene una
+memoria RAM de 4KBytes, permite usar memoria virtual paginada, las páginas son de
+1KBytes de tamaño y las direcciones virtuales son de 16 bits. El primer marco de página
+(marco 0) se usa únicamente por el Kernel y los demás marcos están disponibles para
+su uso por los procesos que se ejecutan en el sistema. Supongamos que tenemos sólo
+dos procesos, P1 y P2, y que utilizan las siguientes direcciones de memoria virtual y en
+el siguiente orden:
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{|c|c|}
+            \hline
+            Proceso & Direcciones Virtuales \\
+            \hline
+            P1 & 0-99 \\
+            P2 & 0-500 \\
+            P1 & 100-500 \\
+            P2 & 501-1500 \\
+            P1 & 3500-3700 \\
+            P2 & 1501-2100 \\
+            P1 & 501-600 \\
+            \hline
+        \end{tabular}
+        \caption{Direcciones virtuales utilizadas por los procesos P1 y P2}
+    \end{table}
+    \begin{enumerate}
+        \item ¿Cuántos marcos de página tiene la memoria RAM de este ordenador?
+        \item ¿Cuántos bits necesitamos para identificar los marcos de página?
+        \item Describe los fallos de página que tendrán lugar para cada intervalo de ejecución de los
+        procesos, si la política de sustitución de páginas utilizada es LRU. Suponga que se
+        dicho algoritmo es de asignación variable y sustitución global.
+    \end{enumerate}
+\end{ejercicio}
+
+
+\begin{ejercicio}
+    Se tiene un sistema de memoria virtual con paginación a dos niveles que permite
+agrupar las páginas en “directorios de páginas”. Cada tabla de páginas puede contener
+hasta 1024 páginas. Los espacios de direcciones lógicas de este sistema son de
+4Gbytes y el tamaño de página es de 4Kbytes. El espacio de direcciones físicas puede
+tener hasta 1Gb. Describa la estructura de las direcciones lógicas y de las direcciones
+físicas de este sistema de memoria virtual.
+\end{ejercicio}
+
+
+\begin{ejercicio}
+    Suponga un sistema que utiliza paginación a dos niveles. Las direcciones son de 8 bits
+con la siguiente estructura: 2 bits en la tabla de páginas de primer nivel, 2 bits en la tabla
+de páginas de segundo nivel y 4 bits para el desplazamiento). El espacio de
+direccionamiento virtual de un proceso tiene la estructura del dibujo. Represente
+gráficamente las tablas de páginas y sus contenidos, suponiendo que cada entrada de la
+tabla de páginas ocupa 8 bits y que todas las páginas están cargadas en memoria
+principal (elige tú mismo la ubicación en memoria principal de dichas páginas,
+suponiendo que la memoria principal es de 160 Bytes). Dada esa asignación traduce la
+dirección virtual 47.
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        \def\ancho{4}
+        \def\alto{0.7}
+
+        % Definir un nuevo patrón
+        \pgfdeclarepatternformonly{wide lines}{\pgfqpoint{-1pt}{-1pt}}{\pgfqpoint{10pt}{10pt}}{\pgfqpoint{9pt}{9pt}}%
+        {
+        \pgfsetlinewidth{0.4pt}
+        \pgfsetstrokecolor{gray}
+        \pgfpathmoveto{\pgfqpoint{0pt}{0pt}}
+        \pgfpathlineto{\pgfqpoint{9pt}{9pt}}
+        \pgfusepath{stroke}
+        }
+
+        % Zona sin usar
+        \draw[pattern=wide lines] (0,-2*\alto) rectangle (\ancho, -6*\alto);
+
+
+        \draw (0,0) -- (\ancho, 0) node[right] {0};
+        \draw (0,-1*\alto) -- (\ancho, -1*\alto) node[right] {16 B};
+        \draw (0,-2*\alto) -- (\ancho, -2*\alto) node[right] {48 B};
+        \draw (0,-6*\alto) -- (\ancho, -6*\alto) node[right] {224 B};
+        \draw (0,-7*\alto) -- (\ancho, -7*\alto) node[right] {256 B};
+
+        \draw(0,0) -- (0, -7*\alto);
+        \draw(\ancho,0) -- (\ancho, -7*\alto);
+
+
+        % Escribe en cada casilla
+        \node at (0.5*\ancho, -0.5*\alto) {Texto};
+        \node at (0.5*\ancho, -1.5*\alto) {Datos};
+        \node at (0.5*\ancho, -4*\alto) {\textbf{Sin usar}};
+        \node at (0.5*\ancho, -6.5*\alto) {Pila};
+    \end{tikzpicture}
+\end{figure}
+\end{ejercicio}
+
+
+\begin{ejercicio}
+    Considere la siguiente tabla de segmentos:
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|c|c|}
+            \hline
+            Segmento & Presencia o validez & Dirección base & Longitud \\
+            \hline
+            0 & 0 & 219 & 600 \\
+            1 & 1 & 2300 & 14 \\
+            2 & 1 & 90 & 100 \\
+            3 & 0 & 1327 & 580 \\
+            4 & 1 & 1952 & 96 \\
+            \hline
+        \end{tabular}
+        \caption{Tabla de segmentos}
+    \end{table}
+    ¿Qué direcciones físicas corresponden a las direcciones lógicas (nº segmento,
+desplazamiento) siguientes? Si no puede traducir alguna dirección lógica a física, explique el
+por qué.
+\begin{enumerate}
+    \item 0, 430
+    
+    Corresponde al segmento 0, pero como su bit de validez es 0, no se encuentra en memoria, por lo que no tiene dirección física.  Se produce una falta de segmento.
+    \item 1, 10
+    
+    La dirección base es 2300, y como $10 < 14$, la dirección física es $2300 + 10 = 2310$.
+    \item 3, 400
+    
+    Corresponde al segmento 3, pero como su bit de validez es 0, no se encuentra en memoria, por lo que no tiene dirección física. Se produce una falta de segmento.
+    \item 4, 112
+    
+    La dirección base es 1952, y como $112 > 96$, se produce una excepción de acceso indebido.
+\end{enumerate}
+\end{ejercicio}
+
+
+\begin{ejercicio}
+    Respecto a la gestión de memoria que se hace en Linux: suponga que un proceso realiza
+una llamada al sistema fork creando un proceso hijo. Represente gráficamente como
+quedan las estructuras de datos relacionadas con ambos procesos.
+\end{ejercicio}
+
+
+\begin{ejercicio}
+    ¿Qué información comparten un proceso y su hijo en un sistema Linux después de
+ejecutar el siguiente código? Justifique su respuesta e indique qué hace este trozo de
+código.
+\begin{minted}{c}
+    if ( fork() != 0 )
+        wait (&status);
+    else
+        exec (B);
+    // usamos una llamada al sistema exec genérica con un único
+    // argumento, el nombre de un archivo ejecutable
+\end{minted}
+\end{ejercicio}
