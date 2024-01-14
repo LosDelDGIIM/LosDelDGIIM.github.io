@@ -118,7 +118,19 @@ Si se pierde el primer puntero de la lista de espacio libre, ¿podría el Sistem
 \end{ejercicio}
 
 \begin{ejercicio}
-El espacio libre en un disco puede ser implementado usando una lista encadenada con agrupación o un mapa de bits. La dirección en disco requiere D bits. Sea un disco con B bloques, en que F están libres. ¿En qué condición la lista usa menos espacio que el mapa de bits?
+El espacio libre en un disco puede ser implementado usando una lista encadenada con agrupación o un mapa de bits.
+La dirección en disco requiere D bits. Sea un disco con B bloques, en que F están libres.
+¿En qué condición la lista usa menos espacio que el mapa de bits?\\
+
+El mapa de bits ocupa $B$ bits, ya que contiene un bit por cada bloque.
+La lista encadenada tan solo necesita almacenar un puntero, $D$ bits, ya que tan solo
+se almacena la dirección del primer bloque libre; el resto de bloques libres se obtienen
+a partir de este. Por tanto, la lista encadenada ocupa menos espacio que el mapa de bits
+cuando $D < B$.
+
+No obstante, hay que tener en cuenta que el acceso a la lista encadenada es más lento que
+el acceso al mapa de bits, ya que para acceder al mapa de bits no es necesario
+acceder a memoria.
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -147,21 +159,64 @@ Si cada bloque índice tiene 256 direcciones de bloques de disco, ¿cuál es el 
 \begin{ejercicio}
 Sobre conversión de direcciones lógicas dentro de un archivo a direcciones físicas de disco.
 Estamos utilizando la estrategia de indexación a tres niveles para asignar espacio en disco.
-Tenemos que el tamaño de bloque de índice es igual a 512 bytes, y el tamaño de puntero es de 4 bytes.
+Tenemos que el tamaño de bloque de índices es igual a 512 bytes, y el tamaño de puntero es de 4 bytes.
 Se recibe la solicitud por parte de un proceso de usuario de leer el carácter número N de determinado archivo.
-Suponemos que ya hemos leído la entrada del directorio asociada a este archivo, es decir, tenemos en memoria los datos
-PRIMER-BLOQUE y TAMAÑO. Calcule la sucesión de direcciones de bloque que se leen hasta llegar al bloque de datos que posee
-el citado carácter.\\
+Suponemos que ya hemos leído la entrada del directorio asociada a este archivo, es decir,
+tenemos en memoria los datos PRIMER-BLOQUE y TAMAÑO.
 
-En primer lugar, necesitamos calcular en qué bloque se encuentra. 
+Calcule la sucesión de direcciones de bloque que se leen hasta llegar al bloque de datos que posee
+el citado carácter.
+\begin{comment}
+En primer lugar, necesitamos calcular en qué bloque se encuentra. Como el tamaño de bloque de índices es de 512 bytes, y suponemos
+que el tamaño de bloque de índices es el mismo que el tamaño de bloque de datos,
+entonces el bloque en el que se encuentra, sabiendo que un carácter ocupa 1 B, es:
+\begin{equation*}
+    \left\lfloor \frac{N}{512} \right\rfloor = \left\lfloor \frac{N}{2^9} \right\rfloor
+\end{equation*}
+
+Por tanto, necesitamos acceder al bloque de índices que contiene la dirección del bloque de datos en el que se encuentra el carácter.
+Como el tamaño de puntero es de 4 bytes, entonces en cada bloque de índices hay:
+\begin{equation*}
+    \frac{512 \text{ B}}{4 \text{ B}} = 128=2^7 \text{ punteros}
+\end{equation*}
+
+Por tanto, el bloque de índices que contiene la dirección del bloque de datos en el que se encuentra el carácter es:
+\begin{equation*}
+    \left\lfloor \frac{\left\lfloor \frac{N}{2^9} \right\rfloor}{2^7} \right\rfloor = \left\lfloor \frac{N}{2^{16}} \right\rfloor
+\end{equation*}
+\end{comment}
 \end{ejercicio}
 
 \begin{ejercicio}
 ¿Qué método de asignación de espacio en un sistema de archivos elegiría para maximizar la eficiencia en términos de velocidad de acceso, uso del espacio de almacenamiento y facilidad de modificación (añadir/borrar /modificar), cuando los datos son:
 \begin{enumerate}
-    \item modificados infrecuentemente, y accedidos frecuentemente de forma aleatoria
-    \item modificados con frecuencia, y accedidos en su totalidad con cierta frecuencia
-    \item modificados frecuentemente y accedidos aleatoriamente y frecuentemente
+    \item Modificados infrecuentemente, y accedidos frecuentemente de forma aleatoria.
+    
+    En este caso al ser accedidos de forma aleatoria, descartamos el no contiguo enlazado, ya que
+    este es más eficiente cuando los datos son accedidos de forma secuencial. Por tanto, nos quedamos
+    con el contiguo y el no contiguo indexado.
+
+    Entre estos, es cierto que el contiguo puede producir fragmentación externa y los archivos no pueden crecer,
+    pero como se modifican infrecuentemente, se supone que no habrá problemas, ya que el tamaño no variará prácticamente.
+    Por tanto, se opta por el contiguo, ya que es más eficiente en términos de velocidad de acceso.
+
+
+    \item Modificados con frecuencia, y accedidos en su totalidad con cierta frecuencia.
+    
+    En este caso, como es modificado con frecuencia, descartamos el contiguo, ya que este no permite crecer el archivo
+    y, al ser modificado con frecuencia, se supone que crecerá. Así, al evitar este método, se evita la fragmentación externa también.
+
+    Entre los otros dos, depende de si los accesos se realizarán de forma secuencial o aleatoria o directa.
+    Como se menciona que se accede en su totalidad, se supone que se accede de forma secuencial, por lo que se opta
+    por el no contiguo enlazado, ya que requerirá menos accesos a memoria (no se emplea el bloque índice).
+
+    \item Modificados frecuentemente y accedidos aleatoriamente y frecuentemente.
+    
+    En este caso, descartamos el contiguo, ya que no permite crecer el archivo y, al ser modificado con frecuencia,
+    se supone que crecerá. Así, al evitar este método, se evita la fragmentación externa también.
+    
+    Entre los otros dos, como se accede de forma aleatoria, se opta por el no contiguo indexado, ya que
+    permite acceder de forma aleatoria, mientras que el no contiguo enlazado no.
 \end{enumerate}
 \end{ejercicio}
 

@@ -117,9 +117,14 @@ porque dicho bucle se encuentre entero en la misma página.
 incoherencias y requiere que el sistema operativo la invalide en cada cambio de
 contexto y, en cambio, una que se accede con direcciones físicas no lo requiere?\\
 
-    la TLB es una memoria caché que almacena las traducciones de direcciones virtuales a direcciones físicas.
+    La TLB es una memoria caché que almacena las traducciones de direcciones virtuales a direcciones físicas.
     Contiene la información que se ha traído de la tabla de páginas que, como es una estructura de datos que pertenece a cada proceso, cambiará en cada cambio de contexto.
     Por tanto, al cambiar el proceso que se está ejecutando, la tabla de páginas cambiará, y por tanto la TLB contendrá información que ya está desfasada.
+
+    En cambio, las direcciones físicas no cambiarán en un cambio de contexto.
+    Por tanto, la caché que se accede con direcciones físicas no requiere que el sistema operativo la invalide en cada cambio de contexto,
+    pero las direcciones con las que se accederá serán distintas y, por tanto, generará una gran cantidad de fallos de caché.
+    No obstante, no son inválidos.
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -375,7 +380,10 @@ referencias a página es: 0 3 1 1 1 3 4 4 2 2 4 0 0 0 0 3 y el parámetro es $\t
     \end{table}
 
     Notemos que en $\red{(\ast)}$ no se ha eliminado ninguna página, ya que la anterior falta de página había ocurrido en $t-2$,
-    y la ventana es de $\tau=3$.
+    y la ventana es de $\tau=3$. Además, es interesante notar que,
+    como no hay restricciones en cuanto al número de marcos de página disponibles,
+    una vez todas las páginas tengan su marco de página correspondiente, no se producirán más faltas de página.
+    Esto es lo que ocurre en la última parte de este ejercicio.
 \end{ejercicio}
 
 
@@ -417,11 +425,11 @@ páginas, 1 4 4 4 2 4 1 1 3 3 5 5 5 5 1 4
         \centering
         \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
         Pag. Referenciada & 1 & 4 & 4 & 4 & 2 & 4 & 1 & 1 & 3 & 3 & 5 & 5 & 5 & 5 & 1 & 4 \\ \hline \hline
-        Marco 0           & 1 & 1 & 1 & 1 & 2 & 2 & 2 & - & 3 & 3 & 3 & 3 & 3 & - & 1 & 1 \\ \hline
-        Marco 1           & 2 & 2 & 2 & - & - & - & 1 & 1 & 1 & 1 & 1 & - & - & - & - & 4 \\ \hline
-        Marco 2           & - & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & - & 5 & 5 & 5 & 5 & 5 & 5 \\ \hline
+        Marco 0           & 1 & 1 & 1 & - & 2 & 2 & 2 & - & 3 & 3 & 3 & 3 & - & - & 1 & 1 \\ \hline
+        Marco 1           & 2 & 2 & - & - & - & - & 1 & 1 & 1 & 1 & - & - & - & - & - & 4 \\ \hline
+        Marco 2           & - & 4 & 4 & 4 & 4 & 4 & 4 & 4 & - & - & 5 & 5 & 5 & 5 & 5 & 5 \\ \hline
         Marco 3           &   &   &   &   &   &   &   &   &   &   &   &   &   &   &   &   \\ \hline \hline
-        Falta de Página   & $\ast$ &   &   &   & $\ast$ &   & $\ast$ &   & $\ast$ &   & $\ast$ &   &   &   & $\ast$ & $\ast$
+        Falta de Página   & $\ast$ & $\ast$ &   &   & $\ast$ &   & $\ast$ &   & $\ast$ &   & $\ast$ &   &   &   & $\ast$ & $\ast$
         \end{tabular}
         \caption{Ejercicio \ref{ej:Rel3_Ej20}}
         \label{tab:Rel3_Ej20}
@@ -531,11 +539,38 @@ el siguiente orden:
 
 \begin{ejercicio}
     Se tiene un sistema de memoria virtual con paginación a dos niveles que permite
-agrupar las páginas en “directorios de páginas”. Cada tabla de páginas puede contener
+agrupar las páginas en ``directorios de páginas''. Cada tabla de páginas puede contener
 hasta 1024 páginas. Los espacios de direcciones lógicas de este sistema son de
-4Gbytes y el tamaño de página es de 4Kbytes. El espacio de direcciones físicas puede
-tener hasta 1Gb. Describa la estructura de las direcciones lógicas y de las direcciones
-físicas de este sistema de memoria virtual.
+4 GiB y el tamaño de página es de 4 KiB. El espacio de direcciones físicas puede
+tener hasta 1 GiB. Describa la estructura de las direcciones lógicas y de las direcciones
+físicas de este sistema de memoria virtual.\\
+
+    En este ejercicio nos dan información de más, así que intentaremos dar distintas formas
+    de calcular lo pedido. En primer lugar, como el espacio de direcciones lógicas es de
+    $4 \text{ GiB}=2^{32} \text{ B}$, necesitamos 32 bits para representar las direcciones lógicas.
+
+    Como cada tabla de páginas puede contener hasta $1024=2^{10}$ páginas, necesitamos 10 bits para
+    representar el directorio de páginas (primer nivel) y 10 bits para representar la tabla de páginas (segundo nivel).
+    Por tanto, nos quedan $32-10-10=12$ bits para el desplazamiento. Es decir:
+    \begin{itemize}
+        \item {10 bits para el directorio de páginas}
+        \item {10 bits para la tabla de páginas}
+        \item {12 bits para el desplazamiento}
+    \end{itemize}
+
+    De forma análoga, el desplazamiento se podría haber obtenido del tamaño de página,
+    ya que $4 \text{ KiB}=2^{12} \text{ B}$, por lo que necesitamos 12 bits para representar el desplazamiento.
+    Vemos que, efectivamente, coincide.\\
+
+    Respecto a las direcciones físicas, como el espacio de direcciones físicas es de
+    $1 \text{ GiB}=2^{30} \text{ B}$, necesitamos 30 bits para representar las direcciones físicas.
+    Como el tamaño de marco de página y de página es el mismo, el desplazamiento
+    será el mismo que en el caso de las direcciones lógicas, es decir, 12 bits.
+    Por tanto, nos quedan $30-12=18$ bits para el marco de página. Es decir:
+    \begin{itemize}
+        \item {18 bits para el marco de página}
+        \item {12 bits para el desplazamiento}
+    \end{itemize}
 \end{ejercicio}
 
 
