@@ -2,6 +2,24 @@
 
 \begin{ejercicio}
 Si un computador no posee hardware de reubicación, e implementa intercambio (\textit{swapping}), entonces el gestor de memoria necesita utilizar un cargador para recalcular las direcciones físicas de un proceso. ¿Sería posible para el sistema de intercambio reubicar los segmentos de datos y pila? Explique cómo funcionaría este sistema, o si es imposible que funcione.
+
+En un sistema de computación que no posee hardware de reubicación y que implementa intercambio (swapping), la gestión de la memoria se vuelve más compleja, especialmente cuando se trata de reubicar segmentos como los de datos y pila de un proceso. Vamos a desglosar cómo funcionaría o no este sistema:
+\begin{itemize}
+    \item \textbf{Ausencia de Hardware de Reubicación:}
+    
+    El hardware de reubicación permite al sistema operativo mover procesos en la memoria física sin cambiar sus direcciones lógicas. Si un sistema no cuenta con este hardware, cada proceso debe ser consciente de su ubicación en la memoria física. Esto significa que las direcciones en el código del programa deben ser absolutas o deben recalcularse cada vez que el proceso se mueve en la memoria.
+    \item \textbf{Implementación de Intercambio (Swapping):}
+    
+    El intercambio implica mover procesos completos desde y hacia la memoria principal y secundaria (usualmente un disco). Sin hardware de reubicación, las direcciones en el programa deben ser recalculadas cada vez que se mueve el proceso, lo cual es una operación costosa en términos de tiempo de CPU.
+    \item \textbf{Reubicación de Segmentos de Datos y Pila:}
+    
+    Reubicar los segmentos de datos y pila es técnicamente posible, pero implica un esfuerzo considerable del gestor de memoria y del cargador del sistema operativo. Cada vez que un proceso es intercambiado de vuelta a la memoria principal, el gestor de memoria tendría que usar un cargador para ajustar todas las direcciones en los segmentos de datos y pila del proceso, asegurándose de que apunten a las nuevas ubicaciones físicas.
+    \item \textbf{Viabilidad del Sistema:}
+    
+    Aunque es posible implementar un sistema de intercambio sin hardware de reubicación, sería ineficiente y lento debido a la necesidad de recalcular constantemente las direcciones físicas. Esto puede ser especialmente problemático en sistemas con alta carga, donde los procesos se intercambian con frecuencia.
+\end{itemize}
+
+En resumen, aunque es posible implementar intercambio sin hardware de reubicación, el costo en términos de rendimiento y complejidad del gestor de memoria sería considerable. En la práctica, este enfoque sería poco práctico para sistemas modernos donde la eficiencia y la velocidad son críticas.
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -20,7 +38,17 @@ por lo que en total necesitamos 30 bits para direccionar la memoria virtual.
 \end{ejercicio}
 
 \begin{ejercicio}
-Considérese un sistema con memoria virtual en el que el procesador tiene una tasa de utilización del 15\% y el dispositivo de paginación está ocupado el 97\% del tiempo, ¿qué indican estas medidas? ¿Y si con el mismo porcentaje de uso del procesador el porcentaje de uso del dispositivo de paginación fuera del 15\%?
+Considérese un sistema con memoria virtual en el que el procesador tiene una tasa de utilización del 15\% y el dispositivo de paginación está ocupado el 97\% del tiempo,
+¿qué indican estas medidas? ¿Y si con el mismo porcentaje de uso del procesador el porcentaje de uso del dispositivo de paginación fuera del 15\%?\\
+
+Si el dispositivo de paginación está ocupado el 97\% del tiempo, significa que la mayor parte del tiempo se están produciendo faltas de página, por lo que
+es necesario que el dispositivo de paginación traiga páginas de memoria secundaria a memoria principal. Asimismo, los datos dan a entender que el procesador
+está la mayor parte del tiempo ocioso, ya que está a la espera de que se traigan las páginas necesarias. Este problema se conoce como \emph{hiperpaginación}.
+
+En el otro caso, tanto el procesador como el dispositivo de paginación están ocupados el 15\% del tiempo. El hecho de que el dispositivo de paginación esté ocupado
+el 15\% del tiempo significa que la mayoría de referencias a páginas se encuentran en memoria principal, por lo que la gestión de memoria está funcionando correctamente.
+No obstante, el hecho de que el procesador esté ocupado tan solo el 15\% del tiempo significa que el algoritmo de planificación no está funcionando correctamente, ya que hay que aumentar
+la multiprogramación para que el procesador esté más tiempo ocupado.
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -46,22 +74,32 @@ incluida su tabla de páginas cuyas entradas son de 32 bits?\\
 \begin{ejercicio}
 Un ordenador tiene 4 marcos de página. En la siguiente tabla se muestran: el tiempo de carga, el tiempo del último acceso y los bits R y M para cada página (los tiempos están en tics de reloj). Responda a las siguientes cuestiones justificando su respuesta.
 
-\begin{center}
-\begin{tabular}{|c|c|c|c|c|}
-\hline
-Página & Tiempo de carga & Tiempo última referencia & R (Referencia) & M (Modificación) \\
-\hline
-0 & 126 & 279 & 1 & 0 \\
-1 & 230 & 235 & 1 & 0 \\
-2 & 120 & 272 & 1 & 1 \\
-3 & 160 & 200 & 1 & 1 \\
-\hline
-\end{tabular}
-\end{center}
+\begin{table}[H]
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        Página & Tº de carga & Tº última referencia & R (Referencia) & M (Modificación) \\
+        \hline
+        0 & 126 & 279 & 1 & 0 \\
+        1 & 230 & 235 & 1 & 0 \\
+        2 & 120 & 272 & 1 & 1 \\
+        3 & 160 & 200 & 1 & 1 \\
+        \hline
+    \end{tabular}
+\end{table}
 
 \begin{itemize}
     \item ¿Qué página se sustituye si se usa el algoritmo FIFO?
+    
+    Con el algoritmo FIFO, se sustituye la página que se cargase antes.
+    No obstante, hay dos posibilidades. Si se da prioridad absoluta a que se sustituyan antes las páginas limpias que las sucias, entonces se sustituiría la página 0, aunque
+    la primera en cargarse fue la 2. Si se usa el algoritmo FIFO puro, entonces se sustituiría la página 2 por ser la primera en cargarse.
+
     \item ¿Qué página se sustituye si se usa el algoritmo LRU?
+    
+    Con el algoritmo LRU, se sustituye la página que lleve más tiempo sin ser referenciada.
+    No obstante, en este caso también hay dos posibilidades.
+    Si se da prioridad absoluta a que se sustituyan antes las páginas limpias que las sucias, entonces se sustituiría la página 1, aunque la 3 es la que lleva más tiempo sin ser referenciada.
+    Si se usa el algoritmo LRU puro, entonces se sustituiría la página 3 por ser la que lleva más tiempo sin ser referenciada.
 \end{itemize}
 \end{ejercicio}
 
@@ -77,7 +115,11 @@ porque dicho bucle se encuentre entero en la misma página.
 \begin{ejercicio}
 ¿Por qué una cache (o la TLB) que se accede con direcciones virtuales puede producir
 incoherencias y requiere que el sistema operativo la invalide en cada cambio de
-contexto y, en cambio, una que se accede con direcciones físicas no lo requiere?
+contexto y, en cambio, una que se accede con direcciones físicas no lo requiere?\\
+
+    la TLB es una memoria caché que almacena las traducciones de direcciones virtuales a direcciones físicas.
+    Contiene la información que se ha traído de la tabla de páginas que, como es una estructura de datos que pertenece a cada proceso, cambiará en cada cambio de contexto.
+    Por tanto, al cambiar el proceso que se está ejecutando, la tabla de páginas cambiará, y por tanto la TLB contendrá información que ya está desfasada.
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -105,10 +147,17 @@ esquema de paginación?\\
     es disminuir el tamaño de página, de forma que la fragmentación interna sea menor.
 \end{ejercicio}
 
-\begin{ejercicio}
-Analice qué puede ocurrir en un sistema que usa paginación por demanda si se recompila un programa mientras este está ejecutando. Proponga soluciones a los problemas que pueden surgir en esta situación.
+\begin{ejercicio} %// TODO: Recompilar mientras se ejecuta
+    Analice qué puede ocurrir en un sistema que usa paginación por demanda si se recompila un programa mientras este está ejecutando.
+    Proponga soluciones a los problemas que pueden surgir en esta situación.\\
+
+    El comportamiento que se produce es que aumentarán los fallos de página, ya que las páginas que se habían cargado en memoria principal
+    ya no son válidas, por lo que se producirán fallos de página cada vez que se intente acceder a ellas. Además, el resultado no será el deseado.
+
+    Para solucionar este problema, se debe esperar a que el proceso termine de ejecutarse para recompilarlo, o bien forzar que termine de ejecutarse antes de recompilarlo.
 \end{ejercicio}
-\begin{ejercicio}
+
+\begin{ejercicio} % // TODO: Quien escribe y lee cada campo de la tabla de páginas
 Para cada uno de los siguientes campos de la tabla de páginas, se debe explicar si es la MMU o el sistema operativo quién los lee y escribe (en este último caso si se activa o desactiva), y en qué momentos:
 \begin{enumerate}
     \item Número de marco
@@ -207,8 +256,13 @@ Esto se debe a que dicha regla no es cierta siempre, sino que depende de la secu
 
 
 \begin{ejercicio}
-    ¿Por qué la localidad no es un factor que se tiene en cuenta en los sistemas con
-segmentación?
+    ¿Por qué la localidad no es un factor que se tiene en cuenta en los sistemas con segmentación?\\
+
+    La localidad no es un factor que se tiene en cuenta en los sistemas con segmentación porque, en estos sistemas, el tamaño de los segmentos es variable.
+    Por tanto, se supone que el tamaño se ha escogido de forma que se aproveche la localidad. Es decir, la localidad no se considera porque se presupone
+    intrínseca en el tamaño de los segmentos.
+
+    Como se habrá traído a memoria principal el segmento completo, se aprovechará la localidad en el interior del segmento, sin necesidad de traernos los segmentos contiguos.
 \end{ejercicio}
 
 
@@ -222,6 +276,14 @@ mantener el Sistema Operativo para administrar el espacio libre?
         \item {Tabla de marcos de página}
         \item {Tabla de ubicación en disco}
     \end{itemize}
+
+    La primera estructura de datos es la que contiene la información para realizar la traducción de direcciones virtuales a direcciones físicas.
+    La segunda es la que contiene la información sobre cada marco de página, y en concreto se puede ver si está libre o no. Por tanto, es esta la estructura de datos
+    que nos interesa para administrar el espacio libre.
+    Por último, la tercera es la que contiene la información sobre la ubicación de cada página en memoria secundaria.
+
+    Por tanto, la estructura de datos que necesitará el sistema operativo para administrar el espacio libre es la tabla de marcos de página, ya que con esa tabla sabremos
+    qué marcos de página están libres y cuáles no.
 \end{ejercicio}
 
 
@@ -305,7 +367,7 @@ referencias a página es: 0 3 1 1 1 3 4 4 2 2 4 0 0 0 0 3 y el parámetro es $\t
             Está 2            & 2 & 2 & 2 & 2 & 2 & 2 & - & - & 2 & 2 & 2 & 2 & 2 & 2 & 2 & 2 \\ \hline
             Está 3            & - & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 & 3 \\ \hline
             Está 4            & - & - & - & - & - & - & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 \\ \hline \hline
-            Falta             & * & * & * &   &   &   & * &   & $\red{\ast}$ &   &   &    &   &   &   & 
+            Falta de Página   & $\ast$ & $\ast$ & $\ast$ &   &   &   & $\ast$ &   & $\red{\ast}$ &   &   &    &   &   &   & 
         \end{tabular}
         \caption{Ejercicio \ref{ej:Rel3_Ej18}}
         \label{tab:Rel3_Ej18}
@@ -331,7 +393,7 @@ referencias de páginas, 1 4 2 2 2 4 5 5 3 3 5 1 1 1 1 4
         Marco 1           & 2 & 2 & 2 & 2 & 2 & 2 & 2 & 2 & 2 & 2 & 2 & $\red{!}$  \\ \hline
         Marco 2           & - & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & $\red{!}$  \\ \hline
         Marco 3           & - & - & - & - & - & - & - & - & 3 & 3 & 3 & $\red{!}$\\ \hline \hline
-        Falta de Página   & * &   &   &   &   &   & * &   & $\red{\ast}$ &   &   & $\red{\ast}$
+        Falta de Página   & $\ast$ &   &   &   &   &   & $\ast$ &   & $\red{\ast}$ &   &   & $\red{\ast}$
         \end{tabular}
         \caption{Ejercicio \ref{ej:Rel3_Ej19}}
         \label{tab:Rel3_Ej19}
@@ -358,7 +420,7 @@ páginas, 1 4 4 4 2 4 1 1 3 3 5 5 5 5 1 4
         Marco 1           & 2 & 2 & 2 & - & - & - & 1 & 1 & 1 & 1 & 1 & - & - & - & - & 4 \\ \hline
         Marco 2           & - & 4 & 4 & 4 & 4 & 4 & 4 & 4 & 4 & - & 5 & 5 & 5 & 5 & 5 & 5 \\ \hline
         Marco 3           &   &   &   &   &   &   &   &   &   &   &   &   &   &   &   &   \\ \hline \hline
-        Falta de Página   & * &   &   &   & * &   & * &   & * &   & * &   &   &   & * & *
+        Falta de Página   & $\ast$ &   &   &   & $\ast$ &   & $\ast$ &   & $\ast$ &   & $\ast$ &   &   &   & $\ast$ & $\ast$
         \end{tabular}
         \caption{Ejercicio \ref{ej:Rel3_Ej20}}
         \label{tab:Rel3_Ej20}
@@ -417,7 +479,16 @@ el siguiente orden:
     \end{table}
     \begin{enumerate}
         \item ¿Cuántos marcos de página tiene la memoria RAM de este ordenador?
+        
+        Tenemos que:
+        \begin{equation*}
+            4 \text{ KBytes} \cdot \frac{1 \text{ marco de página}}{1 \text{ KBytes}} = 4 \text{ marcos de página}
+        \end{equation*}
+
         \item ¿Cuántos bits necesitamos para identificar los marcos de página?
+        
+        Necesitamos 2 bits para identificar los marcos de página, ya que $2^2=4$.
+
         \item Describe los fallos de página que tendrán lugar para cada intervalo de ejecución de los
         procesos, si la política de sustitución de páginas utilizada es LRU. Suponga que se
         dicho algoritmo es de asignación variable y sustitución global.
