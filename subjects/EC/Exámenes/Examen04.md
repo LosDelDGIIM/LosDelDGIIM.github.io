@@ -155,12 +155,8 @@ ______
 16. ¿Qué función codifica el siguiente fragmento de código? <br>
     `0: cmp %esi, %edi` <br>
     `2: mov %esi, %eax` <br>
-xor %rcx, %rcx
-and $5, %ecx
-mov $0x12345, %ebx
-rcr %cl, %rbx
-    `7: retq`
-
+    `4: cmovge %edi, %eax` <br>
+    `7: retq`<br
     - (x) `int min(int a, int b)` <br> `{ if (a<b)` <br> `return a;` <br> `else` <br> `return b;` <br> `}`
     - ( ) `bool igual(int a, int b)` <br> `{ if (a==b)` <br>      `return true;` <br>      `else` <br>      `return false;` <br> `}`
     - ( ) `int max(int a, int b)` <br>      `{ if (a>b)` <br>      `return a;` <br>      `else` <br>      `return b;` <br>      `}`
