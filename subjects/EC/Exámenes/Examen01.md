@@ -108,7 +108,7 @@ ______
     - ( ) 0x0.
     - ( ) 0xF5.
 
-16. Dado el siguiente fragmento de programa en ensamblador: <br><code> xor %rcx,%rcx<br>add $7,%rcx<br>mov $0x1234,%ebx<br>rcr %cl,%rbx</code><br> ¿Cuál es el valor del registro `RAX` al finalizar la última instrucción?
+16. Dado el siguiente fragmento de programa en ensamblador: <br><code> xor %rcx,%rcx<br>add $7,%rcx<br>mov $0x1234,%ebx<br>rcr %cl,%rbx</code><br> ¿Cuál es el valor del registro `RBX` al finalizar la última instrucción?
     - ( ) 0x0.
     - ( ) 0x00000001234.
     - ( ) 0x24.
