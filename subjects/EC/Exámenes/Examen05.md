@@ -95,9 +95,9 @@ Teniendo en cuenta que las instrucciones de desplazamiento de números de 64 bit
 
 12. Diseñe un sistema de memoria de 128 KB direccionable por palabras de 16 bits a partir de módulos SRAM de 16Kx2 y ROM de 8Kx4. La memoria SRAM debe ocupar las direcciones `0x0000` a `0xBFFF` y la ROM `0xC000` a `0xFFFF`. Los módulos necesarios serían, respecto a la ROM, serian:
     - ( ) 16
-    - (x) 24
+    - ( ) 24
     - ( ) 32
-    - ( ) 8
+    - (x) 8
 
 13. Diseñe un sistema de memoria de 128 KB direccionable por palabras de 16 bits a partir de módulos SRAM de 16Kx4 y ROM de 8Kx2. La memoria SRAM debe ocupar las direcciones `0x0000` a `0xBFFF` y la ROM `0xC000` a `0xFFFF`. Los módulos necesarios serían:
     - ( ) 14 módulos de SRAM y 16 de ROM
