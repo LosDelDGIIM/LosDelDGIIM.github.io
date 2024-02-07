@@ -327,7 +327,7 @@ Realizar un programa que lea los coeficientes reales $\mu$ y $\sigma$ de una fun
   Para realizar las operaciones indicadas, debe utilizar las siguientes funciones (disponibles en ```cmath```):  
   * Para elevar el número $e$ a un valor cualquiera, use la función ```exp```. Por ejemplo, para calcular $e⁸$ debería usar la expresión ```exp(8)```.
   * Para calcular la raíz cuadrada, use ```sqrt```. Por ejemplo, para calcular $\sqrt{8}$ debería usar la expresión ```sqrt(8)```.
-  * Para elevar un numero a otro, utilice la función ```pow``` en la siguiente forma: ```pow(base, exponente)```. Por ejemplo, para calcular $2^10$ debería usar la expresión ```pow(2,10)```.  
+  * Para elevar un numero a otro, utilice la función ```pow``` en la siguiente forma: ```pow(base, exponente)```. Por ejemplo, para calcular $2^{10}$ debería usar la expresión ```pow(2,10)```.  
     
 Para consultar los resultados correctos, pueden visitar el siguiente [enlace](https://www.easycalculation.com/statistics/normal-pdf.php)
 ```cpp
