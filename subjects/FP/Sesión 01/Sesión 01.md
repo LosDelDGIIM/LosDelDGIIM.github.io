@@ -11,11 +11,9 @@
 - **Descripción:** Resolución de problemas de la Sesión I de prácticas.
 
 
-## Ejercicio 1.
-
-`voltaje.cpp:`
+## 1. Voltaje.cpp
 Crear un programar que pida un valor de intensidad y resistencia e imprima el voltaje correspondiente, según la _Ley de Ohm_:
-$$voltaje = intensidad * resistencia$$
+$voltaje = intensidad * resistencia$
 ```cpp
 #include <iostream>
 
@@ -45,15 +43,16 @@ int main(){
     return 0;
 }
 ```
+[Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2001/voltaje.cpp)
 
-## Ejercicio 2.
-(circunferencia.cpp) Cread un programa que nos pida la longitud del radio, calcule el área del círculo y la longitud de la circunferencia correspondientes, y nos muestre los resultados en pantalla. Recordad que:  
+## 2. Circunferencia.cpp
+Cread un programa que nos pida la longitud del radio, calcule el área del círculo y la longitud de la circunferencia correspondientes, y nos muestre los resultados en pantalla. Recordad que:  
   
-longitud circunferencia = 2πr  
-área círculo = πr²  
+$perimetro = 2πr$  
+$area = πr²$  
   
   
-Nota: usad el literal 3.1416.
+Nota: usad el literal $3.1416$.
 ```cpp
 #include <iostream>
 
@@ -83,6 +82,7 @@ int main(){
     return 0;
 }
 ```
+[Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2001/circunferencia.cpp)
 
 Debido a que estas sesiones de prácticas son iniciales, la sesión 2 consistió en ver soluciones a ejercicios, por
 lo que no hubo problemas planteados. Saltamos directamente a la sesión de prácticas número 3.
