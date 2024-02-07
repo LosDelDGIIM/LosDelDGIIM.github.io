@@ -329,7 +329,7 @@ Realizar un programa que lea los coeficientes reales $\mu$ y $\sigma$ de una fun
   * Para calcular la raíz cuadrada, use ```sqrt```. Por ejemplo, para calcular $\sqrt{8}$ debería usar la expresión ```sqrt(8)```.
   * Para elevar un numero a otro, utilice la función ```pow``` en la siguiente forma: ```pow(base, exponente)```. Por ejemplo, para calcular $2^{10}$ debería usar la expresión ```pow(2,10)```.  
     
-Para consultar los resultados correctos, pueden visitar el siguiente [https://www.easycalculation.com/statistics/normal-pdf.php](https://www.easycalculation.com/statistics/normal-pdf.php)
+Para consultar los resultados correctos, pueden visitar el siguiente enlace [https://www.easycalculation.com/statistics/normal-pdf.php](https://www.easycalculation.com/statistics/normal-pdf.php).
 ```cpp
 #include <iostream>
 #include <cmath>
