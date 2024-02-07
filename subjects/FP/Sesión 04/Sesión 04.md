@@ -722,7 +722,7 @@ Un dispositivo GPS es capaz de captar y registrar la posición en el espacio en 
 Construir un programa que lea la latitud y longitud (posición en el plano) de dos puntos y calcule la distancia sobre plano entre los dos puntos (distancia que no considera la altura de los puntos).  
   
 Use la llamada fórmula del Haversine:
-1. $$a = \sin² \left(\dfrac{1}{2}(lat_2-lat_1)\right)+\cos lat_1 \cos lat_2 \sin²\left(\dfrac{1}{2}(lon_2-lon_1)\right)$$
+1. $$a = \sin² \left(\dfrac{1}{2}(lat_2-lat_1)\right)+\cos lat_1 \cdot \cos lat_2 \cdot \sin²\left(\dfrac{1}{2}(lon_2-lon_1)\right)$$
 2. $$c = 2 \arcsin \min{\{1, \sqrt{a}\}}$$
 3. La distancia será $d_p = R \cdot c$ donde:  
    $R = 6372797.560856$ metros, la longitud media del radio terrestre.  
