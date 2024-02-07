@@ -321,7 +321,7 @@ int main()
 
 ## 6. Gaussiana.cpp 
 La función gaussiana es muy importante en Estadística. Es una función real de variable real en la que el parámetro $\mu$ se conoce como _esperanza_ o _media_ y $\sigma$ como _desviación típica_. La función se define mediante la siguiente expresión:  
-$$Gaussiana(x) = \dfrac{1}{\sigma\sqrt{2\pi}} e^{\dfrac{-1}{2}\left(\dfrac{x-\mu}{\sigma}\right)²}$$
+$$Gaussiana(x) = \dfrac{1}{\sigma\sqrt{2\pi}} e^{\left[\dfrac{-1}{2}\left(\dfrac{x-\mu}{\sigma}\right)²\right]}$$
 Realizar un programa que lea los coeficientes reales $\mu$ y $\sigma$ de una función gaussiana. A continuación, el programa leerá un valor de abscisa $x$ y se imprimirá el valor que toma la función en $x$.  
   
   Para realizar las operaciones indicadas, debe utilizar las siguientes funciones (disponibles en ```cmath```):  
@@ -501,9 +501,9 @@ int main()
 
 ## 4. Expresiones.cpp
 Declarar las variables necesarias y traducir las siguientes fórmulas a expresiones válidas de C++:  
-$$\dfrac{1+\dfrac{x²}{y}}{\dfrac{x³}{1+y}}$$
-$$\dfrac{1+\dfrac{1}{3}\sin h - \dfrac{1}{7}\cos h}{2h}$$
-$$\sqrt{1+\left(\dfrac{e^x}{x²}\right)²}$$
+1. $$\dfrac{1+\dfrac{x²}{y}}{\dfrac{x³}{1+y}}$$
+2. $$\dfrac{1+\dfrac{1}{3}\sin h - \dfrac{1}{7}\cos h}{2h}$$
+3. $$\sqrt{1+\left(\dfrac{e^x}{x²}\right)²}$$
   
 Algunas funciones de ```cmath```:  
 $\sin x$ : ```sin(x)```  
