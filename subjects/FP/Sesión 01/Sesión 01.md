@@ -47,8 +47,8 @@ int main(){
 ## 2. Circunferencia.cpp
 Cread un programa que nos pida la longitud del radio, calcule el área del círculo y la longitud de la circunferencia correspondientes, y nos muestre los resultados en pantalla. Recordad que:  
   
-$longitud circunferencia = 2πr$  
-$área círculo = πr²$  
+$perimetro = 2πr$  
+$area = πr²$  
   
   
 Nota: usad el literal $3.1416$.
