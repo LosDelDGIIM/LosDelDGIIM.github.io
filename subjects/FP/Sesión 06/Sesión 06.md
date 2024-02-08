@@ -18,9 +18,9 @@ Construya un programa que calcule cuándo se produjo la mayor secuencia de días
 Por ejemplo, ante la siguiente entrada:  
 ```17.2 17.3 16.2 16.4 17.1 19.2 18.9 -1```  
   
-El programa debe indicar que la mayor subsecuencia empieza en la posición 3 (en el 16.2) y tiene longitud 4 (termina en 19.2).  
+El programa debe indicar que la mayor subsecuencia empieza en la posición ```3``` (en el ```16.2```) y tiene longitud ```4``` (termina en ```19.2```).  
   
-El rango de validez de una temperatura quedará determinado por el intervalo ```[MIN_TEMP_VALIDA, MAX_TEMP_VALIDA]```. Deberá fijar dichas constantes según su criterio. Es posible también que el primer valor leído sea incorrecto (esté fuera de rango), por lo que deberá introducir además una constante MIN_LONG_VALIDA (fije también su valor con un número que considere adecuado), de forma que si la subsecuencia creciente de temperaturas más larga no tiene una longitud superior a dicha constante, el programa deberá indicar que la subsecuencia más larga tiene una longitud no válida.
+El rango de validez de una temperatura quedará determinado por el intervalo ```[MIN_TEMP_VALIDA, MAX_TEMP_VALIDA]```. Deberá fijar dichas constantes según su criterio. Es posible también que el primer valor leído sea incorrecto (esté fuera de rango), por lo que deberá introducir además una constante ```MIN_LONG_VALIDA``` (fije también su valor con un número que considere adecuado), de forma que si la subsecuencia creciente de temperaturas más larga no tiene una longitud superior a dicha constante, el programa deberá indicar que la subsecuencia más larga tiene una longitud no válida.
 ```cpp
 #include <iostream>
 
@@ -228,9 +228,9 @@ int main(){
 ## 3. Adivinar.cpp
 Diseñe un programa para jugar a adivinar un número. El programa generará un número aleatorio (entre ```MIN``` y ```MAX```) y el usuario tendrá que adivinarlo. En cada jugada el jugador introducirá un valor y el juego indicará si el número introducido por el jugador está por encima o por debajo del número a adivinar.  
   
-Como reglas de parada considerad que el usuario:
+Como reglas de parada, considerad que el usuario:
 1. Haya acertado.
-2. No quiera seguir jugando y en este caso usad un carácter especial ```TERMINADOR``` para poder abandonar la partida.  
+2. No quiera seguir jugando y en este caso usa un carácter especial ```TERMINADOR``` para poder abandonar la partida.  
    
 Si no sabe cómo generar números aleatorios, le recomendamos ojear el siguiente [archivo](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2006/GenerarNumerosAleatorios.md).
 ```cpp
@@ -308,8 +308,8 @@ int main(){
 [Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2006/Adivinar.cpp)
 
 ## 4. CDFGaussiana.cpp
-Estamos interesados en obtener el área que cubre la función gaussiana en un intervalo dado. Si consideramos el intervalo $]-\infinity, x]$, el valor del área de la región que queda bajo la curva de $g(x)$ (siendo $g$ la función gaussiana) se calcula con la _distribución acumulada_ (_cumulative distribution function_ o CDF) en el punto 5x$:
-$$CDF(x) = \int_{-\infinity}^x g(x)~dx$$
+Estamos interesados en obtener el área que cubre la función gaussiana en un intervalo dado. Si consideramos el intervalo $]-\infty, x]$, el valor del área de la región que queda bajo la curva de $g(x)$ (siendo $g$ la función gaussiana) se calcula con la _distribución acumulada_ (_cumulative distribution function_ o CDF) en el punto $5x$:
+$$CDF(x) = \int_{-\infty}^x g(x)~dx$$
 Puede obtenerse un valor aproximado de $CDF(x)$ como la suma de valores de $g(x)$ empezando por valores alejados de la media (y menores que ella). Esto es, en vez de resolver la integral, estaremos interesados en aproximarla con un sumatorio de rectángulos de anchura relativamente pequeña.  
   
 Escriba un programa que calcule $CDF(x)$. El programa debe pedir los parámetros que definen una función gaussiana ($\mu$ y $\sigma$) y el valor de la abscisa $x$, para el que se va a calcular $CDF(x)$. Para el cálculo de $CDF(x)$, realizaremos una suma. Debemos concretar de qué forma la realizaremos:
@@ -415,7 +415,7 @@ El cálculo de la raíz cuadrada puede realizarse con la función ```sqrt``` dis
   
 Impleméntelo para el cálculo de datos ```double```.  
   
-Implemente a continuación una estimación basada en la proporcionalidad entre triángulos. Se trata de aproximar la función $y = \sqrt{x}$ por ractas en los tramos determinados por lso valores con raíces exactas. Consideraremos las raíces exactas: ```0, 1, 4, 9, 16``` con abscisas ```0, 1, 2, 3, 4``` respectivamente. Consideraremos la función resultante de unir los segmentos (0,0), (1,1), (2,4), (3,9), (4,16), que aproxima a $y = \sqrt{x}$. Si tomamos un valor de abscisa cualquiera entre 1 y 16, podremos calcular su imagen con la función previamente definida, que aproxima a la raíz cuadrada.  
+Implemente a continuación una estimación basada en la proporcionalidad entre triángulos. Se trata de aproximar la función $y = \sqrt{x}$ por ractas en los tramos determinados por lso valores con raíces exactas. Consideraremos las raíces exactas: ```0, 1, 4, 9, 16``` con abscisas ```0, 1, 2, 3, 4``` respectivamente. Consideraremos la función resultante de unir los segmentos ```(0,0)```, ```(1,1)```, ```(2,4)```, ```(3,9)```, ```(4,16)```, que aproxima a $y = \sqrt{x}$. Si tomamos un valor de abscisa cualquiera entre 1 y 16, podremos calcular su imagen con la función previamente definida, que aproxima a la raíz cuadrada.  
   
 Impleméntelo para el cálculo de datos ```dobule```.  
   
@@ -610,7 +610,8 @@ Escriba un programa que convierta números naturales (o cero) a binario, usando 
   
 Dado ```n```, los números válidos estarán comprendidos en el intervalo $[0, 2^n-1]$ (todos los que pueden representarse con ```n``` bits o menos).  
   
-Si fuera necesario, se rellenará con '0' a la izquierda del primer '1'. Por ejemplo, si ```n = 8``` y se quiere convertir el valor 11, se generará el ```string``` ```00001011```; y al convertir el valor 128 se genera el ```string``` ```10000000```.
+Si fuera necesario, se rellenará con '0' a la izquierda del primer '1'.  
+Por ejemplo, si ```n = 8``` y se quiere convertir el valor 11, se generará el ```string``` ```00001011```; y al convertir el valor 128 se genera el ```string``` ```10000000```.
 ```cpp
 #include <iostream>
 #include <cmath>	//Para poder usar pow()
@@ -869,8 +870,8 @@ $$\arctan\left(\dfrac{1}{\sqrt{3}}\right) = \dfrac{\pi}{6} = \sum_{i=0}^{\infty}
 Por lo tanto, podemos usar la siguiente aproximación:
 $$\dfrac{\pi}{6} = \sum_{i=0}^{tope} \dfrac{(-1)^i \left(\dfrac{1}{\sqrt{3}}\right)^{2i+1}}{2i+1}$$
 Construya un programa que:  
-a. Lea el valor ```tope```, obligando a que esté entre 1 y 100000, calcule la aproximación de $\pi$ mediante la anterior serie e imprima el resultado en pantalla.  
-b. Lea un entero que indique cuántos decimales de precisión deseamos, calcule la aproximación de $\pi$ mediante la anterior serie y nos indique cuántas iteraciones (sumas) ha tenido que realizar para conseguir la aproximación deseada.  
+1. Lea el valor ```tope```, obligando a que esté entre 1 y 100000, calcule la aproximación de $\pi$ mediante la anterior serie e imprima el resultado en pantalla.  
+2. Lea un entero que indique cuántos decimales de precisión deseamos, calcule la aproximación de $\pi$ mediante la anterior serie y nos indique cuántas iteraciones (sumas) ha tenido que realizar para conseguir la aproximación deseada.  
   
 Como valor de $\pi$ consideramos: ```3.14159265358979323846```.  
   
@@ -879,15 +880,17 @@ Nota: en la implementación de esta solución:
 2. Tampoco puede usar el condicional ```if```.
 
 ## 6. AproxPiGregory-Leibniz.cpp
-En el siglo XVII, el matemático alemán Gottfried Leibniz y el matemático escocés James Gregory introdujeron una forma de calcular $\pi$ a traǘes de una serie, es decir, de una suma de términos:
-$$\dfrac{\pi}{4} = \sum_{i=0}^{\infinity} \dfrac{(-1)^i}{2i + 1} = 1 - \dfrac{1}{2*1+1} + \dfrac{1}{2*2+1} - \dfrac{1}{2 * 3 + 1} + ...$$
+En el siglo XVII, el matemático alemán Gottfried Leibniz y el matemático escocés James Gregory introdujeron una forma de calcular $\pi$ a través de una serie, es decir, de una suma de términos:
+
+$$\dfrac{\pi}{4} = \sum_{i=0}^{\infty} \dfrac{(-1)^i}{2i + 1} = 1 - \dfrac{1}{2*1+1} + \dfrac{1}{2*2+1} - \dfrac{1}{2 * 3 + 1} + \ldots $$
+
 Se pide desarrollar un programa que pida un número llamado ```tope``` e imprima en pantalla el resultado de la siguiente sumatoria:
-$$\dfrac{\pi}{4} \approx \sum_{i=0}^{tope} \dfrac{(-1)^i}{2i + 1} = 1 - \dfrac{1}{2*1+1} + \dfrac{1}{2*2+1} - \dfrac{1}{2 * 3 + 1} + ... + \dfrac{(-1)^{tope}}{2*tope + 1}$$
+$$\dfrac{\pi}{4} \approx \sum_{i=0}^{tope} \dfrac{(-1)^i}{2i + 1} = 1 - \dfrac{1}{2*1+1} + \dfrac{1}{2*2+1} - \dfrac{1}{2 * 3 + 1} + \ldots + \dfrac{(-1)^{tope}}{2*tope + 1}$$
 ```tope``` deberá estar comprendido entre 1 y 100000.  
   
 Debe resolver el problema de dos formas distintas:  
-a. Usando la función ```pow``` de ```cmath``` para implementar $(-1)^i$.  
-b. Sin usar la función ```pow```. Observe qu el valor de $(-1)^i$ es 1 para los valores pares de $i$ y -1 para los impares.
+1. Usando la función ```pow``` de ```cmath``` para implementar $(-1)^i$.  
+2. Sin usar la función ```pow```. Observe qu el valor de $(-1)^i$ es 1 para los valores pares de $i$ y -1 para los impares.
 ```cpp
 #include <iostream>
 #include <cmath>
@@ -968,8 +971,8 @@ $$\dfrac{\pi}{2} \approx \dfrac{2}{1}\cdot\dfrac{2}{3}\cdot\dfrac{4}{3}\cdot\dfr
 Construya un programa que lea el valor ```tope``` obligando a que esté entre 1 y 100000, calcule la aproximación de $\pi$ mediante la anterior fórmula (multiplicando un total de ```tope``` fracciones) e imprima el resultado en pantalla.  
   
 Debe resolver este problema de dos formas distintas:  
-a. Observe que el numerador y el denominador varían de forma alternativa (aunque ambos de la misma forma, a saltos de 2). Cuando a uno le toca cambiar, el otro permanece igual. Este comportamiento se puede controlar con una única variable de tipo ```bool```.  
-b. Otra forma de implementar los cambios en el numerador y denominador es observando que en cada iteración, el numerador es el denominador de la iteración anterior más 1 y el denominador es el numerador de la iteración anterior más 1.  
+1. Observe que el numerador y el denominador varían de forma alternativa (aunque ambos de la misma forma, a saltos de 2). Cuando a uno le toca cambiar, el otro permanece igual. Este comportamiento se puede controlar con una única variable de tipo ```bool```.  
+2. Otra forma de implementar los cambios en el numerador y denominador es observando que en cada iteración, el numerador es el denominador de la iteración anterior más 1 y el denominador es el numerador de la iteración anterior más 1.  
   
 Ejemplo de entrada: ```1000``` Salida correcta: ```3.1400238186006```  
 Ejemplo de entrada: ```100000``` Salida correcta: ```3.14157694582286```
@@ -1074,7 +1077,7 @@ int main(){
 [Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2006/AproxPiWallis.cpp)
 
 ## 8. Narcisista.cpp
-Un número de ```n``` dígitos se dice que es **narcisista** si se puede obtener como la suma de las potencias ```n```-ésimas de cada uno de sus dígitos. Por ejemplo, 153 y 8208 son números narcisistas porque:
+Un número de ```n``` dígitos se dice que es **narcisista** si se puede obtener como la suma de las potencias ```n```-ésimas de cada uno de sus dígitos. Por ejemplo, 153 y 8208 son números narcisistas, porque:
 $$153 = 1³ + 5³ + 3³$$
 $$8208 = 8⁴ + 2⁴ + 8⁴$$
 Construya un programa que nos indique si un número natural es narcisista.
