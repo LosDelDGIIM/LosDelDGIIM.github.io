@@ -14,10 +14,10 @@ En esta sesión, se **introduce** el uso de las **estructuras condicionales** co
   
 ## 1. MinusculaAMayusculaComp.cpp
 
-Este ejercicio es una modificación del ejercicio ```1. MinusculaAMayuscula.cpp``` de la Sesión IV de prácticas, donde ahora tendremos que llevar a cabo una comprobación de los datos de entrada.  
+Este ejercicio es una modificación del ejercicio ```1. MinusculaAMayuscula.cpp``` de la [Sesión IV](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2004/Sesi%C3%B3n%2004.md) de prácticas, donde ahora tendremos que llevar a cabo una comprobación de los datos de entrada.  
   
 
-Diseñe un programa que lea un carácter (supondremos que el usuario introduce una minúscula), lo pase a mayúscula y lo imprima en pantalla. Hacedlo sin usar las funciones ```toupper``` ni ```tolower``` de la biblioteca cctype. Para ello, debe considerarse la equivalencia en C++ entre los tipos enteros y caracteres.
+Diseñe un programa que lea un carácter (supondremos que el usuario introduce una minúscula), lo pase a mayúscula y lo imprima en pantalla. Hágalo sin usar las funciones ```toupper``` ni ```tolower``` de la biblioteca cctype. Para ello, debe considerarse la equivalencia en C++ entre los tipos enteros y caracteres.
 ```cpp
 #include <iostream>
 
@@ -35,7 +35,7 @@ int main()
 
 	// ENTRADA
 
-	cout << "Un caracter en minuscula: ";
+	cout << "Un caracter en minucula: ";
 	cin >> caracter_in;
 
 	// Comprobamos si caracter_in es una letra minúscula:
@@ -73,7 +73,7 @@ int main()
 
 ## 2. TruncaDecimalesComp.cpp
 
-Este ejercicio es una modificación del ejercicio ```3. TruncaDecimales.cpp``` de la Sesión IV de prácticas, donde ahora tendremos que llevar a cabo una comprobación de los datos de entrada.  
+Este ejercicio es una modificación del ejercicio ```3. TruncaDecimales.cpp``` de la [Sesión IV](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2004/Sesi%C3%B3n%2004.md) de prácticas, donde ahora tendremos que llevar a cabo una comprobación de los datos de entrada.  
   
 Se quiere construir un programa que lea un número real ```r``` y un número entero ```n``` y trunque ```r``` a tantas cifras decimales como indique ```n```. El resultado debe guardarse en una variable diferente. La única función que puede usar de ```cmath``` es ```pow```.  
   
@@ -294,7 +294,7 @@ int main(){
 
 ## 4. CifradoRotacion2.cpp
 
-Este ejercicio es una modificación del ejercicio ```2. CifradoRotacion.cpp``` de la Sesión IV de prácticas, donde ahora tendremos que llevar a cabo una comprobación de los datos de entrada, además de una dificultad añadida.  
+Este ejercicio es una modificación del ejercicio ```2. CifradoRotacion.cpp``` de la [Sesión IV](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2004/Sesi%C3%B3n%2004.md) de prácticas, donde ahora tendremos que llevar a cabo una comprobación de los datos de entrada, además de una dificultad añadida.  
   
 Pra intercambiar mensajes de forma privada, se utilizan distintos algoritmos que codifican y descodifican una cadena de caracteres. Uno de los más sencillos es el cifrado de _rotación_ (o _cifrado césar_). Consiste en seleccionar un número entero como clave y desplazar las letras del alfabeto tantas posiciones como indique la clave. Consideraremos únicamente las mayúsculas.  
   
@@ -507,7 +507,7 @@ int main(){
 
 ## 6. ConversionUnidadesMedida.cpp
 
-Este programa es una versión más desarrollado que el ejercicio ```2. ConversionUnidades.cpp``` de la Sesión III de prácticas, donde ahora las unidades de medida de entrada y salida son variables.  
+Este programa es una versión más desarrollada que el ejercicio ```2. ConversionUnidades.cpp``` de la [Sesión III](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2003/Sesi%C3%B3n%2003.md) de prácticas, donde ahora las unidades de medida de entrada y salida son variables.  
   
 Realice un programa que realice la converesión entre dos unidades de distancia del sistema internacional. Las unidades contempladas serán:  
 ```mm (milímetros)```  
@@ -855,9 +855,9 @@ Desarrolle un programa que pida un carácter al usuario y lo almacene en una var
 3. Si no se trata de un carácter alfabético, no deberá modificarse.  
   
 Finalmente, se imprimirá en pantalla alguno de los siguientes mensajes:  
-La letra era una mayúscula. Una vez convertida es ```letra_convertida```.
-La letra era una mínúscula. Una vez convertida es ```letra_convertida```.
-El carácter era un dígito.
+La letra era una mayúscula. Una vez convertida es ```letra_convertida```.  
+La letra era una mínúscula. Una vez convertida es ```letra_convertida```.  
+El carácter era un dígito.  
 El carácter no era una letra ni un dígito.  
   
 La solución deberá llevarse a cabo con un tipo de dato enumerado que permita guardar el _tipo de carácter_ de ```letra_original```.  
@@ -945,7 +945,7 @@ int main(){
 
 # Ejercicios Opcionales
 ## 1. HaversineConMinimo.cpp
-Este programa es una modificación del ejercicio ```2. Harvesine.cpp``` de la Sesión IV de prácticas, donde ahora tiene prohibido usar la función ```min``` de la biblioteca ```algorithm``` y deberá emplear una estructura condicional. Le recordamos el enunciado del ejercicio:  
+Este programa es una modificación del ejercicio ```2. Harvesine.cpp``` de la [Sesión IV](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2004/Sesi%C3%B3n%2004.md) de prácticas, donde ahora tiene prohibido usar la función ```min``` de la biblioteca ```algorithm``` y deberá emplear una estructura condicional. Le recordamos el enunciado del ejercicio:  
   
 El sistema de posicionamiento global, más conocido por sus siglas en inglés, **GPS** (Global Positioning System), es un sistema que permite determinar en toda la Tierra la posición de un objeto.  
   
@@ -1055,13 +1055,13 @@ Cree un programa que lea los datos fiscales de una persona, reajuste su renta br
 - La renta bruta es la cantidad de dinero íntegra que el trabajador gana.
 - La retención fiscal es el tanto por ciento que el gobierno se queda.
 - La renta neta es la cantidad que le queda al trabajador después de quitarle el porcentaje de retención fiscal, es decir:
-$$Renta neta = Renta bruto - Renta bruta * Retencion / 100$$
+$$Renta\ neta = Renta\ bruta - Renta\ bruta * Retencion / 100$$
   
 Los datos a leer son:
-1. Si la persoan es un trabajador autónomo o no.
+1. Si la persona es un trabajador autónomo o no.
 2. Si es pensionista o no.
 3. Si está casada o no.
-4. Renta bruto (toatal de ingresos obtenidos).
+4. Renta bruta (total de ingresos obtenidos).
 5. Retención inicial.  
   
 La modificación se hará de la siguiente forma:
