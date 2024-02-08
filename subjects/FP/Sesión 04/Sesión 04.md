@@ -814,7 +814,7 @@ int main()
 [Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2004/Haversine.cpp)
 
 ## 3. AreaTriangulo.cpp
-El área $A$ de un triángulo se puede calcular a partir del valor de dos de sus lados, $a$ y $b$, y del ángulo $\thita$ que éstos forman entre sí con la fórmula:  
+El área $A$ de un triángulo se puede calcular a partir del valor de dos de sus lados, $a$ y $b$, y del ángulo $\theta$ que éstos forman entre sí con la fórmula:  
 $$A = \dfrac{1}{2}ab\sin\theta$$  
   
 Construya un programa que pida al usuario el valor de los dos lados (en centímetros), el ángulo que éstos forman (en grados), y muestre el valor del área (tenga en cuenta que el argumento de la función si va en radianes).
