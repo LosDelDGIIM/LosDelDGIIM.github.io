@@ -723,7 +723,7 @@ Construir un programa que lea la latitud y longitud (posición en el plano) de d
   
 Use la llamada fórmula del Haversine:
 1. $$a = \sin² \left(\dfrac{1}{2}(lat_2-lat_1)\right)+\cos lat_1 \cdot \cos lat_2 \cdot \sin²\left(\dfrac{1}{2}(lon_2-lon_1)\right)$$
-2. $$c = 2 \arcsin \min{\{1, \sqrt{a}\}}$$
+2. $$c = 2 \arcsin \left(\min{(1, \sqrt{a})}\right)$$
 3. La distancia será $d_p = R \cdot c$ donde:  
    $R = 6372797.560856$ metros, la longitud media del radio terrestre.  
   
