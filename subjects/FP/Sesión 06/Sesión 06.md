@@ -843,6 +843,12 @@ int main(){
 [Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2006/Divisores.cpp)
 
 ## 2. InteresDoblar.cpp
+Escriba un programa que, dado un capital inicial $C_0$ y un interés $I$, se calcule el número de años que han de pasar para que se doble el capital inicial.
+Cada año se invierte todo el capital de nuevo, es decir, la fórmula del capital que se tiene el $i$-ésimo año es:
+$$C_i=C_{i-1}+C_{i-1}\cdot \dfrac{I}{100}\qquad \forall i\geq 1$$
+Los valores leídos han de cumplir las siguientes restricciones:
+- Sobre el capital inicial, $C_0>0$
+- Sobre el interés, $0 < I \leq 10$
 
 ## 3. ParkingLimitadoDinero.cpp
 Recordando las tarifas de parking del ejercicio ```4. Parking.cpp``` de la [Sesión IV](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2004/Sesi%C3%B3n%2004.md) de prácticas:  
