@@ -999,15 +999,67 @@ int main(){
 
 # Ejercicios Opcionales
 ## 1. MultiplicacionRusa.cpp
+El algoritmo de la multiplicación rusa es una forma distinta de calcular la multiplicación de dos números enteros $n \cdot m$. Para ello, este algorimo va multiplicando por 2 el multiplicador $m$ y dividiendo (sin decimales) por dos el multiplicando $n$ hasta que $n$ tome el valor 1 y suma todos aquellos multiplicadores cuyos multiplicandos sean impares.  
+  
+Por ejemplo, para multiplicar $37 \cdot 12$, se harían las siguiente iteraciones:  
+  
+| Iteración | Multiplicando | Multiplicador |
+|-----------|---------------|---------------|
+| 1         | **37**        | **12**        |
+| 2         | 18            | 24            |
+| 3         | **9**         | **48**        |
+| 4         | 4             | 96            |
+| 5         | 2             | 192           |
+| 6         | **1**         | **384**       |
+  
+$37 \cdot 12 = 12 + 48 + 384 = 444$  
+  
+Cree un programa que lea dos enteros y calcule su producto con este algoritmo.
 
 ## 2. InteresReinvierteAnidado.cpp
 
 ## 3. DivisoresVarios.cpp
+Recordando el enunciado del ejercicio ```1. Divisores.cpp``` de la [Sesión VI](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/edit/main/subjects/FP/Sesi%C3%B3n%2006/Sesi%C3%B3n%2006.md) de prácticas:  
+  
+Realice un programa que lea desde teclado un número natural e imprima en pantalla todos sus **divisores**. Para obtener los divisores, basta recorrer todos los enteros menores que el valor introducido y comprobar si lo dividen.  
+  
+Ahora, el programa deberá leer un número entero ```tope``` e imprimir en pantalla todos los divisores de todos los números enteros del intervalo ```[1, tope]```.
 
 ## 4. Perfecto.cpp
+Un número _perfecto_ es aquel que es igual a la suma de todos sus divisores positivos excepto él mismo. El primer número perfecto es el 6, ya que sus divisores son 1, 2, 3 y $1+2+3=6$.  
+  
+Escriba un programa que muestre el mayor número perfecto que sea menor a un número dado por el usuario.
 
 ## 5. IgualCuadrado.cpp
+Escribir un programa que encuentre dos números enteros $n$ y $m$ mayores que 1 que verifiquen:
+$$\sum_{i=1}^m i² = n²$$
 
 ## 6. Secuenciable.cpp
+Diremos que un número entero es _secuenciable_ si se puede expresar como suma de números consecutivos.  
+Por ejemplo: $6 = 1 + 2 + 3$, $15 = 7 + 8$.  
+Dicha descomposición no tiene por qué ser única.  
+Por ejemplo: $15 = 7 + 8 = 4 + 5 + 6 = 1 + 2 + 3 + 4 + 5$.  
+  
+Escriba un programa que lea un entero $n$ y nos diga cuántas descomposiciones posibles tiene.   
+  
+Por ejemplo:  
+```15 --> 3 descomposiciones.```  
+```94 --> 1 descomposiciones.```  
+```108 --> 3 descomposiciones.```  
+  
+Curiosidad (**no debe usarse para resolver el ejercicio**): los únicos números con 0 descomposiciones son las potencias de 2.
 
 ## 7. GestionMenusGaussiana.cpp
+Escriba un programa que presente un menú principal como este:  
+```a) Introducir parámetros de la funcion (esperanza y desviacion).```  
+```b) Salir del programa.```  
+  
+Si el usuario elige ```b```, el programa terminará. Si elige la opción de introducir los parámetros, el programa leerá dos parámetros (esperanza y desviación típica). A continuación, el programa presentará un menú con las siguientes opciones:  
+```a) Introducir rango de valores de abscisas.```  
+```b) Volver al menu anterior.```  
+  
+Si el usuario elige ```b```, el programa deberá mostrar el menú principal. Si elige la opción de introducir valores de abscisas, el programa le pedirá los extremos del intervalo y el incremento entre dos valores consecutivos de la abscisa. El programa mostrará los valores de la función gaussiana en todos los valores posibles de la abscisa indicados.  
+Después de mostrar los valroes de la función, el programa volverá al menú de introducción de lrango e valores de abscisas.  
+  
+Recordamos la expresión de la función gaussiana:
+$$Gaussiana(x) = \dfrac{1}{\sigma\sqrt{2\pi}} e^{\left[\dfrac{-1}{2}\left(\dfrac{x-\mu}{\sigma}\right)²\right]}$$
