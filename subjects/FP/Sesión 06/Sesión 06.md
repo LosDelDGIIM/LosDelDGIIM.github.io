@@ -415,7 +415,7 @@ El cálculo de la raíz cuadrada puede realizarse con la función ```sqrt``` dis
   
 Impleméntelo para el cálculo de datos ```double```.  
   
-Implemente a continuación una estimación basada en la proporcionalidad entre triángulos. Se trata de aproximar la función $y = \sqrt{x}$ por ractas en los tramos determinados por lso valores con raíces exactas. Consideraremos las raíces exactas: ```0, 1, 4, 9, 16``` con abscisas ```0, 1, 2, 3, 4``` respectivamente. Consideraremos la función resultante de unir los segmentos ```(0,0)```, ```(1,1)```, ```(2,4)```, ```(3,9)```, ```(4,16)```, que aproxima a $y = \sqrt{x}$. Si tomamos un valor de abscisa cualquiera entre 1 y 16, podremos calcular su imagen con la función previamente definida, que aproxima a la raíz cuadrada.  
+Implemente a continuación una estimación basada en la proporcionalidad entre triángulos. Se trata de aproximar la función $y = \sqrt{x}$ por ractas en los tramos determinados por los valores con raíces exactas. Consideraremos las raíces exactas: ```0, 1, 4, 9, 16``` con abscisas ```0, 1, 2, 3, 4``` respectivamente. Consideraremos la función resultante de unir los segmentos ```(0,0)```, ```(1,1)```, ```(2,4)```, ```(3,9)```, ```(4,16)```, que aproxima a $y = \sqrt{x}$. Si tomamos un valor de abscisa cualquiera entre 1 y 16, podremos calcular su imagen con la función previamente definida, que aproxima a la raíz cuadrada.  
   
 Impleméntelo para el cálculo de datos ```dobule```.  
   
@@ -790,7 +790,7 @@ int main(){
 
 # Ejercicios Opcionales
 ## 1. Divisores.cpp
-Realice un programa que lea desde teclado un número natural e imprima en pantalla todos sus **divisores**. Para obtener los divisores, basta recorrer todos lso enteros menores que el valor introducido y comprobar si lo dividen.
+Realice un programa que lea desde teclado un número natural e imprima en pantalla todos sus **divisores**. Para obtener los divisores, basta recorrer todos los enteros menores que el valor introducido y comprobar si lo dividen.
 ```cpp
 #include <iostream>
 
