@@ -1019,7 +1019,7 @@ Cree un programa que lea dos enteros y calcule su producto con este algoritmo.
 ## 2. InteresReinvierteAnidado.cpp
 
 ## 3. DivisoresVarios.cpp
-Recordando el enunciado del ejercicio ```1. Divisores.cpp``` de la [Sesión VI](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/edit/main/subjects/FP/Sesi%C3%B3n%2006/Sesi%C3%B3n%2006.md) de prácticas:  
+Recordando el enunciado del ejercicio ```1. Divisores.cpp``` de la [Sesión VI](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2006/Sesi%C3%B3n%2006.md) de prácticas:  
   
 Realice un programa que lea desde teclado un número natural e imprima en pantalla todos sus **divisores**. Para obtener los divisores, basta recorrer todos los enteros menores que el valor introducido y comprobar si lo dividen.  
   
