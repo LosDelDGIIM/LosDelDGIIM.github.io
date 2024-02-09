@@ -882,10 +882,10 @@ Nota: en la implementación de esta solución:
 ## 6. AproxPiGregory-Leibniz.cpp
 En el siglo XVII, el matemático alemán Gottfried Leibniz y el matemático escocés James Gregory introdujeron una forma de calcular $\pi$ a través de una serie, es decir, de una suma de términos:
 
-$$\dfrac{\pi}{4} = \sum_{i=0}^{\infty} \dfrac{(-1)^i}{2i + 1} = 1 - \dfrac{1}{2*1+1} + \dfrac{1}{2*2+1} - \dfrac{1}{2 * 3 + 1} + \ldots $$
+$$\dfrac{\pi}{4} = \sum_{i=0}^{\infty} \dfrac{(-1)^i}{2i + 1} = 1 - \dfrac{1}{2\cdot 1+1} + \dfrac{1}{2\cdot 2+1} - \dfrac{1}{2\cdot 3 + 1} + \ldots$$
 
 Se pide desarrollar un programa que pida un número llamado ```tope``` e imprima en pantalla el resultado de la siguiente sumatoria:
-$$\dfrac{\pi}{4} \approx \sum_{i=0}^{tope} \dfrac{(-1)^i}{2i + 1} = 1 - \dfrac{1}{2*1+1} + \dfrac{1}{2*2+1} - \dfrac{1}{2 * 3 + 1} + \ldots + \dfrac{(-1)^{tope}}{2*tope + 1}$$
+$$\dfrac{\pi}{4} \approx \sum_{i=0}^{tope} \dfrac{(-1)^i}{2i + 1} = 1 - \dfrac{1}{2\cdot 1+1} + \dfrac{1}{2\cdot 2+1} - \dfrac{1}{2\cdot 3 + 1} + \ldots + \dfrac{(-1)^{tope}}{2\cdot tope + 1}$$
 ```tope``` deberá estar comprendido entre 1 y 100000.  
   
 Debe resolver el problema de dos formas distintas:  
