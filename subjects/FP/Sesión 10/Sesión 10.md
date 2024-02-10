@@ -40,7 +40,7 @@ Si la ordenación fuera por _apellidos_:
 ```Martinez Lopez          Juan Carlos         10 Dic 2000     2345.55```  
 ```Pi Garcia               Jose                05 May 1987     1987.44```  
   
-Si fuera por _fecha de nacimiento_:
+Si fuera por _fecha de nacimiento_:  
 ```Pi Garcia               Jose                05 May 1987     1987.44```  
 ```Martin Martinez         Patricia            04 Jun 1998     1234.56```  
 ```Abad y Paz de Molina    Maria del Carmen    01 Ene 1999     3002.88```  
@@ -592,7 +592,7 @@ int main(){
 [Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2010/ArrayEmpleados.cpp)
 
 ## 2. InflacionMatriz.cpp
-En la siguiente table lmostramos el IPC de varios paises entre 2001 y 2021:  
+En la siguiente tabla mostramos el IPC de varios paises entre 2001 y 2021:  
   
 | Año  | España | Inglaterra | USA  | Zona Euro |
 |------|--------|------------|------|-----------|
@@ -622,7 +622,7 @@ Escriba un programa que solicite un número ```n``` de años ($2\leq n\leq 5$) y
 1. Tiene el mayor IPC medio en ```n``` años.
 2. TIene el menor IPC medio en ```n``` años.  
    
-Muestre además, sus valores y laos años entre los que se han calculado los resultados.  
+Muestre además, sus valores y los años entre los que se han calculado los resultados.  
   
 Repita hasta introducir un valor de ```n``` negativo.
 ```cpp
@@ -1878,7 +1878,7 @@ Escriba un programa que lea una serie indefinida de caracteres de la entrada est
 Suponga que la frecuencia absoluta no puede ser mayor que 500.
 
 ## 3. HistogramaLetras.cpp
-Vamos a mejorar el ejercicio anterior, ```3. HistorgramaVocales.cpp```, calculando el histograma para todas las letras del alfabeto inglés:  
+Vamos a mejorar el ejercicio anterior, ```3. HistogramaVocales.cpp```, calculando el histograma para todas las letras del alfabeto inglés:  
   
 Escriba un programa que lea una serie indefinida de caracteres de la entrada estanar (terminados por ```|```) y que meustre el histograma que representa la frecuencia absoluta de las letras introducidas.  
   
