@@ -1017,6 +1017,26 @@ $37 \cdot 12 = 12 + 48 + 384 = 444$
 Cree un programa que lea dos enteros y calcule su producto con este algoritmo.
 
 ## 2. InteresReinvierteAnidado.cpp
+Un banco presenta la siguiente oferta: Si se deposita un capital durante un año a plazo fijo, se dará un interés (que será un número entero) y el total de dinero que se obtiene al cabo del año viene dado por la siguiente fórmula:  
+$$total = capital + capital\cdot\dfrac{interes}{100}$$
+Se quiere invertir todo lo ganado durante varios años (se invierte el capital más los intereses cada vez).  
+  
+Escribir un programa que lea por teclado el capital **C**, el interés **I**, y el número de años **N**.  
+Filtrar adecuadamente los valores leidos de manera que cumplan las condiciones:  
+- Sobre el capital, $C > 0$.
+- Sobre el número de años, $1 \leq N \leq 20$.
+- Sobre el interés, $0 < I \leq 10$.  
+  
+Calcule el capital obtenido al término de cada año, pero realizando los cálculos para todos los tipos de interés enteros menores o iguales que el introducido. El programa debe mostrar:  
+  
+```Cálculos realizados al 1%:```  
+    ```Dinero obtenido en el año número 1 = 2020.00```  
+	```Dinero obtenido en el año número 2 = 2040.20```  
+	```Dinero obtenido en el año número 3 = 2060.60```  
+```Cálculos realizados al 2%:```  
+	```Dinero obtenido en el año número 1 = 2040.00```  
+	```Dinero obtenido en el año número 2 = 2080.80```  
+	```Dinero obtenido en el año número 3 = 2122.42```  
 
 ## 3. DivisoresVarios.cpp
 Recordando el enunciado del ejercicio ```1. Divisores.cpp``` de la [Sesión VI](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2006/Sesi%C3%B3n%2006.md) de prácticas:  
