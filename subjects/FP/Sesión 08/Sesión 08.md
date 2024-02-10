@@ -10,13 +10,13 @@
 - **Profesor:** Francisco José Cortijo Bon.
 - **Descripción:** Resolución de problemas de la Sesión VIII de prácticas.
 
-En esta sesión de prácticas se introduce las **funciones**, por lo que muchos de los siguientes ejercicios estarán orientados a su uso. Además, deberá incluir en la función **main** código para probar las funciones.
-Además, será necesario **documentar las funciones** de forma breve, incluyendo comentarios que indiquen qué devuelve, qué parámeros recibe y alguna precondición si esta es necesaria.
+En esta sesión de prácticas se introducen las **funciones**, por lo que muchos de los siguientes ejercicios estarán orientados a su uso. Además, deberá incluir en la función **main** código para probar las funciones.
+Será necesario también **documentar las funciones** de forma breve, incluyendo comentarios que indiquen qué devuelve, qué parámeros recibe y alguna precondición si esta es necesaria.
 
 ## 1. RedondearTruncarDecimal.cpp
 En ```cmath``` está definida la función ```round```, que permite redondear un real al entero más próximo.  
   
-Por ejemplo:
+Por ejemplo:  
 ```round(3.6) = 4```  
 ```round(3.5) = 4```  
 ```round(3.1) = 3```  
@@ -1620,7 +1620,7 @@ Recordamos que:
   
 Esta función tiene algunos inconvenientes:  
 1. Siempre proporciona 6 cifras decimales, redondeando la última.
-2. No suprime los ```0```s finales en la parte decimal.
+2. No suprime los '0's finales en la parte decimal.
 3. No permite especificar el número de casillas para la parte entera y decimal.  
   
 Las funciones que se piden a continuación resuelven estos problemas:  
@@ -1700,7 +1700,7 @@ Siempre y cuando $|r| < 1$ (incluir como precondición).
   
 ```MultiplicaHasta```  
 Que multiplique los $k$ primeros términos de la progresión geométrica mediante la expresión:  
-$$\prod_{i=1}^k a_i = \prod_{i=1}^k a_1 \cdot r^{i-1} = \sqrt{(a_1\cdot a_k)^k}
+$$\prod_{i=1}^k a_i = \prod_{i=1}^k a_1 \cdot r^{i-1} = \sqrt{(a_1\cdot a_k)^k}$$
 
 ## 6. SumaSerie.cpp
 Dada la siguiente sucesión de números reales:  
