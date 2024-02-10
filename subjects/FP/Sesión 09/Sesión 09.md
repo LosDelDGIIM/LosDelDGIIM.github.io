@@ -10,7 +10,7 @@
 - **Profesor:** Francisco José Cortijo Bon.
 - **Descripción:** Resolución de problemas de la Sesión IX de prácticas.
 
-En esta sesión de prácticas se introducen los **structs** y los **arrays**, por lo que los siguientes ejercicios estarán orientados a su uso. Los dos primeros ejercicios están orientados a los **structs** y los 5 siguientes a **arrays**.
+En esta sesión de prácticas se introducen los **structs** y los **arrays**, por lo que los siguientes ejercicios estarán orientados a su uso. Los dos primeros ejercicios están orientados a los **structs** y los 5 siguientes a **arrays**.  
 En ningún momento quedará permitido el paso de arrays a funciones, esto se aprenderá en la asignatura de _Metodología de la Programación_.
 Por tanto, se perdonará que los ejercicios de arrays no estén correctamente modularizados.
 
@@ -24,7 +24,8 @@ En este programa, deberá crear varios ```structs```:
 ```struct``` que representa una circunferencia en el plano bidimensional.  
   
 ```Rectangulo```  
-```struct``` que representa a un rectángulo en el plano bidimensional. Un rectángulo viene determinado por el vértice superior izquierdo y por el vértice inferior derecho.  
+```struct``` que representa a un rectángulo en el plano bidimensional.  
+Un rectángulo viene determinado por el vértice superior izquierdo y por el vértice inferior derecho.  
   
 Desarrolle un programa que pida al usuario un rectángulo y calcule la circunferencia centrada en el punto de corte de las diagonales del rectángulo de forma que su superficie sea la menor entre todas las circunferencias de mayor área que la del rectángulo.  
   
@@ -832,16 +833,16 @@ int main(){
 ## 4. Inflacion.cpp
 En la siguiente tabla mostramos el IPC de España entre 1990 y 2021.  
   
-```| Año  | IPC   | Año  | IPC  | Año  | IPC  | Año  | IPC  |```  
-```|------|-------|------|------|------|------|------|------|```  
-```| 2021 | 6.50% | 2013 | 0.3% | 2005 | 3.7% | 1997 | 2.0% |```  
-```| 2020 | -0.5% | 2012 | 2.9% | 2004 | 3.2% | 1996 | 3.2% |```  
-```| 2019 | 0.80% | 2011 | 2.4% | 2003 | 2.6% | 1995 | 4.3% |```  
-```| 2018 | 1.20% | 2010 | 3.0% | 2002 | 4.0% | 1994 | 4.3% |```  
-```| 2017 | 1.10% | 2009 | 0.8% | 2001 | 2.7% | 1993 | 4.9% |```  
-```| 2016 | 1.60% | 2008 | 1.4% | 2000 | 4.0% | 1992 | 5.3% |```  
-```| 2015 | 0.00% | 2007 | 4.2% | 1999 | 2.9% | 1991 | 5.5% |```  
-```| 2014 | -1.0% | 2006 | 2.7% | 1998 | 1.4% | 1990 | 6.5% |```  
+| Año  | IPC   | Año  | IPC  | Año  | IPC  | Año  | IPC  |  
+|------|-------|------|------|------|------|------|------|  
+| 2021 | 6.50% | 2013 | 0.3% | 2005 | 3.7% | 1997 | 2.0% |  
+| 2020 | -0.5% | 2012 | 2.9% | 2004 | 3.2% | 1996 | 3.2% |  
+| 2019 | 0.80% | 2011 | 2.4% | 2003 | 2.6% | 1995 | 4.3% |  
+| 2018 | 1.20% | 2010 | 3.0% | 2002 | 4.0% | 1994 | 4.3% |  
+| 2017 | 1.10% | 2009 | 0.8% | 2001 | 2.7% | 1993 | 4.9% |  
+| 2016 | 1.60% | 2008 | 1.4% | 2000 | 4.0% | 1992 | 5.3% |  
+| 2015 | 0.00% | 2007 | 4.2% | 1999 | 2.9% | 1991 | 5.5% |  
+| 2014 | -1.0% | 2006 | 2.7% | 1998 | 1.4% | 1990 | 6.5% |  
   
 Queremos conocer el valor actualizado según las variaciones del IPC que debería tener un bien cualquiera conociendo su valor monetario en un año concreto. Por ejemplo, en 2001 una barra de pan costaba 0.30€ y una entrada de cine 3,90€. En 2021 la barra de pan costaba alrededor de 0.70€ y la entrada de cine 7,78€. ¿El incremento de precio es razonable?  
   
@@ -956,27 +957,27 @@ int main(){
 ## 5. SueldoFuncionarios.cpp
 Considerando la tabla del IPC del ejercicio ```4. Inflacion.cpp``` realizado anteriormente:  
   
-```| Año  | IPC   | Año  | IPC  | Año  | IPC  | Año  | IPC  |```  
-```|------|-------|------|------|------|------|------|------|```  
-```| 2021 | 6.50% | 2013 | 0.3% | 2005 | 3.7% | 1997 | 2.0% |```  
-```| 2020 | -0.5% | 2012 | 2.9% | 2004 | 3.2% | 1996 | 3.2% |```  
-```| 2019 | 0.80% | 2011 | 2.4% | 2003 | 2.6% | 1995 | 4.3% |```  
-```| 2018 | 1.20% | 2010 | 3.0% | 2002 | 4.0% | 1994 | 4.3% |```  
-```| 2017 | 1.10% | 2009 | 0.8% | 2001 | 2.7% | 1993 | 4.9% |```  
-```| 2016 | 1.60% | 2008 | 1.4% | 2000 | 4.0% | 1992 | 5.3% |```  
-```| 2015 | 0.00% | 2007 | 4.2% | 1999 | 2.9% | 1991 | 5.5% |```  
-```| 2014 | -1.0% | 2006 | 2.7% | 1998 | 1.4% | 1990 | 6.5% |```  
+| Año  | IPC   | Año  | IPC  | Año  | IPC  | Año  | IPC  |  
+|------|-------|------|------|------|------|------|------|  
+| 2021 | 6.50% | 2013 | 0.3% | 2005 | 3.7% | 1997 | 2.0% |  
+| 2020 | -0.5% | 2012 | 2.9% | 2004 | 3.2% | 1996 | 3.2% |  
+| 2019 | 0.80% | 2011 | 2.4% | 2003 | 2.6% | 1995 | 4.3% |  
+| 2018 | 1.20% | 2010 | 3.0% | 2002 | 4.0% | 1994 | 4.3% |  
+| 2017 | 1.10% | 2009 | 0.8% | 2001 | 2.7% | 1993 | 4.9% |  
+| 2016 | 1.60% | 2008 | 1.4% | 2000 | 4.0% | 1992 | 5.3% |  
+| 2015 | 0.00% | 2007 | 4.2% | 1999 | 2.9% | 1991 | 5.5% |  
+| 2014 | -1.0% | 2006 | 2.7% | 1998 | 1.4% | 1990 | 6.5% |  
   
-Y la tabla de variación de los sueldos de los funcionarios en Eespaña desde 2010 hasta 2021:  
+Y la tabla de variación de los sueldos de los funcionarios en España desde 2010 hasta 2021:  
   
-```| Año  | Subida | Año  | Subida |```  
-```|------|--------|------|--------|```  
-```| 2021 | 0.90%  | 2015 | 0.000% |```  
-```| 2020 | 2.00%  | 2014 | 0.000% |```  
-```| 2019 | 2.50%  | 2013 | 0.000% |```  
-```| 2018 | 1.75%  | 2012 | 0.000% |```  
-```| 2017 | 1.00%  | 2011 | 0.000% |```  
-```| 2016 | 1.00%  | 2010 | -5.00% |``` 
+| Año  | Subida | Año  | Subida |  
+|------|--------|------|--------|  
+| 2021 | 0.90%  | 2015 | 0.000% |  
+| 2020 | 2.00%  | 2014 | 0.000% |  
+| 2019 | 2.50%  | 2013 | 0.000% |  
+| 2018 | 1.75%  | 2012 | 0.000% |  
+| 2017 | 1.00%  | 2011 | 0.000% |  
+| 2016 | 1.00%  | 2010 | -5.00% | 
   
 El programa leerá el valor de un sueldo y el año de referencia de ese sueldo. A continuación, leerá el un segundo año (debe ser posterior). Calcule el salario que le correspondería en ese segundo año si se aplicaran las variaciones del IPC y el salario que le corresponde de acuerdo a las subidas reales aplicadas. Muestre ambos valores, su diferencia y el porcentaje de ganancia/pérdida respecto al salario calculado con las variaciones del IPC.  Repetir hasta que se introduzca un valor monetario negativo.
 ```cpp
@@ -1164,10 +1165,10 @@ Para ello, deberá previamente calcular y guardar en un array los números primo
   
 Recomendamos la creación de un struct:  
 ```cpp
-    struct Pareja {
-        int primo;
-        int potencia;
-    };
+struct Pareja {
+    int primo;
+    int potencia;
+};
 ```  
   
 De forma que cada descomposición se guarde en un array antes de la salida.  
@@ -1490,8 +1491,8 @@ En esta ocasión, los 3 primeros ejercicios están orientados a **structs** y lo
 Recupere los ```structs``` ```Punto2D``` y ```Circunferencia``` del ejercicio ```1. Rectangulo.cpp``` del inicio de la sesión de prácticas, para llevar a cabo el siguiente programa:  
   
 Desarrolle funciones para obtener la longitud de una circunferencia, el área del círculo, y una función que indique si una circunferencia contiene a un punto.  
-Recordamos que un punto $P = (x, y)$ está dentro de una circunferencia $C$ de centro $(a,b)$ si:  
-$$d(C, P) = \sqrt{(a-x)² + (b-y)²}$$  
+Recordamos que un punto $P = (x, y)$ está dentro de una circunferencia $C$ de centro $(a,b)$ y radio $r$ si:  
+$$d(C, P) = \sqrt{(a-x)² + (b-y)²} < r$$  
   
 Desarrolle un programa que pida al usuario las coordenadas del centro de una circunferencia y el radio de la misma; y que imprima en pantalla la longitud de la circunferencia y el área que esta encierra. Además, deberá pedir al usuario una secuencia de puntos terminada por FIN y, por cada punto, deberá imprimir si la circunferencia contiene o no al punto.
 
@@ -1562,7 +1563,7 @@ Por ejemplo, si el vector es ```1 3 2 4 7 5```, las diferencias son:
 ```+2 -1 +2 +3 -2```, por lo que el desnivel acumulado positivo será:
 $$2 + 2 + 3 = 7$$  
   
-Construir un programa que, primero, lea un número natural distinto de 0 ```n```, número de valores de altura a introducir. A continuación, el programa leerá ```n``` número enteros consecutivos, almacenándolos en un vector.  El programa calculará el **máximo desnivel** y el **desnivel acumulado positivo**, imprimiéndolos en pantalla.
+Construir un programa que, primero, lea un número natural distinto de 0, ```n```, número de valores de altura a introducir. A continuación, el programa leerá ```n``` número enteros consecutivos, almacenándolos en un vector.  El programa calculará el **máximo desnivel** y el **desnivel acumulado positivo**, imprimiéndolos en pantalla.
 
 ## 6. LeyDHondt.cpp
 La Ley **D'Hondt** es el método usado en España para asignar escaños a una circunscripción electoral.  
@@ -1577,15 +1578,14 @@ El número de votos recibidos por cada partido se divide sucesivamente por cada 
 Ejemplo: Supongamos unas elecciones a las que se presentan ```n = 4``` partidos, entre los que se deben repartir 5 escaños. La asignación de escaños se hace como sigue:  
 Cada escaño se asigna al partido cuyo cociente sea máximo (se indica en negrita):  
   
-```| Partido  | Partido A | Partido B | Partido C | Partido D |```  
-```|----------|-----------|-----------|-----------|-----------|```  
-```| Votos    | 340000    | 280000    | 160000    |  60000    |```  
-```|----------|-----------|-----------|-----------|-----------|```  
-```| Escaño 1 | **340000/1**  | 280000/1  | 160000/1  |  60000/1  |```  
-```| Escaño 2 | 340000/2  | **280000/1**  | 160000/1  |  60000/1  |```  
-```| Escaño 3 | **340000/2**  | 280000/2  | 160000/1  |  60000/1  |```  
-```| Escaño 4 | 340000/3  | 280000/2  | **160000/1**  |  60000/1  |```  
-```| Escaño 5 | 340000/3  | **280000/2**  | 160000/2  |  60000/1  |```  
+| Partido  | Partido A | Partido B | Partido C | Partido D |  
+|----------|-----------|-----------|-----------|-----------|  
+| Votos    | 340000    | 280000    | 160000    |  60000    |   
+| Escaño 1 | **340000/1**  | 280000/1  | 160000/1  |  60000/1  |  
+| Escaño 2 | 340000/2  | **280000/1**  | 160000/1  |  60000/1  |  
+| Escaño 3 | **340000/2**  | 280000/2  | 160000/1  |  60000/1  |  
+| Escaño 4 | 340000/3  | 280000/2  | **160000/1**  |  60000/1  |  
+| Escaño 5 | 340000/3  | **280000/2**  | 160000/2  |  60000/1  |  
   
 Sugerencia: Represente la información de cada partido con un ```struct```:  
 ```cpp
@@ -1608,12 +1608,12 @@ Se pide implementar tres versiones del borrado:
 ```   Si el valor de la casilla NO está en sin_repetir: ```  
 ```      Se añade al vector sin_repetir ```  
 ```Sustituir todas las componentes de datos por las de sin_repetir```  
-2. Sin usar estructuras auxiliares, borrar del vector las repetidas: 
+2. Sin usar estructuras auxiliares, borrar del vector las repetidas:  
 ```Desde la primera casilla de datos, hasta la última:```  
 ```   Guardar el valor de la casilla, v```  
 ```   Desde esta hasta la penúltima: ```  
 ```      Si datos[j] = v: datos[j]=datos[j+1] ```
-3. Usar dos apuntadores: ```pos_lectura``` y ```pos_escritura```; y un array ```repetidos```.
+4. Usar dos apuntadores: ```pos_lectura``` y ```pos_escritura```; y un array ```repetidos```.
 
 ## 8. RLE.cpp
 Recordamos el enunciado del ejercicio ```2. RLE.cpp``` de la [Sesión VI](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2006/Sesi%C3%B3n%2006.md) de prácticas:  
@@ -1627,7 +1627,7 @@ Se codifica como:
 ```3A 5X 6D 1Q```  
   
 Se pide hacer un programa que:  
-1. Lea y almacene en un vector ```cadena``` un número indeterminado de caracteres (no más de 50). Se termina de leer cuando se supere el máximo establecido o se lea el carácter '.'.
+1. Lea y almacene en un vector ```cadena``` un número indeterminado de caracteres (no más de 50). Se termina de leer cuando se supere el máximo establecido o se lea el carácter ```.```.
 2. Codifique mediante el método RLE el array anterior, guardándolo en un array ```codificado```.
 3. Descodifice el array ```codificado```, guardando el resultdo en un array ```descodificado```.
 4. Compare los arrays ```cadena``` y ```descodificado```, e informe si son iguales o no.
@@ -1658,7 +1658,7 @@ Se pide implementar un programa para que, dada una posición inicial ```pos``` p
 - Si la serie de órdenes es correcta, muestre el itinerario, así como el número de veces que se visitó cada posición.
 - Si la serie de órdenes NO es correcta, el programa ejecutará las órdenes posibles hasta que la ejecución no pueda continuar (hasta que ```pos``` se salga de los márgenes establecidos), indicando cuántas órdenes pudo ejecutar.  
   
-Ejemplos:
+Ejemplos:  
 ```Posicion inicial (pos): 10```  
 ```Longitud (lon): 6```  
 ```Ordenes (ord): DDIIII```  
