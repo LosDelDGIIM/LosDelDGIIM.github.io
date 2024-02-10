@@ -1027,7 +1027,7 @@ Filtrar adecuadamente los valores leidos de manera que cumplan las condiciones:
 - Sobre el número de años, $1 \leq N \leq 20$.
 - Sobre el interés, $0 < I \leq 10$.  
   
-Calcule el capital obtenido al término de cada año, pero realizando los cálculos para todos los tipos de interés enteros menores o iguales que el introducido. El programa debe mostrar:  
+Calcule el capital obtenido al término de cada año, pero realizando los cálculos para todos los tipos de interés enteros menores o iguales que el introducido. El programa debe mostrar (Si $I=2$):  
   
 ```Cálculos realizados al 1%:```  
     ```Dinero obtenido en el año número 1 = 2020.00```  
