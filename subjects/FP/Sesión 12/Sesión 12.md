@@ -343,7 +343,7 @@ for (int i=0; i<primos.TotalCalculados(); i++)
     cout << setw(5) << primos.Elemento(i);
 ```
 
-5. RedSocial.cpp
+## 5. RedSocial.cpp
 Implemente una clase ```RedSocial``` para gestionar una red social. La red debe almacenar los nombres de los usuarios y las relaciones de amistad. Se propone la siguiente representación:
 ```cpp
 class RedSocial{
