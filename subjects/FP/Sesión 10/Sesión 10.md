@@ -624,7 +624,7 @@ Escriba un programa que solicite un número ```n``` de años ($2\leq n\leq 5$) y
    
 Muestre además, sus valores y los años entre los que se han calculado los resultados.  
   
-Repita hasta introducir un valor de ```n``` negativo.
+Repita hasta introducir un valor de ```n``` negativo.  
 [Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2010/InflacionMatriz.cpp)
 
 ## 3. RobotTablero.cpp
