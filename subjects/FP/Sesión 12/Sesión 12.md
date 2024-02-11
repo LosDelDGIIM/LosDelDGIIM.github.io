@@ -15,260 +15,11 @@ A partir de esta sesión de prácticas, y a lo largo de las siguientes, serán d
   
 En cada ejercicio que esta se nos mencione, tendremos un enlace a su código, listo para ser copiado.
 [Código de la clase](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2012/SecuenciaCaracteres.cpp)
-```cpp
-#include <iostream>
-
-using namespace std;
-
-/***************************************************************************/
-
-class SecuenciaCaracteres {
-
-private:
-
-    static const int TAMANIO = 50; // Núm.casillas disponibles
-    char vector_privado[TAMANIO];
-
-    // PRE: 0<=total_utilizados<=TAMANIO
-
-    int total_utilizados; // Núm.casillas ocupadas
-
-public:
-
-    /***********************************************************************/
-    // Constructor sin argumentos
-
-    SecuenciaCaracteres (void) : total_utilizados (0)
-    {}
-    
-	/***********************************************************************/
-    // Constructor con argumento string.
-    // "Copia" el contenido del string en la secuencia 
-
-    SecuenciaCaracteres (string cad) 
-    {
-    	int num_caracteres;
-    	
-    	int long_cad = cad.length();
-    	
-		if (long_cad > TAMANIO) num_caracteres = TAMANIO;
-		else num_caracteres = long_cad;
-		
-		for (int pos=0; pos<num_caracteres; pos++) 
-			vector_privado[pos] = cad.at(pos);
-			
-		total_utilizados = num_caracteres;	
-	}
-	
-    /***********************************************************************/
-    // Constructor con char e int.
-    // Rellena la secuencia con "n" caracteres "c".
-
-	SecuenciaCaracteres (char c, int n)
-	{
-		int num_caracteres;
-
-		if (n > TAMANIO) num_caracteres = TAMANIO;
-		else num_caracteres = n;
-			
-		for (int pos=0; pos<num_caracteres; pos++) 
-			vector_privado[pos] = c;		
-
-		total_utilizados = num_caracteres;		
-	}
-
-    /***********************************************************************/
-    // Devuelve el número de casillas ocupadas
-
-    int TotalUtilizados (void)
-    {
-        return (total_utilizados);
-    }
-
-    /***********************************************************************/
-    // Devuelve el número de casillas disponibles
-
-    int Capacidad (void)
-    {
-        return (TAMANIO);
-    }
-
-    /***********************************************************************/
-    // Añade un elemento ("nuevo") al vector.
-    // PRE: total_utilizados < TAMANIO
-    // 		La adición se realiza si hay alguna casilla disponible.
-    // 		El nuevo elemento se coloca al final del vector.
-    // 		Si no hay espacio, no se hace nada.
-
-    void Aniade (char nuevo)
-    {
-        if (total_utilizados < TAMANIO){
-            vector_privado[total_utilizados] = nuevo;
-            total_utilizados++;
-        }
-    }
-
-    /***********************************************************************/
-    // Devuelve el elemento de la casilla "indice"
-    // PRE: 0 <= indice < total_utilizados
-
-    char Elemento (int indice)
-    {
-        return (vector_privado[indice]);
-    }
-
-    /***********************************************************************/
-    // Eliminar el carácter de la posición dada por "indice".
-    // Realiza un borrado físico (desplazamiento y sustitución).
-    // PRE: 0 <= indice < total_utilizados
-
-    void Elimina (int indice)
-    {
-        if ((indice >= 0) && (indice < total_utilizados)) {
-
-            int tope = total_utilizados-1; // posic. del último
-
-            for (int i = indice ; i < tope ; i++)
-                vector_privado[i] = vector_privado[i+1];
-
-            total_utilizados--;
-        }
-    }
- 
-    /***********************************************************************/
-    // Compone un string con todos los caracteres que están
-    // almacenados en la secuencia y lo devuelve.
-
-    string ToString()
-    {
-        string cadena;
-
-        for (int i=0; i<total_utilizados; i++)
-            cadena = cadena + vector_privado[i];
-
-        return (cadena);
-    }
- 
-};	// Clase SecuenciaCaracateres
-
-/***************************************************************************/
-
-```
-
 # Clase SecuenciaEnteros
 A partir de esta sesión de prácticas, y a lo largo de las siguientes, serán de interés varios ejercicios que trabajen sobre la clase ```SecuenciaEnteros```. La implementación básica de esta clase se nos proporciona aquí y podremos usarla en cada ejercicio futuro.  
   
 En cada ejercicio que esta se nos mencione, tendremos un enlace a su código, listo para ser copiado.
 [Código de la clase](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2012/SecuenciaEnteros.cpp)
-```cpp
-#include <iostream>
-
-using namespace std;
-
-/****************************************************************************/
-
-class SecuenciaEnteros{
-	
-	// Campos de clase
-
-	private:
-	
-	static const int TAMANIO = 100; 	// Tamaño del array
-
-	int array[TAMANIO];
-
-	int pos_validas;	// PRE: 0 <= pos_validas < TAMANIO
-
-	// Métodos
-
-	public:
-	
-	/***********************************************************************/
-	// Método constructor
-
-	SecuenciaEnteros() :pos_validas(0) {}
-
-	/***********************************************************************/
-	// GETTERS
-
-	int Longitud(){
-		return pos_validas;
-	}
-
-	int Casillas(){
-		return TAMANIO;
-	}
-
-	/***********************************************************************/
-	// Añade un elemento a la secuencia
-	// PRE: pos_validas < TAMANIO
-
-	void Aniade(int n){
-		if(pos_validas < TAMANIO){
-
-			array[pos_validas] = n;
-			pos_validas++;
-
-		}
-	}
-
-	/***********************************************************************/
-	// Obtiene el elmento de la posición especificada
-	// PRE: 0 <= indice < pos_validas
-
-	int Obtener(int indice){
-		return array[indice];
-	}
-
-	/***********************************************************************/
-	// Elimina el elemento especificado del array
-	// PRE: 0 <= indice < pos_validas
-
-	void Eliminar(int indice){
-
-		for(int i = indice + 1; i < pos_validas; i++){
-			array[i - 1] = array[i];
-		}
-
-		pos_validas--;
-
-	}
-	
-	/***********************************************************************/
-	// Devuelve el contenido de la secuencia en el siguiente formato:
-	// [n, n, ..., n]
-	
-	string ToString(){
-		
-		string cad = "[";
-
-		for(int i = 0; i < pos_validas - 1; i++){
-			cad += to_string(array[i]) + ", ";
-		}
-
-		cad += to_string(array[pos_validas - 1]) + "]";
-
-		return cad;
-	}
-
-	/***********************************************************************/
-	// Intercambia dos valores en la secuencia
-	// PRE: 0 <= indice1, indice2 < pos_validas
-
-	void Intercambia(int indice1, int indice2){
-
-		int auxiliar = array[indice1];
-		array[indice1] = array[indice2];
-		array[indice2] = auxiliar;
-
-	}
-
-};	// Clase SecuenciaEnteros
-
-/****************************************************************************/
-
-```
-
 ## 1. InflacionMatriz.cpp
 Reescriba la solución al ejercicio ```2. InflacionMatriz.cpp``` de la [Sesión X](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2010/Sesi%C3%B3n%2010.md) de prácticas, ahora con una nueva clase ```GestorIPC``` cuya definición indicamos tras recordar el enunciado del ejercicio:  
   
@@ -385,8 +136,6 @@ Por ejemplo:
   
 ```Hay 2 numeros con 2 secuencias```  
 
-```cpp
-```
 [Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2012/NumerosSecuenciables.cpp)
 
 ## 3. Empleados.cpp
@@ -409,9 +158,8 @@ Ahora, deberá crear una clase ```Empleado``` para representar a los empleados.
   
 Use un array de objetos ```Empleado``` para almacenar los empleados leidos. Muestre su contenido después de leer los datos de los empleados. Calcule los salarios mínimos y máximos, muestre sus valores y los nombres y apellidos de los empleados que ganan menos y más. Calcule el salario medio, muestre su valor y después muestre un listado de los empleados cuyo salario es superior al salario medio.  
   
-Nota: recomendamos la ejecución del programa con redirección de datos de entrada. Le dejamos aquí el [fichero](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2010/Empleados.txt) listo con la entrada.
-```cpp
-```
+Nota: recomendamos la ejecución del programa con redirección de datos de entrada. Le dejamos aquí el [fichero](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2010/Empleados.txt) listo con la entrada.  
+  
 [Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2012/Empleados.cpp)
 
 ## 4. EliminaOcurrencias.cpp
@@ -419,9 +167,8 @@ Este ejercicio trabaja sobre la clase ```SecuenciaCaracteres```. Puede encontrar
   
 Añada el método ```EliminaOcurrencias``` para eliminar todas las apariciones que hubiese de un determinado carácter ```a_borrar``` en la secuencia.  
   
-Por ejemplo, después de eliminar el carácter 'o' de la secuencia  ```{'S', 'o', 'Y', 'y', 'o'}```, esta debe quedar: ```{'S', 'Y', ' ', 'y'}```.
-```cpp
-```
+Por ejemplo, después de eliminar el carácter 'o' de la secuencia  ```{'S', 'o', 'Y', 'y', 'o'}```, esta debe quedar: ```{'S', 'Y', ' ', 'y'}```.  
+  
 [Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2012/EliminaOcurrencias.cpp)
 
 ## 5. EliminaExcesoBlancos.cpp
@@ -429,9 +176,8 @@ Este ejercicio trabaja sobre la clase ```SecuenciaCaracteres```. Puede encontrar
   
 Añada el método ```EliminaExcesoBlancos()``` para eliminar el exceso de caracteres en blanco, es decir, que sustituya todas las secuencias de espacios en blanco por un sólo espacio.  
   
-Por ejemplo, si el vector original es ```{' ', 'a', 'h', ' ', ' ', ' ', 'c'}```, que contiene una secuencia de tres espacios consecutivos, el vector resultante debe ser ```{' ', 'a', 'h', ' ', 'c'}```.
-```cpp
-```
+Por ejemplo, si el vector original es ```{' ', 'a', 'h', ' ', ' ', ' ', 'c'}```, que contiene una secuencia de tres espacios consecutivos, el vector resultante debe ser ```{' ', 'a', 'h', ' ', 'c'}```.  
+  
 [Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2012/EliminaExcesoBlancos.cpp)
 
 ## 6. OrdenacionSecuencia.cpp 
@@ -448,9 +194,8 @@ Añada cuatro nuevos métodos a la clase ```SecuenciaEnteros```:
 - ```void OrdenaIntercambio_NuevoOrden()```.
 - ```void OrdenaIntercambioMejorado_NuevoOrden()```.  
   
-Escriba un programa que pida el número de elementos de la secuencia (casillas a ocupar) y rellene esa secuencia con números aleatorios entre ```0``` y ```999```, la ordene con los métodos implementados y muestre el resultado.
-```cpp
-```
+Escriba un programa que pida el número de elementos de la secuencia (casillas a ocupar) y rellene esa secuencia con números aleatorios entre ```0``` y ```999```, la ordene con los métodos implementados y muestre el resultado.  
+  
 [Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2012/OrdenacionSecuencia.cpp)
 
 # Ejercicios Opcionales
