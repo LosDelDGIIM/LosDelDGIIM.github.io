@@ -10,14 +10,15 @@
 - **Profesor:** Francisco José Cortijo Bon.
 - **Descripción:** Resolución de problemas de la Sesión XI de prácticas.
 
-En esta sesión de prácticas, se introducen las **clases**, los lo que los ejercicios estarán orientados a su uso.
+En esta sesión de prácticas, se introducen las **clases**, los lo que los ejercicios estarán orientados a su uso.  
 No lo mencionaremos, pero las funciones **main** debe tener código que nos permita visualizar el correcto funcionamiento de las clases, o el programa que se solicita en cada ejercicio.
 
 ## 1. Dinero.cpp
 Defina una clase ```Dinero``` para trabajar de forma precisa con datos monetarios. La clase tendrá dos datos miembro: ```euros``` y ```céntimos```.  
   
 La clase deberá permitir que se introduzca un número de céntimos arbitrario (siempre que sea positivo o cero) y se encargará de ajustar las cantidades debidamente.  
-Por ejemplo, si asignamos ```20 euros y 115 céntimos```, el objeto deberá almacenar el valor ```21 en euros y 15 en céntimos```. No olvide añadir un método ```ToString()``` para reperesentar de forma textual el contenido de un objeto  ```Dinero```.  
+Por ejemplo, si asignamos ```20 euros y 115 céntimos```, el objeto deberá almacenar el valor ```21 en euros y 15 en céntimos```.  
+No olvide añadir un método ```ToString()``` para reperesentar de forma textual el contenido de un objeto  ```Dinero```.  
   
 Haga un programa que calcule el precio final de un producto a partir de su precio inicial, de un incremento fijo mensual y de un número de mese. EL programa irá mostrando, mes a mes, el precio del producto.
 ```cpp
@@ -1746,7 +1747,7 @@ int main(){
 Se quiere construir la clase ```CoordenadasGPS``` para representar las coordenadas geográficas de una posición terrestre, dada por tres datos reales, a saber, su longitud, latitud y altura. La clase debe proporcionar métodos para asignar y recuperar los datos de latitud y longitud.  
   
 Se pide hacerlo de la siguiente forma:
-- Sólo se podrán asignar los datos de longitud y latitud en grados. Los métodos correspondientes transformarán esos grados en radianes y los asignarán a los datos miembro. La altura vendrá en metros. Debe comprobar que los grados sean correctos, es decir, los grados de latitud deben estar en el intervalo $[-90, 90] y los de longitud en $[-180, 180). La altura debe estar entre -423 (Valle del Jordán) y 8848 (Everest).
+- Sólo se podrán asignar los datos de longitud y latitud en grados. Los métodos correspondientes transformarán esos grados en radianes y los asignarán a los datos miembro. La altura vendrá en metros. Debe comprobar que los grados sean correctos, es decir, los grados de latitud deben estar en el intervalo $[-90, 90]$ y los de longitud en $[-180, 180)$. La altura debe estar entre -423 (Valle del Jordán) y 8848 (Everest).
 - Para consultar los datos de longitud y latitud, se definirán métodos específicos para cada caso: ```GetLatitudGrados()```, ```GetLatitudRadianes()```, ...  
   
 Escriba también un método ```ToString()```.
@@ -1772,7 +1773,7 @@ $$C_{i+1} = C_i + C_i \cdot \dfrac{I}{100}$$
 
 ## 4. Login.cpp
 Se está diseñando un sistema web que recolecta datos personales de un usuario y debe sugerirle un nombre de usuario (login). Dicho login estará basado en el nombre y los apellidos; en concreto estará formado por los ```n``` primeros caracteres de cada nombre y apellido (en minúsculas, unidos y sin espacios en blanco).  
-Por ejemplo si el nombre es ```Antonio Francisco Molina Ortega``` y ```n = 2```.  
+Por ejemplo si el nombre es ```Antonio Francisco Molina Ortega``` y ```n = 2```:  
 El nombre de usuario sugerido será ```anfrmoor```.  
   
 Debe tener en cuenta que el número de palabras que forman el nombre y los apellidos puede ser cualquiera. Además, si ```n``` es mayor que alguna de las palabras que aparecen en el nombre, se incluirá la palabra completa.  
