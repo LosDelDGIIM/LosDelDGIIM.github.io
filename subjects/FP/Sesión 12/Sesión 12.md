@@ -167,7 +167,8 @@ Este ejercicio trabaja sobre la clase ```SecuenciaCaracteres```. Puede encontrar
   
 Añada el método ```EliminaOcurrencias``` para eliminar todas las apariciones que hubiese de un determinado carácter ```a_borrar``` en la secuencia.  
   
-Por ejemplo, después de eliminar el carácter 'o' de la secuencia  ```{'S', 'o', 'Y', 'y', 'o'}```, esta debe quedar: ```{'S', 'Y', ' ', 'y'}```.  
+Por ejemplo, después de eliminar el carácter 'o' de la secuencia  ```{'S', 'o', 'Y', 'y', 'o'}```, esta debe quedar:  
+```{'S', 'Y', ' ', 'y'}```.  
   
 [Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2012/EliminaOcurrencias.cpp)
 
