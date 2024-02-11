@@ -1484,7 +1484,7 @@ int main(){
 	const char INS_IZQDA = 'I', INS_DCHA = 'D';
 	const char INS_ARRIBA = 'A', INS_ABAJO = 'B';
 
-	int mapa[NUM_FILAS][NUM_COLUMNAS] = {{0}};
+	int mapa[NUM_FILAS][NUM_COLUMNAS];
 
 	// ENTRADAS ************************************************************
 
