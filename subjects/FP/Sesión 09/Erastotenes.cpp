@@ -134,7 +134,7 @@ int main(){
 
 		// Las inicializamos todas en 0
 
-		Pareja descomposicion[CASILLAS_DESCOMPOSICION] = {{0, 0}};
+		Pareja descomposicion[CASILLAS_DESCOMPOSICION];
 		
 		int utilizados_descomposicion = 0;
 
