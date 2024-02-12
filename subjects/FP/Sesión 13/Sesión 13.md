@@ -95,7 +95,7 @@ private:
   
 Nota: ```valor_bin``` es el valor **en decimal** del número binario a representar. Los métodos de la clase harán parecer desde fuera que la clase almacena un dato binario pero no, ya que es más cómodo almacenar y trabajar sobre el decimal que sobre el binario.  
   
-[Ir a la solución]()
+[Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2013/Binario.cpp)
 
 ## 2. MayorPalindromo.cpp
 Este ejercicio trabaja sobre la clase ```SecuenciaCaracteres```. Puede encontrar su código en el siguiente [enlace](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2012/SecuenciaCaracteres.cpp).  
@@ -114,7 +114,7 @@ El mayor en ```ABCDEF``` es cualquier carácter, por ejemplo, ```A```.
 El mayor en ```ABBA``` es ```ABBA```.  
 El mayor en ```gAAtySHHSvvABCCBAfh``` es ```ABCCBA```.  
   
-[Ir a la solución]()
+[Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2013/MayorPalindromo.cpp)
 
 ## 3. Empleados.cpp 
 Retomando la solución del ejercicio ```3. Empleados.cpp``` de la [Sesión XII](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2012/Sesi%C3%B3n%2012.md) de prácticas, cuyo enunciado recordamos:  
@@ -138,6 +138,87 @@ En este programa, deberá leer un archivo de ```Empleados``` (como siempre), met
   
 Nota: recomendamos la ejecución del programa con redirección de datos de entrada. Le dejamos aquí el [fichero](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2010/Empleados.txt) listo con la entrada.  
   
-[Ir a la solución]()
+[Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2013/Empleados.cpp)
 
-## 4. 
+## 4. SecuenciaEmpleados.cpp 
+Reescriba la solución al ejercicio anterior (```3. Empleados.cpp```), cuyo enunciado le recordamos:  
+  
+Una empresa tiene los datos de sus empleados guardados en un fichero de texto. Por simplicidad, cada línea guarda los datos de un único empleado y no hay líneas vacías (en consecuencia, habrá tantas líneas como empleados). Los datos registrados son los siguientes:
+- Apellidos (```string```).
+- Nombre (```string```).
+- Fecha de nacimiento (```string```, en formato ```dd/mm/aaaa```).
+- Sueldo bruto (```double```).  
+  
+Se encuentran en dicho orden y separador por ```|```.  
+Por ejemplo:  
+```Martinez Lopez|Juan Carlos|10/12/2000|2345.55|```  
+```Abad y Paz de Molina|Maria del Carmen|01/01/1999|3002.88|```  
+```Pi Garcia|Jose|05/05/1987|1987.44|```  
+```Martin Martinez|Patricia|04/06/1998|1234.56|```  
+  
+Ahora, deberá crear una clase ```Empleado``` para representar a los empleados.  
+  
+En este programa, deberá leer un archivo de ```Empleados``` (como siempre), meterlos en un array ordenarlos por salario, dejando comentado el código para su ordenación por fecha de nacimiento y nombre y apellidos. El cambio deberá realizarse con el menor esfuerzo posible.
+  
+Nota: recomendamos la ejecución del programa con redirección de datos de entrada. Le dejamos aquí el [fichero](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2010/Empleados.txt) listo con la entrada.  
+  
+En esta ocasión, deberá crear una clase ```SecuenciaEmpleados``` que siga la misma lógica que las clases ```SecuenciaCaracteres``` o ```SecuenciaEnteros``` previamente vistas.  
+  
+[Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2013/SecuenciaEmpleados.cpp)
+
+## 5. RectanguloCircunferencia.cpp
+Reescriba la solución al ejercicio ```2. RectanguloCircunferencia.cpp``` de la [Sesión XI](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2011/Sesi%C3%B3n%2011.md) de prácticas:  
+  
+Desarrolle un programa que pida al usuario un rectángulo y calcule la circunferencia centrada en el punto de corte de las diagonales del rectángulo de forma que su superficie sea la menor entre todas las circunferencias de mayor área que la del rectángulo.  
+  
+Para el cálculo de la circunferencia, comience con una circunferencia de radio ```0.5``` y vaya incrementando su valor en ```0.25``` hasta hallar la primera circunferencia de área mayor que el rectángulo.  
+  
+Ahora, deberá crear la clase:  
+```Punto2D```  
+Clase que representa un punto en el plano bidimensional.  
+  
+Deberá mantener las clases:  
+```Circunferencia``` y ```Rectangulo``` con una leve modificación en la clase ```Rectangulo```:  
+Ahora, guardará como datos miembro el vértice superior izquierdo y las longitudes de la base y de la altura.  
+  
+Finalmente, deberá crear la clase:  
+```LectorPunto2D``` con la siguiente estructura:  
+```cpp
+class LectorPunto2D{
+    string mensaje;
+    
+public:
+    LectorPunto2D(string msg);
+    
+    void SetMensaje(string msg);
+    void ImprimeMensaje();
+    
+    Punto2D Lee();
+};
+```
+  
+[Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2013/RectanguloCircunferencia.cpp)
+
+## 6. ColeccionPuntos.cpp
+Recuperando las clases ```Circunferencia```, ```Punto2D``` y ```LectorPunto2D``` del ejercicio superior (```5. RectanguloCircunferenia.cpp```), deberá implementar la clase:  
+```ColeccionPuntos2D```, que se usará para almacenar y gestionar una colección de datos de tipo ```Punto2D```.  
+  
+Realice un progama que lea los datos necesarios para la creación de un objeto ```Circunferencia```. A continuación, lea un número indeterminado de objetos ```Punto2D```, almacenándolos en un objeto de tipo ```ColeccionPuntos2D```. La lectura finaliza cuando el usuario introduzca ```FIN``` como abscisa de un punto.  
+  
+Muestre cuáles son los puntos de la colección que están contenidos en la región limitada por la circunferencia.  
+  
+[Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2013/ColeccionPuntos.cpp)
+
+## 7. CircunferenciasEnRectangulo.cpp
+Recupere las clases ```Circunferencia```, ```Punto2D```, ```LectorPunto2D``` y ```Rectangulo``` del ejercicio ```5. RectanguloCircunferencia.cpp``` y reescriba la solución del ejercicio ```3. RectanguloCircunferenciasInscritas.cpp``` de la [Sesión XI](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2011/Sesi%C3%B3n%2011.md) de prácticas, cuyo enunciado recordamos a continuación:  
+  
+Escriba un programa que lea las coordenadas que definen un rectángulo y calcule y muestre una serie de datos de tipo ```Circunferencia```, todas centrada en en el punto de corte de las diagonales del rectángulo.  
+  
+Las circunferencias en las que estamos interesadas serán todas las circunferencias inscritas en el rectángulo. Para ello comience con una circunferencia de ```radio = 0.5``` y vaya incrementando su valor ```0.25``` en cada iteración.  
+  
+Muestre cuántas circunferencias inscritas se han generado.  
+  
+[Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2013/CircunferenciasEnRectangulo.cpp)
+
+# Ejercicios Opcionales
+## 1. 
