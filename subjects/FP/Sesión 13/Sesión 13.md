@@ -52,26 +52,26 @@ private:
     Bin(unsigned int valor);
     Bin(string valor);
   ```
-  Crean un objeto ```Bin``` y lo inicializan al valor dado. El constructor sin argumentos inicializa el objeto con valor 0.
+  Crean un objeto ```Bin``` y lo inicializan al valor dado. El constructor sin argumentos inicializa el objeto con valor 0.  
 - Métodos que modifican el objeto (setters):
   ```cpp
     void SetValor(unsigned int valor);
     void SetValor(string valor);
   ```
-  Modifica el valor del dato binario sustituyéndolo por ```valor```.
+  Modifica el valor del dato binario sustituyéndolo por ```valor```.  
 - Métodos de consulta (getters):
   ```cpp
     int MinNumBits();
   ```
-  Devuelve cuańtos bits se requieren para representar el valor.
+  Devuelve cuańtos bits se requieren para representar el valor.  
   ```cpp
     unsigned int GetValorDecimal();
   ```
-  Devuelve el valor decimal del dato binario.
+  Devuelve el valor decimal del dato binario.  
   ```cpp
     string ToString(int num_casillas);
   ```
-  Devuelve un tring con el valor binario. El valor binario ocupa ```num_casillas```. En el caso de no precisar tantas casillas, se rellenan con ceros a la izquierda. Si se necesitan más casillas se usan las que se requieran para no perder información. El valor binario obtenido siempre está delimitado por los caracteres '[' y ']'.
+  Devuelve un tring con el valor binario. El valor binario ocupa ```num_casillas```. En el caso de no precisar tantas casillas, se rellenan con ceros a la izquierda. Si se necesitan más casillas se usan las que se requieran para no perder información. El valor binario obtenido siempre está delimitado por los caracteres '[' y ']'.  
 - Métodos de cálculo:
   ```cpp
     Bin Suma(Bin otro);
@@ -79,13 +79,13 @@ private:
     Bin AND(Bin otro);
     Bin OR(Bin otro);
   ```
-  Realiza la operación indicada y devuelve un nuevo objeto con el resultado. Ni el objeto implícito ni ```otro``` se modifican.
+  Realiza la operación indicada y devuelve un nuevo objeto con el resultado. Ni el objeto implícito ni ```otro``` se modifican.  
 - Métodos de desplazamiento de bits:
   ```cpp
     Bin DespDcha(int veces);
     Bin DespIzda(int veces);
   ```
-  Realiza la operación indicada y devuelve un nuevo objeto on el resultado. Los huecos se rellenan con ceros. El objeto implícito no se modifica.
+  Realiza la operación indicada y devuelve un nuevo objeto on el resultado. Los huecos se rellenan con ceros. El objeto implícito no se modifica.  
 - Métodos privados:
   ```cpp
     string DecToBin(unsigned int num_decimal, int num_casillas);
