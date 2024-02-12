@@ -14,12 +14,12 @@
 En esta sesión de prácticas, usará la clase ```TablaRectangularEnteros``` en un par de ejercicios. Le dejamos a continuación dos versiones de esta clase, una implementada mediante una matiz de enteros y otra mediante un array de ```SecuenciaEnteros```.  
 Le dejamos el código de las dos implementaciones, además de la clase ```SecuenciaEnteros```:  
   
-[TablaRectangularEnterosMatriz]()
-[TablaRectangularEnterosSecuencia]()
-[SecuenciaEnteros]()
+[TablaRectangularEnterosMatriz](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2014/TablaRectangularEnterosMatriz.cpp)  
+[TablaRectangularEnterosSecuencia](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2014/TablaRectangularEnterosSecuencia.cpp)  
+[SecuenciaEnteros](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2014/SecuenciaEnteros.cpp)
 
 ## 1. FilaCercanaTRMatriz.cpp
-Este ejercicio está basado en la clase [TablaRectangularEnterosMatriz](), que llamaremos ahora ```TablaRectangularEnteros```.  
+Este ejercicio está basado en la clase [TablaRectangularEnterosMatriz](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2014/TablaRectangularEnterosMatriz.cpp), que llamaremos ahora ```TablaRectangularEnteros```.  
   
 Amplíe la clase ```TablaRectangularEnteros``` con un método que busque la fila de la matriz que más se parezca a una objeto ```SecueniaEnteros``` proporcionado que llamaremos ```referencia```. El método devolverá el número de la fila.  
   
@@ -38,17 +38,17 @@ El programa deberá encontrar ```5``` como la fila más cercana a la secuencia `
 ```--> 2 8 2 2```  
 ```    7 3 2 5```  
   
-[Ir a la solución]()
+[Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2014/FilaCercanaTRMatriz.cpp)
 
 ## 2. FilaCercanaTRSecuencia.cpp
-Este ejercicio está basado en la clase [TablaRectangularEnterosSecuencia](), que llamaremos ahora ```TablaRectangularEnteros```.  
+Este ejercicio está basado en la clase [TablaRectangularEnterosSecuencia](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2014/TablaRectangularEnterosSecuencia.cpp), que llamaremos ahora ```TablaRectangularEnteros```.  
   
 Reescriba el ejercicio superior (```1. FilaCercanaTRMatriz.cpp```) usando ahora la clase ```TablaRectangularEnterosSecuencia``` como la clase ```TablaRectangularEnteros```.  
   
-[Ir a la solución]()
+[Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2014/FilaCercanaTRSecuencia.cpp)
 
 ## 3. EmpleadosDepartamentosMatriz.cpp
-Seguimos trabajando en el famoso problema de los empleados, cuya última versión fue la del ejercicio ```4. SecuenciaEmpleados.cpp``` de la [Sesión XIII]() de prácticas.  
+Seguimos trabajando en el famoso problema de los empleados, cuya última versión fue la del ejercicio ```4. SecuenciaEmpleados.cpp``` de la [Sesión XIII](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2013/Sesi%C3%B3n%2013.md) de prácticas.  
   
 Recordamos que recomendamos trabajar con un fichero redirigiendo la entrada estándar. Use el siguiente [fichero](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2010/Empleados.txt).
   
@@ -113,7 +113,7 @@ public:
 };
 ```
   
-El programa debe estar preparado para recibir este [archivo]() de input.
+El programa debe estar preparado para recibir este [archivo](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2014/Empleados.txt) de input.
   
 ## 4. EmpleadosDepartamentosSecuencia.cpp
 Reescriba la solución del ejercicio superior (```EmpleadosDepartamentosSecuencia.cpp```) ahora usando un array de ```SecuenciaEmpleados```.
