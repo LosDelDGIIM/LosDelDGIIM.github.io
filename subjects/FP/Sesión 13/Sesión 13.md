@@ -221,4 +221,106 @@ Muestre cuántas circunferencias inscritas se han generado.
 [Ir a la solución](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2013/CircunferenciasEnRectangulo.cpp)
 
 # Ejercicios Opcionales
-## 1. 
+## 1. Instante.cpp 
+Amplía la clase ```Instante``` del ejercicio ```Instante.cpp``` de la [Sesión XI](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2011/Sesi%C3%B3n%2011.md) de prácticas:  
+  
+Añada los métodos:
+- ```bool EsAnterior(Instante otro)``` Para saber si el instante del objeto implícito es anterior a ```otro```.
+- ```Instante Avanza(Instante otro)``` Para calcular el instante que resulta de sumar ```otro``` al instante registrado en el objeto implícito. En este caso, ```otro``` representa una cantidad de tiempo más que un instante concreto.
+- ```Instante Retrocede(Instante otro)``` Para calcular el instante que resulta de restar ```otro``` al instante registrado en el objeto implícito.
+- ```Instante Salto(int num_seg)``` Para calcular el instante que resulta de sumar o restar ```num_seg``` al instante registrado en el objeto implícito.
+- ```Instante Diferencia(Instante otro)``` Para calcular la diferencia de tiempo (en horas, minutos y segundos) entre el instante implícito y ```otro```.  
+  
+Cree un programa para probar los nuevos métodos.
+
+## 2. Dinero.cpp
+Amplíe la clase ```Dinero``` del ejercicio ```1. Dinero.cpp``` de la [Sesión XI](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2011/Sesi%C3%B3n%2011.md) de prácticas:  
+  
+Partimos del siguiente esquema:  
+```cpp
+class Dinero{
+    int euros;
+    int centimos;
+    
+public:
+    Dinero();
+    Dinero(double cantidad);    // PRE: 0 <= cantidad
+    Dinero(int eu, int cent);   // PRE: 0 <= eu, cent
+    
+    int GetEuros();
+    int GetCentimos();
+    double GetValor();
+    
+    void Incrementa(double cantidad);   // PRE: 0 <= cantidad
+    void Incrementa(int eu, int cent);  // PRE: 0 <= eu, cant
+    string ToString(int num_casillas_eu, char car_hueco);   // PRE: 0 <= num_casillas_eu
+};
+```
+
+Descarte el método ```void Incrementa(int eu, int cent)```.  
+Añada los métodos:
+- ```Dinero Incrementa(Dinero cantidad)``` Que calcula y devuelve el resultado de sumar ```cantidad``` a la cantidad de dinero del objeto implícito. El valor de ```cantidad``` debe ser positivo.
+- ```Dinero Decrementa(Dinero cantidad)``` Donde ```cantidad``` debe representar una cantidad positiva.
+- ```Dinero Decrementa(double cantidada)``` Donde ```cantidad``` debe ser positivo.
+- ```Dinero Modifica(double cantidad)``` Que calcule y devuelve el resultado de sumar (```cantidad``` es positivo) o restar (```cantidad``` es negativo) ```cantidad``` al objeto implícito. Si no es posible realizar la resta (el objeto implícito acabaría con una cantidad positiva), no se hace nada.
+- ```bool EsMayor(Dinero otro)```
+- ```bool EsMayor(double cantidad)```
+- ```bool EsMenor(Dinero otro)```
+- ```bool EsMenor(double cantidad)```
+- ```bool EsIgual(Dinero otro)```
+- ```bool EsIgual(double cantidad)```
+- ```Dinero Diferencia(Dinero otro)``` Que calcula y devuelve la diferencia de dinero entre el objeto implícito y ```otro```. Para poder realizar esta operación, es necesario que la cantidad de dinero en el objeto implícito sea mayor o igual que la de ```otro```.
+- ```Dinero Diferencia(Dinero otro)```  
+  
+Cree un programa para probar los nuevos métodos.
+
+## 3. InsertaSecuencia.cpp
+Este ejercicio trabaja sobre la clase ```SecuenciaCaracteres```. Puede encontrar su código en el siguiente [enlace](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2012/SecuenciaCaracteres.cpp).  
+  
+Sobre la clase ```SecuenciaCaracteres```, defina los siguientes métodos:
+- ```void Inserta(int pos, char valor)``` Que inserta el carácter ```valor``` en la posición ```pos```, desplazando a la derecha de ```valor``` el carácter que anteiormente ocupaba la posición ```pos```.
+- ```SecuenciaCaracteres InsertaSecuencia(int pos, SecuenciaCaracteres sec)``` Que inserta la secuencia ```otra``` a partir de la posición ```pos```, desplazando a la derecha de ```sec``` los caracteres que se encontraban en y a la izquierda de la posición ```pos```. Debe devolver esta nueva secuencia, el objeto implícito y ```sec``` no deben ser modificados.
+
+## 4. ConjuntoOrdenado.cpp
+Defina la clase ```ConjuntoOrdenado```, para almacenar una secuencia **ordenada** de números enteros **sin admitir repeticiones** (esto es, que si un número ya forma parte de la secuencia y volvemos a introducirlo, no habrá cambios en la secuencia). Defina métodos para:
+- Añadir un entero de forma ordenada.
+- Calcular la unión con otro conjunto. En la unión se incluyen los elementos que estén en cualquiera de los dos conjuntos.
+- Calcular la intersección con otro conjunto. En la intersección se incluyen los elementos que se encuentran al mismo tiempo en los dos conjuntos.
+
+## 5. RedSocial.cpp
+Retomando la solución del ejercicio ```5. RedSocial.cpp``` de la [Sesión XI](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/FP/Sesi%C3%B3n%2011/Sesi%C3%B3n%2011.md) de prácticas que recordamos a continuación:  
+  
+Implemente una clase ```RedSocial``` para gestionar una red social. La red debe almacenar los nombres de los usuarios y las relaciones de amistad. Se propone la siguiente representación:
+```cpp
+class RedSocial{
+    static const int MAX_USUARIOS = 100;
+    string usuarios[MAX_USUARIOS];
+    bool relaciones_amistad[MAX_USUARIOS][MAX_USUARIOS];
+    int usuarios_utiles;
+
+public:
+    ...
+};
+```
+  
+Donde ```relaciones_amistad``` es una matriz cuadrada tal que la commponente  ```(i, j)``` es ```true``` si el usuario $i$ es amigo del usuario $j$ y ```false``` si no. Asumiremos que las relaciones de amistad son simétricas, por lo que también lo será la matriz.  
+  
+Se pide implementar los siguientes métodos:
+- ```RedSocial()``` Crea una red vacía.
+- ```int numUsuarios()``` Devuelve el número de usuarios de la red.
+- ```void agregaUsuario(string usr)``` Añade el usuario ```usr``` a la red (sin amigos).
+- ```void eliminaUsuario(string usr)``` Elimina el usuario ```usr``` de la red.
+- ```bool existe(string usr)``` Informa si ```usr``` es un usuario de la red.
+- ```void hacerAmigos(string usr1, string usr2)``` Registra una relación de amistad entre ```usr1``` y ```usr2```.
+- ```void deshacerAmigos(string usr1, string usr2)``` Elimina una relación de amistad entre ```usr1``` y ```usr2```.
+- ```bool sonAmigos(string usr1, string usr2)``` Informa si hay relación de amistad entre ```usr1``` y ```usr2```.  
+  
+Escriba un programa que cree una red y lea los nombres de los usuarios de la red (termina cuando se introduce ```FIN``` en el primer nombre). Después lee una serie de lineas que contienen parejas de nombres que indican las relaciones de amistad y va actualizando las relaciones de amistad en la red.  
+  
+Queremos ampliar la funcionalidad con:
+- Un método que, dado un usuario ```A``` de la red, sugiera un amigo potencial para ```A```. Un amigo potencial es aquel usuario de la red (no amigo de ```A```) que tiene más amigos en común con ```A```.  
+Escriba en la función main código para que solicite el nombre de un usuario y sugiera una relación de amistad par él.  
+- Un método que decida si dos usuarios son _amigos circunstanciales_, es decir, si son amigos pero no tienen amigos en común.  
+Escriba en la función main código para que muestre todos los amigos circunstanciales presentes en la red.  
+  
+Ahora, deseamos crear la clase ```Usuario``` con los métodos que considere oportunos para su funcionamiento. Reescriba la solución del ejercicio mencionado usando ahora esta clase.
