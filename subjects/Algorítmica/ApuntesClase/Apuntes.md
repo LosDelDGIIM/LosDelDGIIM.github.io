@@ -35,7 +35,7 @@ Cuando se tienen pocos elementos, suele ser más rápido un algoritmo simple com
 Selección hace muchas comparaciones, pocos intercambios mientras que inserción hace menos comparaciones pero más intercambios.  
 Por tanto, ante unos datos pesados con varios registros, selección será mejor que inserción.
   
-Cuando se tienen muchos, datos, es mejor un algoritmo $n \log(n)$.  
+Cuando se tienen muchos datos, es mejor un algoritmo $n \log(n)$.  
 
 # Tema 1. Eficiencia de Algoritmos.
 La asignatura se centrará en eficiencia basada en el tiempo de ejecución (no en la eficiencia en cuanto espacio, memoria usada por el programa).  
@@ -53,8 +53,9 @@ En un principio, se asumiriá que operaciones básicas como sumas, multiplicacio
 
 ## Notación asintótica
 Se dice que un algoritmo $A$ es de orden $O(f(n))$, donde $f$ es una función $f:\mathbb{N}\rightarrow \mathbb{R}^{+}$, cuando existe una implementación del mismo tamaño cuyo tiempo de ejecución $T_A(n)$ es menor igual que $K \cdot f(n)$, donde $K$ es una constante real positiva a partir de un tamaño grande $n_0$. Formalmente:
-$$A \mbox{ es } O(f(n)) \Leftrightarrow \exists K \in \mathbb{R}^{+} \mid \exists n_0 \in \mathbb{N} \mid T_A(n) \leq K \cdot f(n)~~\forall n \geq n_0$$
+$$A \mbox{ es } O(f(n)) \Leftrightarrow \exists K \in \mathbb{R}^{+}, \exists n_0 \in \mathbb{N} \mid T_A(n) \leq K \cdot f(n)~~\forall n \geq n_0$$
 
+### Órdenes de eficiencia.
 Ejemplos de órdenes de eficiencia son:
 - Constante, $O(1)$.
 - Logarítmico, $O(\log(n))$.
@@ -62,3 +63,12 @@ Ejemplos de órdenes de eficiencia son:
 - Cuadrático, $O(n^2)$.
 - Exponencial, $O(a^n)$.
 - $\ldots$
+
+Al decir que el algoritmo $A$ es de orden $O(f(n))$, decimos que siempre podemos encontrar una constante positivoa $K$ que para valores muy grandes del caso $n$ ($n_0$), el tiempo de ejecución del algoritmo siempre será inferior a $K \cdot f(n)$:
+$$T_A(n) \leq K \codt f(n)$$
+
+### Equivalencia de órdenes.
+Para saber si dos órdenes $O(f(n))$ y $O(g(n))$ son iguales, aplicamos las siguientes reglas:
+$$O(f(n)) \equiv O(g(n)) \Leftrightarrow \lim_{n \to \infty} \dfrac{f(n)}{g(n)} \rightarrow K \in \mathbb{R}^{+}$$
+$$O(f(n)) > O(g(n)) \Leftrightarrow \lim_{n \to \infty} \dfrac{f(n)}{g(n)} \rightarrow \infty$$
+$$O(f(n)) < O(g(n)) \Leftrightarrow \lim_{n \to \infty} \dfrac{f(n)}{g(n)} \rightarrow 0$$
