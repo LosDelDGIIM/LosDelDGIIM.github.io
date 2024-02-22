@@ -65,10 +65,38 @@ Ejemplos de órdenes de eficiencia son:
 - $\ldots$
 
 Al decir que el algoritmo $A$ es de orden $O(f(n))$, decimos que siempre podemos encontrar una constante positivoa $K$ que para valores muy grandes del caso $n$ ($n_0$), el tiempo de ejecución del algoritmo siempre será inferior a $K \cdot f(n)$:
-$$T_A(n) \leq K \codt f(n)$$
+$$T_A(n) \leq K \cdot f(n)$$
 
 ### Equivalencia de órdenes.
 Para saber si dos órdenes $O(f(n))$ y $O(g(n))$ son iguales, aplicamos las siguientes reglas:
 $$O(f(n)) \equiv O(g(n)) \Leftrightarrow \lim_{n \to \infty} \dfrac{f(n)}{g(n)} \rightarrow K \in \mathbb{R}^{+}$$
 $$O(f(n)) > O(g(n)) \Leftrightarrow \lim_{n \to \infty} \dfrac{f(n)}{g(n)} \rightarrow \infty$$
 $$O(f(n)) < O(g(n)) \Leftrightarrow \lim_{n \to \infty} \dfrac{f(n)}{g(n)} \rightarrow 0$$
+Entendiendo que un órden es menor que otro si es mejor, más rápido en el caso asintótico.
+
+## Notación Omega.
+Se dice que un algoritmo $A$ es de orden $\Omega(f(n))$, donde $f$ es una función $f:\mathbb{N}\rightarrow \mathbb{R}^{+}$, cuando existe una implementación del mismo tamaño cuyo tiempo de ejecución $T_A(n)$ es mayor igual que $K \cdot f(n)$, donde $K$ es una constante real positiva a partir de un tamaño grande $n_0$. Formalmente:
+$$A \mbox{ es } \Omega(f(n)) \Leftrightarrow \exists K \in \mathbb{R}^{+}, \exists n_0 \in \mathbb{N} \mid T_A(n) \geq K \cdot f(n)~~\forall n > n_0$$
+
+## Notación Theta.
+Se dice que un algoritmo $A$ es de orden $\Theta(f(n))$, donde $f$ es una función $f:\mathbb{N}\rightarrow \mathbb{R}^{+}$, cuando existe una implementación del mismo tamaño cuyo tiempo de ejecución $T_A(n)$ es igual que $K \cdot f(n)$, donde $K$ es una constante real positiva a partir de un tamaño grande $n_0$. En este caso, el algoritmo es simultáneamente de orden $O(f(n))$ y $\Theta(f(n))$.
+$$A \mbox{ es } \Theta(f(n)) \Leftrightarrow \exists K \in \mathbb{R}^{+}, \exists n_0 \in \mathbb{N} \mid T_A(n) = K \cdot f(n)~~\forall n > n_0$$
+
+### Propiedades 
+#### Transitividad
+Si $f(n) \in O(g(n))$ y $g(n) \in O(h(n)) \Rightarrow f(n) \in O(h(n))$.  
+También para $\Omega$ y $\Theta$.
+
+#### Reflexiva
+$$f(n) \in O(f(n))$$
+
+#### Simétrica
+$$f(n) \in O(g(n)) \Leftrightarrow g(n) \in O(f(n))$$
+
+#### Suma 
+Si $T_1(n) \in O(f(n))$ y $T_2(n) \in O(g(n))$. Entonces:
+$$T_1(n) + T_2(n) \in O(max\{f(n), g(n)\})$$
+
+#### Producto
+Si $T_1(n) \in O(f(n))$ y $T_2(n) \in O(g(n))$. Entonces:
+$$T_1(n) \cdot T_2(n) \in O(f(n) \cdot g(n))$$
