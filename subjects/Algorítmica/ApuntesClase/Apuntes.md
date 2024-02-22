@@ -74,29 +74,47 @@ $$O(f(n)) > O(g(n)) \Leftrightarrow \lim_{n \to \infty} \dfrac{f(n)}{g(n)} \righ
 $$O(f(n)) < O(g(n)) \Leftrightarrow \lim_{n \to \infty} \dfrac{f(n)}{g(n)} \rightarrow 0$$
 Entendiendo que un órden es menor que otro si es mejor, más rápido en el caso asintótico.
 
-## Notación Omega.
+### Notación Omega.
 Se dice que un algoritmo $A$ es de orden $\Omega(f(n))$, donde $f$ es una función $f:\mathbb{N}\rightarrow \mathbb{R}^{+}$, cuando existe una implementación del mismo tamaño cuyo tiempo de ejecución $T_A(n)$ es mayor igual que $K \cdot f(n)$, donde $K$ es una constante real positiva a partir de un tamaño grande $n_0$. Formalmente:
 $$A \mbox{ es } \Omega(f(n)) \Leftrightarrow \exists K \in \mathbb{R}^{+}, \exists n_0 \in \mathbb{N} \mid T_A(n) \geq K \cdot f(n)~~\forall n > n_0$$
 
-## Notación Theta.
-Se dice que un algoritmo $A$ es de orden $\Theta(f(n))$, donde $f$ es una función $f:\mathbb{N}\rightarrow \mathbb{R}^{+}$, cuando existe una implementación del mismo tamaño cuyo tiempo de ejecución $T_A(n)$ es igual que $K \cdot f(n)$, donde $K$ es una constante real positiva a partir de un tamaño grande $n_0$. En este caso, el algoritmo es simultáneamente de orden $O(f(n))$ y $\Theta(f(n))$.
+### Notación Theta.
+Se dice que un algoritmo $A$ es de orden $\Theta(f(n))$, donde $f$ es una función $f:\mathbb{N}\rightarrow \mathbb{R}^{+}$, cuando existe una implementación del mismo tamaño cuyo tiempo de ejecución $T_A(n)$ es igual que $K \cdot f(n)$, donde $K$ es una constante real positiva a partir de un tamaño grande $n_0$. En este caso, el algoritmo es simultáneamente de orden $\Theta(f(n))$ y $\Theta(g(n))$.
 $$A \mbox{ es } \Theta(f(n)) \Leftrightarrow \exists K \in \mathbb{R}^{+}, \exists n_0 \in \mathbb{N} \mid T_A(n) = K \cdot f(n)~~\forall n > n_0$$
 
-### Propiedades 
-#### Transitividad
+### Propiedades.
+Se queda como ejercicio demostrar formalmente las siguientes propiedades:
+#### Transitividad.
 Si $f(n) \in O(g(n))$ y $g(n) \in O(h(n)) \Rightarrow f(n) \in O(h(n))$.  
 También para $\Omega$ y $\Theta$.
 
-#### Reflexiva
+#### Reflexiva.
 $$f(n) \in O(f(n))$$
 
-#### Simétrica
+#### Simétrica.
 $$f(n) \in O(g(n)) \Leftrightarrow g(n) \in O(f(n))$$
 
-#### Suma 
+#### Suma .
 Si $T_1(n) \in O(f(n))$ y $T_2(n) \in O(g(n))$. Entonces:
 $$T_1(n) + T_2(n) \in O(max\{f(n), g(n)\})$$
 
-#### Producto
+#### Producto.
 Si $T_1(n) \in O(f(n))$ y $T_2(n) \in O(g(n))$. Entonces:
 $$T_1(n) \cdot T_2(n) \in O(f(n) \cdot g(n))$$
+
+### Órdenes con varios parámetros.
+% TODO: copiar de apuntes
+
+## Análisis de algoritmos.
+El primer paso es identificar qué parámetro determina el tamaño del problema ($n$).  
+Posteriormente, tenemos que tener claro como se analiza cada estructura del código.
+
+### Sentencias simples.
+Su ejecución está acotado superiormente por una constante.  
+Su tiempo de ejecución no depende del tamaño del problema.  
+Asumimos que todas las operaciones básicas son de orden constante.  
+
+### Sentencias condicionales.
+El tiempo de la estructura condicional es el máximo de la eficiencia entre los bloques del ```if``` y del ```else```.  
+Además, debemos tener en cuenta sumarle la eficiencia de la operación de comparación.  
+%TODO: completar con apuntes, mejor y peor caso.
