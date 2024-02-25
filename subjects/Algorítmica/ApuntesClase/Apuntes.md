@@ -1,3 +1,15 @@
+**Autor:** José Juan Urrutia Milán
+***
+
+- **Asignatura:** Algorítmica.
+- **Curso Académico:** 2023-24.
+- **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
+- **Grupo:** Único.
+- **Profesor:** Juan Francisco Huete Guadix.
+- **Descripción:** Apuntes de clase complementados con presentaciones.
+- **Nota:** Este documento es susceptible de contener errores.
+***
+
 # Introducción.
 ## Problemas como motivación.
 ### Parque de Atracciones.
@@ -37,6 +49,7 @@ Por tanto, ante unos datos pesados con varios registros, selección será mejor 
   
 Cuando se tienen muchos datos, es mejor un algoritmo $n \log(n)$.  
 
+***
 # Tema 1. Eficiencia de Algoritmos.
 La asignatura se centrará en eficiencia basada en el tiempo de ejecución (no en la eficiencia en cuanto espacio, memoria usada por el programa).  
   
@@ -328,6 +341,7 @@ Comenzamos analizando el bucle interno:
 - Actualización: $O(1)$.
 - Bloque de sentencias: $O(1)$.
 - Veces que se ejecuta: $O(\log_2(n))$.
+  
 Eficiencia del bucle:
 $$O(1)+O(1)+O(\log_2(n))\cdot (O(1)+O(1)+O(1)) = O(\log_2(n))$$
   
@@ -335,6 +349,7 @@ Ahora, analizamos el bucle externo:
 - Condición: $O(1)$.
 - Bloque de sentencias: $O(\log_2(n)+1)$.
 - Veces que se ejecuta: $O(n)$.
+  
 Eficiencia del bucle:
 $$O(1)+O(n)\cdot (O(1)+O(\log_2(n)+1)) = O(n\cdot \log_2(n))$$
 Despreciando la base del logaritmo:
