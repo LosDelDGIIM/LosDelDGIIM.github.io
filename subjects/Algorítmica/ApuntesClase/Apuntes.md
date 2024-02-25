@@ -124,13 +124,13 @@ Si $f(n) \in O(g(n))$ y $g(n) \in O(h(n)) \Rightarrow f(n) \in O(h(n))$.
 También para $\Omega$ y $\theta$.
 
 ##### Demostración.
-$f(n)$ es $O(g(n)) \Rightarrow \exists K_1 \in \mathbb{R}^{+}, \exists n_0 \in \mathbb{N} \mid f(n) \leq K_1 \cdot g(n)~~\forall n \geq n_0$  
-$g(n)$ es $O(h(n)) \Rightarrow \exists K_2 \in \mathbb{R}^{+}, \exists m_0 \in \mathbb{N} \mid g(n) \leq K_2 \cdot h(n)~~\forall n \geq m_0$  
-$$f(n) \leq K_1 \cdot g(n) \leq K_1 \cdot K_2 \cdot h(n)~~\forall n\geq \max(n_0, m_0)$$
+$f(n)$ es $O(g(n)) \Rightarrow \exists K_1 \in \mathbb{R}^{+}, \exists n_0 \in \mathbb{N} \mid f(n) \leq K_1 \cdot g(n)\forall n \geq n_0$  
+$g(n)$ es $O(h(n)) \Rightarrow \exists K_2 \in \mathbb{R}^{+}, \exists m_0 \in \mathbb{N} \mid g(n) \leq K_2 \cdot h(n)\forall n \geq m_0$  
+$$f(n) \leq K_1 \cdot g(n) \leq K_1 \cdot K_2 \cdot h(n)\forall n\geq \max(n_0, m_0)$$
 Luego $f(n) \leq (K_1 \cdot K_2) \cdot h(n)~~\forall n\geq k_0=\max(n_0, m_0) \Rightarrow f(n)$ es $O(h(n))$.
 
 ### Reflexiva.
-$f(n) \in O(f(n))$
+$f(n) \in O(f(n))$  
 También para $\Omega$ y $\theta$.
 
 ### Simétrica.
