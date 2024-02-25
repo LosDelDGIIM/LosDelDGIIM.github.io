@@ -30,9 +30,9 @@ Por ejemplo, un algoritmo estable de ordenación de enteros en el que los pares 
 ```2, 4, 1, 3```  
   
 ## Algoritmos de ordenación.
-Burbuja es el peor algoritmo de ordenación. 
+Burbuja es el peor algoritmo de ordenación.  
 Cuando se tienen pocos elementos, suele ser más rápido un algoritmo simple como selección o inserción.
-Selección hace muchas comparaciones, pocos intercambios mientras que inserción hace menos comparaciones pero más intercambios.  
+Selección hace muchas comparaciones y pocos intercambios, mientras que inserción hace menos comparaciones pero más intercambios.  
 Por tanto, ante unos datos pesados con varios registros, selección será mejor que inserción.
   
 Cuando se tienen muchos datos, es mejor un algoritmo $n \log(n)$.  
@@ -46,15 +46,20 @@ Para calcular la eficiencia de un algoritmo, tenemos:
 - Método híbrido: Tiempo teórico sin evitar constantes.
   
 ## Principio de Invarianza.
-Dadas dos implementaciones de un algoritmo, el tiempo de ejecución para una misma instancia de tamaño $n$, $T_{I1}(n)$ y $T_{I2}(n)$, no diferirá en más de una constante multiplicativa. Es decir, $\exists K > 0$ que verifica: $$T_{I1}(n) \leq K \cdot T_{I2}(n)$$
+Dadas dos implementaciones $I1$, $I2$ de un algoritmo, el tiempo de ejecución para una misma instancia de tamaño $n$, $T_{I1}(n)$ y $T_{I2}(n)$, no diferirá en más de una constante multiplicativa. Es decir, $\exists K > 0$ que verifica: $$T_{I1}(n) \leq K \cdot T_{I2}(n)$$
 Por lo que podemos despreciar las constantes.  
   
-En un principio, se asumiriá que operaciones básicas como sumas, multiplicaciones, etc. será constante, salvo excepciones (por ejemplo, multiplicaciones de números de 100000 dígitos).  
+En un principio, se asumiriá que operaciones básicas como sumas, multiplicaciones, etc. serán de tiempo constante, salvo excepciones (por ejemplo, multiplicaciones de números de 100000 dígitos).  
 
-## Notación asintótica
+## Notación O.
 Se dice que un algoritmo $A$ es de orden $O(f(n))$, donde $f$ es una función $f:\mathbb{N}\rightarrow \mathbb{R}^{+}$, cuando existe una implementación del mismo tamaño cuyo tiempo de ejecución $T_A(n)$ es menor igual que $K \cdot f(n)$, donde $K$ es una constante real positiva a partir de un tamaño grande $n_0$. Formalmente:
 $$A \mbox{ es } O(f(n)) \Leftrightarrow \exists K \in \mathbb{R}^{+}, \exists n_0 \in \mathbb{N} \mid T_A(n) \leq K \cdot f(n)~~\forall n \geq n_0$$
-
+La notación $O$ nos permite conocer cómo se comportará el algoritmo en términos de eficiencia en instancias del caso pero del problema:  
+Como mucho, sabemos que el algoritmo no tardará más de $K \cdot f(n)$ en ejecutarse, en el peor de los casos.  
+  
+Al decir que el algoritmo $A$ es de orden $O(f(n))$, decimos que siempre podemos encontrar una constante positiva $K$ que para valores muy grandes del caso $n$ (a partir de un $n_0$), el tiempo de ejecución del algoritmo siempre será inferior a $K \cdot f(n)$:
+$$T_A(n) \leq K \cdot f(n)$$
+  
 ### Órdenes de eficiencia.
 Ejemplos de órdenes de eficiencia son:
 - Constante, $O(1)$.
@@ -64,29 +69,59 @@ Ejemplos de órdenes de eficiencia son:
 - Exponencial, $O(a^n)$.
 - $\ldots$
 
-Al decir que el algoritmo $A$ es de orden $O(f(n))$, decimos que siempre podemos encontrar una constante positivoa $K$ que para valores muy grandes del caso $n$ ($n_0$), el tiempo de ejecución del algoritmo siempre será inferior a $K \cdot f(n)$:
-$$T_A(n) \leq K \cdot f(n)$$
-
 ### Equivalencia de órdenes.
-Para saber si dos órdenes $O(f(n))$ y $O(g(n))$ son iguales, aplicamos las siguientes reglas:
+Para saber si dos órdenes $O(f(n))$ y $O(g(n))$ son equivalentes o no, aplicamos las siguientes reglas:
 $$O(f(n)) \equiv O(g(n)) \Leftrightarrow \lim_{n \to \infty} \dfrac{f(n)}{g(n)} \rightarrow K \in \mathbb{R}^{+}$$
 $$O(f(n)) > O(g(n)) \Leftrightarrow \lim_{n \to \infty} \dfrac{f(n)}{g(n)} \rightarrow \infty$$
 $$O(f(n)) < O(g(n)) \Leftrightarrow \lim_{n \to \infty} \dfrac{f(n)}{g(n)} \rightarrow 0$$
-Entendiendo que un órden es menor que otro si es mejor, más rápido en el caso asintótico.
+Entendiendo que un órden es menor que otro si es mejor, es decir, más rápido en el caso asintótico.
 
-### Notación Omega.
+#### Ejemplos.
+###### Ejemplo 1.
+Si tenemos dos algoritmos $A$ y $B$ con órdenes de eficiencia $O(n^2)$ y $O((4n+1)^2+n)$ respectivamente, tratamos de ver qué algoritmos es más eficiente:
+$$\lim_{n\to \infty} \dfrac{f(n)}{g(n)} = \lim_{n\to\infty}\dfrac{n^2}{(4n+1)^2+n)} = \lim_{n\to\infty}\dfrac{n^2}{(16n^2 +1+2\cdot 4n\cdot 1)+n} = \lim_{n\to\infty}\dfrac{1}{16}$$
+Gracias al criterio de comparación entre órdenes, tenemos que los algoritmos $A$ y $B$ son equivalentes.
+
+##### Ejemplo 2.
+En esta ocasión, tenemos a dos algoritmos $A$ y $B$ con órdenes de eficiencia de $O(2^n)$ y $O(3^n)$, respectivamente.
+$$\lim_{n\to\infty}\dfrac{f(n)}{g(n)} = \lim_{n\to\infty}\dfrac{2^n}{3^n}=\lim_{n\to\infty}\left(\dfrac{2}{3}\right)^n = 0$$
+Por el criterio de comparación entre órdenes, $A$ es más eficiente que $B$.
+
+##### Ejemplo 3.
+El algoritmo $A$ tiene una eficiencia $O(n)$ y el algoritmo $B$ tiene una eficiencia de $O(n\log(n))$. Buscamos cuál es más eficiente.
+$$\lim_{n\to\infty}\dfrac{f(n)}{g(n)}=\lim_{n\to\infty}\dfrac{n}{n\log(n)}=\lim_{n\to\infty}\dfrac{1}{\log(n)} = 0$$
+Por lo que $A$ es más eficiente que $B$, por el criterio de comparación entre órdenes.
+
+##### Ejemplo 4.
+Disponemos de dos algoritmos, $A$ y $B$ con órdenes de eficiencia $O((n^2+29)^2)$ y $O(n^3)$ respectivamente. Intuimos que $B$ es más eficiente que $A$ pero queremos probarlo.
+$$\lim_{n\to\infty}\dfrac{f(n)}{g(n)} = \lim_{n\to\infty}\dfrac{(n^2+29)^2}{n^3} = \infty$$
+Gracias al criterio de comparación entre órdenes, hemos probado lo que esperábamos; $B$ es más eficiente que $A$.
+
+##### Ejemplo 5.
+Se quiere probar que $O(\log(n))$ es más eficiente que $O(n)$.
+$$\lim_{n\to\infty}\dfrac{f(n)}{g(n)} = \lim_{n\to\infty}\dfrac{n}{\log(n)} = \lim_{n\to\infty}\dfrac{10^n}{n} = \infty$$
+Por el criterio de comparación entre órdenes, lo acabamos de probar.
+
+##### Ejemplo 6.
+Se quiere dar un ejemplo de que el órden de eficiencia de los logaritmos es equivalente sin importar la base de este. Podemos ver qué sucede con $O(\log_2(n))$ y con $O(\log_3(n))$:
+$$\lim_{n\to\infty}\dfrac{\log_3(n)}{\log_2(n)} = \lim_{n\to\infty}\dfrac{\ln(2)}{\ln(3)}$$
+Por lo que ambos algoritmos tienen el mismo órden de eficiencia.
+
+## Notación Omega.
 Se dice que un algoritmo $A$ es de orden $\Omega(f(n))$, donde $f$ es una función $f:\mathbb{N}\rightarrow \mathbb{R}^{+}$, cuando existe una implementación del mismo tamaño cuyo tiempo de ejecución $T_A(n)$ es mayor igual que $K \cdot f(n)$, donde $K$ es una constante real positiva a partir de un tamaño grande $n_0$. Formalmente:
 $$A \mbox{ es } \Omega(f(n)) \Leftrightarrow \exists K \in \mathbb{R}^{+}, \exists n_0 \in \mathbb{N} \mid T_A(n) \geq K \cdot f(n)~~\forall n > n_0$$
+La notación $\Omega$ nos permite conocer cómo se comportará el algoritmo en términos de eficiencia en instancias del caso mejor del problema:  
+Como poco, sabemos que el algoritmo no t ardará menos de $K\cdot f(n)$ en ejecutarse, en el mejor de los casos.
 
-### Notación Theta.
-Se dice que un algoritmo $A$ es de orden $\Theta(f(n))$, donde $f$ es una función $f:\mathbb{N}\rightarrow \mathbb{R}^{+}$, cuando existe una implementación del mismo tamaño cuyo tiempo de ejecución $T_A(n)$ es igual que $K \cdot f(n)$, donde $K$ es una constante real positiva a partir de un tamaño grande $n_0$. En este caso, el algoritmo es simultáneamente de orden $\Theta(f(n))$ y $\Theta(g(n))$.
-$$A \mbox{ es } \Theta(f(n)) \Leftrightarrow \exists K \in \mathbb{R}^{+}, \exists n_0 \in \mathbb{N} \mid T_A(n) = K \cdot f(n)~~\forall n > n_0$$
+## Notación theta.
+Se dice que un algoritmo $A$ es de orden exacto $\theta(f(n))$, donde $f$ es una función $f:\mathbb{N}\rightarrow \mathbb{R}^{+}$, cuando existe una implementación del mismo tamaño cuyo tiempo de ejecución $T_A(n)$ es igual que $K \cdot f(n)$, donde $K$ es una constante real positiva a partir de un tamaño grande $n_0$. En este caso, el algoritmo es simultáneamente de orden $\theta(f(n))$ y $\theta(g(n))$.
+$$A \mbox{ es } \theta(f(n)) \Leftrightarrow \exists K \in \mathbb{R}^{+}, \exists n_0 \in \mathbb{N} \mid T_A(n) = K \cdot f(n)~~\forall n > n_0$$
 
 ### Propiedades.
 Se queda como ejercicio demostrar formalmente las siguientes propiedades:
 #### Transitividad.
 Si $f(n) \in O(g(n))$ y $g(n) \in O(h(n)) \Rightarrow f(n) \in O(h(n))$.  
-También para $\Omega$ y $\Theta$.
+También para $\Omega$ y $\theta$.
 
 #### Reflexiva.
 $$f(n) \in O(f(n))$$
