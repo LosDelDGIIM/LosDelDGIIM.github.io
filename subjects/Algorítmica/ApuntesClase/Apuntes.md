@@ -205,9 +205,9 @@ if(condicion){
 
 #### Peor caso.
 El órden de eficiencia del peor caso (notación $O$) viene dado por:
-$$O(\mbox{estructura condicional}) = \max(O(\mbox{condicion}), O(\mbox{Sentencia1}), O(\mbox{Sentencia2}))$$
+$$O(\mbox{estructura condicional}) = \max[O(\mbox{condicion}), O(\mbox{Sentencia1}), O(\mbox{Sentencia2})]$$
 ##### Justificación.
-Como justificación para la fórmula, démonos cuenta de que la ejecución de la estructura condicional es igual a una de las siguientes secuencias de instrucciones:
+Como justificación para la fórmula, démonos cuenta de que la ejecución de la estructura condicional es igual a una de las siguientes secuencias de instrucciones (dependerá de la condición la ejecución de una o de otra):
 ```cpp
 bool a = condicion;
 Sentencia1;
@@ -217,14 +217,14 @@ bool a = condicion;
 Sentencia2;
 ```
 La notación $O$ trata de buscar el órden del mayor tiempo de ejecución, por lo que buscaremos la secuencia que más tarde de las dos:
-$$O(\mbox{estructura condicional}) = \max(O(\mbox{Secuencia1}), O(\mbox{Secuencia2}))$$
+$$O(\mbox{estructura condicional}) = \max[O(\mbox{Secuencia1}), O(\mbox{Secuencia2})]$$
 Usando la relga para secuencias de instrucciones vista anteriormente, podemos expresar cada órden como:
-$$O(\mbox{Secuencia1}) = \max(O(\mbox{condicion}), O(\mbox{Sentencia1}))$$
-$$O(\mbox{Secuencia2}) = \max(O(\mbox{condicion}), O(\mbox{Sentencia2}))$$
+$$O(\mbox{Secuencia1}) = \max[O(\mbox{condicion}), O(\mbox{Sentencia1})]$$
+$$O(\mbox{Secuencia2}) = \max[O(\mbox{condicion}), O(\mbox{Sentencia2})]$$
 Por lo que:
-$$O(\mbox{estructura condicional}) = \max(O(\mbox{Secuencia1}), O(\mbox{Secuencia2})) =$$
-$$= \max(\max(O(\mbox{condicion}), O(\mbox{Sentencia1})), \max(O(\mbox{condicion}), O(\mbox{Sentencia2}))) =$$
-$$= \max(O(\mbox{condicion}), O(\mbox{Sentencia1}), O(\mbox{Sentencia2}))$$
+$$O(\mbox{estructura condicional}) = \max[O(\mbox{Secuencia1}), O(\mbox{Secuencia2})] =$$
+$$= \max[\max[O(\mbox{condicion}), O(\mbox{Sentencia1})], \max[O(\mbox{condicion}), O(\mbox{Sentencia2})]] =$$
+$$= \max[O(\mbox{condicion}), O(\mbox{Sentencia1}), O(\mbox{Sentencia2})]$$
 
 
 #### Mejor caso.
