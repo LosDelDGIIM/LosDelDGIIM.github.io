@@ -1,37 +1,42 @@
 # Tema 1. Arquitecturas Paralelas. Clasificación y Prestaciones.
 # Lección 1.1 Clasificación de paralelismo implícito en una aplicación.
 ## Dependencias de datos
-### RAW
-Lectura después de escritura:
-```cpp
-a = b*c;
-// ...
-d = a+c;
-```
-  
-Si ejecutamos las dos operaciones en paralelo, puede suceder que la segunda se ejecute antes que la primera, luego no se podrían ejecutar en paralelo.
 
-### WAW
-Escritura después de escritura:
-```cpp
-a = b*c;
-// Se lee a
-a = d+e;
-// Se lee a
-```
-Podemos resolver este programa cambiando en la segunda instrucción  ```a``` por otra variable. Renombrado de variables.  
-El problema aquí es que al leer ```a``` por segunda vez, el valor de ```a``` podría venir determinado por la instrucción ```a = b * c;```
+Cuando se ejecutan diversas secciones de cçodigo en paralelo, hay que tener en cuenta las dependencias de datos, que se describen a continuación:
+-  RAW
+    Lectura después de escritura:
+    ```cpp
+    a = b*c;
+    // ...
+    d = a+c;
+    ```
+    
+    Si ejecutamos las dos operaciones en paralelo, puede suceder que la segunda se ejecute antes que la primera, luego no se podrían ejecutar en paralelo.
 
-### WAR
-Escitura después de lectura:
-```cpp
-b = a+1;
-// ...
-a = d+e
-// se lee a
-```
-  
-Si ejecutamos las dos operaciones en paralelo, puede suceder que la segunda se ejecute antes que la primera, luego no se podrían ejecutar en paralelo.
+-  WAW
+    Escritura después de escritura:
+    ```cpp
+    a = b*c;
+    // Se lee a
+    a = d+e;
+    // Se lee a
+    ```
+    El problema aquí es que al leer ```a``` por segunda vez, el valor de ```a``` podría venir determinado por la instrucción ```a = b * c;```
+    
+    Podemos resolver este programa cambiando en la segunda instrucción  ```a``` por otra variable. Renombrado de variables. Lo hace de forma automática el compilador por norma general.
+
+- WAR
+    Escitura después de lectura:
+    ```cpp
+    b = a+1;
+    // ...
+    a = d+e
+    // se lee a
+    ```
+    
+    Si ejecutamos las dos operaciones en paralelo, puede suceder que la segunda se ejecute antes que la primera, luego no se podrían ejecutar en paralelo.
+
+    También se puede resolver con el renombrado. Lo hace de forma automática el compilador por norma general.
 
 ## Niveles de paralelismo
 
@@ -46,7 +51,7 @@ Si entre dos bucles distintos no hay RAW, podríamos ejecutarlos en paralelo.
 El mismo razonamiento se aplica a funciones y programas.
 
 ### Unidades para cada tipo de paralelismo
-- Paralelismo a nivel de intruccioens para procesadores segmentados.
+- Paralelismo a nivel de instrucciones para procesadores segmentados.
 - Paralelismo a nivel de bucles para unidades GPU.
 - Paralelismo a nivel de funciones y programas para multiprocesadores.
 
@@ -80,6 +85,7 @@ Podemos pasar una primera foto por el primer programa y cuando lo libere, meter 
 |            | C          | B          | A          |
 |            |            | C          | B          |
 |            |            |            | C          |
+
 El paralelismo a nivel de tareas es similar al paralelismo a nivel de función.
   
 ### Paralelismo de datos
@@ -125,10 +131,10 @@ Todos estos conectados por una red de interconexión.
 Arquitectura UMA.
 Comparten el mismo espacio de direcciones. Acceso a memoria uniforme.  
 El programador no necesita conocer dónde están almacenados los datos.  
-Una placa base con un puerte norte, varios sockets y distintos slots de RAM.  
+Una placa base con un puente norte, varios sockets y distintos slots de RAM.  
   
 En este caso, es sencillo comunicar los procesadores, ya que un procesador puede escribir en su memoria y que otro procesador lea dicha información.  
-Sin embargo, tenemos problemas de sincronización (no leer antes de escribir). Necesitamos código para sincronizar los procesadores (como semáforos o cerrojos).
+Sin embargo, tenemos problemas de sincronización (no leer antes de escribir). Necesitamos código para sincronizar slos procesadores (como semáforos o cerrojos).
 
 #### Multicomputadores
 Todos los procesadores tienen su espacio de direcciones propio.  
