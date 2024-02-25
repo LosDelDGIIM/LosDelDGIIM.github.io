@@ -114,30 +114,37 @@ La notación $\Omega$ nos permite conocer cómo se comportará el algoritmo en t
 Como poco, sabemos que el algoritmo no t ardará menos de $K\cdot f(n)$ en ejecutarse, en el mejor de los casos.
 
 ## Notación theta.
-Se dice que un algoritmo $A$ es de orden exacto $\theta(f(n))$, donde $f$ es una función $f:\mathbb{N}\rightarrow \mathbb{R}^{+}$, cuando existe una implementación del mismo tamaño cuyo tiempo de ejecución $T_A(n)$ es igual que $K \cdot f(n)$, donde $K$ es una constante real positiva a partir de un tamaño grande $n_0$. En este caso, el algoritmo es simultáneamente de orden $\theta(f(n))$ y $\theta(g(n))$.
+Se dice que un algoritmo $A$ es de orden exacto $\theta(f(n))$, donde $f$ es una función $f:\mathbb{N}\rightarrow \mathbb{R}^{+}$, cuando existe una implementación del mismo tamaño cuyo tiempo de ejecución $T_A(n)$ es igual que $K \cdot f(n)$, donde $K$ es una constante real positiva a partir de un tamaño grande $n_0$. En este caso, el algoritmo es simultáneamente de orden $O(f(n))$ y $\Omega(g(n))$.
 $$A \mbox{ es } \theta(f(n)) \Leftrightarrow \exists K \in \mathbb{R}^{+}, \exists n_0 \in \mathbb{N} \mid T_A(n) = K \cdot f(n)~~\forall n > n_0$$
 
-### Propiedades.
+## Propiedades.
 Se queda como ejercicio demostrar formalmente las siguientes propiedades:
-#### Transitividad.
+### Transitividad.
 Si $f(n) \in O(g(n))$ y $g(n) \in O(h(n)) \Rightarrow f(n) \in O(h(n))$.  
 También para $\Omega$ y $\theta$.
 
-#### Reflexiva.
-$$f(n) \in O(f(n))$$
+##### Demostración.
+$f(n)$ es $O(g(n)) \Rightarrow \exists K_1 \in \mathbb{R}^{+}, \exists n_0 \in \mathbb{N} \mid f(n) \leq K_1 \cdot g(n)~~\forall n \geq n_0$  
+$g(n)$ es $O(h(n)) \Rightarrow \exists K_2 \in \mathbb{R}^{+}, \exists m_0 \in \mathbb{N} \mid g(n) \leq K_2 \cdot h(n)~~\forall n \geq m_0$  
+$$f(n) \leq K_1 \cdot g(n) \leq K_1 \cdot K_2 \cdot h(n)~~\forall n\geq \max(n_0, m_0)$$
+Luego $f(n) \leq (K_1 \cdot K_2) \cdot h(n)~~\forall n\geq k_0=\max(n_0, m_0) \Rightarrow f(n)$ es $O(h(n))$.
 
-#### Simétrica.
-$$f(n) \in O(g(n)) \Leftrightarrow g(n) \in O(f(n))$$
+### Reflexiva.
+$f(n) \in O(f(n))$
+También para $\Omega$ y $\theta$.
 
-#### Suma .
+### Simétrica.
+$f(n) \in \theta(g(n)) \Leftrightarrow g(n) \in \theta(f(n))$
+
+### Suma.
 Si $T_1(n) \in O(f(n))$ y $T_2(n) \in O(g(n))$. Entonces:
-$$T_1(n) + T_2(n) \in O(max\{f(n), g(n)\})$$
+$$T_1(n) + T_2(n) \in O(max(f(n), g(n)))$$
 
-#### Producto.
+### Producto.
 Si $T_1(n) \in O(f(n))$ y $T_2(n) \in O(g(n))$. Entonces:
 $$T_1(n) \cdot T_2(n) \in O(f(n) \cdot g(n))$$
 
-### Órdenes con varios parámetros.
+## Órdenes con varios parámetros.
 % TODO: copiar de apuntes
 
 ## Análisis de algoritmos.
