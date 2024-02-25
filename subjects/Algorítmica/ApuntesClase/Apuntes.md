@@ -156,7 +156,7 @@ $O(f(n)\cdot g(n)) = O(f(n))\cdot O(g(n))$
 ## Órdenes con varios parámetros.
 En ocasiones, el tamaño del problema no dependerá de una única variable $n$, sino que podrá depender de varias.  
   
-En estos casos, se analiza de igual forma que en el caso de una variable, pero con una función de varias variables. Conocida una función $f:\matbb{N}\times\mathbb{N}\rightarrow \mathbb{R}^{+}$:
+En estos casos, se analiza de igual forma que en el caso de una variable, pero con una función de varias variables. Conocida una función $f:\mathbb{N}\times\mathbb{N}\rightarrow \mathbb{R}^{+}$:
 $$A \mbox{ es } O(f(n,m)) \Leftrightarrow \exists K \in \mathbb{R}^{+} \mid T_A(n,m) \leq K \cdot f(n,m)\mbox{   } \forall n,m\in \mathbb{N}$$
 
 ### Ejemplo.
@@ -180,7 +180,7 @@ Son aquellas instrucciones cuya ejecución no depende del tamaño del caso, como
 - Entradas y salidas.
   
 Su tiempo de ejecución está acotado superiormente por una constante.  
-SU órden es $O(1)$.
+Su órden es $O(1)$.
 
 ### 2. Secuencias de sentencias.
 Constan de la ejecución de secuencias dse bloques de sentencias:
@@ -191,40 +191,40 @@ Sentencia_2;
 Sentencia_r;
 ```
 Suponiendo que cada sentencia $i$ tiene eficiencia $O(f_i(n))$, la eficiencia de la secuencia se obtiene mediante las reglas de la suma y del máximo:
-$$O(f_1(n) + f_2(n) + \ldots + f_r(n)) = \max(O(f_1(n)), O(f_2(n)), \ldots, O(f_r(n)))$$
+$$O(f_1(n) + f_2(n) + \ldots + f_r(n)) = \max[O(f_1(n)), O(f_2(n)), \ldots, O(f_r(n))]$$
 
 ### 3. Sentencias condicionales.
-Constan de la evaluación de una condición y la ejecución de un bloque de sentencias. Puede ejecutarse la ```Sentencia_1``` o la ```Sentencia_2```, en función de la veracidad o falsedad de la condición:
+Constan de la evaluación de una condición y la ejecución de un bloque de sentencias. Puede ejecutarse la ```Sentencia1``` o la ```Sentencia2```, en función de la veracidad o falsedad de la condición:
 ```cpp
 if(condicion){
-    Sentencia_1;
+    Sentencia1;
 }else{
-    Sentencia_2;
+    Sentencia2;
 }
 ```
 
 #### Peor caso.
 El órden de eficiencia del peor caso (notación $O$) viene dado por:
-$$O(\mbox{estructura condicional}) = \max(O(\mbox{condicion}), O(\mbox{Sentencia_1}), O(\mbox{Sentencia_2}))$$
+$$O(\mbox{estructura condicional}) = \max(O(\mbox{condicion}), O(\mbox{Sentencia1}), O(\mbox{Sentencia2}))$$
 ##### Justificación.
 Como justificación para la fórmula, démonos cuenta de que la ejecución de la estructura condicional es igual a una de las siguientes secuencias de instrucciones:
 ```cpp
 bool a = condicion;
-Sentencia_1;
+Sentencia1;
 ```
 ```cpp
 bool a = condicion;
-Sentencia_2;
+Sentencia2;
 ```
 La notación $O$ trata de buscar el órden del mayor tiempo de ejecución, por lo que buscaremos la secuencia que más tarde de las dos:
-$$O(\mbox{estructura condicional}) = \max(O(\mbox{Secuencia_1}), O(\mbox{Secuencia_2}))$$
+$$O(\mbox{estructura condicional}) = \max(O(\mbox{Secuencia1}), O(\mbox{Secuencia2}))$$
 Usando la relga para secuencias de instrucciones vista anteriormente, podemos expresar cada órden como:
-$$O(\mbox{Secuencia_1}) = \max(O(\mbox{condicion}), O(\mbox{Sentencia_1}))$$
-$$O(\mbox{Secuencia_2}) = \max(O(\mbox{condicion}), O(\mbox{Sentencia_2}))$$
+$$O(\mbox{Secuencia1}) = \max(O(\mbox{condicion}), O(\mbox{Sentencia1}))$$
+$$O(\mbox{Secuencia2}) = \max(O(\mbox{condicion}), O(\mbox{Sentencia2}))$$
 Por lo que:
-$$O(\mbox{estructura condicional}) = \max(O(\mbox{Secuencia_1}), O(\mbox{Secuencia_2})) =$$
-$$= \max(\max(O(\mbox{condicion}), O(\mbox{Sentencia_1})), \max(O(\mbox{condicion}), O(\mbox{Sentencia_2}))) =$$
-$$= \max(O(\mbox{condicion}), O(\mbox{Sentencia_1}), O(\mbox{Sentencia_2}))$$
+$$O(\mbox{estructura condicional}) = \max(O(\mbox{Secuencia1}), O(\mbox{Secuencia2})) =$$
+$$= \max(\max(O(\mbox{condicion}), O(\mbox{Sentencia1})), \max(O(\mbox{condicion}), O(\mbox{Sentencia2}))) =$$
+$$= \max(O(\mbox{condicion}), O(\mbox{Sentencia1}), O(\mbox{Sentencia2}))$$
 
 
 #### Mejor caso.
