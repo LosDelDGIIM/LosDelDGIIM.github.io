@@ -124,10 +124,10 @@ Si $f(n) \in O(g(n))$ y $g(n) \in O(h(n)) \Rightarrow f(n) \in O(h(n))$.
 También para $\Omega$ y $\theta$.
 
 ##### Demostración.
-$f(n)$ es $O(g(n)) \Rightarrow \exists K_1 \in \mathbb{R}^{+}, \exists n_0 \in \mathbb{N} \mid f(n) \leq K_1 \cdot g(n)\forall n \geq n_0$  
-$g(n)$ es $O(h(n)) \Rightarrow \exists K_2 \in \mathbb{R}^{+}, \exists m_0 \in \mathbb{N} \mid g(n) \leq K_2 \cdot h(n)\forall n \geq m_0$  
-$$f(n) \leq K_1 \cdot g(n) \leq K_1 \cdot K_2 \cdot h(n)\forall n\geq \max(n_0, m_0)$$
-Luego $f(n) \leq (K_1 \cdot K_2) \cdot h(n)~~\forall n\geq k_0=\max(n_0, m_0) \Rightarrow f(n)$ es $O(h(n))$.
+$f(n)$ es $O(g(n)) \Rightarrow \exists K_1 \in \mathbb{R}^{+}, \exists n_0 \in \mathbb{N} \mid f(n) \leq K_1 \cdot g(n)$  $\forall n \geq n_0$  
+$g(n)$ es $O(h(n)) \Rightarrow \exists K_2 \in \mathbb{R}^{+}, \exists m_0 \in \mathbb{N} \mid g(n) \leq K_2 \cdot h(n)$  $\forall n \geq m_0$  
+$$f(n) \leq K_1 \cdot g(n) \leq K_1 \cdot K_2 \cdot h(n)$  $\forall n\geq \max(n_0, m_0)$$
+Luego $f(n) \leq (K_1 \cdot K_2) \cdot h(n)$  $\forall n\geq k_0=\max(n_0, m_0) \Rightarrow f(n)$ es $O(h(n))$.
 
 ### Reflexiva.
 $f(n) \in O(f(n))$  
@@ -144,19 +144,92 @@ $$T_1(n) + T_2(n) \in O(max(f(n), g(n)))$$
 Si $T_1(n) \in O(f(n))$ y $T_2(n) \in O(g(n))$. Entonces:
 $$T_1(n) \cdot T_2(n) \in O(f(n) \cdot g(n))$$
 
+### Regla del máximo.
+$O(f(n)+g(n)) = \max(O(f(n)), O(g(n)))$
+
+### Regla de la suma.
+$O(f(n)+g(n)) = O(f(n))+O(g(n))$
+
+### Regla del producto.
+$O(f(n)\cdot g(n)) = O(f(n))\cdot O(g(n))$
+
 ## Órdenes con varios parámetros.
-% TODO: copiar de apuntes
+En ocasiones, el tamaño del problema no dependerá de una única variable $n$, sino que podrá depender de varias.  
+  
+En estos casos, se analiza de igual forma que en el caso de una variable, pero con una función de varias variables. Conocida una función $f:\matbb{N}\times\mathbb{N}\rightarrow \mathbb{R}^{+}$:
+$$A \mbox{ es } O(f(n,m)) \Leftrightarrow \exists K \in \mathbb{R}^{+} \mid T_A(n,m) \leq K \cdot f(n,m)\mbox{   } \forall n,m\in \mathbb{N}$$
+
+### Ejemplo.
+Por ejemplo, el órden de eficiencia del algoritmo canónico (el que todos conocemos) de suma de matrices $n\times m$ es de órden $O(n\cdot m)$.
 
 ## Análisis de algoritmos.
 El primer paso es identificar qué parámetro determina el tamaño del problema ($n$).  
-Posteriormente, tenemos que tener claro como se analiza cada estructura del código.
+Posteriormente, tenemos que tener claro como se analiza cada estructura del código:
+1. Operaciones elementales.
+2. Secuencias de sentencias.
+3. Sentencias condicionales.
+4. Sentencias repetitivas.
+5. Llamadas a funciones no recursivas.
+6. Llamadas a funciones recursivas.
 
-### Sentencias simples.
-Su ejecución está acotado superiormente por una constante.  
-Su tiempo de ejecución no depende del tamaño del problema.  
-Asumimos que todas las operaciones básicas son de orden constante.  
+### 1. Sentencias simples u Operaciones elementales.
+Son aquellas instrucciones cuya ejecución no depende del tamaño del caso, como por ejemlo:
+- Operaciones matemáticas básicas (sumas, multiplicaciones, ...).
+- Comparaciones.
+- Operaciones booleanas.
+- Entradas y salidas.
+  
+Su tiempo de ejecución está acotado superiormente por una constante.  
+SU órden es $O(1)$.
 
-### Sentencias condicionales.
+### 2. Secuencias de sentencias.
+Constan de la ejecución de secuencias dse bloques de sentencias:
+```cpp
+Sentencia_1;
+Sentencia_2;
+// ...
+Sentencia_r;
+```
+Suponiendo que cada sentencia $i$ tiene eficiencia $O(f_i(n))$, la eficiencia de la secuencia se obtiene mediante las reglas de la suma y del máximo:
+$$O(f_1(n) + f_2(n) + \ldots + f_r(n)) = \max(O(f_1(n)), O(f_2(n)), \ldots, O(f_r(n)))$$
+
+### 3. Sentencias condicionales.
+Constan de la evaluación de una condición y la ejecución de un bloque de sentencias. Puede ejecutarse la ```Sentencia_1``` o la ```Sentencia_2```, en función de la veracidad o falsedad de la condición:
+```cpp
+if(condicion){
+    Sentencia_1;
+}else{
+    Sentencia_2;
+}
+```
+
+#### Peor caso.
+El órden de eficiencia del peor caso (notación $O$) viene dado por:
+$$O(\mbox{estructura condicional}) = \max(O(\mbox{condicion}), O(\mbox{Sentencia_1}), O(\mbox{Sentencia_2}))$$
+##### Justificación.
+Como justificación para la fórmula, démonos cuenta de que la ejecución de la estructura condicional es igual a una de las siguientes secuencias de instrucciones:
+```cpp
+bool a = condicion;
+Sentencia_1;
+```
+```cpp
+bool a = condicion;
+Sentencia_2;
+```
+La notación $O$ trata de buscar el órden del mayor tiempo de ejecución, por lo que buscaremos la secuencia que más tarde de las dos:
+$$O(\mbox{estructura condicional}) = \max(O(\mbox{Secuencia_1}), O(\mbox{Secuencia_2}))$$
+Usando la relga para secuencias de instrucciones vista anteriormente, podemos expresar cada órden como:
+$$O(\mbox{Secuencia_1}) = \max(O(\mbox{condicion}), O(\mbox{Sentencia_1}))$$
+$$O(\mbox{Secuencia_2}) = \max(O(\mbox{condicion}), O(\mbox{Sentencia_2}))$$
+Por lo que:
+$$O(\mbox{estructura condicional}) = \max(O(\mbox{Secuencia_1}), O(\mbox{Secuencia_2})) =$$
+$$= \max(\max(O(\mbox{condicion}), O(\mbox{Sentencia_1})), \max(O(\mbox{condicion}), O(\mbox{Sentencia_2}))) =$$
+$$= \max(O(\mbox{condicion}), O(\mbox{Sentencia_1}), O(\mbox{Sentencia_2}))$$
+
+
+#### Mejor caso.
+El órden de eficiencia del
+
+
 El tiempo de la estructura condicional es el máximo de la eficiencia entre los bloques del ```if``` y del ```else```.  
 Además, debemos tener en cuenta sumarle la eficiencia de la operación de comparación.  
-%TODO: completar con apuntes, mejor y peor caso.
