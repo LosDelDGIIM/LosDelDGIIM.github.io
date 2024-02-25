@@ -254,3 +254,95 @@ if(n%2 == 1){
 Aplicamos las fórmulas anteriormente vistas, sabiendo que la condición y la salida son de órden $O(1)$ al ser sentencias simples:
 $$O(\mbox{estructura condicional}) = \max\left[O(\mbox{condicion}), O(\mbox{Sentencia1}), O(\mbox{Sentencia2})\right] = \max\left[O(1), O(1), O(n)\right] = O(n)$$
 $$\Omega(\mbox{estructura condicional}) = \Omega(\mbox{condicion}) + \min\left[\Omega(\mbox{Sentencia1}), \Omega(\mbox{Sentencia2})\right] = \Omega(1) + \min\left[\Omega(1), \Omega(n)\right] = \Omega(1)$$
+
+### 4. Sentencias repetitivas.
+Constan de la evaluación de uan condición y la ejecución de un bloque de sentencias, mientras que dicha condición se cumpla. Tienen la siguiente forma:
+```cpp
+Mientras(condición){
+    BloqueSentencias;
+}
+```
+Suponiendo que:
+- El bloque de sentencias tiene eficiencia $f(n)$.
+- La evaluación de la condición tiene eficiencia $g(n)$.
+- El bucle se ejecuta $h(n)$ veces.
+Entonces, la eficiencia será:
+$$O(\mbox{estructura repetitiva}) = O(g(n) + h(n) \cdot (g(n)+f(n)))$$
+
+##### Justificación.
+La condición se comprueba al menos una vez, por ello se suma.  
+Cada iteración tiene un costo de $g(n) + f(n)$.  
+El bucle realiza $h(n)$ iteraciones.
+
+##### Ejemplo.
+Dado el siguiente código, calcular su eficiencia.
+```cpp
+while(n > 0){
+    cout << n;
+    n--;
+}
+```
+Evaluación de la condición: $g(n) = 1$.  
+Bloque de sentencias: $f(n) = \max(O(1), O(1)) = 1$.  
+Repeticiones: $h(n) = n$.  
+$$O(\mbox{estructura repetitiva}) = g(n) + h(n)\cdot (g(n)+f(n)) = 1+n\cdot (1+1) = 2\cdot n+1 \Rightarrow O(2\cdot n+1)$$
+Aplicando la relga del máximo: $O(2\cdot n+1) = \max(O(2\cdot n), O(1)) = O(2\cdot n)$.  
+Simplificando la constante: La secuencia repetitiva es $O(n)$.
+
+#### 4.1. Bucles for.
+Constan de la inicialización de una variable, comprobación de una condición y actualización de la variable. Se ejecutará un bloque de sentencias mientras que la condición se cumpla:
+```cpp
+for(Inicialización; Condición; Actualización){
+    BloqueSentencias;
+}
+```
+Suponiendo que:
+- El bloque de sentencias tiene eficiencia $f(n)$.
+- La evaluación de la condifición tiene eficiencia $g(n)$.
+- El bucle se ejecuta $h(n)$ veces.
+- La actualización tiene eficiencia $a(n)$.
+- La inicialización tiene eficiencia $i(n)$.
+
+La eficiencia de una estructura de este tipo viene dada por:
+$$O(\mbox{for}) = O(i(n)+g(n) + h(n) \cdot (g(n)+f(n)+a(n)))$$
+
+##### Justificación.
+La inicialización tiene lugar una vez.
+La condición se comprueba al menos una vez, por ello se suma.  
+Cada iteración tiene un costo de $g(n) + f(n) + a(n)$.  
+El bucle realiza $h(n)$ iteraciones.
+
+##### Ejemplo.
+Dado el siguiente código, calcular su eficiencia:
+```cpp
+while(n > 0){
+    for(int i = 1; i <= n; i*=2){
+        cout << i;
+    }
+    n--;
+}
+```
+Comenzamos analizando el bucle interno:
+- Inicialización: $O(1)$.
+- Condición: $O(1)$.
+- Actualización: $O(1)$.
+- Bloque de sentencias: $O(1)$.
+- Veces que se ejecuta: $O(\log_2(n))$.
+Eficiencia del bucle:
+$$O(1)+O(1)+O(\log_2(n))\cdot (O(1)+O(1)+O(1)) = O(\log_2(n))$$
+  
+Ahora, analizamos el bucle externo:
+- Condición: $O(1)$.
+- Bloque de sentencias: $O(\log_2(n)+1)$.
+- Veces que se ejecuta: $O(n)$.
+Eficiencia del bucle:
+$$O(1)+O(n)\cdot (O(1)+O(\log_2(n)+1)) = O(n\cdot \log_2(n))$$
+Despreciando la base del logaritmo:
+$$O(n\log(n))$$
+
+### 5. Funciones no recursivas.
+#### 5.1. Eficiencia de la función.
+La eficiencia de la función se calcula como una secuencia de sentencias o bloques.
+#### 5.2. Eficiencia de la llamada a función.
+Depende de si sus parámetros de entrada dependen o no del tamaño del problema.
+
