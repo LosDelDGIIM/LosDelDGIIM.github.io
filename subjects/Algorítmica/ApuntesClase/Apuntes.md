@@ -191,7 +191,7 @@ Sentencia_2;
 Sentencia_r;
 ```
 Suponiendo que cada sentencia $i$ tiene eficiencia $O(f_i(n))$, la eficiencia de la secuencia se obtiene mediante las reglas de la suma y del máximo:
-$$O(f_1(n) + f_2(n) + \ldots + f_r(n)) = \max[O(f_1(n)), O(f_2(n)), \ldots, O(f_r(n))]$$
+$$O(f_1(n) + f_2(n) + \ldots + f_r(n)) = \max\left[O(f_1(n)), O(f_2(n)), \ldots, O(f_r(n))\right]$$
 
 ### 3. Sentencias condicionales.
 Constan de la evaluación de una condición y la ejecución de un bloque de sentencias. Puede ejecutarse la ```Sentencia1``` o la ```Sentencia2```, en función de la veracidad o falsedad de la condición:
@@ -205,7 +205,7 @@ if(condicion){
 
 #### Peor caso.
 El órden de eficiencia del peor caso (notación $O$) viene dado por:
-$$O(\mbox{estructura condicional}) = \max[O(\mbox{condicion}), O(\mbox{Sentencia1}), O(\mbox{Sentencia2})]$$
+$$O(\mbox{estructura condicional}) = \max\left[O(\mbox{condicion}), O(\mbox{Sentencia1}), O(\mbox{Sentencia2})\right]$$
 ##### Justificación.
 Como justificación para la fórmula, démonos cuenta de que la ejecución de la estructura condicional es igual a una de las siguientes secuencias de instrucciones (dependerá de la condición la ejecución de una o de otra):
 ```cpp
@@ -217,19 +217,40 @@ bool a = condicion;
 Sentencia2;
 ```
 La notación $O$ trata de buscar el órden del mayor tiempo de ejecución, por lo que buscaremos la secuencia que más tarde de las dos:
-$$O(\mbox{estructura condicional}) = \max[O(\mbox{Secuencia1}), O(\mbox{Secuencia2})]$$
+$$O(\mbox{estructura condicional}) = \max\left[O(\mbox{Secuencia1}), O(\mbox{Secuencia2})\right]$$
 Usando la relga para secuencias de instrucciones vista anteriormente, podemos expresar cada órden como:
-$$O(\mbox{Secuencia1}) = \max[O(\mbox{condicion}), O(\mbox{Sentencia1})]$$
-$$O(\mbox{Secuencia2}) = \max[O(\mbox{condicion}), O(\mbox{Sentencia2})]$$
+$$O(\mbox{Secuencia1}) = \max\left[O(\mbox{condicion}), O(\mbox{Sentencia1})\right]$$
+$$O(\mbox{Secuencia2}) = \max\left[O(\mbox{condicion}), O(\mbox{Sentencia2})\right]$$
 Por lo que:
-$$O(\mbox{estructura condicional}) = \max[O(\mbox{Secuencia1}), O(\mbox{Secuencia2})] =$$
-$$= \max[\max[O(\mbox{condicion}), O(\mbox{Sentencia1})], \max[O(\mbox{condicion}), O(\mbox{Sentencia2})]] =$$
-$$= \max[O(\mbox{condicion}), O(\mbox{Sentencia1}), O(\mbox{Sentencia2})]$$
+$$O(\mbox{estructura condicional}) = \max\left[O(\mbox{Secuencia1}), O(\mbox{Secuencia2})\right] =$$
+$$= \max\left[\max\left[O(\mbox{condicion}), O(\mbox{Sentencia1})\right], \max\left[O(\mbox{condicion}), O(\mbox{Sentencia2})\right]\right] =$$
+$$= \max\left[O(\mbox{condicion}), O(\mbox{Sentencia1}), O(\mbox{Sentencia2})\right]$$
 
 
 #### Mejor caso.
-El órden de eficiencia del
+El órden de eficiencia del mejor caso (notación $\Omega$) viene dado por:
+$$\Omega(\mbox{estructura condicional}) = \Omega(\mbox{condicion}) + \min\left[\Omega(\mbox{Sentencia1}), \Omega(\mbox{Sentencia2})\right]$$
+##### Justificación.
+Buscamos expresar el órden de ejecución en el mejor caso. Al igual que en la justificación anterior, el bloque condicional es equivalante a seleccionar una de dos secuencias:
+```cpp
+bool a = condicion;
+Sentencia1;
+```
+```cpp
+bool a = condicion;
+Sentencia2;
+```
+Nos damos cuenta de que la condición siempre se ejecuta y luego se ejecuta una sentencia. Como estamos en el mejor caso, seleccionamos la sentencia que tarde menos tiempo en ejecutarse. Por esto, tenemos que el órden de ejecución es la suma del órden de la condición más el mínimo del órden de las dos sentencias.
 
-
-El tiempo de la estructura condicional es el máximo de la eficiencia entre los bloques del ```if``` y del ```else```.  
-Además, debemos tener en cuenta sumarle la eficiencia de la operación de comparación.  
+#### Ejemplo.
+Dado el siguiente código, buscamos su órden de ejecución en el peor y mejor casos:
+```cpp
+if(n%2 == 1){
+    cout << "Es impar";
+}else{
+    // código de órden n
+}
+```
+Aplicamos las fórmulas anteriormente vistas, sabiendo que la condición y la salida son de órden $O(1)$ al ser sentencias simples:
+$$O(\mbox{estructura condicional}) = \max\left[O(\mbox{condicion}), O(\mbox{Sentencia1}), O(\mbox{Sentencia2})\right] = \max\left[O(1), O(1), O(n)\right] = O(n)$$
+$$\Omega(\mbox{estructura condicional}) = \Omega(\mbox{condicion}) + \min\left[\Omega(\mbox{Sentencia1}), \Omega(\mbox{Sentencia2})\right] = \Omega(1) + \min\left[\Omega(1), \Omega(n)\right] = \Omega(1)$$
