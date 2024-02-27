@@ -125,4 +125,4 @@ $$A \mbox{ es } O(f(n,m)) \Leftrightarrow \exists K \in \mathbb{R}^{+} \mid T_A(
 ### Ejemplo.
 Por ejemplo, el órden de eficiencia del algoritmo canónico (el que todos conocemos) de suma de matrices $n\times m$ es de órden $O(n\cdot m)$.
 
-[Volver al índice]()
+[Volver al índice](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Algor%C3%ADtmica/ApuntesClase/Indice.md)

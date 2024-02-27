@@ -373,4 +373,4 @@ La eficiencia de la función se calcula como una secuencia de sentencias o bloqu
 #### 5.2. Eficiencia de la llamada a función.
 Depende de si sus parámetros de entrada dependen o no del tamaño del problema.
 
-[Volver al índice]()
+[Volver al índice](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Algor%C3%ADtmica/ApuntesClase/Indice.md)

@@ -43,4 +43,4 @@ Por tanto, ante unos datos pesados con varios registros, selección será mejor 
   
 Cuando se tienen muchos datos, es mejor un algoritmo $n \log(n)$.  
 
-[Volver al índice]()
+[Volver al índice](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Algor%C3%ADtmica/ApuntesClase/Indice.md)
