@@ -187,4 +187,160 @@ La eficiencia de la función se calcula como una secuencia de sentencias o bloqu
 #### 5.2. Eficiencia de la llamada a función.
 Depende de si sus parámetros de entrada dependen o no del tamaño del problema.
 
+#### Ejemplos.
+```cpp
+bool esPrimo(int valor){
+    double tope = sqrt(valor);
+    for(int i = 2; i <=tope; i++){
+        if(valor % i == 0)
+            return false;
+    }
+    
+    return true;
+}
+```
+Se trata de un algoritmo de eficiencia $O(\sqrt{n})$.
+
+##### Ejemplo 1.
+```cpp
+for(int i = 1; i<n; i++){
+    if(esPrimo(1234567))
+        cout << i;
+}
+```
+
+El tiempo en calcular ```esPrimo(1234567)``` es constante, luego es de eficiencia $O(1)$. Se repite $n$ veces, luego la eficiencia del bucle es de $O(n)$.
+
+##### Ejemplo 2.
+```cpp
+for(int i = 1; i<n; i++){
+    if(esPrimo(i))
+        cout << i;
+}
+```
+
+En este caso, es de eficiencia $O(n\sqrt{n})$:  
+$$\sum_{i=1}^n \sqrt{i} = \sqrt{1} + \sqrt{2} + \ldots + \sqrt{n} = \int_{1}^n \sqrt{n}\ dn = n\sqrt{n}$$
+
+##### Ejemplo 3.
+```cpp
+for(int i = 1; i<2000; i++){
+    if(esPrimo(i))
+        cout << i;
+}
+```
+
+El tiempo de ejecución no depende de $n$, siempre tarda lo mismo (es decir, es constante), luego es de orden $O(1)$.
+
+##### Ejemplo 4.
+```cpp
+for(int i = n; i>0; i/=2){
+    if(esPrimo(i))
+        cout << i;
+}
+```
+
+La eficiencia es de $O(\log(n)\sqrt{n})$, ya que repite $\log(n)$ veces una orde de eficiencia $O(\sqrt{n})$.
+
+#### Más Ejemplos
+##### Ejemplo 1.
+```cpp
+int LlamarV(int *s, int N){
+    for(int i = N-1; i > 0; i = i/2)
+        V[i] = V[i]-1;
+    return V[0];
+}
+
+void Ejemplo(int *v, int N){
+    for(int i=0; i<N; i++){
+        v[i] = (i*2+20-4*i)/N;
+        v[i] = LlamarV(v, N-1)*LlamarV(v, N-2);
+    }
+}
+```
+
+La función ```LlamarV``` tiene un tiempo de ejecución de $O(\log(n))$.  
+El bucle de ```Ejemplo``` se repite $n$ veces, luego es de orden $O(n\log(n))$.
+
+##### Ejemplo 2.
+```cpp
+void ejemplo1(int n){
+    int i, j, k;
+    for(i = 0; i<n; i++){
+        for(j = 0; j<n; j++){
+            C[i][j] = 0;
+            for(k = 0; k<n; k++){
+                C[i][j] = A[i][k] - B[k][j];
+            }
+        }
+    }
+}
+```
+
+Tiene eficiencia $O(n^3)$.
+
+##### Ejemplo 3.
+```cpp
+bool esPalindromo(char v[]){
+    bool pal = true;
+    int inicio = 0, fin = strlen(v)-1;
+    
+    while((pal) && (inicio<fin)){
+        if(v[inicio] != v[fin])
+            pal = true;
+        inicio++;
+        fin--;
+    }
+    
+    return pal;
+}
+```
+
+Se trata de un algoritmo de orden $O\left(\dfrac{n}{2}\right) = O(n)$.
+
+##### Ejemplo 4.
+```cpp
+void F(int num1, int num2){
+    for(int i = num1; i<= num2; i*=2){
+        cout << i << endl;
+    }
+}
+```
+Tenemos un algoritmo de dos variables, con $n = num2- num1$. Se repite $\log(n)$ veces, luego eficiencia:
+$$O(\log(n)) = O(\log(num2-num1))$$
+
+##### Ejemplo 5.
+```cpp
+void F(int* v, int num, int num2){
+    int i = -1, j = num2;
+    
+    while(i <= j){
+        do{
+            i++; j--;
+        }while(v[i]<v[j]);
+    }
+}
+```
+
+Es un algoritmo que no funciona correctamente en todos los cacos, en un caso puede no llegar a terminar.
+
+### 6. Funciones recursivas
+Se expresa como una ecuación en recurrencias y el orden de eficiencia es su solución.
+Primero, suponemos que hay un caso base que se encarga de conocer la solución al problema en un caso menor.  
+Si la solución al caso base la podemos manipular para dar una solución a un caso mayor, tenemos el problema resuelto.
+
+#### Ejemplos.
+##### Ejemplo 1.
+```cpp
+unsigned long factorial(int n){
+    if(n<=1) return 1;
+    else return n*factorial(n-1);
+}
+```
+
+$$\left\{ \begin{array}{l}
+T(n) = T(n-1) +1\\
+T(0) = T(1) = 1
+\end{array}\right.$$
+
 [Volver al índice](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Algor%C3%ADtmica/ApuntesClase/Indice.md)
