@@ -338,7 +338,8 @@ unsigned long factorial(int n){
 }
 ```
 
-$$T(n) = T(n-1) +1$$
+$$T(n) = T(n-1) +1$$  
+  
 $$T(0) = T(1) = 1$$
 
 ##### Ejemplo 2.
