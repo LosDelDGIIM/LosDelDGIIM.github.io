@@ -384,7 +384,7 @@ $$T(n) = T(n-2) +1$$
   
 $$T(1) = 1$$  
   
-$$T(0) 1$$  
+$$T(0) = 1$$  
   
 Pasamos a resolver el ejercicio:
 $$T(n-2) = T(n-4)+1 $$  
@@ -395,7 +395,22 @@ $$T(n) = T(n-4)+1+1 = T(n-6) + 3= T(n-8) + 4 = T(n-10)+5$$
   
 $$T(n) = T(n-2k) + k$$  
   
-Para $k = \dfrac{n}{2}$:
-$$T(n) = T(n-\dfrac{\cancel{2}n}{\cancel{2}}) + \dfrac{n}{2} = T(0) + \dfrac{n}{2}$$
+Para $k = \dfrac{n}{2}$ si $n$ es par:
+$$T(n) = T\left(n-\dfrac{\cancel{2}n}{\cancel{2}}\right) + \dfrac{n}{2} = T(0) + \dfrac{n}{2} = 1+\dfrac{n}{2} \in O(n)$$
+Para $k = \dfrac{n-1}{2}$ si $n$ es impar:
+$$T(n) = T\left(n-\dfrac{\cancel{2}(n-1)}{\cancel{2}}\right) + \dfrac{n-1}{2} = T(1) +\dfrac{n-1}{2} = 1+\dfrac{n-1}{2}\in O(n) $$
+
+##### Ejemplo 4: Fibonacci.
+$$T(n) = T(n-1)+T(n-2)+1$$  
+  
+$$T(n-1) = T(n-2) + T(n-3) + 1$$  
+  
+$$T(n-2) = T(n-3) +T(n-4)+1$$  
+  
+$$T(n) = T(n-1)+T(n-2)+1 = T(n-2)+T(n-3)+1+T(n-3)+T(n-4)+1+1=$$  
+  
+$$= T(n-3)+T(n-4)+1+2[T(n-4)+T(n-5)+1] + 1+T(n-5)+T(n-6)+1$$  
+  
+En resumen, este método no es útil para resolver este problema.
 
 [Volver al índice](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Algor%C3%ADtmica/ApuntesClase/Indice.md)
