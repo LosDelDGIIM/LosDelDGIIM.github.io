@@ -413,4 +413,12 @@ $$= T(n-3)+T(n-4)+1+2[T(n-4)+T(n-5)+1] + 1+T(n-5)+T(n-6)+1$$
   
 En resumen, este método no es útil para resolver este problema.
 
+## Técnica de ecuación característica.
+Se usa para resolver ecuaciones recurrentes que salen en análisis de eficiencia de algoritmos.  
+Vamos a ver dos etapas, que corresponden con cómo se solucionan:
+- Ecuaciones lineales homogéneas de coeficientes constantes.
+- Ecuaciones lineales no homogéneas de coeficientes constantes.
+  
+En análisis de algoritmos nunca tendremos ecuaciones homogéneas, ya que es normal tener un `+1` por sentencias constantes, usuales en código.
+
 [Volver al índice](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Algor%C3%ADtmica/ApuntesClase/Indice.md)
