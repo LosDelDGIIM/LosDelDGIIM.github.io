@@ -360,18 +360,19 @@ int algoritmo(int n){
 }
 ```
 
-$$T(1) = 1$$
+$$T(1) = 1$$  
+  
 $$T(n) = 2T(n-1) + 1$$
 Tratamos de resolver la ecuación:
 
-$$T(n) = 2T(n-1) + 1$$
-$$T(n-1) = 2T(n-2) + 1$$
-$$T(n-2) = 2T(n-3) + 1$$
+$$T(n) = 2T(n-1) + 1$$  
+$$T(n-1) = 2T(n-2) + 1$$   
+$$T(n-2) = 2T(n-3) + 1$$  
 
-$$T(n) = 2T(n-1) +1=2[2T(n-1)+1]+1 = 2^2T(n-2)+2+1 = \ldots$$
-$$T(n) = 2^k T(n-k) + \sum_{i=0}^{k-1} 2^i$$
+$$T(n) = 2T(n-1) +1=2[2T(n-1)+1]+1 = 2^2T(n-2)+2+1 = \ldots$$  
+$$T(n) = 2^k T(n-k) + \sum_{i=0}^{k-1} 2^i$$  
 Para $k = n-1$:
-$$2^{n-1}T(1) + \sum_{i=0}^{n-2} 2^i = \sum_{i=0}^{n-1} 2^i = 2^{n+1}-1\in O(2^n)$$
+$$2^{n-1}T(1) + \sum_{i=0}^{n-2} 2^i = \sum_{i=0}^{n-1} 2^i = 2^{n+1}-1\in O(2^n)$$  
 
 
 [Volver al índice](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Algor%C3%ADtmica/ApuntesClase/Indice.md)
