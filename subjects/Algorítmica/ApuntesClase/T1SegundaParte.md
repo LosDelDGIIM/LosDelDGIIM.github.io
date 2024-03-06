@@ -338,10 +338,8 @@ unsigned long factorial(int n){
 }
 ```
 
-$$\left\{ \begin{array}{l}
-T(n) = T(n-1) +1\\
-T(0) = T(1) = 1
-\end{array}\right.$$
+$$T(n) = T(n-1) +1$$
+$$T(0) = T(1) = 1$$
 
 ##### Ejemplo 2.
 ```cpp
@@ -361,10 +359,9 @@ int algoritmo(int n){
 }
 ```
 
-$$\left\{ \begin{array}{l}
-T(1) = 1\\
-T(n) = 2T(n-1) + 1
-\end{array}\right.$$
+$$T(1) = 1$$
+$$T(n) = 2T(n-1) + 1$$
+Tratamos de resolver la ecuación:
 
 $$T(n) = 2T(n-1) + 1$$
 $$T(n-1) = 2T(n-2) + 1$$
