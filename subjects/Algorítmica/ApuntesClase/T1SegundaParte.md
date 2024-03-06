@@ -343,4 +343,37 @@ T(n) = T(n-1) +1\\
 T(0) = T(1) = 1
 \end{array}\right.$$
 
+##### Ejemplo 2.
+```cpp
+int algoritmo(int n){
+    if(n <= 1){
+        int k = 0;
+        for(int = 0; i < n; i++){
+            k += k*i;
+        }
+        return k;
+    }else{
+        int r1, r2;
+        r1 = algoritmo(n-1);
+        r2 = algoritmo(n-1);
+        return r1*r2;
+    }
+}
+```
+
+$$\left\{ \begin{array}{l}
+T(1) = 1\\
+T(n) = 2T(n-1) + 1
+\end{array}\right.$$
+
+$$T(n) = 2T(n-1) + 1$$
+$$T(n-1) = 2T(n-2) + 1$$
+$$T(n-2) = 2T(n-3) + 1$$
+
+$$T(n) = 2T(n-1) +1=2[2T(n-1)+1]+1 = 2^2T(n-2)+2+1 = \ldots$$
+$$T(n) = 2^k T(n-k) + \sum_{i=0}^{k-1} 2^i$$
+Para $k = n-1$:
+$$2^{n-1}T(1) + \sum_{i=0}^{n-2} 2^i = \sum_{i=0}^{n-1} 2^i = 2^{n+1}-1\in O(2^n)$$
+
+
 [Volver al índice](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Algor%C3%ADtmica/ApuntesClase/Indice.md)
