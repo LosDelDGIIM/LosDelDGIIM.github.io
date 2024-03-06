@@ -379,5 +379,23 @@ Para $k = n-1$:
   
 $$2^{n-1}T(1) + \sum_{i=0}^{n-2} 2^i = \sum_{i=0}^{n-1} 2^i = 2^{n+1}-1\in O(2^n)$$  
 
+##### Ejemplo 3.
+$$T(n) = T(n-2) +1$$  
+  
+$$T(1) = 1$$  
+  
+$$T(0) 1$$  
+  
+Pasamos a resolver el ejercicio:
+$$T(n-2) = T(n-4)+1 $$  
+  
+$$T(n-4) = T(n-6) + 1$$  
+  
+$$T(n) = T(n-4)+1+1 = T(n-6) + 3= T(n-8) + 4 = T(n-10)+5$$  
+  
+$$T(n) = T(n-2k) + k$$  
+  
+Para $k = \dfrac{n}{2}$:
+$$T(n) = T(n-\dfrac{\cancel{2}n}{\cancel{2}}) + \dfrac{n}{2} = T(0) + \dfrac{n}{2}$$
 
 [Volver al índice](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Algor%C3%ADtmica/ApuntesClase/Indice.md)
