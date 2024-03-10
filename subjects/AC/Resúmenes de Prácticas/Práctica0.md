@@ -25,7 +25,7 @@ La primera que cuenta con los nodos `atcgrid1`, `atcgrid2` y `atcgrid3`, todos e
   
 Disponemos de distintas órdenes para trabajar con dichas colas:
 - `srun`
-- `sbatch`
+- `sbatch`  
 La única diferencia entre ambos es que `srun` se ejecuta en primer plano en terminal, bloqueándola hasta que se termina la ejecución de lo deseado, mientras que `sbatch` manda el trabajo a ejecutar en segundo plano, con posibilidad de seguir usando la terminal. Por tanto, recomendamos el uso de `srun` para comandos sencillos y de `sbatch` para scripts. Estos scripts, en caso de necesitar una línea que ejecute una orden, escribimos delante de la orden `srun`. Estos `srun` heredan las opciones fijadas en el `sbatch` que se usa para enviar el script a la cola.  
 *Nota:* El tiempo máximo de ejecución en cada nodo está fijado en un minuto.  
 
