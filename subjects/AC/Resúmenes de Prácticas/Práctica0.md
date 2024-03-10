@@ -10,7 +10,7 @@
 - **Descripción:** Resúmen de la Sesión 0 de Prácticas.
 
 ## Introducción
-Para conectarse a atcgrid usando ssh, usaremos:
+Para conectarse a atcgrid usando `ssh`, usaremos:
 ```bash
 ssh [username]@atcgrid.ugr.es
 ```
@@ -18,9 +18,10 @@ Donde en *username* debemos proporcionar nuestro usuario (ac*xxx*). A continuaci
 Si no estamos conectados a `eduroam`, podemos usar la VPN de la universidad que debe tener instalada. Una vez instalada (consultar en Google cómo instalarla si no), ejecutaremos el script `/opt/cisco/anyconnect/bin/vpnui`. Este nos preguntará a qué queremos conectarnos (incluir `vpn.ugr.es`), nuestro usuario (correo `@correo.ugr.es`) y dos contraseñas, la primera es asociada al correo y la segunda es el doble factor de autentificación que deberíamos haber fijado al instalar la VPN.  
   
 ### Sistema
-Una vez conectado a `atcgrid`, nos encontramos en la máquina host, que es la encargada de soportar todo el sistema de peticiones. Esta cuenta con un gestor de colas de trabajo llamado `srun`. Contamos con dos colas de trabajo:
+Una vez conectado a `atcgrid`, nos encontramos en la máquina host, que es la encargada de soportar todo el sistema de peticiones. Esta cuenta con un gestor de colas de trabajo llamado `srun`.  
+Contamos con dos colas de trabajo:
 - `ac`
-- `ac4`
+- `ac4`  
 La primera que cuenta con los nodos `atcgrid1`, `atcgrid2` y `atcgrid3`, todos ellos iguales. La segunda cuenta con el nodo `atcgrid4`, más potente y con procesador gráfico dedicado. Para mandar trabajo a `atcgrid4`, debemos usar `ac4` y en caso contrario, `ac`.  
   
 Disponemos de distintas órdenes para trabajar con dichas colas:
@@ -226,7 +227,7 @@ scp archivo.cpp ac111@atcgrid.ugr.es:~/ejercicios/
 A continuación, se solicitará la contraseña del *username* correspondiente.
 
 #### Exportar gráficos 
-Para que aplicaciones gráficas que se ejecutan en remoto (dentro de atcgrid) muestren sus interfaces en la máquina desde la que nos conectamos a atcgrid, debemos especificar a la hora de conectarnos mediante ssh:
+Para que aplicaciones gráficas que se ejecutan en remoto (dentro de atcgrid) muestren sus interfaces en la máquina desde la que nos conectamos a atcgrid, debemos especificar a la hora de conectarnos mediante `ssh`:
 ```bash
 ssh -X [username]@atcgrid.ugr.es
 ```
