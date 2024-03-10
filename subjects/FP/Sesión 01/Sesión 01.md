@@ -3,7 +3,7 @@
 **Autor:** José Juan Urrutia Milán
 ***
 
-- **Asignatura:** Fundamentos de Programación.
+- **Asignatura:** Fundamentos de Programación.  
 - **Curso Académico:** 2022-23.
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
 - **Grupo:** Único.

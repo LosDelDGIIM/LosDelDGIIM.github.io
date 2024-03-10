@@ -1,5 +1,13 @@
-# Sesión 0 de prácticas
+# Arquitectura de Computadores. Sesión 0 de Prácticas.
+
+**Autor:** José Juan Urrutia Milán
 ***
+
+- **Asignatura:** Arquitectura de Computadores.  
+- **Curso Académico:** 2023-24.
+- **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
+- **Profesor:** Mancia Anguita López.
+- **Descripción:** Resúmen de la Sesión 0 de Prácticas.
 
 ## Introducción
 Para conectarse a atcgrid usando ssh, usaremos:
