@@ -18,12 +18,12 @@ Donde en *username* debemos proporcionar nuestro usuario (ac*xxx*). A continuaci
 Si no estamos conectados a `eduroam`, podemos usar la VPN de la universidad que debe tener instalada. Una vez instalada (consultar en Google cómo instalarla si no), ejecutaremos el script `/opt/cisco/anyconnect/bin/vpnui`. Este nos preguntará a qué queremos conectarnos (incluir `vpn.ugr.es`), nuestro usuario (correo `@correo.ugr.es`) y dos contraseñas, la primera es asociada al correo y la segunda es el doble factor de autentificación que deberíamos haber fijado al instalar la VPN.  
   
 ### Sistema
-Una vez conectado a `atcgrid`, nos encontramos en la máquina host, que es la encargada de soportar todo el sistema de peticiones. Esta cuenta con un gestor de colas de trabajo llamado `srun`.  
+Una vez conectado a `atcgrid`, nos encontramos en la máquina host, que es la encargada de soportar todo el sistema de peticiones. Esta cuenta con un gestor de colas de trabajo llamado `slurm`.  
 Contamos con dos colas de trabajo:
 - `ac`
 - `ac4`
   
-La primera que cuenta con los nodos `atcgrid1`, `atcgrid2` y `atcgrid3`, todos ellos iguales. La segunda cuenta con el nodo `atcgrid4`, más potente y con procesador gráfico dedicado. Para mandar trabajo a `atcgrid4`, debemos usar `ac4` y en caso contrario, `ac`.  
+La primera cuenta con los nodos `atcgrid1`, `atcgrid2` y `atcgrid3`, todos ellos iguales. La segunda cuenta con el nodo `atcgrid4`, más potente y con procesador gráfico dedicado. Para mandar trabajo a `atcgrid4`, debemos usar `ac4` y en caso contrario, `ac`.  
   
 Disponemos de distintas órdenes para trabajar con dichas colas:
 - `srun`
@@ -33,17 +33,15 @@ La única diferencia entre ambos es que `srun` se ejecuta en primer plano en ter
 *Nota:* El tiempo máximo de ejecución en cada nodo está fijado en un minuto.  
 
 ### Hardware
-El nodo host o frontend, es un computador modelo `Asus RS300-E9-PS4`.  
-Los nodos `atcgrid1`, `atcgrid2` y `atcgrid3` son servidores rack `SuperMicro SuperServer 6016T-T`.  
-Y el `atcgrid4` es un servidor rack `SuperMicro SYS-6019U-TR4 1U`  
+El nodo host (o frontend) es un computador modelo `Asus RS300-E9-PS4`; los nodos `atcgrid1`, `atcgrid2` y `atcgrid3` son servidores rack `SuperMicro SuperServer 6016T-T`; y el `atcgrid4` es un servidor rack `SuperMicro SYS-6019U-TR4 1U`  
   
 No vamos a entrar mucho en detalle sobre el hardware de cada uno (ya que no nos concierne), pero vamos a mencionar al menos el número de cores de cada nodo:
 
 ##### atcgrid1-3
-En el caso de estos nodos, contamos con una CPU por nodo de 12 cores físicos y 2 cores lógicos por físico; un total de 24 cores lógicos. 
+En el caso de estos nodos, contamos con dos CPU por nodo de 6 cores físicos y 2 cores lógicos por físico; un total de $2\cdot 6 \cdot 2=24$ cores lógicos. 
 
 ##### atcgrid4
-En este nodo, contamos con dos CPUs, cada una con 16 cores físicos y 2 cores lógicos po físico, luego contamos con $2 \cdot 16 \cdot 2 = 64$ cores lógicos.
+En este nodo, contamos con dos CPUs, cada una con 16 cores físicos y 2 cores lógicos por físico, luego contamos con $2 \cdot 16 \cdot 2 = 64$ cores lógicos.
   
 ## Parámetros 
 A continuación, revelamos una serie de opciones que podemos especificar a la hora de mandar trabajos a ejecución con `srun` o `sbatch` (todos los ejemplos serán de `srun`).
@@ -97,7 +95,7 @@ Por ejemplo:
 srun -pac -c1 lscpu
 ```
 *Nota:* Por defecto, el sistema operativo considera como núcleos los núcleos lógicos.  
-Obviamente, no podemos pedir más núcleos que los disponibles por la máquina. Por tanto, en un supuesto computador de una CPU con 6 cores (físicos) y dos `threads` (cores lógicos) por core, el número máximo que podrá acompañar a `-c` será 12.
+Obviamente, no podemos pedir más núcleos que los disponibles por la máquina. Por tanto, en un supuesto computador de una CPU con 6 cores (físicos) y dos threads (cores lógicos) por core, el número máximo que podrá acompañar a `-c` será 12.
 
 ##### Indicar el tipo de cores
 Por defecto, la opción anterior (`-c`) selecciona el número de cores *lógicos* en los que nuestro trabajo se ejecutará. Si por contra, queremos usar sólo cores físicos y no lógicos, especificaremos la opción `--hint=nomultithread`. Por ejemplo:
@@ -188,7 +186,7 @@ Para asegurarnos de que se crea un sólo proceso, indicar el número de cores qu
   
 Tanto con `srun` como con `sbatch`, se recomienda escribir las órdenes directamente en el shell en vez de copiar y pegar.  
   
-*Nota:* a la hora de compiar arhivos en `c` (o en cualquier otro lenguaje), se recomienda usar `srun` para realizar este trabajo en un nodo y no en la máquina host, ya que puede laggearse fácilmente, al tener que adminisitrar muchos usuarios al mismo tiempo.
+*Nota:* a la hora de compilar arhivos en `c` (o en cualquier otro lenguaje), se recomienda usar `srun` para realizar este trabajo en un nodo y no en la máquina host, ya que puede laggearse fácilmente, al tener que adminisitrar muchos usuarios al mismo tiempo.
 
 ## Comandos 
 #### Obtener información sobre colas
@@ -253,5 +251,5 @@ gcc -O2 -fopenmp -o HelloOMP HelloOMP.c
 ```
 Podemos ver que en cada hilo que le aportemos en su ejecución (se recomienda que se use el parámetro `-c` a la hora de ejecutar con `srun` o `sbatch`), imprime el identificardor de cada hilo (que se obtiene con la función `omp_get_thread_num()`), un número de entre 0 y `n-1` siendo `n` el número de hilos del computador; además de un `!!!Hello world!!!` en cada hilo.  
   
-La función de que la rutina `printf()` se ejecute en todos los hilos proporcionados al proceso la hemos obtenido mediante la directiva `pagma omp parallel`. A lo largo de la asignatura, se desarrollarán más directivas y funcionalidades de OpenMP.
+La función de que la rutina `printf()` se ejecute en todos los hilos proporcionados al proceso la hemos obtenido mediante la directiva `pragma omp parallel`. A lo largo de la asignatura, se desarrollarán más directivas y funcionalidades de OpenMP.
 
