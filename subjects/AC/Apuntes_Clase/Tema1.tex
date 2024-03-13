@@ -1,0 +1,165 @@
+\chapter{Arquitecturas Paralelas: Clasificación y Prestaciones}
+
+\section{Clasificación del paralelismo implícito en una aplicación}
+\subsection{Objetivos}
+Como items a conocer en esta sección, destacamos:
+\begin{itemize}
+    \item Conocer las clasificaciones usuales del paralelismo implícito en una aplicación. Distinguir entre paralelismo de tareas y paralelismo de datos.
+    \item Distinguir entre las dependencias RAW, WAW y WAR.
+    \item Distinguir entre \emph{thread} y proceso.
+    \item Relacionar el paralelismo implícito en una aplicación con el nivel en el que se hace explícito para que se pueda utlizar (instrucción, thread, proceso) y con las arquitecturas paralelas que lo aprovechan.
+\end{itemize}
+
+\subsection{Niveles y tipos de paralelismo implícito en una aplicación}
+En una aplicación, podemos encontrar distintos niveles de paralelismo. Para facilitar su comprensión, trataremos de clasificarlos en esta parte inicial de la asignatura. Comenzaremos por marcar varias capas de abstracción que se siguen a la hora de desarrollar la aplicación, lo que los facilitará marcar el paralelismo dentro de esta.
+
+Podemos considerar que un programa está compuesto de funciones, las cuales a su vez están compuestas de bloques de código en la que abundan los bucles (para simplificar esto, diremos que las funciones están compuestas de bucles). Los cuales están basados en operaciones. Asimismo, puede que nuestra aplicación esté compuesta por distintos programas (como en el caso de LibreOffice de LibreOffice Writer, LibreOffice Calc, $\ldots$). Por todo esto, nos es natural tratar de clasificar el paralelismo de una aplicación en función de distintos niveles, los cuales serán:
+\begin{itemize}
+    \item Nivel de programas.
+    \item Nivel de funciones.
+    \item Nivel de bucles (de bloques).
+    \item Nivel de operaciones.
+\end{itemize}
+
+En general, el paralelismo lo podremos encontrar en distinta granularidad (en mayor o menor medida) en relación al nivel en el que nos encontremos. Para detectar mejor este grade de paralelismo, es cómodo tener una clara distinción del tipo de paralelismo (como estamos haciendo), lo que facilita la tarea del programador y del compilador. Destacamos la ventaja de poder manipular el código secuencial (que ya sabemos manejar) en código con funcionalidades paralelas, lo que nos libra de tener que conocer tecnologías nuevas para poder implementar paralelismo en nuestras aplicaciones.
+
+A continuación, justificamos los niveles ya elegidos, junto con ejemplos de paralelismo en cada uno de ellos:
+\begin{description}
+    \item [Nivel de programas:] Los diferentes programas que intervienen en una aplicación (o incluso en diferentes aplicaciones) se pueden ejecutar en paralelo, debido a que es poco probable que existan dependencias entre ellos.
+    \item [Nivel de funciones:] Un nivel de abstracción más bajo; las funciones llamadas en un programa se pueden ejecutar en paralelo, siempre que no haya dependencias (riesgos) inevitables entre ellos, como dependencias de datos verdaderas (RAW). Como ejemplo, recomendamos la familiarización de la directiva \verb|#pragma omp parallel sections| de OpenMP de la Sesión 1 de Prácticas, donde descubrimos el paralelismo a nivel de funciones de forma explícita.
+    \item [Nivel de bucles (de bloques):] Una función puede estar basada en la ejecución de uno o varios bucles. En muchas ocasiones, el código que se encuentra dentro de un bucle no está íntegramente asociado con la iteración en sí; sino que deseamos que una cierta tarea se ejecute un cierto número de veces. Se pueden ejecutar en paralelo las iteaciones de un bucle, siempre que eliminen los problemas derivados de las dependencias de datos verdaderas (RAW). 
+    \item [Nivel de operaciones:] En este nivel se extra el paralelismo disponible entre operaciones. Las operaciones independientes se pueden ejecutar en paralelo. Por otra parte, podemos encontrar instrucciones compuestas de varias operaciones que se aplican en secuencial mismo tipo de datos de entrada. Por ejemplo, la instrucción \verb|mac| nos permite realizar una suma tras una multiplicación. En este nivel se puede detectar la posiblidad de usar instrucciones compuestas como la ya mencionada.
+\end{description}
+
+A esta clasificación del paralelismo que se puede detectar en distintos niveles de un código secuencial se le denomina \emph{paralelismo funcional}. Por otra parte, podemos hablar de \emph{paralelismo de tareas} y de \emph{paralelismo de datos}.
+
+\subsubsection{Paralelismo de tareas}
+En inglés, Task Level Parallelism (TLP). Este paralelismo se encuentra extrayendo la estructura lógica de funciones de la aplicación. Esta estructura está formada por las funciones, siendo las conexiones entre ellas el flujo de datos entre funciones. El paralelismo a nivel de funciones antes descrito en el paralelismo funcional equivale al paralelismo de tareas.
+
+\subsubsection{Paralelismo de datos}
+En inglés, Data Level Parallelism (DLP). El paralelismo de datos se encuentra implícito en las operaciones con estructuras de datos (como vectores y matrices). Las operaciones vectoriales y matriciales engloban operaciones con diversos escalares, las cuales se pueden realizar en paralelo. Como estas operaciones se suelen implementar por bucles, decimos que el paralelismo de datos es equivalente al paralelismo a nivel de operaciones en el paradigma del paralelismo funcional. Por ejemplo, contamos con las instrucciones SIMD (se desarrollarán próximamente), que con una instrucción puede manipular múltiples datos. Un ejemplo de instrucción SIMD es la implementación de una instrución que pueda sumar dos vectores de datos enteros.\\
+
+Por ejemplo, si tenemos una aplicación que nos permite decodificar el formato de imagen JPEG a formato RGB para imprimir en pantalla, podemos encontrar paralelismo de tareas al tener distintos módulos que realizan cada uno de los pasos intermedios para realizar dicha transformación; mientras que disponemos de paralelismo a nivel de datos en las operaciones, al tener instrucciones que nos permitan sumar (con una sola instrucción) dos vectores.
+
+\subsubsection{Granularidad}
+El paralelismo también puede clasificarse en función de la granularidad de la tarea a realizar. Esto es, de la magnitud del número de operaciones a realizar. Esta se suele hacer corresponder con los distintos niveles de paralelismo funcional anteriormente desarrollado. Ilustramos esta relación uno a uno en la siguiente enumeración:
+\begin{itemize}
+    \item Grano grueso: Nivel de programas.
+    \item Grano medio: Nivel de funciones.
+    \item Grano fino-medio: Nivel de bucles.
+    \item Grano fino: Nivel de operaciones.
+\end{itemize}
+
+\subsubsection{Dependencias de datos}
+Constantemente estamos haciendo alusión a las dependencias de datos, pero no nos hemos parado a plantear cuando una sección de código $B_2$ presenta dependencias de datos con respecto a un bloque de código $B_1$. Para que se produzca una dependencia de datos entre ellos:
+\begin{itemize}
+    \item Deben hacer referencia a una misma variable (una misma posición de memoria).
+    \item Un bloque de código debe aparecer en la secuencia de código antes que el otro.
+\end{itemize}
+
+Una vez que conocemos que existe una dependencia de datos entre dos bloques de código nos surge la cuestión de si cualquier dependencia es igual de importante, de si hay dependencias evitables y de si hay otras que no lo son. Respondemos a todo tipando las dependencias de datos:
+
+\begin{description}
+    \item [RAW (Read After Write):]
+        También llamada dependencia verdadera, sucede cuando tratamos de leer una variable (equivalentemente, posición de memoria) después de haberla modificado (de haberla escrito). Recordemos que nos encontramos en el paradigma de la paralelización: tratamos de hacer esto de forma paralela, luego puede que un ente encargado de leer la variable lo haga antes que el encargado de modificarla, haciendo invisible dicha modificación (no existente cuando se leyó) y causando condiciones de carrera junto con un posible mal funcionamiento del programa (así como de romper el esquema determinista de este). Podemos ver un ejemplo de RAW en el siguiente ejemplo:
+\begin{listing}[H]
+    \begin{minted}[xleftmargin=2cm]{c++}
+int a = b * c;
+int d = a + c;
+    \end{minted}
+\end{listing}
+Tenemos en la segunda línea el uso (lectura) de la variable \verb|a|, tras modificarla (escribir en ella) en la primera línea. Si empleamos paralelismo puede suceder que se ejecute la segunda línea antes que la primera, provocando condiciones catastróficas. De hecho, cuando esto se haga, la variable \verb|a| no estará ni siquiera inicializada.
+
+    \item [WAW (Write after Write):]
+        También llamada anti-dependencia, sucede cuando tratamos de modificar una variable por segunda vez (después de haberla modificado ya). Esto puede plantear, al igual que explicábamos en RAW, condiciones de carrera. Mostramos un ejemplo a continuación:
+\begin{listing}[H]
+    \begin{minted}[xleftmargin=2cm]{c++}
+a = b * c;
+// se lee a
+a = d + e;
+    \end{minted}
+\end{listing}
+Donde en la primera y tercera linea modificamos el valor de \verb|a|. Sin embargo, esta dependencia es evitable, ya que si cambiamos el nombre de la variable (empleamos una dirección de memoria distinta), evitamos la dependencia. Por tanto, a esta dependencia también se le llama dependencia de nombre, al no ser una dependencia de datos real.
+
+    \item [WAR (Write after Read):]
+        También llamda dependencia de salida, sucede cuando tratamos de escribir en una variable tras leer de ella. Esto también puede provocar condiciones de carrera, tal y como vemos en el siguiente ejemplo:
+\begin{listing}[H]
+    \begin{minted}[xleftmargin=2cm]{c++}
+b = a + 1;
+a = d + e;
+    \end{minted}
+\end{listing}
+Donde en la primera línae leemos \verb|a| y en la segunda modificamos su valor. Sin embargo, esta dependencia también recibe el nombre de dependencia de nombre, ya que puede solucionarse con un sencillo cambio de nombre, por lo que no se trata de una dependencia de datos real. Cabe destacar que esto lo suele realizar de forma automática el compilador.
+\end{description}
+
+\subsection{Unidades de ejecución: instrucciones, hebras y procesos}
+El hardware es el encargado de la administración y ejecución de las instrucciones, mientras que a nivel superior nos encontramos con el SO, haciéndolo (no en el sentido que estás pensando) con las hebras y los procesos. Cada proceso en ejecución tiene su propia asignación de memoria. Los SO multihebra permiten que un proceso se conforme por una o varias hebras (o hilos). Cada hebra tiene su propia pila y banco de registros, mientras que comparte con sus hermanas la memoria que les oferta el proceso. Esto permite que las hebrs puedan crearse, destruirse y comunicarse entre ellas de una forma más rápida que los procesos. Todo esto permite que las hebras dispongan de una menor granularidad que estos. 
+
+Esta sección nos ha servido para repasar entes que nos permiten hacer explícito el paralelismo, los cuales simplificaran el diseño de las aplicaciones, al ser las hebras y procesos automáticamente gestionadas por el sistema operativo; y las instrucciones por la arquitectura.
+
+\subsection{Relación entre paralelismo implícito, explícito y arquitecturas paralelas. Implementación del paralelismo}
+A lo largo de este documento hemos hecho referencia en varias ocasiones al paralelismo implícito y explícito, sin nunca pararnos a desarrollar de qué estamos hablando. Es ahora la ocasión de hacerlo.
+\begin{description}
+    \item [Paralelismo implícito.]
+        Se trata de aquellas acciones que automáticamente se llevan a cabo (ya sea gracias al hardware, sistema operativo o compilador) de forma paralela.
+
+    \item [Paralelismo explícito.]
+        Se trata de aquellas acciones que deseamos que se hagan de forma paralela, y que obligamos a ello de forma explícita, como por ejemplo, con la ayuda de una API en el caso de las prácticas con OpenMP.
+\end{description}
+Esta diferencia la comentaremos en la siguiente subsección, que será fácil de comprender junto con el desarrollo de las prácticas.
+
+Hecha esta distinción, comenzamos ahora sí con esta subsección, en la que podemos cómo se implementa el paralelismo implícito, así como el explícito, de una forma superficial. Además, será necesario indicar las especificaciones hardware requeridas para llevar esto a cabo. Usaremos el paralelismo funcional, ya que para eso lo hemos desarrollado al inicio.
+\begin{description}
+    \item [Nivel de programas]
+        El paralelismo entre programas se implementa mediante diversos procesos: en el momento que se ejecuta un nuevo programa, se crea el programa asociado a él, y ya sólo dependerá del sistema operativo el llevar a cabo su paralelización con el resto de procesos\footnote{Mediante técnicas ya vistas en la asignatura de Sistemas Operativos}. Para poder implementar este tipo de paralelismo, es necesario disponer de un multiprocesador o multicomputador.
+
+    \item [Nivel de funciones]
+        El paralelismo a este nivel puede extraerse para realizarse a nivel de procesos (si la función realmente lo require) o de hebras, de forma que cada hebra (o proceso) ejecute una o varias funciones. Para ello, necesitaremos de un multiprocesador y, en caso de requerir hebras, será conveniente que este sea multihebra (o en su defecto, contar con una biblioteca de hebras, aunque esto es menos recomendable).
+
+    \item [Nivel de bucles]
+        Este se puede realizar a nivel de procesos o hebras, tal y como se hacía en el nivel anterior. Sin embargo, el paralelismo a este nivel también puede implementarse con instrucciones en el caso de, por ejemplo, sumas de vectores. Para ello, debemos contar con un multiprocesador (a poder ser, multihebra) y para el último caso considerado, una arquitectura SIMD que permite realizar trabajos similares con vectores y, en general, estructuras de datos.
+
+    \item [Nivel de operaciones]
+        El paralelismo entre operaciones se puede aprovechar en arquitecturas con operaciones a nivel de instrucción (ILP), ejecutando en paralelo las instrucciones asociadas a operaciones independientes. Para ello, es claro que necesitamos arquitecturas ILP.
+\end{description}
+
+\subsection{Detección, utilización y extracción del paralelismo}
+En los procesadores ILP superescalares o segmentados la arquitectura en sí misma extrae paralelismo (o como nosotros hemos llamado, implementa paralelismo implícito). Para ello, eliminan dependencias de datos falsas (no del tipo RAW) entre instrucciones y evitan problemas debidas a dependencias de datos, de control y de recursos.
+
+Además, el grado de paralelismo de las instrucciones se puede incrementar con las ayudas del compilador y del programador. En general, se puede definir el grado de paralelismo de un conjunto de entradas a un sistema como el número máximo de entradas del conjunto que se pueden ejecutar en paralelo. 
+
+A continuación, para cada tipo de paralelismo, tratamos de explicar la extracción del paralelismo. Esto es, explicar qué ente lo lo detecta, cómo se implemente y en qué unidad se ejecuta. En este caso, la granularidad es inversamente proporcional a la facilidad de extracción del paralelismo.
+\begin{description}
+    \item [Nivel de operaciones]
+        Puede ser detectado por la arquitectura del hardware, por herramientas de programación (como IDEs o compiladores) y por el programador. Se implementa o aprovecha principalmmente por arquitecturas ILP, que lo hacen usando instrucciones dedicadas a ello.
+    \item [Nivel de bucles]
+        La arquitectura ya escapa a este nivel de abstracción, por lo que sólo podemos detectarlo mediante herramientas de programación o por la destreza del programador. Se implementa a nivel de arquitecturas SIMD mediante intrainstrucciones en el caso de aquellas paralelizaciones vectoriales ya comentadas; mientras que paralelizaciones del estio TLP se implementan mediante multiprocesador multihebra o multicomputadores, usando threads o procesos.
+    \item [Nivel de funciones]
+        A este nivel ya sólo disponemos del programador para llevar la detección a cabo, quien puede hacer el paralelismo explícito mediante multiprocesadores multihebra, multiprocesadores y multicomputadores; mediante hebras y/o procesos.
+    \item [Nivel de programas]
+        El programador puede hacer explícito el paralelismo si dispone de un multiprocesador o multicomputador, mediante el uso de procesos.
+\end{description}
+
+\section{Clasificación de arquitecturas paralelas}
+\subsection{Objetivos}
+Una vez terminada la sección que acabamos de comenzar, tratamos de que el lector sea capaz de:
+\begin{itemize}
+    \item Distinguir entre procesamiento o computación paralela y distribuida.
+    \item Clasificar los computadores según segmento del mercado.
+    \item Distinguir entre las diferentes clases de arquitecturas de la clasificación de Flynn.
+    \item Diferenciar un multiprocesador de un multicomputador.
+    \item Distinguir entre NUMA y SMP.
+    \item Distinguir entre arquitecturas DLP, ILP y TLP.
+    \item Distinguir entre arquitecturas TLP con una instancia de SO y TLP con varias instancias de SO.
+\end{itemize}
+
+\section{Evaluación de prestaciones}
+\subsection{Objetivos}
+En esta sección, aprenderemos a:
+\begin{itemize}
+    \item Distinguir entre tiempo de CPU (sistema y usuario) de Unix y el tiempo de respuesta.
+    \item Distinguir entre productividad y tiempo de respuesta.
+    \item Obtener, de forma aproximada mediante cálculos, el tiempo de CPU, GFLOPS y los MIPS del código ejecutado en un núcleo de procesamiento.
+    \item Calcular la ganancia en prestaciones/velocidad.
+    \item Aplicar la ley de Amdahl.
+\end{itemize}
