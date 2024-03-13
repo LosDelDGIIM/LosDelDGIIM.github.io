@@ -1,0 +1,140 @@
+\chapter{Algoritmos Divide y Vencerás}
+Dado un problema $P$, lo dividimos en subproblemas que han de ser del mismo tipo: $P = \{P_i\}_{i\in I}$. Encontramos las soluciones de todos estos problemas: $S_i \mid i \in I$ y con estas, las juntamos de forma adecuada para obtener la solución al problema $P$: $S = \{S_i\}_{i \in I}$. Notemos que podemos hacerlo de forma recursiva, podemos aplicar la técnica de divide y vencerás a los subproblemas. Debemos fijar un caso base, donde el problema sea suficientemente pequeño como para resolverlo.
+
+Ejemplos de algoritmos que implementan la búsqueda binaria son Quicksort, Mergesort, Búsqueda Binaria, $\ldots$
+
+Problemas como el de las Torres de Hanoi pueden resolverse mediante esta técnica de resolución de problemas.
+
+Tratamos cuestiones importantes:
+\begin{itemize}
+    \item Cómo descomponer un problema en subproblemas.
+    \item Cómo resolver subproblemas.
+    \item Cómo combinar las soluciones.
+    \item ¿Mereció la pena aplicar esta técnica?
+\end{itemize}
+
+Para responder al último punto observemos el siguiente ejemplo, que trata un problema de forma genérica.
+\begin{ejemplo}
+    Supongamos un problema $P$ de tamaño $n$ que sabemos que puede resolverse con un algoritmo (básico) $A$, con:
+    \begin{equation*}
+        t_A(n) \leq cn^2 
+    \end{equation*}
+
+    Dividimos $P$ en 3 subproblemas de tamaño $\frac{n}{2}$, isneod cada uno de ellos del mismo tipo que $A$ y consumiendo un tiempo lineal la combinación de sus soluciones: $t(n) \leq dn$.
+    Tenemos, por tanto, un nuevo algoritmo $B$, Divide y Vencerás, que consumirá un tiempo de:
+    \begin{equation*}
+        t_B(n) = 3t_A\left(\dfrac{n}{2}\right)+t(n) \leq 3t_A\left(\dfrac{n}{2}\right) + dn \leq \left(\dfrac{3c}{4}\right)n^2 + dn
+    \end{equation*}
+    $B$ tiene un tiempo de ejecución mejor que el algoritmo $A$, ya que reduce la constante oculta.
+
+    Si volvemos a reducir el tamaño del subproblema, obtenemos un nuevo algoritmo $C$, que tendría un tiempo:
+    \begin{equation*}
+        t_c(n) = \left\{ \begin{array}{ll}
+            t_A(n) & \text{si\ } n \leq n_0 \\
+            3t_C\left(\dfrac{n}{2}\right) + t(n) & \text{si\ } n > n_0
+        \end{array}\right.
+    \end{equation*}
+    $C$ es mejor en eficiencia que los algoritmos $A$ y $B$ ($t_c(n) \leq bn^{1.58}$). 
+\end{ejemplo}
+Al valor $n_0$ se le denomina umbral y al algoritmo que se ejecuta debajo de este umbral, \verb|ad hoc| son fundamentales para que la técnica funcione bien.
+
+Requisitos lógicos para usar Divide y Vencerás:
+\begin{itemize}
+    \item El problema se tiene que poder reducir a subproblemas del mismo tipo.
+    \item Los subproblemas han de poder resolverse de manera independiente.
+    \item Las soluciones de los subproblemas no deben afectar entre sí, no debe existir solapamiento entre subproblemas.
+    \item Ha de poderse juntar las soluciones de los subproblemas para resolver el problema.
+\end{itemize}
+Una forma matemática de entender el punto 3 es decir que los subproblemas deben formar una \ul{partición} del problema.
+
+Para que la técnica sea eficiente:
+\begin{itemize}
+    \item Selección cuidadosa de cuando usar el algoritmo \verb|ad hoc|.
+    \item El número de subproblemas debe ser razonablemente pequeño (para no reducir mucho la eficiencia).
+    \item Los subproblemas deben tener el menor tamaño posible.
+\end{itemize}
+
+Normalmente, al aplicar Divide y Vencerás nos encontraremos con eficiencias del estilo:
+\begin{equation*}
+    T(n) = \left\{ \begin{array}{ll}
+            t(n) & \text{si\ } n \leq n_0\\
+            IT\left(\dfrac{n}{b}\right) + G(n) & \text{si\ }n > n_0
+    \end{array}\right.
+\end{equation*}
+Donde $I$ es el número de subproblemas, $\dfrac{n}{b}$ el tamaño de estos y:
+\begin{equation*}
+    G(n) = D(n) + C(n)
+\end{equation*}
+Con $D(n)$ el tiempo de dividir el problema en subproblemas y $C(n)$ el tiempo de combinación.
+$t(n)$ era el tiempo del algoritmo \verb|ad hoc|.
+
+
+\begin{ejemplo}
+    Dado un vector de elementos, determinar la posición que ocupa el máximo del mismo.
+
+    Proponemos como solución el siguiente código:
+
+\begin{listing}[H]
+    \begin{minted}[xleftmargin=2cm]{c++}
+        int Maximo(int* v, int inf, int sup){
+            if(sup == inf) return v[inf];
+            else{
+                int med = (inf+sup)/2;
+                int izda = Maximo(v, inf, med);
+                int dcha = Maximo(v, med+1, sup);
+
+                return max(izda, dcha);
+            }
+        }
+    \end{minted}
+\end{listing}
+
+Con un tiempo de ejecución de:
+\begin{equation*}
+    T(n) = 2T\left(\dfrac{n}{2}\right) +1 \in O(n)
+\end{equation*}
+
+Otra solución sería:
+\begin{listing}[H]
+    \begin{minted}[xleftmargin=2cm]{c++}
+        int Maximo2(int* v, int inf, int sup){
+            if(sup == inf) return v[inf];
+            else{
+                int izda = Maximo2(v, inf, sup);
+
+                return max(izda, sup);
+            }
+        }
+    \end{minted}
+\end{listing}
+
+En este caso:
+\begin{equation*}
+    T(n) = T(n-1)+1 \in O(n)
+\end{equation*}
+
+Los dos del mismo orden, pero encontramos un problema entre uno y otro: el número de llamadas recursivas:
+\begin{itemize}
+    \item \verb|Maximo2| Realiza $n$ llamadas recursivas, pero el tamaño de la pila ocupado es de $n$.
+    \item \verb|Maximo| Realiza $n$ llamadas recursivas, pero el tamaño de la pila es $\log n$.
+\end{itemize}
+El número de los elementos de la pila de \verb|Maximo| puede razonarse dibujándolo con un árbol.
+
+Por tanto, el primer algoritmo que planteamos era mejor ya que usa menos pila (evitando su desbordamiento).
+
+\end{ejemplo}
+\begin{observacion}
+    Notemos que este ejemplo ha sido un caso instructivo, es más eficiente resolverlo de la forma canónica que aplicando Divide y Vencerás.
+\end{observacion}
+
+\begin{ejercicio*}
+    Dada una secuencia de números, definimos \ul{pico} al valor $i$ tal que $x[i-1] < x[i] > x[i+1]$ y \ul{valle} al valor $j$ tal que $x[j-1]>x[j]<x[j+1]$. Un pico $i$ es consecutivo a un vallo $j$ si ningún valor entre $i$ y $j$ es pico o valle.
+
+    Diseñar un algoritmo que permita encontrar la mayor diferencia entre un pico y un valle.
+\end{ejercicio*}
+
+\begin{ejercicio*}
+    Un camión va desde Granada a Moscú siguiendo una ruta determinada. La capacidad del tanque de combustible es $C$ y conocemos el consumo por kilómetros del camión. Conocemos las gasolineras que se encuentran en la ruta y la distantica entre ellas. Se pide minimizar el número de paradas que hace el conductor.
+
+
+\end{ejercicio*}
