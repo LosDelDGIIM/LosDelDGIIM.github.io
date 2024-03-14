@@ -10,8 +10,6 @@
         \item ¿Cuál es la ganancia que se puede obtener por reducción a 3 ciclos de las instrucciones
         con enteros?
 
-        % // TODO: Cambiar Arturo
-
         Resumimos los datos del enunciado en la siguiente tabla:
         \begin{table}[H]
             \centering
@@ -46,45 +44,73 @@
             S = \dfrac{T_b}{T_p} = \dfrac{\cancel{T_c} \cdot \bcancel{NI} \cdot 4.7}{\cancel{T_c} \cdot \bcancel{NI} \cdot 3.95} = \frac{4.7}{3.95} \approx 1.1898
         \end{equation*}
 
-        % // TODO: cambiar 5 por 3
         \item ¿Cuál es la ganancia que se puede obtener por reducción a 3 ciclos de las instrucciones en coma flotante?
         
         Tenemos que:
         \begin{align*}
             T_p &= NI \cdot CPI \cdot T_c = T_c \cdot \sum_{i} NI_i \cdot CPI_i
-            =\\&= T_c \cdot NI \cdot \left(\underbrace{0.2 \cdot 4}_{LD} + \underbrace{0.1 \cdot 3}_{ST} + \underbrace{0.25 \cdot 6}_{FP} + \underbrace{0.15 \cdot \red{5}}_{FLT~POINT} + \underbrace{ 0.3 \cdot 3}_{BRANCH}\right) =\\&= T_c \cdot NI \cdot 4.25
+            =\\&= T_c \cdot NI \cdot \left(\underbrace{0.2 \cdot 4}_{LD} + \underbrace{0.1 \cdot 3}_{ST} + \underbrace{0.25 \cdot 6}_{FP} + \underbrace{0.15 \cdot \red{3}}_{FLT~POINT} + \underbrace{ 0.3 \cdot 3}_{BRANCH}\right) =\\&= T_c \cdot NI \cdot 3.95
         \end{align*}
 
         La expresión de la ganancia, por tanto, es:
         \begin{equation*}
-            S = \dfrac{T_b}{T_p} = \dfrac{\cancel{T_c} \cdot \bcancel{NI} \cdot 4.7}{\cancel{T_c} \cdot \bcancel{NI} \cdot 4.25} = \frac{4.7}{4.25} \approx 1.10599
+            S = \dfrac{T_b}{T_p} = \dfrac{\cancel{T_c} \cdot \bcancel{NI} \cdot 4.7}{\cancel{T_c} \cdot \bcancel{NI} \cdot 4.25} = \frac{4.7}{3.95} \approx 1.1898
         \end{equation*}
+
+        Como podemos ver, la ganancia es la misma que en el caso anterior. Esto se debe a que, aun recudiendo más ciclos de reloj ($5$ en este caso, frente a $3$ en el anterior),
+        el número de instrucciones de coma flotante es menor que el número de instrucciones de enteros, por lo que la ganancia se compensa.
+        Se tiene que $0.25 \cdot 3 = 0.15 \cdot 5$.
     \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
-    Un circuito que implementaba una operación en un tiempo de $Top=450$ ns se ha segmentado
-    mediante un cauce lineal con cuatro etapas de duración $T1=100$ ns, $T2=125$ ns, $T3=125$ ns y
-    $T4=100$ ns respectivamente, separadas por un registro de acoplo que introduce un retardo de
+    Un circuito que implementaba una operación en un tiempo de $T_{op}=450$ ns se ha segmentado
+    mediante un cauce lineal con cuatro etapas de duración $T_1=100$ ns, $T_2=125$ ns, $T_3=125$ ns y
+    $T_4=100$ ns respectivamente, separadas por un registro de acoplo que introduce un retardo de
     $25$ ns.
     \begin{enumerate}
         \item ¿Cuál es la máxima ganancia de velocidad posible? ¿Cuál es la productividad máxima
         del cauce?
 
-        Tenemos que el ciclo de reloj es de $T_c = 125ns + 25ns = 150ns$. La ganancia de velocidad es:
-        $$
-        S(N) = \frac{T^b(N)}{T^s(N)} = \frac{N\cdot T_R}{TLI + (N-1)T_c}
-        = \frac{N\cdot T_R}{4\cdot T_c + (N-1)T_c}
-        $$
-        donde el 4 se debe a que es el número de etapas del cauce.
+        Tenemos que el ciclo de reloj es de $T_c = 125ns + 25ns = 150ns$, ya que depende de la etepa de ejecución más lenta.
+        La ganancia de velocidad, siendo $N$ el número de operaciones, es:
+        \begin{equation*}
+            S(N) = \frac{T^b(N)}{T^s(N)} 
+        \end{equation*}
+        donde $T^b(N)$ es el tiempo base y $T^s(N)$ es el tiempo usando segmentación.
+        El tiempo base es directo ver que es $T^b(N) = N\cdot T_{op}$, mientras que el tiempo segmentado es algo más complejo,
+        ya que hay que tener en cuenta el tiempo que tarda el cauce en llenarse.
+        Una vez está lleno, ejecuta una operación cada ciclo de reloj, pero la primera operación
+        tarda $N_{\text{etapas}} \cdot T_c$. Por tanto, el tiempo segmentado es:
+        \begin{align*}
+            T^s(N) &= \left[1\cdot N_{\text{etapas}} \cdot T_c\right] + \left[(N-1)\cdot T_c\right]
+            = N_{\text{etapas}} \cdot T_c + (N-1)T_c
+            =\\&= 4 \cdot T_c + (N-1)T_c
+        \end{align*}
+        donde el 4 se debe a que es el número de etapas del cauce. Por tanto, la ganancia de velocidad es:
+        \begin{equation*}
+            S(N) = \frac{T^b(N)}{T^s(N)}
+            = \frac{N\cdot T_{op}}{4\cdot T_c + (N-1)T_c}
+            = \frac{N\cdot T_{op}}{T_c\cdot (4 + N-1)}
+            = \frac{N\cdot 450}{150 \cdot (3+N)}
+            = \frac{3N}{3+N}
+        \end{equation*}
+        
+        La ganancia máxima se presupone que se alcanza cuando $N\to\infty$, por lo que:
+        \begin{equation*}
+            S_{\max} = S(N\ggg) = \lim_{N\to\infty} S(N) = \lim_{N\to\infty} \frac{N\cdot T_{op}}{T_c\cdot (3+N)} = \frac{T_{op}}{T_c} = \frac{450}{150} = 3
+        \end{equation*}
 
-        La ganancia máxima es:
-        $$
-        S(N\ggg) = \lim_{N\to\infty} S(N) = \lim_{N\to\infty} \frac{N\cdot T_R}{4\cdot T_c + (N-1)T_c} = \frac{T_R}{T_c}
-        $$
+        La productividad máxima del cauce es:
+        \begin{equation*}
+            P_{\max} = \frac{S_{\max}}{N_{\text{etapas}}} = \frac{3}{4}
+        \end{equation*}
+        % // TODO: Qué es la productividad de un cauce?
 
         \item ¿A partir de qué número de operaciones ejecutadas se consigue una productividad igual
         al 90\% de la productividad máxima?
+
+        % // TODO: Completar
     \end{enumerate}
 \end{ejercicio}
 
@@ -103,7 +129,10 @@
     y que el ciclo de reloj de la \ul{ALT1} es un 25\% menor que el de la \ul{ALT2}, dado que en este caso
     la mayor funcionalidad de la instrucción \verb|COMPARE+BRANCH| ocasiona una mayor complejidad en el procesador.\\
 
-    Como el tiempo de ciclo de reloj depende de la ejecución más lenta, es normal que este cambie (como se especifica en el enunciado). La relación entre estos es la siguiente:
+    En todo el ejercicio, el superíndice $1$ denotará la \ul{ALT1}, mientras que
+    el superíndice $2$ denotará la \ul{ALT2}.
+    Como el tiempo de ciclo de reloj depende de la ejecución más lenta, es normal que este cambie (como se especifica en el enunciado).
+    La relación entre los tiempos de ciclo, dada por el enunciado, es la siguiente:
     \begin{equation*}
         T_c^1 = T_c^2 - 0.25 T_c^2 = 0.75 T_c^2
     \end{equation*}
@@ -111,22 +140,27 @@
     Resumimos los datos del enunciado en la siguiente tabla:
     \begin{table}[H]
         \centering
-        \begin{tabular}{c|c|c|c|c|c}
+        \begin{tabular}{c|c|c||c|c|c}
             $I_i^1$ & $CPI_i^1$ & $NI_i^1$ & $I_i^2$ & $CPI_i^2$ & $NI_i^2$ \\
             \hline
-            br & 4 ciclos & $0.2 \cdot NI^1$ & cmpbr & 4 ciclos & $0.2 \cdot NI^1$ \\
-            cmp & 3 ciclos & $0.2 \cdot NI^1$ &  &  &  \\
+            \verb|BRANCH| & 4 ciclos & $0.2 \cdot NI^1$ & \verb|COMPARE+BRANCH| & 4 ciclos & $0.2 \cdot NI^1$ \\
+            \verb|COMPARE| & 3 ciclos & $0.2 \cdot NI^1$ &  &  &  \\
             Demás & 3 ciclos & $0.6 \cdot NI^1$ & Demás & 3 ciclos & $0.6 \cdot NI^1$ \\
             \hline
             & & $NI^1$ &  &  & $0.8 \cdot NI^1$ = $NI^2$ \\
         \end{tabular}
     \end{table}
 
-    Tenemos que ver qué alternativa nos da un tiempo de ejecución menor (tengamos en cuenta que el tiempo de ciclo de cada uno no es el mismo, por lo que tenemos que pasarlo todo al mismo tiempo de ciclo):
+    Hay que tener en cuenta que sabemos que cada salto conlleva un \verb|BRANCH| y un \verb|COMPARE| en la primera alternativa,
+    por lo que hay el mismo número de instrucciones de dichos tipos. Además, como el programa es el mismo,
+    tenemos que hay el mismo número de instrucciones de salto en ambos, por eso deducimos el número de instrucciones de salto en la segunda alternativa.
+    Tiene sentido que $NI^2 < NI^1$, ya que cada instucción de salto conlleva 2 órdenes en la primera alternativa, mientras que en la segunda conlleva una sola.
 
+    Tenemos que ver qué alternativa nos da un tiempo de ejecución menor
+    (tengamos en cuenta que el tiempo de ciclo de cada uno no es el mismo, por lo que tenemos que pasarlo todo al mismo tiempo de ciclo):
     \begin{align*}
-        T_{CPU}^1 &= NI^1 \cdot (\underbrace{0.2 \cdot 4c}_{br} + \underbrace{0.8 \cdot 3c}_{cmp+Resto}) \cdot T_c^1 = NI^1 \cdot 3.2 \cdot 0.75 \cdot T_c^2 = NI^1 \cdot 2.4 \cdot T_c^2\\
-        T_{CPU}^2 &= NI^1 \cdot (\underbrace{0.2 \cdot 4c}_{cmpbr} + \underbrace{0.6\dot 3c}_{Resto}) \cdot T_c^2 = NI^1 \cdot 2.6 \cdot T_c^2
+        %T_{CPU}^1 &= NI^1 \cdot (\underbrace{0.2 \cdot 4}_{\texttt|BR|} + \underbrace{0.8 \cdot 3}_{\verb|CMP|+\text{Resto}}) \cdot T_c^1 = NI^1 \cdot 3.2 \cdot 0.75 \cdot T_c^2 = NI^1 \cdot 2.4 \cdot T_c^2\\
+        %T_{CPU}^2 &= NI^1 \cdot (\underbrace{0.2 \cdot 4}_{\verb|CMPBR|} + \underbrace{0.6\dot 3}_{\text{Resto}}) \cdot T_c^2 = NI^1 \cdot 2.6 \cdot T_c^2
     \end{align*}
 
     Por ser $T_{CPU}^1 < T_{CPU}^2$, concluimos que la opción \ul{ALT1} es la mejor, en cuanto a tiempos de ejecución.
