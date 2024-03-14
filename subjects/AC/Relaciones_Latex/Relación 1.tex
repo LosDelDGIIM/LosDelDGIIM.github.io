@@ -1,4 +1,4 @@
-\section{Arquitecturas Paralelas: Clasificación y Prestaciones}
+\section{Arquitecturas Paralelas}
 
 
 \begin{ejercicio}
@@ -16,43 +16,49 @@
         Resumimos los datos del enunciado en la siguiente tabla:
         \begin{table}[H]
             \centering
-            \begin{tabular}{c|c|c|c}
-                $I_i$ & $CPI_i$ & $NI_i$ & $CPI_i^p$ \\
+            \begin{tabular}{c|c|c}
+                $I_i$ & $CPI_i^b$ & $NI_i$ \\
                 \hline
-                LD & 4 ciclos & $0.2$ NI & \\ 
-                ST & 3 ciclos & $0.1$ NI & \\
-                FX & 6 ciclos & $0.25$ NI &  3 ciclos \\
-                FP & 8 ciclos & $0.15$ NI & 3 ciclos \\
-                BR & 3 ciclos & $0.3$ NI &
+                \verb|LOAD| & 4 ciclos & $0.2$ NI \\ 
+                \verb|STORE| & 3 ciclos & $0.1$ NI \\
+                \verb|FX. POINT| & 6 ciclos & $0.25$ NI \\
+                \verb|FLT. POINT| & 8 ciclos & $0.15$ NI \\
+                \verb|BRANCH| & 3 ciclos & $0.3$ NI
             \end{tabular}
         \end{table}
+        donde $I_i$ es el tipo de instrucción,
+        $CPI_i^b$ es el número de ciclos por instrucción y
+        $NI_i$ es el número de instrucciones de ese tipo.
 
-        Donde $CPI_i^p$ es la reducción en el tiempo de instrucciones del tipo correspondiente.
-
-        La expresión de la ganancia es:
-        \begin{equation*}
-            S = \dfrac{T_b}{T_p}
-        \end{equation*}
-        Donde $T_p$ es el tiempo mejorado y $T_b$ el base.
-
-        \begin{equation*}
-            T_b = \overbrace{NI \cdot CPI}^{\text{num. ciclos}} \cdot T_c = Num ciclos \cdot T_c = \left(\sum_{i} NI_i \cdot CPI_i\right)\cdot T_c
-        \end{equation*}
-        Donde $T_c$ es el tiempo de ciclo, $CPI$ ciclos por instrucción y $NI$ el número de instrucciones. Calculamos estos dos para la expresión de $S$, en función de $NI$ y de $T_c$.
-        
+        El tiempo base $T_b$ que tardaría en ejecutarse el programa sin mejoras sería:
         \begin{align*}
-            T_b &= NI  (\underbrace{0.2\cdot 4c}_{LD}+\underbrace{0.1\cdot 3c}_{ST}+ \underbrace{0.3\cdot 3c}_{BR} + \underbrace{0.15 \cdot 8c}_{FP} + \underbrace{0.25 \cdot 6c}_{FX} ) \cdot T_c\\
-             &= NI (3.2 +\underbrace{1.5}_{FX}) \cdot T_c = NI \cdot (4.7) \cdot T_c
+            T_b &= NI \cdot CPI \cdot T_c = T_c \cdot \sum_{i} NI_i \cdot CPI_i
+            =\\&= T_c \cdot NI \cdot \left(\underbrace{0.2 \cdot 4}_{LD} + \underbrace{0.1 \cdot 3}_{ST} + \underbrace{0.25 \cdot 6}_{FP} + \underbrace{0.15 \cdot 8}_{FLT~POINT} + \underbrace{ 0.3 \cdot 3}_{BRANCH}\right) =\\&= T_c \cdot NI \cdot 4.7
         \end{align*}
+        donde $T_c$ representa el tiempo de ciclo. Respecto al tiempo mejorado $T_p$, sabiendo ahora
+        que en caso de los números enteros el número de ciclos se reduce a 3, tendríamos:
+        \begin{align*}
+            T_p &= NI \cdot CPI \cdot T_c = T_c \cdot \sum_{i} NI_i \cdot CPI_i
+            =\\&= T_c \cdot NI \cdot \left(\underbrace{0.2 \cdot 4}_{LD} + \underbrace{0.1 \cdot 3}_{ST} + \underbrace{0.25 \cdot \red{3}}_{FP} + \underbrace{0.15 \cdot 8}_{FLT~POINT} + \underbrace{ 0.3 \cdot 3}_{BRANCH}\right) =\\& = T_c \cdot NI \cdot 3.95
+        \end{align*}
+
+        La expresión de la ganancia, por tanto, es:
         \begin{equation*}
-            T_p = NI(3.2+0.25 \cdot 3c) \cdot T_c = NI \cdot (3.2+0.75)\cdot T_c = NI \cdot 3.95 \cdot T_c
-        \end{equation*}
-        \begin{equation*}
-            S = \dfrac{\cancel{NI} \cdot 4.7 \cdot \cancel{T_c}}{\cancel{NI} \cdot 3.95 \cdot \cancel{T_c}} = 1.8987
+            S = \dfrac{T_b}{T_p} = \dfrac{\cancel{T_c} \cdot \bcancel{NI} \cdot 4.7}{\cancel{T_c} \cdot \bcancel{NI} \cdot 3.95} = \frac{4.7}{3.95} \approx 1.1898
         \end{equation*}
 
         \item ¿Cuál es la ganancia que se puede obtener por reducción a 3 ciclos de las instrucciones en coma flotante?
-        % // TODO: Hacer, es similar
+        
+        Tenemos que:
+        \begin{align*}
+            T_p &= NI \cdot CPI \cdot T_c = T_c \cdot \sum_{i} NI_i \cdot CPI_i
+            =\\&= T_c \cdot NI \cdot \left(\underbrace{0.2 \cdot 4}_{LD} + \underbrace{0.1 \cdot 3}_{ST} + \underbrace{0.25 \cdot 6}_{FP} + \underbrace{0.15 \cdot \red{5}}_{FLT~POINT} + \underbrace{ 0.3 \cdot 3}_{BRANCH}\right) =\\&= T_c \cdot NI \cdot 4.25
+        \end{align*}
+
+        La expresión de la ganancia, por tanto, es:
+        \begin{equation*}
+            S = \dfrac{T_b}{T_p} = \dfrac{\cancel{T_c} \cdot \bcancel{NI} \cdot 4.7}{\cancel{T_c} \cdot \bcancel{NI} \cdot 4.25} = \frac{4.7}{4.25} \approx 1.10599
+        \end{equation*}
     \end{enumerate}
 \end{ejercicio}
 
