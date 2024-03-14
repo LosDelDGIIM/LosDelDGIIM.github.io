@@ -135,6 +135,218 @@ Por tanto, el primer algoritmo que planteamos era mejor ya que usa menos pila (e
 
 \begin{ejercicio*}
     Un camión va desde Granada a Moscú siguiendo una ruta determinada. La capacidad del tanque de combustible es $C$ y conocemos el consumo por kilómetros del camión. Conocemos las gasolineras que se encuentran en la ruta y la distantica entre ellas. Se pide minimizar el número de paradas que hace el conductor.
-
-
 \end{ejercicio*}
+
+\section{Ejemplos de Divide y Vencerás}
+\subsection{Multiplicación de Enteros Grandes}
+Comprobar si un número es primo requiere muchas multiplicaciones de enteros grandes (desde dos millones de dígitos). Útil en criptografía. Para resolver este problema, debemos implementar algoritmos efiientes capaces de trabajar con estos valores. Nos encontramos con:
+\begin{itemize}
+    \item Método clásico (el que aprendimos en infantil).
+    \item Método basado en Divide y Vencerás.
+\end{itemize}
+
+\begin{description}
+    \item [Método clásico]~\\
+Multiplicar dos dígitos de $n$ entre sí por el método clásico tiene un costo de ($n\cdot n = n^2$ multiplicaciones más $n$ desplazamientos más $n\cdot 2n$ sumas) $n^2 + n + 2n^2$. Tratamos de reducir su costo mediante Divide y Vencerás.
+
+    \item [Divide y Vencerás sencillo]~\\
+    Aplicando Divide y Vencerás, obtenemos el siguiente algoritmo:
+
+    Dados dos números $X = 12345678$ e $Y = 24680135$, consideramos:
+    \begin{gather*}
+        x_i = 1234 \qquad x_d = 5678 \\
+        X = x_i \cdot 10^4 + x_d
+    \end{gather*}
+    \begin{gather*}
+        y_i = 2468 \qquad y_d = 0135 \\
+        Y = y_i \cdot 10^4 + y_d
+    \end{gather*}
+    Y combinamos:
+    \begin{align*}
+        X \cdot Y &= (x_i \cdot 10^4 + x_d)(y_i \cdot 10^4 + y_d)\\
+        &= x_i \cdot y_i \cdot 10^8 + (x_i \cdot y_d + x_d \cdot y_i) \cdot 10^4 + x_d \cdot y_d
+    \end{align*}
+
+    Que, de forma general:
+    \begin{align*}
+        X &= x_i \cdot 10^{\nicefrac{n}{2}} + x_d\\
+        Y &= y_i \cdot 10^{\nicefrac{n}{2}} + y_d\\
+        X \cdot Y &= (x_i \cdot y)\cdot 10^n + (x_i \cdot y_d + x_d \cdot y_i) \cdot 10^{\nicefrac{n}{2}} + x_d \cdot y_d
+    \end{align*}
+
+    De eficiencia:
+    \begin{equation*}
+        T(n) = 4T\left(\dfrac{n}{2}\right) + cn \in O\left(n^{\log_2 4}\right) = O\left(n^2\right)
+    \end{equation*}
+
+    Este lo vemos en el siguiente pseudocódigo:
+        \begin{listing}[H]
+            \begin{minted}[xleftmargin=2cm]{c++}
+Funcion DVbasico(X, Y, n){
+    if P chico return X * Y;
+    else{
+        // Dividir
+        Obtener xi, xd, yi, yd;
+
+        z1 = DVbasico(xi, yi, n/2);
+        z2 = DVbasico(xi, yd, n/2);
+        z3 = DVbasico(xd, yi, n/2);
+        z4 = DVbasico(xd, yd, n/2);
+
+        // Combinar
+        aux = Sumar(z2, z3);
+        z1 = DesplazarDcha(z1, n);
+        aux = DesplazarDcha(aux, n/2);
+        z = Sumar(z1, aux, z4);
+
+        return z;
+    }
+}
+            \end{minted}
+        \end{listing}
+
+
+    Sin embargo, podemos seguir mejorando el algoritmo.
+
+    \item [Divide y Vencerás mejorado]~\\
+        Observemos que el cuello de botella del algoritmo anterior está en el número de multiplicaciones, que es de tamaño $\nicefrac{n}{2}$. Por tanto, para mejorar la eficiencia, necesitamos reducir el número de multiplicaciones que hacemos. Podemos plantear el siguiente algoritmo, donde dados dos números $X$ e $Y$ y divididos entre $x_i$, $x_d$, $y_i$ e $y_d$; definimos:
+        \begin{align*}
+            r &= (x_i + x_d) \cdot (y_i + y_d) = (x_i \cdot y_i) + (x_i \cdot y_d + x_d \cdot y_i) + x_d \cdot y_d \\
+            p &= x_i \cdot y_i \\
+            q &= x_d \cdot y_d
+        \end{align*}
+
+        Luego se tiene que:
+        \begin{equation*}
+            x_i \cdot y_d + x_d \cdot y_i = r - p - q
+        \end{equation*}
+        
+        Y podemos calcular que:
+        \begin{equation*}
+            X \cdot Y = p \cdot 10^n + (r-p-q) \cdot 10^{\nicefrac{n}{2}} + q
+        \end{equation*}
+
+        Donde tenemos una multiplicación de tamaño $n$. Podemos verlo en pseudocódigo:
+        \begin{listing}[H]
+            \begin{minted}[xleftmargin=2cm]{c++}
+FuncionDV (X, Y, n){
+    if P chico return X * Y;
+    else{
+        // Dividir
+        Obtener xi, xd, yi yd;
+
+        s1 = Sumar(xi, xd);
+        s2 = Sumar(yi, yd);
+        p = DV (xi, yi, n/2);
+        q = DV (xd, yd, n/2);
+        r = DV (s1, s2, n/2);
+        
+        // Combinar
+        aux = Sumar(r, -p, -q);
+        p = DesplazarDcha(p, n);
+        aux = DesplazarDcha(aux, n/2);
+        z = Sumar(p, aux, q);
+
+        return z;
+    }
+}
+            \end{minted}
+        \end{listing}
+
+        De eficiencia:
+        \begin{equation*}
+            T(n) = 3T\left(\dfrac{n}{2}\right) + O(n) \in O\left(n^{\log_2 3}\right) \approx O(n^{1.585})
+        \end{equation*}
+\end{description}
+
+\subsection{Búsqueda binaria}
+La búsqueda binaria es un algoritmo de búsqueda de un elemento en un vector \emph{ordenado} de tamaño $n$. Esta consiste en coger el elemento del medio del vector (supongamos que está en la posición $k$) y comprobar si es o no el elemento deseado. Si lo es, hemos terminado; si no lo es:
+\begin{itemize}
+    \item Si el elemento del medio es menor que el deseado, repetimos el procedimiento con el subvector que va desde $k+1$ hasta $n$.
+    \item Si el elemento del medio es mayor que el deseado, repetimos el procedimiento con el subvector que va desde $0$ hasta $k-1$.
+\end{itemize}
+Se trata de un algoritmo de eficiencia $O(\log n)$.
+
+\begin{ejercicio*}
+    Hágase la demostración del orden de eficiencia de la búsqueda binaria.
+\end{ejercicio*}
+
+\subsection{Multiplicación de matrices}
+Dadas dos matrices $A = (a_{ij})_{ij}$ y $B = (b_{ij})_{ij}$ del mismo tamaño, $n \times m$, tratamos de multiplicar $A$ por $B$ para obtener una nueva matriz $C = (c_{ij})_{ij}$. La multiplicación de matrices se define como:
+\begin{equation*}
+    c_{ij} = \sum_{k = 1}^n \left( a_{ik} \cdot b_{kj} \right)
+\end{equation*}
+Para todo índice $(i,j)$ de cada elemento de la matriz $C$ de tamaño $n \times m$.
+
+Implementando la fórmula, se puede ver claramente que es de orden (considerando $n = m$) $O(n^3)$. Para aplicar Divide y Vencerás, vamos a proceder como con la multiplicación de enteros:
+\begin{equation*}
+    \begin{pmatrix}
+        r & s \\
+        t & u
+        \end{pmatrix} = C = A \cdot B = \begin{pmatrix}
+        a & b \\
+        c & d
+        \end{pmatrix} \begin{pmatrix}
+        e & g \\
+        f & h
+        \end{pmatrix} = \begin{pmatrix}
+        ae+bf & ag+bh \\
+        ce + df & cg + dh
+    \end{pmatrix}
+\end{equation*}
+
+Esta fórmula también es cierta cuando $a, \ldots, h$ son matrices. Por tanto, mediante esta fórmula podemos dividir el producto de dos matrices $n \times n$ en 8 subproblemas de tamaños $\nicefrac{n}{2}$. Por lo que tendríamos una eficiencia de tamaño (recordemos que la suma de matrices es de orden $n^2$):
+\begin{equation*}
+    T(n) = 8T\left(\dfrac{n}{2}\right) + cn^2
+\end{equation*}
+
+
+\section{Selección de umbrales}
+Por el método de Divide y Vencerás es natural que queramos ejecutar algoritmos de mayor orden de eficiencia para tamaños de problema pequeños (porque rinden mejor) y que para el resto de tamaños se ejecute un algoritmo de mayor eficiencia asintótica. Este tamaño límite (el último tamaño en el que se ejecuta el algoritmo de orden de eficiencia mayor) recibe el nombre de \ul{umbral}. De esta forma, el algoritmo que se ejecuta para tamaños del problema ($n$) menores que el umbral ($n \leq n_0$), se denomina algoritmo \verb|ad hoc|.
+
+Lo más difícil relativo al umbral es su elección: es difícil hablar del umbral $n_0$ si no tratamos con implementaciones, ya que gracias a ellas conocemos las constantes ocultas que nos permiten afinar el cálculo de dicho valor. No hay restricciones sobre el tamaño que debe tener el umbral: puede que el mejor umbral sea tal que siempre se ejecute el algoritmo \verb|ad hoc|; o puede que el umbral sea tal que siempre se ejecute el algoritmo de mejor orden asintótico. 
+
+
+\section{Problemas de ordenación}
+A la hora de clasificar los algoritmos de ordenación, encontramos:
+\begin{enumerate}
+    \item Algoritmos lentos (de orden $\Theta(n^2)$ y ordenación por cambio):
+        \begin{enumerate}
+            \item Burbuja.
+            \item Inserción.
+            \item Selección.
+        \end{enumerate}
+        Se trata e algoritmos más sencillos cuyo comportamiento es malo para tamaños muy grandes.
+    \item Algoritmos rápidos (de orden $\Theta(n\log n)$):
+        \begin{enumerate}
+            \item Heapsort.
+            \item Mergesort.
+            \item Shellsort.
+            \item Quicksort.
+        \end{enumerate}
+        Son algoritmos más complejos que se coomportan bien cuando el tamaño del problema es grande.
+\end{enumerate}
+
+% // TODO: especificar cada algoritmo
+
+\subsection{Mergesort}
+O también llamado ordenación por mezcla, consiste en dado un vector de $n$ componentes, dividrlo en dos vectores de $\nicefrac{n}{2}$, de forma que ordenamos los dos subvectores y combinamos ambos en un único vector (el vector ya ordenado), sabiendo que los dos subvectores ya se encuentran ordenados (cosa que sabemos hacer). Este proceso puede hacerse de forma recursiva, aplicándolo varias veces sobre el mismo vector.
+
+Podemos encontrar variaciones de este algoritmo, como no dividir por $\nicefrac{n}{2}$, sino por cualquier otro tamaño dependiente de $n$. Por ejemplo, $\nicefrac{n}{k}$ con $k$ entero.
+
+\section{Ejercicios}
+\subsection{Mediana de un vector}
+\begin{ejemplo}
+    ¿Cómo calculamos la mediana de un vector algorítmicamente?
+
+    Usar partición de quicksort
+\end{ejemplo}
+
+\begin{ejemplo}
+    
+\end{ejemplo}
+
+\begin{ejemplo}
+\end{ejemplo}
+
+
