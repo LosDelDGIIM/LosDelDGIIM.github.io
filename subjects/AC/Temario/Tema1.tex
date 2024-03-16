@@ -138,6 +138,7 @@ A continuación, para cada tipo de paralelismo, tratamos de explicar la extracci
         El programador puede hacer explícito el paralelismo si dispone de un multiprocesador o multicomputador, mediante el uso de procesos.
 \end{description}
 
+\newpage
 \section{Clasificación de arquitecturas paralelas}
 \subsection{Objetivos}
 Una vez terminada la sección que acabamos de comenzar, tratamos de que el lector sea capaz de:
@@ -308,6 +309,7 @@ En función del tipo de paralelismo que aprovechen las máquinas, tenemos distin
         Este tipo de arquitecturas con paralelismo a nivel de tareas ejecutan múltiples flujos de instrucción en paralelo. Hace referncia a los multicomputadores, los cuales ejecutan threads en paralelo en un sistema con muchos computadores.
 \end{description}
 
+\newpage
 \section{Evaluación de prestaciones}
 \subsection{Objetivos}
 En esta sección, aprenderemos a:
@@ -319,10 +321,12 @@ En esta sección, aprenderemos a:
     \item Aplicar la ley de Amdahl.
 \end{itemize}
 
-\subsection{Tiempo de CPU}
+\subsection{Definiciones}
 \begin{description}
     \item [Tiempo de respuesta.]~\\
         El tiempo de respuesta es el tiempo transcurrido entre que se lanza la ejecución de un programa y se tienen sus resultados.
+    \item [Productividad]~\\
+        La productividad es el número de entradas procesadas por unidad de tiempo. A mayor sea el número de entradas que un computador pueda procesadr a la vez, mayor será su productividad.
     \item [Tiempo de CPU.]~\\
         Este tiempo está incluido dentro del tiempo de respuesta. Se trata del tiempo que el procesador dedica a ejecutar instrucciones máquina de su repertorio, tanto en modo de usuario como las que corresponden a la actividad que se debe llevar a cabo por el sistema operativo para permitir la ejecución del programa. Sólo se tiene en cuenta el tiempo asociado con la ejecución de las instrucciones relativas al programa. Es cómun diferenciar dentro del tiempo de CPU el \emph{Tiempo de CPU de usuario} y el \emph{Tiempo de CPU de sistema}, cuyos nombres son autoexplicativos.
 \end{description}
@@ -331,9 +335,10 @@ Notemos que entre el tiempo de respuesta y tiempo de CPU hay una diferencia de t
     \item Tiempo de espera debido a las E/S.
     \item Tiempo de ejecución de otros programas que comparten procesador con el nuestro.
 \end{itemize}
-Estos dos tiempos también se incluyen en el tiempo de ejecución, pero no en el de CPU. 
+Estos dos tiempos también se incluyen en el tiempo de ejecución, pero no en el de CPU.
 
-A lo largo de esta sección, nos centraremos exclusivamente en el estudio de tiempo de CPU. Por tanto, supondremos que los dos tiempos anteriores son despreciables y para nosotros, el tiempo de CPU será igual al tiempo de respuesta. Hecha esta asunción, podemos calcular el tiempo de CPU como:
+\subsection{Tiempo de CPU}
+A lo largo de esta sección, nos centraremos exclusivamente en el estudio de tiempo de CPU. Para simplificar el estudio de este tiempo, suponemos que tanto el tiempo de espera por E/S tanto el tiempo de ejecución de otros programas en el procesador son despreciables. Por tanto, para nosotros, el tiempo de CPU será igual al tiempo de respuesta (de forma práctica, no teórica). Hecha esta asunción, podemos calcular el tiempo de CPU como:
 \begin{equation}
     T_{CPU} = \text{Ciclos del programa} \cdot T_{ciclo} = \dfrac{\text{Ciclos del programa}}{F}
     \label{eq:tcpu}
@@ -348,16 +353,16 @@ Dado que el número de ciclos del programa se puede expresar en términos del n�
     \text{Ciclos del programa} = NI\cdot CPI
 \end{equation}
 de donde obtenemos:
-\begin{equation}
+\begin{equation} \label{eq:tcpumejor}
     T_{CPU} = NI \cdot CPI \cdot T_{ciclo} = \dfrac{NI \cdot CPI}{F}
 \end{equation}
 Asumiendo que el número de ciclos por instrucción es constante (es decir, todas las instrucciones tardan el mismo tiempo ene ejecutarse). Esto no es realista, por lo que usaremos en su lugar el número de ciclos por instrucción medio (CPIM), que para abreviar seguiremos notando por CPI:
 \begin{equation}
     CPI = \dfrac{\sum_{i=1}^W NI_i \cdot CPI_i}{NI}
 \end{equation}
-Donde $NI_i$ es el número de instrucciones del tipo $i$ que tiene el programa, $CPI_i$ el número de ciclos del procesador que necesita una instrucción de tipo $i$ para procesarse; y $W$ el número de instrucciones diferentes en el programa. Sustituyendo esta nueva ecuación en~(\ref{eq:tcpu}) obtenemos:
+Donde $NI_i$ es el número de instrucciones del tipo $i$ que tiene el programa, $CPI_i$ el número de ciclos del procesador que necesita una instrucción de tipo $i$ para procesarse; y $W$ el número de instrucciones diferentes en el programa. Sustituyendo esta nueva ecuación en~(\ref{eq:tcpumejor}) obtenemos:
 \begin{equation}
-    T_{CPI} = \sum_{i=1}^W \left(NI_i \cdot CPI_i \right) \times T_{ciclo}
+    T_{CPU} = \sum_{i=1}^W \left(NI_i \cdot CPI_i \right) \cdot T_{ciclo}
 \end{equation}
 
 \subsection{MIPS y FLOPS}
@@ -375,6 +380,56 @@ Otra medida disponible similar a los MIPS son los MFLOPS (millones de operacione
     MFLOPS = \dfrac{\text{Operaciones en coma flotante}}{T_{CPU} \cdot 10^6}
 \end{equation}
 
-Como en el caso anterior, también podemos considerar los GFLOPS o, incluso, 
+Como en el caso anterior, también podemos considerar los GFLOPS o, incluso, TFLOPS ($10^12$), PFLOPS ($10^15$), EFLOPS ($10^18$), $\ldots$ 
 
+No se trata de una medida adecuada para todos los programas, ya que sólo tiene en cuenta las operaciones de coma flotante. Además, ni las instrucciones de coma flotante son iguales en todas las máquinas ni su coste de ejecución. Se usa mayormente en evaluación de computadores dedicados a cálculo científico, donde las operaciones en coma flotante abundan.
 
+\subsection{Ganancia}
+Es común en Arquitectura de Computadores detectar cuellos de botella en la arquitectura del computador y proponer estrategias que nos ayuden a mejorar las prestaciones. Para medir el resultado de una mejora, es habitual usar la ganancia de velocidad, que compara la velocidad de un computador antes y después de mejorar alguno de sus recursos. Gracias a la siguiente expresión definimos la ganancia de velocidad, $S_p$:
+\begin{equation}
+    S_p = \dfrac{V_p}{V_b} = \dfrac{T_b}{T_p}
+\end{equation}
+
+Donde $V_b$ es la velocidad de ejecución del programa antes de aplicar la mejora (velocidad base), $V_p$ es la velocidad tras aplicar la mejora; y $T_b$ y $T_p$ son los tiempos antes de aplicar la mejora y después, respectivamente. Notemos que, alicando la fórmula~(\ref{eq:tcpumejor}) obtenemos:
+\begin{equation}
+    S_p = \dfrac{T^b_{CPU}}{T^p_{CPU}} = \dfrac{NI^b \cdot CPI^b \cdot T^b_{ciclo}}{NI^p \cdot CPI^p \cdot T^p_{ciclo}}
+\end{equation}
+
+La notación $p$ se debe a que si tomamos $b = 1$ (tiempo de referencia, que era el base), entonces estamos obteniendo una mejora que hace $p$ veces más rápido algunos recursos del ordenador.
+
+Ejemplos de la mejora en prestaciones son pasar de un computador no segmentado a uno segmentado, introducir unidades que permitan funcionamento superescalar, unidades que permitan funcionalidades SIMD, $\ldots$
+
+Uno de los mayores limitantes a la hora de introducir mejoras son los accesos a memoria (muy lentos en comparación a la velocidad del procesador) y los riesgos\footnote{Vistos ya en la asignatura de EC} (que recordamos que pueden ser de datos, de control y estructurales).
+
+\subsection{Ley de Amdahl}
+La Ley de Amdahl establece una cota superior a la ganancia de velocidad $S_p$ que se puede conseguir al mejorar alguno de los recursos del computador en un factor $p$ y según la frecuencia con la que se utiliza dicha mejora:
+\begin{equation}
+    S_p \leq \dfrac{p}{1+f\cdot (p-1)}
+\end{equation}
+Donde $f$ es el porcentaje del tiempo de ejecución del sistema base durante el que no se usa el componente mejorado. Por ejemplo, si $f = 1$ (el recurso mejorado no se usa en el programa), entonces $S_p \leq 1$, por lo que no se produce mejora alguna. Si en cambio, $f = 0$ (el recurso mejorado se usa todo el rato), entonces $S_p$ podría alcanzar un valor de $p$. Consultamos un caso intermedio:
+
+\begin{ejemplo}
+    Si un programa pasa el 25\% del tiempo en una máquina ejecutando instrucciones de coma flotanto y se mejora la máquina haciendo que dichas instrucciones se ejecuten en mitad de tiempo, calcule la ganancia máxima de velocidad.\\
+
+    En este caso, tenemos que el tiempo de ejecución de una instrucción de coma flotante se reduce a la mitad, por lo que se ha obtenido una mejora que hace a la ejecución de dichas instrucciones el doble de eficientes, luego obtenemos un factor $p = 2$. Por otra parte, como el 25\% del tiempo de ejecución del programa se debe a operaciones en coma flotanto, el otro 75\% no usará estas operaciones, luego tenemos $f = 0.75$. Calculamos ahora la ganancia máxima de velocidad gracia a la Ley de Amdalh:
+    \begin{equation*}
+        S_p \leq \dfrac{1}{1+f\cdot(p-1)} = \dfrac{1}{1+0.75\cdot(2-1)}= \dfrac{1}{1.75} \approx 1.14
+    \end{equation*}
+    Por tanto, la ganancia máxima de velocidad será de $1.14$.
+\end{ejemplo}
+
+\subsection{Benchmarks}
+Un \emph{benchmark} es un conjunto de programas de prueba diseñados para medir de forma fiable (evalúan distintos componentes del computador y permite comparar distintos sistemas entre sí) las prestaciones de un computador. Se usan en la fabricación, investigación y distribución de hardware (probar distintos componentes) y software (probar la eficacia de distintos sistemas operativos, o programas). Podemos encontrarnos distintos tipos de benchmarks:
+
+\begin{description}
+    \item [Benchmark de bajo nivel o microbenchmark.]
+        Evalúan de forma genérica las prestaciones de la arquitectura o software de un ordenador, evaluando tanto el procesador como la memoria y la E/S.
+    \item [Núcleos (kernels).]
+        Son trozos de código muy utilizados en diferentes aplicaciones (como resolución de sistemas de ecuaciones, multiplicación de matrices, productos escalares, $\ldots$). Junto con los microbenchmarks permiten encontrar los puntos fuertes de cada computador.
+    \item [Sintéticos.]
+        Trozos de código que no permiten obtener un resultado con significado. Es la peor elección.
+    \item [Programas reales.]
+        Programas disponibles comercialmente que tratan de evaluar bases de datos, servidores, $\ldots$
+    \item [Aplicaciones diseñadas.]
+        Se diseñan aplicciones que tratan de imitar a aquellas para las que se usará el computador. 
+\end{description}
