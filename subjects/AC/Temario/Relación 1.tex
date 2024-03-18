@@ -493,6 +493,7 @@ for (i=0;i<N;i++)
 \end{ejercicio}
 
 
+\subsection{Cuestiones}
 \begin{cuestion}
     Indique cuál es la diferencia fundamental entre una arquitectura CC-NUMA y una arquitectura
     SMP.
@@ -514,7 +515,13 @@ for (i=0;i<N;i++)
 
 \begin{cuestion}
     Si le dicen que un ordenador es de 20 GIPS ¿puede estar seguro que ejecutará cualquier
-    programa de $20000$ instrucciones en un microsegundo?
+    programa de $20000$ instrucciones en un microsegundo?\\
+
+    No: si un programa que ejecuta 20000 instrucciones tarda 1 microsegundo, tendríamos efectivamente que el programa se ha ejecutado a una velocidad de 20 GIPS. Sin embargo, \ul{no} podemos estar seguros de que cualquier programa de 20000 instrucciones tarde en ejecutarse un microsegundo, ya que depende de las características de las instrucciones que componen al programa:
+    \begin{itemize}
+        \item El número de instrucciones que constituyen un programa puede ser dinstinto del número de instrucciones que finalmente ejecuta el procesador (se trata por tanto de un número dinámico de instrucciones), ya que puede haber instruccioens de salto, bucles, $\ldots$ que hacen que ciertas instrucciones del código se ejecuten más de una vez; y puede haber otras aque no se ejecuten nunca.
+        \item Por otro lado, el tipo de instruccione sque constituyen el programa y las dependencias entre ellas pueden variar los tiempos de ejecución que tardan en ejecutarse las instrucciones.
+    \end{itemize}
 \end{cuestion}
 
 \begin{cuestion}
@@ -559,7 +566,90 @@ for (i=0;i<N;i++)
     aprovecha atcgrid? Razone su respuesta.
 \end{cuestion}
 
+\subsection{Ejercicios resueltos}
+\begin{ejercicio}
+    En el bucle siguiente, los arrays \verb|a[]|, \verb|b[]|, \verb|c[]| y \verb|d[]|, son números en coma flotanto de 64 bits y $n = 2\cdot 10^{10}$:
+    \begin{minted}[xleftmargin=3cm]{c++}
+for (i = 0; i < n; i++)
+    d[i] = a[i] + b[i] + c[i];
+    \end{minted}
 
+    Si el programa se ejecuta en un procesador a 2 GHz que puede terminar dos operaciones en coma flotante por ciclo, ¿cuál es el tiempo mínimo que tardaría en ejecutarse?. ¿Cuántos GFLOPS de velocidad pico tiene el procesador?\\
+
+    Para calcular el tiempo mínimo que tardaría en ejecutarse, calculamos de forma teórica el tiempo que se necesita para ejecutar las instrucciones descritas en el código. Este es el tiempo mínimo ya que estamos despreciando muchos factores por simplificar el estudio que hacen que el tiempo de ejecución aumente. Hacemos uso de la fórmula del tiempo de CPU:
+    \begin{equation*}
+        T_{CPU} = NI_{float} \cdot CPI_{float} \cdot T_{ciclo} = \dfrac{NI_{float}}{IPC_{float} \cdot F} = \dfrac{\bcancel{2}\cdot 10^{\cancel{10}}}{\bcancel{2} \cdot (2\cdot \cancel{10^9})} = 5 \text{\ segundos}
+    \end{equation*}
+
+    A continuación, calculamos el número de GFLOPS pico del procesador, haciendo uso de la fórmula:
+    \begin{equation*}
+    GFLOPS = \dfrac{1}{CPI \cdot T_{ciclo} \cdot 10^9} = \dfrac{IPC \cdot F}{10^9} = \dfrac{2 \cdot (2 \cdot \cancel{10^9})}{\cancel{10^9}} = 4
+    \end{equation*}
+    Por lo que el procesador tiene 4 GFLOPS de velocidad pico.
+\end{ejercicio}
+
+\begin{ejercicio}
+    La empresa DataNimbus estima que debe adquirir un nuevo computador con una velocidad pico de 100 TFLOPS para alcanzar los niveles de tiempos de respuesta requeridos en su nueva generación de algoritmos para aplicaciones Big Data. Se ha decidido configurar la máquina a base de nodos HP ProLiant SL230s Gen8. Concretamente, cada uno de estos servidores tiene dos procesadores Sandy Bridge Intel$^\copyright$ Xeon$^\copyright$ E5-2670 a $2.60$ GHz con 8 núcleos/procesador: 
+    \begin{enumerate}
+        \item ¿Cuántos nodos (servidores HP ProLiant SL230s) se necesitan para configurar la máquina de 100 TFLOPS?\\
+        \item Clasifique el nuevo servidor que se pretende adquirir, sus nodos, sus encapsulados y sus núcleos dentro de la clasificación de Flynn y dentro de la clasificación que usa como criterio el sistema de memoria.
+        \item ¿Cuál es el número máximo de operaciones de coma flotante por ciclo de cada core del Intel Xeon E5-2670?
+    \end{enumerate}
+    Nota: El Yellowstone National enter for Atmospheric Research, que utiliza el mismo procesador que quermos montar, tiene una velocidad pico de 1503590 GFLOPS y contiene 72288 núcleos.
+
+    \begin{enumerate}
+        \item Como sabemos, por la información que nos proporcina la nota, la velocidad pico de un núcleo para operaciones en coma flotante es:
+            \begin{equation*}
+                \dfrac{1503590}{72288} = 20.8 \text{\ GFLOPS/núcleo}
+            \end{equation*}
+            Dado que hay que alcanzar 100 TFLOPS $= 100\cdot 10^3$ GFLOPS, el número de núcleos que necesitamos es:
+            \begin{equation*}
+                \dfrac{100\cdot 10^3}{20.8} = 4807.7 \text{\ núcleos}
+            \end{equation*}
+            Es decir, 4808 núcleos.
+
+            Como el servidor HP ProLiant SL230s que se utiliza en cada nodo tiene 16 núcleos (2 microprocesadores con 8 núcleos cada uno), el número de nodos necesarios sería:
+            \begin{equation*}
+                \dfrac{4808}{16} = 300.5 \longrightarrow 301 \text{\ nodos}
+            \end{equation*}
+
+        \item Desde el punto de vista de la taxonomía Flynn, es un computador MIMD. Cada uno de los microprocesadores que hay en el nodo tiene 8 núcleos que comparten la memoria local del microprocesdor y por tanto son multiprocesadores UMA. Estos dos microprocesadores se interconectan en el nodo constituyendo un procesador NUMA dado que cada uno de ellos tiene su memoria principal local. Los nodos están interconectados a través de una red y configuran un computador NORMA o cluster.
+
+        \item Para este último punto, simplemente tenemos que observar la fórmula de los GFLOPS:
+            \begin{equation*}
+                GFLOPS = \dfrac{\text{Operaciones coma flotante}}{T_{CPU}\cdot 10^9} = \dfrac{\text{Operaciones coma flotante}}{\text{Ciclos de programa} \cdot T_{ciclo}\cdot 10^9} 
+            \end{equation*}
+            De donde despejamos las operaciones de coma flotante ($Ops$) entre los ciclos de programa ($cdp$):
+            \begin{equation*}
+                \dfrac{Ops}{cdp} = GFLOPS \cdot 10^9\cdot T_{ciclo} = \dfrac{GFLOPS \cdot 10^9}{F} = \dfrac{20.8\cdot \cancel{10^9}}{2.6\cdot \cancel{10^9}} = 8
+            \end{equation*}
+            
+            Por tanto, el número máximo de operaciones en coma flotante que puede terminar el núcleo por ciclo es 8.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Un procesador superescalar de 64 bits a 1 GHz capaz de finalizar tres instrucciones por ciclo ejecuta el programa que se indica a continuación:
+    \begin{minted}[linenos,xleftmargin=3cm]{asm}
+start:  ld      f0, a           // f0 = a
+        add     r8, r0, r2      // r8 = r2 (r0 = 0)
+        addi    r6, r8, #2048   // r6 = r8 + 2048
+        add     r12, r0, r4     // r12 = r4 (r0 = 0)
+loop:   ld      f2, 0(r8)       // f2 = m(r8)
+        multd   f2, f0, f2      // f2 = f0 * f2
+        ld      f4, 0(r12)      // f4 = m(r12)
+        addd    f4, f2, f4      // f4 = f2 + f4
+        sd      0(r12), f4      // m(r12) = f4
+        addi    r8, r8, #8      // r8 = r8 + 8
+        addi    r12, r12, #8    // r12 = r12 + 8
+        sub     r16, r6, r8     // r16 = r6 - r8
+        bnez    r16, loop       // Si r16 != 0, salta
+    \end{minted}
+
+    En el programa, \verb|a| es un número real, \verb|r0| es un registro que siempre está a cero, \verb|r2| contiene la dirección a partir de la cual empieza un array, \verb|X|, de números reales de 64 bits, y \verb|r4| contiene la dirección a partir de la que empieza otro array también de números reales de 64 bits. ¿Qué hace el programa?. ¿Cuál es el tiempo mínimo que tardaría en ejecutarse?
+
+    % // TODO: hacer
+\end{ejercicio}
 
 
 
