@@ -2,18 +2,18 @@
 
 \section{Clasificación del paralelismo implícito en una aplicación}
 \subsection{Objetivos}
-Como items a conocer en esta sección, destacamos:
+Como ítems a conocer en esta sección, destacamos:
 \begin{itemize}
     \item Conocer las clasificaciones usuales del paralelismo implícito en una aplicación. Distinguir entre paralelismo de tareas y paralelismo de datos.
     \item Distinguir entre las dependencias RAW, WAW y WAR.
     \item Distinguir entre \emph{thread} y proceso.
-    \item Relacionar el paralelismo implícito en una aplicación con el nivel en el que se hace explícito para que se pueda utlizar (instrucción, thread, proceso) y con las arquitecturas paralelas que lo aprovechan.
+    \item Relacionar el paralelismo implícito en una aplicación con el nivel en el que se hace explícito para que se pueda utilizar (instrucción, thread, proceso) y con las arquitecturas paralelas que lo aprovechan.
 \end{itemize}
 
 \subsection{Niveles y tipos de paralelismo}
-En una aplicación, podemos encontrar distintos niveles de paralelismo. Para facilitar su comprensión, trataremos de clasificarlos en esta parte inicial de la asignatura. Comenzaremos por marcar varias capas de abstracción que se siguen a la hora de desarrollar la aplicación, lo que los facilitará marcar el paralelismo dentro de esta.
+En una aplicación, podemos encontrar distintos niveles de paralelismo. Para facilitar su comprensión, trataremos de clasificarlos en esta parte inicial de la asignatura. Comenzaremos por marcar varias capas de abstracción que se siguen a la hora de desarrollar una aplicación, lo que nos facilitará marcar el paralelismo dentro de esta.
 
-Podemos considerar que un programa está compuesto de funciones, las cuales a su vez están compuestas de bloques de código en la que abundan los bucles (para simplificar esto, diremos que las funciones están compuestas de bucles). Los cuales están basados en operaciones. Asimismo, puede que nuestra aplicación esté compuesta por distintos programas (como en el caso de LibreOffice de LibreOffice Writer, LibreOffice Calc, $\ldots$). Por todo esto, nos es natural tratar de clasificar el paralelismo de una aplicación en función de distintos niveles, los cuales serán:
+Podemos considerar que un programa está compuesto de funciones, las cuales a su vez están compuestas de bloques de código en la que abundan los bucles (para simplificar esto, diremos que las funciones están compuestas de bucles). Los cuales están basados en operaciones. Asimismo, puede que nuestra aplicación esté compuesta por distintos programas (como en el caso de LibreOffice con LibreOffice Writer, LibreOffice Calc, $\ldots$). Por todo esto, nos es natural tratar de clasificar el paralelismo de una aplicación en función de distintos niveles, los cuales serán:
 \begin{itemize}
     \item Nivel de programas.
     \item Nivel de funciones.
@@ -21,18 +21,18 @@ Podemos considerar que un programa está compuesto de funciones, las cuales a su
     \item Nivel de operaciones.
 \end{itemize}
 
-En general, el paralelismo lo podremos encontrar en distinta granularidad (en mayor o menor medida) en relación al nivel en el que nos encontremos. Para detectar mejor este grade de paralelismo, es cómodo tener una clara distinción del tipo de paralelismo (como estamos haciendo), lo que facilita la tarea del programador y del compilador. Destacamos la ventaja de poder manipular el código secuencial (que ya sabemos manejar) en código con funcionalidades paralelas, lo que nos libra de tener que conocer tecnologías nuevas para poder implementar paralelismo en nuestras aplicaciones.
+En general, el paralelismo lo podremos encontrar en distinta granularidad (en mayor o menor medida) en relación al nivel en el que nos encontremos. Para detectar mejor este grado de paralelismo, es cómodo tener una clara distinción del tipo de paralelismo (como estamos haciendo), lo que facilita la tarea del programador y del compilador. Destacamos la ventaja de poder transformar el código secuencial (que ya sabemos manejar) en código con funcionalidades paralelas, lo que nos libra de tener que conocer tecnologías nuevas para poder implementar paralelismo en nuestras aplicaciones.
 
 A continuación, justificamos los niveles ya elegidos, junto con ejemplos de paralelismo en cada uno de ellos:
 \begin{description}
     \item [Nivel de programas]~\\
         Los diferentes programas que intervienen en una aplicación (o incluso en diferentes aplicaciones) se pueden ejecutar en paralelo, debido a que es poco probable que existan dependencias entre ellos.
     \item [Nivel de funciones]~\\
-    Un nivel de abstracción más bajo; las funciones llamadas en un programa se pueden ejecutar en paralelo, siempre que no haya dependencias (riesgos) inevitables entre ellos, como dependencias de datos verdaderas (RAW). Como ejemplo, recomendamos la familiarización de la directiva \verb|#pragma| \verb|omp| \verb|parallel| \verb|sections| de OpenMP de la Sesión 1 de Prácticas, donde descubrimos el paralelismo a nivel de funciones de forma explícita.
+    Las funciones llamadas en un programa se pueden ejecutar en paralelo, siempre que no haya dependencias (riesgos) inevitables entre ellas, como dependencias de datos verdaderas (RAW). Como ejemplo, recomendamos la familiarización de la directiva \verb|#pragma| \verb|omp| \verb|parallel| \verb|sections| de OpenMP de la Sesión 1 de Prácticas, donde podemos practicar con el paralelismo a nivel de funciones de forma explícita.
     \item [Nivel de bucles (de bloques)]~\\
-        Una función puede estar basada en la ejecución de uno o varios bucles. En muchas ocasiones, el código que se encuentra dentro de un bucle no está íntegramente asociado con la iteración en sí; sino que deseamos que una cierta tarea se ejecute un cierto número de veces. Se pueden ejecutar en paralelo las iteaciones de un bucle, siempre que eliminen los problemas derivados de las dependencias de datos verdaderas (RAW). 
+        Una función puede estar basada en la ejecución de uno o varios bucles. En muchas ocasiones, el código que se encuentra dentro de un bucle no está íntegramente asociado con la iteración en sí; sino que deseamos que una cierta tarea se ejecute un cierto número de veces. Se pueden ejecutar en paralelo las iteaciones de un bucle, siempre que eliminen los problemas derivados de las dependencias de datos verdaderas (RAW), en caso de haberlas.
     \item [Nivel de operaciones]~\\
-        En este nivel se extra el paralelismo disponible entre operaciones. Las operaciones independientes se pueden ejecutar en paralelo. Por otra parte, podemos encontrar instrucciones compuestas de varias operaciones que se aplican en secuencial mismo tipo de datos de entrada. Por ejemplo, la instrucción \verb|mac| nos permite realizar una suma tras una multiplicación. En este nivel se puede detectar la posiblidad de usar instrucciones compuestas como la ya mencionada.
+        En este nivel se extrae el paralelismo disponible entre operaciones. Las operaciones independientes se pueden ejecutar en paralelo. Por otra parte, podemos encontrar instrucciones compuestas de varias operaciones que se aplican en secuencia al mismo tipo de datos de entrada. Por ejemplo, la instrucción \verb|mac| nos permite realizar una suma tras una multiplicación. En este nivel se puede detectar la posiblidad de usar instrucciones compuestas como la ya mencionada.
 \end{description}
 
 A esta clasificación del paralelismo que se puede detectar en distintos niveles de un código secuencial se le denomina \emph{paralelismo funcional}. Por otra parte, podemos hablar de \emph{paralelismo de tareas} y de \emph{paralelismo de datos}.
@@ -41,12 +41,12 @@ A esta clasificación del paralelismo que se puede detectar en distintos niveles
 En inglés, Task Level Parallelism (TLP). Este paralelismo se encuentra extrayendo la estructura lógica de funciones de la aplicación. Esta estructura está formada por las funciones, siendo las conexiones entre ellas el flujo de datos entre funciones. El paralelismo a nivel de funciones antes descrito en el paralelismo funcional equivale al paralelismo de tareas.
 
 \subsubsection{Paralelismo de datos}
-En inglés, Data Level Parallelism (DLP). El paralelismo de datos se encuentra implícito en las operaciones con estructuras de datos (como vectores y matrices). Las operaciones vectoriales y matriciales engloban operaciones con diversos escalares, las cuales se pueden realizar en paralelo. Como estas operaciones se suelen implementar por bucles, decimos que el paralelismo de datos es equivalente al paralelismo a nivel de operaciones en el paradigma del paralelismo funcional. Por ejemplo, contamos con las instrucciones SIMD (se desarrollarán próximamente), que con una instrucción puede manipular múltiples datos. Un ejemplo de instrucción SIMD es la implementación de una instrución que pueda sumar dos vectores de datos enteros.\\
+En inglés, Data Level Parallelism (DLP). El paralelismo de datos se encuentra implícito en las operaciones con estructuras de datos (como vectores y matrices). Las operaciones vectoriales y matriciales engloban operaciones con diversos escalares, las cuales se pueden realizar en paralelo. Como estas operaciones se suelen implementar por bucles, decimos que el paralelismo de datos es equivalente al paralelismo a nivel de bucles en el paradigma del paralelismo funcional. Por ejemplo, contamos con las instrucciones SIMD (se desarrollarán próximamente), que con una instrucción puede manipular múltiples datos. Un ejemplo de instrucción SIMD es la implementación de una instrución que pueda sumar dos vectores de datos enteros.\\
 
-Por ejemplo, si tenemos una aplicación que nos permite decodificar el formato de imagen JPEG a formato RGB para imprimir en pantalla, podemos encontrar paralelismo de tareas al tener distintos módulos que realizan cada uno de los pasos intermedios para realizar dicha transformación; mientras que disponemos de paralelismo a nivel de datos en las operaciones, al tener instrucciones que nos permitan sumar (con una sola instrucción) dos vectores.
+Por ejemplo, si tenemos una aplicación que nos permite decodificar el formato de imagen JPEG a formato RGB para imprimir en pantalla, podemos encontrar paralelismo de tareas al tener distintos módulos que realizan cada uno de los pasos intermedios para realizar dicha transformación ejecutándose al mismo tiempo; mientras que disponemos de paralelismo a nivel de datos en las operaciones, al tener instrucciones que nos permitan sumar (con una sola instrucción) dos vectores.
 
 \subsubsection{Granularidad}
-El paralelismo también puede clasificarse en función de la granularidad de la tarea a realizar. Esto es, de la magnitud del número de operaciones a realizar. Esta se suele hacer corresponder con los distintos niveles de paralelismo funcional anteriormente desarrollado. Ilustramos esta relación uno a uno en la siguiente enumeración:
+El paralelismo también puede clasificarse en función de la granularidad de la tarea a realizar. Esto es, de la magnitud del número de operaciones a realizar. Esta se suele hacer corresponder con los distintos niveles del paralelismo funcional anteriormente desarrollado. Ilustramos esta relación uno a uno en la siguiente enumeración:
 \begin{itemize}
     \item Grano grueso: Nivel de programas.
     \item Grano medio: Nivel de funciones.
@@ -65,12 +65,12 @@ Una vez que conocemos que existe una dependencia de datos entre dos bloques de c
 
 \begin{description}
     \item [RAW (Read After Write)]~\\
-        También llamada dependencia verdadera, sucede cuando tratamos de leer una variable (equivalentemente, posición de memoria) después de haberla modificado (de haberla escrito). Recordemos que nos encontramos en el paradigma de la paralelización: tratamos de hacer esto de forma paralela, luego puede que un ente encargado de leer la variable lo haga antes que el encargado de modificarla, haciendo invisible dicha modificación (no existente cuando se leyó) y causando condiciones de carrera junto con un posible mal funcionamiento del programa (así como de romper el esquema determinista de este). Podemos ver un ejemplo de RAW en el siguiente ejemplo:
+        También llamada dependencia verdadera, sucede cuando tratamos de leer una variable (equivalentemente, posición de memoria) después de haberla modificado (de haberla escrito). Recordemos que nos encontramos en el paradigma de la paralelización: tratamos de hacer esto de forma paralela, luego puede que un ente encargado de leer la variable lo haga antes que el encargado de modificarla, haciendo invisible dicha modificación (no existente cuando se leyó) y causando condiciones de carrera junto con un posible mal funcionamiento del programa (así como de romper el esquema determinista de este). Podemos ver un ejemplo de RAW en el siguiente código:
     \begin{minted}[xleftmargin=1cm]{c++}
 int a = b * c;
 int d = a + c;
     \end{minted}
-Tenemos en la segunda línea el uso (lectura) de la variable \verb|a|, tras modificarla (escribir en ella) en la primera línea. Si empleamos paralelismo puede suceder que se ejecute la segunda línea antes que la primera, provocando condiciones catastróficas. De hecho, cuando esto se haga, la variable \verb|a| no estará ni siquiera inicializada.
+Tenemos en la segunda línea el uso (lectura) de la variable \verb|a|, tras modificarla (escribir en ella) en la primera línea. Si empleamos paralelismo puede suceder que se ejecute la segunda línea antes que la primera, provocando condiciones catastróficas. De hecho, cuando esto se haga, la variable \verb|a| no estará ni siquiera inicializada (en este ejemplo).
 
     \item [WAW (Write after Write)]~\\
         También llamada anti-dependencia, sucede cuando tratamos de modificar una variable por segunda vez (después de haberla modificado ya). Esto puede plantear, al igual que explicábamos en RAW, condiciones de carrera. Mostramos un ejemplo a continuación:
@@ -79,10 +79,10 @@ a = b * c;
 // se lee a
 a = d + e;
     \end{minted}
-Donde en la primera y tercera linea modificamos el valor de \verb|a|. Sin embargo, esta dependencia es evitable, ya que si cambiamos el nombre de la variable (empleamos una dirección de memoria distinta), evitamos la dependencia. Por tanto, a esta dependencia también se le llama dependencia de nombre, al no ser una dependencia de datos real.
+Donde en la primera y tercera línea modificamos el valor de \verb|a|. Sin embargo, esta dependencia es evitable, ya que si cambiamos el nombre de la variable (empleamos una dirección de memoria distinta), evitamos la dependencia. Por tanto, a esta dependencia también se le llama dependencia de nombre, al no ser una dependencia de datos real.
 
     \item [WAR (Write after Read)]~\\
-        También llamda dependencia de salida, sucede cuando tratamos de escribir en una variable tras leer de ella. Esto también puede provocar condiciones de carrera, tal y como vemos en el siguiente ejemplo:
+        También llamada dependencia de salida, sucede cuando tratamos de escribir en una variable tras leer de ella. Esto también puede provocar condiciones de carrera, tal y como vemos en el siguiente ejemplo:
     \begin{minted}[xleftmargin=1cm]{c++}
 b = a + 1;
 a = d + e;
@@ -106,19 +106,19 @@ A lo largo de este documento hemos hecho referencia en varias ocasiones al paral
 \end{description}
 Esta diferencia la comentaremos en la siguiente subsección, que será fácil de comprender junto con el desarrollo de las prácticas.
 
-Hecha esta distinción, comenzamos ahora sí con esta subsección, en la que podemos cómo se implementa el paralelismo implícito, así como el explícito, de una forma superficial. Además, será necesario indicar las especificaciones hardware requeridas para llevar esto a cabo (llamadas arquitecturas paralelas). Usaremos el paralelismo funcional, ya que para eso lo hemos desarrollado al inicio.
+Hecha esta distinción, comenzamos ahora sí con esta subsección, en la que podemos ver cómo se implementa el paralelismo implícito, así como el explícito, de una forma superficial. Además, será necesario indicar las especificaciones hardware requeridas para llevar esto a cabo (llamadas arquitecturas paralelas). Usaremos el paralelismo funcional para distinguir casuísticas, ya que para eso lo hemos desarrollado al inicio.
 \begin{description}
-    \item [Nivel de programas]~\\
-        El paralelismo entre programas se implementa mediante diversos procesos: en el momento que se ejecuta un nuevo programa, se crea el programa asociado a él, y ya sólo dependerá del sistema operativo el llevar a cabo su paralelización con el resto de procesos\footnote{Mediante técnicas ya vistas en la asignatura de Sistemas Operativos}. Para poder implementar este tipo de paralelismo, es necesario disponer de un multiprocesador o multicomputador.
+    \item [Nivel de programas]~\\ejemplo:
+        El paralelismo entre programas se implementa mediante diversos procesos: en el momento que se ejecuta un nuevo programa, se crea el proceso asociado a él, y ya sólo dependerá del sistema operativo el llevar a cabo su paralelización con el resto de procesos\footnote{Mediante técnicas ya vistas en la asignatura de Sistemas Operativos} (creando así paralelismo entre programas). Para poder implementar este tipo de paralelismo, es necesario disponer de un multiprocesador, multicomputador, o cualquier sistema que nos permita ejecutar dos procesos de forma simultánea.
 
     \item [Nivel de funciones]~\\
-        El paralelismo a este nivel puede extraerse para realizarse a nivel de procesos (si la función realmente lo require) o de hebras, de forma que cada hebra (o proceso) ejecute una o varias funciones. Para ello, necesitaremos de un multiprocesador y, en caso de requerir hebras, será conveniente que este sea multihebra (o en su defecto, contar con una biblioteca de hebras, aunque esto es menos recomendable).
+        El paralelismo a este nivel puede extraerse para realizarse a nivel de procesos (si la función realmente lo require) o de hebras, de forma que cada hebra (o proceso) ejecute una o varias funciones. Para ello, necesitaremos de un multiprocesador y, en caso de requerir hebras, será conveniente que este sea multihebra (o en su defecto, contar con una biblioteca de hebras, aunque esto es menos recomendable). En definitiva: crear varios entes del sistema operativo de forma que cada uno ejecute una o varias funciones.
 
     \item [Nivel de bucles]~\\
-        Este se puede realizar a nivel de procesos o hebras, tal y como se hacía en el nivel anterior. Sin embargo, el paralelismo a este nivel también puede implementarse con instrucciones en el caso de, por ejemplo, sumas de vectores. Para ello, debemos contar con un multiprocesador (a poder ser, multihebra) y para el último caso considerado, una arquitectura SIMD que permite realizar trabajos similares con vectores y, en general, estructuras de datos.
+        Este se puede realizar a nivel de procesos o hebras, tal y como se hacía en el nivel anterior. Sin embargo, el paralelismo a este nivel también puede implementarse con instrucciones en el caso de, por ejemplo, sumas de vectores. Para ello, debemos contar con un multiprocesador (a poder ser, multihebra) y para el último caso considerado, una arquitectura SIMD que permita realizar trabajos similares con vectores y, en general, estructuras de datos.
 
     \item [Nivel de operaciones]~\\
-        El paralelismo entre operaciones se puede aprovechar en arquitecturas con paralelismo a nivel de instrucción (ILP), ejecutando en paralelo las instrucciones asociadas a operaciones independientes. Para ello, es claro que necesitamos arquitecturas ILP.
+        El paralelismo entre operaciones se puede aprovechar en arquitecturas con paralelismo a nivel de instrucción (ILP), ejecutando en paralelo las instrucciones asociadas a operaciones independientes. Para ello, es claro que necesitamos arquitecturas ILP, las cuales pueden conseguirse mediante replicado de componentes del procesador o segmentación.
 \end{description}
 
 \subsection{Detección y extracción del paralelismo}
@@ -126,12 +126,12 @@ En los procesadores ILP superescalares o segmentados la arquitectura en sí mism
 
 Además, el grado de paralelismo de las instrucciones se puede incrementar con las ayudas del compilador y del programador. En general, se puede definir el grado de paralelismo de un conjunto de entradas a un sistema como el número máximo de entradas del conjunto que se pueden ejecutar en paralelo. 
 
-A continuación, para cada tipo de paralelismo, tratamos de explicar la extracción del paralelismo. Esto es, explicar qué ente lo lo detecta, cómo se implemente y en qué unidad se ejecuta. En este caso, la granularidad es inversamente proporcional a la facilidad de extracción del paralelismo.
+A continuación, para cada tipo de paralelismo, tratamos de explicar la extracción del paralelismo. Esto es, explicar qué ente lo lo detecta, cómo se implementa y en qué unidad se ejecuta. En este caso, la granularidad es inversamente proporcional a la facilidad de extracción del paralelismo.
 \begin{description}
     \item [Nivel de operaciones]~\\
         Puede ser detectado por la arquitectura del hardware, por herramientas de programación (como IDEs o compiladores) y por el programador. Se implementa o aprovecha principalmmente por arquitecturas ILP, que lo hacen usando instrucciones dedicadas a ello.
     \item [Nivel de bucles]~\\
-        La arquitectura ya escapa a este nivel de abstracción, por lo que sólo podemos detectarlo mediante herramientas de programación o por la destreza del programador. Se implementa a nivel de arquitecturas SIMD mediante intrainstrucciones en el caso de aquellas paralelizaciones vectoriales ya comentadas; mientras que paralelizaciones del estio TLP se implementan mediante multiprocesador multihebra o multicomputadores, usando threads o procesos.
+        La arquitectura ya escapa a este nivel de abstracción, por lo que sólo podemos detectarlo mediante herramientas de programación o por la destreza del programador. Se implementa a nivel de arquitecturas SIMD mediante intrainstrucciones en el caso de aquellas paralelizaciones vectoriales ya comentadas; mientras que paralelizaciones del estilo TLP se implementan mediante multiprocesador multihebra o multicomputadores, usando threads o procesos.
     \item [Nivel de funciones]~\\
         A este nivel ya sólo disponemos del programador para llevar la detección a cabo, quien puede hacer el paralelismo explícito mediante multiprocesadores multihebra, multiprocesadores y multicomputadores; mediante hebras y/o procesos.
     \item [Nivel de programas]~\\
@@ -155,7 +155,7 @@ Una vez terminada la sección que acabamos de comenzar, tratamos de que el lecto
 \subsection{Computación distribuida}
 \begin{description}
     \item [Computación paralela]~\\
-        Esta estudia los aspectos hardware y software relacionados con el desarrollo y ejecución de aplicaciones en un sistema de cómputo compuesto por varios cores, procesadores o computadores que es visto externamente como una sóla unindad autónoma, a la que le llamadamos unidad multicore, multiprocesador o multicomputador.
+        Esta estudia los aspectos hardware y software relacionados con el desarrollo y ejecución de aplicaciones en un sistema de cómputo compuesto por varios cores, procesadores o computadores que es visto externamente como una sóla unidad autónoma, a la que le llamamos unidad multicore, multiprocesador o multicomputador.
 
     \item [Computación distribuida]~\\
         Esta se encarga de estudiar los aspectos hardware y software relacionadas con el desarrollo y ejecución de aplicaciones (hasta ahora, igual que en paralela) en un sistema distribuido. Es decir, en una colección de recursos autónomos (como servidores de datos, supercomputadores, bases de datos distribuidas) situados en distintas localizaciones físicas.
@@ -248,26 +248,26 @@ Las escuetas definiciones manifestadas arriba nos dan una primera idea de cuales
 
 En un multicomputador, cada procesador tiene un propio espacio de direcciones, por lo que es lógico pensar que la memoria se encuentra de forma física cerca de cada procesador (y es así como normalmente se implementa). Es normal encontrar distribuido también el sistema de entrada y salida (aunque este no tendrá mucha relevancia en nuestro estudio). Por contraparte, en un multiprocesador, al compartir todos los procesadores el mismo espacio de memoria, es lógico plantear un diseño en el que todos los módulos de memoria se encuentren físicamente ubicados en la misma zona del sistema, separándolos de los procesadores por una red de interconexión que arbitra el acceso a los módulos. Es natural también, centralizar los dispositivos de E/S. Dispuesto este modelo de memoria centralizada, el tiempo de acceso a memoria será igual para cualquier posición de memoria que se acceda desde cualquier procesador. Se trata de una estructura simétrica. Esta clase de multiprocesadores recibe el nombre \emph{SMP} (\emph{Symmetric MultiProcessor}), o multiprocesador simétrico. En estos, el acceso de los procesadores a memoria se realiza a través de la red de interconexión, por tanto, nos interesa disponer de una red buena que permita el acceso al mismo tiempo de distintos procesadores a distintas posiciones de memoria; y de un sistema que arbitre el acceso de los procesadores a una misma posición de memoria.
 
-En multicomputadores, cada proceadsor tiene su propio módulo de memoria local, al que puede acceder directamente. Es por tanto, que el único fin de la red de interconexión es para comunicar los procesadores entre sí (transferencia de datos). Esto se hace mediante el uso de mensajes entre procesadores. En un multiprocesador, la comunicación entre procesadores puede hacerse de forma directa a través de memoria: un procesador escribe en una posición de memoria la información a comunicar y simplemente tiene que decirle al procesador deseado que lea de dicha posición de memoria (ya sólo queda ver cómo se pasa esta, a través de la red de interconexión).
+En multicomputadores, cada procesador tiene su propio módulo de memoria local, al que puede acceder directamente. Es por tanto, que el único fin de la red de interconexión es para comunicar los procesadores entre sí (transferencia de datos). Esto se hace mediante el uso de mensajes entre procesadores. En un multiprocesador, la comunicación entre procesadores puede hacerse de forma directa a través de memoria: un procesador escribe en una posición de memoria la información a comunicar y simplemente tiene que decirle al procesador deseado que lea de dicha posición de memoria (ya sólo queda ver cómo se pasa esta, a través de la red de interconexión).
 
-Esta descripción básica de la red de intercomunicación ya nos plantea una primera desventaja de los multiprocesadores frente a los multicomputadores: \emph{la falta de escalabilidad}. Mientras que en multicomputadores si queremos añadir un nuevo procesador, nos será tan simple como conectar ala red de interconexión un nuevo procesador (junto con sus módulos de memoria y de E/S). Por contraparte, en multiprocesadores, deberemos también conectar el proceador a la red, teniendo en cuenta de que ahora tendremos un nuevo nodo que use esta red de forma probablemente simultánea al resto: las comunicaciones entre procesadores (que son no muy frecuentes) son el único propósito de los multicomputadores, mientras que los multiprocesadores deben usarlo para comunicaciones y acceso a memoria, lo que dificulta la ejecución de los procesadores de forma paralela, al tener estos que acceder constantemente a memoria de forma simultánea. Por tanto, nos es más fácil añadir procesadores a un sistema multicomputador antes que a uno multiprocesador, ante el temor de saturar la red de intercomunicaciones. Posteriormente comentaremos una mejora de los multiprocesadores que trata de parchear este problema.
+Esta descripción básica de la red de intercomunicación ya nos plantea una primera desventaja de los multiprocesadores frente a los multicomputadores: \emph{la falta de escalabilidad}. Mientras que en multicomputadores si queremos añadir un nuevo procesador, nos será tan simple como conectar a la red de interconexión un nuevo procesador (junto con sus módulos de memoria y de E/S). Por contraparte, en multiprocesadores, deberemos también conectar el proceador a la red, teniendo en cuenta de que ahora tendremos un nuevo nodo que use esta red de forma probablemente simultánea al resto: las comunicaciones entre procesadores (que son no muy frecuentes) son el único uso de los multicomputadores de la red de interconexión, mientras que los multiprocesadores deben usarla para comunicaciones y acceso a memoria, lo que dificulta la ejecución de los procesadores de forma paralela, al tener estos que acceder constantemente a memoria de forma simultánea. Por tanto, nos es más fácil añadir procesadores a un sistema multicomputador antes que a uno multiprocesador, ante el temor de saturar la red de intercomunicaciones. Posteriormente comentaremos una mejora de los multiprocesadores que trata de parchear este problema.
 
-A continuación, seguimos planeando diferencias entre estos:
+A continuación, seguimos planteando diferencias entre estos:
 \begin{description}
     \item [Latencia de acceso a memoria]
         El tiempo de acceso a memoria (como se puede esperar) es mayor en multiprocesadores que en multicomputadores, al tener que atravesar toda la infraestructura de red de interconexión, junto con lo que esto conlleva, ya que puede darse la posibilidad de que varios procesadores ocupen la red de forma simultánea (lo cual ya plantea un problema), pero además deberemos arbitrar el acceso de distintos procesadores a una misma posición de memoria. Cuanto mayor sea el número de procesadores, la probabilida de conflicto aumenta (lo que refleja el problema de escalabilidad previamente comentado). 
     \item [Comunicaciones]
         Como hemos comentado anteriormente, los multiprocesadores pueden comunicarse entre sí mediante memoria, por lo que sólo será necesario implementar sencillas instrucciones de carga (load) y almacenamiento (save). Mientras que los multicomputadores necesitan desarrollar toda una estrategia de mensajes, junto con instrucciones de envío (send) y de recibo de datos (receive). 
     \item [Herramientas de programación]
-        Antes de ejecutar una aplicación en un multicomputador (suponiendo que este implementa paralelismo entre procesadores, que es el caso interesante), debemos ubicar en memoria (en la de cada procesador) el código del programa que estamos a punto de ejecutar, junto con los datos que este necesita. Es decir, es necesario realizar una distribución de carga de trabajo entre los distintos procesadores. Nótese que en multiprocesadores esta distribución no es necesaria, ya que todos los procesadores pueden acceder al mismo espacio de direcciones. Esto presenta un gran problema, ya que nos fácil prever el tiempo de ejecución de cada bloque de código, ni a cuánta carga de trabajo estará sometido cada procesador. Aún es esto parte de la responsabilidad del programador (aunque algunos compiladores ya intentan realizar esta distribución de trabajo). Por tanto, necesitamos herramientras de programación más sofisticadas a la hora de trabajar con multicomputadores.
+        Antes de ejecutar una aplicación en un multicomputador (suponiendo que esta implementa paralelismo entre procesadores, que es el caso interesante), debemos ubicar en memoria (en la de cada procesador) el código del programa que estamos a punto de ejecutar, junto con los datos que este necesita. Es decir, es necesario realizar una distribución de carga de trabajo entre los distintos procesadores. Nótese que en multiprocesadores esta distribución no es necesaria, ya que todos los procesadores pueden acceder al mismo espacio de direcciones. Esto presenta un gran problema, ya que no es fácil prever el tiempo de ejecución de cada bloque de código, ni a cuánta carga de trabajo estará sometido cada procesador. Aún es esto parte de la responsabilidad del programador (aunque algunos compiladores ya intentan realizar esta distribución de trabajo). Por tanto, necesitamos herramientras de programación más sofisticadas a la hora de trabajar con multicomputadores.
 \end{description}
 
 \subsubsection{SMP frente a NUMA}
-Dentro de los multiprocesadores anteriormente comentados, tratamos de dar una solución que solvente el problema de escalabilidad anteriormente planteado. Algunas opciones temporales son el aumento del caché de cada procesador, así como el uso de redes de interconexión de menor latencia y mayor ancho de banda (así como de una forma de red que beneficie a nuestro sistema, más hallá de un bus). Sin embargo, tratamos de buscar una solución que nos aporte más beneficios, que probablemente venga de cambiar un poco el planteamiento del sistema.
+Dentro de los multiprocesadores anteriormente comentados, tratamos de dar una solución que solvente el problema de escalabilidad anteriormente planteado. Algunas opciones temporales son el aumento del caché de cada procesador, así como el uso de redes de interconexión de menor latencia y mayor ancho de banda (así como de una forma de red que beneficie a nuestro sistema, más hallá de un bus). Sin embargo, tratamos de buscar una solución que nos aporte más beneficios, que probablemente surja de cambiar un poco el planteamiento del sistema.
 
 Para nosotros era lógico que un multiprocesador tuviera una arquitectura SMP, donde los módulos de memoria (y los de E/S) se encuentren centralizados y accedidos mediante una red de interconexión. Este era un ejemplo de arquitectura \emph{UMA} (\emph{Uniform Memory Access}), donde cada procesador tarda el mismo tiempo en acceder a cada módulo de memoria.
 
-Sin embargo, planteamos ahora que, manteniendo la estructura de un multiprocesador (esto es, compartiendo el espacio de direcciones), repartir los módulos de memoria a lo largo del sistema, (estableciendo una asociación de un módulo por procesador), de forma que el tiempo de acceso a memoria sea menor para el procesador a su módulo correspondiente. De esta forma, un procesador podrá seguir accediendo al resto de módulos, aunque con una penalización en tiempo respecto a acceder a su módulo de memoria. A este tipo de arquitecturas de multiprocesadores se les conoce como \emph{NUMA} (\emph{Non-Uniform Memory Access}), provenientes de los 90. Al módulo de memoria próximo al procesador le llamaremos módulo de memoria local. Para que un NUMA sea realmente escalable (es la motivación de su creación), se deberá reducir la latencia media, reduciendo el número de accesos a la memoria local de otro proceasador. Para ello, necesitamos distribuir (como hacíamos en multicomputadores) la carga de trabajo entre los módulos de memoria, de forma que en el módulo local se encuentren el código y los datos frecuentemente utilizados. Observemos que acabamos de crear un paradigma similar a la caché de dentro de un procesador. Podemos por tanto, aproximarnos a este reparto de forma estática (repartiendo antes de ejecutar) o dinámica (realizando el reparto en tiempo de ejecución).
+Sin embargo, planteamos ahora que, manteniendo la estructura de un multiprocesador (esto es, compartiendo el espacio de direcciones), repartir los módulos de memoria a lo largo del sistema, (estableciendo una asociación de un módulo por procesador), de forma que el tiempo de acceso a memoria sea menor para el procesador a su módulo correspondiente. De esta forma, un procesador podrá seguir accediendo al resto de módulos, aunque con una penalización en tiempo respecto a acceder a su módulo de memoria. A este tipo de arquitecturas de multiprocesadores se les conoce como \emph{NUMA} (\emph{Non-Uniform Memory Access}), provenientes de los 90. Al módulo de memoria próximo al procesador le llamaremos módulo de memoria local. Para que un NUMA sea realmente escalable (es la motivación de su creación), se deberá reducir la latencia media, reduciendo el número de accesos a la memoria local de otro procesador. Para ello, necesitamos distribuir (como hacíamos en multicomputadores) la carga de trabajo entre los módulos de memoria, de forma que en el módulo local se encuentren el código y los datos frecuentemente utilizados. Observemos que acabamos de crear un paradigma similar a la caché de dentro de un procesador. Podemos por tanto, aproximarnos a este reparto de forma estática (repartiendo antes de ejecutar) o dinámica (realizando el reparto en tiempo de ejecución).
 
 Como resumen a la comparativa de multicomputadores y multiprocesadores, podemos plantear el siguiente esquema:
 \begin{description}
@@ -300,13 +300,13 @@ Como resumen a la comparativa de multicomputadores y multiprocesadores, podemos 
 En función del tipo de paralelismo que aprovechen las máquinas, tenemos distintos tipos de clasificación:
 \begin{description}
     \item [Arquitectura con ILP]~\\
-        Las arquitecturas con paralelismo a nivel de instrucción ejecuta las instrucciones de forma concurrente o en paralelo. Se trata de cores escalaraes segmentados, superescalares o VLIW (very long instruction word).
+        Las arquitecturas con paralelismo a nivel de instrucción ejecuta las instrucciones de forma concurrente o en paralelo. Se trata de cores escalares segmentados, superescalares o VLIW (very long instruction word).
     \item [Arquitectura con DLP]~\\
         Las arquitecturas con paralelismo a nivel de datos ejecutan las operaciones de una instrucción de forma concurrente o en paralelo. Hacen referencia a unidades funcionales vectoriales o SIMD.
     \item [Arquitectura con TLP y una instancia de SO]~\\
-        Este tipo de arquitecturas con paralelismo a nivel de tareas ejecutan múltiples flujos de instrucciones de forma concurrente o paralela usando para ello una única instancia de sistema operativo (esto es, un único proceso). Pueden hacer referencia a cores que modifican la arquitectura escalar segmentada, superescalar o VLIW para ejecutar threads de forma concurrente o en paralelo. Por otra parte, también puede hacer referncia a multiprocesadores, los cuales ejecutan threads en paralelo en un computador con múltiples cores (incluye multicore).
+        Este tipo de arquitecturas con paralelismo a nivel de tareas ejecutan múltiples flujos de instrucciones de forma concurrente o paralela usando para ello una única instancia de sistema operativo (esto es, un único proceso). Pueden hacer referencia a cores que modifican la arquitectura escalar segmentada, superescalar o VLIW para ejecutar threads de forma concurrente o en paralelo. Por otra parte, también puede hacer referencia a multiprocesadores, los cuales ejecutan threads en paralelo en un computador con múltiples cores (incluye multicore).
     \item [Arquitectura con TLP y múltiples instancias de SO]~\\
-        Este tipo de arquitecturas con paralelismo a nivel de tareas ejecutan múltiples flujos de instrucción en paralelo. Hace referncia a los multicomputadores, los cuales ejecutan threads en paralelo en un sistema con muchos computadores.
+        Este tipo de arquitecturas con paralelismo a nivel de tareas ejecutan múltiples flujos de instrucción en paralelo. Hace referencia a los multicomputadores, los cuales ejecutan threads en paralelo en un sistema con muchos computadores.
 \end{description}
 
 \newpage
@@ -324,15 +324,15 @@ En esta sección, aprenderemos a:
 \subsection{Definiciones}
 \begin{description}
     \item [Tiempo de respuesta.]~\\
-        El tiempo de respuesta es el tiempo transcurrido entre que se lanza la ejecución de un programa y se tienen sus resultados.
+        El tiempo de respuesta (elapsed) es el tiempo transcurrido entre que se lanza la ejecución de un programa y se tienen sus resultados.
     \item [Productividad]~\\
-        La productividad es el número de entradas procesadas por unidad de tiempo. A mayor sea el número de entradas que un computador pueda procesador a la vez, mayor será su productividad. Por tanto, calculamos la productividad mediante la siguiente fórmula:
+        La productividad es el número de entradas procesadas por unidad de tiempo. A mayor sea el número de entradas que un computador pueda procesar a la vez, mayor será su productividad. Por tanto, calculamos la productividad mediante la siguiente fórmula:
         \begin{equation}
             P(n) = \dfrac{n}{t}
         \end{equation}
-        Donde $n$ es el número de entradas y $t$ el tiempo en el que las ha procesado.
+        Donde $n$ es el número de entradas y $t$ el tiempo en el que las ha procesado. Notemos que en un computador que no implementa paralelismo, la productividad es la inversa del tiempo, al no poder procesar más de una entrada al mismo tiempo.
     \item [Tiempo de CPU.]~\\
-        Este tiempo está incluido dentro del tiempo de respuesta. Se trata del tiempo que el procesador dedica a ejecutar instrucciones máquina de su repertorio, tanto en modo de usuario como las que corresponden a la actividad que se debe llevar a cabo por el sistema operativo para permitir la ejecución del programa. Sólo se tiene en cuenta el tiempo asociado con la ejecución de las instrucciones relativas al programa. Es cómun diferenciar dentro del tiempo de CPU el \emph{Tiempo de CPU de usuario} y el \emph{Tiempo de CPU de sistema}, cuyos nombres son autoexplicativos.
+        Este tiempo está incluido dentro del tiempo de respuesta. Se trata del tiempo que el procesador dedica a ejecutar instrucciones máquina de su repertorio, tanto en modo de usuario como las que corresponden a la actividad que se debe llevar a cabo por el sistema operativo para permitir la ejecución del programa. Sólo se tiene en cuenta el tiempo asociado con la ejecución de las instrucciones relativas al programa. Es común diferenciar dentro del tiempo de CPU el \emph{Tiempo de CPU de usuario} (user) y el \emph{Tiempo de CPU de sistema} (sys), cuyos nombres son autoexplicativos.
 \end{description}
 Notemos que entre el tiempo de respuesta y tiempo de CPU hay una diferencia de tiempo presente. Este puede deberse a:
 \begin{itemize}
@@ -342,12 +342,12 @@ Notemos que entre el tiempo de respuesta y tiempo de CPU hay una diferencia de t
 Estos dos tiempos también se incluyen en el tiempo de ejecución, pero no en el de CPU.
 
 \subsection{Tiempo de CPU}
-A lo largo de esta sección, nos centraremos exclusivamente en el estudio de tiempo de CPU. Para simplificar el estudio de este tiempo, suponemos que tanto el tiempo de espera por E/S tanto el tiempo de ejecución de otros programas en el procesador son despreciables. Por tanto, para nosotros, el tiempo de CPU será igual al tiempo de respuesta (de forma práctica, no teórica). Hecha esta asunción, podemos calcular el tiempo de CPU como:
+A lo largo de esta sección, nos centraremos exclusivamente en el estudio de tiempo de CPU. Para simplificar el estudio de este tiempo, suponemos que tanto el tiempo de espera por E/S como el tiempo de ejecución de otros programas en el procesador son despreciables. Por tanto, para nosotros, el tiempo de CPU será igual al tiempo de respuesta (de forma práctica, no teórica). Hecha esta asunción, podemos calcular el tiempo de CPU como:
 \begin{equation}
     T_{CPU} = \text{Ciclos del programa} \cdot T_{ciclo} = \dfrac{\text{Ciclos del programa}}{F}
     \label{eq:tcpu}
 \end{equation}
-Donde ``Ciclos del programa'' es el número de ciclos de reloj del procesador que tarda en ejecutarse el programa, $T_{ciclo}$ el el tiempo de ciclo de un procesador (habitualmente, el tiempo que tarda en ejecutarse su instrucción más costosa); y $F$ la frecuencia de reloj:
+Donde ``Ciclos del programa'' es el número de ciclos de reloj del procesador que tarda en ejecutarse el programa, $T_{ciclo}$ el tiempo de ciclo del procesador (habitualmente, el tiempo que tarda en ejecutarse su instrucción más costosa); y $F$ la frecuencia de reloj:
 \begin{equation}
     F = \dfrac{1}{T_{ciclo}}
 \end{equation}
@@ -360,7 +360,7 @@ de donde obtenemos:
 \begin{equation} \label{eq:tcpumejor}
     T_{CPU} = NI \cdot CPI \cdot T_{ciclo} = \dfrac{NI \cdot CPI}{F}
 \end{equation}
-Asumiendo que el número de ciclos por instrucción es constante (es decir, todas las instrucciones tardan el mismo tiempo ene ejecutarse). Esto no es realista, por lo que usaremos en su lugar el número de ciclos por instrucción medio (CPIM), que para abreviar seguiremos notando por CPI:
+Asumiendo que el número de ciclos por instrucción es constante (es decir, todas las instrucciones tardan el mismo tiempo en ejecutarse). Esto no es realista, por lo que usaremos en su lugar el número de ciclos por instrucción medio (CPIM), que para abreviar seguiremos notando por CPI:
 \begin{equation}
     CPI = \dfrac{\sum_{i=1}^W NI_i \cdot CPI_i}{NI}
 \end{equation}
@@ -394,7 +394,7 @@ Es común en Arquitectura de Computadores detectar cuellos de botella en la arqu
     S_p = \dfrac{V_p}{V_b} = \dfrac{T_b}{T_p}
 \end{equation}
 
-Donde $V_b$ es la velocidad de ejecución del programa antes de aplicar la mejora (velocidad base), $V_p$ es la velocidad tras aplicar la mejora; y $T_b$ y $T_p$ son los tiempos antes de aplicar la mejora y después, respectivamente. Notemos que, alicando la fórmula~(\ref{eq:tcpumejor}) obtenemos:
+Donde $V_b$ es la velocidad de ejecución del programa antes de aplicar la mejora (velocidad base), $V_p$ es la velocidad tras aplicar la mejora; y $T_b$ y $T_p$ son los tiempos antes de aplicar la mejora y después, respectivamente. Notemos que, aplicando la fórmula~(\ref{eq:tcpumejor}) obtenemos:
 \begin{equation}
     S_p = \dfrac{T^b_{CPU}}{T^p_{CPU}} = \dfrac{NI^b \cdot CPI^b \cdot T^b_{ciclo}}{NI^p \cdot CPI^p \cdot T^p_{ciclo}}
 \end{equation}
@@ -414,17 +414,18 @@ Donde $f$ es el porcentaje del tiempo de ejecución del sistema base durante el 
 \begin{proof}
     Tenemos que:
     \begin{equation*}
-        S_p = \dfrac{T_b}{T_p} \leq \dfrac{T_b}{f\cdot T_b + (1-f)\cdot \frac{T_b}{p}} = \dfrac{1}{f + \frac{1-f}{p}}
+        S_p = \dfrac{T_b}{T_p} \stackrel{(\ast)}{\leq} \dfrac{T_b}{f\cdot T_b + (1-f)\cdot \frac{T_b}{p}} = \dfrac{1}{f + \frac{1-f}{p}}
     \end{equation*}
+    Notemos que, teóricamente, en $(\ast)$ deberíamos haber puesto un igual en lugar de un menor o igual. La razón de este símbolo es debido a que, gracias a la mejora introducida que nos da un tiempo de $T_p$, esperamos un factor de mejora de $p$ veces el tiempo base ($T_b$). Sin embargo, debido a distintas variables que entran en juego (recordamos que estamos trabajando con un modelo infinitamente simple de la ejecución de un computador), probablemente el tiempo de mejora no sea tan bueno como nosotros queremos. Es por eso por lo que introducimos este menor o igual, ya que en la fracción de tiempo $1-f$ obtenemos un tiempo de mejora de a lo más $p$ veces el base.
 \end{proof}
 
 
 Por ejemplo, si $f = 1$ (el recurso mejorado no se usa en el programa), entonces $S_p \leq 1$, por lo que no se produce mejora alguna. Si en cambio, $f = 0$ (el recurso mejorado se usa todo el rato), entonces $S_p$ podría alcanzar un valor de $p$. Consultamos un caso intermedio:
 
 \begin{ejemplo}
-    Si un programa pasa el 25\% del tiempo en una máquina ejecutando instrucciones de coma flotanto y se mejora la máquina haciendo que dichas instrucciones se ejecuten en mitad de tiempo, calcule la ganancia máxima de velocidad.\\
+    Si un programa pasa el 25\% del tiempo en una máquina ejecutando instrucciones de coma flotante y se mejora la máquina haciendo que dichas instrucciones se ejecuten en mitad de tiempo, calcule la ganancia máxima de velocidad.\\
 
-    En este caso, tenemos que el tiempo de ejecución de una instrucción de coma flotante se reduce a la mitad, por lo que se ha obtenido una mejora que hace a la ejecución de dichas instrucciones el doble de eficientes, luego obtenemos un factor $p = 2$. Por otra parte, como el 25\% del tiempo de ejecución del programa se debe a operaciones en coma flotanto, el otro 75\% no usará estas operaciones, luego tenemos $f = 0.75$. Calculamos ahora la ganancia máxima de velocidad gracia a la Ley de Amdalh:
+    En este caso, tenemos que el tiempo de ejecución de una instrucción de coma flotante se reduce a la mitad, por lo que se ha obtenido una mejora que hace a la ejecución de dichas instrucciones el doble de eficientes, luego obtenemos un factor $p = 2$. Por otra parte, como el 25\% del tiempo de ejecución del programa se debe a operaciones en coma flotante, el otro 75\% no usará estas operaciones, luego tenemos $f = 0.75$. Calculamos ahora la ganancia máxima de velocidad gracia a la Ley de Amdalh:
     \begin{equation*}
         S_p \leq \dfrac{1}{1+f\cdot(p-1)} = \dfrac{1}{1+0.75\cdot(2-1)}= \dfrac{1}{1.75} \approx 1.14
     \end{equation*}
@@ -444,5 +445,5 @@ Un \emph{benchmark} es un conjunto de programas de prueba diseñados para medir 
     \item [Programas reales.]
         Programas disponibles comercialmente que tratan de evaluar bases de datos, servidores, $\ldots$
     \item [Aplicaciones diseñadas.]
-        Se diseñan aplicciones que tratan de imitar a aquellas para las que se usará el computador. 
+        Se diseñan aplicaciones que tratan de imitar a aquellas para las que se usará el computador. 
 \end{description}
