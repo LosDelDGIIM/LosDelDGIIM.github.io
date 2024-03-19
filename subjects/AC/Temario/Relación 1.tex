@@ -54,7 +54,7 @@
 
         La expresión de la ganancia, por tanto, es:
         \begin{equation*}
-            S = \dfrac{T_b}{T_p} = \dfrac{\cancel{T_c} \cdot \bcancel{NI} \cdot 4.7}{\cancel{T_c} \cdot \bcancel{NI} \cdot 4.25} = \frac{4.7}{3.95} \approx 1.1898
+            S = \dfrac{T_b}{T_p} = \dfrac{\cancel{T_c} \cdot \bcancel{NI} \cdot 4.7}{\cancel{T_c} \cdot \bcancel{NI} \cdot 3.95} = \frac{4.7}{3.95} \approx 1.1898
         \end{equation*}
 
         Como podemos ver, la ganancia es la misma que en el caso anterior. Esto se debe a que, aun recudiendo más ciclos de reloj ($5$ en este caso, frente a $3$ en el anterior),
@@ -326,12 +326,12 @@
         Además, no se reduce de 6 a 3, ya que tan solo se reducen a la mitad los 4 ciclos que tarda en ejecutarse la instrucción de la ALU.
         Por tanto, se tiene que $CPI_{\text{ALU}}^2 = 2+4\cdot \nicefrac{1}{2} = 4$.
         Por tanto, la ganancia para un número de instrucciones $NI$ es:
-        \begin{equation*}
-            S (NI) = \frac{T^b(NI)}{T^p(NI)} = \frac{NI \cdot (0.2\cdot 4 + 0.15\cdot 3 + 0.4\cdot 6 + 0.25\cdot 3) \cdot T_c}{NI \cdot (0.2\cdot 4 + 0.15\cdot 3 + 0.4\cdot 4 + 0.25\cdot 3) \cdot T_c} = \frac{4.4}{3.6} = \frac{11}{9} \approx 1.222
-        \end{equation*}
+        \begin{align*}
+            S (NI) &= \frac{T^b(NI)}{T^p(NI)} = \frac{NI \cdot (0.2\cdot 4 + 0.15\cdot 3 + 0.4\cdot 6 + 0.25\cdot 3) \cdot T_c}{NI \cdot (0.2\cdot 4 + 0.15\cdot 3 + 0.4\cdot 4 + 0.25\cdot 3) \cdot T_c} =\\&= \frac{4.4}{3.6} = \frac{11}{9} \approx 1.222
+        \end{align*}
         
         \item ¿Con qué porcentaje de instrucciones con operaciones en la ALU se podría haber obtenido en los cálculos del apartado \ref{ej:1.7a} una ganancia mayor que 2?
-        Razone su respuesta.\\
+        Razone su respuesta.
 
         Para ver que no es posible, usaremos la Ley de Amdahl. Supongamos que el porcentaje de instrucciones con operaciones que no son de la ALU es $f$.
         El factor de mejora de la ALU es $p=\frac{6}{4}=1.5$. Por tanto, por la Ley de Amdahl, tenemos que:
@@ -497,60 +497,144 @@ for (i=0;i<N;i++)
 \begin{cuestion}
     Indique cuál es la diferencia fundamental entre una arquitectura CC-NUMA y una arquitectura
     SMP.
+
+    Una arquitectura cc-NUMA es un tipo concreto de NUMA, y una SMP es un tipo concreto de UMA.
+    La diferencia fundamental entre ambas arquitecturas es que en las NUMA la memoria no está unificada
+    completamente, ya que cada procesador tiene su propio módulo local de memoria.
+    Al igual que en el caso del UMA, en las NUMA se comparte el espacio de direcciones, pero hay un retardo
+    si en vez de acceder a la memoria local se accede a la memoria de otro procesador.
 \end{cuestion}
 
 \begin{cuestion}
     ¿Cuándo diría que un computador es un multiprocesador y cuándo que es un multicomputador?
+
+    La diferencia entre ambos consiste en el mapa de memoria.
+    En el caso de un multiprocesador, todos los procesadores comparten el mismo espacio de direcciones, es decir, la memoria es compartida.
+    En cambio, en el caso de un multicomputador, cada procesador tiene su propio espacio de direcciones independiente y el cual no puede ser accedido por otro procesador; es decir, la memoria no es compartida.
 \end{cuestion}
 
 \begin{cuestion}
     ¿Un CC-NUMA escala más que un SMP? ¿Por qué?
+
+    Un CC-NUMA escala mejor que un SMP, ya que añadir un procesador nuevo en un SMP implica que un nuevo procesador accederá a la memoria
+    compartida, provocando ahí más comflictos. En el caso del NUMA, como el nuevo procesador añadido tendrá su memoria local, sí es verdad que provocará conflictos
+    cuando acceda a memorias de otros procesadores, pero no tantos como en el caso de un SMP, ya que estos accesos serán minoritarios.
 \end{cuestion}
 
 \begin{cuestion}
     Indique qué niveles de paralelismo implícito en una aplicación puede aprovechar un PC con un
     procesador de 4 cores, teniendo en cuenta que cada core tiene unidades funcionales SIMD (también
-    llamadas unidades multimedia) y una microarquitectura segmentada y superscalar. Razone su respuesta.
+    llamadas unidades multimedia) y una microarquitectura segmentada y superscalar. Razone su respuesta.\\
+
+    Un PC con un procesador de 4 cores puede aprovechar los siguientes niveles de paralelismo implícito:
+    \begin{itemize}
+        \item Paralelismo de instrucción, ILP: cada core tiene una microarquitectura segmentada y superscalar, por lo que puede ejecutar varias instrucciones en paralelo.
+        \item Paralelismo de datos: cada core tiene unidades funcionales SIMD, por lo que puede ejecutar varias operaciones en paralelo, como la suma de vectores, la multiplicación de matrices, $\ldots$
+        \item Paralelismo de tareas: cada core es independiente, por lo que puede ejecutar tareas distintas en paralelo.
+    \end{itemize}
 \end{cuestion}
 
 \begin{cuestion}
     Si le dicen que un ordenador es de 20 GIPS ¿puede estar seguro que ejecutará cualquier
     programa de $20000$ instrucciones en un microsegundo?\\
 
-    No: si un programa que ejecuta 20000 instrucciones tarda 1 microsegundo, tendríamos efectivamente que el programa se ha ejecutado a una velocidad de 20 GIPS. Sin embargo, \ul{no} podemos estar seguros de que cualquier programa de 20000 instrucciones tarde en ejecutarse un microsegundo, ya que depende de las características de las instrucciones que componen al programa:
+    No. Si un programa que ejecuta 20000 instrucciones tarda 1 microsegundo,
+    tendríamos efectivamente que el programa se ha ejecutado a una velocidad de 20 GIPS.
+    Sin embargo, \ul{no} podemos estar seguros de que cualquier programa de 20000
+    instrucciones tarde en ejecutarse un microsegundo, ya que depende de las
+    características de las instrucciones que componen al programa:
     \begin{itemize}
-        \item El número de instrucciones que constituyen un programa puede ser dinstinto del número de instrucciones que finalmente ejecuta el procesador (se trata por tanto de un número dinámico de instrucciones), ya que puede haber instruccioens de salto, bucles, $\ldots$ que hacen que ciertas instrucciones del código se ejecuten más de una vez; y puede haber otras aque no se ejecuten nunca.
-        \item Por otro lado, el tipo de instruccione sque constituyen el programa y las dependencias entre ellas pueden variar los tiempos de ejecución que tardan en ejecutarse las instrucciones.
+        \item El número de instrucciones que constituyen un programa puede ser dinstinto del número de instrucciones que finalmente ejecuta el procesador (se trata por tanto de un número dinámico de instrucciones), ya que puede haber instruccioens de salto, bucles, $\ldots$ que hacen que ciertas instrucciones del código se ejecuten más de una vez; y puede haber otras que no se ejecuten nunca.
+        \item Por otro lado, el tipo de instrucciones que constituyen el programa y las dependencias entre ellas pueden variar los tiempos de ejecución que tardan en ejecutarse las instrucciones.
     \end{itemize}
 \end{cuestion}
 
 \begin{cuestion}
     ¿Aceptaría financiar/embarcarse en un proyecto en el que se plantease el diseño e implementación de un
-    computador de propósito general con arquitectura MISD? (Justifique su respuesta).
+    computador de propósito general con arquitectura MISD? (Justifique su respuesta).\\
+
+    No, por diversos motivos:
+    \begin{itemize}
+        \item En primer lugar, estas se pueden implementar mediante una arquitectura MIMD, que es más flexible, por lo que es un caso concreto de algo que ya se puede hacer.
+        \item Además, se tendría un gran cuello de botella, ya que aunque puedas ejecutar varias instrucciones en paralelo, tan solo puedes acceder a un dato a la vez por solo tener un cauce para estos,
+        algo que provocaría que las instrucciones estuviesen esperando a que se accediese a los datos, realentizando entonces el proceso.
+    \end{itemize}
 \end{cuestion}
 
 \begin{cuestion}
     Deduzca la expresión que se usa para representar la ley de Amdahl suponiendo que se mejora un
     recurso del procesador, que hay una probabilidad $f$ de no utilizar dicho recurso y que la mejora supone
-    un incremento en un factor de $p$ dela velocidad de procesamiento del recurso.
+    un incremento en un factor de $p$ de la velocidad de procesamiento del recurso.\\
+
+    Razonado en la sección \ref{sec:amdahl}.
 \end{cuestion}
 
 \begin{cuestion}
     ¿Es cierto que si se mejora una parte de un sistema (por ejemplo, un recurso de un procesador) se
     observa experimentalmente que, al aumentar el factor de mejora, llega un momento en que se satura el
-    incremento de velocidad que se consigue? (Justifique la respuesta)
+    incremento de velocidad que se consigue? (Justifique la respuesta).\\
+
+    Sí. Sea el factor de mejora $p$ y la probabilidad de no utilizar el recurso $f$. Entonces, la ley de Amdahl nos dice que:
+    \begin{equation*}
+        S \leq \frac{p}{1+f(p-1)}
+    \end{equation*}
+
+    Si $p\to\infty$, que representa que el recurso se mejora infinitamente, entonces:
+    \begin{equation*}
+        \lim_{p\to\infty} S
+        = \lim_{p\to\infty} \frac{p}{1+f(p-1)} = \frac{1}{f}
+    \end{equation*}
+
+    Esto se debe a que aunque esa parte del sistema se mejore, si no se utiliza en la ejecución del programa, no se verá reflejado en la mejora de la velocidad.
+    Por tanto, llegará un momento en el que la mejora de la velocidad se sature.
 \end{cuestion}
 
 \begin{cuestion}
     ¿Es cierto que la cota para el incremento de velocidad que establece la ley de Amdahl crece a medida
     que aumenta el valor del factor de mejora aplicado al recurso o parte del sistema que se mejora?
-    (Justifique la respuesta).
+    (Justifique la respuesta).\\
+
+    Tenemos que la cota, notada por $S_{\max}$, para la ganancia que establece la ley de Amdahl es:
+    \begin{equation*}
+        S_{\max}= \frac{p}{1+f(p-1)}
+    \end{equation*}
+
+    Para ver si crece a medida que aumenta el valor del factor de mejora ($p$ aumenta), derivamos la expresión respecto de $p$:
+    \begin{equation*}
+        S_{\max}' = \frac{1+f(p-1) -pf}{(1+f(p-1))^2}
+        = \frac{1-f}{(1+f(p-1))^2} \geq 0 \quad \forall f\in [0,1]
+    \end{equation*}
+    donde hemos afirmado que es positiva puesto que $f\in [0,1]$.
+    Por tanto, tenemos que efectivamente dicha función es creciente a medida que aumenta $p$,
+    por lo que la cota para el incremento de velocidad que establece la ley de Amdahl crece a medida
+    que aumenta el valor del factor de mejora aplicado al recurso o parte del sistema que se mejora.
 \end{cuestion}
 
 \begin{cuestion}
     ¿Qué podría ser mejor suponiendo velocidades pico, un procesador superescalar capaz de emitir
     cuatro instrucciones por ciclo, o un procesador vectorial cuyo repertorio permite codificar 8 operaciones
-    por instrucción y emite una instrucción por ciclo? (Justifique su respuesta).
+    por instrucción y emite una instrucción por ciclo? (Justifique su respuesta).\\
+
+    El tiempo que tardaría en el ordenador superescalar, fijado el número de operaciones $N$, sería:
+    \begin{equation*}
+        T_{\text{superescalar}} = \frac{N\cdot T_{\text{ciclo superescalar}}}{IPC} = \frac{N\cdot T_{\text{ciclo superescalar}}}{4}
+    \end{equation*}
+
+    En el caso de un procesador vectorial, y suponiendo que cualquier instrucción puede ser empaquetada (algo que es complicado),
+    el tiempo que tardaría en el ordenador vectorial sería:
+    \begin{equation*}
+        T_{\text{vectorial}} = \frac{N\cdot T_{\text{ciclo vectorial}}}{IPC} = \frac{N\cdot T_{\text{ciclo vectorial}}}{8}
+    \end{equation*}
+
+    Por tanto, tenemos que:
+    \begin{equation*}
+        \frac{T_{\text{superescalar}}}{T_{\text{vectorial}}} = \frac{N\cdot T_{\text{ciclo superescalar}}}{4} \cdot \frac{8}{N\cdot T_{\text{ciclo vectorial}}} = 2\cdot \frac{T_{\text{ciclo superescalar}}}{T_{\text{ciclo vectorial}}}
+        = 2\cdot \frac{f_{\text{vectorial}}}{f_{\text{superescalar}}}
+    \end{equation*}
+
+    Por tanto, tan solo podemos establecer esta relación entre las frecuencias de reloj de ambos procesadores, ya que no se nos ha dado información sobre ellas.
+    Suponiendo que fuesen iguales (algo que no tiene por qué ser así), entonces el procesador vectorial sería mejor.
+    Para poder sacar más conclusiones, necesitaríamos más información.
 \end{cuestion}
 
 \begin{cuestion}
