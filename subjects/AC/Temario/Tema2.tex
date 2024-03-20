@@ -1,6 +1,10 @@
 \chapter{Programación Paralela}
 
+En el capítulo anterior, nos dedicamos a introducir los conceptos de paralelismo dentro de una aplicación, tanto a nivel implícito como explícito; así como formas de llevarlo a cabo y de evaluación de las mejoras relacionadas con implementar paralelismo. A continuación, nos toca conocer a un menor nivel de abstracción cómo se programan todas estas estrategias relacionadas con el paralelismo que ya hemos desarrollado y que el lector debería poseer.
+
 \section{Estructuras en programación paralela}
+En esta sección, planteamos los aspectos particulares de las herramientas de programación paralela (aquellas que nos ayudan a desarrollar código paralelo, para poder crear aplicaciones paralelas). Haremos incapié en el trabajo extra que supone hacer una aplicación paralela frente a una secuencial, así como aprender formas de comunicación (o sincronización) que se ofertan al programador.
+
 \subsection{Objetivos}
 En esta sección, tratamos de:
 \begin{itemize}
@@ -12,30 +16,159 @@ En esta sección, tratamos de:
 \end{itemize}
 
 \subsection{Problemas que plantea la programación paralela}
-% // TODO: Todo esto son apuntes, arreglar
-El código secuencial nos permite analizar la aplicación: viendo qué porcentaje (f de amdahl) de tiempo de ejecución corresponde a cada parte.
-Comentar SPMD, MPMD, para explotar MIMD.
+La programación paralela requiere de algún ente (ya sea la herramienta que usemos o el propio programador) que realice el trabajo necesario para llevar a cabo el paralelismo, a diferencia de un código secuencial. Los mayores trabajos (y los más comunes) que nos encontramos a la hora de pasar de una aplicación secuencial a una paralela los desarrollaremos a continuación.
 
+\begin{description}
+    \item [Localicación o detección de paralelismo]~\\
+        Para poder implementar paralelismo dentro de una aplicación, esto es, dividir las aplicaciones en unidades de cómputo independientes que recibirán el nombre de \emph{tareas}, es necesario primero localizar de dónde podemos extraer este paralelismo. Lo más cómodo y usual será, a partir del código secuencial que resuelve nuestra aplicación (o a partir de la definición de la aplicación), analizarlo para ver de dónde podemos extraer paralelismo (y en qué parte del código es donde debemos intentar introducir paralelismo). Los grafos pueden ser una gran herramienta en esta tarea, ya que nos permiten ver las tareas que pueden ejecutarse en paralelo (estos serán los nodos a misma altura, si la altura representa el tiempo de ejecución); así como las dependencias que hay entre ellas (los datos que una tarea requiere de otra para su ejecución). Finalmente, también nos permite ver cuál es el número máximo de tareas que se ejecutarán en paralelo. A este número máximo se le suele llamar \emph{grado de paralelismo} de una aplicación.
+    \item [Asignación de carga de trabajo]~\\
+        Tenemos que decidir qué tareas corresponderán a qué ente del sistema operativo (como procesos o threads), así como la asignación de flujos de instrucciones a los procesadores disponibles. Cabe destacar que no suele ser rentable usar más flujos de instrucciones que procesadores ni que los flujos cambien de procesador en tiempo de ejecución. Así, las asignaciones de flujos a procesadores puede hacerse estática o dinámicamente (en tiempo de ejecución); y explícita o implícita (lo hace la herramienta de forma automática). Notemos que la asignación dinámica requiere un costo extra, lo que introduce un retardo adicional. La asignación dinámica es la única posible cuando no puede conocerse el número de tareas a ejecutar. 
+    \item [Comunicación o sincronización]~\\
+        Muchas veces necesitaremos mecanismos de comunicación entre los distintos flujos de instrucciones, ya que todos estos están colaborando en la ejecución del programa (uno puede generar una variable que otro necesite). 
+\end{description}
+
+Un ejemplo de necesidad de todas estas tareas la vemos reflejada en el siguiente código:
+    \begin{minted}[xleftmargin=1cm]{c++}
+main(int argc, char** argv){
+    double ancho, sum = 0;
+    int intervalos, i;
+    
+    intervalos = atoi(argv[1]);
+    ancho = 1.0/(double) intervalos;
+
+    for(int i = 0; i < intervalos; i++){
+        x = (i+0.5) * ancho;
+        sum += 4.0/(1.0 + x * x);
+    }
+
+    sum *= ancho;
+    // ...
+}
+    \end{minted}
+Tenemos un código secuencial que se encarga de realizar una tarea determinada. Ahora, queremos hacer uso del paralelismo para disminuir el tiempo de ejecución de la tarea. Vemos cómo hacerlo en la siguiente figura, donde hemos hecho uso de la herramienta OpenMP.
+    \begin{minted}[xleftmargin=1cm]{c++}
+#include <omp.h>
+#define NUM_THREADS 4
+
+main(int argc, char** argv){
+    double ancho, sum = 0;
+    int intervalos, i;
+    
+    intervalos = atoi(argv[1]);
+    ancho = 1.0/(double) intervalos;
+    omp_set_num_threads(NUM_THREADS);
+
+    #pragma omp parallel
+    {
+        #pragma omp for reduction(+:sum) private(x)
+        for(int i = 0; i < intervalos; i++){
+            x = (i+0.5) * ancho;
+            sum += 4.0/(1.0 + x * x);
+        }
+    }
+
+    sum *= ancho;
+    // ...
+}
+    \end{minted}
+Donde primero, hemos detectado qué parte podríamos mejorar del código. En este caso, repartir las iteraciones del bucle entre distintas hebras, ya que las iteraciones no están relacionadas entre sí. A continuación, hemos decidido que vamos a usar 4 hebras, y que vamos a repartir las \verb|intervalos| iteraciones de forma equitativa entre las 4 hebras. Finalmente, comunicamos las hebras entre sí gracias a dos detalles:
+\begin{itemize}
+    \item La cláusula \verb|reduction(+:sum)| nos permite sumar en \verb|sum| los distintos valores de la variable \verb|sum| de cada hebra (cabe destacar que lo podríamos haber hecho con un proceso menos automático y más personalizado, como usando directivas \verb|critical|, aunque en este caso la mejor elección es \verb|atomic|).
+    \item La directiva \verb|for| tiene una barrera implícita al final que hace que todas las hebras se esperen entre sí (tarea de sincronización).
+\end{itemize}
+
+\subsubsection{Modos de programación}
+A la hora de programar una aplicación paralela, podemos distinguir dos modos de programación:
+\begin{description}
+    \item [SPMD (Single-Programa Multiple Data)]~\\
+        También denominado a veces paralelismo de datos, todos los códigos que se ejecutan en paralelo se obtienen compilando el mismo programa. Cada copia trabaja con un conjunto de datos distintos y se ejecuta en un procesador diferente.
+    \item [MPMD (Multiple-Program Multiple Data)]~\\
+        También llamado a veces paralelismo de tareas o funciones, los códigos que se ejecutan en paralelo se obtienen compilando programas independientes. En este caso, la aplicación a ejecutar (o el código secuencial inicial) se divide en unidades independientes. Cada unidad trabaja con un conjunto de datos distintos y se ejecutan en un procesador diferente.
+\end{description}
+
+SPMD es recomendable en sistemas masivamente paralelos. Es más fácil resolver la aplicación escribiendo un único programa. Usado en sistemas con memoria distribuida, evita la necesidad de tener que distribuir el código entre los nodos, sólo habría que distribuir datos. En la práctica, se aplica en mayor medida SPMD antes que MPMD.
+
+En los programas paralelos se pueden utilizar combinaciones de MPMD y SPMD. La programación dueño-esclavo se puede considerar una variante del modo MPMD (se verá a lo largo de esta sección). Si todos los esclavos tienen el mismo código, sería una mezcla de MPMD y SPMD. Los programas que conforman una solución dueño-esclavo con MPMD se pueden juntar en un único programa SPMD con el uso de estructuras condicionales.
 
 \subsection{Herramientas para obtener código paralelo}
-Poner lo que nos permite las herramientas de código paralelo. Lo más complicado es detectar paralelismo. OpenMP no nos ayuda en nada. Los compiladores sí.
+Las herramientas de programación paralela debería permitirnos de forma explícita o implícita:
+\begin{enumerate}
+    \item Localizar paralelismo: descomponer la aplicación en tareas independientes.
+    \item Asignar las tareas: repartir la carga de trabajo entre procesos.
+    \item Crear (enrolar) y terminar (desenrolar) procesos.
+    \item Comunicar y sincronizar procesos.
+    \item Asignar procesos a procesadores.
+\end{enumerate}
 
-Si OpenMP es el estandar industrial en programacion paralela, MPI es el estandar instrustrial para la programacion de multicomputadores. OpenMP facilita la tarea de reparto de trabajo. MPI se basa en usar funciones, API de funciones.
-CUDA: herramienta relacionada con NVIDIA.
+Donde este último es el SO o el hardware quien realiza esta tarea (usualmente).\\
 
-dynamic = repartir en tiempo de ejecución (se verá próximamente)
-Es mejor físicos a lógicos porque los lógicos compiten por recursos, como unidad de cálculo
+Cuanto mayor sea la abstracción que desarrolle la herramienta paralela, menor serán las labores que debe desarrollar el programador de aplicaciones paralelas. La labor más difícil para la herramienta es la primera, la detección del paralelismo. Podemos realizar una clasificación de las herramientas de programación paralela en función de la abstracción en la que sitúan al programador. Las enumeramos desde el mayor al menor nivel de abstracción:
+\begin{description}
+    \item [Compiladores paralelos]~\\
+        Un compilador paralelo pretende ser aquella automatización capaz de extraer paralelismo a nivel de bucle (paralelismo de datos) y de función (paralelismo de tareas) a partir de un código secuencial. Para ello, realizan análisis de dependencias entre bloques de código. No generan código eficiente para cualquier programa y todavía se investiga en este campo.
+    \item [Lenguajes paralelos y APIs de funciones y directivas]~\\
+        Generalmente, los lengaujes paralelos y directivas sitúan al programador en un nivel de abstracción superior a sólo bibliotecas de funciones. Encontramos lenguajes como Occam, Ada o Java, los cuales tienen construcciones particulares y bibliotecas de funciones que requieren un compilador exclusivo. Por otra parte, las APIs mencionadas (formadas tanto por directivas para el lenguaje como por bibliotecas de funciones) nos permiten trabajar en cualquier lenguaje para el que fueron diseñadas, como \verb|C++| o \verb|Fortran|, en el caso de OpenMP. En este nivel, el programador es el encargado de detectar el paralelísmo implícito en la aplicación. Sin embargo, el programador no hace el reparto (la asignación directa) de este paralelismo, así de eximir al programador las tareas de creación y terminación de flujos o de detalles para comunicación. Como ventaja, es más sencillo desarrollar aplicaciones paralelas, obteniendo códigos más cortos.
+    \item [APIs de funciones]~\\
+        Como por ejemplo Pthreads o MPI, las cuales sólo consisten en una biblioteca de funciones que se añaden a un compilador de un lenguaje sencuencial. El cuerpo de procesos y hebras es escrito en lenguaje secuencial y es el programador quien se encarga de distribuir las tareas entre los procesos, crear o gestionar procesos, e impmlementar la comunicación y sincronización usando funciones de la biblioteca. Como ventajas a destacar:
+        \begin{itemize}
+            \item Los programadores están familiarizados con los lenguajes secuenciales.
+            \item Las bibliotecas están disponibles para todos los sistemas paralelos.
+            \item Las bibliotecas están más cercanas al hardware y permiten dar al programador un control a más bajo nivel.
+            \item Se pueden utilizar a la vez bibliotecas para programar con hebras y con procesos.
+        \end{itemize}
+    \item [Lenguajes paralelos para arquitecturas de propósito específico]~\\
+        Como por ejemplo CUDA (de NVIDIA). Consisten en construcciones del lenguaje y bibliotecas de funciones que requieren un compilador exclusivo. El programador debe participar en todas las labores salvo quizás en la asignación de instrucciones a unidades de procesamiento. Debe tener un gran conocimiento de las arquitecturas para poder escribr el código paralelo.
+\end{description}
 
-En la página 13 tenemos una condición de carrera en sum: tenemos que hacerla privada
-Además, tenemos que sumar todas las sum privadas de todos los hilos (esto se haría mediante un critical, aunque es mejor atomic).
-Esto podemos hacerlo automáticamente con reduction(+:sum)
+Comentamos ahora que, mientras OpenMP es el estándar industrial en programación paralela (gracias al alto nivel de abstracción que provee al programador), MPI es el estándar industrial para la programación de multicomputadores. OpenMP realiza de forma automática el reparto de trabajo, mientras que en MPI es el programador quien debe llevarlo a cabo (esto es lógico, debido al estar orientado a multicomputadores, donde el reparto de la carga de trabajo es más difícil de realizar, como ya vimos en el capítulo anterior).
 
-Comunicaciones colectivas
-dispersión y todos dispersan usado para reparto
-Acumulación usada para fusionar datos intermedios
-Desplazamientos: tramos intermedios para nuevos repartos de datos, para seguir procesando en paralelo.
-Compuestos son compmosiciones de las anteriores.
+\subsection{Comunicaciones y sincronizaciones}
+Las herramientas para la programación paralela también pueden ofrecer al programador, además de la comunicación entre dos procesos, comunicaciones en las que intervienen múltiples procesos. Estas comunicaciones se implementan para comunicar a todos los procesos que forman parte del grupo que colabora en la ejecución de un código. En muchos casos estas comunicaciones no tienen la finalidad de transmitir datos, sino de comunicar procesos. Es común ver en varias aplicaciones las funcionalidades de:
+\begin{itemize}
+    \item Reordenar datos entre procesos.
+    \item Difusión de datos.
+    \item Reducir un conjunto de datos a uno solo.
+    \item Múltiples reducciones en paralelo con el mismo conjunto de datos.
+    \item Sincronizar múltiples procesos en un punto.
+\end{itemize}
 
+Por tanto, se intenta que las herramientas de programación paralela nos permitan implementar dichas funcionalidades mediante comunicaciones entre procesos (flujos de instrucciones). A lo largo de esta sección, cada vez que aparezca ``mensaje'', estaremos haciendo referencia a un dato o estructura de datos. A continuación, enumeramos los distintos tipos de comunicaciones entre procesos que podemos encontrarnos:
+\begin{description} % // TODO: terminar de comentar bien
+    \item [Comunicación múltiple uno-a-uno.] Hay componentes del grupo que envían un único mensaje y componentes que reciben un único mensaje. Si todos los componentes del grupo envían y reciben, diremos que se trata de una permutación. Nos podemos encontrar rotaciones, intercambios, barajes, \ldots 
+        % // TODO: foto
+
+    \item [Comunicación uno-a-todos.] Un proceso envía y todos los procesos del grupo reciben el mensaje.Destacamos aquí:
+        \begin{description}
+            \item [Difusión (broadcast).] Todos los procesos reciben el mismo mensaje.
+            \item [Dispersión (scatter).] Cada proceso recibe un mensaje diferente.
+        \end{description}
+        % // TODO: foto
+
+    \item [Comunicación todos-a-uno.] Todos los procesos en el grupo envían un mensaje a un único proceso. Destacmos:
+        \begin{description}
+            \item [Reducción.] Los mensajes enviados por los procesos se combinan en un sólo mensaje mediante algún operador (como por ejemplo, el proceso recibe una suma de distintas variables de cada proceso).
+            \item [Acumulación (gather).] Los mensajes se reciben de forma concatenada en el receptor.
+        \end{description}
+        % // TODO: foto
+
+    \item [Comunicación todos-a-todos.] Todos los procesos del grupo ejecutan una comunicación uno-a-todos. Puede ser:
+        \begin{description}
+            \item [Todos difunden (all-broadcast).] Todos los procesos realizan una difusión.
+            \item [Todos dispersan (all-scatter).] Todos los procesos realizan una dispersión.
+        \end{description}
+        % // TODO: foto
+
+    \item [Comunicaciones colectivas compuestas.] Hay serviciones que resultan de la combinación de algunos anteriores, como:
+        \begin{description}
+            \item [Todos combinan, o reducción y extensión.] El resultado de aplicar una reducción se obtiene en todos los procesos.
+            \item [Barrera.] Es un punto de sincronización que todos los procesos de un grupo deben alcanzar para que cualquier proceso del grupo pueda continuar con su ejecución.
+            \item [Recorrido (scan).] Todos los procesos envían un mensaje, recibiendo cada uno de ellos el resultado de reducir un conjjunto de estos mensajes.
+        \end{description}
+\end{description}
+
+Comunicaciones como ``dispersión'' o ``todos dispersan'' son usadas para reparto de datos. ``Acumulación'' es usada para fusionar datos intermedios. Los ``desplazamientos'' son tramos intermedios para realizar nuevos repartos de datos. 
+
+% // TODO: Todo esto son apuntes, arreglar
 \subsection{Paradigmas de programación paralela}
 Se pueden agrupar en:
 - paso de mensajes
@@ -44,7 +177,12 @@ Se pueden agrupar en:
 
 de forma que cada uno es una abstracción software de una arquitectura paralela.
 
+
+
+% // TODO: seguir por aquí
+
 \subsection{Estructuras típicas de códigos paralelos}
+
 \section{Proceso de paralelización}
 \subsection{Objetivos}
 Esta sección está dedicada a:
