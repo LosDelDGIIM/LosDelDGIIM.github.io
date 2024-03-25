@@ -248,17 +248,87 @@ También llamado \emph{client-server}, se trata de una estructura similar a due�
 Notemos que el servidor puede estar formado a su vez de otras estructuras, como de un sistema dueño-esclavo. Por tanto, podemos tener por un lado a los clientes, que necesitan del servidor información. Este es el encargado de gestionar los mensajes y de repartir las tareas entre sus esclavos, quien realizan el cómputo, devolviendo el trabajo al maestro y este a los clientes. 
 
 \subsubsection{Descomposición de datos} 
+Alternativa muy utilizada para obtener tareas paralelas en programas con grandes estructuras de datos. La estructura de datos de entrada (o la de salida, o ambas) es dividida en varias partes. A partir de esta división se derivan las tareas paralelas. Estas generalmente realizan operaciones similares. Los algoritmos con imágenes, por ejemplo, admiten una descomposición de datos.
+En este esquema, cada proceso puede englobar una o varias tareas. Los diferentes procesos ejecutan normalmente el mismo código (SPMD), que se ejecuta sobre distintos conjuntos de datos. Puede haber comunicaciones entre los distintos procesos.
+Un ejemplo de descomposición de datos es el siguiente código, donde se invierten los colores de una imagen de tamaño $N\times N$:
+    \begin{minted}[xleftmargin=1cm]{c++}
+for(int i = 0; i < N; i++)
+    #pragma omp parallel for private(i)
+    for(int j = 0; j < N; j++){
+        imagen[i][j] = 255 - imagen[i][j];
+    }
+    \end{minted}
 
+\subsubsection{Estructura segmentada o flujo de datos} 
+Esta estructura aparece en problemas en los que se aplica a un flujo de datos en secuencia distintas funciones (paralelismo de tareas). La estructura de los procesos y de las tareas es la de un cauce segmentado: cada proceso ejecuta por tanto distinto código. Es un caso típico de un programa MPMD puro. Para que resulte apropiada la estructura segmentada, se ebe aplicar el proceso a una secuencia de datos de entrada.
+Por ejemplo, podemos tener un decodificador de imágenes JPEG, que aplica a una secuencia de $N\times N$ píxeles (la imagen de entrada) las siguientes funciones: decodificación de entropía, cuantificación inversa, transformada del coseno inversa y conversión RGB. Este programa podría implementarse con cuatro procesos en una estructura segmentada.
+En este tipo de estructura, la comunicación entre procesos es necesaria, y suele ser unidireccional.
 
+\subsubsection{Divide y vencerás} 
+Se utiliza cuando un problema puede dividirse en dos o más subproblemas de menor tamaño de forma que cada uno pueda resolverse independiéntemente y combinar al final las distintas soluciones. Si los subproblemas son a su vez instancias más pequeñas del problema original, entonces se podrán volver a subdividir de forma recursiva. Las tareas presentan, por tanto, una estructura de árbol, de forma que no habrá interacciones (comunicaciones o sincronizaciones) entre las tareas que cuelgan del mismo padre.
+Un ejemplo de uso de esta estructura podemos verlo cuando nos disponemos a sumar todas las componentes de un vector: podemos dividir el vector en 2, obteniendo dos subproblemas de tamaño $ \nicefrac{n}{2} $, siendo $n$ el número de componentes del vector. Podemos seguir recursivamente dividiendo el vector hasta obtener vectores de tamaño relativamente pequeños, donde haríamos su suma iterativamente. Obtenemos así al final la suma de todas las componentes del vector.
 
 \newpage
 \section{Proceso de paralelización}
+Cuando queremos obtener una versión paralela de una aplicación con una biblioteca de funciones con directivas o con un lenguaje de programación, pueden seguirse los siguientes pasos:
+\begin{itemize}
+    \item Descomposición de la aplicación en tareas independientes.
+    \item Asignación de las tareas a procesos o hebras. 
+    \item Redactar el código paralelo. 
+    \item Evaluación de los tres pasos anteriores.
+\end{itemize}
+Estudiaremos a lo largo de esta sección todos estos pasos a fondo, junto con un ejemplo práctico.
+
 \subsection{Objetivos}
 Esta sección está dedicada a:
 \begin{itemize}
     \item Programar en paralelo una aplicación sencilla.
     \item Distinguir entre asignación estática y dinámica, destacando sus ventajas e inconvenientes.
 \end{itemize}
+
+\subsection{Descomposición en tareas} 
+En esta etapa, tenemos que buscar unidades de trabajo en la aplicación que puedan ejecutarse en paralelo (es decir, que sean independientes). Estas unidades, junto con los datos que usan, forman las \emph{tareas}. Es conveniente en este paso representar las tareas y las relaciones entre ellas mediante un grafo, para observar las dependencias entre estas y el nivel de paralelización de la aplicación. Podemos situarnos en dos niveles de abstracción:
+\begin{description}
+    \item [Nivel de función.] Analizando las dependencias entre las funciones del código podemos encontrar aquellas que son independientes (o aquellas que pueden hacerse independientes), que serán las que se ejecutarán en paralelo. Estamos extrayendo paralelismo de tareas en nuestra aplicación.
+    \item [Nivel de bucle.] Analizando las iteraciones de los bucles dentro de una función, podemos encontrar si son (o se pueden hacer) independientes. Podemos así detectar paralelismo de datos. Además, si una función consta de varios bucles, puede verse la relación entre estos, para así ver si pueden ejecutarse en paralelo.
+\end{description}
+
+\subsubsection{Ejemplo} 
+Para paralelizar el cálculo de $\pi$, puede partirse de una versión secuencial disponible o de un planteamiento para el problema que se preste a paralelización. Procedemos pues a realizar este según el segundo método:
+
+Podemos definir el cálculo de $\pi$ como un problema de integración, susceptible de ser paralelizado. Podemos calcular la integral definida en el intervalo $[0,1]$ de la derivada de la arcotangente de $x$:
+\begin{equation*}
+    \left.\begin{array}{rcl}
+        \text{arctg}'(x) & = & \dfrac{1}{1+x^2} \\
+                  & & \\
+        \text{arctg}(1) & = & \nicefrac{\pi}{4} \\
+        \text{arctg}(0) & = & 0 
+    \end{array}\right\} \Longrightarrow \int_{0}^{1} \dfrac{dx}{1+x^2} = [\text{arctg}(x)]_0^1 = \dfrac{\pi}{4} - 0
+\end{equation*}
+Y así multiplicar por 4 para obtener $\pi$.
+
+Esta integral puede obtenerse mediante métodos de integración numérica (rectángulo izquierdo, rectángulo derecho, punto medio, trapcio, fórmula de Simpson, \ldots). El área de la derivada del arcotangente en $[0,1]$ en subintervalos, calculando el área de la función en cada subintervalo y sumando. Cuantos más subintervalos tengamos, más exacta será la aproximción.
+Notemos que el cálculo del área de los diferentes intervalos es independientes, por lo que podemos repartir estos cálculos en un conjunto de procesadores. Si se divide el intervalo en 100 subintervalos y tenemos 10 procesadores, podemos asignar a cada procesador el cálculo de 10 subintervalos. Sobre código, tenemos lo siguiente:
+    \begin{minted}[xleftmargin=1cm]{c++}
+main(int argc, char** argv){
+    double ancho, sum = 0;
+    int intervalos, i;
+
+    intervalos = atoi(argv[1]);
+    ancho = 1.0 / (double) intervalos;
+
+    for(int i = 0; i < intervalos; i++){
+        x = (i + 0.5) * ancho;
+        sum += 4.0 / (1.0 + x*x);
+    }
+
+    sum *= ancho;
+}
+    \end{minted}
+Para su paralelización, tratamos de determinar si las iteraciones del bucle son independientes. Como podemos ver, entre las iteraciones existe dependencias, ya que se escribe y se lee en la misma variable \verb|sum|. Sin embargo, estas dependencias pueden eliminarse fácilmente: basta suponer que cada iteración distinta escribe en una variable que depende de \verb|i|. La suma de todas estas variables daría la aproximación de $\pi$. 
+
+% \subsection{Asignación de tareas} 
+Nota: Estos apuntes no están terminados.
 
 \newpage
 \section{Evaluación de prestaciones}
