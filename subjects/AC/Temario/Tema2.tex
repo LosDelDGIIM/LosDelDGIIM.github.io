@@ -11,7 +11,7 @@ En esta sección, tratamos de:
     \item Distinguir entre los diferentes tipos de herramientas de programación paralela, como compiladores paralelos, lenguajes paralelos, APIs de directivas y APIs de funciones.
     \item Distinguir entre los diferenties tipos de comunicaciones colectivas.
     \item Diferenciar el paradigma de programación de paso de mensajes con respecto al paradigma de variables compartidas.
-    \item Diferenciar entre OpenMP y MPI, en cuanto a su estilo de programación y tipo de herramiento.
+    \item Diferenciar entre OpenMP y MPI, en cuanto a su estilo de programación y tipo de herramienta.
     \item Distinguir entre las esctructuras de tareas junto a procesos y hebras, master-slave, cliente-servidor, descomposición de dominio, flujo de datos (o segmentación) y divide y vencerás.
 \end{itemize}
 
@@ -58,13 +58,10 @@ main(int argc, char** argv){
     ancho = 1.0/(double) intervalos;
     omp_set_num_threads(NUM_THREADS);
 
-    #pragma omp parallel
-    {
-        #pragma omp for reduction(+:sum) private(x)
-        for(int i = 0; i < intervalos; i++){
-            x = (i+0.5) * ancho;
-            sum += 4.0/(1.0 + x * x);
-        }
+    #pragma omp parallel for reduction(+:sum) private(x)
+    for(int i = 0; i < intervalos; i++){
+        x = (i+0.5) * ancho;
+        sum += 4.0/(1.0 + x * x);
     }
 
     sum *= ancho;
@@ -123,7 +120,7 @@ Cuanto mayor sea la abstracción que desarrolle la herramienta paralela, menor s
 Comentamos ahora que, mientras OpenMP es el estándar industrial en programación paralela (gracias al alto nivel de abstracción que provee al programador), MPI es el estándar industrial para la programación de multicomputadores. OpenMP realiza de forma automática el reparto de trabajo, mientras que en MPI es el programador quien debe llevarlo a cabo (esto es lógico, debido al estar orientado a multicomputadores, donde el reparto de la carga de trabajo es más difícil de realizar, como ya vimos en el capítulo anterior).
 
 \subsection{Comunicaciones y sincronizaciones}
-Las herramientas para la programación paralela también pueden ofrecer al programador, además de la comunicación entre dos procesos, comunicaciones en las que intervienen múltiples procesos. Estas comunicaciones se implementan para comunicar a todos los procesos que forman parte del grupo que colabora en la ejecución de un código. En muchos casos estas comunicaciones no tienen la finalidad de transmitir datos, sino de comunicar procesos. Es común ver en varias aplicaciones las funcionalidades de:
+Las herramientas para la programación paralela también pueden ofrecer al programador, además de la comunicación entre dos procesos, comunicaciones en las que intervienen múltiples procesos. Estas comunicaciones se implementan para comunicar a todos los procesos que forman parte del grupo que colabora en la ejecución de un código. En muchos casos estas comunicaciones no tienen la finalidad de transmitir datos, sino de sincronizar procesos. Es común ver en varias aplicaciones las funcionalidades de:
 \begin{itemize}
     \item Reordenar datos entre procesos.
     \item Difusión de datos.
@@ -134,17 +131,17 @@ Las herramientas para la programación paralela también pueden ofrecer al progr
 
 Por tanto, se intenta que las herramientas de programación paralela nos permitan implementar dichas funcionalidades mediante comunicaciones entre procesos (flujos de instrucciones). A lo largo de esta sección, cada vez que aparezca ``mensaje'', estaremos haciendo referencia a un dato o estructura de datos. A continuación, enumeramos los distintos tipos de comunicaciones entre procesos que podemos encontrarnos:
 \begin{description} % // TODO: terminar de comentar bien
-    \item [Comunicación múltiple uno-a-uno.] Hay componentes del grupo que envían un único mensaje y componentes que reciben un único mensaje. Si todos los componentes del grupo envían y reciben, diremos que se trata de una permutación. Nos podemos encontrar rotaciones, intercambios, barajes, \ldots 
+    \item [Comunicación múltiple uno-a-uno.] Hay componentes del grupo que envían un único mensaje y componentes que reciben un único mensaje. Si todos los componentes del grupo envían y reciben, diremos que se trata de una \emph{permutación}. Nos podemos encontrar \emph{rotaciones} (el proceso $P_i$ envía al proceso $P_{i+1}$ y el $P_n$ al $P_0$), \emph{intercambios}, \emph{barajes}, \emph{desplazamientos}, \ldots 
         % // TODO: foto
 
-    \item [Comunicación uno-a-todos.] Un proceso envía y todos los procesos del grupo reciben el mensaje.Destacamos aquí:
+    \item [Comunicación uno-a-todos.] Un proceso envía y todos los procesos del grupo reciben el mensaje. Destacamos aquí:
         \begin{description}
             \item [Difusión (broadcast).] Todos los procesos reciben el mismo mensaje.
             \item [Dispersión (scatter).] Cada proceso recibe un mensaje diferente.
         \end{description}
         % // TODO: foto
 
-    \item [Comunicación todos-a-uno.] Todos los procesos en el grupo envían un mensaje a un único proceso. Destacmos:
+    \item [Comunicación todos-a-uno.] Todos los procesos en el grupo envían un mensaje a un único proceso. Destacamos:
         \begin{description}
             \item [Reducción.] Los mensajes enviados por los procesos se combinan en un sólo mensaje mediante algún operador (como por ejemplo, el proceso recibe una suma de distintas variables de cada proceso).
             \item [Acumulación (gather).] Los mensajes se reciben de forma concatenada en el receptor.
@@ -158,31 +155,103 @@ Por tanto, se intenta que las herramientas de programación paralela nos permita
         \end{description}
         % // TODO: foto
 
-    \item [Comunicaciones colectivas compuestas.] Hay serviciones que resultan de la combinación de algunos anteriores, como:
+    \item [Comunicaciones colectivas compuestas.] Hay servicios que resultan de la combinación de algunos anteriores, como:
         \begin{description}
             \item [Todos combinan, o reducción y extensión.] El resultado de aplicar una reducción se obtiene en todos los procesos.
             \item [Barrera.] Es un punto de sincronización que todos los procesos de un grupo deben alcanzar para que cualquier proceso del grupo pueda continuar con su ejecución.
-            \item [Recorrido (scan).] Todos los procesos envían un mensaje, recibiendo cada uno de ellos el resultado de reducir un conjjunto de estos mensajes.
+            \item [Recorrido (scan).] Todos los procesos envían un mensaje, recibiendo cada uno de ellos el resultado de reducir un conjunto de estos mensajes.
+                \begin{itemize}
+                    \item Recorrido prefijo: El proceso $P_i$ recibe el resultado de reducir los mensajes de $P_0, P_1, \ldots, P_i$.
+                    \item Recorrido sufijo: El proceso $P_i$ recibe el resultado de reducir los mensajes de $P_i, P_{i+1}, \ldots, P_n$.
+                \end{itemize}
         \end{description}
 \end{description}
 
 Comunicaciones como ``dispersión'' o ``todos dispersan'' son usadas para reparto de datos. ``Acumulación'' es usada para fusionar datos intermedios. Los ``desplazamientos'' son tramos intermedios para realizar nuevos repartos de datos. 
 
-% // TODO: Todo esto son apuntes, arreglar
+\subsubsection{Implementación en OpenMP} 
+Varias comunicaciones de las anteriormente descritas podemos llevarlas a cabo usando la herramienta OpenMP:
+\begin{description}
+    \item [Uno-a-todos] Podemos llevar a cabo la difusión (lo haremos en la Sesión II de prácticas) con:
+        \begin{itemize}
+            \item La cláusula \verb|firstprivate| desde el thread 0.
+            \item La directiva \verb|single| con la cláusula \verb|copyprivate|. 
+            \item La directiva \verb|threadprivate| y uso de la cláusula \verb|copyin| en directiva \verb|parallel| desde thread 0.
+        \end{itemize}
+    \item [Todos-a-uno] Podemos implementar reducción (lo haremos en la Sesión II de prácticas) con la cláusula \verb|reduction|. 
+    \item [Servicios compuestos] En la Sesión I de prácticas hemos usado la directiva \verb|barrier|, que implementa una barrera.
+\end{description}
+Observemos el trabajo a alto nivel que nos facilitan las diversas directivas propias de una API de directivas y funciones.
+
+\subsubsection{Implementación en MPI} 
+Por otra parte, podemos implementar las comunicaciones de una forma más cercana al hardware (a más bajo nivel) con una API de funciones tal y como lo es MPI:
+\begin{description}
+    \item [Uno-a-uno] De forma asíncrona, con las funciones \verb|MPI_Send()| y \verb|MPI_Receive()|.
+    \item [Uno-a-todos] Podemos implementar:
+        \begin{itemize}
+            \item Difusión, con la función \verb|MPI_Bcast()|.
+            \item Dispersión, con la función \verb|MPI_Scatter()|.
+        \end{itemize} 
+    \item [Todos-a-uno] Como:
+        \begin{itemize}
+            \item Reducción, con la función \verb|MPI_Reduce()|.
+            \item Acumulación, con la función \verb|MPI_Gather()|.
+        \end{itemize}
+    \item [Todos-a-todos] Podemos implementar ``todos acumulan'' con la función \verb|MPI_Allgather()|.
+    \item [Servicios compuestos] Como:
+        \begin{itemize}
+            \item Todos combinan, con la función \verb|MPI_Allreduce()|.
+            \item Barreras, con la función \verb|MPI_Barrier()|.
+            \item Scan, con la función \verb|MPI_Scan()|.
+        \end{itemize}
+\end{description}
+
 \subsection{Paradigmas de programación paralela}
-Se pueden agrupar en:
-- paso de mensajes
-- Variables compartidas
-- Paralelismo de datos
+Cada tipo de arquitectura paralela (según la taxonomía de Flynn anteriormente estudiada) presenta distintas implementaciones en cuanto a su diseño se refiere. Es por esto que para cada tipo de arquitectura buscaremos un tipo de código que mejor se adapte a su diseño. Destacamos tres principales paradigmas en cuanto a programación paralela, cada uno asociado a un tipo de arquitectura:
+\begin{itemize}
+    \item Paso de mensajes (para multicomputadores).
+    \item Variables compartidas (para multiprocesadores). 
+    \item Paralelismo de datos (para computadores SIMD).
+\end{itemize}
+Con \emph{paso de mensajes} se supone que cada procesador del sistema tiene su propio espacio de direcciones. Los mensajes llevan datos de un espacio de direcciones a otro y pueden aprovecharse para sincronizar procesos. Los datos transferidos estarán duplicados en el sistema de memoria. Con \emph{variables compartidas}, se supone que los procesasdores comparten espacio de direcciones. Se realiza la transferencia de forma implícita usando instrucciones de lectura y escritura en memoria. Con \emph{paralelismo de datos} la misma instrucción se ejecuta en paralelo en múltiples cores de forma que cada uno actúa sobre un conjunto de datos distinto. Este paradigma es apropiado para aquellas arquitecturas que sólo soportan paralelismo a nivel de bucle. La sincronización se encuentra implícita. 
 
-de forma que cada uno es una abstracción software de una arquitectura paralela.
+Asimismo, también podemos encontrar herramientas que permiten programar multiprocesadores mediante paso de mensajes, un software que se apoya en el hardware para variables compartidas. De igual forma, hay herramientas que permiten variables compartidas en multicomputadores. Hay lenguajes que soportan paralelismo de datos, tanto en multiprocesadores como en multicomputadores.
 
-
-
-% // TODO: seguir por aquí
+\begin{description}
+    \item [Paso de mensajes.]~\\
+        Se dispone de diversas herramientas software, como lenguajes de programación (Ada, Occam, \ldots) o bibliotecas de funciones (como MPI). Los fabricantes de supercomputadores suelen proporcionar este tipo de software, capaz de extraer un gran rendimiento de sus máquinas. Las funciones básicas de comunicación suelen ser \verb|send()| y \verb|receive()|. Generalmente, en la función \verb|send| se especifica el proceso destino y el mensaje a enviar, mientras que en \verb|receive| se especifica la fuente y la estructura de datos en la que se almacenará el mensaje. Podemos encontrar implementaciones \emph{síncronas} (el proceso que ejecuta un \verb|send| se bloquea hasta que el destinatario hace uso de \verb|receive| y viceversa) o \emph{asíncronas} (\verb|send| no tiene por qué bloquear el proceso). Para esta última, es necesario usar un buffer en su implementación. 
+    \item [Variables compartidas.]~\\
+        Encontramos software como lenguajes de programación (Ada 95 o Java), bibliotecas de funciones y APIs de directivas y funciones (como OpenMP). Los propios fabricantes ofrecen compiladores secuenciales con estas extensiones para programar sus máquinas. Para la comunicación se suelen desarrollar instrucciones de \emph{lectura} y \emph{escritura} en memoria, las cuales serán usadas por distintos procesos (en el SO, las hebras comparten memoria entre sí, por lo que no es necesario que usen estas instrucciones). El software ofrece mecanismos para implementar sincronización (para que un proceso no lea antes de que el otro escriba), como cerrojos, semáforos, variables condicionales, \ldots 
+        OpenMP dispone además de directivas para llevar a cabo paralelismo de datos (directiva \verb|for|), de tareas (directiva \verb|sections|), y muchas más funcionalidades. 
+    \item [Paralelismo de datos.]~\\
+        En este paradigma se aprovecha el paralelismo de datos inherente a aplicaciones en la que los datos se organizan en estructuras como vectores o matrices. El programador escribe un programa con construcciones que permiten aprovechar paralelismo de datos (como paralelización de bucles, instrucciones vectoriales, \ldots), así como construcciones para distribuir los datos (la carga de trabajo) entre los núcleos de procesamiento. El programador no lleva a cabo las sincronizaciones (se encuentran implícitas). Ejemplos software son Fortran 95, HPF (High Performance Fortran), NVIDIA CUDA, \ldots
+\end{description}
 
 \subsection{Estructuras típicas de códigos paralelos}
+Analizando las estructuras (los grafos) de las tareas y de los procesos (junto con las conmunicaciones y sincronizaciones entre estos) que componen distintos programas paralelos, se puede encontrar que hay ciertos patrones que se repiten en distintos programas y dentro de un programa. Entre estras estructuras encontramos:
+\begin{itemize}
+    \item Dueño-esclavo (\emph{master-slave}), o ``granja de tareas'' (\emph{task-farming}).
+    \item Paralelismo de datos, descomposición de datos, o descomposición de dominio. 
+    \item Divide y vencerás (\emph{divide and conquer}), o descomposición recursiva. 
+    \item Estructura segmentada (\emph{pipeline}), o flujo de datos.
+\end{itemize}
+Hay estructuras que quizás no se puedan clasificar en un sólo tipo de los anteriores. Por otra parte, nos podemos encontrar dentro de un mismo programa paralelo varias de estas estructuras, en distintos niveles.
 
+\subsubsection{Dueño-esclavo} 
+En este caso, contamos con un proceso denominado dueño (o master) y con varios procesos denominados esclavos (o slaves). El dueño se encarga de distribuir las tareas de un conjunto entre el grupo de esclavos, y de ir recolectando los resultados parciales que van calculando los esvlavos, con los que el dueño obtiene el resultado final. Usualmente, no hay comunicación entre los esclavos.
+Puede implementarse con un único programa si el código de los esclavos no es muy complicado (SPMD), con dos programas, si el código de los esclavos es igual (modo mixto MPMD-SPMD), o con múltiples programas (MPMD).
+La repartición de carga puede hacerse de forma estática o dinámica.
+Un ejemplo de esto es un programa que tiene que calcular los primos hasta un número $n$, y que hace uso de $r$ esclavos para que cada uno calcule los primos que se encuentran en un vector de tamaño $ \nicefrac{n}{r} $. Combinando el resultado de cada esclavo, obtendremos todos los primos.
+
+\subsubsection{Cliente-Servidor} 
+También llamado \emph{client-server}, se trata de una estructura similar a dueño-esclavo, pero con los roles invertidos: contamos con múltiples procesos denominados clientes y con un ente (puede ser un proceso, o tener a su vez una estructura paralela distinta en su interior) denominado servidor. En esta caso, los clientes son procesos que en un momento determinado solicitan cierta información al servidor. Este, se encarga de procesar la petición y de dar al cliente correspondiente la respuesta esperada. 
+Notemos que el servidor puede estar formado a su vez de otras estructuras, como de un sistema dueño-esclavo. Por tanto, podemos tener por un lado a los clientes, que necesitan del servidor información. Este es el encargado de gestionar los mensajes y de repartir las tareas entre sus esclavos, quien realizan el cómputo, devolviendo el trabajo al maestro y este a los clientes. 
+
+\subsubsection{Descomposición de datos} 
+
+
+
+\newpage
 \section{Proceso de paralelización}
 \subsection{Objetivos}
 Esta sección está dedicada a:
@@ -191,6 +260,7 @@ Esta sección está dedicada a:
     \item Distinguir entre asignación estática y dinámica, destacando sus ventajas e inconvenientes.
 \end{itemize}
 
+\newpage
 \section{Evaluación de prestaciones}
 \subsection{Objetivos}
 Siguiendo con la evaluación en prestaciones de los computadores con aplicaciones paralelas, en esta sección aprenderemos a:
