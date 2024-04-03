@@ -103,7 +103,8 @@ Por defecto, la opción anterior (`-c`) selecciona el número de cores *lógicos
 srun -pac -c4 --hint=nomultithread [comando]
 ```
 *Nota:* Volvemos a tener ahora la misma restricción. En el suspuesto computador enunciado anteriormente, el mayor número que podrá acompañar a la opción `-c` será 6.  
-Para que con `sbatch` se tenga en cuenta, se debe usar `srun` dentro del script delante del ejecutable a ejecutar.
+Para que con `sbatch` se tenga en cuenta, se debe usar `srun` dentro del script delante del ejecutable a ejecutar.  
+*Nota:* No especificar `--hint=nomultithread` no es equivalente a usar `--hint=multithread`. Además, se recomienda usar `--hint=nomultithread` para que cores lógicos no compitan por recursos compartidos del core, recomendamos usar cores físicos.
 
 ##### Uso de nodo de forma exclusiva
 Recordamos que el sistema es usado por varios usuarios al mismo tiempo y `slurm` es el encargado de asignar a cada usuario ciertos núcleos de cada nodo cuando el usuario realiza la petición de un trabajo. Si por ejemplo, queremos ejecutar un programa que mida el rendiminto del nodo, no queremos que otros usuarios lo usen al mismo tiempo que nosotros. Por tanto, podemos ejecutar la opción `--exclusive`. Por ejemplo:
