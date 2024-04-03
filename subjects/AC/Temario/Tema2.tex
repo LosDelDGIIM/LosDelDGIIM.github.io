@@ -45,6 +45,7 @@ main(int argc, char** argv){
     // ...
 }
     \end{minted}
+\label{codigo_pi}
 Tenemos un código secuencial que se encarga de realizar una tarea determinada. Ahora, queremos hacer uso del paralelismo para disminuir el tiempo de ejecución de la tarea. Vemos cómo hacerlo en la siguiente figura, donde hemos hecho uso de la herramienta OpenMP.
     \begin{minted}[xleftmargin=1cm]{c++}
 #include <omp.h>
@@ -308,10 +309,11 @@ Podemos definir el cálculo de $\pi$ como un problema de integración, susceptib
 Y así multiplicar por 4 para obtener $\pi$.
 
 Esta integral puede obtenerse mediante métodos de integración numérica (rectángulo izquierdo, rectángulo derecho, punto medio, trapcio, fórmula de Simpson, \ldots). El área de la derivada del arcotangente en $[0,1]$ en subintervalos, calculando el área de la función en cada subintervalo y sumando. Cuantos más subintervalos tengamos, más exacta será la aproximción.
-Notemos que el cálculo del área de los diferentes intervalos es independientes, por lo que podemos repartir estos cálculos en un conjunto de procesadores. Si se divide el intervalo en 100 subintervalos y tenemos 10 procesadores, podemos asignar a cada procesador el cálculo de 10 subintervalos. Sobre código, tenemos lo siguiente:
+Notemos que el cálculo del área de los diferentes intervalos es independiente, por lo que podemos repartir estos cálculos en un conjunto de procesadores. Si se divide el intervalo en 100 subintervalos y tenemos 10 procesadores, podemos asignar a cada procesador el cálculo de 10 subintervalos. Sobre código, tenemos lo siguiente:
+beg
     \begin{minted}[xleftmargin=1cm]{c++}
 main(int argc, char** argv){
-    double ancho, sum = 0;
+    double ancho, x, sum = 0;
     int intervalos, i;
 
     intervalos = atoi(argv[1]);
@@ -325,13 +327,104 @@ main(int argc, char** argv){
     sum *= ancho;
 }
     \end{minted}
-Para su paralelización, tratamos de determinar si las iteraciones del bucle son independientes. Como podemos ver, entre las iteraciones existe dependencias, ya que se escribe y se lee en la misma variable \verb|sum|. Sin embargo, estas dependencias pueden eliminarse fácilmente: basta suponer que cada iteración distinta escribe en una variable que depende de \verb|i|. La suma de todas estas variables daría la aproximación de $\pi$. 
+Para su paralelización, tratamos de determinar si las iteraciones del bucle son independientes. Como podemos ver, entre las iteraciones existen dependencias, ya que se escribe y se lee en la misma variable \verb|sum|. Sin embargo, estas dependencias pueden eliminarse fácilmente: basta suponer que cada iteración distinta escribe en una variable que depende de \verb|i|. La suma de todas estas variables dará la aproximación de $\pi$. 
 
-% \subsection{Asignación de tareas} 
-Nota: Estos apuntes no están terminados.
+\subsection{Asignación de tareas} 
+En esta etapa, tratamos de realizar la asignación de las tareas del grafo de dependencias a procesos y a hebras. Por lo general, no es conveniente asignar más de un proceso o hebra por procesador dentro de una misma aplicación (para que no compitan entre ellos). Por tanto, la asignación a procesos o hebras está ligada a la asignación en procesadores. Podemos incluso realizar asignaciones de procesos a procesadores. 
+
+La granularidad de los procesos y las hebras depende del número de procesadores: cuanto mayor sea, menos tareas se asignarán a cada proceso (o hebra). Además, la granularidad depende del tiempo de comunicación y sincronización, debido a que el tiempo de ejecución en paralelo no sólo depende del código en sí mismo, sino de las comunicaciones y sincronizaciones entre procesos. Para disminuir este tiempo, pueden asignarse más tareas a un proceso (o hebra), reduciendo así el número de interacciones (comunicaciones o sincronizaciones) entre las tareas a través de la red de comunicación. 
+
+La posibilidad de usar procesos o hebras depende de varios factores:
+\begin{itemize}
+    \item La arquitectura en la que se va a ejecutar: en un SMP y en procesadores multihebra es más eficiente usar hebras\footnote{Como bien ya sabemos gracias a Sistemas Operativos.}. En arquitecturas mixtas (como cluster de SMP), sería conveniente usar tanto hebras como procesos, especialmente si el número de procesadores en un SMP es mayor que el número de nodos en un cluster.
+    \item El sistema operativo debe ser multihebra para poder utilizar hebras (a no ser que las emulemos mediante una biblioteca de hebras, lo que introduce un costo adicional).
+    \item Para usar hebras (también para procesos), las herramientas de programación que utilicemos deben permitir poder crearlas.
+\end{itemize}
+Como regla general, se tiende a asignar las iteraciones de un bucle (paralelismo de datos) a hebras y las funciones (paralelismo de tareas) a procesos.
+
+\subsubsection{Tener en cuenta la arquictura}
+La asignación debería repartir la carga de trabajo (el tiempo de cálculo), optimizando la comunicación y la sincronización entre las tareas (minimizándolas), de forma que todos los procesadores empiecen y terminen a la vez (idealmente). En el grafo de tareas previamente mencionado, veíamos tiempos de ejecución aproximados (sabiendo qué trabajo le estamos dando a qué tarea) y sincronizaciones entre estas (visualizando los arcos entre los nodos). Para realizar la asignación cumpliendo todo esto, conviene tener clara la arquitectura (prestaciones de los nodos de ejecución y de la red de comunicación).
+
+Por un lado, la arquitectura puede ser \textbf{heterogénea} u \textbf{homogénea}. Si es heterogénea, consta de componentes con diferentes prestaciones. Por tanto, una buena repartición de carga de trabajo es asignar a los nodos de cómputo más rápido las tareas más pesadas. 
+
+Una arquitectura homogénea (aquella donde los nodos de cómputo son iguales, o casi) puede ser a su vez \textbf{uniforme} o \textbf{no uniforme}:
+\begin{description}
+    \item [Uniforme] ~\\
+        Si es uniforme, la comunicación de los procesadores con memoria (y probablemente con otros componentes, como E/S) supone el mismo tiempo sean cuales sean los dos componentes que intervienen. Las arquitecturas homogéneas uniformes son en las que menos tenemos que tener en cuenta la arquitectura para la asignación de tareas. Sin embargo, hay arquitecturas homogéneas uniformes en las que una buena asignación puede disminuir el número de colisiones en el acceso a la red. 
+    \item [No uniforme] ~\\
+        Si es no uniforme, la velocidad de comunicación entre procesadores con memoria (y probablemente con otros componentes) depende del procesador que queramos que acceda a qué posición de memoria. En este tipo de arquitecturas es más difícil asignar las tareas (código y datos) de forma que se minimice el tiempo de comunicación y sincronización y, en general, el tiempo de ejecución. Pueden eliminarse comunicaciones asignando varias tareas al mismo procesador. 
+\end{description}
+
+\subsubsection{Asignar tareas a procesadores}
+La asignación de tareas (procesos o hebras) a procesadores puede realizarse de forma \textbf{estática} (en tiempo de compilación o al escribir el programa) o \textbf{dinámica} (en tiempo de ejecución). La asignación dinámica es últi para evitar repartos complejos de tareas en sistemas heterogéneos, especialmente cuando no se conoce el número total de tareas que se van a ejecutar antes de la ejecución. Además, permite que la aplicación se ejecute exitosamente si algún procesador falla. Sin embargo, esta asignación consume un tiempo adicional de sincronización y comunicación.
+
+Un ejemplo de asignación estática es asignar iteraciones consecutivas de un mismo bucle a procesos consecutivos (round-robin), mientras que también podemos asignar iteraciones consecutivas a un mismo proceso (continua). Un ejemplo de asignación dinámica es almacenar en una variable el índice de la siguiente iteración a ejecutar, de forma que el primer procesador desocupado lea el índice que le indique qué iteración ejecutar, aumentando su valor para que el siguiente procesador desocupado realice la siguiente. Notemos que este acceso a una variable que indique la siguiente iteración debe realizarse en exclusión mutua (por ejemplo, usando un cerrojo). Con paso de mensajes, la asignación dinámica podría hacerse desde el proceso dueño en un sistema dueño-esclavo. Hay herramientas como OpenMP que permiten que el procesador deje al compilador la asignación de tareas a procesos (o hebras).
+
+\subsubsection{Ejemplo}
+Si retomamos el ejemplo de la sección anterior en un sistema (por ejemplo) homogéneo uniforme, nos gustaría que la carga de trabajo se distribuya por igual en todos los procesadores. Por tanto, nos interesa más usar una asignación estática frente a una dinámica, debido a que esta última perjudicarían considerablemente las prestaciones debido a la comunicación adicional que añaden.
+
+\subsection{Código paralelo}
+El código que queremos desarrollar va a depender del estilo de programación que se utilice (variables compartidas, paso de mensajes, paralelismo de datos), del modo de programación (SPMD, MPMD, mixto), del punto de partida (versión secuencial, descripción del problema), de la herramienta software que usemos (lenguajes de programación, compiladores, bibliotecas de funciones, APIs de funciones y directivas, \ldots) y de la estructura (granja de tareas, segmentada, descomposición de datos, divide y vencerás, maestro-esclavo, \ldots) elegida. Todas estas a su vez dependen de la aplicación que queremos paralelizar.
+
+Habrá que añadir o utilizar en el programa las funciones, directivas o construcciones del lenguaje que hagan falta para:
+\begin{enumerate}
+    \item Crear y terminar procesos (o hebras).
+    \item Localizar paralelismo.
+    \item Asignar la carga de trabajo conforme a las decisiones tomadas.
+    \item Comunicar y sincronizar las diferentes tareas (procesos o hebras).
+\end{enumerate}
+
+\subsubsection{Ejemplo implementado con OpenMP}
+Hemos decidido implementar el ejemplo que venimos realizando a lo largo de esta sección mediante el estilo de variables compartidas, gracias al modelo que ofrece OpenMP con directivas. Podemos programar con OpenMP a un mayor nivel de abstracción usando directivas (y dejando al compilador que implemente lo que le transmitimos), así como a un menor nivel usando las funciones que nos provee la librería \verb|omp.h| de OpenMP. 
+
+Para obtener el programa paralelo a partir del secuencial ya realizado, hemos añadido a este directivas y funciones necesarias para crear y terminar hebras, asignar tareas a procesos y localizar paralelismo; y comunicar y sincronizar tareas.
+\begin{minted}[linenos, xleftmargin=1cm]{c++}
+#include <omp.h>
+#define NUM_THREADS 4
+main(int argc, char** argv){
+    double ancho, x, sum = 0;
+    int intervalos, i;
+    intervalos = atoi(argv[1]);
+    ancho = 1.0 / (double) intervalos;
+
+    omp_set_num_threads(NUM_THREADS)
+    #pragma omp parallel
+    {
+        #pragma omp for reduction(+:sum) private(x) schedule(dynamic)
+        for(int i = 0; i < intervalos; i++){
+            x = (i + 0.5) * ancho;
+            sum += 4.0 / (1.0 + x*x);
+        }
+    }
+    sum *= ancho;
+}
+\end{minted}
+
+\begin{description}
+    \item [Crear y terminar hebras.] En el programa OpenMP se incluyen funciones que permiten la creación dinámica del grupo de hebras que van a intervenir en el cálculo y que permiten fijar el número de hebras que se crean:
+        \begin{itemize}
+            \item \verb|omp_set_num_threads()| es una función OpenMP que modifica en tiempo de ejecución el número de hebras que se pueden utilizar en paralelo. Para ello, se sobrescribe el contenido de la variable \verb|OMP_NUM_THREADS|, que contiene dicho número.
+            \item \verb|#pragma omp parallel| es una directiva OpenMP que crea un conjunto de hebras. El número será el que tenga la variable \verb|OMP_NUM_THREADS| menos uno, ya que también interviene la hebra \verb|master| en el cálculo. El código de las hebras creadas es el que sigue a esta directiva, que puede ser una o varias sentencias.
+        \end{itemize}
+    \item [Asignar tareas a procesos y localizar paralelismo.] El programador ha dejado el trabajo de repartir las tareas al compilador, simplemente le ha especificado una distribución dinámica, mediante la cláusula \verb|schedule(dynamic)|.
+        \begin{itemize}
+            \item \verb|#pragma omp for| es una directiva que identifica un conjunto de trabajo compartido iterativo paralelizable y especifica que se distribuyan las iteraciones del bucle \verb|for| entre las hebras del grupo cuya creación se ha especificado con una directiva \verb|parallel|. La política de distribución de las iteraciones del bucle puede especificarse a la directiva mediante la cláusula \verb|schedule(kind[, chunk_size]);|, donde el tipo de distribución puede ser \verb|static, dynamic, runtime| o \verb|guided|.
+
+                La cláusula \verb|priate(x)| hace que cada hebra tenga una copia privada de la variable \verb|x|. Es decir, no será una variable compartida. La cláusula \verb|reduction(+:sum)| hace que cada hebra utilice una variable local \verb|sum| y que una vez terminada la ejecución de todas las hebras, se sumen todas las variables locales \verb|sum|, almacenando el resultado en una variable compartida \verb|sum|. La directiva \verb|for| obliga a que todas las hebras se sincronicen al terminar el bucle (a no ser que se especifique \verb|nowait|).
+            \item 
+        \end{itemize}
+        Usando esta directiva \verb|for| se libera trabajo al programador, al no tener que implementar la distribución dinámica ni comunicaciones y sincronizaciones para obtener la suma total (así como las declaraciones de las variable locales \verb|sum|). Además, incluye una barrera implícita que tampoco tiene que incluir el programador. La asignación de hebras a procesadores la hará el sistema operativo, aunque para incrementar las prestaciones, el programador puede orientarlo sobre dicha asignación.
+    \item [Comunicación y sincronización.] 
+        Como ya se ha mencionado, se distribuyen las iteraciones del bucle entre hebras de forma dinámica, de forma que cada una cuenta con su variable local \verb|sum| que resulta en una variable compartida \verb|sum| que al final contiene a la suma de todas las variables locales (todo esto gracias a la cláusula \verb|reduction(+:sum)|). Se está utilizando una comunicación colectiva.
+\end{description}
+
+\subsection{Evaluación de prestaciones}
+Una vez redactado el programa paralelo, se pueden evaluar sus prestaciones. Si las prestaciones alcanzadas no son las que se requieren, se debe volver a etapaas anteriores del proceso de planteamiento y programación. Probablemente se retrocederá más en la abstracción realizada cuando mayor queramos que sea la mejora a realizar. Podemos también elegir otra herramienta de programación que más se adecúe a conseguir la aplicación a desarrollar. Además, no todas estas herramientas ofrecen las mismas prestaciones: depende de su nivel de aprovechamiento de la arquitectura (a menor nivel de abstracción estas sean, mayor será su eficacia).
 
 \newpage
 \section{Evaluación de prestaciones}
+En la sección del capítulo anterior de evaluación de prestaciones vimos cómo evaluar mejoras realizadas en programas secuenciales. Nos toca ahora, evaluar programas paralelos, para comprobar si hemos conseguido alcanzar las prestaciones mínimas que requiere la aplicación programada gracias a la paralelización. En programacion paralela, se usa para evaluar las prestaciones de un código paralelo su tiempo de respuesta (\verb|elapsed time| o tiempo de ejecución) y, adicionalmente, su escalabilidad y eficiencia.
+
 \subsection{Objetivos}
 Siguiendo con la evaluación en prestaciones de los computadores con aplicaciones paralelas, en esta sección aprenderemos a:
 \begin{itemize}
@@ -339,3 +432,87 @@ Siguiendo con la evaluación en prestaciones de los computadores con aplicacione
     \item Aplicar la Ley de Amdahl en el contexto de procesamiento paralelo.
     \item Comparar la Ley de Amdahl y la ganancia escalable.
 \end{itemize}
+
+\subsection{Ganancia en prestaciones y escalabilidad}
+Estudiando la escalabilidad, pretendemos evaluar en qué medida aumentan las prestaciones de un código paralelo conforme se incrementa el número de procesadores usados en su ejecución. 
+
+El incremento o \textbf{ganancia en prestaciones}, también denominado ganancia de velocidad (\verb|speed up|), que se obtiene utilizando $p$ procesadores ($S(p)$) se calcula dividiendo el tiempo de ejecución secuencial $T_S$ entre el tiempo de ejecución paralelo usando los $p$ procesadores, $T_P(p)$:
+\begin{equation}
+    S(p) = \dfrac{T_S}{T_P(p)}
+\end{equation}
+
+El tiempo de ejecución en paralelo $T_P$ depende obviamente del número de procesadores dedicados a su cómputo, $p$, y del tamaño del problema, $n$. Fijados estas dos variables, tenemos que el tiempo de ejecución en paralelo depende del tiempo de ejecución en paralelo de las tareas presentes en el código secuencial (tiempo de cálculo paralelo, $T_C$) y del tiempo de \textbf{sobrecarga} introducido por la paralelización ($T_O$), debido por ejemplo al coste de creación de procesos (o hebras), así como de comunicaciones y sincronizaciones. Tenemos que:
+\begin{equation}
+    T_P(p,n) = T_C(p,n) + T_O(p,n)
+\end{equation}
+Para entender mejor estos concepctos y sobretodo, esta última ecuación, observamos el siguiente ejemplo:
+
+\begin{ejemplo}
+    Tenemos un código secuencial formado por un bucle que realiza 16 iteraciones, donde cada iteración tiene un tiempo de ejecución de 1 segundo:
+    \begin{minted}[xleftmargin=1cm]{c++}
+for(int i = 0; i < 16; i++){
+    v[i] = f(i)
+}
+    \end{minted}
+    El bucle es paralelizable, y decidimos repartir sus iteraciones entre 4 hebras (4 iteraciones por hebra). De esta forma, el programa antes tenía un tiempo de ejecución $T_S=16$ segundos. Ahora, despreciando todos los retardos que introduce la paralelización (tiempo $T_O$), tenemos que el código tarda $T_C(4,16)=4$ segundos (al reptartir 16 iteraciones de un segundo entre 4 hebras). Sin embargo, debido al costo de paralelización anteriormente comentado $T_O$, el tiempo de ejecución real será de:
+    \begin{equation*}
+        T_P(4,16) = T_C(4,16) + T_O(4,16) = 4 + T_O(4,16) > 4
+    \end{equation*}
+\end{ejemplo}
+
+Ciertos autores consideran dentro de $T_O(p,n)$ la penalización por no lograr repartir de forma equilibrada la carga de trabajo.
+
+Podemos llegar a tener distintas curvas de escalabilidad. Estas son resultado de diferentes modelos de códigos:
+\begin{itemize}
+\item Si todo el código \underline{puede repartirse por igual} entre los $p$ procesadores disponibles sea cual sea $p$ es decir, el \underline{grado de paralelismo} (número de procesadores) \underline{es ilimitado} y \underline{no} se presenta ninguna \underline{sobrecarga} ($T_O=0$), obtenemos un tiempo de ejecución de $T_P(p) = \nicefrac{T_S}{p}$ con $p$ procesadores para un código secuencial con un tiempo de ejecución de $T_S$. Es decir, una ganancia:
+    \begin{equation*}
+        S(p) = \dfrac{T_S}{T_P(p)} = \dfrac{T_S}{\nicefrac{T_S}{p}}=p
+    \end{equation*}
+lineal (es una recta, $f(x)=x$). Se trata de un caso ideal.
+    \item Sin embargo, si hay una fracción de código secuencial $f$ (recordamos el significado de la $f$ en la Ley de Amdahl) que no puede repartirse por igual entre los $p$ procesadores disponibles (manteniendo grado de paralelismo ilimitado y ninguna sobrecarga), obtenemos aplicando la Ley de Amdahl, una ganancia de:
+    \begin{equation*}
+        S(p) = \dfrac{1}{f+\dfrac{(1-f)}{p}}
+    \end{equation*}
+    Que, tomando el mayor grado de paralelismo (recordamos que era ilimitado), obtenemos:
+    \begin{equation*}
+        \lim_{p\to\infty} S(p) = \dfrac{1}{f}
+    \end{equation*}
+    \item Si además, no disponemos de un grado ilimitado de paralelismo (suponemos que disponemos de $n$ procesasdores), obtenemos la misma ganancia que en el caso anterior, con la diferencia de que la ganancia máxima será ahora:
+    \begin{equation*}
+        S(n) = \dfrac{1}{f+\dfrac{1-f}{n}}
+    \end{equation*}
+    \item Finalmente, si consideramos un factor $f$ que no se puede paralelizar, un grado de independencia ilimitado y una sobrecarga que crece linealmente con $p$, obtenemos:
+        \begin{equation*}
+            S(p) = \dfrac{1}{f+\dfrac{1-f}{p}+\dfrac{T_O(p)}{T_S}}
+        \end{equation*}
+        Que, con todo el grado de paralelismo posible, obtendremos:
+        \begin{equation*}
+            \lim_{p\to\infty}S(p) = 0
+        \end{equation*}
+        Esto es, hay un número de procesadores a partir del cual la ganancia comienza a decrecer debido a que la sobrecarga se puede incrementar con el número de procesadores.
+\end{itemize}
+
+\subsection{Ley de Amdahl}
+De todo este análisis, llegamos a que la Ley de Amdahl dice que la ganancia en prestaciones que puede conseguirse aplicando paralelismo a un código secuencial está limitada por la fracción no paralelizable ($f$) del mismo. Esta ley da, por tanto, una visión pesimista de las ventajas de la paralelización.
+
+Sin embargo, la fracción de código secuencial que limita la escalabilidad ($f$) puede disminuir en muchas aplicaciones aumentando el tamaño del problema ($n$) que resuelve el código. Es decir, aumentando el tamaño del problema, obtenemos una valor de ganancia mayor. Esto nos lleva a pensar que la paralelización de un código puede tener dos objetivos principales:
+\begin{itemize}
+    \item Disminuir el tiempo de ejecución.
+    \item Aumentar el tamaño del problema a resolver para con ello mejorar la calidad del resultado.
+\end{itemize}
+
+Amdalh supone que conforme aumentamos el número de procesadores, $p$, el tiempo de ejecución secuencial, $T_S$, es consante y el tiempo $T_P$ disminuye.
+
+\subsection{Ganancia escalable}
+Mientras que Amdahl considera que el tiempo de ejecución secuencial se mantiene constante conforme aumenta el número de procesadores (concluyendo que la ganancia está limitada por la fracción de código no paralelizable), Gustafson mantiene constante el tiempo de ejecución paralelo y muestra que la ganancia puede crecer con pendiente constante conforme se incrementa el número de procesadores:
+\begin{equation}
+    S(p) = \dfrac{T_S(n)}{T_P} = \dfrac{f\cdot T_P+p\cdot (1-f)\cdot T_P}{T_P}= f+p\cdot (1-f)
+\end{equation}
+La denominada \textbf{Ley de Gustafson}. 
+
+Para evaluar en qué medida las prestaciones que ofrece un sistema para un código paralelo se aercan a las prestaciones máxima que idealmente debería ofrecer dados los procesadores disponibles en el mismo, se usa la siguiente expresión de \textbf{eficiencia}:
+\begin{equation}
+    E(p) = \dfrac{S(p)}{p}
+\end{equation}
+
+% TODO: Arreglar toda esta última parte y hacer ejercicios
