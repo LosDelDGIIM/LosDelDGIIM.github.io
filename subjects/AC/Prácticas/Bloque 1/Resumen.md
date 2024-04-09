@@ -53,10 +53,10 @@ shared (...)
 ```
   
 ## Definiciones
-- Directiva ejecutable: Se trata de una directiva que aparece en el código ejecutable.
-- Bloque estructurado: Un conjunto de sentencias, usualmente entre llaves. Puede ser sólamente una sentencia.
-- Construcción: Engloba la directiva y su código asociado. Puede tener asociada una línea, un bucle o un bloque estructurado. La asociación es algo estático, que podemos ver en el código.
-- Región: Aparece en tiempo de ejecución. Asociadas a las construcciones aparecen regiones de código. Una región es el conjunto de todo el código afectado por una directiva de OpenMP, junto con esta misma. Esta puede extenderse entre llamadas a subrutinas.
+- **Directiva ejecutable**: Se trata de una directiva que aparece en el código ejecutable.
+- **Bloque estructurado**: Un conjunto de sentencias, usualmente entre llaves. Puede ser sólamente una sentencia.
+- **Construcción**: Engloba la directiva y su código asociado. Puede tener asociada una línea, un bucle o un bloque estructurado. La asociación es algo estático, que podemos ver en el código.
+- **Región**: Aparece en tiempo de ejecución. Asociadas a las construcciones aparecen regiones de código. Una región es el conjunto de todo el código afectado por una directiva de OpenMP, junto con esta misma. Esta puede extenderse entre llamadas a subrutinas.
 
 # Directivas
 Usando OpenMP, será común usar directivas, funciones y variables de entorno. Para ello, se recomienda incluir la librería `omp.h` siempre que usemos OpenMP, tal y como se ha indicado arriba. A continuación, vamos a desarrollar las directivas que veremos en esta sesión de prácticas.  
