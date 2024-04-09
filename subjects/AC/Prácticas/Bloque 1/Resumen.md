@@ -122,6 +122,16 @@ Esta función nos devuelve el número de hebra que ejecuta la función. Las nume
 ### omp_get_num_threads()
 Función que devuelve el número de hebras que ejecuta la función (usar dentro de una directiva `parallel`).
 
+### omp_get_wtime()
+Devuelve el tiempo transcurrido desde un inicio en segundos (en un dato `double`). Usualmente, se usa de la siguiente forma:
+```c
+double inicio = omp_get_wtime();
+// código del que queremos medir el tiempo de ejecución
+double final = omp_get_wtime();
+
+printf("Tiempo de ejecución: %f", final - inicio);
+```
+
 ### OMP_NUM_THREADS
 Esta establece el número de hebras que ejecutarán el siguiente programa. Para su uso, en una terminal:
 ```bash
