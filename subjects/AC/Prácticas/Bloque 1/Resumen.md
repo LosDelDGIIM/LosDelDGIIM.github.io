@@ -145,7 +145,7 @@ Donde $n$ es el número de hebras que queremos que ejecuten nuestro programa.
 Esta es una variable booleana (`OMP_DYNAMIC=False` o `OMP_DYNAMIC=True`), especifica si el sistema operativo puede (`True`) o no (`False`) coger prestadas hebras de las encargadas para nuestro programa.
 
 ### OMP_PROC_BIND
-Se verá más adelante en la asignatura, pero podemos usarla ya con el valor `OMP_PROC_BIND=spread` para que se asignen hebras a cores lógicos y no a cores físicos (algo así como la opción `--hint=nomultithread` de slurm).
+Se verá más adelante en la asignatura, pero podemos usarla ya con el valor `OMP_PROC_BIND=spread` para que se asignen hebras a cores físicos y no a cores lógicos (algo así como la opción `--hint=nomultithread` de slurm).
 
 *Nota:* Para usar las variables de entorno como estas 3 ya mencionadas (aprenderemos a usar más en futuras prácticas), si estamos creando un script deberemos usar `export`:
 ```bash
