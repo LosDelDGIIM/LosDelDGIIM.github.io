@@ -52,18 +52,11 @@ Para separar una misma directiva en varias líneas, podemos usar '\\':
 shared (...)
 ```
   
-# Definiciones
-## Directiva ejecutable
-Se trata de una directiva que aparece en el código ejecutable.
-
-## Bloque estructurado
-Un conjunto de sentencias, usualmente entre llaves. Puede ser sólamente una sentencia.
-
-## Construcción
-Engloba la directiva y su código asociado. Puede tener asociada una línea, un bucle o un bloque estructurado. La asociación es algo estático, que podemos ver en el código.
-
-## Región
-Aparece en tiempo de ejecución. Asociadas a las construcciones aparecen regiones de código. Una región es el conjunto de todo el código afectado por una directiva de OpenMP, junto con esta misma. Esta puede extenderse entre llamadas a subrutinas.
+## Definiciones
+- Directiva ejecutable: Se trata de una directiva que aparece en el código ejecutable.
+- Bloque estructurado: Un conjunto de sentencias, usualmente entre llaves. Puede ser sólamente una sentencia.
+- Construcción: Engloba la directiva y su código asociado. Puede tener asociada una línea, un bucle o un bloque estructurado. La asociación es algo estático, que podemos ver en el código.
+- Región: Aparece en tiempo de ejecución. Asociadas a las construcciones aparecen regiones de código. Una región es el conjunto de todo el código afectado por una directiva de OpenMP, junto con esta misma. Esta puede extenderse entre llamadas a subrutinas.
 
 # Directivas
 Usando OpenMP, será común usar directivas, funciones y variables de entorno. Para ello, se recomienda incluir la librería `omp.h` siempre que usemos OpenMP, tal y como se ha indicado arriba. A continuación, vamos a desarrollar las directivas que veremos en esta sesión de prácticas.  
@@ -121,6 +114,8 @@ int ID;
 ```
 
 ## Funciones y variables de entorno útiles
+En esta sección nos dedicamos al estudio de las directivas, pero ya nos es de utilidad aprender a manejar ciertas funciones y variables de entorno simples (y algunas necesarias para la correcta ejecución de los programas de esta práctica).
+
 ### omp_get_thread_num()
 Esta función nos devuelve el número de hebra que ejecuta la función. Las numeración de las hebras comienza en 0, siendo esta la hebra `master`.
 
@@ -128,7 +123,7 @@ Esta función nos devuelve el número de hebra que ejecuta la función. Las nume
 Función que devuelve el número de hebras que ejecuta la función (usar dentro de una directiva `parallel`).
 
 ### OMP_NUM_THREADS
-En esta sección nos dedicamos al estudio de las directivas, pero ya nos es de utilidad aprender a manejar variables de entorno, como `OMP_NUM_THREADS`. Esta establece el número de hebras que ejecutarán el siguiente programa. Para su uso, en una terminal:
+Esta establece el número de hebras que ejecutarán el siguiente programa. Para su uso, en una terminal:
 ```bash
 export OMP_NUM_THREADS=n
 ./ejecutable
