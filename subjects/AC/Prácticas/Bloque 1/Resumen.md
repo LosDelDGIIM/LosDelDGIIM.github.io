@@ -27,9 +27,7 @@ Para usar la herramienta, al compilar debemos utilizar:
 ```bash
 gcc [archivo.c] -o [ejecutable] -fopenmp
 ```
-```bash
-g++ [archivo.c] -o [ejecutable] -fopenmp
-```
+Esta directiva del compilador lo que hace es definir `_OPENMP`.
 Si no se compila con dicha opción un programa OpenMP, las directivas de OpenMP se interpretarán como comentarios y no obtendremos ningún error ni warning. Podemos tener programas que queramos que se ejecuten de forma paralela o secuencial. En dicho caso, podremos (o no) especificar `-fopenmp` a la hora de compilar.  
 Sin embargo, si usamos funciones y no especificamos `-fopenmp`, sí que obtendremos un error. Para seguir el último comportamiento especificado, debemos hacer (si por ejemplo, usamos la función `omp_get_thread_num()`):
 ```c
@@ -59,7 +57,7 @@ shared (...)
 Se trata de una directiva que aparece en el código ejecutable.
 
 ## Bloque estructurado
-Un conjunto de sentencias, usualmente entre llaves. Puede ser sólamente una.
+Un conjunto de sentencias, usualmente entre llaves. Puede ser sólamente una sentencia.
 
 ## Construcción
 Engloba la directiva y su código asociado. Puede tener asociada una línea, un bucle o un bloque estructurado. La asociación es algo estático, que podemos ver en el código.
@@ -82,14 +80,13 @@ Encontramos tres clasificaciones:
 | simple (una sentencia)         | *atomic*                                  |               |
 | autónoma (sin código asociado) | *barrier*, flush                          | threadprivate |
   
-Todas (salvo las autónomas son con sentencias).  
+Todas (salvo las autónomas) son con sentencias.  
 Las directivas en negrita indican que hay una barrera implícita al final de las directivas (esto es, como si hubiera un `barrier` al final de sus regiones).  
 Las directivas en cursiva y en negrita son las que se desarrollarán en esta práctica.  
   
 - `barrier`: Todos los hilos se esperan entre sí una vez alcanzada esta directiva.
 - `flush`: Relacionado con el modelo de consistencia de OpenMP (Tema 3).
-- `worksharing`: Es una directiva de Fortran, no se verá en la asignatura al estar orientada a `c`.
-- `DO`: Es una directiva de Fortran, no se verá en la asignatura al estar orientada a `c`.
+- `worksharing` y `DO`: Son directivas de Fortran, no se verán en la asignatura al estar orientada a `c`.
 
 ## parallel
 La directiva `parallel` se usa para decirle a OpenMP que añada las funciones del SO necesarias para crear hilos, y que después llame al SO para borrar dichos hilos. Es el thread `master` el encargado de crear estos hilos. 
@@ -112,7 +109,8 @@ Se puede usar `parallel` de forma anidada (no se verá en esta asignatura).
 }
 ```
 Esta no es la forma en la que repartiremos el trabajo entre hebras, en su lugar usaremos directivas dedicadas a ello.
-  
+
+#### private
 Todas las variables creadas fuera del bloque de `parallel` la comparten todos los hilos. Podemos hacer que estas variables sean privadas para cada hebra (que cada hebra se cree una instancia de esta) usando la cláusula `private`:
 ```c
 int ID;
@@ -125,6 +123,9 @@ int ID;
 ## omp_get_thread_num()
 Esta función nos devuelve el número de hebra que ejecuta la función. Las numeración de las hebras comienza en 0, siendo esta la hebra `master`.
 
+## omp_get_num_threads()
+Función que devuelve el número de hebras que ejecuta la función (usar dentro de una directiva `parallel`).
+
 ## OMP_NUM_THREADS
 En esta sección nos dedicamos al estudio de las directivas, pero ya nos es de utilidad aprender a manejar variables de entorno, como `OMP_NUM_THREADS`. Esta establece el número de hebras que ejecutarán el siguiente programa. Para su uso, en una terminal:
 ```bash
@@ -133,13 +134,30 @@ export OMP_NUM_THREADS=n
 ```
 Donde $n$ es el número de hebras que queremos que ejecuten nuestro programa.
 
+## OMP_DYNAMIC
+Esta es una variable booleana (`OMP_DYNAMIC=False` o `OMP_DYNAMIC=True`), especifica si el sistema operativo puede (`True`) o no (`False`) coger prestadas hebras de las encargadas para nuestro programa.
+
+## OMP_PROC_BIND
+Se verá más adelante en la asignatura, pero podemos usarla ya con el valor `OMP_PROC_BIND=spread` para que se asignen hebras a cores lógicos y no a cores físicos (algo así como la opción `--hint=nomultithread` de slurm).
+
+*Nota:* Para usar las variables de entorno como estas 3 ya mencionadas (aprenderemos a usar más en futuras prácticas), si estamos creando un script deberemos usar `export`:
+```bash
+export OMP_NUM_THREADS=12
+export OMP_DYNAMIC=False
+export OMP_PROC_BIND=spread
+./ejecutable args...
+```
+
 ## for
 Para decirle a OpenMP que realice las operaciones necesarias para repartir el trabajo del bucle entre los hilos.  
-Podremos especificar cómo queremos que se haga la asignación próximamente (cláusula `schedule`). Por defecto, cada hilo realiza un conjunto de iteraciones. En caso de tener más iteraciones que hilos, la distribución de las iteraciones se realiza de forma próxima. Es decir, si tenemos 8 iteraciones y 4 hilos, el hilo 0 hará las iteraciones 0 y 1 (este es el funcionamiento por defecto).  
+Podremos especificar cómo queremos que se haga la asignación próximamente (cláusula `schedule`). Por defecto, cada hilo realiza un conjunto de iteraciones.  
+En caso de tener más iteraciones que hilos, la distribución de las iteraciones se realiza de forma próxima. Es decir, si tenemos 8 iteraciones y 4 hilos, el hilo 0 hará las iteraciones 0 y 1 (este es el funcionamiento por defecto).  
 Un ejemplo de uso de la directiva es el siguiente:
 ```c
 #pragma omp for [clause[[,]clause]...]
-    for-loop
+    for(...){
+        // ...
+    }
 ```
 La directiva no nos sirve para paralelizar cualquier bucle `for`. El bucle tiene que ser el más sencillo:
 ```c
@@ -174,7 +192,8 @@ Realiza un reparto de hilos en función de secciones:
     }
 }
 ```
-En este caso, un hilo ejecutará la función `funcionA()` y otro la función `funcionB()`. En caso de tener menos hilos que secciones, habrá hilos que ejecuten más de una sección.  
+En este caso, un hilo ejecutará la función `funcionA()` y otro la función `funcionB()`.  
+En caso de tener menos hilos que secciones, habrá hilos que ejecuten más de una sección.  
 *Cuenta con una barrera implícita al final.*
 
 ## single
@@ -213,15 +232,14 @@ Contamos con tres directivas:
 ```c
 #pragma omp barrier
 ```
-Establece una marca que deben alcanzar todos los procesos antes de que cualquier proceso del programa continue con su ejecución. Al final de directivas como `parallel` o de trabajo compartido suele haber una barrera implícita.
+Establece una marca que deben alcanzar todos los procesos antes de que cualquier proceso del programa continue con su ejecución. Al final de directivas como `parallel` o de trabajo compartido suele haber una barrera implícita, como ya hemos visto.
 
 ## critical
 ```c
 #pragma omp critical [(name)]
     structured-block
 ```
-Evita que varios hilos accedan a variables compartidas a la vez (evita condiciones de carrera).  
-`name` permite evitar deadlocks cuando tenemos distintos `critical` en un mismo código.
+Evita que varios hilos accedan a variables compartidas a la vez (evita condiciones de carrera). En su lugar, los hilos irán estableciendo cerrojos sobre esta sección de código: estableciendo cerrojo, ejecutando el código y liberando el cerrojo para que la siguiente hebra (en caso de haberla) pueda seguir con la ejecución. 
 ```c
 #pragma omp parallel
 {
@@ -234,6 +252,10 @@ Evita que varios hilos accedan a variables compartidas a la vez (evita condicion
     suma = suma + calculos;
 }
 ```
+
+Cada `critical` siempre tiene un nombre (un `name`). Todos los que no tengan nombre explícito tendrán el *mismo* nombre no especificado.  
+Si varios `critical` tienen el mismo nombre (recordamos que no tener nombre es un único nombre), entonces a efectos prácticos son el mismo `critical` y si hay un hilo ejecutando una de las dos regiones, ambas se bloquearán.  
+Podemos por tanto pensar que `name` es el nombre del cerrojo que se establece sobre la sección correspondiente al `critical`.
 
 ## atomic
 Es similar a `critical`, pero sólo permite una única instrucción y que sea sencilla. Si tenemos varias sentencias, hay que utilizar `critical`.
@@ -253,6 +275,11 @@ Podemos usarlo en el ejemplo anterior de la directiva `critical`:
     suma = suma + calculos;
 }
 ```
+Sólo podemos usarlo con los operadores:
+```
++, *, -, /, &, ^, |, <<, >>
+```
+*Notemos* que `+=` no se encuentra en esta lista (ni `-=`, `*=`, `/=`, ...).
 
 # Usar directivas de forma combinada
 Podemos combinar dos directivas en una sola, tal y como se muestra en los códigos de debajo, para una mayor legibilidad de estos:
