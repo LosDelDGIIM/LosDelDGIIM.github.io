@@ -114,7 +114,8 @@ int ID;
 ```
 
 ## Funciones y variables de entorno útiles
-En esta sección nos dedicamos al estudio de las directivas, pero ya nos es de utilidad aprender a manejar ciertas funciones y variables de entorno simples (y algunas necesarias para la correcta ejecución de los programas de esta práctica).
+En esta sección nos dedicamos al estudio de las directivas, pero ya nos es de utilidad aprender a manejar ciertas funciones y variables de entorno simples (y algunas necesarias para la correcta ejecución de los programas de esta práctica).  
+*Nota:* para usar las funciones (a diferencia de las directivas), será necesario tener incluida la librería `omp.h`.
 
 ### omp_get_thread_num()
 Esta función nos devuelve el número de hebra que ejecuta la función. Las numeración de las hebras comienza en 0, siendo esta la hebra `master`.
