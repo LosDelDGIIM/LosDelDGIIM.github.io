@@ -286,7 +286,7 @@ Sólo podemos usarlo con los operadores:
 ```
 +, *, -, /, &, ^, |, <<, >>
 ```
-*Notemos* que `+=` no se encuentra en esta lista (ni `-=`, `*=`, `/=`, ...).
+Y sus combinaciones con `=`.
 
 # Usar directivas de forma combinada
 Podemos combinar dos directivas en una sola, tal y como se muestra en los códigos de debajo, para una mayor legibilidad de estos:
