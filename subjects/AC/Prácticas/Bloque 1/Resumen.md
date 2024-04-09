@@ -120,13 +120,14 @@ int ID;
 }
 ```
 
-## omp_get_thread_num()
+## Funciones y variables de entorno útiles
+### omp_get_thread_num()
 Esta función nos devuelve el número de hebra que ejecuta la función. Las numeración de las hebras comienza en 0, siendo esta la hebra `master`.
 
-## omp_get_num_threads()
+### omp_get_num_threads()
 Función que devuelve el número de hebras que ejecuta la función (usar dentro de una directiva `parallel`).
 
-## OMP_NUM_THREADS
+### OMP_NUM_THREADS
 En esta sección nos dedicamos al estudio de las directivas, pero ya nos es de utilidad aprender a manejar variables de entorno, como `OMP_NUM_THREADS`. Esta establece el número de hebras que ejecutarán el siguiente programa. Para su uso, en una terminal:
 ```bash
 export OMP_NUM_THREADS=n
@@ -134,10 +135,10 @@ export OMP_NUM_THREADS=n
 ```
 Donde $n$ es el número de hebras que queremos que ejecuten nuestro programa.
 
-## OMP_DYNAMIC
+### OMP_DYNAMIC
 Esta es una variable booleana (`OMP_DYNAMIC=False` o `OMP_DYNAMIC=True`), especifica si el sistema operativo puede (`True`) o no (`False`) coger prestadas hebras de las encargadas para nuestro programa.
 
-## OMP_PROC_BIND
+### OMP_PROC_BIND
 Se verá más adelante en la asignatura, pero podemos usarla ya con el valor `OMP_PROC_BIND=spread` para que se asignen hebras a cores lógicos y no a cores físicos (algo así como la opción `--hint=nomultithread` de slurm).
 
 *Nota:* Para usar las variables de entorno como estas 3 ya mencionadas (aprenderemos a usar más en futuras prácticas), si estamos creando un script deberemos usar `export`:
