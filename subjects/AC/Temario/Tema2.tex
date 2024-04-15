@@ -27,7 +27,7 @@ La programación paralela requiere de algún ente (ya sea la herramienta que use
         Muchas veces necesitaremos mecanismos de comunicación entre los distintos flujos de instrucciones, ya que todos estos están colaborando en la ejecución del programa (uno puede generar una variable que otro necesite). 
 \end{description}
 
-Un ejemplo de necesidad de todas estas tareas la vemos reflejada en el siguiente código:
+Un ejemplo de la necesidad de todas estas tareas la vemos reflejada en el siguiente código:
     \begin{minted}[xleftmargin=1cm]{c++}
 main(int argc, char** argv){
     double ancho, sum = 0;
@@ -310,7 +310,6 @@ Y así multiplicar por 4 para obtener $\pi$.
 
 Esta integral puede obtenerse mediante métodos de integración numérica (rectángulo izquierdo, rectángulo derecho, punto medio, trapcio, fórmula de Simpson, \ldots). El área de la derivada del arcotangente en $[0,1]$ en subintervalos, calculando el área de la función en cada subintervalo y sumando. Cuantos más subintervalos tengamos, más exacta será la aproximción.
 Notemos que el cálculo del área de los diferentes intervalos es independiente, por lo que podemos repartir estos cálculos en un conjunto de procesadores. Si se divide el intervalo en 100 subintervalos y tenemos 10 procesadores, podemos asignar a cada procesador el cálculo de 10 subintervalos. Sobre código, tenemos lo siguiente:
-beg
     \begin{minted}[xleftmargin=1cm]{c++}
 main(int argc, char** argv){
     double ancho, x, sum = 0;
@@ -347,7 +346,7 @@ La asignación debería repartir la carga de trabajo (el tiempo de cálculo), op
 
 Por un lado, la arquitectura puede ser \textbf{heterogénea} u \textbf{homogénea}. Si es heterogénea, consta de componentes con diferentes prestaciones. Por tanto, una buena repartición de carga de trabajo es asignar a los nodos de cómputo más rápido las tareas más pesadas. 
 
-Una arquitectura homogénea (aquella donde los nodos de cómputo son iguales, o casi) puede ser a su vez \textbf{uniforme} o \textbf{no uniforme}:
+Una arquitectura homogénea (aquella donde los nodos de cómputo son iguales, o casi) puede ser a su vez \textbf{uniforme} o \textbf{no uniforme} (decimos que las arquitecturas uniformes y no uniformes están dentro de las homogéneas porque las heterogéneas son normalmente no uniformes, luego no merece la pena concretar esos casos):
 \begin{description}
     \item [Uniforme] ~\\
         Si es uniforme, la comunicación de los procesadores con memoria (y probablemente con otros componentes, como E/S) supone el mismo tiempo sean cuales sean los dos componentes que intervienen. Las arquitecturas homogéneas uniformes son en las que menos tenemos que tener en cuenta la arquitectura para la asignación de tareas. Sin embargo, hay arquitecturas homogéneas uniformes en las que una buena asignación puede disminuir el número de colisiones en el acceso a la red. 
@@ -356,7 +355,7 @@ Una arquitectura homogénea (aquella donde los nodos de cómputo son iguales, o 
 \end{description}
 
 \subsubsection{Asignar tareas a procesadores}
-La asignación de tareas (procesos o hebras) a procesadores puede realizarse de forma \textbf{estática} (en tiempo de compilación o al escribir el programa) o \textbf{dinámica} (en tiempo de ejecución). La asignación dinámica es últi para evitar repartos complejos de tareas en sistemas heterogéneos, especialmente cuando no se conoce el número total de tareas que se van a ejecutar antes de la ejecución. Además, permite que la aplicación se ejecute exitosamente si algún procesador falla. Sin embargo, esta asignación consume un tiempo adicional de sincronización y comunicación.
+La asignación de tareas (procesos o hebras) a procesadores puede realizarse de forma \textbf{estática} (en tiempo de compilación o al escribir el programa) o \textbf{dinámica} (en tiempo de ejecución). La asignación dinámica es útil para evitar repartos complejos de tareas en sistemas heterogéneos, especialmente cuando no se conoce el número total de tareas que se van a ejecutar antes de la ejecución. Además, permite que la aplicación se ejecute exitosamente si algún procesador falla. Sin embargo, esta asignación consume un tiempo adicional de sincronización y comunicación.
 
 Un ejemplo de asignación estática es asignar iteraciones consecutivas de un mismo bucle a procesos consecutivos (round-robin), mientras que también podemos asignar iteraciones consecutivas a un mismo proceso (continua). Un ejemplo de asignación dinámica es almacenar en una variable el índice de la siguiente iteración a ejecutar, de forma que el primer procesador desocupado lea el índice que le indique qué iteración ejecutar, aumentando su valor para que el siguiente procesador desocupado realice la siguiente. Notemos que este acceso a una variable que indique la siguiente iteración debe realizarse en exclusión mutua (por ejemplo, usando un cerrojo). Con paso de mensajes, la asignación dinámica podría hacerse desde el proceso dueño en un sistema dueño-esclavo. Hay herramientas como OpenMP que permiten que el procesador deje al compilador la asignación de tareas a procesos (o hebras).
 
@@ -410,16 +409,15 @@ main(int argc, char** argv){
         \begin{itemize}
             \item \verb|#pragma omp for| es una directiva que identifica un conjunto de trabajo compartido iterativo paralelizable y especifica que se distribuyan las iteraciones del bucle \verb|for| entre las hebras del grupo cuya creación se ha especificado con una directiva \verb|parallel|. La política de distribución de las iteraciones del bucle puede especificarse a la directiva mediante la cláusula \verb|schedule(kind[, chunk_size]);|, donde el tipo de distribución puede ser \verb|static, dynamic, runtime| o \verb|guided|.
 
-                La cláusula \verb|priate(x)| hace que cada hebra tenga una copia privada de la variable \verb|x|. Es decir, no será una variable compartida. La cláusula \verb|reduction(+:sum)| hace que cada hebra utilice una variable local \verb|sum| y que una vez terminada la ejecución de todas las hebras, se sumen todas las variables locales \verb|sum|, almacenando el resultado en una variable compartida \verb|sum|. La directiva \verb|for| obliga a que todas las hebras se sincronicen al terminar el bucle (a no ser que se especifique \verb|nowait|).
-            \item 
+            \item La cláusula \verb|private(x)| hace que cada hebra tenga una copia privada de la variable \verb|x|. Es decir, no será una variable compartida. La cláusula \verb|reduction(+:sum)| hace que cada hebra utilice una variable local \verb|sum| y que una vez terminada la ejecución de todas las hebras, se sumen todas las variables locales \verb|sum|, almacenando el resultado en una variable compartida \verb|sum|. La directiva \verb|for| obliga a que todas las hebras se sincronicen al terminar el bucle (a no ser que se especifique \verb|nowait|).
         \end{itemize}
         Usando esta directiva \verb|for| se libera trabajo al programador, al no tener que implementar la distribución dinámica ni comunicaciones y sincronizaciones para obtener la suma total (así como las declaraciones de las variable locales \verb|sum|). Además, incluye una barrera implícita que tampoco tiene que incluir el programador. La asignación de hebras a procesadores la hará el sistema operativo, aunque para incrementar las prestaciones, el programador puede orientarlo sobre dicha asignación.
     \item [Comunicación y sincronización.] 
-        Como ya se ha mencionado, se distribuyen las iteraciones del bucle entre hebras de forma dinámica, de forma que cada una cuenta con su variable local \verb|sum| que resulta en una variable compartida \verb|sum| que al final contiene a la suma de todas las variables locales (todo esto gracias a la cláusula \verb|reduction(+:sum)|). Se está utilizando una comunicación colectiva.
+        Como ya se ha mencionado, se distribuyen las iteraciones del bucle entre hebras de forma dinámica, de forma que cada una cuenta con su variable local \verb|sum| que resulta en una variable compartida \verb|sum| que al final contiene a la suma de todas las variables locales (todo esto gracias a la cláusula \verb|reduction(+:sum)|). Se está utilizando una comunicación colectiva. Además, se usa una barrera implícita tras la finalización de la región afectada por \verb|for| y tras la finalización de la región afectada por \verb|parallel|.
 \end{description}
 
 \subsection{Evaluación de prestaciones}
-Una vez redactado el programa paralelo, se pueden evaluar sus prestaciones. Si las prestaciones alcanzadas no son las que se requieren, se debe volver a etapaas anteriores del proceso de planteamiento y programación. Probablemente se retrocederá más en la abstracción realizada cuando mayor queramos que sea la mejora a realizar. Podemos también elegir otra herramienta de programación que más se adecúe a conseguir la aplicación a desarrollar. Además, no todas estas herramientas ofrecen las mismas prestaciones: depende de su nivel de aprovechamiento de la arquitectura (a menor nivel de abstracción estas sean, mayor será su eficacia).
+Una vez redactado el programa paralelo, se pueden evaluar sus prestaciones. Si las prestaciones alcanzadas no son las que se requieren, se debe volver a etapas anteriores del proceso de planteamiento y programación. Probablemente se retrocederá más en la abstracción realizada cuando mayor queramos que sea la mejora a realizar. Podemos también elegir otra herramienta de programación que más se adecúe a conseguir la aplicación a desarrollar. Además, no todas estas herramientas ofrecen las mismas prestaciones: depende de su nivel de aprovechamiento de la arquitectura (a menor nivel de abstracción estas sean, mayor será su eficacia).
 
 \newpage
 \section{Evaluación de prestaciones}
@@ -632,6 +630,17 @@ Generalizando lo ya visto, impondremos como mínimo que la carga paralelizable p
         \begin{equation*}
             S(p) = \dfrac{1}{f+\dfrac{1-f}{p}+\dfrac{T_O(p)}{T_S}}
         \end{equation*}
+        \begin{proof}
+            En primer lugar, calculamos $T_P(p)$:
+            \begin{equation*}
+                T_P(p) = T_C(p) + T_O(p) = f\cdot T_S + \left(\dfrac{1-f}{p}\right)T_S + T_O(p)
+            \end{equation*}
+            A continuación, sustituyendo en la fórmula de la ganancia:
+            \begin{equation*}
+                S(p) = \dfrac{T_S}{T_P(p)} = \dfrac{T_S}{f\cdot T_S + \left(\dfrac{1-f}{p}\right)T_S + T_O(p)} = \dfrac{1}{f+\dfrac{1-f}{p} + \dfrac{T_O(p)}{T_S}}
+            \end{equation*}
+        \end{proof}
+        
         Que con un grado de paralelismo grande obtenemos:
         \begin{equation*}
             \lim_{p\to\infty}S(p) = 0
