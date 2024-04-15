@@ -46,7 +46,7 @@ main(int argc, char** argv){
 }
     \end{minted}
 \label{codigo_pi}
-Tenemos un código secuencial que se encarga de realizar una tarea determinada. Ahora, queremos hacer uso del paralelismo para disminuir el tiempo de ejecución de la tarea. Vemos cómo hacerlo en la siguiente figura, donde hemos hecho uso de la herramienta OpenMP.
+Tenemos un código secuencial que se encarga de realizar una tarea determinada. Ahora, queremos hacer uso del paralelismo para disminunir el tiempo de ejecución de la tarea. Vemos cómo hacerlo en la siguiente figura, donde hemos hecho uso de la herramienta OpenMP.
     \begin{minted}[xleftmargin=1cm]{c++}
 #include <omp.h>
 #define NUM_THREADS 4
@@ -600,7 +600,12 @@ La representación de la ganancia en función del número de procesadores ($p$) 
 \end{equation*}
 de forma que la escalabilidad sería \emph{lineal}. Para que siempre pueda ser $p$ la ganancia independientemente del valor de $p$, el \underline{grado de paralelismo} debe ser \underline{ilimitado}, es decir, siempre podremos dividir el código entre los $p$ procesadores posibles sea cual sea $p$. Debido a estas tres limitaciones, nos planteamos estudiar qué posibilidades se pueden plantear:
 
-Podemos encontrarnos con \emph{escalabilidades superlineales}, casos donde $S(p)>p$ (no son de relevancia ahora mismo). Además, hemos considerado que todo el programa secuencial se puede paralelizar, pero en la práctica podemos encontrarnos (de forma bastante frecuente) tareas que no se puedan ejecutar en paralelo y que suponen un tiempo no despreciable. Más aún, no hemos considerado ninguna limitación en el grado de paralelismo, que sí estará limitado en la práctica (por ejemplo, un bucle de $n$ iteraciones tiene un grado de paralelismo de, a lo sumo, $n$). Finalmente, tampoco hemos considerado tiempos de sobrecarga.
+Podemos encontrarnos con \emph{escalabilidades superlineales}, casos donde $S(p)>p$ (no son de relevancia ahora mismo). Dos ejemplos de este suceso pueden ser:\label{ej:superlineal}
+\begin{itemize}
+    \item Estamos trabajando con una estructura de datos grande (como por ejemplo, un vector muy largo) y puede que al repartir el trabajo, reducimos los fallos de caché (un único procesador debería cargar en cada momento un subvector del vector con el que trabajamos. Sin embargo, puede darse que al repartir el vector entre los procesadores, se disminuya su tamaño y se den menos fallos en cada procesador).
+    \item Por ejemplo, al realizar una búsqueda lineal sobre un vector, puede que el elemento a buscar se encuentre en la posición $\frac{n}{2}+1$. Si paralelizamos el código de forma que una hebra busque en las primeras $\nicefrac{n}{2}$ posiciones y el segundo en las $\nicefrac{n}{2}$ restantes, la segunda hebra encontrará el elemento deseado en la primera iteración, reduciendo considerablemente el tiempo de ejecución en comparación con la implementación totalmente secuencial del mismo código.
+\end{itemize}
+Además, hemos considerado que todo el programa secuencial se puede paralelizar, pero en la práctica podemos encontrarnos (de forma bastante frecuente) tareas que no se puedan ejecutar en paralelo y que suponen un tiempo no despreciable. Más aún, no hemos considerado ninguna limitación en el grado de paralelismo, que sí estará limitado en la práctica (por ejemplo, un bucle de $n$ iteraciones tiene un grado de paralelismo de, a lo sumo, $n$). Finalmente, tampoco hemos considerado tiempos de sobrecarga.
 
 Generalizando lo ya visto, impondremos como mínimo que la carga paralelizable pueda repartirse por igual entre los procesadores disponibles (para simplificar), y además que el tiempo de ejecución $T_S$ es constante (aún variando el número de procesadores). Con estas restricciones generales, procedemos a estudiar casos concretos donde ya damos cierta libertad al problema, con la finalidad de estudiar la escalabilidad de cada sistema:
 \begin{enumerate}
@@ -649,13 +654,13 @@ Generalizando lo ya visto, impondremos como mínimo que la carga paralelizable p
 \end{enumerate}
 
 \subsection{Ley de Amdahl}
-Como puede deducirse de las ganancias anteriores, estas disminuyen conforme aumenta la fracción de código no paralelizable. Es decir, la mejora en prestaciones depende de la fracción de código no paralelizable. Es decir, la mejora en prestaciones depende de la fracción que no se puede mejorar. Este razonamiento fue formalizado por Gene Amdahl, dando origen a la fórmula:
+Como puede deducirse de las ganancias anteriores, estas disminuyen conforme aumenta la fracción de código no paralelizable. Es decir, la mejora en prestaciones depende de la fracción de código no paralelizable. Por lo que la mejora en prestaciones depende de la fracción que no se puede mejorar. Este razonamiento fue formalizado por Gene Amdahl, dando origen a la fórmula:
 \begin{equation}
     S(p) \leq \dfrac{p}{1+f(p-1)}
 \end{equation}
 conocida como la \textbf{Ley de Amdahl}. 
 \begin{proof}
-    Como ya hemos visto, la intuición de la fórmula proviene de suponer que estamos trabajando en un caso con una fracción de código secuencial no paralelizable $f$ y con una sobrecarga despreciable. Tendremos por tanto que $T_P(p) = T_C(p)$, de forma que una parte de $T_P(p)$ está formada por $f\cdot T_S$ al ser código que no peude paralelizarse y tendremos por otra parte una fracción de $1-f$ código paralelizable con sobrecarga nula, luego con una escalabilidad lineal. Tenemos por tanto que:
+    Como ya hemos visto, la intuición de la fórmula proviene de suponer que estamos trabajando en un caso con una fracción de código secuencial no paralelizable $f$ y con una sobrecarga despreciable. Tendremos por tanto que $T_P(p) = T_C(p)$, de forma que una parte de $T_P(p)$ está formada por $f\cdot T_S$ al ser código que no puede paralelizarse y tendremos por otra parte una fracción de $1-f$ código paralelizable con sobrecarga nula, luego con una escalabilidad lineal. Tenemos por tanto que:
     \begin{equation*}
         S(p) = \dfrac{T_S}{T_P(p)} = \dfrac{T_S}{f\cdot T_S+\dfrac{1-f}{p}\cdot T_S} = \dfrac{1}{f+\dfrac{1-f}{p}} = \dfrac{p}{1+f(p-1)}
     \end{equation*}
