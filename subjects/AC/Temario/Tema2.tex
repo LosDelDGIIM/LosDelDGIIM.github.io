@@ -246,7 +246,7 @@ Un ejemplo de esto es un programa que tiene que calcular los primos hasta un nú
 
 \subsubsection{Cliente-Servidor} 
 También llamado \emph{client-server}, se trata de una estructura similar a dueño-esclavo, pero con los roles invertidos: contamos con múltiples procesos denominados clientes y con un ente (puede ser un proceso, o tener a su vez una estructura paralela distinta en su interior) denominado servidor. En este caso, los clientes son procesos que en un momento determinado solicitan cierta información al servidor. Este, se encarga de procesar la petición y de dar al cliente correspondiente la respuesta esperada. 
-Notemos que el servidor puede estar formado a su vez de otras estructuras, como de un sistema dueño-esclavo. Por tanto, podemos tener por un lado a los clientes, que necesitan del servidor información. Este es el encargado de gestionar los mensajes y de repartir las tareas entre sus esclavos, quien realizan el cómputo, devolviendo el trabajo al maestro y este a los clientes. 
+Notemos que el servidor puede estar formado a su vez de otras estructuras, como de un sistema dueño-esclavo. Por tanto, podemos tener por un lado a los clientes, que necesitan del servidor información. Este es el encargado de gestionar los mensajes y de repartir las tareas entre sus esclavos, quienes realizan el cómputo, devolviendo el trabajo al maestro y este a los clientes. 
 
 \subsubsection{Descomposición de datos} 
 Alternativa muy utilizada para obtener tareas paralelas en programas con grandes estructuras de datos. La estructura de datos de entrada (o la de salida, o ambas) es dividida en varias partes. A partir de esta división se derivan las tareas paralelas. Estas generalmente realizan operaciones similares. Los algoritmos con imágenes, por ejemplo, admiten una descomposición de datos.
@@ -254,7 +254,7 @@ En este esquema, cada proceso puede englobar una o varias tareas. Los diferentes
 Un ejemplo de descomposición de datos es el siguiente código, donde se invierten los colores de una imagen de tamaño $N\times N$:
     \begin{minted}[xleftmargin=1cm]{c++}
 for(int i = 0; i < N; i++)
-    #pragma omp parallel for private(i)
+    #pragma omp parallel for
     for(int j = 0; j < N; j++){
         imagen[i][j] = 255 - imagen[i][j];
     }
@@ -266,7 +266,7 @@ Por ejemplo, podemos tener un decodificador de imágenes JPEG, que aplica a una 
 En este tipo de estructura, la comunicación entre procesos es necesaria, y suele ser unidireccional.
 
 \subsubsection{Divide y vencerás} 
-Se utiliza cuando un problema puede dividirse en dos o más subproblemas de menor tamaño de forma que cada uno pueda resolverse independiéntemente y combinar al final las distintas soluciones. Si los subproblemas son a su vez instancias más pequeñas del problema original, entonces se podrán volver a subdividir de forma recursiva. Las tareas presentan, por tanto, una estructura de árbol, de forma que no habrá interacciones (comunicaciones o sincronizaciones) entre las tareas que cuelgan del mismo padre.
+Se utiliza cuando un problema puede dividirse en dos o más subproblemas de menor tamaño de forma que cada uno pueda resolverse independientemente y combinar al final las distintas soluciones. Si los subproblemas son a su vez instancias más pequeñas del problema original, entonces se podrán volver a subdividir de forma recursiva. Las tareas presentan, por tanto, una estructura de árbol, de forma que no habrá interacciones (comunicaciones o sincronizaciones) entre las tareas que cuelgan del mismo padre.
 Un ejemplo de uso de esta estructura podemos verlo cuando nos disponemos a sumar todas las componentes de un vector: podemos dividir el vector en 2, obteniendo dos subproblemas de tamaño $ \nicefrac{n}{2} $, siendo $n$ el número de componentes del vector. Podemos seguir recursivamente dividiendo el vector hasta obtener vectores de tamaño relativamente pequeños, donde haríamos su suma iterativamente. Obtenemos así al final la suma de todas las componentes del vector.
 
 \newpage
@@ -306,9 +306,7 @@ Podemos definir el cálculo de $\pi$ como un problema de integración, susceptib
         \text{arctg}(0) & = & 0 
     \end{array}\right\} \Longrightarrow \int_{0}^{1} \dfrac{dx}{1+x^2} = [\text{arctg}(x)]_0^1 = \dfrac{\pi}{4} - 0
 \end{equation*}
-Y así multiplicar por 4 para obtener $\pi$.
-
-Esta integral puede obtenerse mediante métodos de integración numérica (rectángulo izquierdo, rectángulo derecho, punto medio, trapcio, fórmula de Simpson, \ldots). El área de la derivada del arcotangente en $[0,1]$ en subintervalos, calculando el área de la función en cada subintervalo y sumando. Cuantos más subintervalos tengamos, más exacta será la aproximción.
+Y así multiplicar por 4 para obtener $\pi$. Esta integral puede obtenerse mediante métodos de integración numérica (rectángulo izquierdo, rectángulo derecho, punto medio, trapecio, fórmula de Simpson, \ldots). Podemos dividir el área de la derivada del arcotangente en $[0,1]$ en subintervalos, calculando el área de la función en cada subintervalo y sumando. Cuantos más subintervalos tengamos, más exacta será la aproximción.
 Notemos que el cálculo del área de los diferentes intervalos es independiente, por lo que podemos repartir estos cálculos en un conjunto de procesadores. Si se divide el intervalo en 100 subintervalos y tenemos 10 procesadores, podemos asignar a cada procesador el cálculo de 10 subintervalos. Sobre código, tenemos lo siguiente:
     \begin{minted}[xleftmargin=1cm]{c++}
 main(int argc, char** argv){
