@@ -15,7 +15,7 @@
 
 ## Parte I. Ejercicios basados en los ejemplos del seminario práctico
 
-*Nota*: Para compilar cualquier programa, he hecho uso del simple script [compilar.sh](google), que tan solo ejecuta la siguiente línea:
+*Nota*: Para compilar cualquier programa, he hecho uso del simple script [compilar.sh](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/compilar.sh), que tan solo ejecuta la siguiente línea:
 ```bash
 gcc -O2 -o $1 $1.c -fopenmp # -D DEBUG
 ```
@@ -23,17 +23,17 @@ Como podemos ver, tan solo compila con la opción `-O2` y `-fopenmp`, y además 
 
 ### Ejercicio 1. 
 
-**Usar la directiva `parallel` combinada con directivas de trabajo compartido en los ejemplos [bucle-for.c](google) y [sections.c](google) del seminario.**
+**Usar la directiva `parallel` combinada con directivas de trabajo compartido en los ejemplos [bucle-for.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/bucle-for.c) y [sections.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/sections.c) del seminario.**
 
-La parte modificada del programa [bucle-for.c](google) es la siguiente:
+La parte modificada del programa [bucle-for.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/bucle-for.c) es la siguiente:
 ```c++
 #pragma omp parallel for
     for (i=0; i<n; i++)
         printf("Hebra %d ejecuta la iteración %d del bucle\n", omp_get_thread_num(),i);
 ```
-Se encuentra disponible en el fichero [bucle-forModificado.c](google).
+Se encuentra disponible en el fichero [bucle-forModificado.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/bucle-forModificado.c).
 
-La parte modificada del programa [sections.c](google) es la siguiente:
+La parte modificada del programa [sections.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/sections.c) es la siguiente:
 ```c++
 #pragma omp parallel sections
 {
@@ -44,7 +44,7 @@ La parte modificada del programa [sections.c](google) es la siguiente:
         (void) funcB();
 }
 ```
-Se encuentra disponible en el fichero [sectionsModificado.c](google).
+Se encuentra disponible en el fichero [sectionsModificado.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/sectionsModificado.c).
 
 El objetivo de este ejercicio es simplemente darse cuenta de que se pueden juntar las directivas
 `parallel` y `for` (o `sections`) en una sola, y que el resultado es el mismo, aunque queda más legible.
@@ -52,9 +52,9 @@ El objetivo de este ejercicio es simplemente darse cuenta de que se pueden junta
 
 ### Ejercicio 2.
 
-**Imprimir los resultados del programa [single.c](google) usando una directiva `single` dentro de la construcción `parallel` en lugar de imprimirlos fuera de la región `parallel`. Añadir lo necesario, dentro de la nueva directiva `single` incorporada, para que se imprima el identificador del thread que ejecuta el bloque estructurado de la directiva `single`.**
+**Imprimir los resultados del programa [single.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/single.c) usando una directiva `single` dentro de la construcción `parallel` en lugar de imprimirlos fuera de la región `parallel`. Añadir lo necesario, dentro de la nueva directiva `single` incorporada, para que se imprima el identificador del thread que ejecuta el bloque estructurado de la directiva `single`.**
 
-La parte modificada del programa [single.c](google) es la siguiente:
+La parte modificada del programa [single.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/single.c) es la siguiente:
 ```c++
 #pragma omp parallel 
 {
@@ -79,7 +79,7 @@ La parte modificada del programa [single.c](google) es la siguiente:
 
 }
 ```
-Se encuentra disponible en el fichero [singleModificado.c](google).
+Se encuentra disponible en el fichero [singleModificado.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/singleModificado.c).
 
 La ejecución se puede ver en la siguiente imagen:
 ![Ejecución del programa singleModificado.c](./Imágenes/2_SingleMod.png)
@@ -87,12 +87,12 @@ La ejecución se puede ver en la siguiente imagen:
 Como podemos ver, la directiva `single` permite que la región de código determinada por dicha directiva tan solo se ejecute por una hebra, esperando el resto a que esta termine mediante un `barrier` implícito.
 
 ### Ejercicio 3.
-**Imprimir los resultados del programa [single.c](google) usando una directiva `master` dentro de la construcción
+**Imprimir los resultados del programa [single.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/single.c) usando una directiva `master` dentro de la construcción
 `parallel` en lugar de imprimirlos fuera de la región `parallel`. Añadir lo necesario, dentro de la nueva
 directiva `master` incorporada, para que se imprima el identificador del thread que ejecuta el bloque
 estructurado de la directiva `master`. ¿Qué diferencia observa con respecto a los resultados de ejecución del ejercicio anterior?**
 
-La parte modificada del programa [single.c](google) es la siguiente:
+La parte modificada del programa [single.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/single.c) es la siguiente:
 ```c++
 #pragma omp parallel 
 {
@@ -117,7 +117,7 @@ La parte modificada del programa [single.c](google) es la siguiente:
 
 }
 ```
-Se encuentra disponible en el fichero [singleModificado2.c](google).
+Se encuentra disponible en el fichero [singleModificado2.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/singleModificado2.c).
 
 La ejecución se puede ver en la siguiente imagen:
 ![Ejecución del programa singleModificado2.c](./Imágenes/3_SingleMod2.png)
@@ -128,7 +128,7 @@ Respecto de la directiva `master` es importante tener en cuenta que no tiene una
 
 
 ### Ejercicio 4.
-**¿Por qué si se elimina la directiva barrier en el ejemplo [master.c](google.com) la suma que se calcula e imprime
+**¿Por qué si se elimina la directiva barrier en el ejemplo [master.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/master.c) la suma que se calcula e imprime
 no siempre es correcta? Responda razonadamente.**
 
 Si la hebra master llega el último a la directiva `master`, entonces todas las sumas parciales ya se habrán contabilizado, por lo que el resultado es correcto. No obstante, si llega antes que algún otro hilo, al no estar la barrera no esperará a que todas las hebras añadan su suma parcial, y entonces el resultado será menor que el deseado.
@@ -139,7 +139,7 @@ Si la hebra master llega el último a la directiva `master`, entonces todas las 
 *Usar en atcgrid la cola `ac` a no ser que se tenga que usar atcgrid4*.
 
 ### Ejercicio 5.
-**El programa secuencial C del programa [SumaVectores.c](google.com) calcula la suma de dos vectores (`v3 = v1 + v2;` $v_3(i) = v_1(i) + v_2(i),~\forall i=0,\dots,N-1$). Generar el ejecutable del programa [SumaVectores.c](google.com) para vectores globales. Usar `time` (Lección 3 / Tema 1) en la línea de comandos para obtener, en atcgrid, el tiempo de ejecución (elapsed time) y el tiempo de CPU del usuario y del sistema generado. Obtenga los tiempos para vectores con $10000000=10^7$ componentes. ¿La suma de los tiempos de CPU del usuario
+**El programa secuencial C del programa [SumaVectores.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/SumaVectores.c) calcula la suma de dos vectores (`v3 = v1 + v2;` $v_3(i) = v_1(i) + v_2(i),~\forall i=0,\dots,N-1$). Generar el ejecutable del programa [SumaVectores.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/SumaVectores.c) para vectores globales. Usar `time` (Lección 3 / Tema 1) en la línea de comandos para obtener, en atcgrid, el tiempo de ejecución (elapsed time) y el tiempo de CPU del usuario y del sistema generado. Obtenga los tiempos para vectores con $10000000=10^7$ componentes. ¿La suma de los tiempos de CPU del usuario
 y del sistema es menor, mayor o igual que el tiempo real (*elapsed*)?**
 
 La ejecución del programa se puede ver en la siguiente imagen:
@@ -151,14 +151,14 @@ resultados ilógicos, como veremos en el último ejercicio.
 
 ### Ejercicio 6.
 
-**Generar el código ensamblador a partir del programa secuencial C del Programa [SumaVectores.c](google.com) para vectores globales (para generar el código ensamblador tiene que compilar usando `-S` en lugar de `-o`).
+**Generar el código ensamblador a partir del programa secuencial C del Programa [SumaVectores.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/SumaVectores.c) para vectores globales (para generar el código ensamblador tiene que compilar usando `-S` en lugar de `-o`).
 Utilice el fichero con el código fuente ensamblador generado y el fichero ejecutable generado en el [ejercicio 5](#ejercicio-5) para obtener para atcgrid los MIPS *(Millions of Instructions Per Second)* y los MFLOPS *(Millions of FLOating-point Per Second)* del código que obtiene la suma de vectores (código entre las funciones `clock_gettime()`). El cálculo se debe hacer para $10$ y $10000000=10^7$ componentes en los vectores (consulte la Lección 3/Tema1 AC). Razonar cómo se han obtenido
 los valores que se necesitan para calcular los MIPS y MFLOPS.**
 
 En la siguiente imagen se pueden ver la generación del código ensamblador y la obtención de los tiempos de ejecución:
 ![Generación del código ensamblador y obtención de los tiempos de ejecución](./Imágenes/6_Assembly.png)
 
-El código ensamblador generado se encuentra en el fichero [SumaVectores.s](google), aunque la parte relevante es la siguiente:
+El código ensamblador generado se encuentra en el fichero [SumaVectores.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/SumaVectores.c), aunque la parte relevante es la siguiente:
 ```asm
     call	clock_gettime
 	xorl	%eax, %eax
@@ -182,7 +182,7 @@ $$\text{MIPS} = \dfrac{6\cdot 10+4}{1,93\cdot 10^{-7}\cdot 10^{6}} \approx 331,0
 - Para $10^7$ iteraciones:
 $$\text{MIPS} = \dfrac{6\cdot 10^7+4}{0,040502454\cdot 10^{6}} \approx 1481,39~\text{MIPS}$$
 
-PPara el cálculo de los MFLOPS, usamos directamente el número de instrucciones en coma flotante que hay en el código, disponible en el fichero [SumaVectores.s](google). En él se puede ver el siguiente fragmento:
+PPara el cálculo de los MFLOPS, usamos directamente el número de instrucciones en coma flotante que hay en el código, disponible en el fichero [SumaVectores.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/SumaVectores.c). En él se puede ver el siguiente fragmento:
 ```c++
 clock_gettime(CLOCK_REALTIME,&cgt0);
 //Calcular suma de vectores 
@@ -202,9 +202,9 @@ Analizamos ahora si tiene sentido que haya tanta diferencia entre los resultados
 
 ### Ejercicio 7.
 
-**Implementar un programa en C con OpenMP, a partir del código del Programa [SumaVectores.c](google), que calcule en
+**Implementar un programa en C con OpenMP, a partir del código del Programa [SumaVectores.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/SumaVectores.c), que calcule en
 paralelo la suma de dos vectores (`v3 = v1 + v2;` $v_3(i) = v_1(i) + v_2(i),~\forall i=0,\dots,N-1$) usando las directivas `parallel` y `for`. Se deben paralelizar también las tareas asociadas a la inicialización de los vectores.
-Como en el código del Programa [SumaVectores.c](google) se debe obtener el tiempo (`elapsed time`) que supone el cálculo de la suma. Para obtener este tiempo usar la función `omp_get_wtime()`, que proporciona el estándar
+Como en el código del Programa [SumaVectores.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/SumaVectores.c) se debe obtener el tiempo (`elapsed time`) que supone el cálculo de la suma. Para obtener este tiempo usar la función `omp_get_wtime()`, que proporciona el estándar
 OpenMP, en lugar de `clock_gettime()`. Algunos aspectos a tener en cuenta son:**
 - **El número de componentes $N$ de los vectores debe ser
 un argumento de entrada al programa.**
@@ -214,7 +214,7 @@ resultante, `v3`, para varios tamaños pequeños de los vectores (por ejemplo, $
 - **Se debe imprimir el tamaño de los vectores y el número de hilos.**
 - **Se debe imprimir sea cual sea el tamaño de los vectores el tiempo de ejecución del código paralelo que suma los vectores y, al menos, el primer y último componente de `v1`, `v2` y `v3` (esto último evita que las optimizaciones del compilador eliminen el código de la suma).**
 
-El programa implementado con OpenMP se encuentra en el fichero [sp-OpenMP-for.c](google).
+El programa implementado con OpenMP se encuentra en el fichero [sp-OpenMP-for.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/sp-OpenMP-for.c).
 
 Del código anterior, hemos de destacar que siempre que se usen funciones de la biblioteca OPENMP se ha incluido la directiva `#ifdef _OPENMP` (que se añade automáticamente al compilar con la opción correspondiente) para controlar que no haya errores de compilación. En los siguientes ejercicios, siempre que se busque ejecutar de forma secuencial el código bastará con compilar sin la opción `-fopenmp`. Esto se aprecia en la siguiente parte del código:
 ```c++
@@ -233,10 +233,10 @@ La ejecución del programa se puede ver en la siguiente imagen:
 ### Ejercicio 8.
 
 
-**Implementar un programa en C con OpenMP, a partir del código del Programa [SumaVectores.c](google), que calcule en
+**Implementar un programa en C con OpenMP, a partir del código del Programa [SumaVectores.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/SumaVectores.c), que calcule en
 paralelo la suma de dos vectores (`v3 = v1 + v2;` $v_3(i) = v_1(i) + v_2(i),~\forall i=0,\dots,N-1$) usando las directivas `parallel` y `sections/section` (se debe aprovechar el paralelismo de datos usando estas directivas en lugar de la directiva `for`); es decir, hay que repartir
 el trabajo (tareas) entre varios threads usando `sections/section`. Se deben paralelizar también las tareas asociadas a la inicialización de los vectores.
-Como en el código del Programa [SumaVectores.c](google) se debe obtener el tiempo (`elapsed time`) que supone el cálculo de la suma. Para obtener este tiempo usar la función `omp_get_wtime()`, que proporciona el estándar
+Como en el código del Programa [SumaVectores.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/SumaVectores.c) se debe obtener el tiempo (`elapsed time`) que supone el cálculo de la suma. Para obtener este tiempo usar la función `omp_get_wtime()`, que proporciona el estándar
 OpenMP, en lugar de `clock_gettime()`. Algunos aspectos a tener en cuenta son:**
 - **El número de componentes $N$ de los vectores debe ser
 un argumento de entrada al programa.**
@@ -246,7 +246,7 @@ resultante, `v3`, para varios tamaños pequeños de los vectores (por ejemplo, $
 - **Se debe imprimir el tamaño de los vectores y el número de hilos.**
 - **Se debe imprimir sea cual sea el tamaño de los vectores el tiempo de ejecución del código paralelo que suma los vectores y, al menos, el primer y último componente de `v1`, `v2` y `v3` (esto último evita que las optimizaciones del compilador eliminen el código de la suma).**
 
-El programa implementado con OpenMP se encuentra en el fichero [sp-OpenMP-sections.c](google).
+El programa implementado con OpenMP se encuentra en el fichero [sp-OpenMP-sections.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/sp-OpenMP-sections.c).
 
 La ejecución del programa se puede ver en la siguiente imagen:
 ![Ejecución del programa sp-OpenMP-sections.c](./Imágenes/8_sp-OpenMP-sections.png)
@@ -264,12 +264,12 @@ En el [ejercicio 7](#ejercicio-7), se ha empleado la directiva `#pragma omp for`
 
 ### Ejercicio 10.
 
-**Rellenar una tabla para atcgrid y otra para su PC con los tiempos de ejecución de los programas paralelos implementados en los ejercicios [7](#ejercicio-7) y [8](#ejercicio-8) y el programa secuencial [SumaVectores.c](google). Generar los ejecutables usando `-O2`. Escribir un script para realizar las ejecuciones necesarias utilizando como base el script del BP0. En la tabla debe aparecer el tiempo de ejecución del trozo de código que realiza la suma en paralelo (este es el tiempo que deben imprimir los programas). Ponga en la tabla el número de threads/cores que usan los códigos (use el máximo número de cores físicos del computador que como máximo puede aprovechar el código, no use un número de threads superior al número de cores físicos). Represente en una gráfica los tres tiempos.**
+**Rellenar una tabla para atcgrid y otra para su PC con los tiempos de ejecución de los programas paralelos implementados en los ejercicios [7](#ejercicio-7) y [8](#ejercicio-8) y el programa secuencial [SumaVectores.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/SumaVectores.c). Generar los ejecutables usando `-O2`. Escribir un script para realizar las ejecuciones necesarias utilizando como base el script del BP0. En la tabla debe aparecer el tiempo de ejecución del trozo de código que realiza la suma en paralelo (este es el tiempo que deben imprimir los programas). Ponga en la tabla el número de threads/cores que usan los códigos (use el máximo número de cores físicos del computador que como máximo puede aprovechar el código, no use un número de threads superior al número de cores físicos). Represente en una gráfica los tres tiempos.**
 
 *NOTA*: Nunca ejecute código que imprima todos los
 componentes del resultado cuando este número sea elevado. Observar que el número de componentes en la tabla llega hasta $67108864$.
 
-El script que he usado para realizar las ejecuciones se encuentra en el fichero [sp-OpenMP-script10.sh](google). Principalmente, contiene lo siguiente:
+El script que he usado para realizar las ejecuciones se encuentra en el fichero [sp-OpenMP-script10.sh](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/sp-OpenMP-script10.sh). Principalmente, contiene lo siguiente:
 ```bash
 export OMP_DYNAMIC=False
 
@@ -337,9 +337,9 @@ Como podemos ver, paralelizar mediante la directiva `sections` siempre es más l
 
 ### Ejercicio 11.
 
-**Rellenar una tabla para atcgrid con el tiempo de ejecución, tiempo de CPU del usuario y tiempo CPU del sistema obtenidos con `time` para el ejecutable del [ejercicio 7](#ejercicio-7) y  para el programa secuencial del Programa [SumaVectores.c](google). Ponga en la tabla el número de threads (que debe coincidir con el número cores físicos y lógicos) que usan los códigos. Escribir un script para realizar las ejecuciones necesarias utilizando como base el script del seminario de BP0 (se deben imprimir en el script al menos las variables de entorno que ya se imprimen en el script de BP0) ¿El tiempo de CPU que se obtiene es mayor o igual que el tiempo real (`elapsed`)? Justifique la respuesta.**
+**Rellenar una tabla para atcgrid con el tiempo de ejecución, tiempo de CPU del usuario y tiempo CPU del sistema obtenidos con `time` para el ejecutable del [ejercicio 7](#ejercicio-7) y  para el programa secuencial del Programa [SumaVectores.c](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/SumaVectores.c). Ponga en la tabla el número de threads (que debe coincidir con el número cores físicos y lógicos) que usan los códigos. Escribir un script para realizar las ejecuciones necesarias utilizando como base el script del seminario de BP0 (se deben imprimir en el script al menos las variables de entorno que ya se imprimen en el script de BP0) ¿El tiempo de CPU que se obtiene es mayor o igual que el tiempo real (`elapsed`)? Justifique la respuesta.**
 
-El script que he usado para realizar las ejecuciones se encuentra en el fichero [sp-OpenMP-script11.sh](google). Principalmente, contiene lo siguiente:
+El script que he usado para realizar las ejecuciones se encuentra en el fichero [sp-OpenMP-script11.sh](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/C%C3%B3digos/sp-OpenMP-script11.sh). Principalmente, contiene lo siguiente:
 ```bash
 export OMP_DYNAMIC=False
 
