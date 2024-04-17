@@ -311,7 +311,7 @@ Notemos que el cálculo del área de los diferentes intervalos es independiente,
     \begin{minted}[xleftmargin=1cm]{c++}
 main(int argc, char** argv){
     double ancho, x, sum = 0;
-    int intervalos, i;
+    int intervalos;
 
     intervalos = atoi(argv[1]);
     ancho = 1.0 / (double) intervalos;
@@ -355,14 +355,13 @@ Una arquitectura homogénea (aquella donde los nodos de cómputo son iguales, o 
 \subsubsection{Asignar tareas a procesadores}
 La asignación de tareas (procesos o hebras) a procesadores puede realizarse de forma \textbf{estática} (en tiempo de compilación o al escribir el programa) o \textbf{dinámica} (en tiempo de ejecución). La asignación dinámica es útil para evitar repartos complejos de tareas en sistemas heterogéneos, especialmente cuando no se conoce el número total de tareas que se van a ejecutar antes de la ejecución. Además, permite que la aplicación se ejecute exitosamente si algún procesador falla. Sin embargo, esta asignación consume un tiempo adicional de sincronización y comunicación.
 
-Un ejemplo de asignación estática es asignar iteraciones consecutivas de un mismo bucle a procesos consecutivos (round-robin), mientras que también podemos asignar iteraciones consecutivas a un mismo proceso (continua). Un ejemplo de asignación dinámica es almacenar en una variable el índice de la siguiente iteración a ejecutar, de forma que el primer procesador desocupado lea el índice que le indique qué iteración ejecutar, aumentando su valor para que el siguiente procesador desocupado realice la siguiente. Notemos que este acceso a una variable que indique la siguiente iteración debe realizarse en exclusión mutua (por ejemplo, usando un cerrojo). Con paso de mensajes, la asignación dinámica podría hacerse desde el proceso dueño en un sistema dueño-esclavo. Hay herramientas como OpenMP que permiten que el procesador deje al compilador la asignación de tareas a procesos (o hebras).
+Un ejemplo de asignación estática es asignar iteraciones consecutivas de un mismo bucle a procesos consecutivos (\textit{round-robin}), mientras que también podemos asignar iteraciones consecutivas a un mismo proceso (continua), como es el caso del bucle \verb|for| en OpenMP. Un ejemplo de asignación dinámica es almacenar en una variable el índice de la siguiente iteración a ejecutar, de forma que el primer procesador desocupado lea el índice que le indique qué iteración ejecutar, aumentando su valor para que el siguiente procesador desocupado realice la siguiente. Notemos que este acceso a una variable que indique la siguiente iteración debe realizarse en exclusión mutua (por ejemplo, usando un cerrojo). Con paso de mensajes, la asignación dinámica podría hacerse desde el proceso dueño en un sistema dueño-esclavo. Hay herramientas como OpenMP que permiten que el procesador deje al compilador la asignación de tareas a procesos (o hebras).
 
-\subsubsection{Ejemplo}
-Si retomamos el ejemplo de la sección anterior en un sistema (por ejemplo) homogéneo uniforme, nos gustaría que la carga de trabajo se distribuya por igual en todos los procesadores. Por tanto, nos interesa más usar una asignación estática frente a una dinámica, debido a que esta última perjudicarían considerablemente las prestaciones debido a la comunicación adicional que añaden.
-
+\begin{ejemplo}
+    Si retomamos el ejemplo de la sección anterior en un sistema (por ejemplo) homogéneo uniforme, nos gustaría que la carga de trabajo se distribuya por igual en todos los procesadores. Por tanto, nos interesa más usar una asignación estática frente a una dinámica, debido a que esta última perjudicarían considerablemente las prestaciones debido a la comunicación adicional que añaden.
+\end{ejemplo}
 \subsection{Código paralelo}
 El código que queremos desarrollar va a depender del estilo de programación que se utilice (variables compartidas, paso de mensajes, paralelismo de datos), del modo de programación (SPMD, MPMD, mixto), del punto de partida (versión secuencial, descripción del problema), de la herramienta software que usemos (lenguajes de programación, compiladores, bibliotecas de funciones, APIs de funciones y directivas, \ldots) y de la estructura (granja de tareas, segmentada, descomposición de datos, divide y vencerás, maestro-esclavo, \ldots) elegida. Todas estas a su vez dependen de la aplicación que queremos paralelizar.
-
 Habrá que añadir o utilizar en el programa las funciones, directivas o construcciones del lenguaje que hagan falta para:
 \begin{enumerate}
     \item Crear y terminar procesos (o hebras).
@@ -429,126 +428,6 @@ Siguiendo con la evaluación en prestaciones de los computadores con aplicacione
     \item Comparar la Ley de Amdahl y la ganancia escalable.
 \end{itemize}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%\subsection{Ganancia en prestaciones y escalabilidad}
-%Estudiando la escalabilidad, pretendemos evaluar en qué medida aumentan las prestaciones de un código paralelo conforme se incrementa el número de procesadores usados en su ejecución. 
-%
-%El incremento o \textbf{ganancia en prestaciones}, también denominado ganancia de velocidad (\verb|speed up|), que se obtiene utilizando $p$ procesadores ($S(p)$) se calcula dividiendo el tiempo de ejecución secuencial $T_S$ entre el tiempo de ejecución paralelo usando los $p$ procesadores, $T_P(p)$:
-%\begin{equation}
-    %S(p) = \dfrac{T_S}{T_P(p)}
-%\end{equation}
-%
-%El tiempo de ejecución en paralelo $T_P$ depende obviamente del número de procesadores dedicados a su cómputo, $p$, y del tamaño del problema, $n$. Fijados estas dos variables, tenemos que el tiempo de ejecución en paralelo depende del tiempo de ejecución en paralelo de las tareas presentes en el código secuencial (tiempo de cálculo paralelo, $T_C$) y del tiempo de \textbf{sobrecarga} introducido por la paralelización ($T_O$), debido por ejemplo al coste de creación de procesos (o hebras), así como de comunicaciones y sincronizaciones. Tenemos que:
-%\begin{equation}
-    %T_P(p,n) = T_C(p,n) + T_O(p,n)
-%\end{equation}
-%Para entender mejor estos concepctos y sobretodo, esta última ecuación, observamos el siguiente ejemplo:
-%
-%\begin{ejemplo}
-    %Tenemos un código secuencial formado por un bucle que realiza 16 iteraciones, donde cada iteración tiene un tiempo de ejecución de 1 segundo:
-    %\begin{minted}[xleftmargin=1cm]{c++}
-%for(int i = 0; i < 16; i++){
-    %v[i] = f(i)
-%}
-    %\end{minted}
-    %El bucle es paralelizable, y decidimos repartir sus iteraciones entre 4 hebras (4 iteraciones por hebra). De esta forma, el programa antes tenía un tiempo de ejecución $T_S=16$ segundos. Ahora, despreciando todos los retardos que introduce la paralelización (tiempo $T_O$), tenemos que el código tarda $T_C(4,16)=4$ segundos (al reptartir 16 iteraciones de un segundo entre 4 hebras). Sin embargo, debido al costo de paralelización anteriormente comentado $T_O$, el tiempo de ejecución real será de:
-    %\begin{equation*}
-        %T_P(4,16) = T_C(4,16) + T_O(4,16) = 4 + T_O(4,16) > 4
-    %\end{equation*}
-%\end{ejemplo}
-%
-%Ciertos autores consideran dentro de $T_O(p,n)$ la penalización por no lograr repartir de forma equilibrada la carga de trabajo.
-%
-%Podemos llegar a tener distintas curvas de escalabilidad. Estas son resultado de diferentes modelos de códigos:
-%\begin{itemize}
-%\item Si todo el código \underline{puede repartirse por igual} entre los $p$ procesadores disponibles sea cual sea $p$ es decir, el \underline{grado de paralelismo} (número de procesadores) \underline{es ilimitado} y \underline{no} se presenta ninguna \underline{sobrecarga} ($T_O=0$), obtenemos un tiempo de ejecución de $T_P(p) = \nicefrac{T_S}{p}$ con $p$ procesadores para un código secuencial con un tiempo de ejecución de $T_S$. Es decir, una ganancia:
-    %\begin{equation*}
-        %S(p) = \dfrac{T_S}{T_P(p)} = \dfrac{T_S}{\nicefrac{T_S}{p}}=p
-    %\end{equation*}
-%lineal (es una recta, $f(x)=x$). Se trata de un caso ideal.
-    %\item Sin embargo, si hay una fracción de código secuencial $f$ (recordamos el significado de la $f$ en la Ley de Amdahl) que no puede repartirse por igual entre los $p$ procesadores disponibles (manteniendo grado de paralelismo ilimitado y ninguna sobrecarga), obtenemos aplicando la Ley de Amdahl, una ganancia de:
-    %\begin{equation*}
-        %S(p) = \dfrac{1}{f+\dfrac{(1-f)}{p}}
-    %\end{equation*}
-    %Que, tomando el mayor grado de paralelismo (recordamos que era ilimitado), obtenemos:
-    %\begin{equation*}
-        %\lim_{p\to\infty} S(p) = \dfrac{1}{f}
-    %\end{equation*}
-    %\item Si además, no disponemos de un grado ilimitado de paralelismo (suponemos que disponemos de $n$ procesasdores), obtenemos la misma ganancia que en el caso anterior, con la diferencia de que la ganancia máxima será ahora:
-    %\begin{equation*}
-        %S(n) = \dfrac{1}{f+\dfrac{1-f}{n}}
-    %\end{equation*}
-    %\item Finalmente, si consideramos un factor $f$ que no se puede paralelizar, un grado de independencia ilimitado y una sobrecarga que crece linealmente con $p$, obtenemos:
-        %\begin{equation*}
-            %S(p) = \dfrac{1}{f+\dfrac{1-f}{p}+\dfrac{T_O(p)}{T_S}}
-        %\end{equation*}
-        %Que, con todo el grado de paralelismo posible, obtendremos:
-        %\begin{equation*}
-            %\lim_{p\to\infty}S(p) = 0
-        %\end{equation*}
-        %Esto es, hay un número de procesadores a partir del cual la ganancia comienza a decrecer debido a que la sobrecarga se puede incrementar con el número de procesadores.
-%\end{itemize}
-%
-%\subsection{Ley de Amdahl}
-%De todo este análisis, llegamos a que la Ley de Amdahl dice que la ganancia en prestaciones que puede conseguirse aplicando paralelismo a un código secuencial está limitada por la fracción no paralelizable ($f$) del mismo. Esta ley da, por tanto, una visión pesimista de las ventajas de la paralelización.
-%
-%Sin embargo, la fracción de código secuencial que limita la escalabilidad ($f$) puede disminuir en muchas aplicaciones aumentando el tamaño del problema ($n$) que resuelve el código. Es decir, aumentando el tamaño del problema, obtenemos una valor de ganancia mayor. Esto nos lleva a pensar que la paralelización de un código puede tener dos objetivos principales:
-%\begin{itemize}
-    %\item Disminuir el tiempo de ejecución.
-    %\item Aumentar el tamaño del problema a resolver para con ello mejorar la calidad del resultado.
-%\end{itemize}
-%
-%Amdalh supone que conforme aumentamos el número de procesadores, $p$, el tiempo de ejecución secuencial, $T_S$, es consante y el tiempo $T_P$ disminuye.
-%
-%\subsection{Ganancia escalable}
-%Mientras que Amdahl considera que el tiempo de ejecución secuencial se mantiene constante conforme aumenta el número de procesadores (concluyendo que la ganancia está limitada por la fracción de código no paralelizable), Gustafson mantiene constante el tiempo de ejecución paralelo y muestra que la ganancia puede crecer con pendiente constante conforme se incrementa el número de procesadores:
-%\begin{equation}
-    %S(p) = \dfrac{T_S(n)}{T_P} = \dfrac{f\cdot T_P+p\cdot (1-f)\cdot T_P}{T_P}= f+p\cdot (1-f)
-%\end{equation}
-%La denominada \textbf{Ley de Gustafson}. 
-%
-%Para evaluar en qué medida las prestaciones que ofrece un sistema para un código paralelo se aercan a las prestaciones máxima que idealmente debería ofrecer dados los procesadores disponibles en el mismo, se usa la siguiente expresión de \textbf{eficiencia}:
-%\begin{equation}
-    %E(p) = \dfrac{S(p)}{p}
-%\end{equation}
-
-% TODO: Arreglar toda esta última parte y hacer ejercicios
-
 \subsection{Ganancia en velocidad}
 La ganancia en velocidad ($S$) se utiliza para estudiar en qué medida se incrementan las prestaciones al ejecutar una aplicación en paralelo en un sistema con múltiples procesadores frente a un sistema uniprocesador. Este estudio puede interesarnos tanto por evaluar el computador paralelo como por evaluar la implementación paralela de la aplicación.
 
@@ -564,14 +443,13 @@ Es decir, dividiendo las prestaciones en un sistema con $p$ procesadores frente 
 
 Donde $T_S$ sería el tiempo de ejecución del programa secuencial y $T_P(p)$ el tiempo de ejecución del programa paralelo con $p$ procesadores. Para obtener $T_S$, se debería escoger el mejor programa secuencial que resuelva la aplicación (para sólo centrarnos en el cambio de la implementación del paralelismo).
 
-El tiempo de ejecución en paralelo no sólo depende del tiempo de cómputo (de cálculo) en paralelo de las tareas detectadas en la aplicación ($T_C(p)$), sino también de un tiempo de penalización o sobrecarga (\verb|overhead|) $T_O(p)$. Este tiempo es debido a:
+El tiempo de ejecución en paralelo no sólo depende del tiempo de cómputo (de cálculo) en paralelo de las tareas detectadas en la aplicación ($T_C(p)$), sino también de un tiempo de penalización o sobrecarga (\verb|overhead|) $T_O(p)$. Este tiempo de sobrecarga es debido a:
 \begin{itemize}
     \item El tiempo dedicado a comunicación y sincronización entre procesos.
     \item El tiempo para crear y terminar los procesos y hebras que permiten la paralelización.
     \item El tiempo de ejecución de operaciones añadidas en la versión paralela que no son necesarias en la secuencial.
 \end{itemize}
 Además, el tiempo de penalización resultante de un mal reparto de carga de trabajo en procesadores también puede incluirse en este $T_O(p)$.
-
 Tanto este tiempo como el tiempo de cómputo dependen del número de procesadores: cuanto mayor sea este, mayor será el grado de paralelismo (número máximo de tareas independientes que pueden ejecutarse en paralelo) de la aplicación aprovechado. A mayor número de procesos involucrados (debido probablemente a un mayor número de procesadores), mayor será el tiempo de sobrecarga\footnote{Si esto no queda claro, observar la enumeración superior.}.
 
 \begin{ejemplo}
@@ -586,18 +464,17 @@ for(int i = 0; i < 16; i++){
         T_S = 16 \\
         T_C(4) = \nicefrac{16}{4} = 4
     \end{gather*}
-    Cabe destacar que tenemos $T_C(4)=4$ y no $T_P(4)=4$, ya que los costos de creación, comunicación, sincronización, borrado (y probablemente más acciones) de procesos (o hebras) se encuentran presentes. Por tanto, esperamos un $T_O(4) > 0\Longrightarrow T_P(4) > 4$.
+    Cabe destacar que tenemos $T_C(4)=4$ y no $T_P(4)=4$, ya que los costos de creación, comunicación, sincronización, borrado (y probablemente más acciones) de procesos (o hebras) se encuentran presentes. Por tanto, como esperamos un $T_O(4) > 0$, tenemos que $T_P(4) > 4$.
 \end{ejemplo}
 
 En el ejemplo anterior, cada iteración del bucle tardaba 1 segundo que, en comparación con los tiempos actuales de creación, comunicación, \ldots de procesos (o hebras) es ridículamente grande. Por tanto, podemos esperar un $T_P(4) \sim T_C(4)$. Sin embargo, si cada iteración del bucle tardase en vez de 1 segundo 1 milisegundo, ya sí tendríamos que probablemente el tiempo de ejecución tendría una diferencia relativa mayor con el tiempo de cálculo.
 
 \subsubsection{Escalabilidad}
-La representación de la ganancia en función del número de procesadores ($p$) nos permite evaluar la escalabilidad de una implementación o arquitectura paralela. Idealmente, esperaríamos conseguir un tiempo de ejecución paralelo de ${T_P(p) = \nicefrac{T_S}{p}}$ (como se vió en el ejemplo anterior). Para lograrlo, se debería poder \underline{distribuir} todo el programa secuencia en \underline{partes iguales} entre los procesadores, y el tiempo de \underline{sobrecarga} debería ser \underline{despreciable}. En este caso, la ganancia sería:
+La representación de la ganancia en función del número de procesadores ($p$) nos permite evaluar la escalabilidad de una implementación o arquitectura paralela. Idealmente, esperaríamos conseguir un tiempo de ejecución paralelo de ${T_P(p) = \nicefrac{T_S}{p}}$ (como se vio en el ejemplo anterior). Para lograrlo, se debería poder \underline{distribuir} todo el programa secuencia en \underline{partes iguales} entre los procesadores, y el tiempo de \underline{sobrecarga} debería ser \underline{despreciable}. En este caso, la ganancia sería:
 \begin{equation*}
     S(p) = \dfrac{T_S}{T_P(p)} = \dfrac{T_S}{\nicefrac{T_S}{p}} = p
 \end{equation*}
-de forma que la escalabilidad sería \emph{lineal}. Para que siempre pueda ser $p$ la ganancia independientemente del valor de $p$, el \underline{grado de paralelismo} debe ser \underline{ilimitado}, es decir, siempre podremos dividir el código entre los $p$ procesadores posibles sea cual sea $p$. Debido a estas tres limitaciones, nos planteamos estudiar qué posibilidades se pueden plantear:
-
+de forma que la escalabilidad sería \emph{lineal}. Para que siempre pueda ser $p$ la ganancia independientemente del valor de $p$, el \underline{grado de paralelismo} debe ser \underline{ilimitado}, es decir, siempre podremos dividir el código entre los $p$ procesadores posibles sea cual sea $p$. Debido a estas tres limitaciones, nos planteamos estudiar qué posibilidades se pueden plantear.
 Podemos encontrarnos con \emph{escalabilidades superlineales}, casos donde $S(p)>p$ (no son de relevancia ahora mismo). Dos ejemplos de este suceso pueden ser:\label{ej:superlineal}
 \begin{itemize}
     \item Estamos trabajando con una estructura de datos grande (como por ejemplo, un vector muy largo) y puede que al repartir el trabajo, reducimos los fallos de caché (un único procesador debería cargar en cada momento un subvector del vector con el que trabajamos. Sin embargo, puede darse que al repartir el vector entre los procesadores, se disminuya su tamaño y se den menos fallos en cada procesador).
@@ -606,10 +483,11 @@ Podemos encontrarnos con \emph{escalabilidades superlineales}, casos donde $S(p)
 Además, hemos considerado que todo el programa secuencial se puede paralelizar, pero en la práctica podemos encontrarnos (de forma bastante frecuente) tareas que no se puedan ejecutar en paralelo y que suponen un tiempo no despreciable. Más aún, no hemos considerado ninguna limitación en el grado de paralelismo, que sí estará limitado en la práctica (por ejemplo, un bucle de $n$ iteraciones tiene un grado de paralelismo de, a lo sumo, $n$). Finalmente, tampoco hemos considerado tiempos de sobrecarga.
 
 Generalizando lo ya visto, impondremos como mínimo que la carga paralelizable pueda repartirse por igual entre los procesadores disponibles (para simplificar), y además que el tiempo de ejecución $T_S$ es constante (aún variando el número de procesadores). Con estas restricciones generales, procedemos a estudiar casos concretos donde ya damos cierta libertad al problema, con la finalidad de estudiar la escalabilidad de cada sistema:
+% // TODO: Incluir gráfica escabilidad
 \begin{enumerate}
     \item Comenzamos suponiendo que la fracción no paralelizable del código secuencial es despreciable, que tenemos un grado de paralelismo ilimitado y un tiempo de sobrecarga despreciable. Estamos en el caso inicialmente estudiado como motivación de esta sección, el caso de \textbf{escalabilidad lineal} (o ganancia lineal):
         \begin{equation*}
-            S(p) = \dfrac{T_S}{T_P(p)} = p
+            S(p) = \dfrac{T_S}{T_P(p)} = \dfrac{T_S}{\nicefrac{T_S}{p}} = p
         \end{equation*}
     \item Ahora, suponemos la presencia de una fracción no despreciable del código secuencial que no puede ser paralelizada. A esta fracción la llamaremos $f$. Además, consideramos al igual que en el punto anterior, un grado de paralelismo ilimitado y una sobrecarga despreciable. En este caso tendremos $T_P(p) = T_C(p) = f\cdot T_S + \frac{1-f}{p}\cdot T_S$ debido a que hay una fracción del código secuencial $f$ que no podemos paralelizar y paralelizamos la otra parte, $1-f$, reduciendo el tiempo de forma lineal (al encontrarnos en el caso anterior), obteniendo así una ganancia de:
         \begin{equation*}
@@ -648,7 +526,7 @@ Generalizando lo ya visto, impondremos como mínimo que la carga paralelizable p
         \begin{equation*}
             \lim_{p\to\infty}S(p) = 0
         \end{equation*}
-        Es decir, llega un punto (un grado de paralelismo) a partir del cual si aumentamos el número de procesadores la ganancia deja de crecer y comienza a decrecer. Este decremento se inicia cuando al incrementar $p$ se incrementa el término de la sobrecarga $\nicefrac{T_O(p)}{T_S}$ en mayor medida que se decrementa la parte del cálculo paralelo, de forma que el denominzador de la expresión aumenta en lugar de disminuir.
+        Es decir, llega un punto (un grado de paralelismo) a partir del cual si aumentamos el número de procesadores la ganancia deja de crecer y comienza a decrecer. Este decremento se inicia cuando al incrementar $p$ se incrementa el término de la sobrecarga $\nicefrac{T_O(p)}{T_S}$ en mayor medida que se decrementa la parte del cálculo paralelo, de forma que el denominador de la expresión aumenta en lugar de disminuir.
 \end{enumerate}
 
 \subsection{Ley de Amdahl}
@@ -688,14 +566,15 @@ Este valor será consistente si mantenemos constante el tiempo de ejecución en 
 Mientras que la Ley de Amdahl asume que el tiempo de ejecución secuencial (o tamaño del problema) se mantiene constante y muestra que la ganancia está limitada debido al código no paralelizado (tomando límite cuando $p\to\infty$), Gustafson mantiene constante el tiempo de ejecución paralelo y muestra que la ganancia en función de $p$ puede crecer con pendiente constante. En ambos estudios se desprecia el tiempo de sobrecarga.
 
 \subsection{Eficiencia}
-La eficiencia permite evaluar qué tan cerca está la solución a una aplicación con código paralelo (carga de trabajo en general) respecto a la solución que idealmente deberíamos obtener dados los recursos disponibles. Dicho de otra forma, permite evaluar el grado de aprovechamiento de los recursos del sistema. Las prestaciones que se pueden esperar idealmente con $p$ recursos serían las prestaciones que se obtienen con un recurso multiplicado por $p$ (además, tendremos en cuenta también la dependencia respecto a la variable $n$, anteriormente definida):
+La eficiencia permite evaluar qué tan cerca está la solución a una aplicación con código paralelo (carga de trabajo en general) respecto a la solución que idealmente deberíamos obtener dados los recursos disponibles. Dicho de otra forma, permite evaluar el grado de aprovechamiento de los recursos del sistema. Las prestaciones que se pueden esperar idealmente con $p$ recursos serían las prestaciones que se obtienen con un recurso multiplicado por $p$:
 \begin{equation*}
-    E(p,n) = \dfrac{Prestaciones(p,n)}{p\cdot Prestaciones(1,n)}
+    E(p) = \dfrac{Prestaciones(p)}{p\cdot Prestaciones(1)}
 \end{equation*}
 Teniendo en cuenta la definición de la ganancia, llegamos a que:
 \begin{equation}
-    E(p,n) = \dfrac{S(p,n)}{p}
+    E(p) = \dfrac{S(p)}{p}
 \end{equation}
-es decir, la eficiencia se obtiene dividiendo la ganancia entre el número de recursos (que es la ganancia ideal). La ganancia máxima es $p$, por lo que la eficiencia máxima es 1. Por otra parte, la ganancia mínima es 1, por lo que la eficiencia mínima será $\nicefrac{1}{p}$. Una expresión que refleje en qué medida hay que incrementar el tamaño de los datos para conseguir una eficiencia constante, incluyendo el tiempo de sobrecarga, es una buena forma de evaluar una implementación paralela y/o arquitectura. 
+es decir, la eficiencia se obtiene dividiendo la ganancia entre el número de recursos (que es la ganancia ideal). La ganancia máxima es $p$, por lo que la eficiencia máxima es 1. Por otra parte, la ganancia mínima es 1, por lo que la eficiencia mínima será $\nicefrac{1}{p}$.
+% Una expresión que refleje en qué medida hay que incrementar el tamaño de los datos para conseguir una eficiencia constante, incluyendo el tiempo de sobrecarga, es una buena forma de evaluar una implementación paralela y/o arquitectura. 
 
 
