@@ -1,0 +1,104 @@
+\chapter{Arquitecturas TLP}
+En este capítulo, nos centraremos en arquitecturas que permiten ejecutar de forma paralela o concurrente múltiples flujos de instrucciones (o \emph{threads}) que comparten memoria. Se tratan de arquitecturas con paralelismo a nivel de \emph{thread} (\emph{Thread-Level Parallelism}) con una única instancia del Sistema Operativo. Por tanto, cada vez que mencionemos arquitecturas TLP, nos estamos refiriendo a arquitecturas TLP con una única instancia del Sistema Operativo. En este contexto, el SO es el encargado de gestionar los flujos de instrucciones.
+
+Los paradigmas de programación paralela por variables compartidas son los más fáciles de implementar en este tipo de arquitecturas, mientras que las orientadas a paso de mensajes están más relacionadas con arquitecturas TLP con múltiples instancias del SO\@.
+
+La compartición de memoria que se da trae conceptos como la coherencia del sistema de memoria, consistencia del sistema de memoria o la sincronización entre flujos; conceptos que estudiaremos a lo largo de este capítulo.
+
+\section{Arquitecturas}
+\subsection{Objetivos}
+Esta sección está orientada a:
+\begin{itemize}
+    \item Distinguir entre multhread, multicores y multiprocesadores.
+    \item Comparar entre cores multithread de grano fino, grueso y cores con multithread simultáneo.
+\end{itemize}
+
+% // TODO: COmpletar todo esto
+
+\subsection{Clasificaciones}
+Las arquitecturas TLP con una instancia del SO pueden clasificarse en:
+\begin{description}
+    \item [Multiprocesadores] Son capaces de ejecutar en paralelo varios flujos de instrucciones en un computador con varios núcleos o procesadores de forma que cada flujo se ejecuta en un núcleo o procesador distinto. Pueden encontrarse multiprocesadores en un chip (como los multinúcleos), en una placa o en uno o varios armarios.
+    \item [Multinúcleos (\emph{multicores})] Pueden ejecutar en paralelo varios flujos de instrucciones en un chip de procesamiento con múltiples núcleos de forma que cada flujo se ejecuta en un núcleo distinto. Un chip multinúcleo es un multiprocesador en un chip. La denominación de \emph{multicores} proviene de un nombre comercial que dio Intel a sus multiprocesadores en un chip. De esta forma, se denomica procesador a los chips o encapsulados de procesamiento y núcleo (o core) a los procesadores.
+    \item [Núcleos (o cores) \emph{multithread}] Se trata de un núcleo de procesamiento (procesador) en el que se ha modificado su estructura (ILP) para poder ejecutar flujos de instrucciones de forma concurrente o en paralelo.
+\end{description}
+
+
+\subsubsection{Clasificaciones de cores multithread}
+A su vez, los cores multithread pueden clasificarse en:
+\begin{description}
+    \item [Temporal Multithreading (TMT)] Son capaces de ejecutar varios \emph{threads} de forma \underline{concurrente} en el mismo core. El hardware es el encargado de realizar la conmutación entre \emph{threads}. Emite las instruccinoes de un único \emph{thread} en un ciclo.
+    \item [Simultaneous MultiThreading (SMT)] También llamado \emph{Horizontal multithread}, ejecuta en un core superescalar varios \emph{threads} en \underline{paralelo}. Son capaces de emitir instrucciones de varios \emph{threads} en un ciclo y no implementan conmutaciones entre \emph{threads}.
+\end{description}
+
+\subsubsection{Clasificaciones de cores TMT}
+\begin{description}
+    \item [Fine-grain multithreading (FGMT)] También conocido como \emph{interleaved multithreading}, la conmutación entre threads la decide el hardware en cada ciclo (tiene un coste nulo):
+        \begin{itemize}
+            \item Por turno rotatorio, \emph{round-robin}.
+            \item Por eventos de cierta latencia y una técnica de planificación. Ejemplos de eventos son:
+                \begin{itemize}
+                    \item Dependencia funcional.
+                    \item Acceso a datos de caché L1.
+                    \item Saltos no predecibles.
+                    \item Operaciones de cierta latencia.
+                    \item \ldots
+                \end{itemize}
+        \end{itemize}
+    \item [Coarse-grain multithreading (CGMT)] También conocido como \emph{blocked multithreading}, la conmutación entre threads la decide el hardware (con un costo nulo o de varios ciclos):
+        \begin{itemize}
+            \item Tras un intervalo de tiepmo prefijado, \emph{timeslice multithreading}.
+            \item Por eventos de cierta latencia, \emph{switch-on-event multithreading}.
+        \end{itemize}
+\end{description}
+
+\subsubsection{Clasificación de cores con CGMT con conmutación por eventos}
+\begin{description}
+    \item [Estática] Presenta una comutación implícita para instrucciones de carga, almacenamiento y salto; e instrucciones explícitas para conmutaciones, tales como instrucciones añadidas al repertorio.
+        \begin{itemize}
+            \item Ventaja: Coste de cambio de contexto bajo, de 1 o 0 ciclos.
+            \item Inconveniente: Cambios de contextos innecesarios.
+        \end{itemize}
+    \item [Dinámica] La conmutación se realiza típicamente por fallos en la última caché dentro del chip de procesamiento (conmutación por fallo de caché), interrupciones (conmutación por señal), \ldots
+        \begin{itemize}
+            \item Ventaja: Reduce cambios de contexto innecesarios.
+            \item Inconveniente: mayor sobrecarga al cambiar de contexto.
+        \end{itemize}
+\end{description}
+
+% // TODO: COmpletar
+
+
+
+\section{Coherencia del sistema de memoria}
+\subsection{Objetivos}
+Tras esta sección, debería ser capaz de:
+\begin{itemize}
+    \item Comparar los métodos de actualización de memoria principal implementados en caché.
+    \item Comparar las alternativas para propagar una escritura en protocolos de coherencia de caché.
+    \item Explicar qué debe garantizar el sistema de memoria para evitar problemas por incoherencias.
+    \item Descibir las partes en las que se puede dividir el análisis o el diseño de protocolos de coherencia.
+    \item Distinguir entre protocolos basados en directorios y protocolos de espionaje (snoopy).
+    \item Explicar el protocolo de mantenimiento de coherencia de espionaje MSI.
+    \item Explicar el protocolo de mantenimiento de coherencia de espionaje MESI.
+    \item Explicar el protocolo de mantenimiento de coherencia MSI basado en directorios con difusión y sin difusión.
+\end{itemize}
+
+\section{Consistencia del sistema de memoria}
+\subsection{Objetivos}
+Esta sección está orientada a adquirir los conocimientos necesarios para:
+\begin{itemize}
+    \item Explicar el concepto de consistencia.
+    \item Distinguir entre coherencia y consistencia.
+    \item Distinguir entre el modelo de consistencia secuencial y los modelos relajados.
+    \item Distinguir entre los diferentes modelos de consistencia relajados.
+\end{itemize}
+
+\section{Sincronización}
+\subsection{Objetivos}
+Tras esta sección, debería ser capaz de:
+\begin{itemize}
+    \item Explicar por qué es necesaria la sincronización en multiprocesadores.
+    \item Describir las primitivas para sincronización que ofrece el hardware.
+    \item Implementar cerrojos simples, cerrojos con etiqueta y barreras a partir de instrucciones máquina de sincronización y ordenación de accesos a memoria.
+\end{itemize}
