@@ -156,3 +156,57 @@ Almacenamos en cada nodo cual es la arista de menor costo que lo une con el conj
 
 Tras cada elección, deberemos actualizar dicha lista.
 La actualizamos de forma que sólo actualizamos los valores de los nodos conectados con el nuevo nodo.
+
+\section{Problema de Caminos Mínimos}
+Dado un grafo y dos nodos del grafo, buscar el camino mínimo que los una.
+
+El algoritmo Greedy es capaz de dar solución óptima al problema siempre y cuando no tengamos caminos con pesos negativos. Sí que la alcanzaríamos con costos nulos.
+
+\subsection{Algoritmo de Dijkstra}
+Dado un grafo y un nodo del mismo, es capaz de determinar el camino de costo mínimo desde dicho nodo hasta cualquier nodo del grafo.
+
+Es aplicable tanto a grafos dirigidos como no dirigidos.
+
+Supuesto que no hay caminos negativos:
+Propiedades
+\begin{enumerate}
+    \item Es fácil probar que existen subestructuras optimales. Es decir, una solución óptima al problema está compuesta de subsoluciones que son óptimas para problemas que resuelven.
+    \item $M(u,v) <= M(u,s) + M(s,v)$ para cualquier nodo $s$. Siendo $M$ la longitud de camino minima.
+\end{enumerate}
+
+Del conjunto de candidatos no conozco el camino de costo minimo al origen. Sin embargo, en cada paso voy a calcular el camino de costo minimo pasando sólo por el conjunto de nodos seleccionados. Si no existe, no ponemos costo (o infinito).
+
+
+Camino especial: Un camino que existe desde el origen hasta cualquier nodo que pasa solamente por el conjunto de vértices seleccionados, salvo el último.
+
+En cada paso, escoger el nodo de los no seleccionados con una menor distancia al origen.
+Cada vez que incluimos un nodo tenemos que actualizar la información. Sólo actualizamos la información de los nodos adyacentes al obtenido, que son los susceptibles de tener alterado su camino mínimo al conjunto de nodos especiales.
+Si el camino anterior es mayor, actualizamos el camino. Si no, no.
+
+La implementación más sencilla es $O(V^2)$. Con cola de prioridad es $O(A\cdot \log V)$.
+La sencilla es deseable para grafos densos y la de prioridad para grafos dispersos.
+
+\begin{proof}
+    Para cada $v$ del conjunto de seleccionados, coincide con el camino minimo desde el origen hasta dicho vértice. Por inducción sobre el tamano del conjunto de vertices (caso $n=0$, trivial).
+
+    En el paso de inducción, supongamos que el algoritmo de Dijkstra añade el vértice $v$. Dicho vértice representa la longitud de un camino de $S$ a $v$.
+
+    Si al añadirlo no es el camino mínimo desde $S$ a $v$, entonces tiene que haber otro camino de costo menor entre $s$ y $v$. Dicho camino no puede pasar sólo por vértices de $S$ (porque si no, el que hemos cogido que era el padre de $v$ no era el padre de $v$).
+
+    Sea $x$ el último nodo de los seleccionados que se encuentra en dicho camino y $y$ el último vértice de dicho camino fuera de los seleccionados.
+    \begin{align*}
+        d(v) &> M(s,v) = M(s,x) + c(x,y) + M(y, v)\\
+             &\geq M(s,x) + c(x,y) = d(x) + c(x,y) \geq d(y)
+    \end{align*}
+
+    Por tanto, en el paso de elección de $v$ no lo habríamos escogido, sino que habríamos escogido $y$. Contradicción.
+\end{proof}
+
+\begin{Observacion}
+    No podemos usar \verb|priority_queue|, al tener que actualizar los adyacentes.
+
+    Tener algo que permita obtener el menor y tener algo que permita actualizar el menor.
+    Le vale un vector.
+\end{Observacion}
+
+
