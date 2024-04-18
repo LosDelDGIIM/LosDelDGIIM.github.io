@@ -16,7 +16,7 @@
 
 ## Ejercicio 1
 
-**Este ejercicio se encuentra disponible en el archivo Ejercicio1.rb y descrito a continuación.**
+**Este ejercicio se encuentra disponible en el archivo [Ejercicio1.rb](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/PDOO/Ex%C3%A1menes%20de%20Teor%C3%ADa/Examen%2001/Ejercicio1.rb) y descrito a continuación.**
 
 Se proporciona el siguiente código:
 ```ruby
@@ -75,7 +75,7 @@ _______
 
 ## Ejercicio 2
 
-**Este ejercicio se encuentra disponible en el archivo Ejercicio2.java y descrito a continuación.**
+**Este ejercicio se encuentra disponible en el archivo [Ejercicio2.java](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/PDOO/Ex%C3%A1menes%20de%20Teor%C3%ADa/Examen%2001/Ejercicio2.java) y descrito a continuación.**
 
 Se proporciona el siguiente código:
 ```java
@@ -137,7 +137,7 @@ ____
 
 ## Ejercicio 3
 
-**Este ejercicio se encuentra disponible en el archivo Ejercicio3.java y descrito a continuación.**
+**Este ejercicio se encuentra disponible en el archivo [Ejercicio3.java](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/PDOO/Ex%C3%A1menes%20de%20Teor%C3%ADa/Examen%2001/Ejercicio3.java) y descrito a continuación.**
 
 Se proporciona el siguiente código:
 ```java
@@ -198,7 +198,7 @@ ____
 
 
 ## Ejercicio 4
-**Este ejercicio se encuentra disponible en el archivo Ejercicio4.java y descrito a continuación.**
+**Este ejercicio se encuentra disponible en el archivo [Ejercicio4.java](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/PDOO/Ex%C3%A1menes%20de%20Teor%C3%ADa/Examen%2001/Ejercicio4.java) y descrito a continuación.**
 
 Dado el siguiente código:
 ```java
