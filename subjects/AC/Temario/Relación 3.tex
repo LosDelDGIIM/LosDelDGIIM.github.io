@@ -1,0 +1,377 @@
+\section{Arquitecturas TLP}
+
+\begin{ejercicio}
+    En un multiprocesador SMP con 4 procesadores o nodos (N0-N3) basado en un bus, que
+    implementa el protocolo MESI para mantener la coherencia, supongamos una dirección de memoria incluida
+    en un bloque que no se encuentra en ninguna caché. Indique los estados de este bloque en las cachés y las
+    acciones que se producen en el sistema ante la siguiente secuencia de eventos para dicha dirección:
+    \begin{enumerate}
+        \item Lectura generada por el procesador 1.
+        \item Lectura generada por el procesador 2.
+        \item Escritura generada por el procesador 1.
+        \item Escritura generada por el procesador 2.
+        \item Escritura generada por el procesador 3.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Para un multiprocesador de memoria distribuida con $8$ nodos se quiere implementar un
+    protocolo para mantenimiento de coherencia basado en directorios. Suponiendo que se necesitan un bit de
+    estado para un bloque en el directorio de memoria principal y que el tamaño de una línea de caché es de 64
+    bytes, calcular el porcentaje del tamaño de memoria principal que supone el tamaño del directorio de vector
+    de bits completo.
+\end{ejercicio}
+
+\begin{ejercicio}
+    Suponga que en un CC-NUMA de red estática de 4 nodos (N0-N3) se implementa un protocolo
+    MSI basado en directorios sin difusión con dos estados en el directorio (válido e inválido). Cada nodo tiene 8
+    GBytes de memoria y una línea de caché supone 64 Bytes. Considere que el directorio utiliza vector de bits
+    completo.
+    \begin{enumerate}
+        \item Calcule el tamaño del directorio de uno nodo en bytes.
+        \item Indique cual sería el contenido del directorio, las transiciones de estados (en caché y en el directorio) y la secuencia de paquetes generados por el protocolo de coherencia en los siguientes accesos sobre una dirección D que se encuentra en la memoria del nodo 3 (inicialmente D no está en ninguna caché):
+        \begin{enumerate}
+            \item Lectura generada por el procesador del nodo 1.
+            \item Escritura generada por el procesador del nodo 1.
+            \item Lectura generada por el procesador del nodo 2.
+            \item Lectura generada por el procesador del nodo 3.
+            \item Escritura generada por el procesador del nodo 0.
+        \end{enumerate}
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Supongamos que se va a ejecutar en paralelo el siguiente código, donde \verb|x| e \verb|y| son variables
+    compartidas (inicialmente \verb|x=y=0|):
+    \begin{figure}[H]
+        \centering
+        \begin{subfigure}{0.3\textwidth}
+            \begin{minted}[frame=lines,
+                framesep=2mm,
+                baselinestretch=1.2,
+                linenos,
+                escapeinside=||]{cpp}
+x=1;
+x=2;
+print y;
+            \end{minted}
+            \caption{P1.}
+        \end{subfigure}\hspace{3cm}
+        \begin{subfigure}{0.3\textwidth}
+            \begin{minted}[frame=lines,
+                framesep=2mm,
+                baselinestretch=1.2,
+                linenos,
+                escapeinside=||]{cpp}
+y=1;
+y=2;
+print x;
+            \end{minted}
+            \caption{P2.}            
+        \end{subfigure}
+    \end{figure}
+
+    ¿Qué resultados se pueden imprimir si (considere que el compilador no altera el código):
+    \begin{enumerate}
+        \item Se ejecutan P1 y P2 en un multiprocesador con consistencia secuencial.
+        \item Se ejecutan en un multiprocesador basado en un bus que garantiza todos los órdenes excepto el
+        orden \verb|W|$\to$\verb|R|. Esto es debido a que los procesadores tienen buffer de escritura, permitiendo el
+        procesador que las lecturas en el código que ejecuta adelanten a las escrituras que tiene su buffer.
+        Obsérvese que hay varios resultados posibles.
+    \end{enumerate}
+\end{ejercicio}
+
+
+\begin{ejercicio}
+    Supongamos que se va a ejecutar en paralelo el siguiente código (inicialmente \verb|x=y=0|):
+    \begin{figure}[H]
+        \centering
+        \begin{subfigure}{0.3\textwidth}
+            \begin{minted}[frame=lines,
+                framesep=2mm,
+                baselinestretch=1.2,
+                linenos,
+                escapeinside=||]{cpp}
+x=30;
+y=40;
+flag=1;
+            \end{minted}
+            \caption{P1.}
+        \end{subfigure}\hspace{3cm}
+        \begin{subfigure}{0.3\textwidth}
+            \begin{minted}[frame=lines,
+                framesep=2mm,
+                baselinestretch=1.2,
+                linenos,
+                escapeinside=||]{cpp}
+while (flag==0) {};
+r1=x;
+r2=y;
+            \end{minted}
+            \caption{P2.}            
+        \end{subfigure}
+    \end{figure}
+
+    ¿Qué datos puede obtener P2 en los registros \verb|r1| y \verb|r2| si (considere que el compilador no altera el código):
+    \begin{enumerate}
+        \item Se ejecutan P1 y P2 en un multiprocesador con consistencia secuencial.
+        \item Se ejecutan en un multiprocesador con un modelo de consistencia que relaja todos los órdenes en
+        los accesos a memoria. Razone su respuesta.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Se quiere implementar un cerrojo simple en un multiprocesador SMP basado en procesadores de
+    la línea x86 de Intel, en particular, procesadores Intel Core. 
+    \begin{enumerate}
+        \item Teniendo en cuenta el modelo de consistencia de memoria que ofrece el hardware de este multiprocesador ¿podríamos implementar la función de liberación del cerrojo simple usando \verb|mov k, 0|, siendo \verb|k| la variable cerrojo? Razone su respuesta.
+        \item ¿Cómo se debería implementar la función de liberación de un cerrojo simple si se usan procesadores con la arquitectura ARMv7? Razone su respuesta.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Se ha ejecutado el siguiente código en un multiprocesador con un modelo de consistencia que no
+    garantiza ni \verb|W|$\to$\verb|R| ni \verb|W|$\to$\verb|W| (garantiza el resto de órdenes):
+    \begin{figure}[H]
+        \centering
+        \begin{minted}[frame=lines,
+            framesep=2mm,
+            baselinestretch=1.2,
+            linenos,
+            escapeinside=||]{cpp}
+sump = 0;
+for (i=ithread ; i<8 ; i=i+nthread) {
+    sump = sump + a[i];
+}
+while (Fetch_&_Or(k,1)==1) {};
+sum = sum + sump;
+k=0;
+        \end{minted}
+    \end{figure}
+    Conteste a las siguientes preguntas (considere que el compilador no altera el código):
+    \begin{enumerate}
+        \item Indique qué se puede obtener en \verb|sum| si se suma la lista \verb|a={1,2,3,4,5,6,7,8}|. \verb|k| y \verb|sum| son variables
+        compartidas que están inicialmente a 0 (el resto de variables son privadas), \verb|nthread = 3|, \verb|ithread| es el
+        identificador del thread en el grupo (0,1,2). Si hay varios posibles resultados, se tienen que dar todos
+        ellos. Justifique su respuesta.
+        \item ¿Qué resultados se pueden obtener si lo único que no garantiza el modelo de consistencia es el orden
+        \verb|W|$\to$\verb|R|? Justifique su respuesta.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    ¿Qué ocurre si en el segundo código para implementar barreras visto en clase eliminamos la
+    variable local, \verb|cont_local|, sustituyéndola en los puntos del código donde aparece por el contador
+    compartido asociado a la barrera \verb|bar[id].cont|?
+\end{ejercicio}
+
+\begin{ejercicio}
+    Suponiendo que la arquitectura dispone de instrucciones \verb|Fetch&Add|, simplifique el segundo
+    código para barreras visto en clase.
+\end{ejercicio}
+
+\begin{ejercicio}
+    Se quiere paralelizar el siguiente ciclo de forma que la asignación de iteraciones a los
+    procesadores disponibles se realice en tiempo de ejecución (dinámicamente):
+    \begin{figure}[H]
+        \centering
+        \begin{minted}[frame=lines,
+            framesep=2mm,
+            baselinestretch=1.2,
+            linenos,
+            escapeinside=||]{cpp}
+for (i=0; i<100; i++) {
+    // Código que usa i
+}
+        \end{minted}
+    \end{figure}
+    \begin{observacion}
+        Considerar que las iteraciones del ciclo son independientes, que el único orden no garantizado por el
+        sistema de memoria es \verb|W|$\to$\verb|R|, que las primitivas atómicas garantizan que sus accesos a memoria se realizan
+        antes que los accesos posteriores y que el compilador no altera el código.
+    \end{observacion}
+    \begin{enumerate}
+        \item Paralelizar el ciclo para su ejecución en un multiprocesador que implementa la primitiva \verb|Fetch&Or|
+        para garantizar exclusión mutua.
+        \item Paralelizar el anterior ciclo en un multiprocesador que además tiene la primitiva \verb|Fetch&Add|.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Un programador está usando el siguiente código para barreras (\verb|bar| es un vector compartido, \verb|k|
+    es una variable compartida, el resto son variables locales, \verb|Fetch_&_Or(k,1)| realiza sus accesos a memoria
+    antes de que puedan realizarse los accesos posteriores):
+    \begin{figure}[H]
+        \centering
+        \begin{minted}[frame=lines,
+            framesep=2mm,
+            baselinestretch=1.2,
+            linenos,
+            escapeinside=||]{cpp}
+Barrera(id, num_procesos)
+{
+    band_local= !(band_local)
+    while (Fetch_&_Or(k,1)==1) {};
+    cont_local = ++bar[id].cont;
+    k=0;
+    if (cont_local == num_procesos) {
+        bar[id].cont=0;
+        bar[id].band=band_local;
+    }
+    else while (bar[id].band != band_local) {};
+}
+        \end{minted}
+    \end{figure}
+    Conteste a las siguientes cuestiones (considere que el compilador no altera el código):
+    \begin{enumerate}
+        \item ¿Funciona bien este código como barrera en un multiprocesador en el que lo único que no garantiza su
+        modelo de consistencia es el orden \verb|W|$\to$\verb|R|? Razone por qué.
+        \item Funciona bien este código como barrera en un multiprocesador con modelo de consistencia que no
+        garantice ningún orden en los accesos a memoria? Razone por qué.
+    \end{enumerate}
+\end{ejercicio}
+
+
+\begin{ejercicio}
+    Se quiere implementar un programa que calcule en paralelo la siguiente expresión en un
+    multiprocesador en el que sólo se relaja el orden \verb|W|$\to$\verb|R| y en el que sólo se dispone de primitiva de
+    sincronización \verb|test_&_set|:
+    \[
+        d = \frac{1}{N} \sum_{i=1}^{N} x_i^2 - \ol{x}^2, \quad \ol{x} = \frac{1}{N} \sum_{i=1}^{N} x_i
+    \]
+    Un programador ha implementado el código de abajo. Tenga en cuenta lo siguiente:
+    \begin{itemize}
+        \item El código lo ejecutan \verb|nthread| threads en paralelo.
+        \item \verb|ithread| es una variable local que nota el identificador del thread.
+        \item \verb|i|, \verb|medl| y \verb|varil| son variables locales.
+        \item \verb|i|, \verb|med|, \verb|vari|, el vector \verb|x| y \verb|N| son variables compartidas.
+        \item Inicialmente \verb|med|, \verb|vari|, \verb|medl| y \verb|varil| son 0.
+    \end{itemize}
+    \begin{figure}[H]
+        \centering
+        \begin{minted}[frame=lines,
+            framesep=2mm,
+            baselinestretch=1.2,
+            linenos,
+            escapeinside=||]{cpp}
+for (i=ithread;i<N;i=i+nthread) {
+    medl=medl+x[i];
+    varil=varil+x[i]*x[i];
+}
+med = med + medl/N; vari = vari + varil/N;
+vari= vari - med*med;
+if (ithread==0) printf("varianza = %f", vari); //imprime en pantalla
+        \end{minted}
+    \end{figure}
+    Conteste a las siguientes cuestiones (considere que el compilador no altera el código):
+    \begin{enumerate}
+        \item Se ha ejecutado este código usando varios threads y se ha visto que, aunque \verb|N| y el vector \verb|x| no
+        varían, no siempre se imprime lo mismo. ¿Por qué ocurre esto?
+        \item Añada lo mínimo necesario para solucionar el problema teniendo en cuenta que sólo se dispone
+        para implementar sincronización de \verb|test_&_set| (tampoco se dispone de primitivas software de
+        sincronización). Indique qué variables son ahora compartidas y cuáles locales.
+        \item Escriba el programa suponiendo que el multiprocesador además tiene primitivas de sincronización
+        \verb|fetch_&_add| (se tendrá en cuenta las prestaciones). Indique qué variables son compartidas y
+        cuáles locales.
+        \item Escriba el programa ahora suponiendo que el multiprocesador sólo tiene primitivas de
+        sincronización \verb|compare_&_swap| (se tendrá en cuenta las prestaciones). Indique qué variables son
+        compartidas y cuáles locales.
+    \end{enumerate}
+    \begin{observacion}
+        En todos los apartados puede añadir o quitar variables si lo estima conveniente.
+    \end{observacion}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Se ha extraído la siguiente implementación de cerrojo (\textit{spin-lock}) para x86 del kernel de Linux, el cual se muestra
+    en el Código Fuente~\ref{code:spinlock}.
+    \lstinputlisting[
+        language=C,
+        style=vscode_C,
+        caption={Código de un cerrojo en el kernel de Linux.},
+        label={code:spinlock}
+    ]{Relacion3_Ejercicio13.c}
+
+    Conteste a las siguientes preguntas:
+    \begin{enumerate}
+        \item Utiliza una implementación de cerrojo con etiquetas ¿Cuál es el contador de adquisición y cuál es el
+        contador de liberación?
+        \item Describa qué hace \verb|xaddw %w0, %1| ¿opera con el contador de adquisición, con el de liberación o con
+        los dos? ¿qué operaciones hace con ellos?
+        \item Describa qué hace \verb|cmpb %h0, %b0| ¿opera con el contador de adquisición, con el de liberación o con
+        los dos? ¿qué operaciones hace con ellos?
+        \item ¿Por qué cree que se usa el prefijo \verb|lock| delante de la instrucción \verb|xaddw|? 
+    \end{enumerate}
+
+    \begin{observacion} Es recomendable consultar recursos siguientes:
+        \begin{itemize}
+            \item Puede consultar las instrucciones en el manual de Intel con el repertorio de instrucciones
+            (Volumen 2 o volúmenes 2A, 2B y 2C) que puede encontrar \href{http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html}{\color{blue}\ul{aquí}}.
+            \item Si no recuerda la interfaz entre C/C++ y ensamblador en \verb|gcc| (se ha presentado en Estructura de
+            Computadores), consulte el manual de \verb|gcc| \href{http://gcc.gnu.org/onlinedocs/gcc-4.6.2/gcc/ExtendedAsm.html#Extended-Asm}{\color{blue}\ul{aquí}}.
+        \end{itemize}
+    \end{observacion}
+\end{ejercicio}
+
+
+\subsection{Cuestiones}
+
+\begin{cuestion}
+    Diferencias entre núcleos con multithread temporal y núcleos con multithread simultánea.
+\end{cuestion}
+
+\begin{cuestion}
+    Diferencias entre núcleos con multithread temporal de grano fino y núcleos con multithread
+    temporal de grano grueso.
+\end{cuestion}
+
+\begin{cuestion}
+    Suponga un multiprocesador con protocolo MESI de espionaje. Si un controlador de cache
+    observa en el bus un paquete de petición de lectura exclusiva de un bloque que tiene en estado C, debe
+    (indique cuál sería la respuesta correcta y razone por qué es la respuesta correcta):
+    \begin{enumerate}
+        \item Generar un paquete de respuesta con el bloque y pasar el bloque a estado I.
+        \item Pasar el bloque a estado I.
+        \item Generar un paquete de respuesta con el bloque y pasar el bloque a estado E.
+        \item No tiene que hacer nada.
+    \end{enumerate}
+\end{cuestion}
+
+\begin{cuestion}
+    Suponga un multiprocesador con protocolo MESI de espionaje. Si un nodo observa en el bus un
+    paquete de petición de lectura exclusiva de un bloque que tiene en estado M, ¿qué debe hacer? Razone su
+    respuesta.
+\end{cuestion}
+
+\begin{cuestion}
+    Suponga un multiprocesador con el protocolo MESI de espionaje. Si el procesador de un nodo
+    escribe en un bloque que tiene en su cache en estado I, debe (indique cuál sería la respuesta correcta y
+    razone por qué es la respuesta correcta):
+    \begin{enumerate}
+        \item Generar paquete de petición de acceso E al bloque y pasar el bloque a M.
+        \item Generar paquete de petición de acceso E y pasar el bloque a estado E.
+        \item Generar paquete de petición de acceso E con lectura y pasar el bloque a estado E.
+        \item Generar paquete de petición de acceso E al bloque con lectura y pasar el bloque a M.
+    \end{enumerate}
+\end{cuestion}
+
+\begin{cuestion}
+    ¿Cuál de los siguientes modelos de consistencia permite mejores tiempos de ejecución?
+    Justifique su respuesta.
+    \begin{enumerate}
+        \item Modelo de consistencia que no garantiza los órdenes \verb|W|$\to$\verb|W| y \verb|W|$\to$\verb|R|.
+        \item Modelo implementado en los procesadores de la línea x86.
+        \item Modelo de consistencia secuencial.
+        \item Modelo de consistencia que no garantiza ningún orden.
+    \end{enumerate}
+\end{cuestion}
+
+\begin{cuestion}
+    Indique qué expresión no se corresponde con la serie (justifique su respuesta):
+    \begin{enumerate}
+        \item \verb|Lock|.
+        \item \verb|Fetch_and_Or|.
+        \item \verb|Compare_and_Swap|.
+        \item \verb|Test_and_Set|.
+    \end{enumerate}
+\end{cuestion}
