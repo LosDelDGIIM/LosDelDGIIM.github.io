@@ -41,7 +41,7 @@ El examen completo se basó en la clase `Examen`, implementada en Java en el arc
         }
 
         private boolean cumpleRestricciones(float a){
-            boolean result=false;
+            boolean result=true;
             // Código que modifica el valor de result
             return result;
         }
@@ -59,7 +59,7 @@ El examen completo se basó en la clase `Examen`, implementada en Java en el arc
         @atributo1 = param1
         @atributo2 = param2
 
-        while(!(cumpleRestricciones(param1) && cumpleRestricciones(param2)))
+        while(!(cumple_restricciones(param1) && cumple_restricciones(param2)))
         # Código que modifica los atributos
         end
     end
@@ -67,14 +67,13 @@ El examen completo se basó en la clase `Examen`, implementada en Java en el arc
     private
 
     def cumple_restricciones(a)
-        result = false
+        result = true
         # Código que modifica el valor de result
         result
     end
     end
     ```
-
-
+Notemos que, en ambos archivos, en el repositorio se encuentran los siguientes ejercicios implementados, para que el lector pueda comprobarlos sin problema.
 
 ## Ejercicio 1 (Java)
 
@@ -93,8 +92,8 @@ void metodoExamen(Examen e){
 | Línea | Breve Descripción del Error |
 |-------|------------------------------|
 |-|-|
-<!--No hay errores de compilación.-->
 
+En este caso, tenemos que no hay errores de compilación. Aunque el método `cumpleRestricciones` es privado, se puede llamar a métodos privados de la misma clase sin problema ninguno. El objetivo de este ejercicio era que el alumno no confundiese lo que ocurre en Ruby con lo que ocurre en Java. El caso de Ruby lo veremos en el siguiente ejercicio.
 
 ## Ejercicio 2 (Ruby)
 
@@ -114,9 +113,10 @@ end
 
 | Línea | Breve Descripción del Error |
 |-------|------------------------------|
-|-|-|
+|2|No se puede poner receptor explícito para métodos privados, exceptuando la pseudovariable `self`. Es decir, no está permitido llamar a métodos privados de una instancia distinta.|
+|4|Es el mismo error que el de la línea 2.|
 
-<!--Primera línea. Da error. No puedo llamar a un método privado desde otra instancia. Sí es verdad que puede ser que e no fuese un error, por lo que... En la tercera línea da el mismo error.-->
+Como dato adicional, aunque no se pedía al alumnado, es cierto que la línea 2 no tiene por qué dar error. Debido a que Ruby no es un lenguaje fuertemente tipado, no se puede asegurar que `e` sea una instancia de examen (aunque por el contexto el lector pueda intuirlo). Por tanto, en el caso de que el objeto `e` (que no sabemos de qué clase es) tenga un método público llamado `cumple_restricciones`, no daría error. Este paradigma es conocido como *Duck Typing*.
 
 
 ## Ejercicio 3 (Java)
@@ -147,13 +147,13 @@ e = Examen.new(3, 4)    # Constructor actual
 e2= Examen.newCons      # Constructor sin parámetros
 ```
 
-*Nota: Para generar un número aleatorio entre $0$ y $n$, suponer definida la instrucción `random(n)`, que devolverá el número buscado.*
+*Nota: Para generar un número aleatorio entre $0$ y $n$, suponer definida la instrucción `rand(n)`, que devolverá el número buscado.*
 
 En este caso, la solución sería la siguiente:
 ```ruby
 def self.newCons
-    param1 = random(@MAX_SUMA_ATRIB)
-    param2 = random(@MAX_SUMA_ATRIB)
+    param1 = rand(@MAX_SUMA_ATRIB)
+    param2 = rand(@MAX_SUMA_ATRIB)
     new(param1, param2)
 end
 ```
@@ -169,6 +169,8 @@ class ExamenDerivada extends Examen{
 ```
 **Indicar si el código anterior produciría errores de compilación y por qué sí o por qué no.**
 
+En este caso, sí daría error. La clase hija no tiene constructores definidos, por lo que se empleará su constructor por defecto. Este constructor llamará al constructor sin parámetros de la clase padre, pero aquí se produce el error de compilación, ya que no lo encuentra. El padre, al haber definido explícitamente un constructor con parámetros, no cuenta ya con el constructor por defecto, que era sin parámetros, por lo que no cuenta con ningún constructor sin parámetros. Por tanto, daría error en tiempo de compilación.
+
 
 
 ## Ejercicio 6 (Ruby)
@@ -178,7 +180,9 @@ class ExamenDerivada < Examen
     
 end
 ```
-**Indicar si intérprete produciría en tiempo de ejecución y por qué sí o por qué no a la hora de crear una instancia de la clase `ExamenDerivada`.**
+**Indicar si el intérprete produciría en tiempo de ejecución y por qué sí o por qué no a la hora de crear una instancia de la clase `ExamenDerivada`.**
+
+En este caso, no daría error. Como no se ha implementado el método `initialize` en la clase hija, esta hereda del padre dicho método. Por tanto, cuando se llama al método `new` de la clase hija, este buscará el método `initialize` en la clase hija, no lo encontrará y buscará en la clase padre, encontrándolo. Sí es cierto que en este caso la clase hija no podría tener atributos de instancia distintos a los que tenga el padre, pero esto no supone a priori un error. Por tanto, no daría error en tiempo de ejecución.
 
 
 
@@ -204,12 +208,12 @@ class ExamenDerivada extends Examen{
     }
 }
 ```
-**Rellenar la siguiente tabla con todos los errores de compilación que se producirían al intentar compilar el archivo [`Examen.java`](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/PDOO/Exámenes%20de%20Teor%C3%ADa/Examen%2002/Examen.java) con la clase `ExamenDerivada` incluida.**
+**Rellenar la siguiente tabla con todos los errores de compilación que se producirían en el método al intentar compilar el archivo [`Examen.java`](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/PDOO/Exámenes%20de%20Teor%C3%ADa/Examen%2002/Examen.java) con la clase `ExamenDerivada` incluida.**
 
 *Nota: En el caso de que no haya errores, dejar la tabla vacía y explicar por qué.*
 
 | Línea | Breve Descripción del Error |
 |-------|------------------------------|
-|-|-|
+|2|Tenemos que da error en el `@Override`, ya que no se puede sobreescribir un método privado, aun aumentando la visibilidad.|
 
-<!--Sí da error, en el Override. Si no pusiesemos en el override no daría error, pq estaría definiendo un nuevo método.-->
+Aquí, se busca que el lector tenga claro que, aunque en este caso es cierto que se está cambiando la cabecera para aumentar la visibilidad, por lo que a priori se podría sobreescribir, esto no es válido cuando el método en la clase padre es privado. Por tanto, no se puede sobreescribir, dando error en el `@Override`. Si quitásemos el `@Override`, es cierto que no daría error, ya que estaríamos definiendo un nuevo método en la clase hija, pero esto no es buena práctica debido a que la clase hija tendría dos métodos con el mismo nombre, aunque el de la clase padre no se pudiese llamar.
