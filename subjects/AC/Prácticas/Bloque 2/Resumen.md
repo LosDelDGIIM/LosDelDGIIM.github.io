@@ -154,7 +154,7 @@ for(int i = 0; i < N; i++){
   suma += v[i];
 }
 ```
-Se producen condiciones de carrera en la instrucción `suma += v[i]`.
+Se producen condiciones de carrera en la instrucción `suma += v[i]`. Sin embargo, no hay ningún problema con hacer compartida la variable `N` (al no especificar nada sobre `v`, sus componentes son variables públicas por defecto).
 
 # private(list)
 Es compatible con todas las directivas que aceptan cláusulas: `parallel`, `parallel DO/for`, `parallel sections`, `DO/for`, `sections` o `single`.  
