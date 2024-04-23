@@ -9,7 +9,7 @@
 - **Profesor:** Mancia Anguita López.
 - **Descripción:** Resúmen de la Sesión II de Prácticas.
 
-Esta sesión práctica está orientada al manejo de las cláusulas, las cuales nos permiten modfiicar o añadir funcionalidades a las directivas ya vistas en la [Sesión I de Prácticas](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/Resumen.md).  
+Esta sesión práctica está orientada al manejo de las cláusulas, las cuales nos permiten modificar o añadir funcionalidades a las directivas ya vistas en la [Sesión I de Prácticas](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Pr%C3%A1cticas/Bloque%201/Resumen.md).  
 Además, comentaremos el ámbito que por defecto se les da a las variables, ya que nos ayudará a entender la finalidad y uso de ciertas cláusulas.
 
 # Introducción
