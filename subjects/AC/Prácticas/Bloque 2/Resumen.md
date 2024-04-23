@@ -64,11 +64,12 @@ A continuación, mostramos una tabla resumen de las cláusulas que acepta cada d
 - Las cláusulas con un '(1)' sólo pueden usarse una vez en la directiva que nos encontremos. Por ejemplo, no podríamos hacer un `parallel num_threads(4) num_threads(9)`, pero sí un `parallel private(x) private(y)`.  
 - Notamos ya que las cláusulas dependen de la directiva: hay directivas que no aceptan determinadas cláusulas, por ejemplo, `for` no admite la directiva `num_threads`.  
 - `nowait` es una cláusula que no veremos ahora. Sin embargo, es de utilidad saber que su función es quitar la barrera implícita de ciertas directivas. Notemos que no podemos usarla con `parallel`. Es decir, la barrera implícita de `parallel` es inalterable.
+  
 Notemos que las cláusulas que adminten las directivas combinadas `parallel DO/for` o `parallel sections` son el resultado de aplicar un `OR` a las cláusulas de `parallel` y `for` o `sections`.
 
 # Ámbito de variables por defecto
 Por defecto, las variables creadas fuera de una región afectada por `parallel` (y las dinámicas) son **variables compartidas** por todas las hebras, de forma que pueden llegar a darse condiciones de carrera si el acceso a estas no se realiza de forma adecuada.  
-Por otra parte, las declaradas dentro de una región `parallel` son **privadas**. Esto es, cada hilo creará una dirección de memoria distinta para la variable del mismo nombre:
+Por otra parte, las *declaradas* dentro de una región `parallel` son **privadas**. Esto es, cada hilo creará una dirección de memoria distinta para la variable del mismo nombre:
 ```c
 int N = 20;
 #pragma omp parallel
@@ -81,11 +82,12 @@ int N = 20;
     }
 }
 ```
-En este ejemplo, `N` es una **variable compartida**: está declarada dentro de la región `parallel`. Por tanto, cuando una hebra acceda a la variable `N`, accederá a la misma variable que cuando otra hebra accede a la variable `N`.  
-Por otra parte, la variable `n_hebra` es una **variable privada**: está declarada dentro de la región `parallel`. De esta forma, cuando una hebra acceda o modifique la variable `n_thread`, modificará su propia variable (cada hebra contará con una variable `n_thread` distinta en su pila). De modo que la ejecución de distintas hebras no influye sobre el valor de la variable `n_threads`.  
-  
-Ante estas dos reglas comentadas aparecen dos excepciones:
-- Los índices de los bucles `for` asociados a una directiva `for` se hacen privados (lo hace el compilador) por defecto. 
+- En este ejemplo, `N` es una **variable compartida**: está declarada fuera de la región `parallel`. Por tanto, cuando una hebra acceda a la variable `N`, accederá a la misma variable que cuando otra hebra accede a la variable `N`.  
+- Por otra parte, la variable `n_hebra` es una **variable privada**: está declarada dentro de la región `parallel`. De esta forma, cuando una hebra acceda o modifique la variable `n_thread`, modificará su propia variable (cada hebra contará con una variable `n_thread` distinta en su pila). De modo que la ejecución de distintas hebras no influye sobre el valor de la variable `n_threads`.  
+
+### Excepciones
+Ante las dos reglas comentadas anteriormente aparecen dos **excepciones**:
+- Los índices de los bucles `for` asociados a una directiva `for` (esto es, el bucle se encuentra inmediatamente después de una directiva `for`) se hacen privados (lo hace el compilador) por defecto. 
 - Si declaramos una variable dentro de una región afectada por `parallel` que sea `static`, esta será una variable compartida. Notemos que este tipo de variables no se almacena en la pila, luego tiene sentido este funcionamiento.
 ```c
 int i, j;
@@ -103,7 +105,7 @@ En el ejemplo superior, estamos paralelizando el bucle `for` que itera sobre `i`
 A lo largo de la práctica, observaremos cómo las cláusulas `private`, `firstprivate` y `lastprivate` nos ayudan a modificar el ámbito de las variables. Así mismo, pueden usarse de forma redundante (hacer compartida una variable compartida) para mejorar la legibilidad de los códigos paralelos.  
 ***
   
-Comenzamos ahora con el estudio de todas las cláusulas en negrita de la tabla superior:
+Comenzamos ahora con el estudio de todas las cláusulas en negrita de la tabla ya presentada:
 
 # if(expresion)
 Si `expresion` se evalúa como `true`, hace que el código de la región afectada por `parallel` se ejecute en paralelo. Si la expresión se evalúa como `false`, la región paralela se ejecutará en serie (por un único subproceso).
