@@ -146,10 +146,15 @@ Sólo puede aparecer en las directivas `parallel`, `parallel DO/for` o `parallel
 Donde `list` es una lista de variables (puede ser una o varias variables separadas por comas), especifica que una o varias variables deben compartirse entre todas las hebras.  
 Debemos tener cuidado al usarlo cuando una hebra vaya a leer de una variable compartida, o que otra hebra vaya a escribir en dicha variable. Por ejemplo:
 ```c
-int N = 20;
-#pragma omp parallel for shared(N)
-for(int i = 0; i < N; i++){...}
+int* v;
+// ...
+int N = 20, suma = 0;
+#pragma omp parallel for shared(N,suma)
+for(int i = 0; i < N; i++){
+  suma += v[i];
+}
 ```
+Se producen condiciones de carrera en la instrucción `suma += v[i]`.
 
 # private(list)
 Es compatible con todas las directivas que aceptan cláusulas: `parallel`, `parallel DO/for`, `parallel sections`, `DO/for`, `sections` o `single`.  
