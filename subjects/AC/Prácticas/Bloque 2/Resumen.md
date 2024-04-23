@@ -305,7 +305,7 @@ Donde `list` es una lista de variables.
   
 Sólo puede aparecer en la directiva `single`.  
   
-Especifica que todas las variables de la lista deben copiarse en todas las variables privadas homónimas al finalizar la región `single` asociada. Resulta útil para la lectura de entradas:
+Tras la ejecución de la región afectada por su `single` asociado, por cada variable especificada en `list`, la cláusula `copyprivate` copia el valor de la variable privada de la hebra que ejecuta el `single` en las variables privadas homónimas del resto de hebras. Resulta útil para la lectura de entradas:
 ```c
 #pragma omp parallel
 {
