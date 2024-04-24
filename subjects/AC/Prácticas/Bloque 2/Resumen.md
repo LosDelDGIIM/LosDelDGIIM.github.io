@@ -28,7 +28,7 @@ Como vemos, la sintaxis de una cláusula es similar a la de una función, al rec
   
 Hay directivas que aceptan cláusulas y directivas que no:
 
-### Directivas que no acepta cláusulas
+### Directivas que no aceptan cláusulas
 - `master`.
 - Las de sincronización y/o consistencia: `critical`, `barrier`, `atomic` y `flush` (recordamos que no hemos visto `flush`).
 - `ordered` (no se ha visto).
@@ -65,7 +65,7 @@ A continuación, mostramos una tabla resumen de las cláusulas que acepta cada d
 - Notamos ya que las cláusulas dependen de la directiva: hay directivas que no aceptan determinadas cláusulas, por ejemplo, `for` no admite la directiva `num_threads`.  
 - `nowait` es una cláusula que no veremos ahora. Sin embargo, es de utilidad saber que su función es quitar la barrera implícita de ciertas directivas. Notemos que no podemos usarla con `parallel`. Es decir, la barrera implícita de `parallel` es inalterable.
   
-Notemos que las cláusulas que adminten las directivas combinadas `parallel DO/for` o `parallel sections` son el resultado de aplicar un `OR` a las cláusulas de `parallel` y `for` o `sections`.
+Notemos que las cláusulas que admiten las directivas combinadas `parallel DO/for` o `parallel sections` son el resultado de aplicar un `OR` a las cláusulas de `parallel` y `for` o `sections`.
 
 # Ámbito de variables por defecto
 Por defecto, las variables creadas fuera de una región afectada por `parallel` (y las dinámicas) son **variables compartidas** por todas las hebras, de forma que pueden llegar a darse condiciones de carrera si el acceso a estas no se realiza de forma adecuada.  
