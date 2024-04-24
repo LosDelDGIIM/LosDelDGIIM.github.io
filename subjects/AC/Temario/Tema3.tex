@@ -1,145 +1,264 @@
 \chapter{Arquitecturas TLP}
-En este capítulo, nos centraremos en arquitecturas que permiten ejecutar de forma paralela o concurrente múltiples flujos de instrucciones (o \emph{threads}) que comparten memoria. Se tratan de arquitecturas con paralelismo a nivel de \emph{thread} (\emph{Thread-Level Parallelism}) con una única instancia del Sistema Operativo. Por tanto, cada vez que mencionemos arquitecturas TLP, nos estamos refiriendo a arquitecturas TLP con una única instancia del Sistema Operativo. En este contexto, el SO es el encargado de gestionar los flujos de instrucciones.
+En este capítulo, nos centraremos en arquitecturas que permiten ejecutar de forma paralela o concurrente múltiples flujos de instrucciones (o \emph{threads}) que comparten memoria. Se tratan de arquitecturas con paralelismo a nivel de \emph{thread} (\emph{Thread-Level Parallelism}) con una única instancia del Sistema Operativo. Por tanto, cada vez que mencionemos arquitecturas TLP, nos estamos refiriendo a arquitecturas TLP con una única instancia del Sistema Operativo. En este contexto, el SO es el encargado de gestionar los flujos de instrucciones.\\
 
-Los paradigmas de programación paralela por variables compartidas son los más fáciles de implementar en este tipo de arquitecturas, mientras que las orientadas a paso de mensajes están más relacionadas con arquitecturas TLP con múltiples instancias del SO\@.
+Los paradigmas de programación paralela por variables compartidas son los más fáciles de implementar en este tipo de arquitecturas, mientras que las orientadas a paso de mensajes están más relacionadas con arquitecturas TLP con múltiples instancias del SO\@.\\
 
 La compartición de memoria que se da trae conceptos como la coherencia del sistema de memoria, consistencia del sistema de memoria o la sincronización entre flujos; conceptos que estudiaremos a lo largo de este capítulo.
 
-\section{Arquitecturas}
+\section{Tipos de Arquitecturas}
 \subsection{Objetivos}
 Esta sección está orientada a:
 \begin{itemize}
-    \item Distinguir entre multhread, multicores y multiprocesadores.
+    \item Distinguir entre cores multhread, multicores y multiprocesadores.
     \item Comparar entre cores multithread de grano fino, grueso y cores con multithread simultáneo.
 \end{itemize}
 
 % // TODO: COmpletar todo esto
 
-\subsection{Clasificaciones}
+\subsection{Clasificaciones de arquitecturas TLP}
 Las arquitecturas TLP con una instancia del SO pueden clasificarse en:
 \begin{description}
-    \item [Multiprocesadores] Son capaces de ejecutar en paralelo varios flujos de instrucciones en un computador con varios núcleos o procesadores de forma que cada flujo se ejecuta en un núcleo o procesador distinto. Pueden encontrarse multiprocesadores en un chip (como los multinúcleos), en una placa o en uno o varios armarios.
-    \item [Multinúcleos (\emph{multicores})] Pueden ejecutar en paralelo varios flujos de instrucciones en un chip de procesamiento con múltiples núcleos de forma que cada flujo se ejecuta en un núcleo distinto. Un chip multinúcleo es un multiprocesador en un chip. La denominación de \emph{multicores} proviene de un nombre comercial que dio Intel a sus multiprocesadores en un chip. De esta forma, se denomica procesador a los chips o encapsulados de procesamiento y núcleo (o core) a los procesadores.
-    \item [Núcleos (o cores) \emph{multithread}] Se trata de un núcleo de procesamiento (procesador) en el que se ha modificado su estructura (ILP) para poder ejecutar flujos de instrucciones de forma concurrente o en paralelo.
+    \item [Multiprocesadores.] Son capaces de ejecutar en paralelo varios flujos de instrucciones (hilos) en un computador con varios núcleos o procesadores de forma que cada flujo se ejecuta en un núcleo o procesador distinto. 
+
+        Podemos encontrarnos multiprocesadores en un chip (como los multinúcleos), en una placa o en uno o varios armarios.
+    \item [Multinúcleos (\emph{multicores}).] Pueden ejecutar en paralelo varios flujos de instrucciones en un chip de procesamiento con múltiples núcleos de forma que cada flujo se ejecuta en un núcleo distinto. Un chip multinúcleo no es más que un multiprocesador en un chip. 
+
+        La denominación de \emph{multicores} proviene de un nombre comercial que dio Intel a sus multiprocesadores en un chip. Además, denominó \emph{procesador} a los chips o encapsulados de procesamiento y \emph{núcleos} (o \emph{cores}) a los procesadores.
+    \item [Núcleos (o cores) \emph{multithread}.] Se trata de un núcleo de procesamiento (un procesador) en el que se ha modificado su arquitectura ILP (\emph{Instruction Level Parallelism}) para poder ejecutar flujos de instrucciones de forma concurrente o en paralelo.
 \end{description}
 
+\subsection{Repaso de arquitecturas ILP}
+Recordamos lo que eran las arquitecturas ILP (\emph{Instruction Level Parallelism}): son la capacidad por parte de un procesador de ejecutar múltiples instrucciones en paralelo para mejorar el rendimiento del sistema. Las arquitecturas se centran en identificar y aprovechar las dependencias de datos entre las instrucciones para ejecutarlas de forma eficiente.
 
-\subsubsection{Clasificaciones de cores multithread}
-A su vez, los cores multithread pueden clasificarse en:
+\subsubsection{Etapas de ejecucución}
+Antes de continuar, recordamos las etapas básicas para la ejecución de una instrucción:
 \begin{description}
-    \item [Temporal Multithreading (TMT)] Son capaces de ejecutar varios \emph{threads} de forma \underline{concurrente} en el mismo core. El hardware es el encargado de realizar la conmutación entre \emph{threads}. Emite las instruccinoes de un único \emph{thread} en un ciclo.
-    \item [Simultaneous MultiThreading (SMT)] También llamado \emph{Horizontal multithread}, ejecuta en un core superescalar varios \emph{threads} en \underline{paralelo}. Son capaces de emitir instrucciones de varios \emph{threads} en un ciclo y no implementan conmutaciones entre \emph{threads}.
+    \item [Etapa de captación de instrucciones (\emph{Instruction Fetch}).]~\\
+        Etapa en la que se capta de la caché de instrucciones la siguiente instrucción a ejecutar, incrementando el valor del PC\@ (\emph{Program Counter}).
+    \item [Etapa de decodificación de instrucciones (\emph{Instruction Decode}).]~\\
+        Etapa en la que se decofica la instrucción captada para determinar su tipo y operaciones a realizar. Se identifican aquí las dependencias de datos y condiciones de control que pueden afectar la ejecución de la instrucicón.
+    \item [Etapa de ejecución (\emph{Execution}).]~\\
+        Se lleva a cabo la ejecución de la instrucción. Podemos encontrarnos 4 tipos de instrucciónes (en relación a ellos se ejecutará una cosa u otra).
+        \begin{itemize}
+            \item Operaciones de enteros.
+            \item Operaciones de coma flotante.
+            \item Saltos.
+            \item Escrituras o lecturas de memoria.
+        \end{itemize}
+        Aunque esta última no se realizaría en esta etapa, es importante para el desarrollo que vamos a hacer de arquitecturas ILP.
+    \item [Etapa de acceso a memoria (\emph{Memmory}).]~\\
+        Se accede a memoria en caso de que sea necesario (depende de la instrucción).
+    \item [Etapa de almacenamiento de resultados en registros (\emph{Write-Back}).]~\\
+        Se almacenan en los registros del procesador los resultados de la instrucción, si es necesario.
 \end{description}
 
-\subsubsection{Clasificaciones de cores TMT}
+\subsubsection{Formas de arquitecturas ILP}
+Podemos encontrarnos con dos formas principales de paralelizar estas etapas a la hora de desarrollar una estructura ILP:
 \begin{description}
-    \item [Fine-grain multithreading (FGMT)] También conocido como \emph{interleaved multithreading}, la conmutación entre threads la decide el hardware en cada ciclo (tiene un coste nulo):
+    \item [Escalar segmentada.]~\\ Segmentaremos las etapas de ejecución de forma que dispongamos de 5 módulos que sean capaces de procesar su parte de forma paralela. Incluiremos \emph{buffers} auxiliares entre las distintas etapas.
+    \item [VLIW y superescalar.]~\\ Consideraremos simplemente 4 etapas (fusionaremos las de ejecución y memoria en una), de forma que replicaremos los componentes de la unidad funcional para que esta sea capaz de ejecutar al mismo tiempo diversos tipos de instrucciones. También es necesario el uso de \emph{buffers} auxiliares.
+
+        Por ejemplo, podemos replicar los componentes de la unidad funcional de forma que podamos ejecutar en paralelo (al mismo tiempo):
         \begin{itemize}
-            \item Por turno rotatorio, \emph{round-robin}.
-            \item Por eventos de cierta latencia y una técnica de planificación. Ejemplos de eventos son:
-                \begin{itemize}
-                    \item Dependencia funcional.
-                    \item Acceso a datos de caché L1.
-                    \item Saltos no predecibles.
-                    \item Operaciones de cierta latencia.
-                    \item \ldots
-                \end{itemize}
+            \item Operaciones con enteros.
+            \item Operaciones de coma flotante.
+            \item Operaciones de lecturas y escrituras en memoria.
+            \item Saltos.
         \end{itemize}
-    \item [Coarse-grain multithreading (CGMT)] También conocido como \emph{blocked multithreading}, la conmutación entre threads la decide el hardware (con un costo nulo o de varios ciclos):
-        \begin{itemize}
-            \item Tras un intervalo de tiepmo prefijado, \emph{timeslice multithreading}.
-            \item Por eventos de cierta latencia, \emph{switch-on-event multithreading}.
-        \end{itemize}
+        Podemos además tener no sólo una unidad sino varias de las ya mencionadas (2 unidades para operaciones con enteros, \ldots).
+
+        Además, las 3 etapas restantes estarán segmentadas. Podemos tener también unidades superescalares en las que tengamos replicadas además las etapas de captación, decodificación y \emph{write-back}.
+\end{description}
+
+\subsection{Clasificaciones de cores multithread}
+Ahora vamos a clasificar los \emph{cores multithread}, que no dejan de ser procesadores con arquitectura ILP que se aprovechan para ejecutar a la vez distintos hilos del sistema operativo de forma concurrente o paralela.
+\begin{description}
+    \item [\emph{Temporal Multithreading} (TMT)]~\\ Ejecutan distintos hilos de forma \underline{concurrente} en el mismo core. De esta forma, emite instrucciones de un único hilo en cada ciclo. Podemos pensar que el core se está multiplexando.
+
+        La conmutación entre hilos la decide el hardware.
+    \item [\emph{Simultaneous MultiThreading} (SMT)]~\\ Ejecuta distintos hilos de forma \underline{paralela} en el mismo core. Pueden llegar a emitir en un sólo ciclo instrucciones de varios hilos. Para llevar esto a cabo, necesitamos un core superescalar.
+
+        No implementa conmutación entre hilos, al no ser necesaria.
+\end{description}
+Según qué tan seguido intercambiamos los hilos del core, nos encontramos con:
+\begin{description}
+    \item [TMT de grano fino (\emph{Fine-grain multithreading}, FGMT).]~\\ La conmutación de hilos en el core se realiza en cada ciclo. Presentan un coste de cambio de contexto bajo, no es necesario perder ningún ciclo para realizar los cambios de contexto.
+
+        La planificación del siguiente hilo a ejecutar puede ser \emph{round-robin} u otra técnica de planificación (podemos guiarnos por el hilo menos recientemente ejecutado, por accesos a datos, por saltos no predecibles, por operaciones con gran latencia, \ldots).
+    \item [TMT de grano grueso (\emph{Coarse-grain multithreading}, CGMT).]~\\ La conmutación entre hilos no se realiza en cada ciclo. Presentan un mayor coste por cambios de contexto: pueden perderse entre ninguno y varios ciclos debido a los cambios de contexto.
+
+        La planificación puede depender cualquier técnica, como tras intervalos de tiempos prefijados (\emph{timeslice multithreading}), por eventos de cierta latencia (\emph{switch-on-event multithreading}), \ldots
 \end{description}
 
 \subsubsection{Clasificación de cores con CGMT con conmutación por eventos}
+Podemos conmutar los hilos del core de grano grueso de forma:
 \begin{description}
-    \item [Estática] Presenta una comutación implícita para instrucciones de carga, almacenamiento y salto; e instrucciones explícitas para conmutaciones, tales como instrucciones añadidas al repertorio.
+    \item [Estática.]~\\ 
+        Realizando la conmutación de forma \emph{explícita}, mediante nuevas instrucciones para conmutación añadidas al repertorio; o de forma \emph{implícita}, al detectar instrucciones e carga, almacenamiento, salto, \ldots
+
         \begin{itemize}
-            \item Ventaja: Coste de cambio de contexto bajo, de 1 o 0 ciclos.
-            \item Inconveniente: Cambios de contextos innecesarios.
+            \item Como ventaja, destacamos el bajo coste de los cambios de contexto (de 0 o 1 ciclos).
+            \item Como inconveniente, pueden producirse cambios de contexto innecesarios.
         \end{itemize}
-    \item [Dinámica] La conmutación se realiza típicamente por fallos en la última caché dentro del chip de procesamiento (conmutación por fallo de caché), interrupciones (conmutación por señal), \ldots
+    \item [Dinámica]~\\
+        La conmutación se realiza típicamente por fallos de caché o por interrupciones (interrupciones por señales).
+
         \begin{itemize}
-            \item Ventaja: Reduce cambios de contexto innecesarios.
-            \item Inconveniente: mayor sobrecarga al cambiar de contexto.
+            \item Como ventaja, reduce los cambios de contexto innecesarios de la estática.
+            \item Como inconveniente, la sobrecarga que se añade por los cambios de contexto es mayor.
         \end{itemize}
 \end{description}
 
+\subsubsection{Característica}
+En un núcleo multithread, podemos usar las siguiente modificaciones con el objetivo de ejecutar varios hilos en un mismo core:
+\begin{itemize}
+    \item Multiplexado: Hacemos que los hilos se turnen en el uso de una unidad.
+    \item Repartición: Repartimos una unidad entre (al menos) dos hilos, de forma que a uno le asociamos su zona y al otro la suya.
+    \item Compartición: Hay (al menos) dos hilos que acceden a la misma unidad de forma simultánea.
+    \item Replicación: Disponemos de varias unidades, de forma que cada hilo puede hacer uso de una.
+\end{itemize}
+Notemos que tanto el precio de implementación como la bondad de la técnica se encuentran en orden creciente (siendo más caro y mejor realizar la replicación de unidades).\\
+
+Una vez desarrollada la clasificación de cores multithread, podemos mostrar la siguiente tabla a modo de resumen, que nos ayudará a entender mejor cada tipo de multithreading:
+% // TODO: Arreglar esta tabla
+\begin{table}
+\footnotesize
+\centering
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{|l|c|c|c|c|}
+    \hline
+    Hardware & CGMT & FGMT & SMT & CMP \\ % // qué es cmp?
+    \hline
+    Registros & Replicado (al menos el PC) & Replicado & Replicado & Replicado \\
+    \hline
+    Almacenamiento & Multiplexado & Cualquiera de las 4 & Multiplexado no & Replicado \\
+    \hline
+    Hardware de etapas & Multiplexado & Captación repartida o compartida, & Unidad funcional compartida, & Replicado \\
+    del cauce & el resto multiplexadas & el resto repartidas o compartidas & Replicado \\
+    \hline
+    Necesidad de distinguir & Sí & Sí & Sí & No \\
+    el hilo de una instruc. & & & & \\
+    \hline
+    Hardware para conmutar & Sí & Sí & No & No \\
+    \hline
+\end{tabular}
+\end{table}
+``CMP'' es un Chip multicore, aquel en el que tenemos replicado todo el cauce (esto es, todas las unidades de la etapa de ejecución).
+
+% // TODO: Hacer
+\subsection{Comparativa de cores multithread}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 % // TODO: COmpletar
-\section{Apuntes clase}
-Con multithread temporal (durante un tiempo instrucciones de un hilo y durante otro instrucciones de otro) puedo eliminar huecos verticales pero no horizontales. Grano grueso cada cierto número de ciclos. En un grano grueso, un cambio de contexto puede provocar una penalización en ciclos, lo que supone un retardo. Grano fino cambio de contexto en cada ciclo.
-
-Con un multithread simultáneo podemos eliminar más huecos que un un temporal.
-
-Diapositiva 20:
-En coremultithread sólo puedo emitir una instruccio de cada tipo por ciclo.
-En 2 cores multithread tengo 2 unidades de ese tipo, que puede ejecutar a la vez FX/B y M/FP.
-Puedo hacer a la vez:
-FX M FX FP, FX M B M, \ldots
-En core multithread tengo menos huecos.
-
-Diap 22, solo leer
-CMP chip multi procesador (multinucleo): varios procesadores (que llamamos núcleos), tenemos replicado todo el cauce (todas las unidades de la etapa de ejecucion). Es lo mas caro.
-Lo más barato es CGMT, multiplexa uso del hardware, muchos usos sobre el mismo hardware. Sólo replicamos el banco de registros (aunque hay arquitecturas donde solo se replica el PC).
-SMT: multithread temporal, ejecutar distintos hilos a la par. Las unidades funcionales se comparten (UF compartidas). 
-
-En un nucleo multithread se usan modificaciones para ejecutar varios hilos k puede ser:
-- multiplexar
-- repartir
-- Compartir: es mejor porque en repartir un hilo puede quedarse atascado de formas más fácil.
-- Replicar.
-El precio en orden creciente.
-
-Diap 14: IB compartido. Si usamos repartir, hacemos que ciertas posiciones sólo sean para un hilo y ciertas para otro. Compartido es una especie de "reparto" dinamico.
-
-\subsection{Leccion 8}
-Puedo tener varias copias de una misma parte de memoria en distintas partes del memory system.
-Existe un hardware automatica de precaptacion: tras varios fallos, el hardware precide la siguiente linea a usar, gracias a un patron de acceso.
-
-incoherencia: las copias no tienen todas el mismo contenido. Debemos tratar las incoherencias.
- Podemos generalizar incoherencia entre cache-MP poniendo l_i - l_k con k < i (incoherencias en distintos niveles de jerarquia de memoria).
-
-incoherencias entre distinto nivel de jerarquia (cache-MP)
-write-through: Cada vez que se escribe la copia de un bloque que hay en cache se escribe en memoria principal. No se admiten incoherencias.
-write-bach: Cuando se escribe, en cache, no se modifica inmediatamente la memoria principal. Se modifica al desalojar de cache. Se pueden dar por tanto incoherencias.
-
-Escribir en memoria N bytes = N * T_acceso
-El acceso a memoria esta segmentado, transferir un bloque no es N * T_acceso
-
-Hay que hacer modificaciones en write-back en el bus para k no se den incoherencias: si el controlador de la cache modificada detecta el acceso a un bloque modificado (hay un protocolo de sondeo, espionaje en cada controlador), inibe la respuesta de la memoria y responde él.
-
-PROPAGACIONES
-Cuando se modifica una cache, se propaga a todos los bloques:
-write-update: actualiza las instancias. Mejor para escribir y leer por otros.
-write-invalidate: invalida las instancias antes de modificar su propia copia, se consigue acceso exclusivo al bloque. Es la más utilizada.
-
-En la BIOS puede configurarse todo esto.
-
-CLASIFICACIONES Y DISEÑO
-
-Paquetes que genera un controlador de cache:
-PtEx - En buses no se usa pero en redes sí.
-PtLec, PtLecEx - Se generan como consecuencia de eventos de origen el procesador. Peticiones de lectura y escritura por parte del procesador.
-PtPEsc - Para escribir en memoria.
-RpBloque - Respuesta de un bloque. Peticiones puestas en el bus por otros nodos.
-
-MSI de espionaje
-post-escritura e invalidacion: 2 bits:
-01 modificado - M. Unica copia del bloque valida en todo el sistema. Memoria inválida.
-00 ninguno (compartido) - S. Bloque válido en caché. Memoria válida.
-10 invalido - I. 
-
-La memoria siempre constesta, pero si un controlador detecta algo, el controlador \emph{inhibe} la respuesta de la memoria.
-
-MESI de espionaje
-En las placas de Intel se usa una variante de MESI. En las AMD una variante de MOESI.
-4 estados.
+% Con multithread temporal (durante un tiempo instrucciones de un hilo y durante otro instrucciones de otro) puedo eliminar huecos verticales pero no horizontales. Grano grueso cada cierto número de ciclos. En un grano grueso, un cambio de contexto puede provocar una penalización en ciclos, lo que supone un retardo. Grano fino cambio de contexto en cada ciclo.
+% 
+% Con un multithread simultáneo podemos eliminar más huecos que un un temporal.
+% 
+% Diapositiva 20:
+% En coremultithread sólo puedo emitir una instruccio de cada tipo por ciclo.
+% En 2 cores multithread tengo 2 unidades de ese tipo, que puede ejecutar a la vez FX/B y M/FP.
+% Puedo hacer a la vez:
+% FX M FX FP, FX M B M, \ldots
+% En core multithread tengo menos huecos.
+% 
+% \subsection{Leccion 8}
+% Puedo tener varias copias de una misma parte de memoria en distintas partes del memory system.
+% Existe un hardware automatica de precaptacion: tras varios fallos, el hardware precide la siguiente linea a usar, gracias a un patron de acceso.
+% 
+% incoherencia: las copias no tienen todas el mismo contenido. Debemos tratar las incoherencias.
+ % Podemos generalizar incoherencia entre cache-MP poniendo l_i - l_k con k < i (incoherencias en distintos niveles de jerarquia de memoria).
+% 
+% incoherencias entre distinto nivel de jerarquia (cache-MP)
+% write-through: Cada vez que se escribe la copia de un bloque que hay en cache se escribe en memoria principal. No se admiten incoherencias.
+% write-bach: Cuando se escribe, en cache, no se modifica inmediatamente la memoria principal. Se modifica al desalojar de cache. Se pueden dar por tanto incoherencias.
+% 
+% Escribir en memoria N bytes = N * T_acceso
+% El acceso a memoria esta segmentado, transferir un bloque no es N * T_acceso
+% 
+% Hay que hacer modificaciones en write-back en el bus para k no se den incoherencias: si el controlador de la cache modificada detecta el acceso a un bloque modificado (hay un protocolo de sondeo, espionaje en cada controlador), inibe la respuesta de la memoria y responde él.
+% 
+% PROPAGACIONES
+% Cuando se modifica una cache, se propaga a todos los bloques:
+% write-update: actualiza las instancias. Mejor para escribir y leer por otros.
+% write-invalidate: invalida las instancias antes de modificar su propia copia, se consigue acceso exclusivo al bloque. Es la más utilizada.
+% 
+% En la BIOS puede configurarse todo esto.
+% 
+% CLASIFICACIONES Y DISEÑO
+% 
+% Paquetes que genera un controlador de cache:
+% PtEx - En buses no se usa pero en redes sí.
+% PtLec, PtLecEx - Se generan como consecuencia de eventos de origen el procesador. Peticiones de lectura y escritura por parte del procesador.
+% PtPEsc - Para escribir en memoria.
+% RpBloque - Respuesta de un bloque. Peticiones puestas en el bus por otros nodos.
+% 
+% MSI de espionaje
+% post-escritura e invalidacion: 2 bits:
+% 01 modificado - M. Unica copia del bloque valida en todo el sistema. Memoria inválida.
+% 00 ninguno (compartido) - S. Bloque válido en caché. Memoria válida.
+% 10 invalido - I. 
+% 
+% La memoria siempre constesta, pero si un controlador detecta algo, el controlador \emph{inhibe} la respuesta de la memoria.
+% 
+% MESI de espionaje
+% En las placas de Intel se usa una variante de MESI. En las AMD una variante de MOESI.
+% 4 estados.
 
 
 
-
+\newpage
 \section{Coherencia del sistema de memoria}
+A la hora de usar multiprocesadores, surge un problema fundamental de manera natural: las incoherencias en memoria. A lo largo de esta sección definiremos este problema, dando ejemplo y protocolos que lo resuelven. Cabe mencionar que todos los multiprocesadores salvo los NUMA implementan la coherencia del sistema de memoria por hardware.
+
 \subsection{Objetivos}
 Tras esta sección, debería ser capaz de:
 \begin{itemize}
@@ -153,6 +272,32 @@ Tras esta sección, debería ser capaz de:
     \item Explicar el protocolo de mantenimiento de coherencia MSI basado en directorios con difusión y sin difusión.
 \end{itemize}
 
+\subsection{Definición del problema}
+La utilización de memoria caché trae consigo el esquema de jerarquía de memoria y la posibilidad de tener en distintas jerarquías una misma posición de memoria repetida. En sistemas uniprocesador, si tratamos de modificar una posición de memoria, esta se llevará a caché y será modificada en caché, indicando que ha sido modificada. En un cierto momento, la modificación en esta jerarquía de caché será comunicada a jerarquías de memoria mayores, hasta llegar a memoria principal y modificar dicho dato. De esta forma, la próxima vez que se necesite en caché dicha posición, estará actualizada conforme a la última modificación.\\
+
+Recordamos ahora que cada procesador lleva asociada una memoria caché y, al ser mayor la memoria principal que la caché, necesitamos almacenar en algún sitio qué bloque de memoria principal contiene cada entrada de memoria caché. Esta información se almacena en una tabla asociada a la caché. En dicha tabla hay una entrada por cada dirección de la memoria caché y, en cada entrada, se almacena qué bloque de memoria principal está cargado y unos bits de información sobre el bloque cargado. Representamos una aproximación a esta tabla en la Figura~\ref{tab:tabla_cache}. En un sistema uniprocesador, nos basta con un bit sucio (que indique si el bloque ha sido modificado o no, para saber si hay que escribir en jerarquías supsriores) y un bit de validez (que indique si el bloques es válido).\\
+
+\begin{table}
+\centering
+\begin{tabular}{r|c|c|}
+    \cline{2-3}
+    0 & Dirección de MP & Bits \\ \cline{2-3}
+    1 & Dirección de MP & Bits \\ \cline{2-3}
+      & \vdots & \vdots \\ \cline{2-3}
+    $N-1$ & Dirección de MP & Bits \\ \cline{2-3}
+\end{tabular}
+\caption{Tabla para una caché de $N$ direcciones de memoria.}
+\label{tab:tabla_cache}
+\end{table}
+
+En un multiprocesador, cada procesador lleva consigo una memoria caché, de forma que todos los procesadores comparten el espacio de memoria. Puede suceder que dos procesadores distintos trabajen con la misma posición de memoria $k$ (y por tanto, tengan al bloque que contiene a $k$ en sus respectivas cachés). Si uno de los dos procesadores decide modificar $k$, se modificará la dirección de memoria caché correspondiente, pero el bloque en la caché del otro procesador y en memoria principal quedarán inalterados. Nos acabamos de encontrar con una incoherencia en el sistema de memoria.\\
+
+Concretando las ideas, una \textbf{incoherencia en el sistema de memoria} se produce cuando en el sistema de memoria las copias de una misma dirección no tienen el mismo contenido. Como hemos ya comentado, en sistemas uniprocesdores teníamos este problema: podíamos tener un bloque en memoria caché modificado que no estuviese modificado en memoria principal. En este caso hablamos de incoherencias en distintas jerarquías de memoria. Sin embargo, ahora en multiprocesadores podemos tener incoherencias en la misma jerarquía de memoria, tal y como mencionábamos en el ejemplo anterior.
+
+% // TODO: COntinuar por fin de pág 96 en libro chiquito y por "A continuación \ldots" en página 524 libro tocho
+
+
+\newpage
 \section{Consistencia del sistema de memoria}
 \subsection{Objetivos}
 Esta sección está orientada a adquirir los conocimientos necesarios para:
@@ -163,6 +308,7 @@ Esta sección está orientada a adquirir los conocimientos necesarios para:
     \item Distinguir entre los diferentes modelos de consistencia relajados.
 \end{itemize}
 
+\newpage
 \section{Sincronización}
 \subsection{Objetivos}
 Tras esta sección, debería ser capaz de:
