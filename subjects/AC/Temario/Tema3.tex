@@ -67,6 +67,75 @@ A su vez, los cores multithread pueden clasificarse en:
 \end{description}
 
 % // TODO: COmpletar
+\section{Apuntes clase}
+Con multithread temporal (durante un tiempo instrucciones de un hilo y durante otro instrucciones de otro) puedo eliminar huecos verticales pero no horizontales. Grano grueso cada cierto número de ciclos. En un grano grueso, un cambio de contexto puede provocar una penalización en ciclos, lo que supone un retardo. Grano fino cambio de contexto en cada ciclo.
+
+Con un multithread simultáneo podemos eliminar más huecos que un un temporal.
+
+Diapositiva 20:
+En coremultithread sólo puedo emitir una instruccio de cada tipo por ciclo.
+En 2 cores multithread tengo 2 unidades de ese tipo, que puede ejecutar a la vez FX/B y M/FP.
+Puedo hacer a la vez:
+FX M FX FP, FX M B M, \ldots
+En core multithread tengo menos huecos.
+
+Diap 22, solo leer
+CMP chip multi procesador (multinucleo): varios procesadores (que llamamos núcleos), tenemos replicado todo el cauce (todas las unidades de la etapa de ejecucion). Es lo mas caro.
+Lo más barato es CGMT, multiplexa uso del hardware, muchos usos sobre el mismo hardware. Sólo replicamos el banco de registros (aunque hay arquitecturas donde solo se replica el PC).
+SMT: multithread temporal, ejecutar distintos hilos a la par. Las unidades funcionales se comparten (UF compartidas). 
+
+En un nucleo multithread se usan modificaciones para ejecutar varios hilos k puede ser:
+- multiplexar
+- repartir
+- Compartir: es mejor porque en repartir un hilo puede quedarse atascado de formas más fácil.
+- Replicar.
+El precio en orden creciente.
+
+Diap 14: IB compartido. Si usamos repartir, hacemos que ciertas posiciones sólo sean para un hilo y ciertas para otro. Compartido es una especie de "reparto" dinamico.
+
+\subsection{Leccion 8}
+Puedo tener varias copias de una misma parte de memoria en distintas partes del memory system.
+Existe un hardware automatica de precaptacion: tras varios fallos, el hardware precide la siguiente linea a usar, gracias a un patron de acceso.
+
+incoherencia: las copias no tienen todas el mismo contenido. Debemos tratar las incoherencias.
+ Podemos generalizar incoherencia entre cache-MP poniendo l_i - l_k con k < i (incoherencias en distintos niveles de jerarquia de memoria).
+
+incoherencias entre distinto nivel de jerarquia (cache-MP)
+write-through: Cada vez que se escribe la copia de un bloque que hay en cache se escribe en memoria principal. No se admiten incoherencias.
+write-bach: Cuando se escribe, en cache, no se modifica inmediatamente la memoria principal. Se modifica al desalojar de cache. Se pueden dar por tanto incoherencias.
+
+Escribir en memoria N bytes = N * T_acceso
+El acceso a memoria esta segmentado, transferir un bloque no es N * T_acceso
+
+Hay que hacer modificaciones en write-back en el bus para k no se den incoherencias: si el controlador de la cache modificada detecta el acceso a un bloque modificado (hay un protocolo de sondeo, espionaje en cada controlador), inibe la respuesta de la memoria y responde él.
+
+PROPAGACIONES
+Cuando se modifica una cache, se propaga a todos los bloques:
+write-update: actualiza las instancias. Mejor para escribir y leer por otros.
+write-invalidate: invalida las instancias antes de modificar su propia copia, se consigue acceso exclusivo al bloque. Es la más utilizada.
+
+En la BIOS puede configurarse todo esto.
+
+CLASIFICACIONES Y DISEÑO
+
+Paquetes que genera un controlador de cache:
+PtEx - En buses no se usa pero en redes sí.
+PtLec, PtLecEx - Se generan como consecuencia de eventos de origen el procesador. Peticiones de lectura y escritura por parte del procesador.
+PtPEsc - Para escribir en memoria.
+RpBloque - Respuesta de un bloque. Peticiones puestas en el bus por otros nodos.
+
+MSI de espionaje
+post-escritura e invalidacion: 2 bits:
+01 modificado - M. Unica copia del bloque valida en todo el sistema. Memoria inválida.
+00 ninguno (compartido) - S. Bloque válido en caché. Memoria válida.
+10 invalido - I. 
+
+La memoria siempre constesta, pero si un controlador detecta algo, el controlador \emph{inhibe} la respuesta de la memoria.
+
+MESI de espionaje
+En las placas de Intel se usa una variante de MESI. En las AMD una variante de MOESI.
+4 estados.
+
 
 
 
