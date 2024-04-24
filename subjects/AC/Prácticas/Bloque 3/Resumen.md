@@ -119,16 +119,16 @@ No puede consultarse ni modificarse.
 # Funciones del entorno de ejecución
 A parte de las funciones del entorno que modifican variables de control internas, disponemos de otras rutinas del entorno que nos son útiles:
 
-### omp_get_thread_num()
+## omp_get_thread_num()
 Devuelve a la hebra su identificador dentro de su grupo. Si estamos usando $N$ hebras, nos devolverá un número entero en el intervalo $[0, N[$, siendo 0 la hebra `master`.
 
-### omp_get_num_threads()
+## omp_get_num_threads()
 Devuelve el número de hebras que se están usando en una región paralela. Llamada en un código secuencial, devolverá `1`.
 
-### omp_get_num_procs()
+## omp_get_num_procs()
 Devuelve el número de núcleos lógicos disponibles para el programa en el momento de la ejecución.
 
-### omp_in_parallel()
+## omp_in_parallel()
 Devuelve `true` si se llama a la función dentro de una región `parallel` activa (si está dentro de varios `parallel` anidados, basta con que uno de ellos lo esté). Devuelve `false` en el caso contrario.
 
 # Cláusulas
