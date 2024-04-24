@@ -39,7 +39,7 @@ Respecto a tu proyecto de **RUBY**, realize los siguientes cambios:
 
 - El monstruo que está más cerca de la salida debe tener unas características que hagan que siempre pierda los combates con los jugadores y el otro que los gane siempre.
     
-    *Nota: Durante el examen, el profesor especificó que debido a la aleatoriedad del juego no se pedía estrictamente que **siempre** ganase, sino que en la gran, gran mayoría de los casos ganase. Esto daba a entender que simplemente pedía que se fijase el valor de `strength` e `intelligence` del mounstruo a un valor muy alto.*
+    *Nota: Durante el examen, el profesor especificó que debido a la aleatoriedad del juego no se pedía estrictamente que **siempre** ganase, sino que en la gran, gran mayoría de los casos ganase. Esto daba a entender que simplemente pedía que se fijase el valor de `strength` e `intelligence` del monstruo a un valor muy alto.*
 
 - Recuerda usar los métodos de los que dispone el laberinto para situar jugadores, obstáculos, y monstruos.
 
