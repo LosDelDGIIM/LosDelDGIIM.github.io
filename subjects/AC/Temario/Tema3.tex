@@ -292,8 +292,9 @@ Recordamos ahora que cada procesador lleva asociada una memoria caché y, al ser
 
 En un multiprocesador, cada procesador lleva consigo una memoria caché, de forma que todos los procesadores comparten el espacio de memoria. Puede suceder que dos procesadores distintos trabajen con la misma posición de memoria $k$ (y por tanto, tengan al bloque que contiene a $k$ en sus respectivas cachés). Si uno de los dos procesadores decide modificar $k$, se modificará la dirección de memoria caché correspondiente, pero el bloque en la caché del otro procesador y en memoria principal quedarán inalterados. Nos acabamos de encontrar con una incoherencia en el sistema de memoria.\\
 
-Concretando las ideas, una \textbf{incoherencia en el sistema de memoria} se produce cuando en el sistema de memoria las copias de una misma dirección no tienen el mismo contenido. Como hemos ya comentado, en sistemas uniprocesdores teníamos este problema: podíamos tener un bloque en memoria caché modificado que no estuviese modificado en memoria principal. En este caso hablamos de incoherencias en distintas jerarquías de memoria. Sin embargo, ahora en multiprocesadores podemos tener incoherencias en la misma jerarquía de memoria, tal y como mencionábamos en el ejemplo anterior.\\
+Concretando las ideas, una \textbf{incoherencia en el sistema de memoria} se produce cuando en el sistema de memoria las copias de una misma dirección no tienen el mismo contenido. Como hemos ya comentado, en sistemas uniprocesdores teníamos este problema: podíamos tener un bloque en memoria caché modificado que no estuviese modificado en memoria principal. En este caso hablamos de incoherencias en distintas jerarquías de memoria. Sin embargo, ahora en multiprocesadores podemos tener incoherencias en la misma jerarquía de memoria, tal y como mencionábamos en el ejemplo anterior.
 
+\subsubsection{Métodos de actualización de memoria principal}
 Las situaciones de incoherencia se deben abordar no permitiendo que se produzcan nunca o bien evitando que causen problemas (que algún componente lea el valor no actualizado de la memoria) en caso de permitirse. Las cachés implementan dos métodos de actualización de memoria principal:
 \begin{description}
     \item [Escritura directa (\emph{write-through}).]~\\ 
@@ -348,7 +349,7 @@ La propagación de las actualizaciones o invalidaciones entre los procesadores s
 \subsection{Protocolos de mantenimiento de coherencia}
 En una arquitectura UMA, podemos utilizar una red bus para las transferencias entre los procesadores y la memoria que comparten. Los buses implementan la difusión de forma natural. De esta forma, todos los paquetes enviados a la red son visibles por todos los componentes conectados al bus, de forma que toos ven las peticiones en el orden en el que se solicitan (dándose las dos condiciones para evitar situaciones de incoherencias). Todo esto hace que en el caso de los multiprocesadores UMA con red bus no sea necesarios mantener información de la cachés con copias de los bloques, pudiendo suprimir incluso el directorio de memoria del que antes se hablaba. 
 
-En este tipo de arquitecturas, es común el uso de \textbf{protocolos de espionaje} (\emph{snoopy}), ya que todos los componentes pueden ver (espiar) dicho bus. Cada controlador de caché espía los paquetes del bus y actúa en consecuencia (si por ejemplo otro controlador solicita un paquete invalidado del que nuestra caché tiene acceso exclusivo y no está actualizado en memoria, nuestro controlador invalida la respuesta de la memoria y es él quien responde a la petición del paquete, devolviendo el paquete actualizado). Es por ello sencillo implementar protocolos de coherencia en una arquitectura que use buses. Sin embargo, los protocolos de espionaje no escalan bien debido a retardos que introducen otro tipo de redes\footnote{al tener que esperar a que todos los procesadores reciban el paquete enviado.}.\\
+En este tipo de arquitecturas, es común el uso de \textbf{protocolos de espionaje} (\emph{snoopy}), ya que todos los componentes pueden ver (espiar) dicho bus. Cada controlador de caché espía los paquetes del bus y actúa en consecuencia (si por ejemplo otro controlador solicita un paquete invalidado del que nuestra caché tiene acceso exclusivo y no está actualizado en memoria, nuestro controlador invalida la respuesta de la memoria y es él quien responde a la petición del paquete, devolviendo el paquete actualizado). Es por ello sencillo implementar protocolos de coherencia en una arquitectura que use buses. Sin embargo, los protocolos de espionaje no escalan bien debido a retardos que introducen otro tipo de redes\footnote{Al tener que esperar a que todos los procesadores reciban el paquete enviado.}.\\
 
 En redes en las que la difusión es costosa de implementar o redes que requieren de una gran escalabilidad, se usan \textbf{esquemas basados en directorios}, en los que para reducir el tráfico, se envían los paquetes únicamente a las cachés implicadas (cachés con copia del bloque al que se accede). Es necesario por tanto el uso del directorio de memoria. Sin embargo, también obtenemos un cuello de botella al tener que acceder por cada procesador a dicho directorio. Se obtienen mejores prestaciones distribuyendo el directorio entre los módulos de memoria principal, de forma que el subdirectorio de cada módulo mantenga la información sobre sólo los bloques que contiene cada módulo. De esta forma, los diferentes subdirectorios pueden procesar peticiones en paralelo.
 
@@ -376,22 +377,296 @@ Describimos a continuación el protocolo MSI, el protocolo con menor número de 
 \subsubsection{Estados de un bloque en caché}
 \begin{description}
     \item [Modificado (M).]~\\
-        Un bloque en este estado en caché es la única copia del bloque válida en todo el sistema de memoria. 
+        Un bloque modificado en caché es la única copia del bloque válida en todo el sistema de memoria. 
         \begin{itemize}
-            \item El controlador de su caché debe responder con dicho bloque en caso de que otro módulo lo solicite por el bus.
+            \item En caso de que otro módulo solicite este bloque por el bus, el controlador de su caché debe invalidar la respuesta de la memoria principal (la memoria principal siempre intentará responder)\footnote{En caso de estar así implementado; puede haber implementaciones que no realicen esta función, como se verá en breves.} y el controlador de caché debe responder con su propio bloque, que es el único válido.
             \item El controlador de su caché debe escribir dicho bloque en memoria en caso de ser extraído de su caché.
             \item El controlador de su caché debe invalidar el bloque si le llega por el bus una petición de invalidación del bloque correspondiente.
         \end{itemize}
 
     \item [Compartido (S).]~\\
-        Un bloque en este estado en caché indica que todas las copias de dicho bloque que pueda haber en la jerarquía de memoria están actualizadas.
+        Un bloque compartido en caché indica que todas las copias de dicho bloque que pueda haber en la jerarquía de memoria están actualizadas.
 
-        El controlador de su caché debe invalidar el bloque si le llega por el bus una petición de invalidación del bloque correspondiente.
+        \begin{itemize}
+            \item El controlador de su caché debe invalidar el bloque si le llega por el bus una petición de invalidación del bloque correspondiente.
+        \end{itemize}
+
     \item [Inválido (I).]~\\
-        
+        Un bloque inválido en caché es un bloque que o no está físicamente en caché (esa posición de caché está vacía) o que está invalidado (por progragación de invalidaciones desde otra caché).
+
+        \begin{itemize}
+            \item Si el procesador de la caché accede a un bloque en estado inválido, enviará un paquete de petición del bloque por el bus de la red.
+        \end{itemize}
+\end{description}
+Podemos ordenar estos estados en relación al grado de disponibilidad del bloque por parte del procesador al que pertenece la caché en orden creciente por:
+\begin{itemize}
+    \item Inválido.
+    \item Compartido.
+    \item Modificado.
+\end{itemize}
+El estado modificado supone que el procesador tiene el uso exclusivo del bloque, de forma que puede disponer de él tanto par aleer como para escribir, sin informar al resto del sistema. Como el módulo que contiene al bloque es el único que dispone de una copia válida del mismo, se trata del encargado de responder a todas las peticiones de este por el bus. 
+
+\subsubsection{Estados de un bloque en memoria}
+Según lo anteriormente explicado, podemos evitar establecer estados para bloques en memoria (habilitando que los controladores de caché puedan inhibir respuestas del controlador de memoria principal). Sin embargo, si se desea almacenar puede hacerse simplemente con dos estados:
+\begin{description}
+    \item [Válido.] El bloque está actualizado en memoria principal y puede haber una copia en una o varias cachés (sin acceso exclusivo). 
+
+        \begin{itemize}
+            \item El controlador de memoria principal responde con el bloque si ve en el bus una petición con lectura de un bloque que en memoria principal es válido.
+        \end{itemize}
+    \item [Inválido.] El bloque no está actualiza en la memoria principal y hay una copia válida en alguna caché.
+
+        \begin{itemize}
+            \item En caso de que este bloque sea pedido por el bus, será el controlador de caché de la caché correspondiente quien proporcione el bloque.
+        \end{itemize}
 \end{description}
 
-% // TODO: COntinuar por fin de pág 96 en libro chiquito y por "A continuación \ldots" en página 524 libro tocho
+\subsubsection{Paquetes que genera un controlador de caché}
+Hemos comentado varias veces que los distintos controladores de caché de cada nodo tienen que tener un trabajo en la red de comunicación, pero no hemos especificado cómo se realizan estas comunicaciones. 
+
+Un controlador de caché puede generar los siguiente tipos de transferencias como consecuencia de acciones en caché del procesador, o como consecuencia de paquetes recibidos por otros nodos. Puede generar paquetes de petición (comienzan por \verb|Pt|) o de respuesta (comienzan por \verb|Rp|).
+\begin{description}
+    \item [Petición de lectura de un bloque] \verb|PtLec(B)|\textbf{.}~\\
+        Se genera como consecuencia de una lectura con fallo de caché del procesador del nodo (evento \verb|PrLec|) en relación al bloque \verb|B|. El paquete contendrá la dirección del bloque \verb|B|.
+
+        Como respuesta a esta petición, recibirá un paquete de respuesta con el bloque (\verb|RpBloque(B)|) de memoria principal o de la caché que lo tiene en estado modificado, en caso de haberlo.
+    \item [Petición de acceso exclusivo a un bloque con lectura de bloque] \verb|PtLecEx(B)|\textbf{.}~\\
+        Se genera como consecuencia de una escritura con fallo de caché del procesador (evento \verb|PrEsc|) en un bloque inválido \verb|B| en la caché. El paquete contendrá la dirección del bloque \verb|B|.
+
+        Como respuesta se invalidarán las copias del bloque en otras cachés y memoria principal; y se recibirá un paquete de respuesta con el bloque (\verb|RpBloque(B)|) de memoria o de la caché que lo tiene en estado modificado, en caso de haberlo.
+    \item [Petición de acceso exclusivo a un bloque] \verb|PtEx(B)|\textbf{.}~\\
+        Se genera como consecuencia de una escritura del procesador (evento \verb|PrEsc|) en un bloque \verb|B| en estado compartido en la caché (si estuviera en estado modificado, no hace falta generar este paquete). El paquete contendrá la dirección del bloque \verb|B|.
+
+        Como respuesta se invalidarán las copias del bloque en otras cachés y memoria principal.
+
+        En ciertas implementaciones no existe este paquete; en su lugar se usa el paquete \verb|PtLecEx(B)| descartando el paquete de respuesta (\verb|RpBloque(B)|) que es enviado a través del bus.
+    \item [Petición de posescritura de un bloque] \verb|PtPEsc(B)|\textbf{.}~\\
+        Se genera por el reeemplazo en caché de un bloque \verb|B| en estado modificado, como consecuencia del acceso del procesador a un bloque que no se encuentra en caché. El paquete contendrá la dirección del bloque \verb|B|, así como su contenido.
+
+        El procesador no espera ninguna respuesta.
+        
+
+    \item [Respuesta con bloque] \verb|RpBloque(B)|\textbf{.}~\\
+        Se genera por el controlador de la caché que tiene el bloque \verb|B| solicitado en estado modificado, cuando detecta por el bus una petición \verb|PtLec(B)| o \verb|PtLecEx(B)|.
+\end{description}
+
+\subsubsection{Paquetes que genera el controlador de memoria principal}
+El controlador de memoria principal sólo genera paquetes de respuesta:
+\begin{description}
+    \item [Respuesta con bloque] \verb|RpBloque(B)|\textbf{.}~\\
+        Se genera como respuesta a paquetes de peticiones de un bloque \verb|B| por \verb|PtLec(B)| o \verb|PtLecEx(B)|.
+
+        \begin{itemize}
+            \item Si la memoria guarda el estado de sus bloques de memoria (esto es, los controladores de caché no inhiben la respuesta de la memoria principal), espiará el bus y sólo generará el paquete de respuesta si el bloque \verb|B| se encuentra en estado válido en memoria.
+            \item Si la memoria no guarda el estado de sus bloques de memoria, siempre reponderá con estos paquetes, siendo su respuesta inhibida por el controlador correspondiente.
+        \end{itemize}
+\end{description}
+
+\subsubsection{Transiciones de estado de un bloque}
+En la Tabla~\ref{tab:acciones_controlador_MSI} podemos ver las acciones del controlador de caché de un nodo (los paquetes que genera y los cambios de estado que realiza sobre sus bloques) que provocan los eventos relacionados con un bloque \verb|B|, teniendo en cuenta el estado del bloque en la caché (eventos del procesador o del controlador de caché del nodo, recibidos del exterior a traés de la red en forma de paquete).
+
+\begin{table}
+\centering
+\begin{tabular}{c l l c}
+    \toprule
+    Estado & Evento & Acciones del controlador & Estado final \\
+    \toprule
+           & \verb|PrLec(B)| & & M \\
+    \midrule
+    & \verb|PrEsc(B)| & & M \\
+    \midrule
+    M & \verb|PtLec(B)| & Genera \verb|RpBloque(B)| & S \\
+    \midrule
+      & \verb|PtLecEx(B)| & Invalida copia local y genera \verb|RpBloque(B)| & I \\
+    \midrule
+      & \verb|Reemplazo(B)| & Genera \verb|PtPEsc(B)| & I \\
+    \bottomrule
+      & \verb|PrLec(B)| & & S \\
+    \midrule
+    S & \verb|PrEsc(B)| & Genera \verb|PtEx(B)| & M \\
+    \midrule
+      & \verb|PtLec(B)| & & S \\
+    \midrule
+      & \verb|PtLecEx(B)| & Invalida copia local de \verb|B| & I \\
+    \toprule
+      & \verb|PrLec(B)| & Genera \verb|PtLec(B)| y recibe \verb|RpBloque(B)| & C \\
+    \midrule
+    I & \verb|PrEsc(B)| & Genera \verb|PtLecEx(B)| invalida en otras cachés & M \\
+      & & y recibe \verb|RpBloque(B)| & \\
+    \midrule
+      & \verb|PtLec(B)| & & I \\
+    \midrule
+      & \verb|PtLecEx(B)| & & I \\
+    \bottomrule
+\end{tabular}
+\caption{Tabla de acciones del controlador de caché.}
+\label{tab:acciones_controlador_MSI}
+\end{table}
+
+\begin{description}
+    \item [Fallo de lectura.]~\\
+    El procesaor lee (\verb|PrLec(B)|) y el bloque no está en caché (o está en estado inválido). El controlador de caché difunde un paquete de petición de lectura del bloque de memoria \verb|PtLec(B)|.
+
+    El estado del bloque en la caché será compartido. La copia del boque en otras cachés también será compartido y en memoria, válido. 
+
+    \verb|PtLec(B)| provoca los siguientes efectos:
+    \begin{enumerate}
+        \item Si el bloque se encuentra en otra caché en estado modificado, su controlador deposita en el bus el paquete \verb|RpBloque(B)| y pasa a estado compartido. La memoria también recoge el bloque del bus, pasando a estado válido (si tiene estados).
+        \item Si el bloque está compartido en otras cachés, la memoria proporciona el bloque a la caché que la solicita. El bloque sigue en estado compartido en cada una de las cachés.
+    \end{enumerate}
+
+    \item [Fallo de escritura al no estar el bloque en la caché.]~\\
+        El procesador escribe (\verb|PrEsc(B)|) y el bloque no está en caché (o está en estado inválido). El controlador de caché difunde un paquete de petición de acceso exclusivo al bloque de memoria \verb|PtLecEx(B)|. 
+
+    El estado del bloque en la caché después de la escritura será modificado.
+
+    \verb|PtLecEx(B)| provoca los siguientes efectos:
+    \begin{enumerate}
+        \item Si la memoria tiene el bloque válido, lo deposita en el bus y pasa a estado inválido.
+        \item Si una caché tiene el bloque en estado modificado, deposita el bloque en el bus (invalidando la respuesta de la memoria) y pasa a estado inválido.
+        \item Si una caché tiene el bloque en estado compartido, pasa a estado inválido.
+    \end{enumerate}
+
+    \item [Acierto de escritura en bloque compartido.]~\\
+    El procesador escribe (\verb|PrEsc(B)|) y el bloque está en caché en estado compartido. El controlador quiere acceso exclusivo al bloque, por lo que difunde un paquete de petición de acceso exclusivo al bloque \verb|PtEx(B)|.
+
+    El estado del bloque en la caché después de la escritura será modificado\footnote{Notemos que el acierto de escritura en un bloque compartido se trata de forma similar al fallo de escritura.}.
+
+    \verb|PtEx(B)| provoca los siguientes efectos:
+    \begin{enumerate}
+        \item Si la memoria tiene el bloque válido, lo deposita en el bus y pasa a estado inválido.
+        \item Si una caché tiene el bloque en estado modificado, deposita el bloque en el bus y pasa a estado inválido.
+        \item Si una caché tiene el bloque en estado compartido, pasa a estado inválido.
+    \end{enumerate}
+    \item [Acierto de escritura en bloque modificado.]~\\
+        El procesador escribe (\verb|PrEsc(B)|) y el bloque está en caché en estado modificado. Como el nodo ya tiene acceso exclusivo al bloque, no se genera ningún paquete. El bloque sigue en estado modificado.
+    \item [Acierto de lectura.]~\\
+        El procesador lee (\verb|PrLec(B)|) y el bloque está en caché en estado compartido o modificado. No se genera ningún paquete y el bloque continúa en su mismo estado.
+    \item [Reemplazo.]~\\
+        Fallo en el acceso a otro bloque y la política de reemplazo de la caché selecciona a \verb|B| para hacer sitio al nuevo. Si el bloque reemplazado se encuentra en estado modificado, el controlador de caché difunde un paquete de posescritura en memoria \verb|PtPEsc(B)|. 
+
+        El estado del bloque en la caché pasa a ser inválido.
+
+        \verb|PtPEsc(B)| provoca el siguiente efecto:
+        \begin{enumerate}
+            \item El bloque se transfiere a memoria principal, pasando el estado del bloque en memoria a válido.
+        \end{enumerate}
+\end{description}
+
+\subsection{Protocolo MESI (\emph{Modified-Exclusive-Shared-Invalid}) de espionaje}
+El protocolo que estamos a punto de ver también utiliza posescritura como política de actualización de memoria principal y escritura con invalidación como política para mantener la coherencia entre cachés, como cabría esperar.
+
+Con el protocolo MSI, siempre que se escribía en la copia de un bloque en una caché se genera un paquete de petición con acceso exclusivo al bloque, aunque no haya copias en otras cachés que se tengan que invalidar. Esto generaba un tráfico innecesario por la red que degrada las prestaciones de las aplicaciones, especialmente en aplicaciones secuenciales. Es por esto que el protocolo MESI divide el anterior estado compartido en dos (con la filosofía de que si un bloque está en estado compartido en un único nodo no está siendo compartido realmente).
+
+Un bloque en estado \emph{exclusivo} será válido sólo en dicha caché y en memoria principal. Si un bloque está en estado exclusivo en un nodo y el procesador del nodo escribe en el bloque, no se generará paquete para solicitar uso exclusivo del bloque (invalidando copias), ya que ninguna otra caché tiene copias del bloque. Si un bloque está en estado exclusivo, entonces son dos los propietarios del bloque: la memoria principal y una única caché. 
+
+Reordenamos ahora el esquema de disponibilidad de bloques según su estado, desarrollando a continuación cada estado en este nuevo protocolo:
+\begin{itemize}
+    \item Inválido.
+    \item Compartido.
+    \item Exclusivo.
+    \item Modificado.
+\end{itemize}
+
+\subsubsection{Estados de un bloque en caché}
+\begin{description}
+    \item [Modificado (M).]~\\
+        Si el bloque en la caché se encuentra en estado modificado, significa que ese es el único nodo del sistema con una copia válida del bloque, mientras que el resto de cachés y memoria tienen una copia desactualizada (no válida).
+
+        El controlador de su caché debe proporcionar el bloque si observa al espiar el bus que algún componente lo solicita y debe invalidar su propia copia si algún otro nodo solicita una copia exclusiva del bloque para su modificación.
+    \item [Exclusivo (E).]~\\
+        Si el bloque en caché se encuentra en este estado, significa que es la única caché en el sistema con una copia válida del bloque: el resto de cachés tienen una copia no válida. La memoria tiene también una copia actualizada el bloque. 
+
+        La caché debe invalidar su copia si observa al espiar el bus que algún nodo solicita una copia exclusiva del bloque para su modificación.
+    \item [Compartido (C).]~\\
+        Supone que el bloque es válido en esta caché, en memoria y en al menos alguna otra caché. 
+
+        La caché debe invalidar su copia si al espiar el bus algún otro nodo solicita una copia exclusiva del bloque para su modificación.
+    \item [Inválido (I).]~\\
+        Supone que el bloque no está físicamente en lacaché, o si se encuentra, ha sido invalidado por el controlador como consecuencia de la escritura en la copia del bloque situado en otra caché.
+\end{description}
+En cuanto a los paquetes que usa MESI, son los mismos que MSI\@.
+
+\subsubsection{Transiciones de estado de un bloque}
+En la Tabla~\ref{tab:acciones_controlador_MESI} podemos ver las nuevas acciones del controlador de caché de un nodo que provocan los eventos relacionados con un bloque \verb|B|, teniendo en cuenta el estado del bloque en la caché que ahora origina el protocolo MESI frente a MSI (es decir, tener en cuenta la Tabla~\ref{tab:acciones_controlador_MSI} y agregarle las acciones de la Tabla~\ref{tab:acciones_controlador_MESI}).
+
+Detallamos las acciones que se cometen tras la disparación de cada evento con detalle.
+
+\begin{table}
+\centering
+\begin{tabular}{c l l c}
+    \toprule
+    Estado & Evento & Acciones del controlador & Estado final \\
+    \toprule
+       & \verb|PrLec(B)| & & E \\
+    \midrule
+    E  & \verb|PrEsc(B)| & & M \\
+    \midrule
+       & \verb|PrLec(B)| & & S \\
+    \midrule
+       & \verb|PrLecEx(B)| & & I \\
+    \bottomrule
+    I & \verb|PrLec(B)| y no hay & Genera \verb|PtLec(B)| y recibe \verb|RpBloque(B)| & S \\
+      & cachés con copias de \verb|B| & & \\
+    \bottomrule
+\end{tabular}
+\caption{Tabla de nuevas acciones del controlador de caché.}
+\label{tab:acciones_controlador_MESI}
+\end{table}
+
+\begin{description}
+    \item [Fallo de lectura.]~\\
+    El procesaor lee (\verb|PrLec(B)|) y el bloque no está en caché (o está en estado inválido). El controlador de caché difunde un paquete de petición de lectura del bloque de memoria \verb|PtLec(B)|.
+
+    El estado del bloque en la caché será pasará a ser compartido si hay copias del bloque en otras cachés y exclusivo en caso contrario. Se puede añadir una línea \verb|OR| cableada que informe si hay cachés con copias del bloque solicitado. El estado en memoria será válido.
+
+    \verb|PtLec(B)| provoca los siguientes efectos:
+    \begin{enumerate}
+        \item Si el bloque se encuentra en otra caché en estado modificado, su controlador deposita en el bus el paquete \verb|RpBloque(B)| y pasa a estado compartido. La memoria también recoge el bloque del bus, pasando a estado válido (si tiene estados).
+        \item Si el bloque está compartido en otras cachés, la memoria proporciona el bloque a la caché que la solicita. El bloque sigue en estado compartido en cada una de las cachés.
+        \item Si el bloque se encuentra en estado exclusivo, pasa a estado compartido. En este caso, la respuesta con el bloque que llega a la caché del nodo solicitante procede de la memoria principal.
+    \end{enumerate}
+    Hay implementaciones en las que si el bloque solicitado está disponible en estado válido en alguna caché, en lugar de proporcionar el bloque la memoria lo proporciona la caché. Es necesario aquí añadir hardware que realice esta funcionalidad (que decida qué caché seleccionar). Esta alternativa es interesante en sistemas con memoria físicamente distribuida (que probablemente use protocolos basados en directorios), ya que se puede proporcionar el bloque desde el nodo más cercano al que lo solicita, reduciendo tiempos.
+
+    \item [Fallo de escritura al no estar el bloque en la caché.]~\\
+        El procesador escribe (\verb|PrEsc(B)|) y el bloque no está en caché (o está en estado inválido). El controlador de caché difunde un paquete de petición de acceso exclusivo al bloque de memoria \verb|PtLecEx(B)|. 
+
+    El estado del bloque en la caché después de la escritura será modificado.
+
+    \verb|PtLecEx(B)| provoca los siguientes efectos:
+    \begin{enumerate}
+        \item Si una caché tiene el bloque en estado modificado, deposita el bloque en el bus (invalidando la respuesta de la memoria) y pasa a estado inválido.
+        \item Si una caché tiene el bloque en estado exclusivo o compartido, pasa a estado inválido.
+    \end{enumerate}
+
+    \item [Acierto de escritura en bloque compartido.]~\\
+    El procesador escribe (\verb|PrEsc(B)|) y el bloque está en caché en estado compartido (es decir, está en algún otra caché también). El controlador quiere acceso exclusivo al bloque, por lo que difunde un paquete de petición de acceso exclusivo al bloque \verb|PtEx(B)|.
+
+    El estado del bloque en la caché después de la escritura será modificado\footnote{Notemos que el acierto de escritura en un bloque compartido se trata de forma similar al fallo de escritura.}.
+
+    \verb|PtEx(B)| provoca los siguientes efectos:
+    \begin{enumerate}
+        \item Si la memoria tiene el bloque válido, lo deposita en el bus y pasa a estado inválido.
+        \item Si una caché tiene el bloque en estado modificado, deposita el bloque en el bus y pasa a estado inválido.
+        \item Si una caché tiene el bloque en estado compartido, pasa a estado inválido.
+    \end{enumerate}
+    \item [Acierto de escritura en bloque modificado o exclusivo.]~\\
+        El procesador escribe (\verb|PrEsc(B)|) y el bloque está en caché en estado modificado o exclusivo. Como no hay ningún otro nodo con acceso al bloque, no se genera ningún paquete. El bloque pasa a estado modificado si estaba en estado exclusivo y si no, no se modifica su estado.
+    \item [Acierto de lectura.]~\\
+        El procesador lee (\verb|PrLec(B)|) y el bloque está en caché en estado compartido, exclusivo o modificado. No se genera ningún paquete y el bloque continúa en su mismo estado.
+    \item [Reemplazo.]~\\
+        Fallo en el acceso a otro bloque y la política de reemplazo de la caché selecciona a \verb|B| para hacer sitio al nuevo. Si el bloque reemplazado se encuentra en estado modificado, el controlador de caché difunde un paquete de posescritura en memoria \verb|PtPEsc(B)|. 
+
+        El estado del bloque en la caché pasa a ser inválido.
+
+        \verb|PtPEsc(B)| provoca el siguiente efecto:
+        \begin{enumerate}
+            \item El bloque se transfiere a memoria principal, pasando el estado del bloque en memoria a válido.
+        \end{enumerate}
+\end{description}
+
+
+% // TODO: Continuar por fin de pág 103 en libro chiquito y por 10.1.3 de 537 libro tocho
 
 
 \newpage
