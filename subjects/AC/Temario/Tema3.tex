@@ -45,7 +45,7 @@ Antes de continuar, recordamos las etapas básicas para la ejecución de una ins
             \item Saltos.
             \item Escrituras o lecturas de memoria.
         \end{itemize}
-        Aunque esta última no se realizaría en esta etapa, es importante para el desarrollo que vamos a hacer de arquitecturas ILP.
+        Aunque esta última no se realizaría en esta etapa, es importante para el desarrollo que vamos a hacer de arquitecturas ILP\@.
     \item [Etapa de acceso a memoria (\emph{Memmory}).]~\\
         Se accede a memoria en caso de que sea necesario (depende de la instrucción).
     \item [Etapa de almacenamiento de resultados en registros (\emph{Write-Back}).]~\\
@@ -53,7 +53,7 @@ Antes de continuar, recordamos las etapas básicas para la ejecución de una ins
 \end{description}
 
 \subsubsection{Formas de arquitecturas ILP}
-Podemos encontrarnos con dos formas principales de paralelizar estas etapas a la hora de desarrollar una estructura ILP:
+Podemos encontrarnos con dos formas principales de paralelizar estas etapas a la hora de desarrollar una estructura ILP\@:
 \begin{description}
     \item [Escalar segmentada.]~\\ Segmentaremos las etapas de ejecución de forma que dispongamos de 5 módulos que sean capaces de procesar su parte de forma paralela. Incluiremos \emph{buffers} auxiliares entre las distintas etapas.
     \item [VLIW y superescalar.]~\\ Consideraremos simplemente 4 etapas (fusionaremos las de ejecución y memoria en una), de forma que replicaremos los componentes de la unidad funcional para que esta sea capaz de ejecutar al mismo tiempo diversos tipos de instrucciones. También es necesario el uso de \emph{buffers} auxiliares.
@@ -125,22 +125,22 @@ Una vez desarrollada la clasificación de cores multithread, podemos mostrar la 
 \footnotesize
 \centering
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{|l|c|c|c|c|}
-    \hline
+\begin{tabular}{l c c c c}
+    \toprule
     Hardware & CGMT & FGMT & SMT & CMP \\ % // qué es cmp?
-    \hline
+    \midrule
     Registros & Replicado (al menos el PC) & Replicado & Replicado & Replicado \\
-    \hline
+    \midrule
     Almacenamiento & Multiplexado & Cualquiera de las 4 & Multiplexado no & Replicado \\
-    \hline
+    \midrule
     Hardware de etapas & Multiplexado & Captación repartida o compartida, & Unidad funcional compartida, & Replicado \\
     del cauce & el resto multiplexadas & el resto repartidas o compartidas & Replicado \\
-    \hline
+    \midrule
     Necesidad de distinguir & Sí & Sí & Sí & No \\
     el hilo de una instruc. & & & & \\
-    \hline
+    \midrule
     Hardware para conmutar & Sí & Sí & No & No \\
-    \hline
+    \bottomrule
 \end{tabular}
 \end{table}
 ``CMP'' es un Chip multicore, aquel en el que tenemos replicado todo el cauce (esto es, todas las unidades de la etapa de ejecución).
@@ -267,8 +267,8 @@ Tras esta sección, debería ser capaz de:
     \item Explicar qué debe garantizar el sistema de memoria para evitar problemas por incoherencias.
     \item Descibir las partes en las que se puede dividir el análisis o el diseño de protocolos de coherencia.
     \item Distinguir entre protocolos basados en directorios y protocolos de espionaje (snoopy).
-    \item Explicar el protocolo de mantenimiento de coherencia de espionaje MSI.
-    \item Explicar el protocolo de mantenimiento de coherencia de espionaje MESI.
+    \item Explicar el protocolo de mantenimiento de coherencia de espionaje MSI\@.
+    \item Explicar el protocolo de mantenimiento de coherencia de espionaje MESI\@.
     \item Explicar el protocolo de mantenimiento de coherencia MSI basado en directorios con difusión y sin difusión.
 \end{itemize}
 
@@ -292,7 +292,104 @@ Recordamos ahora que cada procesador lleva asociada una memoria caché y, al ser
 
 En un multiprocesador, cada procesador lleva consigo una memoria caché, de forma que todos los procesadores comparten el espacio de memoria. Puede suceder que dos procesadores distintos trabajen con la misma posición de memoria $k$ (y por tanto, tengan al bloque que contiene a $k$ en sus respectivas cachés). Si uno de los dos procesadores decide modificar $k$, se modificará la dirección de memoria caché correspondiente, pero el bloque en la caché del otro procesador y en memoria principal quedarán inalterados. Nos acabamos de encontrar con una incoherencia en el sistema de memoria.\\
 
-Concretando las ideas, una \textbf{incoherencia en el sistema de memoria} se produce cuando en el sistema de memoria las copias de una misma dirección no tienen el mismo contenido. Como hemos ya comentado, en sistemas uniprocesdores teníamos este problema: podíamos tener un bloque en memoria caché modificado que no estuviese modificado en memoria principal. En este caso hablamos de incoherencias en distintas jerarquías de memoria. Sin embargo, ahora en multiprocesadores podemos tener incoherencias en la misma jerarquía de memoria, tal y como mencionábamos en el ejemplo anterior.
+Concretando las ideas, una \textbf{incoherencia en el sistema de memoria} se produce cuando en el sistema de memoria las copias de una misma dirección no tienen el mismo contenido. Como hemos ya comentado, en sistemas uniprocesdores teníamos este problema: podíamos tener un bloque en memoria caché modificado que no estuviese modificado en memoria principal. En este caso hablamos de incoherencias en distintas jerarquías de memoria. Sin embargo, ahora en multiprocesadores podemos tener incoherencias en la misma jerarquía de memoria, tal y como mencionábamos en el ejemplo anterior.\\
+
+Las situaciones de incoherencia se deben abordar no permitiendo que se produzcan nunca o bien evitando que causen problemas (que algún componente lea el valor no actualizado de la memoria) en caso de permitirse. Las cachés implementan dos métodos de actualización de memoria principal:
+\begin{description}
+    \item [Escritura directa (\emph{write-through}).]~\\ 
+        Con escritura directa, no se permiten situaciones de incoherencia entre caché y memoria principal al escribir en caché: cada vez que se escribe en un bloque de la caché, el correspondiente bloque de la memoria principal es modificado. 
+
+        Por tanto, tenemos una escritura en memoria principal por cada escritura, lo que requiere usar la red de comunicación entre procesador y memoria principal. Este sobreuso de la red empeora más aún en multiprocesadores, al tener múltiples procesadores que son susceptibles de modificar datos de forma paralela.
+
+        Otro problema que se plantea es desaprovechar los principios de localidad espacial y temporal (al modificar una variable, es posible que se modifique otra próxima a ella, o que la ya modificada se vuelva a modificar próximamente), por lo que sería mejor esperar a que termine la modificación en curso (por ejemplo, si estamos iterando sobre un vector y modificando sus componentes), antes de escribir en memoria los cambios modificados.
+
+        Cabe destacar también que sí pueden producirse con escritura directa situaciones de incoherencia entre cachés (dos cachés tienen el mismo bloque y una lo modifica) y entre caché y memoria principal (cuando un componente modifica la dirección de un bloque de memoria principal que se encuentra en alguna caché del multiprocesador). En sistemas uniprocesadores, tenemos la ventaja de no necesitar un bit sucio.
+
+    \item [Posescritura (\emph{write-back}).]~\\
+        En posescritura, cuando una dato es modificado por un procesador, sólo se modifica en la caché correspondiente a dicho procesador. La actualización en memoria principal se produce cuando un bloque modificado (un bloque en el que se ha alterado una dirección de memoria mientras estaba en la caché) es retirado de la caché (por ejemplo, para hacer sitio a otro bloque más necesario). De esta forma, minimizamos el número de accesos a memoria y, por tanto, de uso de la red de conexión entre el procesador y la memoria; aprovechando los principios de localidad espacial y temporal.
+
+        De esta forma, se permiten situaciones de incoherencia entre caché y memoria principal (incluso en sistemas uniprocesador). También puede producirse cualquier tipo de incoherencia en este sistema, empeorando la situación que teníamos con escritura directa.
+
+        Es necesario además mantener la información sobre qué bloques han sido modificados en caché y cuales no. Esta labor la realiza un bit en la tabla de la caché, llamdo ``bit sucio''.
+\end{description}
+Lo usual en cachés es que usen posescritura, debido a sus ventajas frente a escritura directa. A continuación, estaremos hablando siempre de sistemas multiprocesadores, ya que en sistemas uniprocesadores las situaciones de incoherencia ya están resueltas (tanto con escritura directa no permitiendo incoherencias tanto con posescritura, permitiendo incoherencias pero controlando que no provoquen fallos).
+
+\subsection{Protocolos de coherencia entre cachés}
+Como ya habrás podido deducir, nuestra tarea ahora es buscar cómo resolver las incoherenias ya mencionadas, y manejar las incoherencias que se permiten para que no provoquen fallos en el sistema. Para evitar situaciones de incoherencias entre cachés, se deben cumplir las siguientes dos condiciones:
+\begin{enumerate}
+    \item \textbf{Propaganción de escrituras.} Se debe garantizar que todo lo que se escribe en la copia de un bloque en caché se propague a las copias del bloque en otras cachés.
+    \item \textbf{Serialización de escrituras.} Se debe garantizar que las escrituras en una dirección se ven en el mismo orden por todos los procesadores: el sistema de memoria debe parecer que realiza en serie las operaciones de escritura en la misma dirección. Debe dar la impresión de que estas operaciones sean \underline{atómicas}. 
+
+        Esto es de vital importancia en arquitecturas donde no todos los procesadores tienen el mismo (o similar) tiempo acceso a sus cachés, como los NUMA, debemos garantizar que el primer procesador que se dispuso a escribir en memoria sea el primero que lo haga.
+\end{enumerate}
+Los \textbf{protocolos de coherencias de caché} buscan resolver el problema de las incoherencias entre cachés, de forma que cada escritura en caché sea visible para el resto de procesadores, propagando de forma fiable el valor escrito en una dirección. Los protocolos de coherencia usan dos alternativas principales para propagar escrituras a otras cachés:
+\begin{description}
+    \item [Escritura con actualización (\emph{write-update}).]~\\
+        Siempre que se modifique una dirección en la copia de un bloque en una caché, se modifica dicha dirección en las copias del mismo bloque de memoria que tengan el resto de procesadores en sus cachés (en caso de tenerlo). Si se cumplen los principios de localidad espacial y temporal, esto provoca una alta sobrecarga en la red de comunicación, al tener que avisar al resto de procesadores la modificación de una variable.
+    \item [Escritura con invalidación (\emph{write-invalidate}).]~\\ 
+        Antes de que un procesador modifique un bloque en su memoria caché, invalida el resto de copias del mismo bloque en las cachés de otros procesadores. Posteriormente, es libre de modificar su bloque tantas veces como desee, obteniendo un \emph{acceso exclusivo} al bloque. 
+
+        Cuando otro procesador quiera acceder a dicho bloque desde su caché, en caso de tenerlo, verá que estará invalidado y deberá solicitarlo a la memoria (en caso de que el bloque se encuentre actualizado en memoria) o al procesador que tenía el acceso exclusivo al bloque. Es necesario por tanto disponer de un bit en la tabla de la caché que indique si un bloque se encuentra invalidado o no.
+
+        Notemos que invalidar es más rápido que actualizar, ya que sólo necesitamos recibir la información del bloque invalidado y cambiar un bit, en lugar de reescribir el bloque completo. 
+
+        Esta práctica sólo permite compartir bloques de memoria mientras sólo se lee del bloque.
+\end{description}
+Si escribimos varias veces sucesivas sin que otro procesador lea de su bloque correspondiente, con invalidación podemos reducir el número de accesos (transferencias) a la red. Por otra parte, si deseamos que un procesador escriba un dato para que el resto lo lean podría ser más eficiente usar escritura con actualización, que disminuye en este caso los accesos a la red (notemos que con invalidación necesitamos un acceso a la red por cada caché que falle, pero con actualización con un único acceso a la red podemos actualizar todas las cachés). Cabe destacar que esta ventaja de la actualización no se da en arquitecturas que no implementan difusión. Podemos decir que en general, la política de actualización genera un tráfico innecesario cuando los datos compartidos se leen por pocos procesadores.\\
+
+La propagación de las actualizaciones o invalidaciones entre los procesadores se puede realizar:
+\begin{itemize}
+    \item Con una \textbf{difusión} de los paquetes de actualización o invalidación a \underline{todas} las cachés.
+    \item Con el envío de los paquetes de actualización o invalidación \underline{sólo} a aquellas cachés con copias del bloque, que son sólo las que necesitan recibirlo. Es decir, realizar un \textbf{envío selectivo}.
+
+        Para esta última alternativa, necesitamos mantener una tabla o directorio de memoria, que informe de las cachés que tienen copia de un determinado bloque para poder realizar la comunicación. Esta tabla tendría una entrada por cada dirección de memoria de cada caché y contendría el bloque que contiene, junto con bits de estado.
+\end{itemize}
+
+\subsection{Protocolos de mantenimiento de coherencia}
+En una arquitectura UMA, podemos utilizar una red bus para las transferencias entre los procesadores y la memoria que comparten. Los buses implementan la difusión de forma natural. De esta forma, todos los paquetes enviados a la red son visibles por todos los componentes conectados al bus, de forma que toos ven las peticiones en el orden en el que se solicitan (dándose las dos condiciones para evitar situaciones de incoherencias). Todo esto hace que en el caso de los multiprocesadores UMA con red bus no sea necesarios mantener información de la cachés con copias de los bloques, pudiendo suprimir incluso el directorio de memoria del que antes se hablaba. 
+
+En este tipo de arquitecturas, es común el uso de \textbf{protocolos de espionaje} (\emph{snoopy}), ya que todos los componentes pueden ver (espiar) dicho bus. Cada controlador de caché espía los paquetes del bus y actúa en consecuencia (si por ejemplo otro controlador solicita un paquete invalidado del que nuestra caché tiene acceso exclusivo y no está actualizado en memoria, nuestro controlador invalida la respuesta de la memoria y es él quien responde a la petición del paquete, devolviendo el paquete actualizado). Es por ello sencillo implementar protocolos de coherencia en una arquitectura que use buses. Sin embargo, los protocolos de espionaje no escalan bien debido a retardos que introducen otro tipo de redes\footnote{al tener que esperar a que todos los procesadores reciban el paquete enviado.}.\\
+
+En redes en las que la difusión es costosa de implementar o redes que requieren de una gran escalabilidad, se usan \textbf{esquemas basados en directorios}, en los que para reducir el tráfico, se envían los paquetes únicamente a las cachés implicadas (cachés con copia del bloque al que se accede). Es necesario por tanto el uso del directorio de memoria. Sin embargo, también obtenemos un cuello de botella al tener que acceder por cada procesador a dicho directorio. Se obtienen mejores prestaciones distribuyendo el directorio entre los módulos de memoria principal, de forma que el subdirectorio de cada módulo mantenga la información sobre sólo los bloques que contiene cada módulo. De esta forma, los diferentes subdirectorios pueden procesar peticiones en paralelo.
+
+Cabe destacar que no son los únicos tipos de protocolos de coherencia, sino que hay también esquemas organizados en \textbf{jerarquía}, compuestos de protocolos de espionaje y directorios, que dependen de la red utilizada en cada nivel.\\
+
+Resumiento toda esta introducción a los protocolos de coherencia realizada, debemos tener claro que para diseñar un protocolo de mantenimiento de coherencia, debemos planificar:
+\begin{itemize}
+    \item La política de actualización en memoria principal: escritura directa o posescritura.
+    \item La política de propagación de escrituras entre cachés: escrituras con actualizción o con invalidación.
+    \item El comportamiento:
+        \begin{itemize}
+            \item Los posibles estados de un bloque en caché y las acciones que el controlador de caché debe realizar ante eventos recibidos.
+            \item Los posibles estados de un bloque en memoria principal, junto con las acciones que el controlador de memoria principal debe hacer ante eventos.
+            \item Los paquetes que genera el controlador de memoria principal.
+            \item Saber relacionar las acciones con eventos y estados.
+        \end{itemize}
+\end{itemize}
+A continuación, vamos a estudiar cuatro protocolos de mantenimiento de coherencia, dos para multiprocesadores UMA con red bus (MIS y MESI) y dos para multiprocesadores NUMA en una placa (MSI con y sin difusión). Todos ellos usan posescritura y escrituras con invalidación, como cabría esperar.\\
+
+Los protocolos de espionaje que estudiaremos se basan en la difusión de los paquetes asociados al mantenimiento de coherencia a todas las cachés. Se implementan de forma eficiente en sistemas basados en buses.
+
+\subsection{Protocolo MSI (\emph{Modified-Shared-Invalid}) de espionaje}
+Describimos a continuación el protocolo MSI, el protocolo con menor número de estados que utiliza posescritura e invalidación. Debe su nombre a cada estado de un bloque en caché.
+
+\subsubsection{Estados de un bloque en caché}
+\begin{description}
+    \item [Modificado (M).]~\\
+        Un bloque en este estado en caché es la única copia del bloque válida en todo el sistema de memoria. 
+        \begin{itemize}
+            \item El controlador de su caché debe responder con dicho bloque en caso de que otro módulo lo solicite por el bus.
+            \item El controlador de su caché debe escribir dicho bloque en memoria en caso de ser extraído de su caché.
+            \item El controlador de su caché debe invalidar el bloque si le llega por el bus una petición de invalidación del bloque correspondiente.
+        \end{itemize}
+
+    \item [Compartido (S).]~\\
+        Un bloque en este estado en caché indica que todas las copias de dicho bloque que pueda haber en la jerarquía de memoria están actualizadas.
+
+        El controlador de su caché debe invalidar el bloque si le llega por el bus una petición de invalidación del bloque correspondiente.
+    \item [Inválido (I).]~\\
+        
+\end{description}
 
 % // TODO: COntinuar por fin de pág 96 en libro chiquito y por "A continuación \ldots" en página 524 libro tocho
 
