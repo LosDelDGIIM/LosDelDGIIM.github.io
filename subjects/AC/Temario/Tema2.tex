@@ -86,7 +86,7 @@ A la hora de programar una aplicación paralela, podemos distinguir dos modos de
 
 SPMD es recomendable en sistemas masivamente paralelos. Es más fácil resolver la aplicación escribiendo un único programa. Usado en sistemas con memoria distribuida, evita la necesidad de tener que distribuir el código entre los nodos, sólo habría que distribuir datos. En la práctica, se aplica en mayor medida SPMD antes que MPMD.
 
-En los programas paralelos se pueden utilizar combinaciones de MPMD y SPMD. La programación dueño-esclavo se puede considerar una variante del modo MPMD (se verá a lo largo de esta sección). Si todos los esclavos tienen el mismo código, sería una mezcla de MPMD y SPMD. Los programas que conforman una solución dueño-esclavo con MPMD se pueden juntar en un único programa SPMD con el uso de estructuras condicionales.
+En los programas paralelos se pueden utilizar combinaciones de MPMD y SPMD\@. La programación dueño-esclavo se puede considerar una variante del modo MPMD (se verá a lo largo de esta sección). Si todos los esclavos tienen el mismo código, sería una mezcla de MPMD y SPMD\@. Los programas que conforman una solución dueño-esclavo con MPMD se pueden juntar en un único programa SPMD con el uso de estructuras condicionales.
 
 \subsection{Herramientas para obtener código paralelo}
 Las herramientas de programación paralela debería permitirnos de forma explícita o implícita:
@@ -105,7 +105,7 @@ Cuanto mayor sea la abstracción que desarrolle la herramienta paralela, menor s
     \item [Compiladores paralelos]~\\
         Un compilador paralelo pretende ser aquella automatización capaz de extraer paralelismo a nivel de bucle (paralelismo de datos) y de función (paralelismo de tareas) a partir de un código secuencial. Para ello, realizan análisis de dependencias entre bloques de código. No generan código eficiente para cualquier programa y todavía se investiga en este campo.
     \item [Lenguajes paralelos y APIs de funciones y directivas]~\\
-        Generalmente, los lengaujes paralelos y directivas sitúan al programador en un nivel de abstracción superior a sólo bibliotecas de funciones. Encontramos lenguajes como Occam, Ada o Java, los cuales tienen construcciones particulares y bibliotecas de funciones que requieren un compilador exclusivo. Por otra parte, las APIs mencionadas (formadas tanto por directivas para el lenguaje como por bibliotecas de funciones) nos permiten trabajar en cualquier lenguaje para el que fueron diseñadas, como \verb|C++| o \verb|Fortran|, en el caso de OpenMP. En este nivel, el programador es el encargado de detectar el paralelísmo implícito en la aplicación. Sin embargo, el programador no hace el reparto (la asignación directa) de este paralelismo, así de eximir al programador las tareas de creación y terminación de flujos o de detalles para comunicación. Como ventaja, es más sencillo desarrollar aplicaciones paralelas, obteniendo códigos más cortos.
+        Generalmente, los lengaujes paralelos y directivas sitúan al programador en un nivel de abstracción superior a sólo bibliotecas de funciones. Encontramos lenguajes como Occam, Ada o Java, los cuales tienen construcciones particulares y bibliotecas de funciones que requieren un compilador exclusivo. Por otra parte, las APIs mencionadas (formadas tanto por directivas para el lenguaje como por bibliotecas de funciones) nos permiten trabajar en cualquier lenguaje para el que fueron diseñadas, como \verb|C++| o \verb|Fortran|, en el caso de OpenMP\@. En este nivel, el programador es el encargado de detectar el paralelísmo implícito en la aplicación. Sin embargo, el programador no hace el reparto (la asignación directa) de este paralelismo, así de eximir al programador las tareas de creación y terminación de flujos o de detalles para comunicación. Como ventaja, es más sencillo desarrollar aplicaciones paralelas, obteniendo códigos más cortos.
     \item [APIs de funciones]~\\
         Como por ejemplo Pthreads o MPI, las cuales sólo consisten en una biblioteca de funciones que se añaden a un compilador de un lenguaje sencuencial. El cuerpo de procesos y hebras es escrito en lenguaje secuencial y es el programador quien se encarga de distribuir las tareas entre los procesos, crear o gestionar procesos, e implementar la comunicación y sincronización usando funciones de la biblioteca. Como ventajas a destacar:
         \begin{itemize}
@@ -131,36 +131,32 @@ Las herramientas para la programación paralela también pueden ofrecer al progr
 \end{itemize}
 
 Por tanto, se intenta que las herramientas de programación paralela nos permitan implementar dichas funcionalidades mediante comunicaciones entre procesos (flujos de instrucciones). A lo largo de esta sección, cada vez que aparezca ``mensaje'', estaremos haciendo referencia a un dato o estructura de datos. A continuación, enumeramos los distintos tipos de comunicaciones entre procesos que podemos encontrarnos:
-\begin{description} % // TODO: terminar de comentar bien
-    \item [Comunicación múltiple uno-a-uno.] Hay componentes del grupo que envían un único mensaje y componentes que reciben un único mensaje. Si todos los componentes del grupo envían y reciben, diremos que se trata de una \emph{permutación}. Nos podemos encontrar \emph{rotaciones} (el proceso $P_i$ envía al proceso $P_{i+1}$ y el $P_n$ al $P_0$), \emph{intercambios}, \emph{barajes}, \emph{desplazamientos}, \ldots 
-        % // TODO: foto
+\begin{description} 
+    \item [Comunicación múltiple uno-a-uno.] Hay componentes del grupo que envían un único mensaje y componentes que reciben un único mensaje. Si todos los componentes del grupo envían y reciben, diremos que se trata de una \emph{permutación}. Nos podemos encontrar \emph{rotaciones} (el proceso $P_i$ envía al proceso $P_{i+1}$ y el $P_n$ al $P_0$), \emph{intercambios}, \emph{barajes}, \emph{desplazamientos}, etc. (Ver Figura~\ref{graph:uno_uno}).
 
-    \item [Comunicación uno-a-todos.] Un proceso envía y todos los procesos del grupo reciben el mensaje. Destacamos aquí:
+    \item [Comunicación uno-a-todos.] Un proceso envía y todos los procesos del grupo reciben el mensaje (Ver Figura~\ref{graph:uno_todos}). Destacamos aquí:
         \begin{description}
             \item [Difusión (broadcast).] Todos los procesos reciben el mismo mensaje.
             \item [Dispersión (scatter).] Cada proceso recibe un mensaje diferente.
         \end{description}
-        % // TODO: foto
 
-    \item [Comunicación todos-a-uno.] Todos los procesos en el grupo envían un mensaje a un único proceso. Destacamos:
+    \item [Comunicación todos-a-uno.] Todos los procesos en el grupo envían un mensaje a un único proceso (Ver Figura~\ref{graph:todos_uno}). Destacamos:
         \begin{description}
             \item [Reducción.] Los mensajes enviados por los procesos se combinan en un sólo mensaje mediante algún operador (como por ejemplo, el proceso recibe una suma de distintas variables de cada proceso).
             \item [Acumulación (gather).] Los mensajes se reciben de forma concatenada en el receptor.
         \end{description}
-        % // TODO: foto
 
-    \item [Comunicación todos-a-todos.] Todos los procesos del grupo ejecutan una comunicación uno-a-todos. Puede ser:
+    \item [Comunicación todos-a-todos.] Todos los procesos del grupo ejecutan una comunicación uno-a-todos (Ver Figura~\ref{graph:todos_todos}). Puede ser:
         \begin{description}
             \item [Todos difunden (all-broadcast).] Todos los procesos realizan una difusión.
             \item [Todos dispersan (all-scatter).] Todos los procesos realizan una dispersión.
         \end{description}
-        % // TODO: foto
 
     \item [Comunicaciones colectivas compuestas.] Hay servicios que resultan de la combinación de algunos anteriores, como:
         \begin{description}
-            \item [Todos combinan, o reducción y extensión.] El resultado de aplicar una reducción se obtiene en todos los procesos.
+            \item [Todos combinan, o reducción y extensión.] El resultado de aplicar una reducción se obtiene en todos los procesos (Ver Figura~\ref{graph:colectivas1}).
             \item [Barrera.] Es un punto de sincronización que todos los procesos de un grupo deben alcanzar para que cualquier proceso del grupo pueda continuar con su ejecución.
-            \item [Recorrido (scan).] Todos los procesos envían un mensaje, recibiendo cada uno de ellos el resultado de reducir un conjunto de estos mensajes.
+            \item [Recorrido (scan).] Todos los procesos envían un mensaje, recibiendo cada uno de ellos el resultado de reducir un conjunto de estos mensajes (Ver Figura~\ref{graph:colectivas2}).
                 \begin{itemize}
                     \item Recorrido prefijo: El proceso $P_i$ recibe el resultado de reducir los mensajes de $P_0, P_1, \ldots, P_i$.
                     \item Recorrido sufijo: El proceso $P_i$ recibe el resultado de reducir los mensajes de $P_i, P_{i+1}, \ldots, P_n$.
@@ -168,7 +164,285 @@ Por tanto, se intenta que las herramientas de programación paralela nos permita
         \end{description}
 \end{description}
 
-Comunicaciones como ``dispersión'' o ``todos dispersan'' son usadas para reparto de datos. ``Acumulación'' es usada para fusionar datos intermedios. Los ``desplazamientos'' son tramos intermedios para realizar nuevos repartos de datos. 
+Comunicaciones como ``dispersión'' o ``todos dispersan'' son usadas para reparto de datos. ``Acumulación'' es usada para fusionar datos intermedios. Los ``desplazamientos'' son tramos intermedios para realizar nuevos repartos de datos.\\
+
+% ----------------------------------------------------------------------
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+  % Nodos
+    % Rotacion
+    \node[draw, circle] (A) at (0,3) {P0};
+    \node[draw, circle] (B) at (0,2) {P1};
+    \node[draw, circle] (C) at (0,1) {P2};
+    \node[draw, circle] (D) at (0,0) {P3};
+    \node[draw, circle] (E) at (4,3) {P0};
+    \node[draw, circle] (F) at (4,2) {P1};
+    \node[draw, circle] (G) at (4,1) {P2};
+    \node[draw, circle] (H) at (4,0) {P3};
+
+    % Permutacion
+    \node[draw, circle] (I) at (8,3) {P0};
+    \node[draw, circle] (J) at (8,2) {P1};
+    \node[draw, circle] (K) at (8,1) {P2};
+    \node[draw, circle] (L) at (8,0) {P3};
+    \node[draw, circle] (M) at (12,3) {P0};
+    \node[draw, circle] (N) at (12,2) {P1};
+    \node[draw, circle] (O) at (12,1) {P2};
+    \node[draw, circle] (P) at (12,0) {P3};
+
+  % Aristas
+    % Rotacion
+    \draw (A) -- (F);
+    \draw (B) -- (G);
+    \draw (C) -- (H);
+    \draw (D) -- (E);
+
+    % Permutacion
+    \draw (I) -- (N);
+    \draw (K) -- (M);
+    \draw (J) -- (P);
+    \draw (L) -- (O);
+\end{tikzpicture}
+\caption{Dos permutaciones, la primera de ellas rotación.}
+\label{graph:uno_uno}
+\end{figure}
+
+\begin{figure}
+\centering 
+\begin{tikzpicture}
+    % Nodos
+    % Difusion
+    \node[draw, circle] (A) at (0,1.5) {P0};
+    \node[draw, circle] (B) at (4,0) {P3};
+    \node[draw, circle] (C) at (4,1) {P2};
+    \node[draw, circle] (D) at (4,2) {P1};
+    \node[draw, circle] (E) at (4,3) {P0};
+
+    % Dispersion
+    \node[draw, circle] (F) at (8,1.5) {P0};
+    \node[draw, circle] (G) at (12,0) {P3};
+    \node[draw, circle] (H) at (12,1) {P2};
+    \node[draw, circle] (I) at (12,2) {P1};
+    \node[draw, circle] (J) at (12,3) {P0};
+
+    % Nodos
+    % Difusion
+    \draw (A) -- (1, 1.5);
+    \draw (1, 1.5) -- (B);
+    \draw (1, 1.5) -- (C);
+    \draw (1, 1.5) -- (D);
+    \draw (1, 1.5) -- (E);
+
+    % Dispersion
+    \draw (F) -- (G);
+    \draw (F) -- (H);
+    \draw (F) -- (I);
+    \draw (F) -- (J);
+\end{tikzpicture}
+\caption{Una difusión a la izquierda y una dispersión a la derecha.}
+\label{graph:uno_todos}
+\end{figure}
+
+\begin{figure}
+\centering 
+\begin{tikzpicture}
+    % Nodos
+    % Difusion
+    \node[draw, circle] (A) at (4,1.5) {P0};
+    \node[draw, circle] (B) at (0,0) {P3};
+    \node[draw, circle] (C) at (0,1) {P2};
+    \node[draw, circle] (D) at (0,2) {P1};
+    \node[draw, circle] (E) at (0,3) {P0};
+
+    % Dispersion
+    \node[draw, circle] (F) at (12,1.5) {P0};
+    \node[draw, circle] (G) at (8,0) {P3};
+    \node[draw, circle] (H) at (8,1) {P2};
+    \node[draw, circle] (I) at (8,2) {P1};
+    \node[draw, circle] (J) at (8,3) {P0};
+
+    % Nodos
+    % Difusion
+    \draw (A) -- (3, 1.5);
+    \draw (3, 1.5) -- (B);
+    \draw (3, 1.5) -- (C);
+    \draw (3, 1.5) -- (D);
+    \draw (3, 1.5) -- (E);
+
+    % Dispersion
+    \draw (F) -- (G);
+    \draw (F) -- (H);
+    \draw (F) -- (I);
+    \draw (F) -- (J);
+\end{tikzpicture}
+\caption{Una reducción a la izquierda y una acumulación a la derecha.}
+\label{graph:todos_uno}
+\end{figure}
+
+\begin{figure}
+\centering 
+\begin{tikzpicture}
+    % Nodos de todos difunden
+    \node[draw, circle] (A) at (0,3) {P0};
+    \node[draw, circle] (B) at (0,2) {P1};
+    \node[draw, circle] (C) at (0,1) {P2};
+    \node[draw, circle] (D) at (0,0) {P3};
+    \node[draw, circle] (E) at (4,3) {P0};
+    \node[draw, circle] (F) at (4,2) {P1};
+    \node[draw, circle] (G) at (4,1) {P2};
+    \node[draw, circle] (H) at (4,0) {P3};
+
+    % Arcos de todos difunden
+    \draw (A) -- (1, 3);
+    \draw (1, 3) -- (E);
+    \draw (1, 3) -- (F);
+    \draw (1, 3) -- (G);
+    \draw (1, 3) -- (H);
+
+    \draw (B) -- (1,2);
+    \draw (1,2) -- (E);
+    \draw (1,2) -- (F);
+    \draw (1,2) -- (G);
+    \draw (1,2) -- (H);
+
+    \draw (C) -- (1,1);
+    \draw (1,1) -- (E);
+    \draw (1,1) -- (F);
+    \draw (1,1) -- (G);
+    \draw (1,1) -- (H);
+
+    \draw (D) -- (1,0);
+    \draw (1,0) -- (E);
+    \draw (1,0) -- (F);
+    \draw (1,0) -- (G);
+    \draw (1,0) -- (H);
+
+    % Nodos de todos dispersan
+    \node[draw, circle] (I) at (8,3) {P0};
+    \node[draw, circle] (J) at (8,2) {P1};
+    \node[draw, circle] (K) at (8,1) {P2};
+    \node[draw, circle] (L) at (8,0) {P3};
+    \node[draw, circle] (M) at (12,3) {P0};
+    \node[draw, circle] (N) at (12,2) {P1};
+    \node[draw, circle] (O) at (12,1) {P2};
+    \node[draw, circle] (P) at (12,0) {P3};
+
+    % Arcos de todos difunden
+    \draw (I) -- (M);
+    \draw (I) -- (N);
+    \draw (I) -- (O);
+    \draw (I) -- (P);
+    \draw (J) -- (M);
+    \draw (J) -- (N);
+    \draw (J) -- (O);
+    \draw (J) -- (P);
+    \draw (K) -- (M);
+    \draw (K) -- (N);
+    \draw (K) -- (O);
+    \draw (K) -- (P);
+    \draw (L) -- (M);
+    \draw (L) -- (N);
+    \draw (L) -- (O);
+    \draw (L) -- (P);
+\end{tikzpicture}
+\caption{Todos difunden a la izquierda y todos dipersan a la derecha.}
+\label{graph:todos_todos}
+\end{figure}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+    % Nodos
+    \node[draw, circle] (A) at (0,3) {P0};
+    \node[draw, circle] (B) at (0,2) {P1};
+    \node[draw, circle] (C) at (0,1) {P2};
+    \node[draw, circle] (D) at (0,0) {P3};
+    \node[draw, circle] (E) at (4,3) {P0};
+    \node[draw, circle] (F) at (4,2) {P1};
+    \node[draw, circle] (G) at (4,1) {P2};
+    \node[draw, circle] (H) at (4,0) {P3};
+
+    % Aristas
+    \draw (A) -- (3,3);
+    \draw (B) -- (3,3);
+    \draw (C) -- (3,3);
+    \draw (D) -- (3,3);
+    \draw (3,3) -- (E);
+
+    \draw (A) -- (3,2);
+    \draw (B) -- (3,2);
+    \draw (C) -- (3,2);
+    \draw (D) -- (3,2);
+    \draw (3,2) -- (F);
+
+    \draw (A) -- (3,1);
+    \draw (B) -- (3,1);
+    \draw (C) -- (3,1);
+    \draw (D) -- (3,1);
+    \draw (3,1) -- (G);
+
+    \draw (A) -- (3,0);
+    \draw (B) -- (3,0);
+    \draw (C) -- (3,0);
+    \draw (D) -- (3,0);
+    \draw (3,0) -- (H);
+\end{tikzpicture}
+\caption{Todos combinan.}
+\label{graph:colectivas1}
+\end{figure}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+    % Nodos prefijo
+    \node[draw, circle] (A) at (0,3) {P0};
+    \node[draw, circle] (B) at (0,2) {P1};
+    \node[draw, circle] (C) at (0,1) {P2};
+    \node[draw, circle] (D) at (0,0) {P3};
+    \node[draw, circle] (E) at (4,3) {P0};
+    \node[draw, circle] (F) at (4,2) {P1};
+    \node[draw, circle] (G) at (4,1) {P2};
+    \node[draw, circle] (H) at (4,0) {P3};
+
+    \draw (A) -- (E);
+    \draw (A) -- (F);
+    \draw (A) -- (G);
+    \draw (A) -- (H);
+    \draw (B) -- (F);
+    \draw (B) -- (G);
+    \draw (B) -- (H);
+    \draw (C) -- (G);
+    \draw (C) -- (H);
+    \draw (D) -- (H);
+
+    % Nodos sufijo
+    \node[draw, circle] (I) at (8,3) {P0};
+    \node[draw, circle] (J) at (8,2) {P1};
+    \node[draw, circle] (K) at (8,1) {P2};
+    \node[draw, circle] (L) at (8,0) {P3};
+    \node[draw, circle] (M) at (12,3) {P0};
+    \node[draw, circle] (N) at (12,2) {P1};
+    \node[draw, circle] (O) at (12,1) {P2};
+    \node[draw, circle] (P) at (12,0) {P3};
+
+    \draw (I) -- (M);
+    \draw (J) -- (M);
+    \draw (J) -- (N);
+    \draw (K) -- (M);
+    \draw (K) -- (N);
+    \draw (K) -- (O);
+    \draw (L) -- (M);
+    \draw (L) -- (N);
+    \draw (L) -- (O);
+    \draw (L) -- (P);
+\end{tikzpicture}
+\caption{Recorrido en prefijo a la izquierda y recorrido en sufijo a la derecha.}
+\label{graph:colectivas2}
+\end{figure}
+
+% ----------------------------------------------------------------------
 
 \subsubsection{Implementación en OpenMP} 
 Varias comunicaciones de las anteriormente descritas podemos llevarlas a cabo usando la herramienta OpenMP:
@@ -232,9 +506,10 @@ Asimismo, también podemos encontrar herramientas que permiten programar multipr
 Analizando las estructuras (los grafos) de las tareas y de los procesos (junto con las conmunicaciones y sincronizaciones entre estos) que componen distintos programas paralelos, se puede encontrar que hay ciertos patrones que se repiten en distintos programas y dentro de un programa. Entre estras estructuras encontramos:
 \begin{itemize}
     \item Dueño-esclavo (\emph{master-slave}), o ``granja de tareas'' (\emph{task-farming}).
+    \item Cliente-servidor (\emph{client-server}).
     \item Paralelismo de datos, descomposición de datos, o descomposición de dominio. 
-    \item Divide y vencerás (\emph{divide and conquer}), o descomposición recursiva. 
     \item Estructura segmentada (\emph{pipeline}), o flujo de datos.
+    \item Divide y vencerás (\emph{divide and conquer}), o descomposición recursiva. 
 \end{itemize}
 Hay estructuras que quizás no se puedan clasificar en un sólo tipo de los anteriores. Por otra parte, nos podemos encontrar dentro de un mismo programa paralelo varias de estas estructuras, en distintos niveles.
 
@@ -243,10 +518,47 @@ En este caso, contamos con un proceso denominado dueño (o master) y con varios 
 Puede implementarse con un único programa si el código de los esclavos no es muy complicado (SPMD), con dos programas, si el código de los esclavos es igual (modo mixto MPMD-SPMD), o con múltiples programas (MPMD).
 La repartición de carga puede hacerse de forma estática o dinámica.
 Un ejemplo de esto es un programa que tiene que calcular los primos hasta un número $n$, y que hace uso de $r$ esclavos para que cada uno calcule los primos que se encuentran en un vector de tamaño $ \nicefrac{n}{r} $. Combinando el resultado de cada esclavo, obtendremos todos los primos.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+    \node[draw, circle, scale=1.8] (A) at (0,1.5) {Master};
+    \node[draw, circle] (B) at (4,0) {Slave};
+    \node[draw, circle] (C) at (4,1.5) {Slave};
+    \node[draw, circle] (D) at (4,3) {Slave};
+
+    \draw (A) to[out=0,in=180] (B);
+    \draw (A) to[out=0,in=180] (C);
+    \draw (A) to[out=0,in=180] (D);
+\end{tikzpicture}
+\caption{Representación gráfica dueño-esclavo.}
+\label{graph:dueno_esclavo}
+\end{figure}
+
 
 \subsubsection{Cliente-Servidor} 
 También llamado \emph{client-server}, se trata de una estructura similar a dueño-esclavo, pero con los roles invertidos: contamos con múltiples procesos denominados clientes y con un ente (puede ser un proceso, o tener a su vez una estructura paralela distinta en su interior) denominado servidor. En este caso, los clientes son procesos que en un momento determinado solicitan cierta información al servidor. Este, se encarga de procesar la petición y de dar al cliente correspondiente la respuesta esperada. 
 Notemos que el servidor puede estar formado a su vez de otras estructuras, como de un sistema dueño-esclavo. Por tanto, podemos tener por un lado a los clientes, que necesitan del servidor información. Este es el encargado de gestionar los mensajes y de repartir las tareas entre sus esclavos, quienes realizan el cómputo, devolviendo el trabajo al maestro y este a los clientes. 
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+    \node[draw, circle] (E) at (0,0) {Client};
+    \node[draw, circle] (F) at (0,1.5) {Client};
+    \node[draw, circle] (G) at (0,3) {Client};
+    \node[draw, circle, scale=1.8] (A) at (4,1.5) {Server};
+    \node[draw, circle] (B) at (8,0) {Client};
+    \node[draw, circle] (C) at (8,1.5) {Client};
+    \node[draw, circle] (D) at (8,3) {Client};
+
+    \draw (A) to[out=0,in=180] (B);
+    \draw (A) to[out=0,in=180] (C);
+    \draw (A) to[out=0,in=180] (D);
+    \draw (E) to[out=0,in=180] (A);
+    \draw (F) to[out=0,in=180] (A);
+    \draw (G) to[out=0,in=180] (A);
+\end{tikzpicture}
+\caption{Representación gráfica cliente-servidor.}
+\label{graph:cliente_servidor}
+\end{figure}
 
 \subsubsection{Descomposición de datos} 
 Alternativa muy utilizada para obtener tareas paralelas en programas con grandes estructuras de datos. La estructura de datos de entrada (o la de salida, o ambas) es dividida en varias partes. A partir de esta división se derivan las tareas paralelas. Estas generalmente realizan operaciones similares. Los algoritmos con imágenes, por ejemplo, admiten una descomposición de datos.
@@ -262,12 +574,52 @@ for(int i = 0; i < N; i++)
 
 \subsubsection{Estructura segmentada o flujo de datos} 
 Esta estructura aparece en problemas en los que se aplican funciones a un flujo de datos en secuencia distintas (paralelismo de tareas). La estructura de los procesos y de las tareas es la de un cauce segmentado: cada proceso ejecuta por tanto distinto código. Es un caso típico de un programa MPMD puro. Para que resulte apropiada la estructura segmentada, se ebe aplicar el proceso a una secuencia de datos de entrada.
-Por ejemplo, podemos tener un decodificador de imágenes JPEG, que aplica a una secuencia de $N\times N$ píxeles (la imagen de entrada) las siguientes funciones: decodificación de entropía, cuantificación inversa, transformada del coseno inversa y conversión RGB. Este programa podría implementarse con cuatro procesos en una estructura segmentada.
+Por ejemplo, podemos tener un decodificador de imágenes JPEG, que aplica a una secuencia de $N\times N$ píxeles (la imagen de entrada) las siguientes funciones: decodificación de entropía, cuantificación inversa, transformada del coseno inversa y conversión RGB\@. Este programa podría implementarse con cuatro procesos en una estructura segmentada.
 En este tipo de estructura, la comunicación entre procesos es necesaria, y suele ser unidireccional.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+    \node[draw, circle] (A) at (0,0) {Task 1};
+    \node[draw, circle] (B) at (3,0) {Task 2};
+    \node[draw, circle] (C) at (6,0) {Task 3};
+    \node[draw, circle] (D) at (9,0) {Task 4};
+    \node[draw, circle] (E) at (12,0) {Task 5};
+
+    \draw (A) -- (B);
+    \draw (B) -- (C);
+    \draw (C) -- (D);
+    \draw (D) -- (E);
+\end{tikzpicture}
+\caption{Representación gráfica de una estructura segmentada.}
+\label{graph:estructura_segmentada}
+\end{figure}
 
 \subsubsection{Divide y vencerás} 
 Se utiliza cuando un problema puede dividirse en dos o más subproblemas de menor tamaño de forma que cada uno pueda resolverse independientemente y combinar al final las distintas soluciones. Si los subproblemas son a su vez instancias más pequeñas del problema original, entonces se podrán volver a subdividir de forma recursiva. Las tareas presentan, por tanto, una estructura de árbol, de forma que no habrá interacciones (comunicaciones o sincronizaciones) entre las tareas que cuelgan del mismo padre.
 Un ejemplo de uso de esta estructura podemos verlo cuando nos disponemos a sumar todas las componentes de un vector: podemos dividir el vector en 2, obteniendo dos subproblemas de tamaño $ \nicefrac{n}{2} $, siendo $n$ el número de componentes del vector. Podemos seguir recursivamente dividiendo el vector hasta obtener vectores de tamaño relativamente pequeños, donde haríamos su suma iterativamente. Obtenemos así al final la suma de todas las componentes del vector.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+    \node[draw, circle, scale=1.8] (A) at (0,3) {$n$};
+    \node[draw, circle, scale=1.3] (B) at (2,1.5) {$\nicefrac{n}{2}$};
+    \node[draw, circle, scale=1.3] (C) at (2,4.5) {$\nicefrac{n}{2}$};
+    \node[draw, circle, scale=1.3] (D) at (4,0) {$\nicefrac{n}{4}$};
+    \node[draw, circle, scale=1.3] (E) at (4,2) {$\nicefrac{n}{4}$};
+    \node[draw, circle, scale=1.3] (F) at (4,4) {$\nicefrac{n}{4}$};
+    \node[draw, circle, scale=1.3] (G) at (4,6) {$\nicefrac{n}{4}$};
+
+    \draw (A) -- (B);
+    \draw (A) -- (C);
+    \draw (B) -- (D);
+    \draw (B) -- (E);
+    \draw (C) -- (F);
+    \draw (C) -- (G);
+\end{tikzpicture}
+\caption{Representación gráfica de divide y vencerás.}
+\label{graph:dyv}
+\end{figure}
+
 
 \newpage
 \section{Proceso de paralelización}
@@ -346,16 +698,16 @@ Por un lado, la arquitectura puede ser \textbf{heterogénea} u \textbf{homogéne
 
 Una arquitectura homogénea (aquella donde los nodos de cómputo son iguales, o casi) puede ser a su vez \textbf{uniforme} o \textbf{no uniforme} (decimos que las arquitecturas uniformes y no uniformes están dentro de las homogéneas porque las heterogéneas son normalmente no uniformes, luego no merece la pena concretar esos casos):
 \begin{description}
-    \item [Uniforme] ~\\
+    \item [Uniforme]~\\
         Si es uniforme, la comunicación de los procesadores con memoria (y probablemente con otros componentes, como E/S) supone el mismo tiempo sean cuales sean los dos componentes que intervienen. Las arquitecturas homogéneas uniformes son en las que menos tenemos que tener en cuenta la arquitectura para la asignación de tareas. Sin embargo, hay arquitecturas homogéneas uniformes en las que una buena asignación puede disminuir el número de colisiones en el acceso a la red. 
-    \item [No uniforme] ~\\
+    \item [No uniforme]~\\
         Si es no uniforme, la velocidad de comunicación entre procesadores con memoria (y probablemente con otros componentes) depende del procesador que queramos que acceda a qué posición de memoria. En este tipo de arquitecturas es más difícil asignar las tareas (código y datos) de forma que se minimice el tiempo de comunicación y sincronización y, en general, el tiempo de ejecución. Pueden eliminarse comunicaciones asignando varias tareas al mismo procesador. 
 \end{description}
 
 \subsubsection{Asignar tareas a procesadores}
 La asignación de tareas (procesos o hebras) a procesadores puede realizarse de forma \textbf{estática} (en tiempo de compilación o al escribir el programa) o \textbf{dinámica} (en tiempo de ejecución). La asignación dinámica es útil para evitar repartos complejos de tareas en sistemas heterogéneos, especialmente cuando no se conoce el número total de tareas que se van a ejecutar antes de la ejecución. Además, permite que la aplicación se ejecute exitosamente si algún procesador falla. Sin embargo, esta asignación consume un tiempo adicional de sincronización y comunicación.
 
-Un ejemplo de asignación estática es asignar iteraciones consecutivas de un mismo bucle a procesos consecutivos (\textit{round-robin}), mientras que también podemos asignar iteraciones consecutivas a un mismo proceso (continua), como es el caso del bucle \verb|for| en OpenMP. Un ejemplo de asignación dinámica es almacenar en una variable el índice de la siguiente iteración a ejecutar, de forma que el primer procesador desocupado lea el índice que le indique qué iteración ejecutar, aumentando su valor para que el siguiente procesador desocupado realice la siguiente. Notemos que este acceso a una variable que indique la siguiente iteración debe realizarse en exclusión mutua (por ejemplo, usando un cerrojo). Con paso de mensajes, la asignación dinámica podría hacerse desde el proceso dueño en un sistema dueño-esclavo. Hay herramientas como OpenMP que permiten que el procesador deje al compilador la asignación de tareas a procesos (o hebras).
+Un ejemplo de asignación estática es asignar iteraciones consecutivas de un mismo bucle a procesos consecutivos (\textit{round-robin}), mientras que también podemos asignar iteraciones consecutivas a un mismo proceso (continua), como es el caso del bucle \verb|for| en OpenMP\@. Un ejemplo de asignación dinámica es almacenar en una variable el índice de la siguiente iteración a ejecutar, de forma que el primer procesador desocupado lea el índice que le indique qué iteración ejecutar, aumentando su valor para que el siguiente procesador desocupado realice la siguiente. Notemos que este acceso a una variable que indique la siguiente iteración debe realizarse en exclusión mutua (por ejemplo, usando un cerrojo). Con paso de mensajes, la asignación dinámica podría hacerse desde el proceso dueño en un sistema dueño-esclavo. Hay herramientas como OpenMP que permiten que el procesador deje al compilador la asignación de tareas a procesos (o hebras).
 
 \begin{ejemplo}
     Si retomamos el ejemplo de la sección anterior en un sistema (por ejemplo) homogéneo uniforme, nos gustaría que la carga de trabajo se distribuya por igual en todos los procesadores. Por tanto, nos interesa más usar una asignación estática frente a una dinámica, debido a que esta última perjudicarían considerablemente las prestaciones debido a la comunicación adicional que añaden.

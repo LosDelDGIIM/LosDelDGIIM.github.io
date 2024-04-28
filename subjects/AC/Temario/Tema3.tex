@@ -13,8 +13,6 @@ Esta sección está orientada a:
     \item Comparar entre cores multithread de grano fino, grueso y cores con multithread simultáneo.
 \end{itemize}
 
-% // TODO: COmpletar todo esto
-
 \subsection{Clasificaciones de arquitecturas TLP}
 Las arquitecturas TLP con una instancia del SO pueden clasificarse en:
 \begin{description}
@@ -119,29 +117,44 @@ En un núcleo multithread, podemos usar las siguiente modificaciones con el obje
 \end{itemize}
 Notemos que tanto el precio de implementación como la bondad de la técnica se encuentran en orden creciente (siendo más caro y mejor realizar la replicación de unidades).\\
 
-Una vez desarrollada la clasificación de cores multithread, podemos mostrar la siguiente tabla a modo de resumen, que nos ayudará a entender mejor cada tipo de multithreading:
-% // TODO: Arreglar esta tabla
+Una vez desarrollada la clasificación de cores multithread, podemos mostrar la Tabla~\ref{tab:resumen_multithreading} a modo de resumen, que nos ayudará a entender mejor cada tipo de multithreading.
 \begin{table}
 \footnotesize
 \centering
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{l c c c c}
     \toprule
-    Hardware & CGMT & FGMT & SMT & CMP \\ % // qué es cmp?
+    Hardware & CGMT & FGMT \\ 
     \midrule
-    Registros & Replicado (al menos el PC) & Replicado & Replicado & Replicado \\
+    Registros & Replicado (al menos el PC) & Replicado \\
     \midrule
-    Almacenamiento & Multiplexado & Cualquiera de las 4 & Multiplexado no & Replicado \\
+    Almacenamiento & Multiplexado & Cualquiera de las 4 \\
     \midrule
-    Hardware de etapas & Multiplexado & Captación repartida o compartida, & Unidad funcional compartida, & Replicado \\
-    del cauce & el resto multiplexadas & el resto repartidas o compartidas & Replicado \\
+    Hardware de etapas & Multiplexado & Captación repartida o compartida, \\
+    del cauce & & el resto multiplexadas \\
     \midrule
-    Necesidad de distinguir & Sí & Sí & Sí & No \\
-    el hilo de una instruc. & & & & \\
+    Necesidad de distinguir & Sí & Sí \\
+    el hilo de una instruc. & & \\
     \midrule
-    Hardware para conmutar & Sí & Sí & No & No \\
+    Hardware para conmutar & Sí & Sí \\
+    \toprule % ----
+    Hardware & SMT & CMP \\ 
+    \midrule
+    Registros & Replicado & Replicado \\
+    \midrule
+    Almacenamiento & Todo menos multiplexado & Replicado \\
+    \midrule
+    Hardware de etapas & Unidad funcional compartida, & Replicado \\
+    del cauce & el resto repartidas o compartidas & \\
+    \midrule
+    Necesidad de distinguir & Sí & No \\
+    el hilo de una instruc. & & \\
+    \midrule
+    Hardware para conmutar & No & No \\
     \bottomrule
 \end{tabular}
+\caption{Comparación de tipos de multithreading.}
+\label{tab:resumen_multithreading}
 \end{table}
 ``CMP'' es un Chip multicore, aquel en el que tenemos replicado todo el cauce (esto es, todas las unidades de la etapa de ejecución).
 
@@ -211,49 +224,10 @@ Una vez desarrollada la clasificación de cores multithread, podemos mostrar la 
 % En core multithread tengo menos huecos.
 % 
 % \subsection{Leccion 8}
-% Puedo tener varias copias de una misma parte de memoria en distintas partes del memory system.
 % Existe un hardware automatica de precaptacion: tras varios fallos, el hardware precide la siguiente linea a usar, gracias a un patron de acceso.
-% 
-% incoherencia: las copias no tienen todas el mismo contenido. Debemos tratar las incoherencias.
- % Podemos generalizar incoherencia entre cache-MP poniendo l_i - l_k con k < i (incoherencias en distintos niveles de jerarquia de memoria).
-% 
-% incoherencias entre distinto nivel de jerarquia (cache-MP)
-% write-through: Cada vez que se escribe la copia de un bloque que hay en cache se escribe en memoria principal. No se admiten incoherencias.
-% write-bach: Cuando se escribe, en cache, no se modifica inmediatamente la memoria principal. Se modifica al desalojar de cache. Se pueden dar por tanto incoherencias.
 % 
 % Escribir en memoria N bytes = N * T_acceso
 % El acceso a memoria esta segmentado, transferir un bloque no es N * T_acceso
-% 
-% Hay que hacer modificaciones en write-back en el bus para k no se den incoherencias: si el controlador de la cache modificada detecta el acceso a un bloque modificado (hay un protocolo de sondeo, espionaje en cada controlador), inibe la respuesta de la memoria y responde él.
-% 
-% PROPAGACIONES
-% Cuando se modifica una cache, se propaga a todos los bloques:
-% write-update: actualiza las instancias. Mejor para escribir y leer por otros.
-% write-invalidate: invalida las instancias antes de modificar su propia copia, se consigue acceso exclusivo al bloque. Es la más utilizada.
-% 
-% En la BIOS puede configurarse todo esto.
-% 
-% CLASIFICACIONES Y DISEÑO
-% 
-% Paquetes que genera un controlador de cache:
-% PtEx - En buses no se usa pero en redes sí.
-% PtLec, PtLecEx - Se generan como consecuencia de eventos de origen el procesador. Peticiones de lectura y escritura por parte del procesador.
-% PtPEsc - Para escribir en memoria.
-% RpBloque - Respuesta de un bloque. Peticiones puestas en el bus por otros nodos.
-% 
-% MSI de espionaje
-% post-escritura e invalidacion: 2 bits:
-% 01 modificado - M. Unica copia del bloque valida en todo el sistema. Memoria inválida.
-% 00 ninguno (compartido) - S. Bloque válido en caché. Memoria válida.
-% 10 invalido - I. 
-% 
-% La memoria siempre constesta, pero si un controlador detecta algo, el controlador \emph{inhibe} la respuesta de la memoria.
-% 
-% MESI de espionaje
-% En las placas de Intel se usa una variante de MESI. En las AMD una variante de MOESI.
-% 4 estados.
-
-
 
 \newpage
 \section{Coherencia del sistema de memoria}
@@ -404,7 +378,19 @@ Podemos ordenar estos estados en relación al grado de disponibilidad del bloque
     \item Compartido.
     \item Modificado.
 \end{itemize}
-El estado modificado supone que el procesador tiene el uso exclusivo del bloque, de forma que puede disponer de él tanto par aleer como para escribir, sin informar al resto del sistema. Como el módulo que contiene al bloque es el único que dispone de una copia válida del mismo, se trata del encargado de responder a todas las peticiones de este por el bus. 
+El estado modificado supone que el procesador tiene el uso exclusivo del bloque, de forma que puede disponer de él tanto par aleer como para escribir, sin informar al resto del sistema. Como el módulo que contiene al bloque es el único que dispone de una copia válida del mismo, se trata del encargado de responder a todas las peticiones de este por el bus.\\
+
+Todos estos estados se implementan añadiendo a la tabla de caché de cada módulo (Tabla~\ref{tab:tabla_cache}) una serie de bits. Necesitamos representar 3 estados, luego nos será suficiente con disponer de mínimo 2 bits por cada entrada de la tabla. Las implementaciones suelen añadir normalmente los bits de invalidez (indica si el bloque en dicha posición de caché es válido) y sucio (indica si el bloque en dicha posición de caché ha sido modificado) en relación a nuestro modelo de estados MSI\@. De esta forma:
+\begin{table}[H]
+\centering
+\begin{tabular}{c c c c}
+    Estados & Bit de invalidez & Bit sucio & Ambos bits \\
+    \midrule
+    M & 0 & 1 & 01 \\
+    S & 0 & 0 & 00 \\
+    I & 1 & 0 & 10
+\end{tabular}
+\end{table}
 
 \subsubsection{Estados de un bloque en memoria}
 Según lo anteriormente explicado, podemos evitar establecer estados para bloques en memoria (habilitando que los controladores de caché puedan inhibir respuestas del controlador de memoria principal). Sin embargo, si se desea almacenar puede hacerse simplemente con dos estados:
@@ -420,6 +406,7 @@ Según lo anteriormente explicado, podemos evitar establecer estados para bloque
             \item En caso de que este bloque sea pedido por el bus, será el controlador de caché de la caché correspondiente quien proporcione el bloque.
         \end{itemize}
 \end{description}
+En caso de desear implementar la validez o no de los bloques en memoria, nos bastaría con disponer de un bit de invalidez por bloque de memoria.
 
 \subsubsection{Paquetes que genera un controlador de caché}
 Hemos comentado varias veces que los distintos controladores de caché de cada nodo tienen que tener un trabajo en la red de comunicación, pero no hemos especificado cómo se realizan estas comunicaciones. 
