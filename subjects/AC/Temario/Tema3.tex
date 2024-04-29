@@ -341,14 +341,14 @@ Resumiento toda esta introducción a los protocolos de coherencia realizada, deb
             \item Saber relacionar las acciones con eventos y estados.
         \end{itemize}
 \end{itemize}
-A continuación, vamos a estudiar cuatro protocolos de mantenimiento de coherencia, dos para multiprocesadores UMA con red bus (MIS y MESI) y dos para multiprocesadores NUMA en una placa (MSI con y sin difusión). Todos ellos usan posescritura y escrituras con invalidación, como cabría esperar.\\
+A continuación, vamos a estudiar cuatro protocolos de mantenimiento de coherencia, dos para multiprocesadores UMA con red bus (MSI y MESI) y dos para multiprocesadores NUMA en una placa (MSI con y sin difusión). Todos ellos usan posescritura y escrituras con invalidación, como cabría esperar.\\
 
 Los protocolos de espionaje que estudiaremos se basan en la difusión de los paquetes asociados al mantenimiento de coherencia a todas las cachés. Se implementan de forma eficiente en sistemas basados en buses.
 
 \subsection{Protocolo MSI (\emph{Modified-Shared-Invalid}) de espionaje}
 Describimos a continuación el protocolo MSI, el protocolo con menor número de estados que utiliza posescritura e invalidación. Debe su nombre a cada estado de un bloque en caché.
 
-\subsubsection{Estados de un bloque en caché}
+\subsubsection{Estados de un bloque en caché}\label{sec:prot_MSI}
 \begin{description}
     \item [Modificado (M).]~\\
         Un bloque modificado en caché es la única copia del bloque válida en todo el sistema de memoria. 
@@ -652,6 +652,124 @@ Detallamos las acciones que se cometen tras la disparación de cada evento con d
         \end{enumerate}
 \end{description}
 
+\subsection{Protocolos basados en directorios}
+Los protocolos de espionaje son apropiados para redes que implementan comunicaciones con comunicaciones uno-a-todos, tales como los buses. Sin embargo, para redes en las que las difusiones son costosas o cuando necesitamos una gran escalabilidad en el sistema, es mejor usar protocolos basados en directorios. Por tanto, nos serán útiles tanto en multiprocesadores con memoria físicamente distribuida (los NUMA) como en multiprocesadores con memoria centralizada (los UMA) con red escalable.
+
+Estos protocolos de mantenimiento de coherencia reducen el tráfico en la red enviando selectivamente órdenes sólo a las cachés que disponen de una copia válida del bloque implicado en la operación de memoria. Para que esto sea posible, debe existir (como ya se ha comentado previamente) una tabla de memoria (o directorio de memoria) en la que haya una entrada de directorio asociada a cada bloque de memoria principal, con información de las cachés que tienen copia de dicho bloque; y de toda la información necesaria para tratar las situaciones de incoherencias. 
+
+Por ejemplo, en la Tabla~\ref{tab:directorio_memoria}, representamos una tabla con una entrada por cada bloque de memoria y una fila por cada cahé en el sistema, junto con sus bits de presencia. La última fila corresponde con el bit de presencia en memoria.\\
+
+\begin{table}[H]
+\centering
+\begin{tabular}{c c c c c c}
+    Bloque & $C_0$ & $C_1$ & \ldots & $C_{N-1}$ & \\
+    \bottomrule
+    0 & 1 & 0 & \ldots & 1 & 0 \\
+    1 & 0 & 0 & \ldots & 1 & 1 \\
+    \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+    $M-1$ & 1 & 1 & \ldots & 1 & 0 \\
+\end{tabular}
+\caption{Directorio de memoria, mediante vector de bits.}
+\label{tab:directorio_memoria}
+\end{table}
+
+Según cómo esté distribuido el almacenamiento del directorio en la jerarquía de memoria, podemos clasificar los tipos de directorios de memoria en:
+\begin{itemize}
+    \item Directorio centralizado.
+    \item Directorio distribuido entre módulos de memoria principal.
+    \item Directorio distribuido entre módulos de memoria principal y caché.
+\end{itemize}
+El primer protocolo basado en directorio que se implementó consistía en un directorio centralizado monolítico, con una entrada para cada uno de los bloques de memoria principal con información de estado e información de las cachés con copias del mismo.
+
+Este directorio tenía que atender todas las peticiones de acceso a memoria generadas por el sistema, lo que introducía un cuello de botella que degradaba las prestaciones del sistema. Buscamos por tanto repartir el directorio en el sistema. Esta repartición puede realizarse tanto por filas como por columnas (o ambas).\\
+
+En una implementación distribuida entre los módulos de memoria principal, cada módulo tiene asociado un subdirectorio con información para los bloques de memoria de dicho módulo. En este caso, hemos repartido la tabla por filas, de forma que las peticiones podrán ser atendidas por los subdirectorios en paralelo.
+
+En una implementación distribuida entre los módulos de memoria principal y cachés, además de distribuir las filas entre los módulos de memoria principal, se distribuye cada una de las filas entre las cachés con copia del bloque.
+
+\subsubsection{Protocolo MSI para multiprocesadores NUMA}
+A continuación, vamos a describir dos protocolos MSI con prosescritra e invalidación para NUMA basado en directorios: uno que difunde las peticiones a todos los nodos (con difusión) y uno que envía las peticiones sólo al nodo que tiene el bloque en el trozo de memoria principal más cercano al nodo (sin difusión). Al seguir esta filosofía, nos aparecen tres roles que desempeñan los nodos en la red NUMA\@:
+\begin{description}
+    \item [Nodo solicitante de un bloque] (S)\textbf{.} Es un nodo que genera una petición del bloque (\verb|PtLec|, \verb|PtEx|, \verb|PtLecEx| o \verb|PtPEsc|).
+    \item [Nodo origen de un bloque] (O)\textbf{.} Recordamos que en un multiprocesador NUMA la memoria está repartida físicamente entre los nodos, de forma que cada uno tiene en módulos de memoria más cercanos un trozo del espacio de direcciones total del multiprocesador. Decimos que esos módulos de memoria más cercanos se hospedan en el nodo. El nodo origen o \emph{home} de un bloque es aquél que tiene el bloque en el trozo de memoria que hospeda.
+    \item [Nodo propietario de un bloque] (P)\textbf{.} Es un nodo que tiene copia del bloque en su caché.
+\end{description}
+
+\subsection{Protocolo MSI para procesadores NUMA sin difusión}
+Como en este protocolo no usamos difusión, necesitamos almacenar en el directorio de memoria prncipal, además del estado del bloque en memoria, información sobre las cachés con copia del bloque, para que las invalidaciones se puedan propagar sólo a los nodos con copia del bloque.
+
+Al igual que en la Tabla~\ref{tab:directorio_memoria}, se puede usar un vector de bits de presencia para almacenar dicha información. Habría un bit para cada caché conectada a la red NUMA, de forma que un bit activo (un 1) significa que hay una copia válida del bloque en esa caché. El directorio a usar se encuentra distribuido entre módulos de memoria principal (entre los nodos del computador NUMA). En la Tabla~\ref{tab:subdirectorio_memoria} podemos observar cómo es uno de estos subdirectorios de un nodo. Este protocolo es el más básico a la hora de usar un directorio con posescritura, invalidación y sin difusión.
+
+\begin{table}
+\centering
+\begin{tabular}{c c c c c c}
+    \toprule
+    Bloque & Estado Memoria & $C_0$ & $C_1$ & \ldots & $C_{N-1}$ \\
+    \bottomrule
+    \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+    $B-1$ & V & 0 & 0 & \ldots & 0 \\
+    $B$ & V & 1 & 1 & \ldots & 1 \\
+    $B+1$ & I & 0 & 0 & \ldots & 1 \\
+    \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+    \bottomrule
+\end{tabular}
+\caption{Subdirectorio de memoria principal para un nodo de un NUMA.}
+\label{tab:subdirectorio_memoria}
+\end{table}
+
+Todas las peticiones de un bloque se envían al nodo origen del bloque, que es quien tiene el subdirectorio con información sobre el bloque. El nodo origen propagará las invalidaciones a los nodos con copia de un bloque. Con esta propagación, cumplimos la condición 1 de coherencia. El orden de llegada de las peticiones de un bloque al origen será el orden en el que los nodos van a ver los accesos a memoria de ese bloque. Todos van a ver el mismo orden en las escrituras, cumplíendose la segunda condición de coherencia.
+
+\subsubsection{Estados de un bloque en caché}
+Son los mismos que teníamos ya en el protocolo MSI de la sección~\ref{sec:prot_MSI}, Modificado (M), Compartido (C) e Inválido (I).
+
+\subsubsection{Estados de un bloque en memoria}
+En la implementación más sencilla de este protocolo nos encontraríamos con dos estados estables:
+\begin{description}
+    \item [Válido.] Puede haber copias válidas en una o en más cachés.
+    \item [Inválido.] Hay una copia válida en una caché en estado Modificado.
+\end{description}
+Además, podríamos encontrar implementaciones con estados ``pendientes'' de un estado estable, como \emph{pendiente de válido} o \emph{pendiente de inválido}. Un estado pendiente indica que se está procesando un acceso a memoria del bloque. Hasta que no se pueda procesar una nueva petición sobre ese bloque, su estado continuará en pendiente. 
+
+A las peticiones que se reciben de un bloque pendiente se responde con un paquete de reconocimiento negativo al solicitante, para que intente de nuevo la petición más tarde.
+
+\subsubsection{Paquetes generados por controladores}
+A continuación, desarrollamos cada una de las 4 interacciones posibles entre los posibles roles de nodos de un NUMA:
+
+\begin{enumerate}
+    \item Paquete de petición (\verb|Pt|) desde $S$ hasta $O$ (cuando son distintos nodos).
+    \begin{enumerate}
+        \item Cuando se produce una lectura del procesador del nodo $S$ (\verb|PrLec(B)|) con fallo de caché (no hay copia válida del bloque \verb|B| en la caché privada del nodo), se genera el paquete de lectura de bloque \verb|PtLec(B)|. 
+
+            Cuando reciba el paquete de respuesta \verb|RpBloque(B)|, introducirá el bloque en la caché, poniendo su estado en Compartido.
+        \item Cuando se produce una escritura del procesador del nodo $S$ (\verb|PrEsc(B)|) en bloque \verb|B| en estado Compartido, se genera el paquete de petición de acceso exclusivo sin lectura \verb|PtEx(B)|.
+
+            Cuando reciba el paquete de respuesta \verb|RpInv(B)| que confirma la invalidación en memoria y en otras cachés, modificará el bloque y cambiará el estado de \verb|B| a Modificado.
+        \item Cuando se produce una escritura del procesador del nodo $S$ (\verb|PrEsc(B)|) en el bloque \verb|B| en estado Inválido, se genera el paquete de petición de lectura con acceso exclusivo \verb|PtLecEx(B)|.
+
+            Cuando reciba el paquet ee respuesta \verb|RpBloqueInv(B)| que confirma la invalidación en memoria y en otras cachés, junto con el propio bloque \verb|B|, lo modificará y cambiará el estado de \verb|B| a Modificado.
+        \item Cuando el controlador de caché del nodo $S$ reemplaza un bloque \verb|B| que se encuentra en estado Modificado, se genera el paquet ede petición de posescritura \verb|PtPEsc(B)|.
+
+            Posteriormente, el bloque dejará de estar físicamente en la caché.
+    \end{enumerate}
+    \item Paquete de reenvío (\verb|Rv|), de petición desde $O$ a nodos con copia $P$.
+    \begin{enumerate}
+        \item Cuando $O$ recibe el paquete \verb|PtLec(B)| y el bloque \verb|B| está en estado Inválido en memoria principal, entonces algún nodo dispone del bloque válido en su caché. Si es el nodo $O$, no se crea paquete de reenvío y se devuelve \verb|RpBloque(B)|; por otra parte, si no es el nodo $O$, se envía el paquete de reenvío de lectura del bloque \verb|RvLec(B)| a algún nodo que tenga a \verb|B| válido en su caché.
+
+            El nodo $O$ pone el bloque en el directorio en estado Pendiente de válido hasta que se actualice el bloque en memoria una vez recibido de la única caché con copia válida. Entonces, pasará a estado Válido y podrá responder a $S$.
+        \item Cuando $O$ recibe el paquete \verb|PtEx(B)| de $S$ y el bloque \verb|B| está válido en cachés de otros nodos ó recibe el paquete \verb|PtLecEx(B)| de $S$ y el bloque \verb|B| está válido tanto en cachés de otros nodos como en memoria, se envía el paquete de invalidación \verb|RvInc(B)| a los nodos que tengan válido el bloque \verb|B|.
+
+            El nodo $O$ pondrá el estado de \verb|B| en su directorio a Pendiente de inválido (para que el resto de llamadas no sean atendidas). Cuando $O$ confirma la invalidación en el resto de cachés:
+            \begin{itemize}
+                \item Dejará activo sólo el bit de presencia de $S$ en el directorio.
+                \item Pondrá el estado de \verb|B| en memoria a Inválido.
+                \item Responderá a $S$ confirmando su invalidación en memoria y en otras cachés con \verb|RpInv(B)| (en caso de \verb|PtLecEx(B)|, incluirá el bloque en el paquete y será de tipo \verb|RpBloqueInv(B)|).
+            \end{itemize}
+
+            % // TODO: Continuar por 106 en libro chiquito
+
+
+    \end{enumerate}
+\end{enumerate}
 
 % // TODO: Continuar por fin de pág 103 en libro chiquito y por 10.1.3 de 537 libro tocho
 
