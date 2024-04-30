@@ -160,7 +160,7 @@ Una vez desarrollada la clasificación de cores multithread, podemos mostrar la 
 
 % // TODO: Hacer
 \subsection{Comparativa de cores multithread}
-
+ESTOS APUNTES ESTÁN AÚN EN DESARROLLO.
 
 
 
@@ -657,7 +657,7 @@ Los protocolos de espionaje son apropiados para redes que implementan comunicaci
 
 Estos protocolos de mantenimiento de coherencia reducen el tráfico en la red enviando selectivamente órdenes sólo a las cachés que disponen de una copia válida del bloque implicado en la operación de memoria. Para que esto sea posible, debe existir (como ya se ha comentado previamente) una tabla de memoria (o directorio de memoria) en la que haya una entrada de directorio asociada a cada bloque de memoria principal, con información de las cachés que tienen copia de dicho bloque; y de toda la información necesaria para tratar las situaciones de incoherencias. 
 
-Por ejemplo, en la Tabla~\ref{tab:directorio_memoria}, representamos una tabla con una entrada por cada bloque de memoria y una fila por cada cahé en el sistema, junto con sus bits de presencia. La última fila corresponde con el bit de presencia en memoria.\\
+Por ejemplo, en la Tabla~\ref{tab:directorio_memoria}, representamos una tabla con una entrada por cada bloque de memoria y una fila por cada caché en el sistema, junto con sus bits de presencia. La última fila corresponde con el bit de presencia en memoria principal.\\
 
 \begin{table}[H]
 \centering
@@ -688,17 +688,18 @@ En una implementación distribuida entre los módulos de memoria principal, cada
 En una implementación distribuida entre los módulos de memoria principal y cachés, además de distribuir las filas entre los módulos de memoria principal, se distribuye cada una de las filas entre las cachés con copia del bloque.
 
 \subsubsection{Protocolo MSI para multiprocesadores NUMA}
-A continuación, vamos a describir dos protocolos MSI con prosescritra e invalidación para NUMA basado en directorios: uno que difunde las peticiones a todos los nodos (con difusión) y uno que envía las peticiones sólo al nodo que tiene el bloque en el trozo de memoria principal más cercano al nodo (sin difusión). Al seguir esta filosofía, nos aparecen tres roles que desempeñan los nodos en la red NUMA\@:
+A continuación, vamos a describir dos protocolos MSI con prosescritra e invalidación para NUMA basados en directorios: uno que difunde las peticiones a todos los nodos (con difusión) y uno que envía las peticiones sólo al nodo que tiene el bloque en el trozo de memoria principal más cercano al nodo (sin difusión). Al seguir esta filosofía, nos aparecen tres roles que desempeñan los nodos en la red NUMA\@:
 \begin{description}
     \item [Nodo solicitante de un bloque] (S)\textbf{.} Es un nodo que genera una petición del bloque (\verb|PtLec|, \verb|PtEx|, \verb|PtLecEx| o \verb|PtPEsc|).
     \item [Nodo origen de un bloque] (O)\textbf{.} Recordamos que en un multiprocesador NUMA la memoria está repartida físicamente entre los nodos, de forma que cada uno tiene en módulos de memoria más cercanos un trozo del espacio de direcciones total del multiprocesador. Decimos que esos módulos de memoria más cercanos se hospedan en el nodo. El nodo origen o \emph{home} de un bloque es aquél que tiene el bloque en el trozo de memoria que hospeda.
     \item [Nodo propietario de un bloque] (P)\textbf{.} Es un nodo que tiene copia del bloque en su caché.
 \end{description}
+De esta forma, en la situación más compleja (que estos tres nodos sean distintos), tenemos al controlador de caché de un nodo $S$ que solicita un bloque \verb|B| de memoria principal, por no tenerlo en su caché. Dicha petición la procesará el controlador de caccé del nodo $O$ (origen del bloque), ya que la dirección de \verb|B| corresponde a un módulo de memoria alojado en $O$. Dado que $O$ no tendrá a \verb|B| en estado válido (suponíamos que $O\neq P$), solicitará al nodo $P$ el bloque, que lo tiene en estado válido para así poder devolver a $S$ el bloque solicitado.
 
 \subsection{Protocolo MSI para procesadores NUMA sin difusión}
 Como en este protocolo no usamos difusión, necesitamos almacenar en el directorio de memoria prncipal, además del estado del bloque en memoria, información sobre las cachés con copia del bloque, para que las invalidaciones se puedan propagar sólo a los nodos con copia del bloque.
 
-Al igual que en la Tabla~\ref{tab:directorio_memoria}, se puede usar un vector de bits de presencia para almacenar dicha información. Habría un bit para cada caché conectada a la red NUMA, de forma que un bit activo (un 1) significa que hay una copia válida del bloque en esa caché. El directorio a usar se encuentra distribuido entre módulos de memoria principal (entre los nodos del computador NUMA). En la Tabla~\ref{tab:subdirectorio_memoria} podemos observar cómo es uno de estos subdirectorios de un nodo. Este protocolo es el más básico a la hora de usar un directorio con posescritura, invalidación y sin difusión.
+Al igual que en la Tabla~\ref{tab:directorio_memoria}, se puede usar un vector de bits de presencia para almacenar dicha información. Habría un bit para cada caché conectada a la red NUMA, de forma que un bit activo (un 1) significa que hay una copia válida del bloque en esa caché. El directorio a usar se encuentra distribuido entre módulos de memoria principal (entre los nodos del computador NUMA). En la Tabla~\ref{tab:subdirectorio_memoria} podemos observar cómo es uno de estos subdirectorios de un nodo, con una entrada por cada bloque de memoria alojado en el nodo. Este protocolo es el más básico a la hora de usar un directorio con posescritura, invalidación y sin difusión.
 
 \begin{table}
 \centering
@@ -723,20 +724,21 @@ Todas las peticiones de un bloque se envían al nodo origen del bloque, que es q
 Son los mismos que teníamos ya en el protocolo MSI de la sección~\ref{sec:prot_MSI}, Modificado (M), Compartido (C) e Inválido (I).
 
 \subsubsection{Estados de un bloque en memoria}
-En la implementación más sencilla de este protocolo nos encontraríamos con dos estados estables:
+Este protocolo cuenta con dos estados estables que ya tenía el protocolo MSI de espionaje: válido e inválido. Sin embargo, nos encontramos además implementaciones con estados ``pendientes'' de un estado estable, como pueden ser \emph{pendiente de válido} o \emph{pendiente de inválido}. 
+
+Un estado pendiente indica que se está procesando un acceso a memoria del bloque. Hasta que no se pueda procesar una nueva petición sobre dicho bloque, su estado continuará en pendiente. A las peticiones que se reciben de un bloque pendiente se responde con un paquete de reconocimiento negativo al solicitanto, para que intente de nuevo la petición más tarde.
 \begin{description}
     \item [Válido.] Puede haber copias válidas en una o en más cachés.
     \item [Inválido.] Hay una copia válida en una caché en estado Modificado.
+    \item [Pendiete de válido.] Hay una copia válida en una caché, cuyo contenido se trasladará a la memoria próximamente.
+    \item [Pendiete de inválido.] La copia del bloque en la memoria está esperando a invalidarse, en cuanto se invalide en el resto de cachés.
 \end{description}
-Además, podríamos encontrar implementaciones con estados ``pendientes'' de un estado estable, como \emph{pendiente de válido} o \emph{pendiente de inválido}. Un estado pendiente indica que se está procesando un acceso a memoria del bloque. Hasta que no se pueda procesar una nueva petición sobre ese bloque, su estado continuará en pendiente. 
 
-A las peticiones que se reciben de un bloque pendiente se responde con un paquete de reconocimiento negativo al solicitante, para que intente de nuevo la petición más tarde.
-
-\subsubsection{Paquetes generados por controladores}
-A continuación, desarrollamos cada una de las 4 interacciones posibles entre los posibles roles de nodos de un NUMA:
+\subsubsection{Paquetes generados por controladores e interacciones}
+A continuación, desarrollamos varias interacciones que pueden suceder entre los tres posibles roles principales de los nodos de un computador NUMA, desarrollando al mismo tiempo todos los paquetes que usan los contorladores de caché de cada nodo:
 
 \begin{enumerate}
-    \item Paquete de petición (\verb|Pt|) desde $S$ hasta $O$ (cuando son distintos nodos).
+    \item Paquetes de petición (\verb|Pt|) desde $S$ hasta $O$ (cuando son distintos nodos).
     \begin{enumerate}
         \item Cuando se produce una lectura del procesador del nodo $S$ (\verb|PrLec(B)|) con fallo de caché (no hay copia válida del bloque \verb|B| en la caché privada del nodo), se genera el paquete de lectura de bloque \verb|PtLec(B)|. 
 
@@ -746,12 +748,12 @@ A continuación, desarrollamos cada una de las 4 interacciones posibles entre lo
             Cuando reciba el paquete de respuesta \verb|RpInv(B)| que confirma la invalidación en memoria y en otras cachés, modificará el bloque y cambiará el estado de \verb|B| a Modificado.
         \item Cuando se produce una escritura del procesador del nodo $S$ (\verb|PrEsc(B)|) en el bloque \verb|B| en estado Inválido, se genera el paquete de petición de lectura con acceso exclusivo \verb|PtLecEx(B)|.
 
-            Cuando reciba el paquet ee respuesta \verb|RpBloqueInv(B)| que confirma la invalidación en memoria y en otras cachés, junto con el propio bloque \verb|B|, lo modificará y cambiará el estado de \verb|B| a Modificado.
-        \item Cuando el controlador de caché del nodo $S$ reemplaza un bloque \verb|B| que se encuentra en estado Modificado, se genera el paquet ede petición de posescritura \verb|PtPEsc(B)|.
+            Cuando reciba el paquete de respuesta \verb|RpBloqueInv(B)| que confirma la invalidación en memoria y en otras cachés, junto con el propio bloque \verb|B|, lo modificará y cambiará el estado de \verb|B| a Modificado.
+        \item Cuando el controlador de caché del nodo $S$ reemplaza un bloque \verb|B| que se encuentra en estado Modificado, se genera el paquete de petición de posescritura \verb|PtPEsc(B)|.
 
             Posteriormente, el bloque dejará de estar físicamente en la caché.
     \end{enumerate}
-    \item Paquete de reenvío (\verb|Rv|), de petición desde $O$ a nodos con copia $P$.
+    \item Paquetes de reenvío (\verb|Rv|), de petición desde $O$ a nodos con copia $P$; y paquetes de respuesta (\verb|Rp|), desde $O$ al nodo $S$.
     \begin{enumerate}
         \item Cuando $O$ recibe el paquete \verb|PtLec(B)| y el bloque \verb|B| está en estado Inválido en memoria principal, entonces algún nodo dispone del bloque válido en su caché. Si es el nodo $O$, no se crea paquete de reenvío y se devuelve \verb|RpBloque(B)|; por otra parte, si no es el nodo $O$, se envía el paquete de reenvío de lectura del bloque \verb|RvLec(B)| a algún nodo que tenga a \verb|B| válido en su caché.
 
@@ -765,17 +767,79 @@ A continuación, desarrollamos cada una de las 4 interacciones posibles entre lo
                 \item Responderá a $S$ confirmando su invalidación en memoria y en otras cachés con \verb|RpInv(B)| (en caso de \verb|PtLecEx(B)|, incluirá el bloque en el paquete y será de tipo \verb|RpBloqueInv(B)|).
             \end{itemize}
 
-            % // TODO: Continuar por 106 en libro chiquito
+        \item Cuando $O$ recibe el paquete \verb|PtLecEx(B)| de $S$ y el bloque \verb|B| está Inválido en memoria principal, entonces algún nodo dispone del bloque válido en su caché. Si es el nodo $O$, no se crea paquete de reenvío y se devuelve \verb|RpBloqueInv(B)|; por otra parte, si no es el nodo $O$, se envía el paquete de reenvío de lectura con invalidación, al nodo que tenga válido a \verb|B|.
 
+            El nodo $O$ pondrá el estado de \verb|B| a Pendiente de inválido. Cuando $O$ reciba la confirmación de invalidación así como el bloque, pasará a estado Inválido y responderá a $S$ con el bloque confirmando la invalidación, mediante el paquete \verb|RpBloqueInv(B)|.
+    \end{enumerate}
+    \item Paquetes de respuesta (\verb|Rp|) desde $P$ hasta $O$.
+    \begin{enumerate}
+        \item Cuando $P$ recibe el paquete \verb|RvLec(B)|, antes de responder cambia el estado del bloque \verb|B| de Modificado a Compartido. Posteriormente, responde con el paquete de respuesta con bloque \verb|RpBloque(B)|.
 
+        Cuando $O$ recibe el paquete:
+        \begin{itemize}
+            \item Escribe el bloque en memoria principal.
+            \item Pasa el estado del bloque de Pendiente de válido a Válido.
+            \item Responde con el bloque al nodo $S$.
+        \end{itemize}
+        \item Cuando $P$ recibe el paquete \verb|RvInv(B)|, antes de responder cambia el estado del bloque \verb|B| a Inválido. Posteriormente, responde con el paquete de respuesta confirmando invalidación \verb|RpInv(B)|.
+        \item Cuando $P$ recibe el paquete \verb|RvLecEx(B)|, antes de responder combia el estado del bloque \verb|B| a Inválido. Posteriormente, responde con el paquete de respuesta con bloque confirmando invalidación \verb|RpBloqueInv(B)|.
     \end{enumerate}
 \end{enumerate}
 
-% // TODO: Continuar por fin de pág 103 en libro chiquito y por 10.1.3 de 537 libro tocho
+\subsection{Protocolo MSI para procesadores NUMA con difusión}
+Al usar difusión, enviamos los paquetes de petición a todas las cachés, tengan o no copia del bloque. Por tanto, no nos es necesario almacenar en el directorio de memoria principal información sobre las cachés con copias del bloque. Se trata del protocolo más sencillo que puede llevarse a cabo con posescritura, invalidación y con difusión.
 
+Los estados de los bloques en caché y en memoria coinciden con los del protocolo MSI para NUMA sin difusión.
+
+\subsubsection{Paquetes generados por los controladores e interacciones}
+A continuación, desarrollamos igual que en el caso sin difusión varias interacciones que pueden suceer entre los tres roles principales de los nodos de un computador NUMA, comentando al mismo tiempo los paquetes empleados.
+
+\begin{enumerate}
+    \item Paquetes de petición (\verb|Pt|) desde $S$ hasta cualquier nodo $N$.
+    \begin{enumerate}
+        \item El nodo solicitante $S$ envía cualquier paquete de petición (son los mismos que se usaban en el protocolo sin difusión) a todos los nodos del computador. Por tanto, lo reciben también el nodo $O$ y los $P$. Son los mismos paquetes que generaba el nodo $S$ al nodo $O$ en el protocolo sin  difusión, como consecuencia de los mismos eventos.
+    \end{enumerate}
+    \item Paquetes de respuesta (\verb|Rp|) desde nodos $N$ a $O$.
+    \begin{enumerate}
+        \item Si $P$ recibe el paquete \verb|PtLec(B)| desde $S$ de un bloque \verb|B| que tiene en estado Modificado (estará por tanto en estado Inválido en memoria), $P$ cambia el estado del bloque \verb|B| en su caché a Compartido y genera un paquete de respuesta con bloque \verb|RpBloque(B)|.
+
+        Cuando $O$ reciba el paquete:
+        \begin{itemize}
+            \item Escribirá el bloque en memoria principal.
+            \item Pasará el estado del bloque a válido.
+            \item Responderá con el bloque al nodo $S$.
+        \end{itemize}
+        El resto de nodos no hacen nada.
+        \item Si $P$ recibe el paquete \verb|PtEx(B)| o \verb|PtLecEx(B)| desde $S$ de un bloque \verb|B| que tenga en estado Compartido o Inválido, invalidarán la copia de \verb|B| en sus cachés (en caso de que estuviera en Compartido) y responderán a $O$ confirmando la invalidación con el paquete \verb|RpInv(B)|.
+        \item Si $P$ recibe el paquete \verb|PtLecEx(B)| desde $S$ de un bloque \verb|B| que tenga en estado Modificado, primero invalidará la copia de su bloque y responderá a $O$ con el bloque, confirmando la invalidación con el paquete \verb|RpBloqueInv(B)|.
+    \end{enumerate}
+    \item Paquetes de respuesta (\verb|Rp|) desde $O$ a $S$.
+    \begin{enumerate}
+        \item Si $O$ recibe del nodo $S$ un paquete \verb|PtLec(B)|:
+            \begin{itemize}
+                \item Si \verb|B| está en estado válido, genera el paquete de respuesta \verb|RpBloque(B)|.
+                \item Si \verb|B| está en estado inválido, pone el estado del bloque \verb|B| a Pendiente de validación y esperará a que la caché con una copia válida del bloque envíe dicho bloque. En dicho caso, cambiará el estado a válido y generará el paquete de respuesta \verb|RpBloque(B)|.
+            \end{itemize}
+        \item Si $O$ recibe del nodo $S$ un paquete \verb|PtEx(B)|:
+            \begin{itemize}
+                \item Cambia el estado del bloque \verb|B| a Pendiente de invalidación.
+                \item Espera a recibir la confirmación de invalidación de todos los nodos $N$.
+                \item Una vez recibidas todas las confirmaciones, cambia el estado de \verb|B| a inválido y responde con el paquete \verb|RpInv(B)|.
+            \end{itemize}
+        \item Si $O$ recibe del nodo $S$ un paquete \verb|PtLecEx(B)|:
+            \begin{itemize}
+                \item Si tiene a \verb|B| en estado Válido, lo cambiará a estado Pendiente de inválido y esperará a recibir la respuesta de invalidación en todas las cachés de los nodos $N$. Posteriormente, cambiará a estado Inválido y responderá con el paquete \verb|RpBloqueInv(B)|, junto con el bloque \verb|B|.
+                \item Si tiene a \verb|B| en estado Inválido, esperará a recibir la respuesta de invalidación en todas las cachés de los nodos $N$, junto con la respuesta del nodo $P$, que además contendrá el bloque \verb|B|, el cual se actualizará en memoria y enviará a $S$ en el paquete \verb|RpBloqueInv(B)|.
+            \end{itemize}
+    \end{enumerate}
+\end{enumerate}
 
 \newpage
 \section{Consistencia del sistema de memoria}
+El modelo de programación de memoria compartida ofrece varias ventajas al programador respecto al modelo basado en paso de mensajes: evita (o al menos relaja) la necesidad de distribuir la carga de trabajo (código y datos). Esta es la principal razón por la que los multiprocesadores han tenido una amplia aceptación tanto en el mundo comercial como en computación científica.\\
+
+Sin embargo, para programar de forma correcta un multiprocesador, los programadores deben conocer la semántica del sistema de memoria. Si programan en bajo nivel con ensamblador o desarrollando herramientas de programación, sistemas operativos, controladores, \ldots deben conocer la semántica proporcionada por el multiprocesador, también llamado \emph{modelo de consistencia de memoria del hardware} (la arquitectura abstracta del sistema de memoria). Por otra parte, si programan en alto nivel haciendo uso de herramientas de programación, deben tener en cuenta la semántica del sistema de memoria proporcionada por dichas herramientas software, también llamado \emph{modelo de consistencia de memoria del software}.
+
 \subsection{Objetivos}
 Esta sección está orientada a adquirir los conocimientos necesarios para:
 \begin{itemize}
@@ -784,6 +848,96 @@ Esta sección está orientada a adquirir los conocimientos necesarios para:
     \item Distinguir entre el modelo de consistencia secuencial y los modelos relajados.
     \item Distinguir entre los diferentes modelos de consistencia relajados.
 \end{itemize}
+
+\subsection{Concepto de consistencia}
+Un \textbf{modelo de consistencia de memoria} es un modelo abstracto del sistema de memoria que nos ayuda a especificar el orden en el cual las operaciones de acceso a memoria deben \emph{parecer} haberse realizado (esto es, las operaciones de lectura y escritura). Es de vital importancia conocer en qué orden se escribe o se lee de memoria, para poder desarrollar programas sin toparnos con errores indeseados.\\
+
+En sistemas \underline{uniprocesadores}, el orden en el que deben parecer haberse ejecutado los accesos a memoria es el orden secuencial especificado por el programador en el programa desarrollado, denominado \textbf{orden del programa}. Sin embargo, esto no significa que el hardware o que las herramientas de programación que usamos (como copiladores con opciones de optimización) puedan alterar el orden de las instrucciones para mejorar las prestaciones. De hecho lo hacen bastante a menudo, pero debe parecer que no se ha alterado, para garantizarle al programador el \underline{modelo de consistencia}. En concreto, debe garantizarse que:
+\begin{itemize}
+    \item Cada lectura de una dirección proporcione el último valor escrito en dicha dirección.
+    \item Si se escribe varias veces en la misma dirección, se debe retornar el último valor escrito (el de la última escritura). 
+    \item Si se escribe en una dirección a la que previamente se ha accedido para leer, no se debe obtener en la lectura previa el valor escrito posteriormente en la secuencia del programa especificada por el programador. 
+    \item No se puede escribir en una dirección si la escritura depende de una condición que no se cumple.
+\end{itemize}
+Como podemos ver, cada una de estas condiciones lleva asociado un tipo de dependencia: RAW, WAW, WAR y de control. Por tanto, si el hardware de un procesador permite durante la ejecución de instrucciones, accesos a memoria desordenados en lugar de una ejecución estrictamente secuencial, entonces este debe detectar y resolver los problemas derivados de las dependencias de datos y de control, para garantizar el modelo de consistencia que ofrece al programador de su sistema (basado en el orden del programa). Es obvio que la herramienta de programación debe preservar el orden esperado por el programador en las optimizaciones que lleve a cabo.\\
+
+A la hora de programar programas paralelos o concurrentes en multiprocesadores con variables compartidas, no podemos esperar que la ejecución de la instrucción número $k$ de un programa en un proceso $P_i$ preceda a la ejecución de la instrucción número $k+1$ del mismo programa en un proceso $P_j$ (al estar hablando de consistencia de memoria, nos interesan especialmente las instrucciones de acceso a memoria), ya que ambos procesos se ejecutan de forma independiente en el multiprocesador, sin realizar análisis de dependencias entre las operaciones de acceso a memoria entre distintos procesos. Es el programador quien debe forzar el orden en el que desea que se ejecute un código paralelo, usando código extra para proporcionar sincronización entre los procesos. Por ejemplo, en la Figura~\ref{codigo:instrucciones_seguidas_paralelo}, no podemos asegurar que la línea 1 se ejecute antes que la 2; y al revés tampoco.
+
+\begin{figure}[H]
+\centering
+\begin{minted}[xleftmargin=1cm, linenos]{c++}
+int foo = 2;    // Ejecutado por procesador P_i
+int bar = foo;  // Ejecutado por procesador P_j
+\end{minted}
+\caption{Ejemplo de código paralelo o concurrente con resultado indeterminado.}    
+\label{codigo:instrucciones_seguidas_paralelo}
+\end{figure}
+
+Definiendo de forma precisa el modelo de consistencia de memoria para un conjunto de procesos que comparten espacio de direcciones, diríamos que el modelo especifica (las restricciones en) el orden en el cual las operaciones de memoria deben \emph{parecer} haberse realizado, incluyendo operaciones a las mismas o distintas direcciones y emitidas por el mismo o distintos procesos. Observemos que la coherencia sólo abarcaba operaciones desde múltiples componentes sobre una misma dirección, no como la consistencia.\\
+
+El modelo de consistencia de un procesador basado en el orden del programa uede generalizarse para procesadores multithread y multiprocesadores, mediante el denominado \textbf{modelo de consistencia secuencial}. Para obtener una primera idea, podríamos decir que este modelo busca una ejecución \emph{atómica} (que parezcan instantáneas) de las operaciones de memoria, y que todas las operaciones de un único procesador parezcan ejecutarse en el orden descrito por el programa de entrada al procesador. Según el modelo, las operaciones de distintos procesos se ejecutarán entremezclándose unas con otras en cualquier orden. Por tanto, el modelo no elimina la necesidad de utilizar mecanismos de sincronizacióon.
+
+Se trata de un modelo simple e intuitivo, que se suele esperar por el programador de aplicaciones de alto nivel. Sin embargo, no permite muchas de las optimizaciones del compilador y procesador. Este es el motivo por el cual a bajo nivel el hardware puede ofrecer un modelo que \emph{relaje} las restricciones sobre el orden de ejecución, para incrementar las prestaciones. Esto provoca que el programador a alto nivel (que es respaldado por las herramientas de programación) o a bajo nivel deba evitar los problemas derivados de las relajaciones en las restricciones, usando las insturcciones que ofrezca el hardware para ello.
+
+El modelo de consistencia influye tanto en las prestaciones como en la facilidad de programar. Hemos pues de buscar un equilibrio entre ambas, así como llegar a un estándar hardware par a hacer portables las aplicaciones. La mayor parte de los multiprocesadores comerciales presentan \textbf{modelos relajados de consistencia de memoria}. 
+
+\subsection{Consistencia secuencial}
+Un multiprocesador presenta un modelo de consistencia secuencial si el resultado de cualquier ejecución coincide con el que se obtendría si las operaciones de todos los procesadores se ejecutaran en algún orden secuencial y las operaciones de cada procesador particular aparecieran en en esta secuencia en el orden especificador por su programa.
+
+Por tanto, para obtener consistencia secuencial en un sistema, debemos:
+\begin{itemize}
+    \item En cada procesador, mantener el orden entre operaciones que indique el código que ejecuta (mantener el orden de programa).
+    \item Globalmente, se debe mantener un orden secuencial entre toas las operaciones (atomicidad de las operaciones).
+\end{itemize}
+Una ejecución atómica supone que la operación parece globalmente que se ejecuta y completa antes de que comience la siguiente.\\
+
+El modelo de consistencia secuencial presenta el sistema de memoria a los programadores como si estuviera constituido por una memoria central global, conectada a los procesadores a través de un conmutador central (todo esto de forma abstracta, dicho conmutador puede no existir). Cada procesador emite operaciones a memoria en el orden de su programa. El conmutador realiza una ordenación de todas las peticiones de accesos a memoria, de forma que una vez servido un acceso a memoria de un procesador, conecta la memoria con otro procesador.
+
+\subsection{Modelos de consistencia relajados}
+Los modlos de consistencia de memoria relajados difieren en cuanto a los requisitos para ganrantizar la consistencia secuencial que relajan:
+\begin{description}
+    \item [Orden del programa.] Los modelos pueden permitir que en el código ejecutado en un procesador se relaje el orden entre dos accesos a distintas direcciones. Nos encontramos distintos tipos de modelos, que podemos clasificar en relación a las órdenes que nos permiten relajar. Podemos encontrar alteraciones entre:
+        \begin{itemize}
+            \item escrituras ($W\rightarrow W$).
+            \item lecturas ($R\rightarrow R$).
+            \item una lectura y una escritura posterior ($W\rightarrow R$).
+            \item una escritura y una lectura posterior ($R\rightarrow W$).
+        \end{itemize}
+    \item [Atomicidad.] Hay modelos que permiten que un procesador pueda leer el valor escrito por otro procesador en uan posición de memoria antes de que dicha escritura se haga visible al resto de procesadores.
+\end{description}
+Una relajación habitual es que un procesador pueda leer con antelación una escritura propia. Dicha relajación está relacionada tanto con el orden del programa como con la atomicidad de la operación.
+
+Los modelos relajados de consistencia hardware comprenden:
+\begin{itemize}
+    \item Especificaciones sobre los órdenes de acceso a memoria que no garantiza el sistema de memoria.
+    \item Mecanismos que ofrece el hardware para forzar de forma explícita un orden (no garantizado) cuando sea necesario.
+\end{itemize}
+Desarrollamos ahora varios tipos de modelos de consistencia relajados:
+
+\subsubsection{Lecturas adelantan a escrituras}
+Estos modelos permiten que en las operaciones ejecutadas en un procesador las lecturas adelante a las escrituras, pero evitando dependencias de datos tipo RAW\@. Eliminan por tanto la ordenación $W\rightarrow R$, lo que permite ocultar latencias de escritura. 
+
+Con esta relajación, la mayor parte de los códigos de para consistencia secuencial funcionan correctamente. Cuando sea necesario, se pueden utilizar para garantizar un resultado correcto instrucciones especiales de ordenación que garanticen el orden en el programa. 
+
+Los implementan procesadores que utilizan buffers de escritura FIFO para permitir que los accesos de escritura no retarden la ejecución bloqueando las escrituras posteriores. Estos buffers son la clave para que las lecturas adelanten a las escrituras. Como ya se ha dicho, se comprueba que no existan problemas derivados de dependencias tipo RAW\@. Además, la implementación del procesador permite que se pueda obtener el valor de una lectura directamente del buffer de escritura, permitiendo que el procesador pueda leer antes que el resto de una escritura propia.
+
+\subsubsection{Lecturas y escrituras adelantan a escrituras}
+Estos modelos permiten además relajar el orden entre escrituras (a distintas direcciones), eliminando las ordenaciones $W\rightarrow R$ y $W\rightarrow W$, y evitando dependencias RAW y WAW.
+
+\subsubsection{Cualquier reordenación}
+Estos modelos relajan todos los órdenes: $W\rightarrow R$, $W\rightarrow W$, $R\rightarrow R$ y $R\rightarrow W$. Se cambia el orden siempre que no haya conflictos entre los accesos cuyo orden se va a alterar, es decir, se mantiene la consistencia en el procesador evitando problemas por dependencias de datos o de control.\\
+
+Dentro de este grupo se encuentra el \textbf{modelo de ordenación débil}, que se basa en mantener el orden entre accesos sólo en los puntos de sincronización del código. Este modelo tiene en cuenta que cuando se necesita coordinar el acceso a una variable compartida se añade código extra de sincronización.
+
+Se clasifican las operaciones de memoria en dos clases: \emph{operaciones de datos} y \emph{operaciones de sincronización}. Para forzar el orden entre dos operaciones, el programador debe etiquetar alguna de ellas como operación de sincronización. Si $S$ es una operación de sincronización, entonces el modelo garantiza los siguientes órdenes:
+\begin{itemize}
+    \item Las operaciones de acceso a memoria anteriores en el orden del programa a una operación etiquetada de sincronización deben completarse antes que la operación de sincronización, $WR\rightarrow S$.
+    \item Una operación etiquetada como de sincronización se debe completar antes que las operaciones de acceso a memoria posteriores en el orden del programa, $S\rightarrow WR$.
+\end{itemize}
+De esta forma, los accesos a memoria entre dos operaciones de sincronización pueden reordenarse y solaparse, buscando siempre optimizar programas y disminuir tiempos.
+
+% // TODO: Seguir por libro tocho, comienzo página 565
+ESTOS APUNTES ESTÁN AÚN EN DESAROLLO.
 
 \newpage
 \section{Sincronización}
@@ -794,3 +948,5 @@ Tras esta sección, debería ser capaz de:
     \item Describir las primitivas para sincronización que ofrece el hardware.
     \item Implementar cerrojos simples, cerrojos con etiqueta y barreras a partir de instrucciones máquina de sincronización y ordenación de accesos a memoria.
 \end{itemize}
+
+ESTOS APUNTES ESTÁN AÚN EN DESAROLLO.
