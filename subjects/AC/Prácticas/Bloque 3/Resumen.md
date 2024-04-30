@@ -38,7 +38,7 @@ omp_set/get_dynamic() omp_get_max_threads() omp_set/get_num_threads() omp_set/ge
 Estas no modifican las variables de control. Sin embargo, contamos con las claúsulas `if` y `num_threads` que nos permite influir sobre la ejecución de la región paralela; y con `schedule`, que nos permite influir sobre la asignación de iteraciones de un bucle a hebras.
 ***
 
-# Variables de control internas y cómo modficarlas
+# Variables de control internas y cómo modificarlas
 Existen dos tipos de variables de control internas (sus valores por defecto dependen de la implementación):
 
 ## Afectan a región parallel
@@ -203,4 +203,62 @@ Notemos que el número de hebras que se crearán dentro de una directiva `parall
 ## schedule
 Sólo puede aparecer en las directivas `DO/for` o `parallel DO/for`.  
   
-ESTOS APUNTES ESTÁN AÚN EN DESARROLLO.
+Cambia la cláusula de planificación por defecto que usa la herramienta de programación. Su sintaxis es:
+```c
+#pragma omp for schedule([modifier:]kind[,chunk])
+```
+Donde los corchetes indican que tanto `modifier:` como `chunk` son opcionales.  
+Permite indicar un modificador (hablaremos de eso más adelante), un tipo de planificación (`kind`) y la granularidad de la distribución (`chunk`).
+
+### Modificador
+Podemos indicarle a la cláusula que use o no un modificador, el cual cambiará el comportamiento por defecto de la misma. Esta puede adoptar los valores:
+- `monotonic:` Si a un hilo se le asigna la iteración $i$, entonces ejecutará después iteraciones mayores que $i$.
+- `nomonotonic:` No hay restricciones en el orden de asignación de las iteraciones.
+
+### Chunk
+Es el tamaño de las unidades de trabajo que se asignan a los hilos. Dicho de otra forma, es el número de iteraciones del bucle que se le asignan a un hilo a la vez.  
+No repartimos las iteraciones a ejecutar entre los hilos, sino que agrupamos las iteraciones en chunks y esta es la unidad que repartimos entre los hilos.  
+  
+Es mejor no asumir una granularidad de distribución por defecto.  
+Con chunks más grandes tenemos una menor sobrecarga.
+
+### Tipo
+Tenemos a nuestra disposición distintas formas de asignación de chunks a hilos:
+- `static`.
+- `dynamic`.
+- `guided`.
+- `auto`.
+- `runtime`.
+Procederemos ahora a desarrollar cada tipo de asignación
+
+#### static
+Se asigna un chunk a cada hilo (es el comportamiento usual por defecto). En cuanto se nos acaban los hilos, volvemos a comenzar desde el inicio, realizando un `round-robin`.  
+Es el tipo de asignación por defecto de `gcc`.
+
+#### dynamic
+Se realiza la distribución en tiempo de ejecución.  
+Es apropiada si se desconoce el tiempo de ejecución de las iteraciones (útil cuando hay iteraciones mucho más costosas que otras y no sabemos cuáles).  
+Añade sobrecarga adicional.
+
+### guided
+Se realiza la distribución en tiempo de ejecución.  
+Es apropiada si se desconoce el tiempo de ejecución de las iteraciones (útil cuando hay iteraciones mucho más costosas que otras y no sabemos cuáles).  
+En este caso, se comienza con un tamaño de bloque largo que va menguando (es el número de iteraciones restantes entre el número de hilos), sin pasar del tamaño especificado en el chunk.  
+Añade sobrecarga adicional pero menos que `dynamic`.
+
+#### runtime
+Usa la forma de asignación de chunks a hilos especificada en la variable de control interna `run-sched-var`.
+
+### Prioridad
+Antes hemos desarrollado dos variables de control internas `run-sched-var` y `def-sched-var`, cuya funcionalidad se entenderá a continuación.  
+  
+Seguimos el siguiente diagrama de flujo para entenderlo:  
+```
+¿Está la cláusula 'schedule' presente en el bucle for a paralelizar?
+    No: Se usa la forma de asignación especificada en 'def-sched-var'.
+    Sí: ¿el tipo de la cláusula es 'runtime'?
+        No: Se usa el tipo especificado.
+        No: Se usa la forma de asignación especificada en 'run-sched-var'.
+```
+  
+*Sólo puede haber una cláusula `schedule`*.
