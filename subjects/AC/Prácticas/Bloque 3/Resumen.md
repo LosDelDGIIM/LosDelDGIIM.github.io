@@ -203,4 +203,4 @@ Notemos que el número de hebras que se crearán dentro de una directiva `parall
 ## schedule
 Sólo puede aparecer en las directivas `DO/for` o `parallel DO/for`.  
   
-
+ESTOS APUNTES ESTÁN AÚN EN DESARROLLO.
