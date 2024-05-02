@@ -50,7 +50,7 @@ Es una variable booleana que controla el ajuste dinámico del número de hilos d
 | `dyn-var`           | Modificable              | Consultable         |
 |----------------------|--------------------------|---------------------|
 | Variable de entorno  | `OMP_DYNAMIC`            | X                   |
-| Funciones de entorno | `omp_set_dynamic(value)` | `omp_get_dynamic()` |
+| Funciones de entorno | `omp_set_dynamic(value)` | `int omp_get_dynamic()` |
 
 ### nthreads-var
 Es una variable numérica que controla el número de hilos a usar en la próxima región `parallel`. Hemos podido experimentar que `gcc` lo inicializa por defecto al número de cores lógicos del computador.  
@@ -58,7 +58,7 @@ Es una variable numérica que controla el número de hilos a usar en la próxima
 | `nthreads-var`       | Modificable                  | Consultable             |
 |----------------------|------------------------------|-------------------------|
 | Variable de entorno  | `OMP_NUM_THREADS`            | X                       |
-| Funciones de entorno | `omp_set_num_threads(value)` | `omp_get_max_threads()` |
+| Funciones de entorno | `omp_set_num_threads(value)` | `int omp_get_max_threads()` |
 
 ### thread-limit-var
 Pertence a la versión 3.0 de OpenMP.  
@@ -67,7 +67,7 @@ Es una variable numérica que controla el número máximo de hilos para todo el 
 | `thread-limit-var`   | Modificable        | Consultable              |
 |----------------------|--------------------|--------------------------|
 | Variable de entorno  | `OMP_THREAD_LIMIT` | X                        |
-| Funciones de entorno | X                  | `omp_get_thread_limit()` |
+| Funciones de entorno | X                  | `int omp_get_thread_limit()` |
 
 ## Afectan a región DO/for
 Aunque sólo nos interesa la directiva `for`, también funcionan con `DO`.
@@ -80,7 +80,7 @@ Controla la planificación de bucles para `runtime`.
 | `run-sched-var`      | Modificable                     | Consultable                       |
 |----------------------|---------------------------------|-----------------------------------|
 | Variable de entorno  | `OMP_SCHEDULE`                  | X                                 |
-| Funciones de entorno | `omp_set_schedule(kind, chunk)` | `omp_get_schedule(&kind, &chunk)` |
+| Funciones de entorno | `omp_set_schedule(kind, chunk)` | `omp_get_schedule(omp_sched_t* kind, int* chunk)` |
   
 Ejemplos de su modificación mediante variables de entorno son:
 ```bash
@@ -107,6 +107,14 @@ typedef enum omp_sched_t {
     // schedule modifier
     omp_sched_monotonic = 0x80000000u
 } omp_sched_t;
+```
+
+Para consultar su valor, podemos hacer:
+```c
+omp_sched_t kind;
+int chunkdize;
+omp_get_schedule(&kind, &chunksize);
+printf("kind: %x, chunksize: %d", kind, chunksize);
 ```
   
 Ampliaremos la información en la cláusula `schedule`, donde todo quedará más claro.
