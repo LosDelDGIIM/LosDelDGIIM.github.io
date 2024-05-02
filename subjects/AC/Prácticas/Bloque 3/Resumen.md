@@ -88,6 +88,8 @@ export OMP_SCHEDULE="static,4"
 export OMP_SCHEDULE="nonmonotonic:static,4"
 export OMP_SCHEDULE="dynamic,4"
 export OMP_SCHEDULE="monotonic:dynamic,4"
+export OMP_SCHEDULE="static"
+export OMP_SCHEDULE="guided"
 ```
   
 Mientras que podemos modificar la variable de control también desde código, gracias a la función:
