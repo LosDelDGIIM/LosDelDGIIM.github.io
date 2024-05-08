@@ -939,6 +939,44 @@ De esta forma, los accesos a memoria entre dos operaciones de sincronización pu
 % // TODO: Seguir por libro tocho, comienzo página 565
 ESTOS APUNTES ESTÁN AÚN EN DESAROLLO.
 
+% --------------------------------------------------
+% // TODO: Apuntes de clase
+
+Si no permitimos que las escrituras sean adelantadas, el tiempo de ejecución del código se vería muy perjudicado.
+Para ejecutar operaciones es necesario leer datos de memoria; cuando antes consiga leer, antes se realizarán las operaciones en la CPU.
+Esto se puede hacer siempre y cuando las escrituras y lecturas sean en distintas posiciones de memoria (si no, se produciría un RAW).
+En la actualidad, todos los procesadores permiten que una lectura adelante a una escritura anterior en distintas posiciones de memoria.
+También podemos hacer que lecturas adelanten a lecturas (por ejemplo, a una que haya dado fallo en caché, que puede suponer 2 o 4 paquetes, dependiendo del protocolo de coherencia). Nos permite también reducir tiempo de ejecución.
+
+Todos los modelos de consistencia relajan los accesos a memoria.
+El propio sistema de memoria también permite reordenar los accesos a memoria, de forma que se realicen en orden distinto al que se han emitido.
+El compilador también reordena operaciones independientes y accesos a memoria independientes.
+
+La consistencia de memoria está relacionado con el orden de los accesos a memoria.
+
+El modelo de consistencia de memoria hardware lo que hace es visualizar al resto de procesadores un acceso a memoria. Especifica el orden en el que los accesos a memoria PARECEN haberse realizado. En realidad, los accesos al sistema de memoria se hacen en paralelo, pero a efectos de los que vemos en el programa, parece que se han realizado de forma secuencial.
+Este debe tenerse en cuenta sobretodo cuando va a implementar herramientas de sincronización. Las funciones del sistema operativo deben conocer bien el modelo de consistencia de memoria.
+También las herramientas de programación paralela ofrecen un modelo a nivel software que no tiene por qué coincidir con el del hardware. 
+
+Notemos que la coherencia sólo se refiere a accesos a memoria a una misma dirección (todos los núcleos tienen que ver el mismo orden en los accesos a memoria a una misma dirección). En consistencia, habalmos del orden de los accesos pero a todas las posiciones de memoria.
+
+Con OpenMP tenemos un modelo de consistencia secuencial, el que el programador desearía que tuviese. Lo que se obtendría al ejecutar un código paralelo es lo que por lógica uno espera que se obtenga.
+Ver diapositiva 85. en un x86 sí pero en un ARM no por su modelo de consistencia (puede pasar que la escritura en k se realice antes (la adelante) que en A, haciendo una ejecución del programa que no esperamos). Además, un compilador podría reordenar las instrucciones o eliminar código muerto. Para ello, tenemos que declarar la variable como `volatile`.
+
+Para garantizar consistencia secuencial, se debe cumplir:
+- Todos los procesadores deben ver los accesos a memoria de todos ellos en el mismo orden en el que esos accesos están en el código que ejecutan. Orden del programa.
+- Todos los procesadores tienen que ver el mismo orden en el acceso a memoria, aunque ambos vean el orden del programa (ver diap. 87 en ejemplo 3, vemos siempre 1 antes de 2 y a antes de b). Orden/Serialización global.
+Diapositiva 86: En el 2o ej vemos que no se cumple la 2a. Puede suceder que a P3 llegue la actualización B=1 pero que A=0, aunque en P2 haya A=1. La lectura de P3 es adelantada al resto, con un protocolo de coherencia de actualización. En el nuestro de invalidación esto no puede suceder.
+
+A->B significa que A está primero y luego B y que dicho orden no se asegura (se ejecuta B antes que A).
+
+Modelos relajados:
+- orden del programa: permiten que instrucciones adelanten a otras.
+- atomicidad: Permiten que un procesador lea antes que otro.
+
+% // TODO: Apuntes de clase
+% --------------------------------------------------
+
 \newpage
 \section{Sincronización}
 \subsection{Objetivos}
