@@ -836,9 +836,9 @@ A continuación, desarrollamos igual que en el caso sin difusión varias interac
 
 \newpage
 \section{Consistencia del sistema de memoria}
-El modelo de programación de memoria compartida ofrece varias ventajas al programador respecto al modelo basado en paso de mensajes: evita (o al menos relaja) la necesidad de distribuir la carga de trabajo (código y datos). Esta es la principal razón por la que los multiprocesadores han tenido una amplia aceptación tanto en el mundo comercial como en computación científica.\\
+El modelo de programación de memoria compartida ofrece varias ventajas al programador respecto al modelo basado en paso de mensajes: evita (o al menos relaja) la necesidad de distribuir la carga de trabajo (código y datos) entre los distintos procesadores. Esta es la principal razón por la que los multiprocesadores han tenido una amplia aceptación tanto en el mundo comercial como en computación científica (frente a los multicomputadores).\\
 
-Sin embargo, para programar de forma correcta un multiprocesador, los programadores deben conocer la semántica del sistema de memoria. Si programan en bajo nivel con ensamblador o desarrollando herramientas de programación, sistemas operativos, controladores, \ldots deben conocer la semántica proporcionada por el multiprocesador, también llamado \emph{modelo de consistencia de memoria del hardware} (la arquitectura abstracta del sistema de memoria). Por otra parte, si programan en alto nivel haciendo uso de herramientas de programación, deben tener en cuenta la semántica del sistema de memoria proporcionada por dichas herramientas software, también llamado \emph{modelo de consistencia de memoria del software}.
+Sin embargo, para programar de forma correcta un multiprocesador, los programadores deben conocer bien cómo se comporta el sistema de memoria frente a las instrucciones que el programador coloca en el código paralelo a ejecutar.
 
 \subsection{Objetivos}
 Esta sección está orientada a adquirir los conocimientos necesarios para:
@@ -850,9 +850,9 @@ Esta sección está orientada a adquirir los conocimientos necesarios para:
 \end{itemize}
 
 \subsection{Concepto de consistencia}
-Un \textbf{modelo de consistencia de memoria} es un modelo abstracto del sistema de memoria que nos ayuda a especificar el orden en el cual las operaciones de acceso a memoria deben \emph{parecer} haberse realizado (esto es, las operaciones de lectura y escritura). Es de vital importancia conocer en qué orden se escribe o se lee de memoria, para poder desarrollar programas sin toparnos con errores indeseados.\\
+Un \textbf{modelo de consistencia de memoria} es un modelo abstracto del sistema de memoria que nos ayuda a especificar el orden en el cual las operaciones de acceso a memoria deben \emph{parecer} haberse realizado (el sistema de memoria aprovecha que las instrucciones de operaciones con memoria se procesan de forman paralela para realizarlas de forma paralela, pero los procesadores ven las acciones en memoria de forma secuencial). Es de gran importancia conocer en qué orden se escribe o se lee de memoria, para poder desarrollar programas sin toparnos con comportamientos inesperados.\\
 
-En sistemas \underline{uniprocesadores}, el orden en el que deben parecer haberse ejecutado los accesos a memoria es el orden secuencial especificado por el programador en el programa desarrollado, denominado \textbf{orden del programa}. Sin embargo, esto no significa que el hardware o que las herramientas de programación que usamos (como copiladores con opciones de optimización) puedan alterar el orden de las instrucciones para mejorar las prestaciones. De hecho lo hacen bastante a menudo, pero debe parecer que no se ha alterado, para garantizarle al programador el \underline{modelo de consistencia}. En concreto, debe garantizarse que:
+En sistemas \underline{uniprocesadores}, el orden en el que deben parecer haberse ejecutado los accesos a memoria es el orden secuencial especificado por el programador en el programa desarrollado, denominado \textbf{orden del programa}. Sin embargo, esto no significa que el hardware o que las herramientas de programación que usamos (como compiladores con opciones de optimización) puedan alterar el orden de las instrucciones para mejorar las prestaciones. De hecho lo hacen bastante a menudo, pero debe parecer que no se ha alterado, para garantizar al programador el \underline{modelo de consistencia}. En concreto, debe garantizarse que:
 \begin{itemize}
     \item Cada lectura de una dirección proporcione el último valor escrito en dicha dirección.
     \item Si se escribe varias veces en la misma dirección, se debe retornar el último valor escrito (el de la última escritura). 
@@ -873,13 +873,13 @@ int bar = foo;  // Ejecutado por procesador P_j
 \label{codigo:instrucciones_seguidas_paralelo}
 \end{figure}
 
-Definiendo de forma precisa el modelo de consistencia de memoria para un conjunto de procesos que comparten espacio de direcciones, diríamos que el modelo especifica (las restricciones en) el orden en el cual las operaciones de memoria deben \emph{parecer} haberse realizado, incluyendo operaciones a las mismas o distintas direcciones y emitidas por el mismo o distintos procesos. Observemos que la coherencia sólo abarcaba operaciones desde múltiples componentes sobre una misma dirección, no como la consistencia.\\
+Definiendo de forma precisa el modelo de consistencia de memoria para un conjunto de procesos que comparten espacio de direcciones, diríamos que el modelo especifica (las restricciones en) el orden en el cual las operaciones de memoria deben \emph{parecer} haberse realizado, incluyendo operaciones a las mismas o distintas direcciones y emitidas por el mismo o distintos procesos. Notemos que la coherencia de memoria sólo se refería a accesos de memoria desde distintos procesadores a una misma dirección de memoria (todos los procesadores debían ver en dicha dirección de memoria la misma información). Ahora, hablando de consistencia de memoria, se debe garantizar el orden de los accesos a cualquier posición de memoria.
 
 El modelo de consistencia de un procesador basado en el orden del programa uede generalizarse para procesadores multithread y multiprocesadores, mediante el denominado \textbf{modelo de consistencia secuencial}. Para obtener una primera idea, podríamos decir que este modelo busca una ejecución \emph{atómica} (que parezcan instantáneas) de las operaciones de memoria, y que todas las operaciones de un único procesador parezcan ejecutarse en el orden descrito por el programa de entrada al procesador. Según el modelo, las operaciones de distintos procesos se ejecutarán entremezclándose unas con otras en cualquier orden. Por tanto, el modelo no elimina la necesidad de utilizar mecanismos de sincronizacióon.
 
 Se trata de un modelo simple e intuitivo, que se suele esperar por el programador de aplicaciones de alto nivel. Sin embargo, no permite muchas de las optimizaciones del compilador y procesador. Este es el motivo por el cual a bajo nivel el hardware puede ofrecer un modelo que \emph{relaje} las restricciones sobre el orden de ejecución, para incrementar las prestaciones. Esto provoca que el programador a alto nivel (que es respaldado por las herramientas de programación) o a bajo nivel deba evitar los problemas derivados de las relajaciones en las restricciones, usando las insturcciones que ofrezca el hardware para ello.
 
-El modelo de consistencia influye tanto en las prestaciones como en la facilidad de programar. Hemos pues de buscar un equilibrio entre ambas, así como llegar a un estándar hardware par a hacer portables las aplicaciones. La mayor parte de los multiprocesadores comerciales presentan \textbf{modelos relajados de consistencia de memoria}. 
+El modelo de consistencia influye tanto en las prestaciones como en la facilidad de programar. Hemos pues de buscar un equilibrio entre ambas, así como llegar a un estándar hardware para hacer portables las aplicaciones. La mayor parte de los multiprocesadores comerciales presentan \textbf{modelos relajados de consistencia de memoria}. 
 
 \subsection{Consistencia secuencial}
 Un multiprocesador presenta un modelo de consistencia secuencial si el resultado de cualquier ejecución coincide con el que se obtendría si las operaciones de todos los procesadores se ejecutaran en algún orden secuencial y las operaciones de cada procesador particular aparecieran en en esta secuencia en el orden especificador por su programa.
@@ -887,25 +887,32 @@ Un multiprocesador presenta un modelo de consistencia secuencial si el resultado
 Por tanto, para obtener consistencia secuencial en un sistema, debemos:
 \begin{itemize}
     \item En cada procesador, mantener el orden entre operaciones que indique el código que ejecuta (mantener el orden de programa).
-    \item Globalmente, se debe mantener un orden secuencial entre toas las operaciones (atomicidad de las operaciones).
+    \item Globalmente, se debe mantener un orden secuencial entre todas las operaciones (atomicidad de las operaciones). Esto es, todos los procesadores tienen que ver el mismo orden en el acceso a memoria.
 \end{itemize}
 Una ejecución atómica supone que la operación parece globalmente que se ejecuta y completa antes de que comience la siguiente.\\
 
 El modelo de consistencia secuencial presenta el sistema de memoria a los programadores como si estuviera constituido por una memoria central global, conectada a los procesadores a través de un conmutador central (todo esto de forma abstracta, dicho conmutador puede no existir). Cada procesador emite operaciones a memoria en el orden de su programa. El conmutador realiza una ordenación de todas las peticiones de accesos a memoria, de forma que una vez servido un acceso a memoria de un procesador, conecta la memoria con otro procesador.
 
 \subsection{Modelos de consistencia relajados}
-Los modlos de consistencia de memoria relajados difieren en cuanto a los requisitos para ganrantizar la consistencia secuencial que relajan:
+Para ejecutar operaciones es necesario disponer de los datos requeridos de la memoria. Por tanto, cuanto antes se consiga leer de memoria, antes se realizarán las operaciones en la CPU\@. Es por esto que podemos desear que, por ejemplo, las lecturas adelanten a las escrituras (no tan necesarias en dicho momento), con el fin de aumentar las prestaciones. Este tipo de adelantamiento se puede realizar siempre y cuando no se vaya a escribir y leer sobre la misma posición de memoria (porque si no tendríamos una dependencia de datos tipo RAW).
+
+También, podríamos plantear que lecturas adelanten a otras lecturas, como por ejemplo a una que haya dado fallo en caché.\\
+
+Los modelos de consistencia de memoria relajados difieren en cuanto a los requisitos para garantizar la consistencia secuencial que relajan:
 \begin{description}
-    \item [Orden del programa.] Los modelos pueden permitir que en el código ejecutado en un procesador se relaje el orden entre dos accesos a distintas direcciones. Nos encontramos distintos tipos de modelos, que podemos clasificar en relación a las órdenes que nos permiten relajar. Podemos encontrar alteraciones entre:
+    \item [Orden del programa.] Los modelos pueden permitir que en el código ejecutado en un procesador relaje el orden entre dos accesos a distintas direcciones. Nos encontramos distintos tipos de modelos, que podemos clasificar en relación a las órdenes que nos permiten relajar. Podemos encontrar alteraciones entre:
         \begin{itemize}
             \item escrituras ($W\rightarrow W$).
             \item lecturas ($R\rightarrow R$).
-            \item una lectura y una escritura posterior ($W\rightarrow R$).
-            \item una escritura y una lectura posterior ($R\rightarrow W$).
+            \item lecturas y escrituras ($W\rightarrow R$ o $R\rightarrow W$).
         \end{itemize}
-    \item [Atomicidad.] Hay modelos que permiten que un procesador pueda leer el valor escrito por otro procesador en uan posición de memoria antes de que dicha escritura se haga visible al resto de procesadores.
+        $A\rightarrow B$ significa que en el código la instrucción $A$ precede a $B$ pero que por un cierto motivo se ejecutó la instrucción $B$ antes que la $A$ ($B$ adelantó a $A$).
+    \item [Atomicidad.] Hay modelos que permiten que un procesador pueda leer el valor escrito por otro procesador en una posición de memoria antes de que dicha escritura se haga visible al resto de procesadores. 
+
+        Es normal encontrar este comportamiento cuando en un mismo procesador una lectura adelanta a una escritura de la misma posición de memoria. En dicho caso, se leerá del contenido de la petición de escritura (y no de la posición de memoria correspondiente). Dicho comportamiento también se salta lo impuesto por el orden del programa.
 \end{description}
-Una relajación habitual es que un procesador pueda leer con antelación una escritura propia. Dicha relajación está relacionada tanto con el orden del programa como con la atomicidad de la operación.
+
+Podemos encontrar también relajaciones (esto es, reordenaciones en cuanto al orden de las instrucciones relativas a memoria) por parte del propio sistema de memoria o por el compilador que usemos para nuestro programa.\\
 
 Los modelos relajados de consistencia hardware comprenden:
 \begin{itemize}
@@ -917,7 +924,7 @@ Desarrollamos ahora varios tipos de modelos de consistencia relajados:
 \subsubsection{Lecturas adelantan a escrituras}
 Estos modelos permiten que en las operaciones ejecutadas en un procesador las lecturas adelante a las escrituras, pero evitando dependencias de datos tipo RAW\@. Eliminan por tanto la ordenación $W\rightarrow R$, lo que permite ocultar latencias de escritura. 
 
-Con esta relajación, la mayor parte de los códigos de para consistencia secuencial funcionan correctamente. Cuando sea necesario, se pueden utilizar para garantizar un resultado correcto instrucciones especiales de ordenación que garanticen el orden en el programa. 
+Con esta relajación, la mayor parte de los códigos que cumplan consistencia secuencial funcionan correctamente. Cuando sea necesario, se pueden utilizar para garantizar un resultado correcto instrucciones especiales de ordenación que garanticen el orden en el programa. 
 
 Los implementan procesadores que utilizan buffers de escritura FIFO para permitir que los accesos de escritura no retarden la ejecución bloqueando las escrituras posteriores. Estos buffers son la clave para que las lecturas adelanten a las escrituras. Como ya se ha dicho, se comprueba que no existan problemas derivados de dependencias tipo RAW\@. Además, la implementación del procesador permite que se pueda obtener el valor de una lectura directamente del buffer de escritura, permitiendo que el procesador pueda leer antes que el resto de una escritura propia.
 
@@ -939,43 +946,6 @@ De esta forma, los accesos a memoria entre dos operaciones de sincronización pu
 % // TODO: Seguir por libro tocho, comienzo página 565
 ESTOS APUNTES ESTÁN AÚN EN DESAROLLO.
 
-% --------------------------------------------------
-% // TODO: Apuntes de clase
-
-Si no permitimos que las escrituras sean adelantadas, el tiempo de ejecución del código se vería muy perjudicado.
-Para ejecutar operaciones es necesario leer datos de memoria; cuando antes consiga leer, antes se realizarán las operaciones en la CPU.
-Esto se puede hacer siempre y cuando las escrituras y lecturas sean en distintas posiciones de memoria (si no, se produciría un RAW).
-En la actualidad, todos los procesadores permiten que una lectura adelante a una escritura anterior en distintas posiciones de memoria.
-También podemos hacer que lecturas adelanten a lecturas (por ejemplo, a una que haya dado fallo en caché, que puede suponer 2 o 4 paquetes, dependiendo del protocolo de coherencia). Nos permite también reducir tiempo de ejecución.
-
-Todos los modelos de consistencia relajan los accesos a memoria.
-El propio sistema de memoria también permite reordenar los accesos a memoria, de forma que se realicen en orden distinto al que se han emitido.
-El compilador también reordena operaciones independientes y accesos a memoria independientes.
-
-La consistencia de memoria está relacionado con el orden de los accesos a memoria.
-
-El modelo de consistencia de memoria hardware lo que hace es visualizar al resto de procesadores un acceso a memoria. Especifica el orden en el que los accesos a memoria PARECEN haberse realizado. En realidad, los accesos al sistema de memoria se hacen en paralelo, pero a efectos de los que vemos en el programa, parece que se han realizado de forma secuencial.
-Este debe tenerse en cuenta sobretodo cuando va a implementar herramientas de sincronización. Las funciones del sistema operativo deben conocer bien el modelo de consistencia de memoria.
-También las herramientas de programación paralela ofrecen un modelo a nivel software que no tiene por qué coincidir con el del hardware. 
-
-Notemos que la coherencia sólo se refiere a accesos a memoria a una misma dirección (todos los núcleos tienen que ver el mismo orden en los accesos a memoria a una misma dirección). En consistencia, habalmos del orden de los accesos pero a todas las posiciones de memoria.
-
-Con OpenMP tenemos un modelo de consistencia secuencial, el que el programador desearía que tuviese. Lo que se obtendría al ejecutar un código paralelo es lo que por lógica uno espera que se obtenga.
-Ver diapositiva 85. en un x86 sí pero en un ARM no por su modelo de consistencia (puede pasar que la escritura en k se realice antes (la adelante) que en A, haciendo una ejecución del programa que no esperamos). Además, un compilador podría reordenar las instrucciones o eliminar código muerto. Para ello, tenemos que declarar la variable como `volatile`.
-
-Para garantizar consistencia secuencial, se debe cumplir:
-- Todos los procesadores deben ver los accesos a memoria de todos ellos en el mismo orden en el que esos accesos están en el código que ejecutan. Orden del programa.
-- Todos los procesadores tienen que ver el mismo orden en el acceso a memoria, aunque ambos vean el orden del programa (ver diap. 87 en ejemplo 3, vemos siempre 1 antes de 2 y a antes de b). Orden/Serialización global.
-Diapositiva 86: En el 2o ej vemos que no se cumple la 2a. Puede suceder que a P3 llegue la actualización B=1 pero que A=0, aunque en P2 haya A=1. La lectura de P3 es adelantada al resto, con un protocolo de coherencia de actualización. En el nuestro de invalidación esto no puede suceder.
-
-A->B significa que A está primero y luego B y que dicho orden no se asegura (se ejecuta B antes que A).
-
-Modelos relajados:
-- orden del programa: permiten que instrucciones adelanten a otras.
-- atomicidad: Permiten que un procesador lea antes que otro.
-
-% // TODO: Apuntes de clase
-% --------------------------------------------------
 
 \newpage
 \section{Sincronización}
