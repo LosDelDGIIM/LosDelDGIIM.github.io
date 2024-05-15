@@ -130,7 +130,7 @@ No puede consultarse ni modificarse.
 A parte de las funciones del entorno que modifican variables de control internas, disponemos de otras rutinas del entorno que nos son útiles:
 
 ## omp_get_thread_num()
-Devuelve a la hebra su identificador dentro de su grupo. Si estamos usando $N$ hebras, nos devolverá un número entero en el intervalo $[0, N[$, siendo 0 la hebra `master`.
+Devuelve a la hebra su identificador dentro de su grupo. Si estamos usando $N$ hebras, nos devolverá un número entero en el intervalo $[0, N-1]$, siendo 0 la hebra `master`.
 
 ## omp_get_num_threads()
 Devuelve el número de hebras que se están usando en una región paralela. Llamada en un código secuencial, devolverá `1`.
@@ -244,18 +244,24 @@ Procederemos ahora a desarrollar cada tipo de asignación
 
 #### static
 Se asigna un chunk a cada hilo (es el comportamiento usual por defecto). En cuanto se nos acaban los hilos, volvemos a comenzar desde el inicio, realizando un `round-robin`.  
-Es el tipo de asignación por defecto de `gcc`.
+Por defecto, si no se especifica esta cláusula, se empleará esta forma de asignación con el chunk necesario para que solo se asigne un único chuck a cada hilo, de forma que aunque la asignación de chunks sea `round-robin`, se asignan iteraciones consecutivas a un mismo hilo.
+
+Es `monotonic` por defecto.
 
 #### dynamic
 Se realiza la distribución en tiempo de ejecución.  
-Es apropiada si se desconoce el tiempo de ejecución de las iteraciones (útil cuando hay iteraciones mucho más costosas que otras y no sabemos cuáles).  
-Añade sobrecarga adicional.
+Es apropiada si se desconoce el tiempo de ejecución de las iteraciones (útil cuando hay iteraciones mucho más costosas que otras y no sabemos cuáles).
+Añade sobrecarga adicional. 
+
+Es `nonmonotonic` por defecto, y el tamaño del chunk por defecto es 1.
 
 ### guided
 Se realiza la distribución en tiempo de ejecución.  
 Es apropiada si se desconoce el tiempo de ejecución de las iteraciones (útil cuando hay iteraciones mucho más costosas que otras y no sabemos cuáles).  
-En este caso, se comienza con un tamaño de bloque largo que va menguando (es el número de iteraciones restantes entre el número de hilos), sin pasar del tamaño especificado en el chunk.  
+En este caso, se comienza con un tamaño de bloque grande que va menguando (es el número de iteraciones restantes entre el número de hilos), no más pequeño que el tamaño especificado en el chunk (excepto la última asignación).
 Añade sobrecarga adicional pero menos que `dynamic`.
+
+Es `nonmonotonic` por defecto.
 
 #### runtime
 Usa la forma de asignación de chunks a hilos especificada en la variable de control interna `run-sched-var`.
