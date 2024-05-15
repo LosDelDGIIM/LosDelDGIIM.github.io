@@ -122,7 +122,11 @@ printf("kind: %x, chunksize: %d", kind, chunksize);
 Ampliaremos la información en la cláusula `schedule`, donde todo quedará más claro.
 
 ### def-sched-var
-Cuyo ámbito es de dispositivo, se trata de la planificación por defecto de los bucles. Hemos comprobado que la planificación por defecto en `gcc` es la asignación estática de forma que interacciones consecutivas se asignan a un mismo hilo.  
+Cuyo ámbito es de dispositivo, se trata de la planificación por defecto de los bucles. Hemos comprobado que
+la planificación por defecto en `gcc` es `monotonic:static`, con el chunk por defecto (se verá en la cláusula `schedule`).
+
+
+la planificación por defecto en `gcc` es la asignación estática de forma que interacciones consecutivas se asignan a un mismo hilo.  
   
 No puede consultarse ni modificarse.
 
@@ -223,7 +227,7 @@ Permite indicar un modificador (hablaremos de eso más adelante), un tipo de pla
 ### Modificador
 Podemos indicarle a la cláusula que use o no un modificador, el cual cambiará el comportamiento por defecto de la misma. Esta puede adoptar los valores:
 - `monotonic:` Si a un hilo se le asigna la iteración $i$, entonces ejecutará después iteraciones mayores que $i$.
-- `nomonotonic:` No hay restricciones en el orden de asignación de las iteraciones.
+- `nonmonotonic:` No hay restricciones en el orden de asignación de las iteraciones.
 
 ### Chunk
 Es el tamaño de las unidades de trabajo que se asignan a los hilos. Dicho de otra forma, es el número de iteraciones del bucle que se le asignan a un hilo a la vez.  
@@ -247,7 +251,8 @@ Se asigna un chunk a cada hilo (es el comportamiento usual por defecto). En cuan
 
 Es `monotonic` por defecto, y por defecto el chunk es el necesario para que solo se asigne un único chuck a cada hilo de forma que, aunque la asignación de chunks sea `round-robin`, se asignan iteraciones consecutivas a un mismo hilo, por lo que no parece que se esté realizando una asignación `round-robin`.
 
-Es el tipo de asignación que suele estar por defecto en la mayoría de las implementaciones de OpenMP.
+Es el tipo de asignación que suele estar por defecto en la mayoría de las implementaciones de OpenMP, en la
+variable de control interna `def-sched-var`.
 
 
 #### dynamic
