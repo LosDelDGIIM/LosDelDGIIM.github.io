@@ -244,9 +244,11 @@ Procederemos ahora a desarrollar cada tipo de asignación
 
 #### static
 Se asigna un chunk a cada hilo (es el comportamiento usual por defecto). En cuanto se nos acaban los hilos, volvemos a comenzar desde el inicio, realizando un `round-robin`.  
-Por defecto, si no se especifica esta cláusula, se empleará esta forma de asignación con el chunk necesario para que solo se asigne un único chuck a cada hilo, de forma que aunque la asignación de chunks sea `round-robin`, se asignan iteraciones consecutivas a un mismo hilo.
 
-Es `monotonic` por defecto.
+Es `monotonic` por defecto, y por defecto el chunk es el necesario para que solo se asigne un único chuck a cada hilo de forma que, aunque la asignación de chunks sea `round-robin`, se asignan iteraciones consecutivas a un mismo hilo, por lo que no parece que se esté realizando una asignación `round-robin`.
+
+Es el tipo de asignación que suele estar por defecto en la mayoría de las implementaciones de OpenMP.
+
 
 #### dynamic
 Se realiza la distribución en tiempo de ejecución.  
@@ -261,7 +263,7 @@ Es apropiada si se desconoce el tiempo de ejecución de las iteraciones (útil c
 En este caso, se comienza con un tamaño de bloque grande que va menguando (es el número de iteraciones restantes entre el número de hilos), no más pequeño que el tamaño especificado en el chunk (excepto la última asignación).
 Añade sobrecarga adicional pero menos que `dynamic`.
 
-Es `nonmonotonic` por defecto.
+Es `nonmonotonic` por defecto, y el tamaño del chunk por defecto es 1.
 
 #### runtime
 Usa la forma de asignación de chunks a hilos especificada en la variable de control interna `run-sched-var`.
