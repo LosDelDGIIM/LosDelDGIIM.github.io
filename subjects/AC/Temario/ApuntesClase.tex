@@ -1,0 +1,100 @@
+Sincronizacion
+
+- Codigo de colores:
+Variables calabaza: compartidas
+Color verde: cerrojos
+Color fuxia: cosas nivel hardware
+Variables azules: privadas
+Variables en negrita: da igual si compartidas o privadas
+
+- Nota de asm
+Para hacer que lecturas o escrituras no se adelanten hay que escribir en ensamblador `dmb`:
+A = 1
+dmb 
+k = 1
+
+- Nombres de codigo de sincronizacion
+\textbf{Codigo de sincronización de adquisición}: para adquirir el derecho a acceder a variables compartidas.
+Los códigos de sincronización que ejecutan los hilos una vez que han accedido a variables compartidas par que otros hilos accedan se le llama codigo de \textbf{sincronizacion de liberacion}.
+
+- Ejemplo de comunicacion colectiva:
+Suponemos que vamos a paralelizar el codigo secuencial. En la paralelizacion tenemos una condicion de carrera tipica de hebras.
+Para evitar condicion de carrera, debemos evitar que se incluya nada entre la lectura y escritura de un mismo flujo. Esto lo conseguimos con un cerrojo (primitivas de sincronizacion software a bajo nivel, implementados en el SO. Las herramientas de programacion o implementan los suyos o usan los del SO).
+
+Funcion de adquisicion, delate del acceso a variables compartidas, lock().
+Funcion de liberacion, detras del acceso a variables compartidas, unlock().
+Se vera como implementarlos para que funcionen bien.
+
+En el ejemplo no es suficiente establecer los cerrojos, tenemos que hacer que el thread 0 espere al resto a actualizar la variable.
+
+Con cerrojos y barreras tenemos todo el problema de sincronizacion resuelto.
+
+- Niveles de abstraccion
+Monitores > Regiones criticas condicionales y Regiones criticas > Cerrojos, semaforos y barreras > Instrucciones hardware de memoria atomicas (tenemos garantizado que en medio ningun otro flujo acceda a la variable. Se procesan en paralelo pero se ven secuencialmente).
+Conforme se sube en la abstraccion, hay menor probabilidad de obtener errores, aunque obtenemos un codigo mas lento.
+
+Para implementar cerrojos, semaforos y barreras de forma eficiente, tenemos que usar instrucciones para respetar consistencia del procesador e instrucciones que incluyen los procesdores para implementar sincronizacion de forma eficiente. Hay de dos tipos.
+
+
+
+
+atomic es mas rapido k critical xq critical implementa cerrojos y atomic una instruccion maquina particular, del estilo *lock addl*.
+
+- - - Como implementar cerrojos - - -
+Si no queremos usar los del SO o los de las herramientas de programacion, podemos implementarlos (al igual k las barreras).
+
+Tiene dos funciones a implementar: cierre del cerrojo (lock()), como adquisicion; apertura del cerrojo (unlock()).
+Tenemos en la diapositiva los requisitos software, a cometar sobre el ejemplo.
+
+Un cerrojo abierto es un 0 y uno cerrado es un 1.
+
+- lock: Se deben cumplir las 3 condiciones:
+LLega un flujo y ve cerrojo abierto.
+Flujo i --> ve lock(k) a 0 --> Cierra cerrojo y entra.
+
+Llegan varios y ven cerrojo cerrado
+Flujo j, k, \ldots --> ve lock(k) a 1 --> while(k == 1) espera(); 
+
+Llegan varios y solo uno puede verlo abierto.
+Flujo 0, 1, \ldots, n --> ven lock(k) a 0. 
+El software debe hacer que sólo 1 vea el cerrojo abierto y pase la seccion critica, que deberia dejar el cerrojo cerrado para k el resto espere.
+
+- unlock: SÓLO VA A LLEGAR UN HILO.
+Si hay hilos esperando, deja entrar sólo a uno.
+Si no hubiera hilos, deja el cerrojo abierto.
+
+- - Alternativas para espera - -
+Si el codigo critico es muy gordo, hacer llamadas al SO para suspender hilos y luego revivirlos. Espera util. Para cuando la region critica suponga un tiempo mayor a suspender y reanimar.
+Si es un codigo sencillo, no renta (demasiada sobrecarga). Se implementa una espera ocupada, el procesador está en un bucle consultando el cerrojo y haciendo un trabajo inutil.
+
+
+- - Metodo de adquisicion - -
+Si entran varios a la vez y el cerrojo esta abierto.
+Hay dos alternativas:
+- x86 y otros procesadores (como ARMv6): utilizan instrucciones de lectura-modificacion-escritura atomicas. Implementan una lectura y escritura de una variable de forma atomica (indivisible, no permite que ninguna instruccion de otro flujo se introduzca en medio). Se puede notar por $(RW)^i$.
+- ARMv7,v8: instruccion de carga (LL, load linked) especial (enlazado al almacenamiento condicional) y una instruccion de almacenamiento especial (SC), store condicional. Se intenta el acceso atomico a una variable compartida. Si al ejecutar el almacenamiento condicional descubre (por una linea condicional) que entre el load y esta el acceso atomico no ha surgido efecto, vuelve a intentarlo.
+Si LLi --> LLk --> CCi --> CCk
+La carga de k no se realiza porque en medio se situa la carga de i, vuelve a intentarse.
+
+- - Implementacion - -  (Cerrojo Simple II)
+- La mas sencilla: Se usa una variable k compartida (que toma valores 0 y 1).
+Espera ocupada con un bucle mientras cerrojo esta cerrado (ver diapositiva).
+
+lock(k){
+    while(leer-asignar_1-escribir(k) == 1){};
+}
+
+unlock(k){
+    k = 0;
+}
+
+Cumple los 2 primeros y el tercero si usamos un metodo de adquisicion de los ya vistos.
+Codigo asm: ldrex (carga enlazada), strexeq (almacenamiento condicional) el bucle es para volver a repetir si no ha tenido exito. El dmb establece un orden total (todos los de arriba) deben ejecutarse antes de los de abajo (los accesos a memoria).
+
+
+¿Puedo implementar un unlock de un cerrojo en un x86 con k = 0?
+Consistencia relajada: lectura puede adelantar a escritura.
+k = 0 tenemos escritura que puede adelantar a escrituras y lecturas anteriores, pero una escritura no puede adelantar a nada.
+
+¿ARMv7?
+No, tengo que usar un dmb delante, ya que la escritura en el cerrojo de 0 podria adelantar a los accesos a variables compartidas (abrir hilo antes de liberar seccion critica).

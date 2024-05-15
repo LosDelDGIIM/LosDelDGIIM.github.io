@@ -29,7 +29,7 @@ OMP_NUM_THREADS OMP_DYNAMIC, OMP_NESTED OMP_SCHEDULE OMP_THREAD_LIMIT ...
 ```
 
 ## Funciones del entorno de ejecución
-Son funciones que nos proporciona la librería `omp.h` de OpenMP. Nos permiten consultar y modificar variables de control internas mediante funciones *getters* y *estters*. Encontramos:
+Son funciones que nos proporciona la librería `omp.h` de OpenMP. Nos permiten consultar y modificar variables de control internas mediante funciones *getters* y *setters*. Encontramos:
 ```
 omp_set/get_dynamic() omp_get_max_threads() omp_set/get_num_threads() omp_set/get_nested() omp_get_thread_num() omp_get_num_procs() omp_in_parallel() omp_get_thread_limit() omp_set/get_schedule(kind, modifier) ...
 ```
@@ -239,6 +239,7 @@ Tenemos a nuestra disposición distintas formas de asignación de chunks a hilos
 - `guided`.
 - `auto`.
 - `runtime`.
+  
 Procederemos ahora a desarrollar cada tipo de asignación
 
 #### static
@@ -268,7 +269,7 @@ Seguimos el siguiente diagrama de flujo para entenderlo:
     No: Se usa la forma de asignación especificada en 'def-sched-var'.
     Sí: ¿el tipo de la cláusula es 'runtime'?
         No: Se usa el tipo especificado.
-        No: Se usa la forma de asignación especificada en 'run-sched-var'.
+        Sí: Se usa la forma de asignación especificada en 'run-sched-var'.
 ```
   
 *Sólo puede haber una cláusula `schedule`*.
