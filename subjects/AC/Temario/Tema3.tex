@@ -872,14 +872,16 @@ Motivada ya la razón por la que tenemos que desear que ciertas instrucciones ad
     \item No se puede escribir en una dirección si la escritura depende de una condición que no se cumple. Esto se ilustra en la Figura~\ref{escritura_condicional}, ya que si permitimos adelantamientos, puede que la evaluación de la variable booleana no sea el esperado en el momento de su evaluación, sucediendo la escritura a pesar del valor de la variable.
 \end{itemize}
 
-% // TODO: ARREGLAR
+\begin{listing}[H]
+\centering
 \begin{minted}[xleftmargin=1cm]{c++}
 if(var_booleana){
     A = 1;
 }
 \end{minted}
 \label{escritura_condicional}
-
+\caption{Ejemplo de escritura condicional.}
+\end{listing}
 Antes de continuar, cabe mencionar que las arquitecturas de memoria para multiprocesadores aprovechan el hecho de que los distintos procesadores pueden emitir instrucciones de acceso a memoria en paralelo, para realizarlas en paralelo. Sin embargo, los procesadores observan estos accesos de forma secuencial. Esto es, en caso de haberse realizado dos accesos en paralelo, los procesadores habrán observado que uno se ha realizado antes que otro.
 
 \subsection{Modelo de consistencia secuencial}
@@ -919,12 +921,16 @@ Como hemos comentado ya, en realidad los modelos de consistencia relajados son e
 \end{itemize}
 La tercera cuestión no la hemos mencionado hasta el momento y es de crucial importancia: si disponemos de un modelo de consistencia que no nos permite especificar que un cierto código debe ejecutarse de forma secuencial sin permitir ningún adelantamiento, no tenemos forma de desarrollar códigos que implementen sincronizaciones entre procesadores (ya que estos códigos necesitan actualizar direcciones de memoria en orden, protocolos que fallarán si se reordenan las instrucciones de memoria).\\
 
-Cabe destacar también que la necesidad de disponer de códigos de sincronización es vital. Si no disponemos de códigos de sincronización y nos disponemos, por ejemplo, a ejecutar el siguiente código de forma que la línea 1 sea ejecutada por un procesador y la línea 2 por otro, no tenemos forma de garantizar que la variable \verb|k| del segundo procesador sea igual a 1.
-% // TODO: ARREGLAR
+Cabe destacar también que la necesidad de disponer de códigos de sincronización es vital. Si no disponemos de códigos de sincronización y nos disponemos, por ejemplo, a ejecutar el código de la Figura~\ref{sec_paralelizar} de forma que la línea 1 sea ejecutada por un procesador y la línea 2 por otro, no tenemos forma de garantizar que la variable \verb|k| del segundo procesador sea igual a 1.
+\begin{listing}[H]
+\centering
 \begin{minted}[xleftmargin=1cm, linenos]{c++}
 int A = 1;
 int k = A;
 \end{minted}
+\label{sec_paralelizar}
+\caption{Código secuencial a paralelizar.}
+\end{listing}
 Es por esto por lo que necesitamos tener códigos de sincronización, los cuales para implementarlos necesitan garantizar de alguna forma la secuenciación de las instrucciones de acceso a memoria. De donde surge la necesidad de que los modelos de consistencia de memoria relajados implementen dichas instrucciones.\\
 
 A continuación, desarrollamos dos modelos de consistencia de memoria relajados distintos, que nos permitirán terminar de entender la importancia de la consistencia.
@@ -948,8 +954,8 @@ A modo de resumen, podemos decir que su modelo de consistencia lo relaja todo:
     \item Instrucciones para garantizar un orden: \verb|dmb|.
 \end{itemize}
 La instrucción \verb|dmb| sólamente tiene la utilidad de garantizar la ejecución de las instrucciones a memoria que se incluyen antes de ella antes de ejecutar la instrucción \verb|dmb|, además de ejecutar las instrucciones que se encuentran tras ella sólamente tras su ejecución.
-
-% // TODO: ARREGLAR
+\begin{listing}[H]
+\centering
 \begin{minted}[xleftmargin=1cm, linenos]{c++}
 int A = 1;
 int B = A;
@@ -960,6 +966,8 @@ int C = C - A;
 int B = B + 1;
 \end{minted}
 \label{uso_dmb}
+\caption{Ejemplo de uso de dmb.}
+\end{listing}
 Por ejemplo, en el pseudocódigo de la Figura~\ref{uso_dmb} (la instrucción \verb|dmb| es a nivel de ensamblador y el resto de código es código de C), ninguna de las instrucciones de la línea 5 hacia abajo puede adelantar a ninguna de las instrucciones hasta la lína 3; y ninguna de las instrucciones de hasta la línea 3 puede ser ejecutada tras una instrucción que comienza a partir de la línea 5.
 
 Podemos pensar en la instrucción \verb|dmb| como en una especia de barrera (no confundir con una barrera en el contexto de sincronización) relativa a la memoria: cuando llegamos a una instrucción \verb|dmb| se asegura que ninguna de las instrucciones anteriores se haya ejecutado y que todas las siguientes no han comenzado a ejecutarse todavía.
@@ -981,40 +989,64 @@ Tras esta sección, debería ser capaz de:
 Motivamos la necesidad de la sincronización entre procesadores con el siguiente ejemplo, que probablemente sea el más sencillo que podamos considerar.
 
 \begin{ejemplo}
-    Estamos desarrollando un programa paralelo que será ejecutado por dos hilos (que intentaremos que se ejecuten en dos procesadores de forma paralela). En un determinado instant, queremos copiar el contenido de la variable compartida \verb|A| actualizada por el procesador 1 al procesador 2 (la numeración no es relevante). Plasmamos en código secuencial lo que queremos hacer:
+    Estamos desarrollando un programa paralelo que será ejecutado por dos hilos (que intentaremos que se ejecuten en dos procesadores de forma paralela). En un determinado instant, queremos copiar el contenido de la variable compartida \verb|A| actualizada por el procesador 1 al procesador 2 (la numeración no es relevante). Plasmamos en código secuencial lo que queremos hacer en la Figura~\ref{codigo_paralelizar_ej_sinc}:
+\begin{listing}[H]
+\centering
 \begin{minted}[xleftmargin=1cm, linenos]{c++}
 A = valor;  // código a ejecutar en P1
 copia = A;  // código a ejecutar en P2
 \end{minted}
+\label{codigo_paralelizar_ej_sinc}
+\caption{Código a paralelizar.}
+\end{listing}
 De esta forma, el programa que tengamos en el procesador 1 tendrá en alguna parte de su código la instrucción de la línea 1 y el procesador 2 tendrá la de la línea 2. El problema es asegurarnos de que el procesador 2 ejecute dicha instrucción tras haber ejecutado el procesador 1 su instrucción, porque si no estaremos copiando en el procesador 2 el antiguo valor de la variable \verb|A|, que probablemente no coincida con el valor de \verb|valor|.\\
 
-Deseamos buscar un código del siguiente estilo (tras esta sección, sabrá cómo implementarlo y cómo usarlo):
+Deseamos buscar un código del siguiente estilo (tras esta sección, sabrá cómo implementarlo y cómo usarlo), que plasmamos en las Figuras~\ref{ej_sinc_p1} y~\ref{ej_sinc_p2}.
+\begin{listing}[H]
+\centering
 \begin{minted}[xleftmargin=1cm]{c++}
-// -- Código para el procesador 1 --
 A = valor;
 // Avisar a procesador 2 de la actualización
 \end{minted}
+\label{ej_sinc_p1}
+\caption{Código para el procesador 1.}
+\end{listing}
+
+\begin{listing}[H]
+\centering
 \begin{minted}[xleftmargin=1cm]{c++}
 // -- Código para el procesador 2 --
 // Esperar a que el procesador 1 avise de la actualización
 copia = A;
 \end{minted}
+\label{ej_sinc_p2}
+\caption{Código para el procesador 2.}
+\end{listing}
 \end{ejemplo}
 No es difícil imaginar una forma en la que usar código basado en variables compartidas para sincronizar ambos procesadores de forma que se ejecute de forma correcta el código anterior (garantizando que la instrucción \verb|A = valor;| del procesador 1 se ejecuta antes que \verb|copia = A;| del procesador 2). Esto lo vemos en el siguiente ejemplo, resaltando la necesidad de tener en cuenta el modelo de consistencia hardware del computador en el que estemos trabajando:
 \begin{ejemplo}
-    Proponemos el siguiente código como solución del ejemplo anterior:
+    Proponemos el código de las Figuras~\ref{ej_sinc_p1_2} y~\ref{ej_sinc_p2_2} como solución del ejemplo anterior:
+\begin{listing}[H]
+\centering
 \begin{minted}[xleftmargin=1cm]{c++}
-// -- Código para el procesador 1 -- 
 // A y K son variables compartidas, inicialmente K = 0
 A = valor; 
 K = 1;      // Indica que ya se ha copiado el valor
 \end{minted}
+\label{ej_sinc_p1_2}
+\caption{Código para el procesador 1.}
+\end{listing}
+
+\begin{listing}[H]
+\centering
 \begin{minted}[xleftmargin=1cm]{c++}
-// -- Código para el procesador 2 -- 
 // A y K son variables compartidas, inicialmente K = 0
 while(K == 0){;}    // Esperar a que se actualice K
 copia = A;
 \end{minted}
+\label{ej_sinc_p2_2}
+\caption{Código para el procesador 2.}
+\end{listing}
 Si ahora pensamos en qué ocurriría en los dos casos de ejecución más sencillos:
 \begin{description}
     \item [El código del procesador 1 se ejecuta antes.] Entonces, se copia en \verb|A| el valor de \verb|valor| y se pone \verb|K = 1|. Al ejecutar el código del procesador 2, tendríamos \verb|K = 1|, por lo que no se realizaría el bucle y se copiaría el contenido de \verb|A|.
@@ -1034,34 +1066,50 @@ Si pensamos esto, el código funcionaría perfectamente y no obtendríamos ning�
 \end{description}
 Para garantizar el orden secuencial del programa (crucial a la hora de desarrollar este código de sincronización entre dos procesadores) necesitamos, como ya se vió en la sección de consistencia, usar las instrucciones que nos proporcionan los modelos de consistencia para asegurar ejecuciones secuenciales del mismo.\\
 
-En este caso, sólo debemos introducir dichas instrucciones en el modelo de consistencia de los ARMv7 (en los ejemplos considerados), que sólo dispone de la instrucción \verb|dmb| (la cual nos es suficiente). El código correcto para este tipo de procesadores lo mostramos en el siguiente pseudocódigo (hablamos de pseudocódigo por estar mezclando instrucciones ensamblador como \verb|dmb| con lenguaje C):
+En este caso, sólo debemos introducir dichas instrucciones en el modelo de consistencia de los ARMv7 (en los ejemplos considerados), que sólo dispone de la instrucción \verb|dmb| (la cual nos es suficiente). El código correcto para este tipo de procesadores lo mostramos en el siguiente pseudocódigo (hablamos de pseudocódigo por estar mezclando instrucciones ensamblador como \verb|dmb| con lenguaje C) de las Figuras~\ref{ej_sinc_p1_3} y~\ref{ej_sinc_p2_3}:
+\begin{listing}[H]
+\centering
 \begin{minted}[xleftmargin=1cm]{c++}
-// -- Código para el procesador 1 --
 // A y K son variables compartidas, inicialmente K = 0
 A = valor;
 dmb;
 K = 1;
 \end{minted}
+\label{ej_sinc_p1_3}
+\caption{Código para el procesador 1.}
+\end{listing}
+\begin{listing}[H]
+\centering
 \begin{minted}[xleftmargin=1cm]{c++}
-// -- Código para el procesador 2 --
 // A y K son variables compartidas, inicialmente K = 0
 while(K == 0){;}
 dmb;
 copia = A;
 \end{minted}
+\label{ej_sinc_p2_3}
+\caption{Código para el procesador 2.}
+\end{listing}
+
 De esta forma, obtendríamos el resultado deseado para sincronizar los dos procesadores.
 
 \end{ejemplo}
 Mostramos ahora un último ejemplo como motivación de los dos protocolos a desarrollar que son tan necesarios para realizar la sincronización entre procesadores.
 \begin{ejemplo}
-    Queremos paralelizar el siguiente código secuencial:
+    Queremos paralelizar el siguiente código secuencial de la Figura~\ref{cod_paralelizar_2}:
+\begin{listing}[H]
+\centering
 \begin{minted}[xleftmargin=1cm, linenos]{c++}
 for(int i = 0; i < n; i++){
     sum = sum + a[i];
 }
 printf(sum);
 \end{minted}
-Es decir, queremos paralelizar la suma de un vector y su impresión en consola. Para ello, podríamos pensar en un primer código de la siguiente forma:
+\label{cod_paralelizar_2}
+\caption{Código secuencial a paralelizar.}
+\end{listing}
+Es decir, queremos paralelizar la suma de un vector y su impresión en consola. Para ello, podríamos pensar en un primer código de la Figura~\ref{cod_paralelizado_1}.
+\begin{listing}[H]
+\centering
 \begin{minted}[xleftmargin=1cm, linenos]{c++}
 // La variable sump es privada y a, sum son compartidas
 // inicilmente sum, sump = 0
@@ -1072,9 +1120,15 @@ for(i = id_thread; i < n; i = i+num_threads){
 sum = sum + sump;
 if(id_thread == 0) printf(sum);
 \end{minted}
+\label{cod_paralelizado_1}
+\caption{Código paralelizado con condiciones de carreara.}
+\end{listing}
+
 Este presenta un problema que podemos ya intuir: una condición de carrera en la línea 7, al acceder todas hebras a una variable compartida de forma no exclusiva.
 
-Para solucionar la condición de carrera y garantizar el acceso exclusivo a la variable compartida \verb|sum|, podemos hacer uso de un cerrojo (que suponemos ya implementado):
+Para solucionar la condición de carrera y garantizar el acceso exclusivo a la variable compartida \verb|sum|, podemos hacer uso de un cerrojo (que suponemos ya implementado), como hacemos en la Figura~\ref{cod_paralelizar_2}.
+\begin{listing}[H]
+\centering
 \begin{minted}[xleftmargin=1cm, linenos]{c++}
 // La variable sump es privada y a, sum son compartidas
 // inicilmente sum, sump = 0
@@ -1088,7 +1142,12 @@ unlock();
 
 if(id_thread == 0) printf(sum);
 \end{minted}
-Hemos ya eliminado la anterior condición de carrera, pero tenemos una en la que nos habíamos fijado, en la línea 11: puede que la hebra 0 llegue al \verb|if| antes de que el resto de hebras hayan terminado de sumar su aportación a la variable \verb|sum|, imprimiendo en pantalla un resultado prematuro (y posiblemente erróneo) de la variable \verb|sum|. Es por ello que en este código tenemos que usar además una barrera (que también suponemos ya implementada):
+\label{cod_paralelizado_2}
+\caption{Código paralelizado mejorado.}
+\end{listing}
+Hemos ya eliminado la anterior condición de carrera, pero tenemos una en la que nos habíamos fijado, en la línea 11: puede que la hebra 0 llegue al \verb|if| antes de que el resto de hebras hayan terminado de sumar su aportación a la variable \verb|sum|, imprimiendo en pantalla un resultado prematuro (y posiblemente erróneo) de la variable \verb|sum|. Es por ello que en este código tenemos que usar además una barrera (que también suponemos ya implementada), como hacemos en la Figura~\ref{cod_paralelizado_3}.
+\begin{listing}[H]
+\centering
 \begin{minted}[xleftmargin=1cm, linenos]{c++}
 // La variable sump es privada y a, sum son compartidas
 // inicilmente sum, sump = 0
@@ -1103,6 +1162,10 @@ unlock();
 barrier();
 if(id_thread == 0) printf(sum);
 \end{minted}
+\label{cod_paralelizado_3}
+\caption{Código paralelizado definitivo.}
+\end{listing}
+
 De esta forma, todas las hebras esperarán en la línea 12 antes de proseguir con su código (incluida la hebra 0, que era la que provocaba el fallo a la hora de imprimir).
 \end{ejemplo}
 Hemos visto ya en este ejemplo la necesidad de disponer de cerrojos y barreras. De hecho, con ambas nos es suficiente para desarrollar cualquier código paralelo. Esta sección está dedicada a comentar los tipos de cerrojos y barreras, así como de su implementación.
