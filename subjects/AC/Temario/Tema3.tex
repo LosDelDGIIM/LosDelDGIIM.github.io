@@ -249,7 +249,7 @@ Tras esta sección, debería ser capaz de:
 \subsection{Definición del problema}
 La utilización de memoria caché trae consigo el esquema de jerarquía de memoria y la posibilidad de tener en distintas jerarquías una misma posición de memoria repetida. En sistemas uniprocesador, si tratamos de modificar una posición de memoria, esta se llevará a caché y será modificada en caché, indicando que ha sido modificada. En un cierto momento, la modificación en esta jerarquía de caché será comunicada a jerarquías de memoria mayores, hasta llegar a memoria principal y modificar dicho dato. De esta forma, la próxima vez que se necesite en caché dicha posición, estará actualizada conforme a la última modificación.\\
 
-Recordamos ahora que cada procesador lleva asociada una memoria caché y, al ser mayor la memoria principal que la caché, necesitamos almacenar en algún sitio qué bloque de memoria principal contiene cada entrada de memoria caché. Esta información se almacena en una tabla asociada a la caché. En dicha tabla hay una entrada por cada dirección de la memoria caché y, en cada entrada, se almacena qué bloque de memoria principal está cargado y unos bits de información sobre el bloque cargado. Representamos una aproximación a esta tabla en la Figura~\ref{tab:tabla_cache}. En un sistema uniprocesador, nos basta con un bit sucio (que indique si el bloque ha sido modificado o no, para saber si hay que escribir en jerarquías supsriores) y un bit de validez (que indique si el bloques es válido).\\
+Recordamos ahora que cada procesador lleva asociada una memoria caché y, al ser mayor la memoria principal que la caché, necesitamos almacenar en algún sitio qué bloque de memoria principal contiene cada entrada de memoria caché. Esta información se almacena en una tabla asociada a la caché. En dicha tabla hay una entrada por cada dirección de la memoria caché y, en cada entrada, se almacena qué bloque de memoria principal está cargado y unos bits de información sobre el bloque cargado. Representamos una aproximación a esta tabla en el Código fuente~\ref{tab:tabla_cache}. En un sistema uniprocesador, nos basta con un bit sucio (que indique si el bloque ha sido modificado o no, para saber si hay que escribir en jerarquías supsriores) y un bit de validez (que indique si el bloques es válido).\\
 
 \begin{table}
 \centering
@@ -869,15 +869,15 @@ Motivada ya la razón por la que tenemos que desear que ciertas instrucciones ad
     \item Cada lectura de una dirección proporcione el último valor escrito en dicha dirección.
     \item Si se escribe varias veces en la misma dirección, se debe retornar el último valor escrito (el de la última escritura según el orden del programa).
     \item Si se escribe en una dirección a la que previamente se ha accedido para leer, no se debe obtener en la lectura previa el valor escrito posteriormente, sino el que había antes de la escritura.
-    \item No se puede escribir en una dirección si la escritura depende de una condición que no se cumple. Esto se ilustra en la Figura~\ref{escritura_condicional}, ya que si permitimos adelantamientos, puede que la evaluación de la variable booleana no sea el esperado en el momento de su evaluación, sucediendo la escritura a pesar del valor de la variable.
+    \item No se puede escribir en una dirección si la escritura depende de una condición que no se cumple. Esto se ilustra en el Código fuente~\ref{escritura_condicional}, ya que si permitimos adelantamientos, puede que la evaluación de la variable booleana no sea el esperado en el momento de su evaluación, sucediendo la escritura a pesar del valor de la variable.
 \end{itemize}
 
 \begin{listing}[H]
 \centering
 \begin{minted}[xleftmargin=1cm]{c++}
-if(var_booleana){
-    A = 1;
-}
+                    if(var_booleana){
+                        A = 1;
+                    }
 \end{minted}
 \caption{Ejemplo de escritura condicional.}
 \label{escritura_condicional}
@@ -921,10 +921,10 @@ Como hemos comentado ya, en realidad los modelos de consistencia relajados son e
 \end{itemize}
 La tercera cuestión no la hemos mencionado hasta el momento y es de crucial importancia: si disponemos de un modelo de consistencia que no nos permite especificar que un cierto código debe ejecutarse de forma secuencial sin permitir ningún adelantamiento, no tenemos forma de desarrollar códigos que implementen sincronizaciones entre procesadores (ya que estos códigos necesitan actualizar direcciones de memoria en orden, protocolos que fallarán si se reordenan las instrucciones de memoria).\\
 
-Cabe destacar también que la necesidad de disponer de códigos de sincronización es vital. Si no disponemos de códigos de sincronización y nos disponemos, por ejemplo, a ejecutar el código de la Figura~\ref{sec_paralelizar} de forma que la línea 1 sea ejecutada por un procesador y la línea 2 por otro, no tenemos forma de garantizar que la variable \verb|k| del segundo procesador sea igual a 1.
+Cabe destacar también que la necesidad de disponer de códigos de sincronización es vital. Si no disponemos de códigos de sincronización y nos disponemos, por ejemplo, a ejecutar el código de el Código fuente~\ref{sec_paralelizar} de forma que la línea 1 sea ejecutada por un procesador y la línea 2 por otro, no tenemos forma de garantizar que la variable \verb|k| del segundo procesador sea igual a 1.
 \begin{listing}[H]
     \centering
-    \begin{minted}[xleftmargin=1cm, linenos]{c++}
+    \begin{minted}[xleftmargin=6cm, linenos]{c++}
 int A = 1;
 int k = A;
     \end{minted}
@@ -956,7 +956,7 @@ A modo de resumen, podemos decir que su modelo de consistencia lo relaja todo:
 La instrucción \verb|dmb| sólamente tiene la utilidad de garantizar la ejecución de las instrucciones a memoria que se incluyen antes de ella antes de ejecutar la instrucción \verb|dmb|, además de ejecutar las instrucciones que se encuentran tras ella sólamente tras su ejecución.
 \begin{listing}[H]
 \centering
-\begin{minted}[xleftmargin=1cm, linenos]{c++}
+\begin{minted}[xleftmargin=6cm, linenos]{c++}
 int A = 1;
 int B = A;
 int C = A + B;
@@ -968,7 +968,7 @@ int B = B + 1;
 \caption{Ejemplo de uso de dmb.}
 \label{uso_dmb}
 \end{listing}
-Por ejemplo, en el pseudocódigo de la Figura~\ref{uso_dmb} (la instrucción \verb|dmb| es a nivel de ensamblador y el resto de código es código de C), ninguna de las instrucciones de la línea 5 hacia abajo puede adelantar a ninguna de las instrucciones hasta la lína 3; y ninguna de las instrucciones de hasta la línea 3 puede ser ejecutada tras una instrucción que comienza a partir de la línea 5.
+Por ejemplo, en el pseudocódigo de el Código fuente~\ref{uso_dmb} (la instrucción \verb|dmb| es a nivel de ensamblador y el resto de código es código de C), ninguna de las instrucciones de la línea 5 hacia abajo puede adelantar a ninguna de las instrucciones hasta la lína 3; y ninguna de las instrucciones de hasta la línea 3 puede ser ejecutada tras una instrucción que comienza a partir de la línea 5.
 
 Podemos pensar en la instrucción \verb|dmb| como en una especia de barrera (no confundir con una barrera en el contexto de sincronización) relativa a la memoria: cuando llegamos a una instrucción \verb|dmb| se asegura que ninguna de las instrucciones anteriores se haya ejecutado y que todas las siguientes no han comenzado a ejecutarse todavía.
 
@@ -989,7 +989,7 @@ Tras esta sección, debería ser capaz de:
 Motivamos la necesidad de la sincronización entre procesadores con el siguiente ejemplo, que probablemente sea el más sencillo que podamos considerar.
 
 \begin{ejemplo}
-    Estamos desarrollando un programa paralelo que será ejecutado por dos hilos (que intentaremos que se ejecuten en dos procesadores de forma paralela). En un determinado instant, queremos copiar el contenido de la variable compartida \verb|A| actualizada por el procesador 1 al procesador 2 (la numeración no es relevante). Plasmamos en código secuencial lo que queremos hacer en la Figura~\ref{codigo_paralelizar_ej_sinc}:
+    Estamos desarrollando un programa paralelo que será ejecutado por dos hilos (que intentaremos que se ejecuten en dos procesadores de forma paralela). En un determinado instant, queremos copiar el contenido de la variable compartida \verb|A| actualizada por el procesador 1 al procesador 2 (la numeración no es relevante). Plasmamos en código secuencial lo que queremos hacer en el Código fuente~\ref{codigo_paralelizar_ej_sinc}:
 \begin{listing}[H]
 \centering
 \begin{minted}[xleftmargin=1cm, linenos]{c++}
@@ -1001,7 +1001,7 @@ copia = A;  // código a ejecutar en P2
 \end{listing}
 De esta forma, el programa que tengamos en el procesador 1 tendrá en alguna parte de su código la instrucción de la línea 1 y el procesador 2 tendrá la de la línea 2. El problema es asegurarnos de que el procesador 2 ejecute dicha instrucción tras haber ejecutado el procesador 1 su instrucción, porque si no estaremos copiando en el procesador 2 el antiguo valor de la variable \verb|A|, que probablemente no coincida con el valor de \verb|valor|.\\
 
-Deseamos buscar un código del siguiente estilo (tras esta sección, sabrá cómo implementarlo y cómo usarlo), que plasmamos en las Figuras~\ref{ej_sinc_p1} y~\ref{ej_sinc_p2}.
+Deseamos buscar un código del siguiente estilo (tras esta sección, sabrá cómo implementarlo y cómo usarlo), que plasmamos en el Código fuente~\ref{ej_sinc_p1} y~\ref{ej_sinc_p2}.
 \begin{listing}[H]
 \centering
 \begin{minted}[xleftmargin=1cm]{c++}
@@ -1015,7 +1015,6 @@ A = valor;
 \begin{listing}[H]
 \centering
 \begin{minted}[xleftmargin=1cm]{c++}
-// -- Código para el procesador 2 --
 // Esperar a que el procesador 1 avise de la actualización
 copia = A;
 \end{minted}
@@ -1025,7 +1024,7 @@ copia = A;
 \end{ejemplo}
 No es difícil imaginar una forma en la que usar código basado en variables compartidas para sincronizar ambos procesadores de forma que se ejecute de forma correcta el código anterior (garantizando que la instrucción \verb|A = valor;| del procesador 1 se ejecuta antes que \verb|copia = A;| del procesador 2). Esto lo vemos en el siguiente ejemplo, resaltando la necesidad de tener en cuenta el modelo de consistencia hardware del computador en el que estemos trabajando:
 \begin{ejemplo}
-    Proponemos el código de las Figuras~\ref{ej_sinc_p1_2} y~\ref{ej_sinc_p2_2} como solución del ejemplo anterior:
+    Proponemos el código del Código fuente~\ref{ej_sinc_p1_2} y~\ref{ej_sinc_p2_2} como solución del ejemplo anterior:
 \begin{listing}[H]
 \centering
 \begin{minted}[xleftmargin=1cm]{c++}
@@ -1066,7 +1065,7 @@ Si pensamos esto, el código funcionaría perfectamente y no obtendríamos ning�
 \end{description}
 Para garantizar el orden secuencial del programa (crucial a la hora de desarrollar este código de sincronización entre dos procesadores) necesitamos, como ya se vió en la sección de consistencia, usar las instrucciones que nos proporcionan los modelos de consistencia para asegurar ejecuciones secuenciales del mismo.\\
 
-En este caso, sólo debemos introducir dichas instrucciones en el modelo de consistencia de los ARMv7 (en los ejemplos considerados), que sólo dispone de la instrucción \verb|dmb| (la cual nos es suficiente). El código correcto para este tipo de procesadores lo mostramos en el siguiente pseudocódigo (hablamos de pseudocódigo por estar mezclando instrucciones ensamblador como \verb|dmb| con lenguaje C) de las Figuras~\ref{ej_sinc_p1_3} y~\ref{ej_sinc_p2_3}:
+En este caso, sólo debemos introducir dichas instrucciones en el modelo de consistencia de los ARMv7 (en los ejemplos considerados), que sólo dispone de la instrucción \verb|dmb| (la cual nos es suficiente). El código correcto para este tipo de procesadores lo mostramos en el siguiente pseudocódigo (hablamos de pseudocódigo por estar mezclando instrucciones ensamblador como \verb|dmb| con lenguaje C) del Código fuente~\ref{ej_sinc_p1_3} y~\ref{ej_sinc_p2_3}:
 \begin{listing}[H]
 \centering
 \begin{minted}[xleftmargin=1cm]{c++}
@@ -1095,10 +1094,10 @@ De esta forma, obtendríamos el resultado deseado para sincronizar los dos proce
 \end{ejemplo}
 Mostramos ahora un último ejemplo como motivación de los dos protocolos a desarrollar que son tan necesarios para realizar la sincronización entre procesadores.
 \begin{ejemplo}
-    Queremos paralelizar el siguiente código secuencial de la Figura~\ref{cod_paralelizar_2}:
+    Queremos paralelizar el siguiente código secuencial del Código fuente~\ref{cod_paralelizar_2}:
 \begin{listing}[H]
 \centering
-\begin{minted}[xleftmargin=1cm, linenos]{c++}
+\begin{minted}[xleftmargin=4cm, linenos]{c++}
 for(int i = 0; i < n; i++){
     sum = sum + a[i];
 }
@@ -1107,7 +1106,7 @@ printf(sum);
 \caption{Código secuencial a paralelizar.}
 \label{cod_paralelizar_2}
 \end{listing}
-Es decir, queremos paralelizar la suma de un vector y su impresión en consola. Para ello, podríamos pensar en un primer código de la Figura~\ref{cod_paralelizado_1}.
+Es decir, queremos paralelizar la suma de un vector y su impresión en consola. Para ello, podríamos pensar en un primer código del Código fuente~\ref{cod_paralelizado_1}.
 \begin{listing}[H]
 \centering
 \begin{minted}[xleftmargin=1cm, linenos]{c++}
@@ -1126,7 +1125,7 @@ if(id_thread == 0) printf(sum);
 
 Este presenta un problema que podemos ya intuir: una condición de carrera en la línea 7, al acceder todas hebras a una variable compartida de forma no exclusiva.
 
-Para solucionar la condición de carrera y garantizar el acceso exclusivo a la variable compartida \verb|sum|, podemos hacer uso de un cerrojo (que suponemos ya implementado), como hacemos en la Figura~\ref{cod_paralelizar_2}.
+Para solucionar la condición de carrera y garantizar el acceso exclusivo a la variable compartida \verb|sum|, podemos hacer uso de un cerrojo (que suponemos ya implementado), como hacemos en el Código fuente~\ref{cod_paralelizar_2}.
 \begin{listing}[H]
 \centering
 \begin{minted}[xleftmargin=1cm, linenos]{c++}
@@ -1145,7 +1144,7 @@ if(id_thread == 0) printf(sum);
 \caption{Código paralelizado mejorado.}
 \label{cod_paralelizado_2}
 \end{listing}
-Hemos ya eliminado la anterior condición de carrera, pero tenemos una en la que nos habíamos fijado, en la línea 11: puede que la hebra 0 llegue al \verb|if| antes de que el resto de hebras hayan terminado de sumar su aportación a la variable \verb|sum|, imprimiendo en pantalla un resultado prematuro (y posiblemente erróneo) de la variable \verb|sum|. Es por ello que en este código tenemos que usar además una barrera (que también suponemos ya implementada), como hacemos en la Figura~\ref{cod_paralelizado_3}.
+Hemos ya eliminado la anterior condición de carrera, pero tenemos una en la que nos habíamos fijado, en la línea 11: puede que la hebra 0 llegue al \verb|if| antes de que el resto de hebras hayan terminado de sumar su aportación a la variable \verb|sum|, imprimiendo en pantalla un resultado prematuro (y posiblemente erróneo) de la variable \verb|sum|. Es por ello que en este código tenemos que usar además una barrera (que también suponemos ya implementada), como hacemos en el Código fuente~\ref{cod_paralelizado_3}.
 \begin{listing}[H]
 \centering
 \begin{minted}[xleftmargin=1cm, linenos]{c++}
@@ -1214,10 +1213,251 @@ A continuación, destacamos unas cuantas primitivas que pueden utilizarse para l
     \item [LL y SC.]~\\
         Llamado carga enlazada con almacenamiento condicional (\emph{load linked/locked with store conditional}). Disponemos de dos instrucciones (\verb|ll| y \verb|sc|), las cuales se escriben de forma secuencial (primero \verb|ll| y luego \verb|sc|).
 
-        Si al ejecutar el almacenamiento condicional el procesador descubre (gracias a una línea que funciona a modo de chivato) que entre la instrucción de \emph{linked load} y \emph{store conditional} se ha modificado % // TODO: por aqui
+        Si al ejecutar el almacenamiento condicional el procesador descubre (gracias a una línea que funciona a modo de chivato) que entre la instrucción de \emph{linked load} y \emph{store conditional} se ha modificado la posición de memoria con la que se trabajaba, no se realiza la escritura en memoria. Realmente no se realiza una operación de lectura-escritura atómica, sino que se realizan ambas impidiendo la escritura si la atomicidad fue violada\footnote{Esto es, si una instrucción que puede modificar dicha posición se interpuso entre ambas.}. Podemos ver un ejemplo de la funcionalidad de estas dos instrucciones en el Código fuente~\ref{ej_ll_sc}, donde la instrucción \verb|sc(k, j)| no realiza su acción, al ser la posición de memoria $k$ modificada por la variable local $i$.
+
+        El resto de primitivas de lectura-modificación-escritura previamente comentadas pueden implementarse mediante estas dos instrucciones.
+\begin{listing}[H]
+\begin{minted}[xleftmargin=6cm, linenos]{c++}
+ll(k, &i);
+ll(k, &j);
+// Modificar i
+// Modificar j
+sc(k, i);
+sc(k, j);
+\end{minted}
+\caption{Ejemplo de instrucciones ll y sc.}
+\label{ej_ll_sc}
+\end{listing}
+
 \end{description}
+En definitiva, a la hora de realizar funciones para sincronización (tal y como vamos a hacer a continuación), es necesario conocer tanto las instrucciones del procesador que nos provee nuestro modelo de consistencia de memoria para ejecutar código de forma secuencial, como instrucciones que nos permitan implementar los códigos de forma eficiente, a elegir entre:
+\begin{itemize}
+    \item Instrucciones atómicas de lectura-modificación-escritura.
+    \item Instrucciones de lectura y escritura especiales (\verb|ll| y \verb|sc|).
+\end{itemize}
+Las arquitecturas de los procesadores x86 (y ARMv6) usan las instrucciones atómicas de lectura-modificación-escritura, mientras que ARMv7 y sus versiones sucesivas usan LL/SC.\\
 
+Por último, cabe destacar los distintos tipos de primitivas que disponemos para sincronización, tanto a alto nivel como a bajo nivel, que podemos recoger en la Tabla~\ref{tab:primitivas_sinc}.
+\begin{table}[H]
+\centering
+\begin{tabular}{cl}
+    Soporte & Monitores \\
+    software & Regiones críticas condicionales \\
+             & Cerrojos, barreras y semáforos \\
+    \toprule
+    Suporte & Instrucciones lectura-modificación-escritura, \\
+    hardware & LL/SC, escritura y lectura atómicas, \\
+             & instrucciones del modelo de consistencia
+\end{tabular}
+\caption{Primitivas para sincronización}
+\label{tab:primitivas_sinc}
+\end{table}
 
+\subsection{Cerrojos}
+Los cerrojos (también llamados a veces \emph{mutex}, de \emph{mutual exclusion}) proporcionan una forma de asegurar la exclusión mutua entre hilos a la hora de acceder a una sección crítica del código que queremos que sea ejecutada ``de forma secuencial''\footnote{Que no haya dos hilos ejecutando la sección de forma simultánea, sino que se organicen para ir de uno en uno.}. 
 
-ESTOS APUNTES ESTÁN AÚN EN DESAROLLO.
+Tendremos dos estados en el cerrojo:
+\begin{itemize}
+    \item \underline{Cerrojo abierto:} No hay ningún hilo ejecutando la seccion crítica.
+    \item \underline{Cerrojo cerrado:} Hay un hilo ejecutando la seccion crítica.
+\end{itemize}
+Los cerrojos utilizan dos funciones para sincronizar los distintos hilos:
+\begin{description}
+    \item [Cierre del cerrojo (lock).]~\\
+        Con esta función un proceso (o hilo) intenta \underline{adquirir} el derecho de acceso a una región crítica (que probablemente contenga el uso de variables compartidas). Si se le deniega temporalmente el acceso, debe pasar a una etapa de \textbf{espera}. Su implementación debe cumplir que:
+        \begin{enumerate}
+            \item Si varios flujos de instrucciones intentan la adquisición (la ejecución de \verb|lock()|) a la vez de un cerrojo abierto, sólo uno de ellos debe conseguir la adquisición y cerrar el cerrojo, el resto pasará a la espera.
+            \item Si varios flujos de instrucciones intentan la adquisición a la vez de un cerrojo cerrado, a todos se les debe poner en una etapa de espera.
+        \end{enumerate}
+    \item [Apertura del cerrojo (unlock).]~\\
+        Lo ejecuta un proceso (o hilo) cuando ha terminado la ejecución de la región crítica y da paso a otro flujo de instrucciones. Esta:
+        \begin{itemize}
+            \item Abrirá el cerrojo en caso de no haber ningún flujo a la espera.
+            \item Dejará pasar sólo a un flujo, en caso de haber uno o varios flujos a la espera.
+        \end{itemize}
+\end{description}
+Recordamos ahora el uso de un cerrojo que hicimos en un ejemplo anterior, en el Código fuente~\ref{cod_paralelizado_2}.\\
+
+Hemos hablado antes de que tenemos que enviar a menudo procesos a etapas de espera. Esta etapa puede desarrollarse mediante dos mecanismos principales:
+\begin{description}
+    \item [Espera ocupada.]~\\
+        Llamada \emph{busy-waiting} o \emph{spin-lock}, el proceso se queda en esperae ejecutando un ciclo en el que constantemente\footnote{De aquí viene el nombre \emph{spin}.} consulta si ha cambiado el valor de alguna variable de control de la espera.
+        Es fácil de implementar pero estamos desaprovechando temporalmente el procesador.
+    \item [Bloqueo.]~\\
+        El proceso que debe esperar se bloquea por el Sistema Operativo, queda suspendido dejando el procesador a otro proceso.
+        Utilizamos el procesador para algo útil pero si el tiempo de ejecución de la región crítica es ínfimo en comparación con el tiempo necesario en suspender y reanimar un proceso, estamos introduciendo sobrecarga innecesaria.
+\end{description}
+Por tanto, usaremos espera ocupada cuando la sección crítica tenga un tiempo de ejecución pequeño y el bloqueo cuando el tiempo de ejecución de la región crítica sea un tiempo considerable (hablando siempre en relación al Sistema Operativo\footnote{Un tiempo que puede parecer despreciable para nosotros para el Sistema Operativo puede parecer muy largo.}).
+
+Los cerrojos de espera ocupada son la base de construcción de funciones software de alto nivel, tales como los semáforos o monitores, que se usan ampliamente en la construcción de los sistemas operativos paralelos y aplicaciones paralelas.\\
+
+Como puede deducirse de todo esto, hay tres componentes esenciales en el desarrollo de un código para sincronización:
+\begin{itemize}
+    \item\ul{Método de adquisición.} En cerrojos, la función \verb|lock()|.
+    \item\ul{Método de espera.} En cerrojos, a elegir entre espera ocupada o bloqueo.
+    \item\ul{Método de liberación.} En cerrojos, la función \verb|unlock()|.
+\end{itemize}
+A continuación, seguiremos con el desarrollo de dos tipos de implementaciones de cerrojos con espera ocupada.
+
+\subsubsection{Cerrojos simples}
+Es la implementación más sencilla de un cerrojo, la cual se realiza con una variable compartida \verb|k| que adopte dos valores: cerrojo abierto (0) o cerrojo cerrado (1).\\
+
+La función \verb|unlock()| abre el cerrojo simplemente escribiendo un 0 en \verb|k|:
+\begin{listing}[H]
+\begin{minted}[xleftmargin=5cm]{c++}
+void unlock(k){
+    k = 0;
+}
+\end{minted}
+\caption{Código de unlock para cerrojos simples.}
+\label{unlock_cerrojos_simples}
+\end{listing}
+
+La función \verb|lock()| lee el contenido del cerrojo:
+\begin{itemize}
+    \item Si está cerrado, el proceso queda esperando en un ciclo mientras que el cerrojo permanezca cerrado.
+    \item Si está abierto, para que el proceso obtenga el cerrojo debe escribir un 1 de forma que él sea el único proceso que ha visto el 0 y escrito el 1. Para cumplir esto, puede usarse una instrucción de lectura-modificación-escritura con acceso atómico o LL/SC, para garantizar que sólo un proceso realiza esta funcionalidad.
+\end{itemize}
+Podríamos implementar el \verb|lock()| de la siguiente forma:
+\begin{listing}[H]
+\begin{minted}[xleftmargin=1cm]{c++}
+void lock(k){
+    while(leer-asignar_1-escribir(k) == 1){;}   // Espera
+    k = 1;                       // Pasa y cierra cerrojo
+}
+\end{minted}
+\caption{Código de lock para cerrojos simples.}
+\label{lock_cerrojos_simples}
+\end{listing}
+Sin embargo, esta implementación escribe en la variable \verb|k| siempre (incluso cuando esta ya está puesta a 1), lo que introduce una gran carga al saber ya qué sucede en los protocolos de coherencia con las escrituras. Es por esto que proponemos el siguiente código como mejora, el cual minimiza las escrituras realizadas.
+\begin{listing}[H]
+\begin{minted}[xleftmargin=1cm]{c++}
+void lock(k){
+    do{
+        while(k == 1){;}
+    }while(leer-asignar_1-escribir(k) == 1);
+
+    k = 1;
+}
+\end{minted}
+\caption{Código de lock para cerrojos simples mejorado.}
+\label{lock_cerrojos_simples_mejor}
+\end{listing}
+Finalmente, debemos tener en cuenta el modelo de consistencia de memoria sobre el que estamos trabajando y añadir si es necesario las instrucciones convenientes para garantizar que los accesos a memoria tras la instrucción \verb|lock| no adelanten a los accesos en la sección crítica (ya que si no se garantiza, no estamos garantizando el acceso exclusivo a la región crítica); asímismo, la instrucción \verb|unlock| debe realizarse una vez garantizados los accesos a memoria de la región crítica. 
+
+Esto podría implementarse en un procesador ARMv7 con la instrucción \verb|dmb|.
+
+\subsubsection{Cerrojos con etiqueta}
+Una crítica que podemos hacer a los cerrojos simples es la injusticia cometida a la hora de seleccionar el siguiente proceso a ejecutar la sección crítica cuando hay varios procesos esperando, ya que el criterio de selección es el que primero vea que el cerrojo está abierto. 
+
+Sin embargo, es lógico pensar que puede sernos de mayor utilidad un cerrojo que garantice un orden FIFO en cuanto al momento de la petición de la adquisición\footnote{Como si de una pescadería se tratara. De hecho, sigue su misma lógica.} (de la llamada a \verb|lock()|).\\
+
+Para implementarlo, hacemos uso de dos contadores: el contador de adquisición y el de liberación. Cuando un proceso ejecuta \verb|lock()|, obtiene el número de procesos que han solicitado ya el cerrojo mediante el valor del contador de adquisición\footnote{El ticket de la pescadería.} e incrementa su valor en 1 para el siguiente. Posteriormente, pasa a espera mientras que su indicador no coincida con el contador de liberación. La función \verb|unlock()| simplemente aumenta en uno el contador de liberación.
+
+\begin{listing}[H]
+\begin{minted}[xleftmargin=1cm, linenos]{c++}
+struct Cerrojo{
+    int lib;
+    int adq;
+};
+
+int inc(int contador){
+    return (contador + 1) % num_threads;
+}
+
+void unclock(Cerrojo cerrojo){
+    cerrojo.lib = inc(cerrojo.lib);   // Aumenta liberacion
+}
+
+void lock(Cerrojo cerrojo){
+    int etiqueta = cerrojo.adq;        // Obtiene valor adquisicion
+    cerrojo.adq = inc(cerrojo.adq);   // Aumenta adquisicion
+    while(etiqueta != cerrojo.lib){;}  // Espera
+}
+\end{minted}
+\caption{Ejemplo de implementación de cerrojo con etiqueta.}
+\label{implementacion_cerrojo_etiqueta}
+\end{listing}
+Los accesos a memoria han de ser mediante instrucciones de lectura-modificación-escritura atómicas o LL/SC y puede que sea necesario añadir instrucciones para garantizar el correcto orden de acceso a memoria, depende del tipo de modelo de consistencia que estemos considerando.
+
+\subsection{Barreras}
+Una barrera es un punto en el código en el que los flujos de instrucciones que colaboran en la ejecución del código se esperan entre sí. Una vez que todos han llegado a la barrera, salen de la misma y continúan ejecutando el código que se sitúa tras la barrera. Se usan para asegurar que todos los flujos han llegado hasta cierto punto antes de continuar con la ejecución de las siguientes instrucciónes. Recordamos el ejemplo de uso del Código fuente~\ref{cod_paralelizado_3}.
+
+\subsubsection{Implementación}
+Para implementar la versión más simple de una barrera necesitamos 3 variables de control por barrera. Para almacenar de alguna forma todas las barreras de un código, usaremos un array donde almacenaremos en cada posición estas 3 variables de control. Procedemos ahora a concretar las tres variables de control que tenemos que usar a la hora de implementar una barrera:
+\begin{description}
+    \item [Contador.] Necesitamos un contador para llevar la cuenta del número de hebras que han llegado ya a la barrera (las cuales pondremos en estado de espera). Cuando el contador sea igual al número total de hebras, abriremos la barrera dejando pasar a todas las hebras.
+    \item [Bandera.] Indicativo de cuando la barrera está cerrada (no deja pasar a ninguna hebra que llegue a la barrera), que es usualmente el valor 0 y 1 cuando está abierta. Por tanto, el método de espera ocupada será un ciclo que se ejecute mientras la bandera no sea 1.
+    \item [Cerrojo.] Es necesario un cerrojo para realizar de forma correcta los accesos a las variables compartidas (al contador y a la bandera).
+\end{description}
+De esta forma, tenemos una primera implementación en el Código fuente~\ref{implementacion_barrera_1}. Cuando una hebra llegue al punto en el que queremos implementar la barrera, simplemente ha de llamar a la función \verb|barrera|, especificándole qué barrera quiere usar (mediante un identificador) y el número total de hebras que se encuentra ejecutando la región paralela: \verb|barrera(num_barrera, num_threads());|. Es de importancia que la variable \verb|cuenta_local| sea privada, para el buen funcionamiento de la barrera\footnote{Se comentó en clase que debía ser privada pero no sé por qué, contactar conmigo si se sabe.}.
+
+Este primer código presenta un error difícil de detectar que se produce cuando se reusa una misma barrera en al menos dos partes distintas del código (cuando se usó una vez hace tiempo y se desea volver a usar otra barrera que, por ahorrar memoria, se decide usar la misma). Para sacar a la luz dicho error, el cual \textbf{puede dejar programas enteros bloqueados}, nos preguntamos qué sucedería si algún flujo que ya se encuentra esperando en la barrera se suspende (ya sea por el Sistema Operativo o por otro ente), llegan todas las hebras a la barrera por lo que se liberaría la barrera (pero nuestra hebra sigue suspendida, luego no ha avanzado de la función de la barrera), y puede que alguna hebra llegue al siguiente uso de la misma barrera antes de que nuestra hebra suspendida se reanude, con lo que volvería a establecer la bandera a 0, haciendo que nuestra hebra nunca pase del uso de la barrera en el que se suspendió y que el resto de las hebras se queden esperando por siempre (ya que nunca igualarán el número total de hebras, al haber al menos una que no superó la barrera anterior) en el siguiente uso de la misma barrera.\\
+
+\begin{listing}
+\begin{minted}[xleftmargin=1cm, linenos]{c++}
+struct Barrera{
+    int contador;
+    int bandera;
+    Cerrojo cerrojo;
+}
+
+void barrera(int id, int num_threads){
+
+    // Cerrojo para la sección crítica
+
+    lock(barreras[id].cerrojo);
+
+    // Si es la primera hebra en llegar cierra la barrera
+    if(barreras[id].contador == 0) barreras[id].bandera = 0;
+    // Aumenta el contador y guarda su valor en variable PRIVADA
+    int cuenta_local = ++barreras[id].contador;
+
+    unlock(barreras[id].cerrojo);
+
+    // Si todas las hebras han llegado
+    if(cuenta_local == num_threads){
+        barreras[id].contador = 0;  // Para un próximo uso
+        barreras[id].bandera = 1;   // Libera de espera
+    }else{
+        // Pone a la hebra en espera
+        while(barreras[id].bandera == 0) {;}
+    }
+}
+\end{minted}
+\caption{Ejemplo de implementación de barrera.}
+\label{implementacion_barrera_1}
+\end{listing}
+
+Para solventar este gran problema, proponemos la siguiente implementación de la función \verb|barrera|, que puede observarse en el Código fuente~\ref{implementacion_barrera_2}. En este caso, en vez de que el valor 0 es barrera cerrada y 1 es barrera abierta, contamos con una variable privada \verb|bandera_local| en cada hebra, de forma que en el primer uso de la barrera 0 será cerrado y 1 abierto y en el siguiente uso de la barrera al revés: 1 cerrado y 0 abierto. De esta forma, solventamos de forma elegante el problema que surgió con el código anterior.
+
+\begin{listing}
+\begin{minted}[xleftmargin=.6cm, linenos]{c++}
+void barrera(int id, int num_threads){
+    // Variable privada de cada hebra,
+    // complementa la bandera anterior
+    int bandera_local = !bandera_local;
+
+    // Acceso a sección crítica
+
+    lock(barreras[id].cerrojo);
+    // Aumenta el contador y guarda su valor en variable privada
+    int cuenta_local = ++barreras[id].contador;
+    unlock(barreras[id].cerrojo);
+
+    // Si todas las hebras han llegado
+    if(cuenta_local == num_threads){
+        barreras[id].contador = 0;      // Para un próximo uso
+
+        // Si todas han llegado, todas tienen la misma bandera local
+        barreras[id].bandera = bandera_local;
+    }else{
+        // Pone a la hebra en espera
+        while(barreras[id].bandera != bandera_local) {;}
+    }
+}
+\end{minted}
+\caption{Ejemplo de implementación de barrera SIN FALLOS.}
+\label{implementacion_barrera_2}
+\end{listing}
 
