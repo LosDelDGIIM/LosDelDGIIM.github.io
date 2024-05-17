@@ -92,14 +92,14 @@ Según qué tan seguido intercambiamos los hilos del core, nos encontramos con:
 Podemos conmutar los hilos del core de grano grueso de forma:
 \begin{description}
     \item [Estática.]~\\ 
-        Realizando la conmutación de forma \emph{explícita}, mediante nuevas instrucciones para conmutación añadidas al repertorio; o de forma \emph{implícita}, al detectar instrucciones e carga, almacenamiento, salto, \ldots
+        Realizando la conmutación de forma \emph{explícita}, mediante nuevas instrucciones para conmutación añadidas al repertorio; o de forma \emph{implícita}, al detectar instrucciones de carga, almacenamiento, salto, \ldots
 
         \begin{itemize}
             \item Como ventaja, destacamos el bajo coste de los cambios de contexto (de 0 o 1 ciclos).
             \item Como inconveniente, pueden producirse cambios de contexto innecesarios.
         \end{itemize}
     \item [Dinámica]~\\
-        La conmutación se realiza típicamente por fallos de caché o por interrupciones (interrupciones por señales).
+        La conmutación se realiza típicamente por fallos de caché o por interrupciones (conmutación por señales).
 
         \begin{itemize}
             \item Como ventaja, reduce los cambios de contexto innecesarios de la estática.
@@ -240,7 +240,7 @@ Tras esta sección, debería ser capaz de:
     \item Comparar las alternativas para propagar una escritura en protocolos de coherencia de caché.
     \item Explicar qué debe garantizar el sistema de memoria para evitar problemas por incoherencias.
     \item Descibir las partes en las que se puede dividir el análisis o el diseño de protocolos de coherencia.
-    \item Distinguir entre protocolos basados en directorios y protocolos de espionaje (snoopy).
+    \item Distinguir entre protocolos basados en directorios y protocolos de espionaje (\emph{snoopy}).
     \item Explicar el protocolo de mantenimiento de coherencia de espionaje MSI\@.
     \item Explicar el protocolo de mantenimiento de coherencia de espionaje MESI\@.
     \item Explicar el protocolo de mantenimiento de coherencia MSI basado en directorios con difusión y sin difusión.
@@ -249,7 +249,7 @@ Tras esta sección, debería ser capaz de:
 \subsection{Definición del problema}
 La utilización de memoria caché trae consigo el esquema de jerarquía de memoria y la posibilidad de tener en distintas jerarquías una misma posición de memoria repetida. En sistemas uniprocesador, si tratamos de modificar una posición de memoria, esta se llevará a caché y será modificada en caché, indicando que ha sido modificada. En un cierto momento, la modificación en esta jerarquía de caché será comunicada a jerarquías de memoria mayores, hasta llegar a memoria principal y modificar dicho dato. De esta forma, la próxima vez que se necesite en caché dicha posición, estará actualizada conforme a la última modificación.\\
 
-Recordamos ahora que cada procesador lleva asociada una memoria caché y, al ser mayor la memoria principal que la caché, necesitamos almacenar en algún sitio qué bloque de memoria principal contiene cada entrada de memoria caché. Esta información se almacena en una tabla asociada a la caché. En dicha tabla hay una entrada por cada dirección de la memoria caché y, en cada entrada, se almacena qué bloque de memoria principal está cargado y unos bits de información sobre el bloque cargado. Representamos una aproximación a esta tabla en el Código fuente~\ref{tab:tabla_cache}. En un sistema uniprocesador, nos basta con un bit sucio (que indique si el bloque ha sido modificado o no, para saber si hay que escribir en jerarquías supsriores) y un bit de validez (que indique si el bloques es válido).\\
+Recordamos ahora que cada procesador lleva asociada una memoria caché y, al ser mayor la memoria principal que la caché, necesitamos almacenar en algún sitio qué bloque de memoria principal contiene cada entrada de memoria caché. Esta información se almacena en una tabla asociada a la caché. En dicha tabla hay una entrada por cada dirección de la memoria caché y, en cada entrada, se almacena qué bloque de memoria principal está cargado y unos bits de información sobre el bloque cargado. Representamos una aproximación de esta en la Tabla~\ref{tab:tabla_cache}. En un sistema uniprocesador, nos basta con un bit sucio (que indique si el bloque ha sido modificado o no, para saber si hay que escribir en jerarquías superiores) y un bit de validez (que indique si el bloques es válido).\\
 
 \begin{table}
 \centering
@@ -285,14 +285,14 @@ Las situaciones de incoherencia se deben abordar no permitiendo que se produzcan
 
         De esta forma, se permiten situaciones de incoherencia entre caché y memoria principal (incluso en sistemas uniprocesador). También puede producirse cualquier tipo de incoherencia en este sistema, empeorando la situación que teníamos con escritura directa.
 
-        Es necesario además mantener la información sobre qué bloques han sido modificados en caché y cuales no. Esta labor la realiza un bit en la tabla de la caché, llamdo ``bit sucio''.
+        Es necesario además mantener la información sobre qué bloques han sido modificados en caché y cuáles no. Esta labor la realiza un bit en la tabla de la caché, llamdo ``bit sucio''.
 \end{description}
 Lo usual en cachés es que usen posescritura, debido a sus ventajas frente a escritura directa. A continuación, estaremos hablando siempre de sistemas multiprocesadores, ya que en sistemas uniprocesadores las situaciones de incoherencia ya están resueltas (tanto con escritura directa no permitiendo incoherencias tanto con posescritura, permitiendo incoherencias pero controlando que no provoquen fallos).
 
 \subsection{Protocolos de coherencia entre cachés}
 Como ya habrás podido deducir, nuestra tarea ahora es buscar cómo resolver las incoherenias ya mencionadas, y manejar las incoherencias que se permiten para que no provoquen fallos en el sistema. Para evitar situaciones de incoherencias entre cachés, se deben cumplir las siguientes dos condiciones:
 \begin{enumerate}
-    \item \textbf{Propaganción de escrituras.} Se debe garantizar que todo lo que se escribe en la copia de un bloque en caché se propague a las copias del bloque en otras cachés.
+    \item \textbf{Propagación de escrituras.} Se debe garantizar que todo lo que se escribe en la copia de un bloque en caché se propague a las copias del bloque en otras cachés.
     \item \textbf{Serialización de escrituras.} Se debe garantizar que las escrituras en una dirección se ven en el mismo orden por todos los procesadores: el sistema de memoria debe parecer que realiza en serie las operaciones de escritura en la misma dirección. Debe dar la impresión de que estas operaciones sean \underline{atómicas}. 
 
         Esto es de vital importancia en arquitecturas donde no todos los procesadores tienen el mismo (o similar) tiempo acceso a sus cachés, como los NUMA, debemos garantizar que el primer procesador que se dispuso a escribir en memoria sea el primero que lo haga.
@@ -321,7 +321,7 @@ La propagación de las actualizaciones o invalidaciones entre los procesadores s
 \end{itemize}
 
 \subsection{Protocolos de mantenimiento de coherencia}
-En una arquitectura UMA, podemos utilizar una red bus para las transferencias entre los procesadores y la memoria que comparten. Los buses implementan la difusión de forma natural. De esta forma, todos los paquetes enviados a la red son visibles por todos los componentes conectados al bus, de forma que toos ven las peticiones en el orden en el que se solicitan (dándose las dos condiciones para evitar situaciones de incoherencias). Todo esto hace que en el caso de los multiprocesadores UMA con red bus no sea necesarios mantener información de la cachés con copias de los bloques, pudiendo suprimir incluso el directorio de memoria del que antes se hablaba. 
+En una arquitectura UMA, podemos utilizar una red bus para las transferencias entre los procesadores y la memoria que comparten. Los buses implementan la difusión de forma natural. De esta forma, todos los paquetes enviados a la red son visibles por todos los componentes conectados al bus, de forma que todos ven las peticiones en el orden en el que se solicitan (dándose las dos condiciones para evitar situaciones de incoherencias). Todo esto hace que, en el caso de los multiprocesadores UMA con red bus, no sea necesario mantener información de la caché con copias de los bloques, pudiendo suprimir incluso el directorio de memoria del que antes se hablaba. 
 
 En este tipo de arquitecturas, es común el uso de \textbf{protocolos de espionaje} (\emph{snoopy}), ya que todos los componentes pueden ver (espiar) dicho bus. Cada controlador de caché espía los paquetes del bus y actúa en consecuencia (si por ejemplo otro controlador solicita un paquete invalidado del que nuestra caché tiene acceso exclusivo y no está actualizado en memoria, nuestro controlador invalida la respuesta de la memoria y es él quien responde a la petición del paquete, devolviendo el paquete actualizado). Es por ello sencillo implementar protocolos de coherencia en una arquitectura que use buses. Sin embargo, los protocolos de espionaje no escalan bien debido a retardos que introducen otro tipo de redes\footnote{Al tener que esperar a que todos los procesadores reciban el paquete enviado.}.\\
 
