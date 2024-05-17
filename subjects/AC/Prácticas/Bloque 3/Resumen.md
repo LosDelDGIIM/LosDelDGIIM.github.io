@@ -114,7 +114,7 @@ typedef enum omp_sched_t {
 Para consultar su valor, podemos hacer:
 ```c
 omp_sched_t kind;
-int chunkdize;
+int chunksize;
 omp_get_schedule(&kind, &chunksize);
 printf("kind: %x, chunksize: %d", kind, chunksize);
 ```
@@ -194,7 +194,7 @@ Al inicio de la sesión de prácticas habíamos comentado la prioridad de las di
 - Función `omp_set_num_threads()`: Establece el número de hilos de la próxima región paralela.
 - Variable de entorno `OMP_NUM_THREADS`: Establece el número de hilos de la próxima región paralela.
   
-Donde la cláusula `num_threads` tiene prioridad sobre la función `omp_set_num_threads()`, que tiene prioridad sobre la función `OMP_NUM_THREADS`; todas ellas dependen de que la condición de la cláusula `if` sea cierta para poder llevarse a cabo.
+Donde la cláusula `num_threads` tiene prioridad sobre la función `omp_set_num_threads()`, que tiene prioridad sobre la variable `OMP_NUM_THREADS`; todas ellas dependen de que la condición de la cláusula `if` sea cierta para poder llevarse a cabo.
 
 ## num_threads(n)
 Sólo puede aparecer en las directivas `parallel`, `parallel DO/for` o `parallel sections`.  
