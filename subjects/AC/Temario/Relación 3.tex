@@ -1,10 +1,7 @@
 \section{Arquitecturas TLP}
 
 \begin{ejercicio}
-    En un multiprocesador SMP con 4 procesadores o nodos (N0-N3) basado en un bus, que
-    implementa el protocolo MESI para mantener la coherencia, supongamos una dirección de memoria incluida
-    en un bloque que no se encuentra en ninguna caché. Indique los estados de este bloque en las cachés y las
-    acciones que se producen en el sistema ante la siguiente secuencia de eventos para dicha dirección:
+    En un multiprocesador SMP con 4 procesadores o nodos (N0-N3) basado en un bus, que implementa el protocolo MESI para mantener la coherencia, supongamos una dirección de memoria incluida en un bloque que no se encuentra en ninguna caché. Indique los estados de este bloque en las cachés y las acciones que se producen en el sistema ante la siguiente secuencia de eventos para dicha dirección:
     \begin{enumerate}
         \item Lectura generada por el procesador 1.
         \item Lectura generada por el procesador 2.
@@ -12,23 +9,101 @@
         \item Escritura generada por el procesador 2.
         \item Escritura generada por el procesador 3.
     \end{enumerate}
+
+    Al hablar el enunciado de un protocolo MESI en un SMP con un bus, entendemos que se refiere al protocolo MESI de espionaje. Durante el ejercicio, supongamos que el bloque en el que se encuentra la dirección de memoria mencionada es el bloque \verb|B|. A continuación, mostramos la Tabla~\ref{tab:ej_rel3_1}, que contiene cómo van cambiando los estados del bloque \verb|B| en cada caché en relación al tiempo (que medimos de forma relativa a los estados). Consideramos que el estado 0 es el inicial (cuando el bloque no se encuentra en ninguna caché). A continuación, desarrollamos en detalle los eventos que se producen y las acciones de los controladores, junto con los eventos que generan:\\
+
+\begin{table}
+\centering
+\begin{tabular}{c|c|c|c|c}
+    Evento & Caché 0 & Caché 1 & Caché 2 & Caché 3 \\
+    \hline
+    0 & I & I & I & I \\
+    \hline
+    1 & I & E & I & I \\
+    \hline
+    2 & I & C & C & I \\
+    \hline
+    3 & I & M & I & I \\
+    \hline
+    4 & I & I & M & I \\
+    \hline
+    5 & I & I & I & M \\
+\end{tabular}
+\caption{Estados del bloque B tras cada evento.}
+\label{tab:ej_rel3_1}
+\end{table}
+Inicialmente, como ningún nodo contiene al bloque \verb|B|, este está en estado Inválido en todas las cachés. Explicamos ahora las acciones derivadas de cada evento:
+\begin{enumerate}
+    \item Tenemos el evento \verb|PrLec(B)| por parte del procesador 1, que provoca un fallo de caché al estar el bloque \verb|B| en estado Inválido en su caché. Como consecuencia, genera el paquete \verb|PtLec(B)|, que es enviado a través del bus.
+
+        El resto de los controladores ignoran el paquete, al tener el bloque \verb|B| en estado Inválido en sus cachés. Es pues el controlador de la memoria principal quien contesta al paquete, a través de un paquete \verb|RpBloque(B)|.
+
+        El controlador de caché del procesador 1 recibe el paquete, escribiéndo su contenido en la línea de caché correspondiente y cambiando el estado del bloque \verb|B| de Inválido a Exclusivo, ya que el controlador de caché sabe que dicho paquete no está en estado válido en ninguna otra caché.
+
+    \item El procesador 2 genera el evento \verb|PrLec(B)|, que provoca un fallo en su caché, al estar el bloque \verb|B| en estado Inválido en su caché. Como consecuencia, genera el paquete \verb|PtLec(B)|, que es enviado a través del bus.
+
+        Los controladores de caché de los procesadores 0 y 3 ignoran dicho paquete, al tener al bloque \verb|B| en estado Inválido. El controlador de caché del procesador 1 ve que el paquete es de lectura del mismo paquete \verb|B| que tiene en estado Exclusivo, luego cambia su estado a Compartido, al saber que otro nodo contendrá otra copia del bloque. Es el contorlador de la memoria principal quien contesta al paquete, a través de un paquete \verb|RpBloque(B)|.
+
+        El controlador de caché del procesador 2 recibe el paquete, escribiéndo su contenido en la línea de caché correspondiente y cambiando el estado del bloque \verb|B| de Inválido a Compartido, ya que el controlador de caché sabe que dicho paquete está en estado válido en otra caché (depende de la implementación, pero puede saberlo por una línea OR que funcione a modo de chivato, relativa a si otras cachés tienen o no a \verb|B|).
+
+    \item El procesador 1 genera el evento \verb|PrEsc(B)|. Al estar \verb|B| en estado Compartido en su caché (es un estado válido), no hay fallo de caché. Su controlador de caché genera el paquete \verb|PtEx(B)|, para solicitar acceso exclusivo al bloque (estamos en un protocolo con escritura con invalidación) para poder escribir en él. Posteriormente, cambia el estado de su bloque a Modificado y procede a escribir en él.
+
+        Los controladores de caché de los procesadores 0 y 3 ignoran dicho paquete, al tener al bloque \verb|B| en estado Inválido. El controlador de caché del procesador 2 observa que tiene al bloque \verb|B| en estado Compartido y procede a invalidar su copia, pasando el bloque \verb|B| a estado Inválido.
+
+    \item El procesador 2 genera el evento \verb|PrEsc(B)|. Al estar \verb|B| en estado Inválido en su caché, se produce un fallo de caché. Su controlador de caché genera el paquete \verb|PtLecEx(B)|, para solicitar la copia actualizada de \verb|B| y escribir en ella.
+
+        Los controladores de caché de los procesadores 0 y 3 ignoran dicho paquete (tienen a \verb|B| en estado inválido). El controlador de caché del procesador 1 observa el paquete y tiene a \verb|B| en estado Modificado, luego contiene a la única copia de \verb|B| en estado válido en todo el sistema de memoria. Por tanto, genera el paquete \verb|RpBloque(B)| con el contenido de \verb|B| e invalida su copia (era un paquete de acceso exclusivo). Además, el controlador del procesador 1 invalida la respuesta de la memoria principal.
+
+        El controlador de caché del procesador 2 recibe el paquete y escribe el contenido del bloque \verb|B| en la línea de caché correspondiente, cambiando su estado a Modificado.
+    
+    \item Se produce el mismo razonamiento que en el caso anterior, sustituyendo:
+        \begin{itemize}
+            \item 2 por 3.
+            \item 1 por 2.
+            \item 3 por 1.
+        \end{itemize}
+\end{enumerate}
+
 \end{ejercicio}
 
 \begin{ejercicio}
-    Para un multiprocesador de memoria distribuida con $8$ nodos se quiere implementar un
-    protocolo para mantenimiento de coherencia basado en directorios. Suponiendo que se necesitan un bit de
-    estado para un bloque en el directorio de memoria principal y que el tamaño de una línea de caché es de 64
-    bytes, calcular el porcentaje del tamaño de memoria principal que supone el tamaño del directorio de vector
-    de bits completo.
+    Para un multiprocesador de memoria distribuida con $8$ nodos se quiere implementar un protocolo para mantenimiento de coherencia basado en directorios. Suponiendo que se necesitan un bit de estado para un bloque en el directorio de memoria principal y que el tamaño de una línea de caché es de 64 bytes, calcular el porcentaje del tamaño de memoria principal que supone el tamaño del directorio de vector de bits completo.\\
+
+Supuesto que la memoria principal tiene $M$ bloques de memoria, el directorio será una tabla de $M$ entradas y 9 columnas, similar a la Tabla~\ref{tab:ej_rel3_2}.
+\begin{table}[H]
+\centering
+\begin{tabular}{r|c|c|c|c|}
+    & C_0 & \ldots & C_7 & MP \\
+    \cline{2-5}
+    0 & Bit & \ldots & Bit & Bit \\
+    \cline{2-5}
+    \vdots & \vdots & \ddots & \vdots & \vdots \\
+    \cline{2-5}
+    $M-1$ & Bit & \ldots & Bit & Bit \\
+    \cline{2-5}
+\end{tabular}
+\caption{Directorio de memoria.}
+\label{tab:ej_rel3_2}
+\end{table}
+
+Notemos que nos es suficiente con calcular el porcentaje del tamaño de cada bloque que supone almacenar una fila (9 bits) de la tabla. Como las líneas de caché son de 64 bytes $= 68\cdot 8 = 512$ bits, calculamos dicha fracción:
+\begin{equation*}
+    \dfrac{9}{512} = 0.017578 \approx 1.76\%
+\end{equation*}
+\begin{itemize}
+    \item Si nuestra memoria principal sólo contiene un bloque, sólo tenemos una entrada en la tabla y por tanto sólo se ocupan 9 bits, con lo que ocupa un $1.76\%$ del tamaño total de memoria principal.
+    \item Si ahora nuestra memoria principal tiene $M$ bloques, pasamos de gastar 9 bits de la tabla a gastar $9M$ bits. Asímismo, pasamos a tener una memoria de tamaño $512M$ bits, de donde calculamos el porcentaje que supone almacenar el directorio:
+        \begin{equation*}
+            \dfrac{9\cancel{M}}{512\cancel{M}} = 0.017578 \approx 1.76\%
+        \end{equation*}
+\end{itemize}
+
 \end{ejercicio}
 
 \begin{ejercicio}
-    Suponga que en un CC-NUMA de red estática de 4 nodos (N0-N3) se implementa un protocolo
-    MSI basado en directorios sin difusión con dos estados en el directorio (válido e inválido). Cada nodo tiene 8
-    GBytes de memoria y una línea de caché supone 64 Bytes. Considere que el directorio utiliza vector de bits
-    completo.
+    Suponga que en un CC-NUMA de red estática de 4 nodos (N0-N3) se implementa un protocolo MSI basado en directorios sin difusión con dos estados en el directorio (válido e inválido). Cada nodo tiene 8 GBytes de memoria y una línea de caché supone 64 Bytes. Considere que el directorio utiliza vector de bits completo.
     \begin{enumerate}
-        \item Calcule el tamaño del directorio de uno nodo en bytes.
+        \item Calcule el tamaño del directorio de un nodo en bytes.
         \item Indique cual sería el contenido del directorio, las transiciones de estados (en caché y en el directorio) y la secuencia de paquetes generados por el protocolo de coherencia en los siguientes accesos sobre una dirección D que se encuentra en la memoria del nodo 3 (inicialmente D no está en ninguna caché):
         \begin{enumerate}
             \item Lectura generada por el procesador del nodo 1.
@@ -38,6 +113,97 @@
             \item Escritura generada por el procesador del nodo 0.
         \end{enumerate}
     \end{enumerate}
+
+\begin{enumerate}
+    \item % // TODO:
+
+    \item En las Tablas~\ref{tab:ej_rel3_3} y~\ref{tab:ej_rel3_3_2} indicamos la secuencia de estados de la línea del directorio del nodo 3 correspondiente a la dirección D del bloque \verb|B|, así como el estado del bloque \verb|B| en cada una de las cachés.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{r|c|c|c|c|c|}
+    & C_0 & C_1 & C_2 & C_3 & MP \\
+    \cline{2-6}
+    0 & 0 & 0 & 0 & 0 & 1 \\
+    \cline{2-6}
+    a & 0 & 1 & 0 & 0 & 1 \\
+    \cline{2-6}
+    b & 0 & 1 & 0 & 0 & 0 \\
+    \cline{2-6}
+    c & 0 & 1 & 1 & 0 & 1 \\
+    \cline{2-6}
+    d & 0 & 1 & 1 & 1 & 1 \\
+    \cline{2-6}
+    e & 1 & 0 & 0 & 0 & 0 \\
+    \cline{2-6}
+\end{tabular}
+\caption{Estado de la línea de B del directorio de memoria del nodo 3.}
+\label{tab:ej_rel3_3}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{c|c|c|c|c}
+    Evento & Caché 0 & Caché 1 & Caché 2 & Caché 3 \\
+    \hline
+    0 & I & I & I & I \\
+    \hline
+    a & I & C & I & I \\
+    \hline
+    b & I & M & I & I \\
+    \hline
+    c & I & C & C & I \\
+    \hline
+    d & I & C & C & C \\
+    \hline
+    e & M & I & I & I \\
+\end{tabular}
+\caption{Estados del bloque B tras cada evento.}
+\label{tab:ej_rel3_3_2}
+\end{table}
+Inicialmente, como D no está en ninguna caché, su bloque \verb|B| tampoco, luego inicializamos todos los estados de \verb|B| en las cachés a Inválido y un 0 en el directorio de memoria, siendo la copia de la memoria principal válida (ya que si no \verb|B| no está en el sistema de memoria).
+
+    \begin{enumerate}
+        \item El procesador 1 realiza \verb|PrLec(B)| y al estar \verb|B| en estado Inválido en su caché, su controlador genera el paquete \verb|PtLec(B)|, que envía al nodo 3, al ser el nodo origen de \verb|B|. Su controlador de caché observa que no tiene en su caché a \verb|B| en un estado válido (gracias al directorio), y que se encuentra válido en memoria principal. No realiza ninguna acción, dejando que la memoria (como tiene a \verb|B| en estado válido), responda con el paquete \verb|RpBloque(B)|. 
+
+        El controlador del nodo 3 apunta en el directorio que ahora el nodo 1 tiene una copia válida del bloque \verb|B|.
+
+        El procesador 1 recibe el paquete de respuesta, copiando el bloque \verb|B| en la correspondiente línea de caché y cambiando su estado a Compartido.
+
+        \item El procesador 1 realiza \verb|PrEsc(B)| y al estar \verb|B| en estado Compartido en su caché, su controlador genera el paquete \verb|PtEx(B)|, que envía al nodo 3, al ser el nodo origen de \verb|B|. Su controlador de caché observa que es la única caché con copia de \verb|B|, por lo que sólo invalida la copia de \verb|B| en memoria principal y deuelve al nodo 1 el paquete \verb|RpInv(B)|, para que sepa que todas las copias de \verb|B| fueron invalidadas.
+
+            Una vez recibido el paquete, el controlador de caché del nodo 1 cambia el estado de \verb|B| a Modificado y el procesador es libre de escribir en el bloque.
+
+        \item El procesador 2 realiza \verb|PrLec(B)| y al estar \verb|B| en estado Inválido en su caché, su controlador genera el paquete \verb|PtLec(B)|, que envía al nodo 3, al ser el nodo origen de \verb|B|. Su controlador de caché observa que el nodo 1 es el único que contiene una copia válida de \verb|B| en todo el sistema, por lo que genera el paquete \verb|RvLec(B)|, que envía al nodo 1.
+
+            El controlador de caché del nodo 1 recibe el paquete, con lo que cambia el estado de \verb|B| a Compartido, y genera el paquete de respuesta \verb|RpBloque(B)| al nodo 3.
+
+            El controlador de caché del nodo 3 copia el contenido del paquete en memoria principal, cambiando su bit de validez a 1 y reenviando el paquete de respuesta al nodo solicitante 2.
+
+            El controlador de caché del nodo 2 recibe el paquete, copiando el contenido de \verb|B| en la línea de caché correspondiente y cambiando su estado a Compartido.
+        
+        \item El procesador del nodo 3 realiza \verb|PrLec(B)| y al estar \verb|B| en estado Inválido, se produce un fallo de caché. Él mismo es el origen del bloque, luego consulta su directorio y observa que tanto los nodos 1 y 2 como la memoria principal lo tienen en estado válido.
+
+            Dependiendo de la implementación:
+            \begin{itemize}
+                \item O copia a la caché el contenido del bloque desde la memoria.
+                \item O genera un paquete \verb|RvLec(B)| al nodo 1 o 2, para que le devuelva el bloque \verb|B| a través de un paquete \verb|RpBloque(B)|.
+            \end{itemize}
+            EL controlador de caché del nodo 3 apunta en el directorio que ahora dispone de una copia válida de \verb|B|.
+
+            Copia el contenido del bloque \verb|B| en la línea de caché correspondiente, cambiando su estado a Compartido.
+        
+        \item El procesador del nodo 0 realiza \verb|PrEsc(B)| y al estar \verb|B| en estado Inválido, se produce un fallo de caché. Genera un paquete \verb|PtLecEx(B)|, para obtener \verb|B| con acceso exclusivo, que envía al nodo 3 por ser el origen del bloque. El controlador del nodo 3 recibe el paquete de petición y:
+            \begin{itemize}
+                \item Primero, envía el paquete \verb|RvInv(B)| a los nodos 1 y 2 para que invaliden sus copias de \verb|B|, mientras que el controlador invalida las copias de memoria principal y de su propia caché.
+                \item Por haber estado \verb|B| Compartido en el nodo 3, una vez que se reciban los paquetes \verb|RpInv(B)| desde los nodos 1 y 2, el controlador del nodo 3 generará el paquete \verb|RpBloqueInv(B)|, que enviará al nodo 0.
+            \end{itemize}
+
+            El controlador de caché del nodo 0 copiará el contenido de \verb|B| en la línea de caché correspondiente, cambiando su estado a Modificado.
+    \end{enumerate}
+
+\end{enumerate}
+
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -317,42 +483,47 @@ if (ithread==0) printf("varianza = %f", vari); //imprime en pantalla
 \subsection{Cuestiones}
 
 \begin{cuestion}
-    Diferencias entre núcleos con multithread temporal y núcleos con multithread simultánea.
+    Diferencias entre núcleos con multithread temporal y núcleos con multithread simultánea.\\
+
+    La diferencia fundamental es que los hilos que se ejecutan en núcleos con multithread temporal (TMT) no se ejecutan de forma paralela, sino que multiplexan el núcleo, teniendo que disponer de un sistema hardware que realice la conmutación entre ellos. Por otra parte, en los núcleos de multithread simultáneo (SMT), el núcleo no se multiplexa, por lo que no es necesaria realizar la conmutación de hilos. Esto provoca que los TMT sólo sean capaces de emitir resultados de un sólo hilo (o flujo de instrucciones) por iteración, mientras que los SMT son capaces de emitir resultados de distintos hilos por ciclo.
 \end{cuestion}
 
 \begin{cuestion}
-    Diferencias entre núcleos con multithread temporal de grano fino y núcleos con multithread
-    temporal de grano grueso.
+    Diferencias entre núcleos con multithread temporal de grano fino y núcleos con multithread temporal de grano grueso.\\
+
+    La conmutación de hilos en los núcleos con multithread temporal de grano fino (FGMT) se realiza en cada ciclo, por lo que son cambios de contexto con bajo coste, que no implica pérdidas de ciclos para realizar los cambios de contexto. Por otra parte, la conmutación de hilos en los núcleos con multithread temporal de grano grueso (CGMT) presenta un mayor coste de cambio de contexto, que puede derivar en la pérdida de ciclos para realizar dicho cambio, introduciendo pérdidas verticales.
+    
+    Además, si el CGMT realiza una conmutación dinámica, se introduce un coste mayor a la hora de realizar los cambios de contexto.
 \end{cuestion}
 
 \begin{cuestion}
-    Suponga un multiprocesador con protocolo MESI de espionaje. Si un controlador de cache
-    observa en el bus un paquete de petición de lectura exclusiva de un bloque que tiene en estado C, debe
-    (indique cuál sería la respuesta correcta y razone por qué es la respuesta correcta):
+    Suponga un multiprocesador con protocolo MESI de espionaje. Si un controlador de cache observa en el bus un paquete de petición de lectura exclusiva de un bloque que tiene en estado C, debe (indique cuál sería la respuesta correcta y razone por qué es la respuesta correcta):
     \begin{enumerate}
         \item Generar un paquete de respuesta con el bloque y pasar el bloque a estado I.
         \item Pasar el bloque a estado I.
         \item Generar un paquete de respuesta con el bloque y pasar el bloque a estado E.
         \item No tiene que hacer nada.
     \end{enumerate}
+
+    La respuesta correcta es la opción 2: Si la caché especificada tiene el bloque en estado C (Compartido), entonces se encuentra válido el bloque en memoria principal y en otras cachés (en al menos una más). En este caso, debe ser el controlador de la memoria principal quien genera el paquete con el bloque de respuesta (ya que en otro caso todos los controladores generarían el paquete, saturando la red de comunicación). Por tanto, la única acción que realiza el controlador es invalidar su copia del bloque, ya que se solicitó acceso exclusivo al bloque para su modificaicón.
 \end{cuestion}
 
 \begin{cuestion}
-    Suponga un multiprocesador con protocolo MESI de espionaje. Si un nodo observa en el bus un
-    paquete de petición de lectura exclusiva de un bloque que tiene en estado M, ¿qué debe hacer? Razone su
-    respuesta.
+    Suponga un multiprocesador con protocolo MESI de espionaje. Si un nodo observa en el bus un paquete de petición de lectura exclusiva de un bloque que tiene en estado M, ¿qué debe hacer? Razone su respuesta.\\
+
+Por tener dicho bloque en estado M (Modificado), entonces dicha caché es la única en todo el sistema de memoria que tiene dicho bloque actualizado. Por solicitar una lectura \textbf{exclusiva}, debe primero invalidar la copia del bloque en su caché. Posteriormente (al ser la única copia válida en el sistema), debe responder con el contenido del bloque, generando un paquete \verb|RpBloque|. Además: si la memoria no tiene constancia de que su contenido del bloque está desactualizado (está en estado inválido), la memoria tratará de responder también a la caché solicitante del bloque. En dicho caso, el controlador de caché deberá a su vez invalidar la respuesta de la memoria.
 \end{cuestion}
 
 \begin{cuestion}
-    Suponga un multiprocesador con el protocolo MESI de espionaje. Si el procesador de un nodo
-    escribe en un bloque que tiene en su cache en estado I, debe (indique cuál sería la respuesta correcta y
-    razone por qué es la respuesta correcta):
+    Suponga un multiprocesador con el protocolo MESI de espionaje. Si el procesador de un nodo escribe en un bloque que tiene en su cache en estado I, debe (indique cuál sería la respuesta correcta y razone por qué es la respuesta correcta):
     \begin{enumerate}
         \item Generar paquete de petición de acceso E al bloque y pasar el bloque a M.
         \item Generar paquete de petición de acceso E y pasar el bloque a estado E.
         \item Generar paquete de petición de acceso E con lectura y pasar el bloque a estado E.
         \item Generar paquete de petición de acceso E al bloque con lectura y pasar el bloque a M.
     \end{enumerate}
+
+    La opción correcta es la 4: Debe generar un paquete de petición de acceso exclusivo con lectura ya que tiene el bloque en estado I (Inválido), luego no dispone de una copia actualizada del mismo (por lo que tiene que solicitar la lectura del mismo). El acceso es exclusivo ya que se dispone a escribir en el bloque, luego debe invalidar el resto de copias del bloque en el resto de las cachés (al usar MESI la escritura con invalidación). FInalmente, pasará el bloque a estado Modificado ya que escribirá en él, por lo que será (una vez finalizada la escritura) la única copia del bloque válida en todo el sistema de memoria.
 \end{cuestion}
 
 \begin{cuestion}
@@ -374,4 +545,5 @@ if (ithread==0) printf("varianza = %f", vari); //imprime en pantalla
         \item \verb|Compare_and_Swap|.
         \item \verb|Test_and_Set|.
     \end{enumerate}
+    La expresión que no corresponde es \verb|Lock|, por ser el código de adquisición de un cerrojo, mientras que el resto de las expresiones son primitivas de las que dispone el hardware para implementar códigos para sincronización de forma eficiente.
 \end{cuestion}
