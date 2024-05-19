@@ -486,11 +486,24 @@ Aunque no lo dice el enunciado, suponemos que inicialmente \verb|flag=0|.
 \end{ejercicio}
 
 \begin{ejercicio}
-    Se quiere implementar un cerrojo simple en un multiprocesador SMP basado en procesadores de
-    la línea x86 de Intel, en particular, procesadores Intel Core. 
+    Se quiere implementar un cerrojo simple en un multiprocesador SMP basado en procesadores de la línea x86 de Intel, en particular, procesadores Intel Core. 
     \begin{enumerate}
         \item Teniendo en cuenta el modelo de consistencia de memoria que ofrece el hardware de este multiprocesador ¿podríamos implementar la función de liberación del cerrojo simple usando \verb|mov k, 0|, siendo \verb|k| la variable cerrojo? Razone su respuesta.
         \item ¿Cómo se debería implementar la función de liberación de un cerrojo simple si se usan procesadores con la arquitectura ARMv7? Razone su respuesta.
+    \end{enumerate}
+
+    \begin{enumerate}
+        \item El modelo de consistencia de memoria de los x86 permite el adelantamiento $W\rightarrow R$ (lecturas adelantan a escrituras). Debemos por tanto garantizar que ninguna lectura adelante a la escritura \verb|mov k, 0|.
+        \item El modelo de consistencia de los procesadores con ARMv7 permite cualquier tipo de adelantamiento, luego la función de liberación de un cerrojo simple debería ser de la forma:
+            \begin{listing}[H]
+            \begin{minted}[xleftmargin=1cm]{asm}
+unlock:
+    dmb
+    mov k, 0
+    dmb
+            \end{minted}
+            \end{listing}
+        Para garantizar que \verb|mov k, 0| no adelante a ninguna instrucción y que ninguna instrucción adelante a \verb|mov k, 0|.
     \end{enumerate}
 \end{ejercicio}
 
@@ -514,12 +527,37 @@ k=0;
     \end{figure}
     Conteste a las siguientes preguntas (considere que el compilador no altera el código):
     \begin{enumerate}
-        \item Indique qué se puede obtener en \verb|sum| si se suma la lista \verb|a={1,2,3,4,5,6,7,8}|. \verb|k| y \verb|sum| son variables
-        compartidas que están inicialmente a 0 (el resto de variables son privadas), \verb|nthread = 3|, \verb|ithread| es el
-        identificador del thread en el grupo (0,1,2). Si hay varios posibles resultados, se tienen que dar todos
-        ellos. Justifique su respuesta.
+        \item Indique qué se puede obtener en \verb|sum| si se suma la lista \verb|a={1,2,3,4,5,6,7,8}|. \verb|k| y \verb|sum| son variables compartidas que están inicialmente a 0 (el resto de variables son privadas), \verb|nthread = 3|, \verb|ithread| es el identificador del thread en el grupo (0,1,2). Si hay varios posibles resultados, se tienen que dar todos ellos. Justifique su respuesta.
         \item ¿Qué resultados se pueden obtener si lo único que no garantiza el modelo de consistencia es el orden
         \verb|W|$\to$\verb|R|? Justifique su respuesta.
+    \end{enumerate}
+
+    \begin{enumerate}
+        \item Al no garantizar $W\rightarrow W$, puede suceder que la escritura \verb|k=0| de ``liberación del cerrojo'' adelante a la línea 6, produciéndose condiciones de carrera. Para ver los distintos resultados, calculamos qué valor tiene cada hebra en \verb|sump|:
+            \begin{itemize}
+                \item Hebra 0: Le corresponden las iteraciones 0, 3, 6: 
+                    \begin{equation*}
+                        \verb|sump|_0 = \verb|a[0]| + \verb|a[3]| + \verb|a[6]| = 1+4+7 = 12
+                    \end{equation*}
+                \item Hebra 1: Le corresponden las iteraciones 1, 4, 7:
+                    \begin{equation*}
+                        \verb|sump|_1 = \verb|a[1]| + \verb|a[4]| + \verb|a[7]| = 2+5+8 = 15
+                    \end{equation*}
+                \item Hebra 2: Le corresponden las iteraciones 2, 5:
+                    \begin{equation*}
+                        \verb|sump|_2 = \verb|a[2]| + \verb|a[5]| = 3+6=9
+                    \end{equation*}
+            \end{itemize}
+            Podemos obtener en \verb|sum| cualquier combinación de dichas sumas:
+            \begin{gather*}
+                12+15+9 = 36 \qquad 12+15 = 27 \\
+                12+9 = 21 \qquad 15+9 = 24 \\
+                12 \qquad 15 \qquad 9
+            \end{gather*}
+        \item En este caso la liberación del cerrojo no puede adelantar nunca a los accesos a la variable compartida \verb|sum| porque la liberación es una escritura y no se admiten que las escrituras adelanten a accesos anteriores en el código. Por tanto, se hace el acceso en exclusión mutua por parte de los tres flujos. El único resultado posible sería la suma de todos los componentes de la lista porque se acumula corresctamente en \verb|sum| la suma partical calculada en \verb|sump| por todos los flujos de control:
+            \begin{equation*}
+                \verb|sump| = \sum_{i=0}^{7} a[i] = 12 + 15 + 9 = 36
+            \end{equation*}
     \end{enumerate}
 \end{ejercicio}
 
