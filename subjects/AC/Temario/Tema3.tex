@@ -9,7 +9,7 @@ La compartición de memoria que se da trae conceptos como la coherencia del sist
 \subsection{Objetivos}
 Esta sección está orientada a:
 \begin{itemize}
-    \item Distinguir entre cores multhread, multicores y multiprocesadores.
+    \item Distinguir entre cores multithread, multicores y multiprocesadores.
     \item Comparar entre cores multithread de grano fino, grueso y cores con multithread simultáneo.
 \end{itemize}
 
@@ -390,6 +390,7 @@ Todos estos estados se implementan añadiendo a la tabla de caché de cada módu
     S & 0 & 0 & 00 \\
     I & 1 & 0 & 10
 \end{tabular}
+\caption{Representación de los estados de un bloque en caché.}
 \end{table}
 
 \subsubsection{Estados de un bloque en memoria}
@@ -742,8 +743,8 @@ Un estado pendiente indica que se está procesando un acceso a memoria del bloqu
 \begin{description}
     \item [Válido.] Puede haber copias válidas en una o en más cachés.
     \item [Inválido.] Hay una copia válida en una caché en estado Modificado.
-    \item [Pendiete de válido.] Hay una copia válida en una caché, cuyo contenido se trasladará a la memoria próximamente.
-    \item [Pendiete de inválido.] La copia del bloque en la memoria está esperando a invalidarse, en cuanto se invalide en el resto de cachés.
+    \item [Pendiente de válido.] Hay una copia válida en una caché, cuyo contenido se trasladará a la memoria próximamente.
+    \item [Pendiente de inválido.] La copia del bloque en la memoria está esperando a invalidarse, en cuanto se invalide en el resto de cachés.
 \end{description}
 
 \subsubsection{Paquetes generados por controladores e interacciones}
@@ -994,7 +995,7 @@ Tras esta sección, debería ser capaz de:
 \begin{itemize}
     \item Explicar por qué es necesaria la sincronización en multiprocesadores.
     \item Describir las primitivas para sincronización que ofrece el hardware.
-    \item Implementar cerrojos simples, cerrojos con etiqueta y barreras a partir de instrucciones máquina de sincronización y ordenación de accesos a memoria.
+    \item Implementar cerrojos simples, cerrojos con etiqueta y barreras\footnote{Conceptos como cerrojo, barrera, condición de carrera, operación atómica, o monitor; los cuales serán empleados en la presente lección, son conceptos vistos en la asignatura \emph{Sistemas Concurrentes y Distribuidos}, por lo que no se incluye su definición.} a partir de instrucciones máquina de sincronización y ordenación de accesos a memoria.
 \end{itemize}
 
 \subsection{Necesidad de sincronización}
@@ -1184,7 +1185,7 @@ Hemos visto ya en este ejemplo la necesidad de disponer de cerrojos y barreras. 
 \subsection{Soporte hardware}
 A la hora de usar cerrojos o barreras, disponemos de tres opciones:
 \begin{itemize}
-    \item Usar las implementadas por las herramientas de programación que estemos usando (en caso de que estas disopngan de las mismas).
+    \item Usar las implementadas por las herramientas de programación que estemos usando (en caso de que estas dispongan de las mismas).
     \item Usar las ya implementadas en el sistema operativo en el que esté trabajando.
     \item Implementar usted mismo los propios cerrojos y barreras.
 \end{itemize}
@@ -1217,7 +1218,7 @@ A continuación, destacamos unas cuantas primitivas que pueden utilizarse para l
                 Con \verb|Fetch&Add| la operación es una suma, con \verb|Fetch&Or| un OR lógico y con \verb|Fetch&Increment| incrementa en uno la variable \verb|x|. Un ejemplo de \verb|Fetch&Add| es la instrucción \verb|lock xadd reg, mem| (${reg\leftarrow mem},\newline {mem\leftarrow reg + mem}$), de los procesadores x86.
         \end{itemize}
     \item [Compare\&Swap.]~\\
-        Esta opera con dos variable locales \verb|a| y \verb|b| y con una variable compartida \verb|x|. Realiza sobre la variable \verb|x| de forma inninterrumpida las siguientes operaciones:
+        Esta opera con dos variable locales \verb|a| y \verb|b| y con una variable compartida \verb|x|. Realiza sobre la variable \verb|x| de forma ininterrumpida (atómica) las siguientes operaciones:
         \begin{itemize}
             \item Lee el contenido de \verb|x|.
             \item Si el contenido de \verb|x| coincide con el de \verb|a| se intercambian los contenidos de \verb|x| y de \verb|b|.
@@ -1293,10 +1294,10 @@ Recordamos ahora el uso de un cerrojo que hicimos en un ejemplo anterior, en el 
 Hemos hablado antes de que tenemos que enviar a menudo procesos a etapas de espera. Esta etapa puede desarrollarse mediante dos mecanismos principales:
 \begin{description}
     \item [Espera ocupada.]~\\
-        Llamada \emph{busy-waiting} o \emph{spin-lock}, el proceso se queda en esperae ejecutando un ciclo en el que constantemente\footnote{De aquí viene el nombre \emph{spin}.} consulta si ha cambiado el valor de alguna variable de control de la espera.
+        Llamada \emph{busy-waiting} o \emph{spin-lock}, el proceso se queda en  ejecutando un ciclo en el que constantemente\footnote{De aquí viene el nombre \emph{spin}.} consulta si ha cambiado el valor de alguna variable de control de la espera.
         Es fácil de implementar pero estamos desaprovechando temporalmente el procesador.
     \item [Bloqueo.]~\\
-        El proceso que debe esperar se bloquea por el Sistema Operativo, queda suspendido dejando el procesador a otro proceso.
+        El proceso que debe esperar se bloquea por el Sistema Operativo; es decir, queda suspendido dejando el procesador a otro proceso.
         Utilizamos el procesador para algo útil pero si el tiempo de ejecución de la región crítica es ínfimo en comparación con el tiempo necesario en suspender y reanimar un proceso, estamos introduciendo sobrecarga innecesaria.
 \end{description}
 Por tanto, usaremos espera ocupada cuando la sección crítica tenga un tiempo de ejecución pequeño y el bloqueo cuando el tiempo de ejecución de la región crítica sea un tiempo considerable (hablando siempre en relación al Sistema Operativo\footnote{Un tiempo que puede parecer despreciable para nosotros para el Sistema Operativo puede parecer muy largo.}).
@@ -1402,7 +1403,7 @@ Para implementar la versión más simple de una barrera necesitamos 3 variables 
     \item [Bandera.] Indicativo de cuando la barrera está cerrada (no deja pasar a ninguna hebra que llegue a la barrera), que es usualmente el valor 0 y 1 cuando está abierta. Por tanto, el método de espera ocupada será un ciclo que se ejecute mientras la bandera no sea 1.
     \item [Cerrojo.] Es necesario un cerrojo para realizar de forma correcta los accesos a las variables compartidas (al contador y a la bandera).
 \end{description}
-De esta forma, tenemos una primera implementación en el Código fuente~\ref{implementacion_barrera_1}. Cuando una hebra llegue al punto en el que queremos implementar la barrera, simplemente ha de llamar a la función \verb|barrera|, especificándole qué barrera quiere usar (mediante un identificador) y el número total de hebras que se encuentra ejecutando la región paralela: \verb|barrera(num_barrera, num_threads());|. Es de importancia que la variable \verb|cuenta_local| sea privada, para el buen funcionamiento de la barrera\footnote{Se comentó en clase que debía ser privada pero no sé por qué, contactar conmigo si se sabe.}.
+De esta forma, tenemos una primera implementación en el Código fuente~\ref{implementacion_barrera_1}. Cuando una hebra llegue al punto en el que queremos implementar la barrera, simplemente ha de llamar a la función \verb|barrera|, especificándole qué barrera quiere usar (mediante un identificador) y el número total de hebras que se encuentra ejecutando la región paralela: \verb|barrera(num_barrera, num_threads());|. Es de importancia que la variable \verb|cuenta_local| sea privada, para el buen funcionamiento de la barrera\footnote{Aunque se comentó en clase que debía ser privada, no recordamos el motivo. Se ruega que, si se tiene claro, nos lo comuniquen.}.
 
 Este primer código presenta un error difícil de detectar que se produce cuando se reusa una misma barrera en al menos dos partes distintas del código (cuando se usó una vez hace tiempo y se desea volver a usar otra barrera que, por ahorrar memoria, se decide usar la misma). Para sacar a la luz dicho error, el cual \textbf{puede dejar programas enteros bloqueados}, nos preguntamos qué sucedería si algún flujo que ya se encuentra esperando en la barrera se suspende (ya sea por el Sistema Operativo o por otro ente), llegan todas las hebras a la barrera por lo que se liberaría la barrera (pero nuestra hebra sigue suspendida, luego no ha avanzado de la función de la barrera), y puede que alguna hebra llegue al siguiente uso de la misma barrera antes de que nuestra hebra suspendida se reanude, con lo que volvería a establecer la bandera a 0, haciendo que nuestra hebra nunca pase del uso de la barrera en el que se suspendió y que el resto de las hebras se queden esperando por siempre (ya que nunca igualarán el número total de hebras, al haber al menos una que no superó la barrera anterior) en el siguiente uso de la misma barrera.\\
 

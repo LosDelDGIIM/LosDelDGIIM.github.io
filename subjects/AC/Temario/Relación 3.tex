@@ -12,7 +12,7 @@
 
     Al hablar el enunciado de un protocolo MESI en un SMP con un bus, entendemos que se refiere al protocolo MESI de espionaje. Durante el ejercicio, supongamos que el bloque en el que se encuentra la dirección de memoria mencionada es el bloque \verb|B|. A continuación, mostramos la Tabla~\ref{tab:ej_rel3_1}, que contiene cómo van cambiando los estados del bloque \verb|B| en cada caché en relación al tiempo (que medimos de forma relativa a los estados). Consideramos que el estado 0 es el inicial (cuando el bloque no se encuentra en ninguna caché). A continuación, desarrollamos en detalle los eventos que se producen y las acciones de los controladores, junto con los eventos que generan:\\
 
-\begin{table}
+\begin{table}[H]
 \centering
 \begin{tabular}{c|c|c|c|c}
     Evento & Caché 0 & Caché 1 & Caché 2 & Caché 3 \\
@@ -38,13 +38,13 @@ Inicialmente, como ningún nodo contiene al bloque \verb|B|, este está en estad
 
         El resto de los controladores ignoran el paquete, al tener el bloque \verb|B| en estado Inválido en sus cachés. Es pues el controlador de la memoria principal quien contesta al paquete, a través de un paquete \verb|RpBloque(B)|.
 
-        El controlador de caché del procesador 1 recibe el paquete, escribiéndo su contenido en la línea de caché correspondiente y cambiando el estado del bloque \verb|B| de Inválido a Exclusivo, ya que el controlador de caché sabe que dicho paquete no está en estado válido en ninguna otra caché.
+        El controlador de caché del procesador 1 recibe el paquete, escribiendo su contenido en la línea de caché correspondiente y cambiando el estado del bloque \verb|B| de Inválido a Exclusivo, ya que el controlador de caché sabe que dicho paquete no está en estado válido en ninguna otra caché.
 
     \item El procesador 2 genera el evento \verb|PrLec(B)|, que provoca un fallo en su caché, al estar el bloque \verb|B| en estado Inválido en su caché. Como consecuencia, genera el paquete \verb|PtLec(B)|, que es enviado a través del bus.
 
         Los controladores de caché de los procesadores 0 y 3 ignoran dicho paquete, al tener al bloque \verb|B| en estado Inválido. El controlador de caché del procesador 1 ve que el paquete es de lectura del mismo paquete \verb|B| que tiene en estado Exclusivo, luego cambia su estado a Compartido, al saber que otro nodo contendrá otra copia del bloque. Es el contorlador de la memoria principal quien contesta al paquete, a través de un paquete \verb|RpBloque(B)|.
 
-        El controlador de caché del procesador 2 recibe el paquete, escribiéndo su contenido en la línea de caché correspondiente y cambiando el estado del bloque \verb|B| de Inválido a Compartido, ya que el controlador de caché sabe que dicho paquete está en estado válido en otra caché (depende de la implementación, pero puede saberlo por una línea OR que funcione a modo de chivato, relativa a si otras cachés tienen o no a \verb|B|).
+        El controlador de caché del procesador 2 recibe el paquete, escribiendo su contenido en la línea de caché correspondiente y cambiando el estado del bloque \verb|B| de Inválido a Compartido, ya que el controlador de caché sabe que dicho paquete está en estado válido en otra caché (depende de la implementación, pero puede saberlo por una línea OR que funcione a modo de chivato, relativa a si otras cachés tienen o no a \verb|B|).
 
     \item El procesador 1 genera el evento \verb|PrEsc(B)|. Al estar \verb|B| en estado Compartido en su caché (es un estado válido), no hay fallo de caché. Su controlador de caché genera el paquete \verb|PtEx(B)|, para solicitar acceso exclusivo al bloque (estamos en un protocolo con escritura con invalidación) para poder escribir en él. Posteriormente, cambia el estado de su bloque a Modificado y procede a escribir en él.
 
@@ -121,16 +121,12 @@ Notemos que nos es suficiente con calcular el porcentaje del tamaño de cada blo
         \end{equation*}
         Por tanto, el directorio de memoria de cada nodo tendrá $2^{27}$ entradas, cada una con 5 columnas (cada una con un bit). Cada direcorio de memoria ocupará por tanto:
         \begin{equation*}
-            2^{27}\cdot 5 \text{\ Bytes} = 5\cdot 2^7\cdot 2^{20} \text{\ Bytes} = 5\cdot 128 \text{\ MBytes} = 640 \text{\ MBytes}
+            2^{27}\cdot 5 {\text{\ bits}} \cdot \frac{1 \text{\ Byte}}{{2^3 \text{\ bits}}} = 5 \cdot 2^{24} \text{\ Bytes} = 80 \text{\ MBytes}
         \end{equation*}
-        Que son:
-        \begin{equation*}
-            2^{27}\cdot 5 \text{\ Bytes} = 671088640 \text{\ Bytes} \approx 6.71\cdot 10^8 \text{\ Bytes}
-        \end{equation*}
+        
         En total, los 4 subdirectorios de memoria ocuparán:
         \begin{align*}
-            4\cdot 640 \text{\ MBytes} &= 2560 \text{\ MBytes} \\
-            4\cdot 6.71\cdot 10^8 &= 2.68\cdot 10^9 \text{\ Bytes}
+            4\cdot 80 \text{\ MBytes} &= 320 \text{\ MBytes}
         \end{align*}
 
     \item En las Tablas~\ref{tab:ej_rel3_3} y~\ref{tab:ej_rel3_3_2} indicamos la secuencia de estados de la línea del directorio del nodo 3 correspondiente al bloque \verb|B| de la dirección D, así como el estado del bloque \verb|B| en cada una de las cachés.
@@ -186,7 +182,7 @@ Inicialmente, como D no está en ninguna caché, su bloque \verb|B| tampoco, lue
 
         El procesador 1 recibe el paquete de respuesta, copiando el bloque \verb|B| en la correspondiente línea de caché y cambiando su estado a Compartido.
 
-        \item El procesador 1 realiza \verb|PrEsc(B)| y al estar \verb|B| en estado Compartido en su caché, su controlador genera el paquete \verb|PtEx(B)|, que envía al nodo 3, al ser el nodo origen de \verb|B|. Su controlador de caché observa que es la única caché con copia de \verb|B|, por lo que sólo invalida la copia de \verb|B| en memoria principal y deuelve al nodo 1 el paquete \verb|RpInv(B)|, para que sepa que todas las copias de \verb|B| fueron invalidadas.
+        \item El procesador 1 realiza \verb|PrEsc(B)| y al estar \verb|B| en estado Compartido en su caché, su controlador genera el paquete \verb|PtEx(B)|, que envía al nodo 3, al ser el nodo origen de \verb|B|. Su controlador de caché observa que es la única caché con copia de \verb|B|, por lo que sólo invalida la copia de \verb|B| en memoria principal y devuelve al nodo 1 el paquete \verb|RpInv(B)|, para que sepa que todas las copias de \verb|B| fueron invalidadas.
 
             Una vez recibido el paquete, el controlador de caché del nodo 1 cambia el estado de \verb|B| a Modificado y el procesador es libre de escribir en el bloque.
 
@@ -252,15 +248,24 @@ print x;
         \end{subfigure}
     \end{figure}
 
-    ¿Qué resultados se pueden imprimir si (considere que el compilador no altera el código):
+    Indique qué resultados se pueden imprimir si (considere que el compilador no altera el código):
     \begin{enumerate}
         \item Se ejecutan P1 y P2 en un multiprocesador con consistencia secuencial.
         \item Se ejecutan en un multiprocesador basado en un bus que garantiza todos los órdenes excepto el orden \verb|W|$\to$\verb|R|. Esto es debido a que los procesadores tienen buffer de escritura, permitiendo el procesador que las lecturas en el código que ejecuta adelanten a las escrituras que tiene su buffer.  Obsérvese que hay varios resultados posibles.
     \end{enumerate}
 
     \begin{enumerate}
-        \item Al no haber ningún código de sincronización entre los dos programas, el comportamiento del mismo está indeterminado, por lo que tenemos que distinguir casos. Mostramos todas las trazas de ejecución posibles:
-\begin{figure}[H]
+        \item Al no haber ningún código de sincronización entre los dos programas, el comportamiento del mismo está indeterminado, por lo que tenemos que distinguir casos:
+        \begin{itemize}
+            \item Si P1 imprime antes que P2, entonces la salida obligatoriamente tendrá \verb|x=2|, ya que esta asignación se realiza antes que la impresión de \verb|y| en P1.
+            No obstante, la impresión de \verb|y| puede ser $0$, $1$ o $2$; dependiendo de qué instrucciones hayan llegado a ejecutarse en P2 antes.
+
+            \item Si P2 imprime antes que P1, entonces la salida obligatoriamente tendrá \verb|y=2|, ya que esta asignación se realiza antes que la impresión de \verb|x| en P2.
+            No obstante, la impresión de \verb|x| puede ser $0$, $1$ o $2$; dependiendo de qué instrucciones hayan llegado a ejecutarse en P1 antes.
+        \end{itemize}
+        
+        Mostramos algunas de las trazas de ejecución posibles en la Figura~\ref{fig:ej_rel3_4}.
+\begin{figure}
     \centering
     \begin{subfigure}{0.3\textwidth}
         \begin{minted}[frame=lines,
@@ -416,8 +421,10 @@ print y; // Imprime 2
         \end{minted}
         \caption{Opción 10.}            
     \end{subfigure}
+    \caption{Posibles trazas del programa.}
+    \label{fig:ej_rel3_4}
 \end{figure}
-En resumen, las salidas del programa podrán ser: $\{0 2, 1 2, 2 2\}$.
+En resumen, las salidas del programa podrán ser: $\{0 2, 1 2, 2 2, 2 0, 2 1\}$.
 
         \item Si ahora consideramos que las lecturas pueden adelantar a las escrituras, entonces la instrucción \verb|print var| puede adelantar a las escrituras anteriores (ya que consiste en una lectura), por lo que ahora sí que podemos obtener como salida cualquier combinación de 0, 1 y 2:
             \begin{equation*}
@@ -458,7 +465,7 @@ r2=y;
         \end{subfigure}
     \end{figure}
 
-    ¿Qué datos puede obtener P2 en los registros \verb|r1| y \verb|r2| si (considere que el compilador no altera el código):
+    Indique qué datos puede obtener P2 en los registros \verb|r1| y \verb|r2| si (considere que el compilador no altera el código):
     \begin{enumerate}
         \item Se ejecutan P1 y P2 en un multiprocesador con consistencia secuencial.
         \item Se ejecutan en un multiprocesador con un modelo de consistencia que relaja todos los órdenes en los accesos a memoria. Razone su respuesta.
