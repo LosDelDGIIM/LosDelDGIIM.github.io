@@ -562,14 +562,40 @@ k=0;
 \end{ejercicio}
 
 \begin{ejercicio}
-    ¿Qué ocurre si en el segundo código para implementar barreras visto en clase eliminamos la
-    variable local, \verb|cont_local|, sustituyéndola en los puntos del código donde aparece por el contador
-    compartido asociado a la barrera \verb|bar[id].cont|?
+    ¿Qué ocurre si en el segundo código para implementar barreras visto en clase eliminamos la variable local, \verb|cont_local|, sustituyéndola en los puntos del código donde aparece por el contador compartido asociado a la barrera \verb|bar[id].cont|?
 \end{ejercicio}
 
 \begin{ejercicio}
-    Suponiendo que la arquitectura dispone de instrucciones \verb|Fetch&Add|, simplifique el segundo
-    código para barreras visto en clase.
+    Suponiendo que la arquitectura dispone de instrucciones \verb|Fetch&Add|, simplifique el segundo código para barreras visto en clase.\\
+
+    Como disponemos de la instrucción \verb|Fetch&Add|, no tenemos la necesidad de usar el cerrojo para acceder al contador compartido (al poder realizar la lectura-modificación-escritura de forma atómica). De esta forma, mejoras las prestaciones del código (eliminando ciertos retardos introducidos por el uso del cerrojo). El código quedaría como el del Código fuente~\ref{cod:ej_rel3_9}
+
+\begin{listing}[H]
+\begin{minted}[xleftmargin=.6cm, linenos]{c++}
+void barrera(int id, int num_threads){
+    // Variable privada de cada hebra,
+    // complementa la bandera anterior
+    int bandera_local = !bandera_local;
+
+    // Incremento de contador
+    int cuenta_local = Fetch&Add(barreras[id].contador, 1) + 1;
+
+    // Si todas las hebras han llegado
+    if(cuenta_local == num_threads){
+        barreras[id].contador = 0;      // Para un próximo uso
+
+        // Si todas han llegado, todas tienen la misma bandera local
+        barreras[id].bandera = bandera_local;
+    }else{
+        // Pone a la hebra en espera
+        while(barreras[id].bandera != bandera_local) {;}
+    }
+}
+\end{minted}
+\caption{Simplificación con la instrucción Fetch\&Add.}
+\label{cod:ej_rel3_9}
+\end{listing}
+
 \end{ejercicio}
 
 \begin{ejercicio}
