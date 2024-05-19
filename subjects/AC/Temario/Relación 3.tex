@@ -73,13 +73,13 @@ Supuesto que la memoria principal tiene $M$ bloques de memoria, el directorio se
 \begin{table}[H]
 \centering
 \begin{tabular}{r|c|c|c|c|}
-    & C_0 & \ldots & C_7 & MP \\
+    & $C_0$ & $\ldots$ & $C_7$ & MP \\
     \cline{2-5}
-    0 & Bit & \ldots & Bit & Bit \\
+    0 & Bit & $\ldots$ & Bit & Bit \\
     \cline{2-5}
-    \vdots & \vdots & \ddots & \vdots & \vdots \\
+    $\vdots$ & $\vdots$ & $\ddots$ & $\vdots$ & $\vdots$ \\
     \cline{2-5}
-    $M-1$ & Bit & \ldots & Bit & Bit \\
+    $M-1$ & Bit & $\ldots$ & Bit & Bit \\
     \cline{2-5}
 \end{tabular}
 \caption{Directorio de memoria.}
@@ -115,14 +115,30 @@ Notemos que nos es suficiente con calcular el porcentaje del tamaño de cada blo
     \end{enumerate}
 
 \begin{enumerate}
-    \item % // TODO:
+    \item El tamaño de un bloque de memoria principal coincide con el tamaño de la línea de caché, de $64 = 2^6$ Bytes. Cada nodo tiene 8 GBytes de memoria, luego dispondrá de:
+        \begin{equation*}
+            \dfrac{8 \text{\ GBytes}}{64 \text{\ Bytes}} = \dfrac{2^3\cdot 2^{30} \text{\ Bytes}}{2^6 \text{\ Bytes}} = 2^{27} \text{\ Bloques}
+        \end{equation*}
+        Por tanto, el directorio de memoria de cada nodo tendrá $2^{27}$ entradas, cada una con 5 columnas (cada una con un bit). Cada direcorio de memoria ocupará por tanto:
+        \begin{equation*}
+            2^{27}\cdot 5 \text{\ Bytes} = 5\cdot 2^7\cdot 2^{20} \text{\ Bytes} = 5\cdot 128 \text{\ MBytes} = 640 \text{\ MBytes}
+        \end{equation*}
+        Que son:
+        \begin{equation*}
+            2^{27}\cdot 5 \text{\ Bytes} = 671088640 \text{\ Bytes} \approx 6.71\cdot 10^8 \text{\ Bytes}
+        \end{equation*}
+        En total, los 4 subdirectorios de memoria ocuparán:
+        \begin{align*}
+            4\cdot 640 \text{\ MBytes} &= 2560 \text{\ MBytes} \\
+            4\cdot 6.71\cdot 10^8 &= 2.68\cdot 10^9 \text{\ Bytes}
+        \end{align*}
 
-    \item En las Tablas~\ref{tab:ej_rel3_3} y~\ref{tab:ej_rel3_3_2} indicamos la secuencia de estados de la línea del directorio del nodo 3 correspondiente a la dirección D del bloque \verb|B|, así como el estado del bloque \verb|B| en cada una de las cachés.
+    \item En las Tablas~\ref{tab:ej_rel3_3} y~\ref{tab:ej_rel3_3_2} indicamos la secuencia de estados de la línea del directorio del nodo 3 correspondiente al bloque \verb|B| de la dirección D, así como el estado del bloque \verb|B| en cada una de las cachés.
 
 \begin{table}[H]
 \centering
 \begin{tabular}{r|c|c|c|c|c|}
-    & C_0 & C_1 & C_2 & C_3 & MP \\
+    & $C_0$ & $C_1$ & $C_2$ & $C_3$ & MP \\
     \cline{2-6}
     0 & 0 & 0 & 0 & 0 & 1 \\
     \cline{2-6}
@@ -207,8 +223,7 @@ Inicialmente, como D no está en ninguna caché, su bloque \verb|B| tampoco, lue
 \end{ejercicio}
 
 \begin{ejercicio}
-    Supongamos que se va a ejecutar en paralelo el siguiente código, donde \verb|x| e \verb|y| son variables
-    compartidas (inicialmente \verb|x=y=0|):
+    Supongamos que se va a ejecutar en paralelo el siguiente código, donde \verb|x| e \verb|y| son variables compartidas (inicialmente \verb|x=y=0|):
     \begin{figure}[H]
         \centering
         \begin{subfigure}{0.3\textwidth}
@@ -240,11 +255,176 @@ print x;
     ¿Qué resultados se pueden imprimir si (considere que el compilador no altera el código):
     \begin{enumerate}
         \item Se ejecutan P1 y P2 en un multiprocesador con consistencia secuencial.
-        \item Se ejecutan en un multiprocesador basado en un bus que garantiza todos los órdenes excepto el
-        orden \verb|W|$\to$\verb|R|. Esto es debido a que los procesadores tienen buffer de escritura, permitiendo el
-        procesador que las lecturas en el código que ejecuta adelanten a las escrituras que tiene su buffer.
-        Obsérvese que hay varios resultados posibles.
+        \item Se ejecutan en un multiprocesador basado en un bus que garantiza todos los órdenes excepto el orden \verb|W|$\to$\verb|R|. Esto es debido a que los procesadores tienen buffer de escritura, permitiendo el procesador que las lecturas en el código que ejecuta adelanten a las escrituras que tiene su buffer.  Obsérvese que hay varios resultados posibles.
     \end{enumerate}
+
+    \begin{enumerate}
+        \item Al no haber ningún código de sincronización entre los dos programas, el comportamiento del mismo está indeterminado, por lo que tenemos que distinguir casos. Mostramos todas las trazas de ejecución posibles:
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{0.3\textwidth}
+        \begin{minted}[frame=lines,
+            framesep=2mm,
+            baselinestretch=1.2,
+            linenos,
+            escapeinside=||]{cpp}
+x=1;
+x=2;
+print y; // Imprime 0
+y=1;
+y=2;
+print x; // Imprime 2
+        \end{minted}
+        \caption{Opción 1.}
+    \end{subfigure}\hspace{3cm}
+    \begin{subfigure}{0.3\textwidth}
+        \begin{minted}[frame=lines,
+            framesep=2mm,
+            baselinestretch=1.2,
+            linenos,
+            escapeinside=||]{cpp}
+x=1;
+x=2;
+y=1;
+print y; // Imprime 1
+y=2;
+print x; // Imprime 2
+        \end{minted}
+        \caption{Opción 2.}            
+    \end{subfigure}
+    \\
+    \begin{subfigure}{0.3\textwidth}
+        \begin{minted}[frame=lines,
+            framesep=2mm,
+            baselinestretch=1.2,
+            linenos,
+            escapeinside=||]{cpp}
+x=1;
+x=2;
+y=1;
+y=2;
+print y; // Imprime 2
+print x; // Imprime 2
+        \end{minted}
+        \caption{Opción 3.}
+    \end{subfigure}\hspace{3cm}
+    \begin{subfigure}{0.3\textwidth}
+        \begin{minted}[frame=lines,
+            framesep=2mm,
+            baselinestretch=1.2,
+            linenos,
+            escapeinside=||]{cpp}
+x=1;
+x=2;
+y=1;
+y=2;
+print x; // Imprime 2
+print y; // Imprime 2
+        \end{minted}
+        \caption{Opción 4.}            
+    \end{subfigure}
+    \\
+    \begin{subfigure}{0.3\textwidth}
+        \begin{minted}[frame=lines,
+            framesep=2mm,
+            baselinestretch=1.2,
+            linenos,
+            escapeinside=||]{cpp}
+x=1;
+y=1;
+x=2;
+y=2;
+print x; // Imprime 2
+print y; // Imprime 2
+        \end{minted}
+        \caption{Opción 5.}
+    \end{subfigure}\hspace{3cm}
+    \begin{subfigure}{0.3\textwidth}
+        \begin{minted}[frame=lines,
+            framesep=2mm,
+            baselinestretch=1.2,
+            linenos,
+            escapeinside=||]{cpp}
+x=1;
+y=1;
+y=2;
+x=2;
+print x; // Imprime 2
+print y; // Imprime 2
+        \end{minted}
+        \caption{Opción 6.}            
+    \end{subfigure}
+    \\
+    \begin{subfigure}{0.3\textwidth}
+        \begin{minted}[frame=lines,
+            framesep=2mm,
+            baselinestretch=1.2,
+            linenos,
+            escapeinside=||]{cpp}
+x=1;
+y=1;
+y=2;
+print x; // Imprime 1
+x=2;
+print y; // Imprime 2
+        \end{minted}
+        \caption{Opción 7.}
+    \end{subfigure}\hspace{3cm}
+    \begin{subfigure}{0.3\textwidth}
+        \begin{minted}[frame=lines,
+            framesep=2mm,
+            baselinestretch=1.2,
+            linenos,
+            escapeinside=||]{cpp}
+y=1;
+x=1;
+y=2;
+print x; // Imprime 1
+x=2;
+print y; // Imprime 2
+        \end{minted}
+        \caption{Opción 8.}            
+    \end{subfigure}
+    \\
+    \begin{subfigure}{0.3\textwidth}
+        \begin{minted}[frame=lines,
+            framesep=2mm,
+            baselinestretch=1.2,
+            linenos,
+            escapeinside=||]{cpp}
+y=1;
+y=2;
+x=1;
+print x; // Imprime 1
+x=2;
+print y; // Imprime 2
+        \end{minted}
+        \caption{Opción 9.}
+    \end{subfigure}\hspace{3cm}
+    \begin{subfigure}{0.3\textwidth}
+        \begin{minted}[frame=lines,
+            framesep=2mm,
+            baselinestretch=1.2,
+            linenos,
+            escapeinside=||]{cpp}
+y=1;
+y=2;
+print x; // Imprime 0
+x=1;
+x=2;
+print y; // Imprime 2
+        \end{minted}
+        \caption{Opción 10.}            
+    \end{subfigure}
+\end{figure}
+En resumen, las salidas del programa podrán ser: $\{0 2, 1 2, 2 2\}$.
+
+        \item Si ahora consideramos que las lecturas pueden adelantar a las escrituras, entonces la instrucción \verb|print var| puede adelantar a las escrituras anteriores (ya que consiste en una lectura), por lo que ahora sí que podemos obtener como salida cualquier combinación de 0, 1 y 2:
+            \begin{equation*}
+                \{0 0, 0 1, 0 2, 1 0, 1 1, 1 2, 2 0, 2 1, 2 2\}
+            \end{equation*}
+    \end{enumerate}
+
 \end{ejercicio}
 
 
@@ -281,9 +461,28 @@ r2=y;
     ¿Qué datos puede obtener P2 en los registros \verb|r1| y \verb|r2| si (considere que el compilador no altera el código):
     \begin{enumerate}
         \item Se ejecutan P1 y P2 en un multiprocesador con consistencia secuencial.
-        \item Se ejecutan en un multiprocesador con un modelo de consistencia que relaja todos los órdenes en
-        los accesos a memoria. Razone su respuesta.
+        \item Se ejecutan en un multiprocesador con un modelo de consistencia que relaja todos los órdenes en los accesos a memoria. Razone su respuesta.
     \end{enumerate}
+
+Aunque no lo dice el enunciado, suponemos que inicialmente \verb|flag=0|.
+\begin{enumerate}
+    \item Si se cumple la consistencia secuencial, no se producirán adelantamientos, por lo que lo primero que se ejecutará en el procesador 2 será la línea 1, que entrará en bucle hasta que no se ejecute la línea 3 del procesador 1, liberando al bucle (una vez ya modificadas las variables \verb|x| e \verb|y|) y copiando en los registros su contenido.
+
+        De esta forma, en cualquier ejecución obtendremos \verb|r1=30| y \verb|r2=40|.
+
+    \item En este caso, podemos obtener cualquiera de los siguientes resultados:
+        \begin{equation*}
+            \verb|r1=0|, \verb|r2=0| \qquad \verb|r1=30|, \verb|r2=0| \qquad \verb|r1=0|, \verb|r2=40| \qquad \verb|r1=30|, \verb|r2=40|
+        \end{equation*}
+        \begin{enumerate}
+            \item La instrucción \verb|flag=1| puede adelantar a \verb|x=30| y \verb|y=40|.
+            \item La instrucción \verb|flag=1| puede adelantar a \verb|y=40|.
+            \item Tanto \verb|y=40| como \verb|flag=1| adelantan a \verb|x=30|.
+            \item Si no se produce ningún adelantamiento (o se produce uno que no altera el resultado, como que \verb|y=40| adelante a \verb|x=30|).
+        \end{enumerate}
+        Sólo hemos considerado un subconjunto pequeño de posibilidades, pero se pueden dar muchas más (sólo hemos comentado algunos adelantamientos en P1, pero en P2 también pueden producirse de muchas formas). En definitiva, puede suceder cualquier cosa.
+\end{enumerate}
+
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -296,8 +495,7 @@ r2=y;
 \end{ejercicio}
 
 \begin{ejercicio}
-    Se ha ejecutado el siguiente código en un multiprocesador con un modelo de consistencia que no
-    garantiza ni \verb|W|$\to$\verb|R| ni \verb|W|$\to$\verb|W| (garantiza el resto de órdenes):
+    Se ha ejecutado el siguiente código en un multiprocesador con un modelo de consistencia que no garantiza ni \verb|W|$\to$\verb|R| ni \verb|W|$\to$\verb|W| (garantiza el resto de órdenes):
     \begin{figure}[H]
         \centering
         \begin{minted}[frame=lines,

@@ -317,7 +317,7 @@ La propagación de las actualizaciones o invalidaciones entre los procesadores s
     \item Con una \textbf{difusión} de los paquetes de actualización o invalidación a \underline{todas} las cachés.
     \item Con el envío de los paquetes de actualización o invalidación \underline{sólo} a aquellas cachés con copias del bloque, que son sólo las que necesitan recibirlo. Es decir, realizar un \textbf{envío selectivo}.
 
-        Para esta última alternativa, necesitamos mantener una tabla o directorio de memoria, que informe de las cachés que tienen copia de un determinado bloque para poder realizar la comunicación. Esta tabla tendría una entrada por cada dirección de memoria de cada caché y contendría el bloque que contiene, junto con bits de estado.
+        Para esta última alternativa, necesitamos mantener una tabla o directorio de memoria, que informe de las cachés que tienen copia de un determinado bloque para poder realizar la comunicación. Esta tabla tendría una entrada por cada dirección de memoria de cada caché y contendría el bloque que contiene, junto con bits de estado. Se desarrollará en detalle cómo funciona el directorio de memoria en la Sección~\ref{sec:protocolos_directorios}.
 \end{itemize}
 
 \subsection{Protocolos de mantenimiento de coherencia}
@@ -478,7 +478,7 @@ En la Tabla~\ref{tab:acciones_controlador_MSI} podemos ver las acciones del cont
     \midrule
       & \verb|PtEx(B)| & Invalida copia local de \verb|B| & I \\
     \midrule
-      & \verb|Reemplazo(B)| & Invalida copia local de \verb|B| & I \\
+      & \verb|Reemplazo(B)| &  & -\footnote{El bloque B ya no está en la caché.} \\
     \toprule
       & \verb|PrLec(B)| & Genera \verb|PtLec(B)| y recibe \verb|RpBloque(B)| & S \\
     \midrule
@@ -490,7 +490,7 @@ En la Tabla~\ref{tab:acciones_controlador_MSI} podemos ver las acciones del cont
     \midrule
       & \verb|PtEx(B)| & & I \\
     \midrule
-      & \verb|Reemplazo(B)| & & I \\
+      & \verb|Reemplazo(B)| &   & - \\
     \bottomrule
 \end{tabular}
 \caption{Tabla de acciones del controlador de caché.}
@@ -528,9 +528,8 @@ En la Tabla~\ref{tab:acciones_controlador_MSI} podemos ver las acciones del cont
 
     \verb|PtEx(B)| provoca los siguientes efectos:
     \begin{enumerate}
-        \item Si la memoria tiene el bloque válido, lo deposita en el bus y pasa a estado inválido.
-        \item Si una caché tiene el bloque en estado modificado, deposita el bloque en el bus y pasa a estado inválido.
-        \item Si una caché tiene el bloque en estado compartido, pasa a estado inválido.
+        \item La memoria cambia el estado del bloque a Inválido (en caso de considerar estados).
+        \item Si una caché tiene el bloque en estado compartido, pasa a estado Inválido.
     \end{enumerate}
     \item [Acierto de escritura en bloque modificado.]~\\
         El procesador escribe (\verb|PrEsc(B)|) y el bloque está en caché en estado modificado. Como el nodo ya tiene acceso exclusivo al bloque, no se genera ningún paquete. El bloque sigue en estado modificado.
@@ -666,7 +665,7 @@ Detallamos las acciones que se cometen tras la disparación de cada evento con d
         \end{enumerate}
 \end{description}
 
-\subsection{Protocolos basados en directorios}
+\subsection{Protocolos basados en directorios} \label{sec:protocolos_directorios}
 Los protocolos de espionaje son apropiados para redes que implementan comunicaciones uno-a-todos, tales como los buses. Sin embargo, para redes en las que las difusiones son costosas o cuando necesitamos una gran escalabilidad en el sistema, es mejor usar protocolos basados en directorios. Por tanto, nos serán útiles tanto en multiprocesadores con memoria físicamente distribuida (los NUMA) como en multiprocesadores con memoria centralizada (los UMA) con red escalable.
 
 Estos protocolos de mantenimiento de coherencia reducen el tráfico en la red enviando selectivamente órdenes sólo a las cachés que disponen de una copia válida del bloque implicado en la operación de memoria. Para que esto sea posible, debe existir (como ya se ha comentado previamente) una tabla de memoria (o directorio de memoria) en la que haya una entrada de directorio asociada a cada bloque de memoria principal, con información de las cachés que tienen copia de dicho bloque; y de toda la información necesaria para tratar las situaciones de incoherencias. 
