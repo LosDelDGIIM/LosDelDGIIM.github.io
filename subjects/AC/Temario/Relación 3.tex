@@ -86,7 +86,7 @@ Supuesto que la memoria principal tiene $M$ bloques de memoria, el directorio se
 \label{tab:ej_rel3_2}
 \end{table}
 
-Notemos que nos es suficiente con calcular el porcentaje del tamaño de cada bloque que supone almacenar una fila (9 bits) de la tabla. Como las líneas de caché son de 64 bytes $= 68\cdot 8 = 512$ bits, calculamos dicha fracción:
+Notemos que nos es suficiente con calcular el porcentaje del tamaño de cada bloque que supone almacenar una fila (9 bits) de la tabla. Como las líneas de caché son de $\unit[64]{bytes}= \unit[64\cdot 8]{bits} = \unit[512]{bits}$, calculamos dicha fracción:
 \begin{equation*}
     \dfrac{9}{512} = 0.017578 \approx 1.76\%
 \end{equation*}
@@ -569,14 +569,19 @@ k=0;
 \end{ejercicio}
 
 \begin{ejercicio}
-    ¿Qué ocurre si en el segundo código para implementar barreras visto en clase eliminamos la variable local, \verb|cont_local|, sustituyéndola en los puntos del código donde aparece por el contador compartido asociado a la barrera \verb|bar[id].cont|?
+    ¿Qué ocurre si en el segundo código para implementar barreras visto en clase eliminamos la variable local, \verb|cuenta_local|, sustituyéndola en los puntos del código donde aparece por el contador compartido asociado a la barrera, llamado \verb|barreras[id].contador|?\\
+
+    Podría ocurrir que, tras aumentar el contador la penúltima hebra en llegar a la barrera, otra hebra también lo aumente mientras se libera el cerrojo,
+    provocando entonces que ambas hebras se encargen de liberar la barrera. No habrá
+    problema al resetear el contador, pero es posible que ambas hebras contengan una bandera local distinta (casuística por la que hicimos la segunda versión).
+    Por tanto, la bandera asociada a la barrera quedaría en uno de los dos estados (no sabemos cuál), y no se garantiza que todas las hebras tengan la misma bandera local.
 \end{ejercicio}
 
 \begin{ejercicio}
     Suponiendo que la arquitectura dispone de instrucciones \verb|Fetch&Add|, simplifique el segundo código para barreras visto en clase.\\
 
-    Como disponemos de la instrucción \verb|Fetch&Add|, no tenemos la necesidad de usar el cerrojo para acceder al contador compartido (al poder realizar la lectura-modificación-escritura de forma atómica). De esta forma, mejoras las prestaciones del código (eliminando ciertos retardos introducidos por el uso del cerrojo). El código quedaría como el del Código fuente~\ref{cod:ej_rel3_9}
-
+    Como disponemos de la instrucción \verb|Fetch&Add|, no tenemos la necesidad de usar el cerrojo para acceder al contador compartido (al poder realizar la lectura-modificación-escritura de forma atómica). De esta forma, mejoras las prestaciones del código (eliminando ciertos retardos introducidos por el uso del cerrojo). El código quedaría como el del Código fuente~\ref{cod:ej_rel3_9}.
+    Notemos que hemos de sumarle $1$ a nuestra cuenta local debido a que la instrucción \verb|Fetch&Add| devuelve el valor anterior al incremento.
 \begin{listing}[H]
 \begin{minted}[xleftmargin=.6cm, linenos]{c++}
 void barrera(int id, int num_threads){
@@ -605,8 +610,8 @@ void barrera(int id, int num_threads){
 
 \end{ejercicio}
 
-\begin{ejercicio}
-    Se quiere paralelizar el siguiente ciclo de forma que la asignación de iteraciones a los
+\begin{ejercicio}\label{ej:rel3_10}
+    Se quiere paralelizar el ciclo del Código Fuente~\ref{cod:ej_rel3_10} de forma que la asignación de iteraciones a los
     procesadores disponibles se realice en tiempo de ejecución (dinámicamente):
     \begin{figure}[H]
         \centering
@@ -619,6 +624,8 @@ for (i=0; i<100; i++) {
     // Código que usa i
 }
         \end{minted}
+        \caption{Ciclo a paralelizar del Ejercicio~\ref{ej:rel3_10}.}
+        \label{cod:ej_rel3_10}
     \end{figure}
     \begin{observacion}
         Considerar que las iteraciones del ciclo son independientes, que el único orden no garantizado por el
@@ -628,12 +635,70 @@ for (i=0; i<100; i++) {
     \begin{enumerate}
         \item Paralelizar el ciclo para su ejecución en un multiprocesador que implementa la primitiva \verb|Fetch&Or|
         para garantizar exclusión mutua.
+        
+        \begin{figure}[H]
+            \centering
+            \begin{minted}[frame=lines,
+                framesep=2mm,
+                baselinestretch=1.2,
+                linenos,
+                escapeinside=||]{cpp}
+while (Fetch&Or(k, 1) == 1) {}; // lock()
+n = i;
+++i;
+k=0; // unlock()
+
+while (n < 100) {
+    // Código que usa n
+    
+    while (Fetch&Or(k, 1) == 1) {}; // lock()
+    n = i;
+    ++i;
+    k=0 // unlock()
+}
+            \end{minted}
+            \caption{Paralelización del Código Fuente~\ref{cod:ej_rel3_10} con \texttt{Fetch\&Or}.}
+            \label{cod:ej_rel3_10_1}
+        \end{figure}
+
+        Suponemos que la variable \verb|i| estará inicializada a $0$, que por ejemplo se podría hacer al declararla.
+        Cuando cierta hebra llegue a dicha región crítica, de forma atómica (debido al cerrojo)
+        se le asignará un valor a \verb|n| y se incrementará \verb|i|, preparando así esta última para repartir la siguiente iteración.
+
+        Mientras que \verb|n| sea menor que $100$, se seguirá ejecutando el código que usa \verb|n|, y se volverá a realizar el cerrojo para asignarle un nuevo valor a \verb|n| e incrementar \verb|i|.
+        Notemos que el uso de la variable \verb|n| es para que la variable compartida que todas las hebras modifican sea \verb|i|, y no \verb|n|, que es privada de cada hebra.
+        Además, gracias a esta idea sabemos que cada hebra no llevará a cabo $100$ iteraciones, ya que las otras habrán modificado el valor de \verb|i|.
+
+        Además, como los únicos adelantamientos que podrían darse es que escrituras adelanten a lecturas, y usando que las primitivas
+        atómicas garantizan que sus accesos a memoria se realizan antes que los accesos posteriores, no habrá problemas de que la
+        orden \verb|k=0| cambie de sitio, funcionando correctamente entonces el cerrojo.
+
         \item Paralelizar el anterior ciclo en un multiprocesador que además tiene la primitiva \verb|Fetch&Add|.
+        
+        \begin{figure}[H]
+            \centering
+            \begin{minted}[frame=lines,
+                framesep=2mm,
+                baselinestretch=1.2,
+                linenos,
+                escapeinside=||]{cpp}
+n = Fetch&Add(i, 1);
+while (n < 100) {
+    // Código que usa n
+    n = Fetch&Add(i, 1);
+}
+            \end{minted}
+            \caption{Paralelización del Código Fuente~\ref{cod:ej_rel3_10} con \texttt{Fetch\&Add}.}
+            \label{cod:ej_rel3_10_2}
+        \end{figure}
+
+        En este caso, tenemos que es más sencillo. Suponemos que la variable \verb|i| estará inicializada a $0$, que por ejemplo se podría hacer al declararla.
+        Como la primitiva \verb|Fetch&Add| nos permite realizar la operación de incremento de forma atómica, podemos simplemente hacer uso de ella para asignarle un valor a \verb|n| y aumentar \verb|i| en una sola operación, sin necesidad de cerrojos.
     \end{enumerate}
 \end{ejercicio}
 
-\begin{ejercicio}
-    Un programador está usando el siguiente código para barreras (\verb|bar| es un vector compartido, \verb|k|
+\begin{ejercicio}\label{ej:rel3_11}
+    Un programador está usando Código Fuente~\ref{cod:ej_rel3_11} para barreras (\verb|bar| es un vector compartido, \verb|k|
     es una variable compartida, el resto son variables locales, \verb|Fetch_&_Or(k,1)| realiza sus accesos a memoria
     antes de que puedan realizarse los accesos posteriores):
     \begin{figure}[H]
@@ -656,13 +721,18 @@ Barrera(id, num_procesos)
     else while (bar[id].band != band_local) {};
 }
         \end{minted}
+        \caption{Código de la barrera del Ejercicio~\ref{ej:rel3_11}.}
+        \label{cod:ej_rel3_11}
     \end{figure}
     Conteste a las siguientes cuestiones (considere que el compilador no altera el código):
     \begin{enumerate}
         \item ¿Funciona bien este código como barrera en un multiprocesador en el que lo único que no garantiza su
-        modelo de consistencia es el orden \verb|W|$\to$\verb|R|? Razone por qué.
-        \item Funciona bien este código como barrera en un multiprocesador con modelo de consistencia que no
-        garantice ningún orden en los accesos a memoria? Razone por qué.
+        modelo de consistencia es el orden \verb|W|$\rightarrow$\verb|R|? Razone por qué.
+        \item ¿Funciona bien este código como barrera en un multiprocesador con modelo de consistencia que no
+        garantice ningún orden en los accesos a memoria? Razone por qué.\\
+
+        No, en este caso no tenemos asegurado el correcto funcionamiento. La asignación \verb|k=0| que asemeja la función \verb|unlock()| podría adelantar a la escritura anterior de \verb|cont_local|,
+        perdiendo entonces la utilidacd el cerrojo y no siendo entonces dicha asignación atómica, provocando errores.
     \end{enumerate}
 \end{ejercicio}
 
