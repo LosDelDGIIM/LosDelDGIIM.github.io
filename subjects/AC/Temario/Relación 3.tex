@@ -728,8 +728,12 @@ Barrera(id, num_procesos)
     \begin{enumerate}
         \item ¿Funciona bien este código como barrera en un multiprocesador en el que lo único que no garantiza su
         modelo de consistencia es el orden \verb|W|$\rightarrow$\verb|R|? Razone por qué.
+
+        Sí, en este caso el código funciona correctamente. En un primer momento podríamos pensar que
+        la lectura de \verb|cont_local| en el condicional podría adelantar a su escritura, pero no es posible debido a que hay depencias RAW entre ambas instrucciones.
+        Por tanto, no hay problemas de adelantamientos en este caso.
         \item ¿Funciona bien este código como barrera en un multiprocesador con modelo de consistencia que no
-        garantice ningún orden en los accesos a memoria? Razone por qué.\\
+        garantice ningún orden en los accesos a memoria? Razone por qué.
 
         No, en este caso no tenemos asegurado el correcto funcionamiento. La asignación \verb|k=0| que asemeja la función \verb|unlock()| podría adelantar a la escritura anterior de \verb|cont_local|,
         perdiendo entonces la utilidacd el cerrojo y no siendo entonces dicha asignación atómica, provocando errores.
@@ -737,19 +741,19 @@ Barrera(id, num_procesos)
 \end{ejercicio}
 
 
-\begin{ejercicio}
+\begin{ejercicio} \label{ej:rel3_12}
     Se quiere implementar un programa que calcule en paralelo la siguiente expresión en un
     multiprocesador en el que sólo se relaja el orden \verb|W|$\to$\verb|R| y en el que sólo se dispone de primitiva de
     sincronización \verb|test_&_set|:
     \[
         d = \frac{1}{N} \sum_{i=1}^{N} x_i^2 - \ol{x}^2, \quad \ol{x} = \frac{1}{N} \sum_{i=1}^{N} x_i
     \]
-    Un programador ha implementado el código de abajo. Tenga en cuenta lo siguiente:
+    Un programador ha implementado el Código Fuente~\ref{cod:ej_rel3_12}. Tenga en cuenta lo siguiente:
     \begin{itemize}
         \item El código lo ejecutan \verb|nthread| threads en paralelo.
         \item \verb|ithread| es una variable local que nota el identificador del thread.
         \item \verb|i|, \verb|medl| y \verb|varil| son variables locales.
-        \item \verb|i|, \verb|med|, \verb|vari|, el vector \verb|x| y \verb|N| son variables compartidas.
+        \item \verb|med|, \verb|vari|, el vector \verb|x| y \verb|N| son variables compartidas.
         \item Inicialmente \verb|med|, \verb|vari|, \verb|medl| y \verb|varil| son 0.
     \end{itemize}
     \begin{figure}[H]
@@ -767,24 +771,181 @@ med = med + medl/N; vari = vari + varil/N;
 vari= vari - med*med;
 if (ithread==0) printf("varianza = %f", vari); //imprime en pantalla
         \end{minted}
+        \caption{Código del Ejercicio~\ref{ej:rel3_12}.}
+        \label{cod:ej_rel3_12}
     \end{figure}
+    
+    \begin{observacion}
+        En todos los apartados puede añadir o quitar variables si lo estima conveniente.
+    \end{observacion}
     Conteste a las siguientes cuestiones (considere que el compilador no altera el código):
     \begin{enumerate}
         \item Se ha ejecutado este código usando varios threads y se ha visto que, aunque \verb|N| y el vector \verb|x| no
         varían, no siempre se imprime lo mismo. ¿Por qué ocurre esto?
+
+        Esto se debe a errores de sincronización tras la ejecución del bucle for, el cual solo modifica variables locales luego no da problema.
+        Sin embargo, tras la ejecución del bucle, se realizan operaciones sobre variables compartidas, lo que provoca condiciones de carrera, veámoslo:
+        \begin{enumerate}
+            \item No se accede en exclusión mutua a las variables compartidas \verb|med| y \verb|vari| en la línea 5,
+            lo que provoca que se puedan realizar operaciones sobre ellas de forma simultánea. Por ejemplo, dos hebras podrían
+            leer el mismo valor de \verb|med| en cierto momento, y luego sumarle \verb|medl/N|, lo que provocaría que el valor
+            final de \verb|med| no tenga la contribución de todas las hebras.
+
+            \item De forma similar, todas las hebras ejecutarán la línea 6, cuando debería ser solo una de ellas la que lo haga, ya que
+            según la expresión matemática, $\ol{x}^2$ tan solo se resta una vez. Además, como no se
+            accede en mutua exclusión a \verb|vari|, se pueden realizar operaciones sobre ella de forma simultánea, lo que provoca
+            que el resultado también varíe.
+
+            \item Por último, la impresión en pantalla se realiza sin garantizar que todas las hebras hayan terminado de realizar
+            las operaciones anteriores, por lo que se puede imprimir el valor de \verb|vari| antes de que todas las hebras hayan
+            sumado su contribución. En el caso de que la hebra 0 sea la primera en llegar,
+            se imprimirá el valor de \verb|vari| sin haber sumado la contribución de las demás hebras,
+            lo que provocará que el resultado no sea el esperado.
+        \end{enumerate}
         \item Añada lo mínimo necesario para solucionar el problema teniendo en cuenta que sólo se dispone
         para implementar sincronización de \verb|test_&_set| (tampoco se dispone de primitivas software de
         sincronización). Indique qué variables son ahora compartidas y cuáles locales.
+
+        El código corregido se muestra en el Código Fuente~\ref{cod:ej_rel3_12_b}.
+        En este caso, se ha añadido un cerrojo para garantizar la exclusión mutua en las operaciones sobre las variables compartidas \verb|med| y \verb|vari| empleando para ello la variable compartida \verb|k_1|.
+        Además, se ha añadido una barrera para garantizar que todas las hebras han terminado de sumar su contribución antes de realizar la resta de $\ol{x}^2$ a \verb|vari|
+        y la impresión en pantalla.
+
+        \begin{figure}
+            \centering
+            \begin{minted}[frame=lines,
+                framesep=2mm,
+                baselinestretch=1.2,
+                linenos,
+                escapeinside=||]{cpp}
+for (i=ithread;i<N;i=i+nthread) {
+    medl=medl+x[i];
+    varil=varil+x[i]*x[i];
+}
+while(test_&_set(k_1,1)==1) {}; // lock()
+med = med + medl/N; vari = vari + varil/N;
+k_1=0; // unlock()
+
+bandera_local = !(bandera_local);
+while(test_&_set(k_2,1)==1) {}; // lock()
+cont_local = ++bar[id].cont;
+k_2=0; // unlock()
+if(cont_local == num_procesos) {
+    bar[id].cont = 0;
+    bar[id].band = bandera_local;
+}
+else while(bar[id].band != bandera_local) {};
+
+if (ithread==0){
+    vari= vari - med*med;
+    printf("varianza = %f", vari); //imprime en pantalla
+} 
+            \end{minted}
+            \caption{Código del Ejercicio~\ref{ej:rel3_12} con \texttt{test\&set}.}
+            \label{cod:ej_rel3_12_b}
+        \end{figure}
+
+        Las variables locales son \verb|ithread|, \verb|i|, \verb|medl|, \verb|varil|, \verb|bandera_local| y \verb|cont_local|.
+        Las variables compartidas son \verb|med|, \verb|vari|, \verb|N|, \verb|k_1| y \verb|k_2|. Además,
+        \verb|x| y \verb|bar| son arrays compartidos. Inicialmente,
+        \verb|med|, \verb|vari|, \verb|k_1|, \verb|k_2|, \verb|medl|, \verb|varil| y \verb|cont_local| son 0.
+
         \item Escriba el programa suponiendo que el multiprocesador además tiene primitivas de sincronización
-        \verb|fetch_&_add| (se tendrá en cuenta las prestaciones). Indique qué variables son compartidas y
+        \verb|fetch&add| (se tendrá en cuenta las prestaciones). Indique qué variables son compartidas y
         cuáles locales.
+
+        El código corregido se muestra en el Código Fuente~\ref{cod:ej_rel3_12_c}. Gracias a la instrucción \verb|fetch&add|, podemos realizar las sumas de forma atómica, evitando así el uso de cerrojos.
+        Las variables locales son \verb|ithread|, \verb|i|, \verb|medl|, \verb|varil|, \verb|bandera_local| y \verb|cont_local|.
+        Las variables compartidas son \verb|med|, \verb|vari|, \verb|N|. Además, al igual que antes,
+        \verb|x| y \verb|bar| son arrays compartidos. Inicialmente,
+        \verb|med|, \verb|vari|, \verb|medl|, \verb|varil| y \verb|cont_local| son 0.
+        \begin{figure}
+            \centering
+            \begin{minted}[frame=lines,
+                framesep=2mm,
+                baselinestretch=1.2,
+                linenos,
+                escapeinside=||]{cpp}
+for (i=ithread;i<N;i=i+nthread) {
+    medl=medl+x[i];
+    varil=varil+x[i]*x[i];
+}
+Fetch&Add(med, medl/N);
+Fetch&Add(vari, varil/N);
+
+bandera_local = !(bandera_local);
+cont_local = Fetch&Add(bar[id].cont, 1) + 1;
+if(cont_local == num_procesos) {
+    bar[id].cont = 0;
+    bar[id].band = bandera_local;
+}
+else while(bar[id].band != bandera_local) {};
+
+if (ithread==0){
+    vari= vari - med*med;
+    printf("varianza = %f", vari); //imprime en pantalla
+} 
+            \end{minted}
+            \caption{Código del Ejercicio~\ref{ej:rel3_12} con \texttt{fetch\&add}.}
+            \label{cod:ej_rel3_12_c}
+        \end{figure}
+
         \item Escriba el programa ahora suponiendo que el multiprocesador sólo tiene primitivas de
         sincronización \verb|compare_&_swap| (se tendrá en cuenta las prestaciones). Indique qué variables son
         compartidas y cuáles locales.
+
+        El código corregido se muestra en el Código Fuente~\ref{cod:ej_rel3_12_d}. Gracias a la instrucción \verb|compare&swap|.
+        Las variables locales son \verb|ithread|, \verb|i|, \verb|medl|, \verb|varil|, \verb|bandera_local|, \verb|cont_local|,
+        \verb|a| y \verb|b|. Las variables compartidas son \verb|med|, \verb|vari|, \verb|N|. Además, al igual que antes,
+        \verb|x| y \verb|bar| son arrays compartidos. Inicialmente,
+        \verb|med|, \verb|vari|, \verb|medl|, \verb|varil|, \verb|a|, \verb|b| y \verb|cont_local| son 0.
+        \begin{figure}
+            \centering
+            \begin{minted}[frame=lines,
+                framesep=2mm,
+                baselinestretch=1.2,
+                linenos,
+                escapeinside=||]{cpp}
+for (i=ithread;i<N;i=i+nthread) {
+    medl=medl+x[i];
+    varil=varil+x[i]*x[i];
+}
+medl = medl/N;
+do{
+    a=med;
+    b=med+medl;
+    compare&swap(a,b,med);
+}while(a!=b);
+
+varil = varil/N;
+do{
+    a=vari;
+    b=vari+varil;
+    compare&swap(a,b,vari);
+}while(a!=b);
+
+bandera_local = !(bandera_local);
+do{
+    cont_local = bar[id].cont;
+    b = cont_local + 1;
+    compare&swap(cont_local,b,bar[id].cont);
+}while(cont_local!=b);
+if(cont_local == num_procesos) {
+    bar[id].cont = 0;
+    bar[id].band = bandera_local;
+}
+else while(bar[id].band != bandera_local) {};
+
+if (ithread==0){
+    vari= vari - med*med;
+    printf("varianza = %f", vari); //imprime en pantalla
+} 
+            \end{minted}
+            \caption{Código del Ejercicio~\ref{ej:rel3_12} con \texttt{compare\&swap}.}
+            \label{cod:ej_rel3_12_d}
+        \end{figure}
+
     \end{enumerate}
-    \begin{observacion}
-        En todos los apartados puede añadir o quitar variables si lo estima conveniente.
-    \end{observacion}
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -862,7 +1023,7 @@ Por tener dicho bloque en estado M (Modificado), entonces dicha caché es la ún
         \item Generar paquete de petición de acceso E al bloque con lectura y pasar el bloque a M.
     \end{enumerate}
 
-    La opción correcta es la 4: Debe generar un paquete de petición de acceso exclusivo con lectura ya que tiene el bloque en estado I (Inválido), luego no dispone de una copia actualizada del mismo (por lo que tiene que solicitar la lectura del mismo). El acceso es exclusivo ya que se dispone a escribir en el bloque, luego debe invalidar el resto de copias del bloque en el resto de las cachés (al usar MESI la escritura con invalidación). FInalmente, pasará el bloque a estado Modificado ya que escribirá en él, por lo que será (una vez finalizada la escritura) la única copia del bloque válida en todo el sistema de memoria.
+    La opción correcta es la 4: Debe generar un paquete de petición de acceso exclusivo con lectura ya que tiene el bloque en estado I (Inválido), luego no dispone de una copia actualizada del mismo (por lo que tiene que solicitar la lectura del mismo). El acceso es exclusivo ya que se dispone a escribir en el bloque, luego debe invalidar el resto de copias del bloque en el resto de las cachés (al usar MESI la escritura con invalidación). Finalmente, pasará el bloque a estado Modificado ya que escribirá en él, por lo que será (una vez finalizada la escritura) la única copia del bloque válida en todo el sistema de memoria.
 \end{cuestion}
 
 \begin{cuestion}
