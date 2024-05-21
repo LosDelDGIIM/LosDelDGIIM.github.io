@@ -53,7 +53,7 @@ Es una variable booleana que controla el ajuste dinámico del número de hilos d
 | Funciones de entorno | `omp_set_dynamic(value)` | `int omp_get_dynamic()` |
 
 ### nthreads-var
-Es una variable numérica que controla el número de hilos a usar en la próxima región `parallel`. Hemos podido experimentar que `gcc` lo inicializa por defecto al número de cores lógicos del computador.  
+Es una variable numérica que controla el número máximo de hilos a usar en la próxima región `parallel` si no se especifica en ella la cláusula `num_threads`. Hemos podido experimentar que `gcc` lo inicializa por defecto al número de cores lógicos del computador.  
   
 | `nthreads-var`       | Modificable                  | Consultable             |
 |----------------------|------------------------------|-------------------------|
