@@ -191,7 +191,7 @@ Al inicio de la sesión de prácticas habíamos comentado la prioridad de las di
   
 - Cláusula `if`: Establece si la región se paralelizará o no.
 - Cláusula `num_threads`: Establece el número de hilos de la próxima región paralela.
-- Función `omp_set_num_threads()`: Establece el número de hilos de la próxima región paralela.
+- Función `omp_set_num_threads()`: Establece el número máximo de hilos de la próxima región paralela.
 - Variable de entorno `OMP_NUM_THREADS`: Establece el número de hilos de la próxima región paralela.
   
 Donde la cláusula `num_threads` tiene prioridad sobre la función `omp_set_num_threads()`, que tiene prioridad sobre la variable `OMP_NUM_THREADS`; todas ellas dependen de que la condición de la cláusula `if` sea cierta para poder llevarse a cabo.
