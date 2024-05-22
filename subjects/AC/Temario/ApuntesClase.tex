@@ -1,56 +1,46 @@
 atomic es mas rapido k critical xq critical implementa cerrojos y atomic una instruccion maquina particular, del estilo *lock addl*.
 
 ### Tema 4 ###
-# Nomenclatura - Incluir en los apuntes.
-Microarquitectura en vez de arquitectura para denominar el repertorio de instrucciones (que verdaderamente es lo que es la arquitectura). No a cómo está implementado el núcleo (qué bloques tiene, cómo se comunican, \ldots).
-Las microarquitecturas podemos entenderlas en cómo están implementadas las arquitecturas.
-
 # La diferencia entre ILP y VLIW 
 ## Diferencias
-VLIW (very long instruction word) no hay hardware que se encarga de la planificación de instrucciones. Lo hace el compilador. Pone en palabras de instrucciones (el compilador) largas las instrucciones que se van a emitir juntas en ejecución.
-ILP: el hardware se encarga de la planificación de instrucciones. 
-ILP: Hardware para decidir qué instrucciones se van a emitir a ejecución a la vez y VLIW no, lo hace el compilador.
-VLIW en computadores empotrados (ocultos), usualmente.
+% Las dos implementaciones están segmentadas (tienen un cauce).
+% - Las instrucciones se captan en el orden del programa --> buffer de instrucciones y se decodifican en orden del programa.
+% - UNa vez decodificada se sabe qué se va a usar y en ISS se emite a ejecución.
+% 
+% ## Comentarios en el flujo de ejecucion de instrucciones
+% La emision a ejecucion puede ser en orden del programa o desordenada, con el fin de ahorrar tiempo de ejecución.
+% Ya sea ordenada o no, como las unidades pueden suponer distinto tiempo, la finalización de las instrucciones también va a ser desordenada (una puede emitirse antes y terminar después que una que se emite después y termina antes).
+% 
+% En los superescalares, la última etapa procesa las instrucciones de forma ordenada (en orden del programa), aunque la ejecución sea en forma desordenada.
+% Esta última etapa es la que modifica los registros de la arquitectura. Con esto se garantiza la consistencia del procesador, de forma que el resultado coincide con el que se obtendría de forma ordenada. Está claro que la ejecución va a ser de forma desordenada. Sin embargo, obtenemos un resultado como si se obtendria en el orden del programa.
 
-Las dos implementaciones están segmentadas (tienen un cauce).
-- Las instrucciones se captan en el orden del programa --> buffer de instrucciones y se decodifican en orden del programa.
-- UNa vez decodificada se sabe qué se va a usar y en ISS se emite a ejecución.
+% En la realidad, cada etapa está compuesta por distintas subetapas. Puede llegar a haber 10, 14, \ldots etapas en el cauce.
 
-## Comentarios en el flujo de ejecucion de instrucciones
-La emision a ejecucion puede ser en orden del programa o desordenada, con el fin de ahorrar tiempo de ejecución.
-Ya sea ordenada o no, como las unidades pueden suponer distinto tiempo, la finalización de las instrucciones también va a ser desordenada (una puede emitirse antes y terminar después que una que se emite después y termina antes).
+% ## Modificaciones instroducidas en las arquitecturas para reducir tiempos de ejecución
+% - Segmentación (esto es repaso). Mejora el tiempo de CPU porque reduce el tiempo de ciclo, reduciéndolo entre el N de etapas si todas las etapas duran lo mismo.
 
-En los superescalares, la última etapa procesa las instrucciones de forma ordenada (en orden del programa), aunque la ejecución sea en forma desordenada.
-Esta última etapa es la que modifica los registros de la arquitectura. Con esto se garantiza la consistencia del procesador, de forma que el resultado coincide con el que se obtendría de forma ordenada. Está claro que la ejecución va a ser de forma desordenada. Sin embargo, obtenemos un resultado como si se obtendria en el orden del programa.
+% Sin embargo, en los códigos hay dependencias (de datos o control) que dan lugar a problemas en un cauce segmentado, que pueden llevar a un resultado incorrecto de la ejecución (distinto al que se obtendría si no estuviera segmentado).
 
-Cuando esta en alguna de las etapas diremos que se esta procesando y cuando este en ejecucion diremos que se esta ejecutando.
-En la realidad, cada etapa está compuesta por distintas subetapas. Puede llegar a haber 10, 14, \ldots etapas en el cauce.
+% Problemas (llamados hazards, riesgos): Hay riesgos entre dos instrucciones que tienen dependencias. Además, hay riesgos en saltos (de control), ya que la siguiente instruccion despues de un salto no es la que hay despues en el código. Gran problema con saltos condicionales.
 
-## Modificaciones instroducidas en las arquitecturas para reducir tiempos de ejecución
-- Segmentación (esto es repaso). Mejora el tiempo de CPU porque reduce el tiempo de ciclo, reduciéndolo entre el N de etapas si todas las etapas duran lo mismo.
+% ### Como prevenir riesgos 
+% En VLIW el compilador debe añadir instrucciones de no operacion (nop), para eliminar riesgos; tanto de datos como de control. Peores prestaciones, pasamos de un CPI ideal (1) a uno mayor (como 3 ciclos por instruccion).
+% Un superescalar VLIW (uno real): Vamos a trabajar en cada una de las etapas con varias instrucciones a la vez (tantas como replicado). Tenemos un CPI ideal (0.5, dos resultados por ciclo). Al añadir instrucciones nop, hace el CPI muy malo (de 2.75). Sin considerar dependencias estructurales (que puede empeorar las cosas, si dos instrucciones necesitan acceder en el mismo tiempo a la misma unidad que no se encuentra replicada). Peor es el rendiminto.
 
-Sin embargo, en los códigos hay dependencias (de datos o control) que dan lugar a problemas en un cauce segmentado, que pueden llevar a un resultado incorrecto de la ejecución (distinto al que se obtendría si no estuviera segmentado).
+% Para reducir la penalización el compialdor debe encargarse.
 
-Problemas (llamados hazards, riesgos): Hay riesgos entre dos instrucciones que tienen dependencias. Además, hay riesgos en saltos (de control), ya que la siguiente instruccion despues de un salto no es la que hay despues en el código. Gran problema con saltos condicionales.
+% En ILP el hardware se encarga de eliminar los riesgos y reducir el tiempo de penalización que suponen las dependencias. Puede llegar a el 0.5 ideal que teniamos antes.
 
-### Como prevenir riesgos 
-En VLIW el compilador debe añadir instrucciones de no operacion (nop), para eliminar riesgos; tanto de datos como de control. Peores prestaciones, pasamos de un CPI ideal (1) a uno mayor (como 3 ciclos por instruccion).
-Un superescalar VLIW (uno real): Vamos a trabajar en cada una de las etapas con varias instrucciones a la vez (tantas como replicado). Tenemos un CPI ideal (0.5, dos resultados por ciclo). Al añadir instrucciones nop, hace el CPI muy malo (de 2.75). Sin considerar dependencias estructurales (que puede empeorar las cosas, si dos instrucciones necesitan acceder en el mismo tiempo a la misma unidad que no se encuentra replicada). Peor es el rendiminto.
+% # Cómo se hace
+% 1. Ver los diagramas.
+% 2. Ver cómo se implementan los bloquecitos (almacenamiento, algoritmos, \ldots) para eliminar riesgos de datos, control y estructurales; reduciendo tiempos.
 
-Para reducir la penalización el compialdor debe encargarse.
+% Vamos a ver un diseño sencillo.
 
-En ILP el hardware se encarga de eliminar los riesgos y reducir el tiempo de penalización que suponen las dependencias. Puede llegar a el 0.5 ideal que teniamos antes.
-
-# Cómo se hace
-1. Ver los diagramas.
-2. Ver cómo se implementan los bloquecitos (almacenamiento, algoritmos, \ldots) para eliminar riesgos de datos, control y estructurales; reduciendo tiempos.
-
-Vamos a ver un diseño sencillo.
-
-## Vistazo a diagrama de Microarquitectura.
-### Diagrama de bloques (ejemplo del ARM a76, con ARMv8).
-La emisión forma parte de la codificación. Con la emision se emiten las instrucciones a ejecutar a las unidades funcionales. 
-Hay almacenamientos intermedios (llamados estaciones de reserva), anteriormente se presentaron como buffers intermedios.
+% ## Vistazo a diagrama de Microarquitectura.
+% ### Diagrama de bloques (ejemplo del ARM a76, con ARMv8).
+% La emisión forma parte de la codificación. Con la emision se emiten las instrucciones a ejecutar a las unidades funcionales. 
+% Hay almacenamientos intermedios (llamados estaciones de reserva), anteriormente se presentaron como buffers intermedios.
 
 Dudas posibles: IMPORTANTE
 - En los 86 pasa siempre (al ser CISC) y en ARM (es RISC): Puede suceder que uns instrucción esté implementada con varias microinstrucciones (que son las que entiende el núcleo). Por eso hay veces que pasa de 4 flechas a 8.
