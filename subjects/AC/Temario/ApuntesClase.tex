@@ -132,4 +132,149 @@ Usar otra barrera (necesitamos muchas barreras).
 No.
 
 
+### Tema 4 ###
+# Nomenclatura - Incluir en los apuntes.
+Microarquitectura en vez de arquitectura para denominar el repertorio de instrucciones (que verdaderamente es lo que es la arquitectura). No a cómo está implementado el núcleo (qué bloques tiene, cómo se comunican, \ldots).
+Las microarquitecturas podemos entenderlas en cómo están implementadas las arquitecturas.
 
+# La diferencia entre ILP y VLIW 
+## Diferencias
+VLIW (very long instruction word) no hay hardware que se encarga de la planificación de instrucciones. Lo hace el compilador. Pone en palabras de instrucciones (el compilador) largas las instrucciones que se van a emitir juntas en ejecución.
+ILP: el hardware se encarga de la planificación de instrucciones. 
+ILP: Hardware para decidir qué instrucciones se van a emitir a ejecución a la vez y VLIW no, lo hace el compilador.
+VLIW en computadores empotrados (ocultos), usualmente.
+
+Las dos implementaciones están segmentadas (tienen un cauce).
+- Las instrucciones se captan en el orden del programa --> buffer de instrucciones y se decodifican en orden del programa.
+- UNa vez decodificada se sabe qué se va a usar y en ISS se emite a ejecución.
+
+## Comentarios en el flujo de ejecucion de instrucciones
+La emision a ejecucion puede ser en orden del programa o desordenada, con el fin de ahorrar tiempo de ejecución.
+Ya sea ordenada o no, como las unidades pueden suponer distinto tiempo, la finalización de las instrucciones también va a ser desordenada (una puede emitirse antes y terminar después que una que se emite después y termina antes).
+
+En los superescalares, la última etapa procesa las instrucciones de forma ordenada (en orden del programa), aunque la ejecución sea en forma desordenada.
+Esta última etapa es la que modifica los registros de la arquitectura. Con esto se garantiza la consistencia del procesador, de forma que el resultado coincide con el que se obtendría de forma ordenada. Está claro que la ejecución va a ser de forma desordenada. Sin embargo, obtenemos un resultado como si se obtendria en el orden del programa.
+
+Cuando esta en alguna de las etapas diremos que se esta procesando y cuando este en ejecucion diremos que se esta ejecutando.
+En la realidad, cada etapa está compuesta por distintas subetapas. Puede llegar a haber 10, 14, \ldots etapas en el cauce.
+
+## Modificaciones instroducidas en las arquitecturas para reducir tiempos de ejecución
+- Segmentación (esto es repaso). Mejora el tiempo de CPU porque reduce el tiempo de ciclo, reduciéndolo entre el N de etapas si todas las etapas duran lo mismo.
+
+Sin embargo, en los códigos hay dependencias (de datos o control) que dan lugar a problemas en un cauce segmentado, que pueden llevar a un resultado incorrecto de la ejecución (distinto al que se obtendría si no estuviera segmentado).
+
+Problemas (llamados hazards, riesgos): Hay riesgos entre dos instrucciones que tienen dependencias. Además, hay riesgos en saltos (de control), ya que la siguiente instruccion despues de un salto no es la que hay despues en el código. Gran problema con saltos condicionales.
+
+### Como prevenir riesgos 
+En VLIW el compilador debe añadir instrucciones de no operacion (nop), para eliminar riesgos; tanto de datos como de control. Peores prestaciones, pasamos de un CPI ideal (1) a uno mayor (como 3 ciclos por instruccion).
+Un superescalar VLIW (uno real): Vamos a trabajar en cada una de las etapas con varias instrucciones a la vez (tantas como replicado). Tenemos un CPI ideal (0.5, dos resultados por ciclo). Al añadir instrucciones nop, hace el CPI muy malo (de 2.75). Sin considerar dependencias estructurales (que puede empeorar las cosas, si dos instrucciones necesitan acceder en el mismo tiempo a la misma unidad que no se encuentra replicada). Peor es el rendiminto.
+
+Para reducir la penalización el compialdor debe encargarse.
+
+En ILP el hardware se encarga de eliminar los riesgos y reducir el tiempo de penalización que suponen las dependencias. Puede llegar a el 0.5 ideal que teniamos antes.
+
+# Cómo se hace
+1. Ver los diagramas.
+2. Ver cómo se implementan los bloquecitos (almacenamiento, algoritmos, \ldots) para eliminar riesgos de datos, control y estructurales; reduciendo tiempos.
+
+Vamos a ver un diseño sencillo.
+
+## Vistazo a diagrama de Microarquitectura.
+### Diagrama de bloques (ejemplo del ARM a76, con ARMv8).
+La emisión forma parte de la codificación. Con la emision se emiten las instrucciones a ejecutar a las unidades funcionales. 
+Hay almacenamientos intermedios (llamados estaciones de reserva), anteriormente se presentaron como buffers intermedios.
+
+Dudas posibles: IMPORTANTE
+- En los 86 pasa siempre (al ser CISC) y en ARM (es RISC): Puede suceder que uns instrucción esté implementada con varias microinstrucciones (que son las que entiende el núcleo). Por eso hay veces que pasa de 4 flechas a 8.
+- En la emisión hay dos partes: una (Intel llama emisión a (estación de reserva) ventana de instrucciones) y luego usa envio cuando se refiere a paso de instrucciones desde estacion de reserva a unidad. En manuales de ARM y PowerPC se usa al revés (envío a estaciones de reserva y luego emisión a unidad funcional).
+
+IMPORTANTE 
+IMPORTANTE 
+- Que ver con carga y almacenamiento: Se implementa en la ejecución el adelantamiento (también que una escritura propia sea adelantada en cuanto a orden general) (lo pueden hacer todos los núcleos): LSU, una parte donde pone las cargas y otra con almacenamientos. Lo que va delante AGU (generacion de address) genera las direcciones para acceder a memoria. Puede calcular la direccion en cualqueir AGU, pero si es de carga se va a otra y si es de lectura se va a otra. En estas listas una lectura puede coger el contenido de una escritura, viéndola antes que el resto (ya que todavia no se ha llevado a caché, ningun otro nucleo se entera al realizarse de forma interna).
+
+Si es la misma direccion: el cerebro de la LSU mira la direccion de las lecturas que entran y comprueba si hay alguna escritura que escribe en la dirección. Cuando se mete un LOAD se coje la direccion (ya calculada en el AGU) y se mira en todas las tablas a ver si hay escrituras en dicha direccion y la última que haya coge su contenido.
+Si se gestiona como una FIFO, se garantizan W->W y R->R (no se realizan dichos adelantamientos). Así es en Intel. En ARM no (implementacion mas compleja).
+- Las dos colas del LSU van a su ritmo (cada una al suyo). 
+
+### Esquema de ARM cortex A72
+IMPORTANTE
+IMPORTANTE
+VER DIAPOSITIVA 12, leer qué hace cada etapa.
+En la etapa de captacion está la predicción de saltos y la tabla de saltos (se verá después).
+En emision se usa la (ventana de instrucciones) estaciones de reserva. Buffer de renombrado (eliminar WAW y WAR), buffer de reorden.
+Buffer renombrado y de reorden (ROB) en WB.
+Buffer de reorden: 
+- puede inbluir buffer de renombreado.
+- Permite implementar la eliminacion de riesgos de control de forma sencilla.
+- Tarea fundamental: En la ultima etapa, garantiza que registros se modifican en orden del programa (de ahi viene el orden).
+
+Eliminar RAW: ventanas de instrucciones 
+Eliminar WAR, WAW: buffer renombre.
+
+Los de control que se escapan (por prediccion incorrecta) se eliminan en WB.
+Para eliminar control usamos ROB.
+
+
+
+IMPORTANTE
+# Detalles
+
+IMPORTANTE
+## Como se implmementa la emision
+Utilizamos los almacenamientos de negrita y se realizan las tareas de negrita (arriba).
+- Eliminan RAW y estructurales con estaciones de reserva o ventanas.
+- WAW y WAR con renombrado.
+- Cómo se capturan los operandos. Buffer con los registros de la arquitectura.
+
+Si hay un registro no renombrado se capta el operando del buffer de registros.
+Si está renombrado, se capta del buffer de renombrado.
+
+
+
+
+A Intel le gusta una estacion de reserva compartida.
+
+Antes de nada:
+### Buffer de renombrado
+Cuando se emite instruccion se le asigna entrada en estacion de reserva y se renombra el registro en el que se va a escribir asignandole una entrada en el banco de registros de renombrado. (Eso es la tabla Diap 14). Es una tabla con tantas entradas como registros. Campos:
+- U Si estoy usando la entrada.
+- Dest: registro que estoy renombrando. (2 renombra a 5).
+- Valor: Almaceno el valor que se va a guardar en 2
+- Valido: Si el valor está calculado o no (1 si esta calculado) y 0 si la instruccion emitida pero no ha terminado.
+- Ult: Elimina el WAW: si esta activo dice que es el ultimo renombrado de un registro (si el 5 esta renombrado varias veces), el 1 es que sea valido.
+
+Cuando se emite una instruccion el registro donde se escribe se renombra.
+Si 3 y 5 no estan renombrados, se coge el contenido directamente de 3 y 5. Si estan renombrados, se cogen de la tabla.
+
+Siempre que se emite instruccion se le asigna entrada en buffer de renombrado (al registro que almacena) (si no, se producen WAR y WAW). Se ELIMINAN las dependencias, no hace falta detectarlas.
+RR: registro en tabla de renombrado.
+1. Se renombran 3 y 5. Se meten en la tabla.
+2. Se renombra 4.
+3. Se espera a 3 en la estacion de reserva.
+4. Se renombra nuevamente 3 con la entrada 5.
+5. Se renombra nuevamente 7 con la entrada 6.
+6. Suponemos division tarda mas que suma. Se completa antes la suma y pasa el campo a valido.
+7. Se completa la siguiente suma.
+8. Se completa la division, dato ya disponible.
+9. Ya lo tiene disponible la estacion de reserva y ya se ejecuta.
+10. Termina la entrada 6.
+
+TODO AHORA:
+Añadimos estaciones de reserva. Las unidades de mult y suma-resta tienen su propia estacion de reserva.
+ESTACION DE RESERVA:
+- OC: para instruccion.
+- Rdestino: El registro de renombrado donde guardar el resultado. Cuando se calcula se mete y ya.
+- VS1: Primero operando.
+- VS2: Segundo operando.
+
+Cuando se emite una instruccion se captan los operandos.
+Si no estan renombrados los operandos, se captan del registro y se mandan a estacion de reserva (no se renombran).
+Si estan renombrados, se coge de la tabla de renombrado en caso de estar calculado.
+Si estan renombrados, si no esta calculado, se almacena en OSi/ISi la entrada de la tabla de renombrado en el que se almacena el operando.
+
+Al tener los operandos disponibles en el siguiente ciclo se ejecuta.
+Pasa a ejecutar una instruccion de la estacion de reserva cuando ambos operandos estan disponibles (elimina RAW) y la estructura esta disponible (elimina estructural).
+
+Se pueden enviar instrucciones a la par.
+
+- OSi/ISi El registro de renombrado donde se alamcena el operando cuando termina de calcularse.
