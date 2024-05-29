@@ -131,3 +131,221 @@ atomic es mas rapido k critical xq critical implementa cerrojos y atomic una ins
 % Se pueden enviar instrucciones a la par.
 % 
 % - OSi/ISi El registro de renombrado donde se alamcena el operando cuando termina de calcularse.
+
+Añadir que write-back -> registros de la arquitectura.
+
+Clase 29 - 5
+
+Algoritmo de Tomasulo (el de las estaciones de reserva)
+
+En la etapa de write-back, se pasan los valores de los registros renombrados a los registros reales (si 5 era el ultimo que renombraba a 3), en la etapa de write-back se hará:
+RR3 = RR5
+
+# Buffer de reorden:
+- Permite que las instrucciones en la etapa de write-back se modifiquen los registros de la arquitectura (el estado del procesador) en el orden del programa, obteniendo resultados como si se ejecutase en orden del programa.
+- Además, sirve para implementar ejecución especulativa (para reducir riesgos de control) de una forma muy sencilla.
+
+-- -- -- -- -- 
+-- -- -- -- -- 
+Antes: Importancia de reordenar instrucciones para extraer paralelismo y reducir tiempo secuencial.
+Diapositiva 25, código ensamblador de MIPS generador del bucle en c.
+
+
+Se carga xi en r1, se multipica por r6 y se guarda en la misma pos de la que se ha leido.
+Se carga yi en r3.
+Las instrucciones addi, subi, bnz son para el bucle
+addi: i++
+subi: n--
+bnz: n == 0 ?
+
+Tenemos raw entre varias instrucciones (ld - mulf en ambos y mulf - st), y en subi - bnz.
+
+Vemos que a pesar de tener 4 unidades funcionales para ejecución, no podemos extraer paralelismo. 
+Sin embargo, como en todos se permite W -> R, podemos hacer la flecha de "si W->R relajado", (no se pueden los dos ld en el mismo ciclo porque sólo hay una unidad de Mem) hay que ver si cada instruccion en paralelo puede hacerse en cada unidad funcioanl. Estamos extrayendo paralelismo.
+
+El renombrado permite que addi adelante hasta mul, ya que elimina el WAR indicado.
+-- -- -- -- -- 
+-- -- -- -- -- 
+# BUFFER DE REORDEN
+Si el segundo ld lo hacemos con r7: el hardware no sabe si se va a leer la misma escritura.
+
+Tenemos carga especulativa: 
+
+Si entre ld y st se hacen calculos, dichos calculos estan en el buffer de renombre.
+
+Cuando se sabe que el st accede a la misma direccion que ld, las instrucciones intermedias se deben marcar en algún almacenamiento para que cuando pasen por la úĺtima etapa no modifiquen los registros de la arquitectura, sino que se descarten. Esto se anota en el buffer de reordenamiento. Normalmente en el ROB se implementa el de renombrado.
+El contador de programa debe volver a ld, para volver a introducir las instrucciones al ROB.
+
+Las instrucciones cuando se emiten se almacenan en el buffer de reorden en el orden del programa. Campos:
+- Indica la posición de la instrucción en el código (instr(n), instr(n+1)).
+- Indica el estado de la instruccion:
+    - x para ejecutando.
+    - i emitida pero no se ejecuta. En el 
+    - f finalizada.
+- flush: se pone a 1 para todas las instrucciones a continuacion de la instruccion de almacenamiento (se han ejecutado pero no deben modfiicar los registros de la arquitectura).
+Se pone a 1 cuando se han ejecutado instrucciones de forma especulativa y se encuentra que no se deben ejecutar realmente. Se han ejecutado pensando (especulando) que el almacenamiento no coincide con la lectura.
+Cuando el st pasa a finalizado y se ve que el ld es a la misma direccion se pone a 1.
+- Puede usarse de buffer de renombrado a la vez (para no tener renombrado y ROB, sino ROB k tmb hace de renombrado):
+- Registro de destino.
+- codop
+- resultado, ok
+- unidad a la que se va a mandar.
+
+Cuando va finalizando la ejecucion se van retirando. Funciona a modo de cola.
+
+Para quitar una instruccion, tiene que estar primero y finalizada. 
+En cada ciclo sacamos el nº maximo de instrucciones finalizadas en la cabeza de la cola que permita la arquitectura (quizas pueda sacar max 4 por ciclo).
+Las finalizadas que tengan antes una no finalizada no pueden retirarse hasta sacar las que le preceden, para garantizar el orden del programa => se garantiza que las instrucciones dan el funcionamiento como si fuera secuencial.
+
+- Cuando una instruccion finalice:
+
+
+Diap 28
+Suponemos estaciones de reserva independientes (una para cada unidad). Las Estaciones de resrva se encuentran inmediatamente antes de las unidades funcionales (COMENTAR EN ESTACIONES DE RESRVA).
+
+Cada unidad funcional tiene un bus de salida, que llega tanto al ROB (y buffer de renombrado en en caso de ser separados) como a las estaciones de reserva (que pueden estar esperando un operando).
+Las estaciones de reserva implementan espiaje en dicho bus, de forma que si tienen un 0 en ok y un numero en el operando, buscan si se envia alguna instruccion de escritura en dicho registro.
+
+
+
+
+
+
+
+
+
+No hemos hablado de eliminar riesgos de control:
+Los saltos los procesa:
+captación, ejecución, write back (mirar diapositivas):
+
+para que no supongan penalizaciones las instrucciones de salto, detectarlas lo antes posible (se usa la direccion en la que se encuentra la direccion de salto).
+EN el PC tengo la direccion de la siguiente.
+
+Debemos almacenar las direcciones que ocupan las instrucciones de salto: en la tabla de saltos.
+
+- Campos:
+- Dirección de las instrucciones de salto (se identifican con la direccion en el código).
+- Dirección a la que salta si se cumple la condición.
+- Historial (3 bits) ayuda a predecir si saltará o no.
+Si hay más 1 que 0, se salta.
+primero: en la ultima ejecucion se salto.
+segundo: en la penultima no se salto.
+ultimo: en  la antepenultima se salto.
+
+Diapo 31, en la columna 3 sub se queda en estacion de reserva por riesgo estructural (color rojo sobre blanco). 
+Teniamos dependencias de datos que haran esperar en estaciones de reserva (color amarillo sobre blanco).
+ER = Estacion de Reserva.
+
+Con la prediccion que introducimos, hacemos que en el ciclo 2 (columna 2) se coja el pc y se consulte en la tabla de saltos (encontramos una direccion de salto => hay una instruccion de salto). 
+Va a consultar donde hay que saltar y la prediccion.
+Si hay que saltar, se carga en el pc la direccion y no hay penalizacion ninguna.
+
+
+Habra penalizacion cuando falla la prediccion:
+Al finalizar la etapa de ejcucion se comprobará el valor de r8 y se comprobará que no era válida la predicción. En el ROB se marcan las instrucciones a 1 en el flush.
+
+Si acertamos: 0.75 cpi ~ 0.5 cpi ideal.
+
+Si la prediccion falla, la instruccion despues del salto antes de terminar EX espera en ROB antes de quitarse (ya que se retiran en orden del programa). Por tanto, hasta que no se asegure que el salto era correcto no termina la siguiente tras el salto, en caso de predecir que iba a saltar y no salta.
+
+
+
+Cómo se implementa el historial: con registro de desplazamiento, se realiza un shift.
+
+Con dos estados:
+3 y 2 salta, 1 y 0 no salta.
+3 <--> 2 <--> 1 <--> 0
+Si se salta se va a la izquierda y si no se salta se va a la derecha.
+Se implementa a partir de realizacion de circuito a partir de diagrama de estados.
+
+
+
+# Tipos de predicciones:
+pred dinamica: en tiempo de ejecucion.
+    implicita: se almacena la direccion sque se ejecuto la ultima vez que se ejecuto el salto.
+    explicita: se usa un estado que cuenta cuantas veces se salto.
+
+pred estatica: fija.
+    segun desplazamiento: si es hacia detras, saltar (pensar en bucles), si no, no saltar (salir de un bucle).
+    podemos encontrar en ejs: siempre se predice saltar o siempre no.
+
+Implementaciones rudimentarias, las actuales son más complejas.
+
+¿Por qué estado empieza?
+Se usa estatica para la para la primera vez.
+
+
+
+# Ganancia con la extracción de paralelismo del hardware
+El software puede mejorar los tiempos:
+El compilador puede intercambiar el add con el sub, eliminando el RAW y por tanto la espera por estaciones de reserva.
+Beneficioso para superescalares y obligatorio para VLIW. Eliminamos las penalizaciones que suponen las RAW (no las podemos eliminar).
+
+
+
+
+
+
+
+
+# VLIW
+Sólo vamos a ver que los compiladores de un VLIW ponen juntas en memoria (para que se capten juntas) las instrucciones que se van a emitir en cada ciclo de reloj.
+
+Suponemos que tenemos 4 unidades funcionales, luego va a poner junas 4 instrucciones.
+
+¿Siempre va a encontrar 4 instrucciones de cada tipo independientes?
+No, cuando no lo hace introduce instrucciones nop.
+
+Hay procesadores VLIW comerciales.
+
+
+
+
+
+
+
+
+
+Ejercicio 1. ENUNCIADO:
+UNidades: 1 LD (2 ciclos), 1 ST (1 ciclos), 3 ADD/SUB (1), 1 mul (4).
+Recomienda resumir datos en un dibujo:
+IF --> ID --> En filas: Arriba --> WB
+se captan: 4i/c, se codifican 4 y se emiten 4.
+
+Emisión ordenada (en orden del programa), estación de reserva centralizada.
+Supongo que unidades funcionales de ALU no segmentadas.
+
+El ej no lo dice pero tenemos que saber:
+- WAW, WAR se eliminan.
+- RAW y estructurales se ocupa estacion de reserva.
+- Instruccion no pasa a EX hasta operandos y unidad libre.
+
+Suelen decir que no debemos preocuparnos del tamaño para ejecutarlo.
+
+En gris lo que aún no ha ocurrido.
+Todos los registros que no se han escrito se suponen dato disponible.
+Los bits del inicio es si los operandos están o no disponibles (Si esta en gris es que no estan en la estacion de reserva).
+
+
+
+Se pasan a EX las que tienen operando disponible y unidad.
+TENER EN CUENTA ORDEN DEL PROGRAMA EN ESTE EJERCICIO: emitir a la vez o despues de la ultima.
+
+
+Retirar de ROB: Etapa de WB.
+IMPORTANTE: 
+    Ver si emisión es ordenada o no
+    Ver si envío desde unidades de reserva es ordenado o no.
+    Si unidades segmentadas o no.
+    Ciclos de cada unidad, intrucciones por ciclo, \ldots
+
+
+Ver pdf de ejercicios.
+
+Ejercicio 2.
+Se captan y decodifica un número distinto.
+
+Etapa de ROB:
+    Tenemos un núcleo con 4 unidades pero el ROB no permite más que almacenar el resultado de 2 instrucciones cada ciclo de reloj.
+    Problema: terminar mas instrucciones que instrucciones que el ROB puede almacenar a la vez (en un ciclo).
+    Por ello, se introduce una etapa extra de ROB (RB). 
