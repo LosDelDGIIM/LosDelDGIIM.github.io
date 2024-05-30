@@ -67,7 +67,12 @@ Desarrollamos a continuación varios aspectos relevantes del cauce de procesamie
     \item Como ya se comentaba en la Sección~\ref{subsec:repaso_ILP}, la etapa de ejecución y de memoria se consideraba una sola, al ser las instrucciones bien de acceso a memoria o bien instrucciones aritmético-lógicas.
     \item La etapa de emisión (aquella en la que ya se conocen los operandos y se prepara para mandar a ejecución) forma parte de la decodificación.
     \item Observamos que en la etapa amarillo pastel encontramos entre cada módulo y el siguiente 4 flechas representando puentes de datos, los cuales pasan a 8 en la etapa verde pastel. Esto sucede siempre en los x86 (son computadores CISC): sucede cuando una instrucción está implementada mediante varias microinstrucciones.
-    \item En la etapa de emisión hay dos partes importantes: una en la que las instrucciones son almacenadas para su ejecución en lo que se llaman estaciones de reserva (o ventana de instrucciones en el caso de Intel), y una en la que se mandan a la primera unidad funcional desde las estaciones de reserva.
+    \item En la etapa de emisión hay dos partes importantes:
+        \begin{itemize}
+            \item Una en la que las instrucciones son almacenadas para su ejecución en lo que se llaman estaciones de reserva (o ventana de instrucciones en el caso de Intel), mientras que la operación no está lista para pasar a su ejecución las unidades funcionales.
+            \item Una en la que se mandan a la primera unidad funcional desde las estaciones de reserva.
+        \end{itemize}
+        Depende de la implementación del procesador, pero normalmente cada unidad funcional tiene sus propias estaciones de reserva. Podemos observarlas en la Figura~\ref{fig:Cauce_ARM_cortex_a76}, las cajas de color azul claro etiquetadas con ``Queue'' antes de las unidades funcionales de la etapa de ejecución.
     \item En relación al punto anterior, Intel llama \textbf{emisión} a ventana de instrucciones y \textbf{envío} a unidades funcionales; mientras que manuales de ARM enuncian \textbf{envío} a estaciones de reserva y \textbf{emisión} a unidades funcionales.
     \item En la Figura~\ref{fig:Cauce_ARM_cortex_a76}, destacamos las unidades de \verb|AGU| y \verb|LSU|, que son las últimas a las que van a parar las instrucciones de acceso a memoria.
         \begin{itemize}
@@ -118,19 +123,27 @@ A continuación, en la Figura~\ref{fig:Cauce_ARM_cortex_a72} podemos volver a ob
 \end{description}
 
 \subsection{Implementación de la etapa de emisión}
-En esta sección, desarrollaremos en profundidad cómo funciona la etapa de emisión. Para ello, será necesario entender bien los buffers de renombrado, reorden y las estaciones de reserva, que son la parte principal de la etapa. Por simplicidad, en esta sección siempre que nos refiras a instrucciones, estaremos hablando de instrucciones aritméticas, que son las más completas para describir bien ambos buffers (por tener siempre un registro donde almacenar el resultado y operandos).
+En esta sección, desarrollaremos en profundidad cómo funciona la etapa de emisión. Para ello, será necesario entender bien los buffers de renombrado, reorden y las estaciones de reserva, que son la parte principal de la etapa. Por simplicidad, en esta sección siempre que nos referimos a instrucciones, estaremos hablando de instrucciones aritméticas, que son las más completas para describir bien ambos buffers (por tener siempre un registro donde almacenar el resultado y uno o dos operandos).
 
 \subsubsection{Buffer de renombrado}
-Cada vez que se emite una instrucción, se le asigna una entrada en la estación de reserva, y se renombra el registro en el que se va a guardar la salida de la instrucción (siempre se renombra), asignándole una entrada en el banco de registros de renombrado. Este banco se trata de una tabla de tantas entradas como registros, que contiene los siguientes campos (o columnas):
+Cada vez que se emite una instrucción, se le asigna una entrada en la estación de reserva, y se renombra el registro en el que se va a guardar la salida de la instrucción (siempre se renombra), asignándole una entrada en el banco de registros de renombrado (cada una de estas entradas recibirá el nombre de ``registro de renombrado'').
 
 \begin{description}
-    \item [Entrada válida.] Indica si la entrada de la tabla está en uso (se indica con un bit a 1) o no (bit a 0).
-    \item [Registro de destino.] Se indica el registro que está siendo renombrado (un 3 en la entrada 5ª indica que el registro número 5 está renombrando al número 3).
-    \item [Valor.] Se almacena el valor que se va a almacenar en el registro renombrado.
-    \item [Valor válido.] Indica si el valor de la columna anterior es válido (esto es, que ha sido ya calculado), o no (la instrucción que da el valor fue emitida pero no terminó).
-    \item [Último.] Si está activo indica que es el último renombrado de un registro. Por ejemplo, si el registro número 5 está siendo renombrado varias veces, la entrada que contenga un 1 en esta columna contendrá el valor válido para dicho registro.
+    \item [Entrada válida.] Bit que indica si la entrada de la tabla está en uso o no.
+    \item [Registro de destino.] Se indica el registro que está siendo renombrado (un 3 en la entrada 5ª indica que el registro de renombrado número 5 está renombrando al registro número 3).
+
+        Próximamente, nos referiremos por \verb|Ri| al registro número $i$, y por \verb|RRi| al registro de renombrado número $i$.
+    \item [Valor.] Se almacena el valor que contendría el registro.
+    \item [Valor válido.] Un bit que indica si el valor de la columna anterior es válido (esto es, que ha sido ya calculado), o no (la instrucción que da el valor fue emitida pero no terminó).
+    \item [Último.] Un bit que indica que es el último renombrado de un registro. Sólo puede estar activo en una única entrada, por cada registro de renombrado que renombre a un mismo registro.
+
+        Por ejemplo, si el registro número 5 está siendo renombrado varias veces por varios registros de renombrado, la entrada que contenga un 1 en esta columna contendrá el valor válido para dicho registro.
 \end{description}
-A la hora de captar operandos, si necesitamos por ejemplo obtener el valor del registro 5, si este se encuentra renombrado (es decir, fue usado para almacenar el valor resultante de una operación), se captará el valor del buffer de renombrado (en caso de que tenga el bit de ``valor válido'' a 1, si no esperará). En caso contrario, se capta directamente del registro número 5.\\
+A la hora de captar operandos, si necesitamos por ejemplo obtener el valor del registro 5: 
+\begin{itemize}
+    \item Si este se encuentra renombrado (es decir, fue usado para almacenar el valor resultante de una operación), se captará el valor del buffer de renombrado del registro de renombrado con el campo ``Último'' a 1 (en caso de que tenga el bit de ``Valor válido'' a 1, si no esperará a que esté listo el dato).
+    \item En caso contrario, se capta directamente del registro número 5.
+\end{itemize}
 
 Al renombrar siempre el registro que almacena el resultado de una instrucción, nunca podrán producirse dependencias de tipo WAW y WAR (eliminamos dichas depedencias), por lo que no es necesario detectarlas.
 
@@ -159,7 +172,7 @@ R7 = R3 * R4
     \caption{Estado inicial de buffer de renombrado}
     \label{tab:ejm1_T3}
     \end{table}
-    Así pues, el buffer de renombrado tras la ejecución de nuestro programa de 4 líneas sería el que podemos observar en la Tabla~\ref{tab:ejm1_T3_2}. Describimos los pasos que nos han llevado a obtener dicho estado en el buffer:
+    Así pues, el buffer de renombrado tras la ejecución de nuestro programa de 4 líneas será el que podemos observar en la Tabla~\ref{tab:ejm1_T3_2}. Describimos los pasos que nos han llevado a obtener dicho estado en el buffer:
     \begin{itemize}
         \item Línea 1: Creamos una entrada para el registro 3, no completando el campo de valor (ya que la instrucción todavía no terminó de ejecutarse), luego con un 0 en válido y un 1 en último (es el último renombramiento del registro 3).
         \item Línea 2: Creamos una entrada para el registro 4, no completando el campo de valor, luego con un 0 en válido y un 1 en último.
@@ -187,10 +200,10 @@ R7 = R3 * R4
     \caption{Estado de buffer de renombrado}
     \label{tab:ejm1_T3_2}
     \end{table}
-    Tras este renombramiento, el Código~\ref{cod:ejm1_T3} pasaría a ser para el procesador (notando por \verb|RR| a los registros que de verdad se usan) el que muestra el Código~\ref{cod:ejm1_T3_2}, que ya no tiene las dependencias WAW y WAR que tenía el anterior Código~\ref{cod:ejm1_T3} (una dependencia WAW entre las líneas 1 y 3, y una WAR entre las líneas 2 y 3). Sin embargo, observamos que siguen existiendo dependencias RAW (entre las líneas 1 y 2), las cuales se eliminarán con el uso de las estaciones de reserva.
+    Tras este renombramiento, el Código~\ref{cod:ejm1_T3} pasaría a ser para el procesador (notando por \verb|RR| a los registros de renombrado) el que muestra el Código~\ref{cod:ejm1_T3_2}, que ya no tiene las dependencias WAW y WAR que tenía el anterior Código~\ref{cod:ejm1_T3} (una dependencia WAW entre las líneas 1 y 3, y una WAR entre las líneas 2 y 3). Sin embargo, observamos que siguen existiendo dependencias RAW (entre las líneas 1 y 2), las cuales se eliminarán con el uso de las estaciones de reserva.
     \begin{listing}[H]
     \begin{minted}[xleftmargin=6cm, linenos]{c++}
-RR1 = RR3 - RR0        
+RR1 = R3 - RR0        
 RR2 = RR1 + 1
 RR3 = RR0 + 1
 RR4 = RR3 * RR2
@@ -201,62 +214,66 @@ RR4 = RR3 * RR2
 \end{ejemplo}
 
 \subsubsection{Estaciones de reserva}
-Cada unidad funcional tiene sus propias estaciones de reserva, tal y como puede observarse en la Figura~\ref{fig:Cauce_ARM_cortex_a72}. Por ejemplo, la estación de reserva de la unidad para multiplicaciones suele ser independientes de la estación de reserva para sumas y restas. 
+Cada unidad funcional tiene sus propias estaciones de reserva, tal y como puede observarse en la Figura~\ref{fig:Cauce_ARM_cortex_a72} (en la columna 13). Por ejemplo, la estación de reserva de la unidad para multiplicaciones suele ser independiente de la estación de reserva para la unidad de sumas y restas. 
 
 Una estación de reserva es una tabla donde se almacenan las instrucciones que todavía no han sido emitidas a unidades funcionales. La razón por la que estén en estas estaciones puede ser o bien que estén esperando a un operando que está siendo calculado, o bien que la unidad funcional a la que van a entrar está siendo usada por otra instrucción.
 
 Los campos de una tabla de estación de reserva son los siguientes:
 \begin{description}
     \item [Código de operación.] Se guarda la instrucción que no ha sido emitida todavía. Por ejemplo: \verb|add|, \verb|mult|, \ldots
-    \item [Registro de destino.] Se guarda el registro en el que almacenar el resultado de la instrucción cuando esta finalice.
-    \item [Operando i-ésimo.] Se guarda el operando i-ésimo para la instrucción, o el registro de donde obtener el operando cuando termine de calcularse.
-    \item [OK i-ésimo.]\ 
+    \item [Registro de destino.] Se guarda el registro de renombrado en el que almacenar el resultado de la instrucción cuando esta finalice.
+    \item [Operando i-ésimo.] Se guarda el operando i-ésimo para la instrucción, o el registro de renombrado de donde obtener el operando cuando termine de calcularse.
+    \item [OK i-ésimo.] Bit que controla la columna anterior:
         \begin{itemize}
-            \item Si contiene un 1, indica que el operando i-ésimo es el valor que se encuentra en la columna anterior.
-            \item Si contiene un 0, indica que el operando i-ésimo va a ser obtenido del registro número la columna anterior, cuando este termine de calcularse.
+            \item Si contiene un 1, indica que el operando i-ésimo es el valor que se encuentra en la columna anterior. 
+
+                Indica que el operando está listo para su uso.
+            \item Si contiene un 0, indica que el operando i-ésimo va a ser obtenido del registro de renombrado número la columna anterior, cuando este termine de calcularse. 
+
+                Indica que se está esperando al operando.
         \end{itemize}
 \end{description}
-Lo normal es que una instrucción tenga dos operandos (1 y 2).
+Lo normal es que una instrucción tenga dos operandos (1 y 2).\\
 
 Cuando una instrucción pasa a la fase de emisión, se genera una entrada en la estación de reserva para la misma. En esta se rellena el campo de código de operación, registro de destino y:
 \begin{itemize}
     \item Si un operando se sabe ya, se introduce en el campo correspondiente, pondiendo el campo de OK correspondiente a 1.
-    \item Si se está calculando todavía, se pone el campo OK correspondiente a 0 y:
-        \begin{itemize}
-            \item Si el registro de donde obtener el valor no está renombrado, se pone el número de registro.
-            \item Si el registro de donde obtener el valor está renombrado, se pone el registro real de donde se obtendrá (el número de entrada en el buffer de renombrado).
-        \end{itemize}
+    \item Si se está calculando todavía, se pone el campo OK correspondiente a 0 y se indica la entrada del registro de renombrado de la que se captará el valor una vez esté listo.
 \end{itemize}
+Cuando una unidad funcional termina el cálculo de un dato, este pasa al bus de salida de la unidad, con un paquete que contiene el registro de renombrado en el que se escribirá junto con el valor a escribir. El paquete es recibido por el registro de renombrado correspondiente, que escribe el valor y cambia el bit del campo ``Valor válido'' a 1.
+
+Además, las estaciones de reserva se encuentran espiando dicho bus, para que cuando se vaya a escribir en un registro de renombrado que se encuentra en una entrada como operando no válido, la estación de reserva capte su valor, cambiando ahora el bit de ``OK'' a 1, y teniendo ahora el operando disponible.\\
+
 Cuando una entrada de la tabla de la estación de reserva está completa (dispone de todos los operandos), pasará a ejecución en el siguiente ciclo (en caso de tener la unidad funcional correspondiente libre, evitando también riesgos estructurales). De esta forma, se eliminan las dependencias de tipo RAW (por lo que no será necesario su detección y eliminación, al hacerlo este proceso de forma automática).
 
 Se pueden enviar instrucciones a emisión de forma paralela.\\
 
-Repetimos el ejemplo anterior, ahora viendo cómo evoluciona la tabla de la estación de reserva (suponiendo que se usa la misma para las 4 instrucciones).
-
-\begin{ejemplo}
-    Supongamos que queremos ejecutar el Código~\ref{cod:ejm1_T3} en el procesador, donde ningún registro ha sido renombrado todavía salvo el registro \verb|R5|, cuya entrada en el buffer de renombrado observamos en la Tabla~\ref{tab:ejm1_T3}. El registro 3 tiene como valor inicial 62.
-
-    Ahora, no comentaremos los cambios básicos en la tabla del buffer de renombrado, por haberlo hecho ya en el ejemplo anterior, sabiendo que el código que de verdad se ejecuta es el Código~\ref{cod:ejm1_T3_2}.
-    \begin{itemize}
-        \item Línea 1: Creamos una entrada para la línea 1 en la tabla de la estación de reserva. Completamos el código de operación y registro de destino (tenemos al registro 3 renombrado por la primera entrada del buffer de renombrado, luego indicamos el registro 1). Por estar los operandos listos en los registros, los incluimos directamente.
-
-            La operación pasará a ejecución en el siguiente ciclo, en caso de no haber ninguna en su unidad funcional.
-        \item Línea 2: Creamos una entrada para la línea 2 en la estación de reserva. Completamos el código de operación y registro de destino (tenemos al registro 3 renombrado por el 1). Como en la tabla de renombrado la última entrada del registro 3 tiene el campo ``valor válido'' a 0, el valor no está todavía, luego se coloca un 1 para indicar que debe cogerse del registro 1 (que es quien renombra a 3 en este caso), colocando un 0 en el OK del operando 1. Como el segundo operando es un valor inmediato, se coloca en la entrada de la estación de reserva.
-        \item Línea 3.
-    \end{itemize}
-
-    \begin{table}[H]
-    \centering
-    \begin{tabular}{|c|c|c|c|c|c|}
-        \hline
-        Código Op. & Reg. Dest. & Operando 1 & OK 1 & Operando 2 & OK 2 \\
-        \hline
-        \verb|sub| & RR1 & 62 & 1 & 58 & 1 \\
-        \hline
-        \verb|add| & RR2 & 1 & 0 & 1 & 1 \\
-        \hline
-    \end{tabular}
-    \caption{Estado de la estación de reserva}
-    \label{tab:ejm2_T3}
-    \end{table}
-\end{ejemplo}
+% Repetimos el ejemplo anterior, ahora viendo cómo evoluciona la tabla de la estación de reserva (suponiendo que se usa la misma para las 4 instrucciones).
+% 
+% \begin{ejemplo}
+    % Supongamos que queremos ejecutar el Código~\ref{cod:ejm1_T3} en el procesador, donde ningún registro ha sido renombrado todavía salvo el registro \verb|R5|, cuya entrada en el buffer de renombrado observamos en la Tabla~\ref{tab:ejm1_T3}. El registro 3 tiene como valor inicial 62.
+% 
+    % Ahora, no comentaremos los cambios básicos en la tabla del buffer de renombrado, por haberlo hecho ya en el ejemplo anterior, sabiendo que el código que de verdad se ejecuta es el Código~\ref{cod:ejm1_T3_2}.
+    % \begin{itemize}
+        % \item Línea 1: Creamos una entrada para la línea 1 en la tabla de la estación de reserva. Completamos el código de operación y registro de destino (tenemos al registro 3 renombrado por la primera entrada del buffer de renombrado, luego indicamos el registro 1). Por estar los operandos listos en los registros, los incluimos directamente.
+% 
+            % La operación pasará a ejecución en el siguiente ciclo, en caso de no haber ninguna en su unidad funcional.
+        % \item Línea 2: Creamos una entrada para la línea 2 en la estación de reserva. Completamos el código de operación y registro de destino (tenemos al registro 3 renombrado por el 1). Como en la tabla de renombrado la última entrada del registro 3 tiene el campo ``valor válido'' a 0, el valor no está todavía, luego se coloca un 1 para indicar que debe cogerse del registro 1 (que es quien renombra a 3 en este caso), colocando un 0 en el OK del operando 1. Como el segundo operando es un valor inmediato, se coloca en la entrada de la estación de reserva.
+        % \item Línea 3.
+    % \end{itemize}
+% 
+    % \begin{table}[H]
+    % \centering
+    % \begin{tabular}{|c|c|c|c|c|c|}
+        % \hline
+        % Código Op. & Reg. Dest. & Operando 1 & OK 1 & Operando 2 & OK 2 \\
+        % \hline
+        % \verb|sub| & RR1 & 62 & 1 & 58 & 1 \\
+        % \hline
+        % \verb|add| & RR2 & 1 & 0 & 1 & 1 \\
+        % \hline
+    % \end{tabular}
+    % \caption{Estado de la estación de reserva}
+    % \label{tab:ejm2_T3}
+    % \end{table}
+% \end{ejemplo}
