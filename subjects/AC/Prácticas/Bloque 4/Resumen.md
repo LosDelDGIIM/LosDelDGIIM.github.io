@@ -14,7 +14,7 @@ En esta sesión aprenderemos a optimizar los códigos de nuestro programas, apro
 - Se recomienda no optimizar los códigos al final, lo que dificulta esta labor, sino ir optimizando conforme se programa.
 - Es un error no programar sin tener en cuenta la arquitectura, ya que genera códigos muy ineficientes cuyos tiempos pueden reducirse fácilmente pensando un poco en la arquitectura.
 - No se debe reducir el tiempo de ejecución eliminando funcionalidades del programa.
-- A la hora de optimizar, debemos fijarnos en la parte del código que más tiempo suponga en la ejecución del programa, eliminando códigos de botella.
+- A la hora de optimizar, debemos fijarnos en la parte del código que más tiempo suponga en la ejecución del programa, eliminando cuellos de botella.
 - No es necesario bajar a código ensamblaor para optimizar, aunque a veces es la única opción.
   
 Hay optimizaciones con las que veremos mejoras en todos los núcleos de procesamiento actuales, por tener características comunes a tener en cuenta (por ejemplo, todas las CPUs actuales tienen varias ALUs).  
@@ -32,7 +32,7 @@ Además, la opción `-O3` genera instrucciones vectoriales (las reconoceremos po
 Con la opción `-O0` se optimiza poco, por lo que obtendremos códigos largos con grandes tiempos de ejecución.  
   
 ***
-A continuación, enumeramos una serie de estrategias a realizar con la finalidad de generar códigos con menores tiempos de ejecución, aprovechando las características de las arquitecturas actuales. Posiblemente se conozcan ya otras estrategias que también consigan este propósito, aquí simplemente describimos los conocimientos que nos aporta esta práctica. Las clasificamos entres categorías:
+A continuación, enumeramos una serie de estrategias a realizar con la finalidad de generar códigos con menores tiempos de ejecución, aprovechando las características de las arquitecturas actuales. Posiblemente se conozcan ya otras estrategias que también consigan este propósito, aquí simplemente describimos los conocimientos que nos aporta esta práctica. Las clasificamos en tres categorías:
 
 # Optimización de la ejecución
 ## Reducción de fuerza
