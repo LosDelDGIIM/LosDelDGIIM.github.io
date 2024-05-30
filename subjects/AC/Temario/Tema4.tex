@@ -15,7 +15,7 @@ A lo largo de esta sección hablaremos largo y tendido sobre cómo se ejecutan l
 \end{itemize}
 Finalmente, aconsejamos consultar la Sección~\ref{subsec:repaso_ILP}, antes de continuar con la lectura de este capítulo.
 
-\subsection{Diferencias entre núcleos ILP}
+\subsection{Diferencias entre núcleos ILP}\label{sec:diff_ilp}
 En los núcleos que implementan paralelismo a nivel de instrucción (aquellos que son capaces de emitir más de una instrucción por ciclo), nos encontramos con dos grandes familias:
 \begin{description}
     \item [Núcleos ILP superescalares.]~\\
@@ -709,6 +709,46 @@ Comentamos ahora dos tipos de predicciones dinámicas explícitas sencillas\foot
 \end{enumerate}
 En este tipo de predicciones, para las primeras predicciones (cuando no tenemos un estado prefijado todavía), se realizan predicciones estáticas y luego se puede fijar un estado, en relación a si se saltó o no.
 
-% // TODO: SEguir por software + VLIW
+\subsection{Software mejorando el paralelismo}
+El software puede mejorar la ejecución de programas, ya que los compiladores pueden realizar cambios sobre el código a ejecutar, antes de traducirlo a lenguaje máquina\footnote{Muchas de estas optimizaciones se describen en la Sesión IV de prácticas.}. Destacamos en esta sección un par de optimizaciones que puede llevar a cabo el software:
 
-APUNTES AÚN EN DESARROLLO.
+\subsubsection{Reordenación de código}
+El software puede extraer paralelismo de la aplicación, eliminando dependencias y reduciendo tiempos de penaliación (latencias), lo cual es beneficioso en los procesadores VLIW.
+
+Mostramos el siguiente ejemplo como ilustración de dicha funcionalidad.
+
+\begin{ejemplo}
+    Supongamos que queremos ejecutar el Código ensamblador~\ref{cod:ejm7_T4}.
+    \begin{listing}[H]
+    \begin{minted}[xleftmargin=6cm, linenos]{asm}
+add r1, r2, r3
+sub r4, r5, r2
+cmp r8, r4, r7
+jz  r8, 0x2300000F
+ld  r2, a
+    \end{minted}
+    \caption{Código a ejecutar}
+    \label{cod:ejm7_T4}
+    \end{listing}
+    El cual tiene una dependencias de datos tipo RAW entre las líneas 2 y 3, que introducirá tiempos de penalización, al tener que esperar la instrucción 3 a la 2 en la estación de reserva. Sin embargo, el compilador puede darse cuenta de esta dependencia RAW, así como que las instrucciones 1 y 2 no tienen dependencias entre sí, para intercambiar las instrucciones 1 y 2, reduciendo el tiempo de penalización de la instrucción 3 provocada por la dependencia RAW (que no eliminamos pero hacemos que su efecto se vea reducido).
+\end{ejemplo}
+
+\subsubsection{Instrucciones de ejecución condicional}
+Podemos reducir el número de instrucciones de salto condicional del programa (reduciendo así los riesgos de control), mediante instrucciones de ejecución condicional, como por ejemplo \verb|setxx| o \verb|cmovxx|.
+
+\section{Microarquitectura de ILP VLIW}
+Como comentamos en la Sección~\ref{sec:diff_ilp}, los procesadores con paralelismo a nivel de instrucción del tipo VLIW (\emph{Very Long Instruction Word}), sólo son capaces de emitir una instrucción por ciclo, de forma que cada instrucción es capaz de codificar varias operaciones.
+
+Es el compilador quien tiene que realizar todas las labores vistas en este capítulo para una buena planificación en las operaciones.\\
+
+La labor que hacen los compiladores de un procesador VLIW es poner juntas en memoria las operaciones a realizar en cada ciclo de reloj (para que se capten y ejecuten juntas). En caso de disponer de $n$ unidades funcionales para la etapa de ejecución, cada instrucción del procesador VLIW será capaz de ejecutar $n$ operaciones a la vez.\\
+
+La pregunta que nos hacemos ahora es, ¿siempre va a ser posible encontrar $n$ instrucciones independientes (sin dependencias tipo RAW entre ellas) a ejecutar de forma que en cada ciclo queden libres todas las unidades funcionales? la respuesta a esta pregunta es negativa:
+\begin{itemize}
+    \item O bien no hay $n$ instrucciones consecutivas independientes.
+    \item O bien hay una unidad funcional que durante los siguientes $m$ ciclos estará ejecutando una instrucción y no será posible introducir otra del mismo tipo.
+\end{itemize}
+Cuando algo de esto suceda, se introducirá una operación de no operación (\verb|nop|), relativa a la unidad funcional correspondiente.\\
+
+Cabe destacar que los procesdores VLIW se comercializaron, aunque una de sus grandes contrapartidas es la complejidad que tiene crear un compilador para este tipo de procesadores.
+Por otra parte, implementan un cauce mucho más sencillo.
