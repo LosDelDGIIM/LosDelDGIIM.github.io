@@ -25,7 +25,7 @@ Los compiladores introducen además varias opciones de compilación con optimiza
 Por ejemplo, `gcc` cuenta con las opciones de optimización `-O0` (no optimiza nada), `-O1`, `-O2` y `-O3` para tiempo (se encuentran en orden creciente de número de actualizaciones), además de `-Os` para espacio, para que el programa a ejecutar ocupe el menor espacio posible.  
   
 La opción de compilación con optimización que recomendamos usar es `-O2`, que suele dar los mejores tiempos de ejecución.  
-`-O3` cuenta con varias funcionalidades que todavía no están bien depuradas (las cuales pueden provocar errores a la hora de compilar los programas). Cuando una opción está depurada y lleva tiempo en uso, suele pasarse a `-O2`.  
+`-O3` cuenta con varias funcionalidades que todavía no están bien depuradas (las cuales pueden provocar errores a la hora de compilar los programas). Cuando una funcionalidad de optimización está depurada y lleva tiempo en uso, suele pasarse a `-O2`.  
 Puede suceder que el tiempo con `-O3` aumente en relación a `-O2`, ya que aunque suele intentar realizar mejores optimizaciones, como ya se ha dicho no está del todo depurado.  
   
 Además, la opción `-O3` genera instrucciones vectoriales (las reconoceremos por acabar con el sufijo `p`, o `pd` en el caso de instrucciones vectoriales para `double`). Las instrucciones con el sufijo `sd` son instrucciones escalares.  
