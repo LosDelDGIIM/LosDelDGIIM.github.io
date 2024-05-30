@@ -87,7 +87,7 @@ Sin embargo, podemos reducir tiempos aprovechando la estructura segmentada del p
   
 Suponiendo que `ARR % 4 = 0` (si no, debemos añadir, tras dividir todas las veces posibles entre 4, tantas operaciones como el resto `ARR % 4`), realizamos un desenrollado de 4:
 ```c
-int i, float tmp0 = 0.0, float tmp1 = 0.0, float tmp2 = 0.0, float tmp3 = 0.0; 
+int i, float tmp0 = 0.0, tmp1 = 0.0, tmp2 = 0.0, tmp3 = 0.0; 
 for(int i = 0; i < ARR; i+=4){
     tmp0 += a[i]*b[i];
     tmp1 += a[i+1]*b[i+1];
@@ -170,7 +170,7 @@ Debemos declarar las variables y estructuras de datos teniendo en cuenta cómo v
 En C, sabemos que las matrices se almacenan por filas, luego tras la dirección de memoria que almacena la componente `(i, j)` de una matriz, la siguiente dirección de memoria almacenará la componente (suponiendo una matriz de tamaño `n x m`):
 ```
 (i, j+1) si j < m-1
-(i+1, j) si j = m-1
+(i+1, 0) si j = m-1 && i < n-1
 ```
 Por tanto, con el fin de explotar el principio de localidad espacial que aprovechan las cachés, el bucle que recorre la matriz de la forma:
 ```c
