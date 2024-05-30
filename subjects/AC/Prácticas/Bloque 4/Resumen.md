@@ -1,4 +1,4 @@
-# Arquitectura de Computadores. Sesión III de Prácticas.
+# Arquitectura de Computadores. Sesión IV de Prácticas.
 
 **Autor:** José Juan Urrutia Milán
 ***
@@ -29,19 +29,18 @@ La opción de compilación con optimización que recomendamos usar es `-O2`, que
 Puede suceder que el tiempo con `-O3` aumente en relación a `-O2`, ya que aunque suele intentar realizar mejores optimizaciones, como ya se ha dicho no está del todo depurado.  
   
 Además, la opción `-O3` genera instrucciones vectoriales (las reconoceremos por acabar con el sufijo `p`, o `pd` en el caso de instrucciones vectoriales para `double`). Las instrucciones con el sufijo `sd` son instrucciones escalares.  
-Con la opción `-O0` se optimiza poco, por lo que obtendremos códigos largos con grandes tiempos de ejecución.
-
-# Optimizaciones recomendables
+Con la opción `-O0` se optimiza poco, por lo que obtendremos códigos largos con grandes tiempos de ejecución.  
+  
+***
 A continuación, enumeramos una serie de estrategias a realizar con la finalidad de generar códigos con menores tiempos de ejecución, aprovechando las características de las arquitecturas actuales. Posiblemente se conozcan ya otras estrategias que también consigan este propósito, aquí simplemente describimos los conocimientos que nos aporta esta práctica. Las clasificamos entres categorías:
 
-***
-## Optimización de la ejecución
-### Reducción de fuerza
+# Optimización de la ejecución
+## Reducción de fuerza
 Muchas veces usamos operaciones sobre nuestros datos de forma natural pero que podrían realizarse de formas más rápidas (empleando menos bucles) con otro tipo de operaciones que nos proporcionan el mismo resultado.  
   
 Vemos algunos ejemplos en los que se aplica esta técnica:
 
-#### Sustituir divisiones por multiplicaciones
+### Sustituir divisiones por multiplicaciones
 Si por ejemplo en un bucle tenemos el siguiente código:
 ```c
 for(int i = 0; i < n; i++){
@@ -56,14 +55,14 @@ for(int i = 0; i < n; i++){
 }
 ```
 
-#### Sustituir multiplicaciones por shifts
+### Sustituir multiplicaciones por shifts
 Si queremos realizar multiplicaciones, siempre será más eficiente realizar operaciones de shift, que ocupan menos ciclos (entre 1 y 2). Por ejemplo, en vez de ejecutar:
 ```c
 a = b * 10;
 ```
 Podemos aplicar que `b * 10 = b * (2 + 8) = b * 2 + b * 8` y aprovechar las multiplicaciones por potencias de 2 para realizar shifts en vez de multiplicaciones.
 
-#### Sustituir operaciones aritméticas por leaq
+### Sustituir operaciones aritméticas por leaq
 Hablamos ya de una optimización que sólo se puede realizar a nivel de ensamblador, y es que podemos aprovechar la unidad artimético-lógica de cálculo de direcciones de memoria para realizar cálculos, en lugar de una ALU del procesador, donde las instrucciones pueden tardar más.  
 Además, de esta forma podemos llegar a emitir dos instrucciones de cálculo a la vez: una que se realizará en la ALU y otra en la unidad de cálculo de direcciones de memoria.  
   
@@ -73,7 +72,7 @@ lea ecx, [eax + eax]    # ecx <-- 2eax
 lea eax, [ecx + eax*8]  # eax <-- 2eax + 8eax = 10eax
 ```
 
-### Desenrollado de bucles
+## Desenrollado de bucles
 Permite aprovechar la productividad de las unidades reduciendo latencias producidas por dependencias RAW.
 Por ejemplo, en el siguiente código:
 ```c
@@ -105,7 +104,7 @@ Cabe destacar que no siempre un mayor desenrollado nos va a dar unos mejores tie
   
 A partir del desenrollado, el compilador generará el código según su optimización, añadiendo operaciones vectoriales o no. Los compiladores aplican desenrollado.
 
-#### Reducir latencias de saltos
+### Reducir latencias de saltos
 Por ejemplo, ante el siguiente código:
 ```c
 for(int i = 0; i < 100; i++){
@@ -124,7 +123,7 @@ for(int i = 0; i < 100; i+=2){
 }
 ```
 
-### Códigos difíciles para el compilador
+## Códigos difíciles para el compilador
 Antes de generar el código ejecutable, el compilador optimiza el código existente aunque, puede tener problemas a la hora de optimizarlas.  
   
 Por ejemplo, muchos sabemos que el uso de punteros en código puede ayudar mucho a la hora de obtener unos menores tiempos de ejecución. Sin embargo, a veces este uso es contraproducente.  
@@ -142,32 +141,32 @@ j /= 7;
 ```
 La dirección de memoria a la que apunta `v` se sabe en tiempo de ejecución pero no en tiempo de compilación, luego el compilador no sabe si es que `v` apunto o no a `j`, por lo que no puede realizar la optimización anteriormente comentada.
 
-#### Recomendaciones
+### Recomendaciones
 Como recomendaciones para evitar este tipo de situaciones, se recomienda:
 - Usar variables locales en lugar de punteros siempre que sea posible.
 - Utilizar variables globales si no se pueden usar locales.
 - Poner instrucciones de almacenamiento después o bastante antes de las de carga de memoria.
 
 ***
-## Optimización del acceso a memoria
+# Optimización del acceso a memoria
 Como principal optimización a tener en cuenta, **dentro de un bucle se debe acceder a posiciones contiguas de memoria en medida de lo posible**, con el fin de reducir los fallos de caché, que introducen latencias considerables.
 
-### Alineamiento de datos
+## Alineamiento de datos
 Si trabajamos con un vector de longitud menor a 2 bloques de caché, si no alineamos bien los datos puede que dicho vector ocupe 3 bloques de caché (comience en el final de uno, rellene otro y termine en el principio de otro).  
 Por tanto, si nos preocupamos de que nuestro vector comience justo en un bloque (dirección múltiplo de 32 bytes, ya que un bloque suele tener dicho tamaño), podemos obtener un menor número de fallos de caché: si el vector anterior lo alineamos de forma que sólo ocupe 2 bloques, al recorrerlo entero sólo necesitamos 2 bloques de caché, en vez de 3.  
   
 Todos los compiladores ofrecen directivas para alinear datos en memoria.  
 El procesador suele alinear los datos según el tamaño de dato al que se va a asignar una dirección (por ejemplo, para un vector de coma flotante de simple precisión, se le suele asignar una dirección de inicio múltiplo de 4, al ocupar este tipo de dato 4 bytes).
 
-### Colisiones en caché
+## Colisiones en caché
 Las cachés modernas tienen una organización asociativa por conjuntos, ya vista en la asignatura de EC.  
 Si todos los bloques traídos de memoria principal van al mismo conjunto de caché (dejando otros vacíos), obtenemos peores tiempos de ejecución al tener que desalojar bloques de caché de forma continuada.  
 Buscamos por tanto, repartir los bloques de memoria principal entre los conjuntos en medida de lo posible.
 
-### Localidad de los accesos
+## Localidad de los accesos
 Debemos declarar las variables y estructuras de datos teniendo en cuenta cómo vamos a acceder a ellas, o acceder a ellas teniendo en cuenta cómo las hemos declarado; con el fin de **acceder a posiciones consecutivas**, explotando los principios de localidad local y temporal.
 
-#### Ejemplo 1: Acceso a matrices
+### Ejemplo 1: Acceso a matrices
 En C, sabemos que las matrices se almacenan por filas, luego tras la dirección de memoria que almacena la componente `(i, j)` de una matriz, la siguiente dirección de memoria almacenará la componente (suponiendo una matriz de tamaño `n x m`):
 ```
 (i, j+1) si j < m-1
@@ -193,7 +192,7 @@ for(int j = 0; j < m; j++){
 Hay lenguajes como Fortran en los que las matrices se almacenan por columnas. En estos lenguajes, el segundo bucle provocará menos fallos de caché que el primero.  
 Vemos cómo es importante saber cómo los lenguajes almacenan las estructuras de datos.
 
-#### Ejemplo 2: Acceso a vectores
+### Ejemplo 2: Acceso a vectores
 Supongamos que tenemos un código que trabaja sobre dos vectores `a` y `b` de 500 componentes cada uno. Dependiendo de cómo queramos acceder a ellos, podemos declararlos de una forma u otra con el fin de reducir las colisiones en caché.  
 Por ejemplo, ante la siguiente forma de recorrerlos:
 ```c
@@ -229,12 +228,12 @@ struct {
 ```
 con el fin de acceder a posiciones contiguas de memoria.
 
-### Accesos a memoria especulativos
+## Accesos a memoria especulativos
 Sabemos ya por lo visto en teoría que todos los procesadores relajan `W --> R`, así como las lecturas propias pueden acceder antes a memoria que lecturas de otros procesadores.  
 Si nuestros programas realizan accesos a memoria solapados, no se puede usar ninguna de las dos optimizaciones.  
 Es por ello por lo que además recomendamos poner las lecturas tan lejos como sea posibles de las escrituras a las mismas áreas de memoria.
 
-### Precaptación
+## Precaptación
 El procesador, mediante instrucciones de `prefetch`, puede cargar zonas de memoria en caché antes de que se soliciten (en caso de haber ancho de banda disponible).  
 Un uso positivo de la precaptación es, en un bucle que recorre un vector entero, introducir en ciertas iteraciones del bucle instrucciones de precaptación de iteraciones futuras, con el fin de que ya estén cargadas en caché cuando se soliciten, reduciendo latencias introducidas por fallos de caché.  
   
@@ -244,10 +243,10 @@ Si detecta que estamos accediendo a bloques consecutivos, se preocupará de trae
 Debemos por tanto intentar acceder a los datos en memoria con un patrón fácilmente reconocible. En caso contrario, podemos usar instrucciones de precaptación para ayudar la labor de predecir los siguientes bloques de memoria a usar.
 
 ***
-## Optimización de saltos
+# Optimización de saltos
 A la hora de reducir latencias introducidas por los saltos, trataremos de hacer códigos en los que sea fácil predecir si un salto se realizará o no.
 
-### Cambiar condición de salto
+## Cambiar condición de salto
 Cada una de las instrucciones seperadas por `&&` en un salto condicional se evalúan como instrucciones de salto distintas.  
 Ante el ejemplo siguiente, si todas las variables tienen un 50% de probabilidad de ser 0, la posibilidad de predecir las instrucciones de salto no es muy elevada:
 ```c
@@ -259,7 +258,7 @@ if((t1 | t2 | t3) == 0)
 ```
 donde ya sólo usamos un salto.
 
-### Usar instrucciones condicionales
+## Usar instrucciones condicionales
 Podemos eliminar saltos sencillos usando instrucciones condicionales de `asm`. Por ejemplo, en vez de usar un `if` para asignar un valor a una variable y otro en caso contrario, podemos en su lugar evaluar la condición y usar la instrucción `cmove`, que realiza la asignación en relación al resultado obtenido tras la condición.  
 Esta transformación la realiza el compilador a veces, pero siempre la realiza con el uso del operador `?`, luego recomendamos su uso.  
   
@@ -292,7 +291,7 @@ Con este código inteligente:
   
 Los compiladores son capaces de generar este tipo de códigos.
 
-### Switchs
+## Switches
 Se pueden reducir el número de saltos de un programa reorganizando las alternativas en las sentencias `switch`, en el caso de que alguna opción tenga una mayor probabilidad a ejecutarse respecto a otras.  
 Por ejemplo:
 ```c
