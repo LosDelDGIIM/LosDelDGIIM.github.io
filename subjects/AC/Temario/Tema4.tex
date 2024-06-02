@@ -47,9 +47,9 @@ La segmentación nos permite disminuir el tiempo de ciclo de la CPU, reduciéndo
 
 Sin embargo, en los códigos a ejecutar nos encontramos con dependencias (de datos, de control o estructurales) que dan lugar a problemas en el cauce segmentado, los cuales pueden conducir a los programas a un resultado incorrecto en su ejecución. Todos estos problemas reciben el nombre de \emph{hazards} (o riesgos).\\
 
-Para eliminar riesgos en los núcleos VLIW se deben introducir operaciones de no operación (\verb|nop|). Esto provoca una disminución en las prestaciones del núcleo (al desperdiciar ciclos de instrucción). Esta disminuición de las prestaciones es aún peor en los procesadores VLIW superescalares (núcleos capaces de dar por un ciclo varias instrucciones VLIW), donde obtenemos un IPC mucho mayor al introducir operaciones \verb|nop| que los que ya obteníamos en el VLIW escalar.
+Para eliminar riesgos en los núcleos VLIW se deben introducir operaciones de no operación (\verb|nop|). Esto provoca una disminución en las prestaciones del núcleo (al desperdiciar ciclos de instrucción). Esta disminuición de las prestaciones es aún peor en los procesadores VLIW superescalares (núcleos capaces de dar por un ciclo varias instrucciones VLIW), donde obtenemos un IPC mucho mayor (al introducir operaciones \verb|nop|) que el que ya obteníamos en el VLIW escalar.
 
-Todo esto sin considerar las dependencias estructurales (las cuales se detectan cuando en tiempo de ejecución dos instrucciones tratan de acceder a la misma unidad funcional), lo que ralentiza aún más los tiempos de ejecución.\\
+Todo esto sin considerar las dependencias estructurales (las cuales se detectan cuando, en tiempo de ejecución, dos instrucciones tratan de acceder a la misma unidad funcional), lo que ralentiza aún más los tiempos de ejecución.\\
 
 A continuación, vamos a ver cómo en los computadores ILP superescalares es el hardware quien se encarga de eliminar los riesgos y de reducir el tiempo de penalización que suponen las dependencias, pudiendo llegar a un tiempo de ejecución próximo al ideal.
 
@@ -72,11 +72,11 @@ Desarrollamos a continuación varios aspectos relevantes del cauce de procesamie
             \item Una en la que las instrucciones son almacenadas para su ejecución en lo que se llaman estaciones de reserva (o ventana de instrucciones en el caso de Intel), mientras que la operación no está lista para pasar a su ejecución en las unidades funcionales.
             \item Una en la que se mandan a la primera unidad funcional desde las estaciones de reserva.
         \end{itemize}
-        Depende de la implementación del procesador, pero normalmente cada unidad funcional tiene sus propias estaciones de reserva. Podemos observarlas en la Figura~\ref{fig:Cauce_ARM_cortex_a76}, las cajas de color azul claro etiquetadas con ``Queue'' antes de las unidades funcionales de la etapa de ejecución.
+        Depende de la implementación del procesador, pero normalmente cada unidad funcional tiene sus propias estaciones de reserva. Podemos observarlas en la Figura~\ref{fig:Cauce_ARM_cortex_a76}, las cajas de color azul claro etiquetadas con \emph{``Queue''} antes de las unidades funcionales de la etapa de ejecución.
     \item En relación al punto anterior, Intel llama \textbf{emisión} a ventana de instrucciones y \textbf{envío} a unidades funcionales; mientras que los manuales de ARM hablan de \textbf{envío} a estaciones de reserva y de \textbf{emisión} a unidades funcionales.
     \item En la Figura~\ref{fig:Cauce_ARM_cortex_a76}, destacamos las unidades de \verb|AGU| y \verb|LSU|, que son las últimas a las que van a parar las instrucciones de acceso a memoria.
         \begin{itemize}
-            \item Las \verb|AGU| son unidades de cálculo arimético que se encargan de calcular direcciones de acceso a memoria, la generación del address de una instrucción de acceso a memoria\footnote{Esta es la unidad que se encarga de procesar las instrucciones leaq de ASM, que se vieron en EC.}.
+            \item Las \verb|AGU| son unidades de cálculo arimético que se encargan de calcular direcciones de acceso a memoria, la generación del \emph{address} de una instrucción de acceso a memoria\footnote{Esta es la unidad que se encarga de procesar las instrucciones leaq de ASM, que se vieron en EC. Es por esto que se vio que, siempre que fuese posible usarlas, aumentarían el rendimiento, ya que al tratarse de unidades funcionales distintas se evitan dependencias estructurales.}.
             \item Las \verb|LSU| son colas FIFO en las que esperan las instrucciones de acceso a memoria. Hay una cola dedicada a las instrucciones de lectura y otra a las de escritura. 
         \end{itemize}
     La implementación de adelantamiento de lecturas a escrituras propias (que vimos en el Capítulo~\ref{chapter:Tema3} que todos los procesadores incumplían en cuanto a orden global) se implementa en estas colas LSU\@. El protocolo genérico y más sencillo para realizarlo es el siguiente.
@@ -105,7 +105,7 @@ A continuación, en la Figura~\ref{fig:Cauce_ARM_cortex_a72} podemos volver a ob
 \begin{description}
     \item [Etapa de captación.] Formada por la unidad funcional etiquetada por ``Instruction Fetch'', recibe las instrucciones de la memoria caché L1 de instrucciones.
 
-        Se encarga de detectar saltos y predecir saltos condicionales. Almacena la Tabla de saltos.
+        Se encarga de detectar saltos y predecir saltos condicionales. Almacena la Tabla de Saltos, que se verá más adelante.
     \item [Etapa de decodificación y emisión.] Formada por las unidades funcionales de las columnas 6 a 12, recibe las instrucciones del IB (\emph{Instruction Buffer}), que sirve de puente entre la etapa de captación y esta.
 
         Se encarga primero de decodificar las instrucciones y luego de prepararlas para emisión (para enviarlas a las unidades funcionales), durante la cual (se desarrollarán pŕoximamente):
@@ -117,7 +117,7 @@ A continuación, en la Figura~\ref{fig:Cauce_ARM_cortex_a72} podemos volver a ob
         \end{itemize}
         Cuenta con la ventana de instrucciones o estación de reserva (las unidades de la columna 13, que preceden a la etapa de ejecución), con el Buffer de renombrado y con el Buffer de reorden (\emph{ReOrder Buffer} o ROB), que permite eliminar los riegos de control de forma sencilla. En el bloque de ``Rename/Dispatch'' tiene acceso a los registros de la arquitectura.
     \item [Etapa de ejecución.] Formada por todas las unidades de la columna 14, recibe las instrucciones de las ventanas de instrucciones o estaciones de reserva.
-    \item [Etapa para \emph{write-back}.] Formada por la unidad de la columna 15, implementa la consistencia secuencial del procesador así como la ejecución especulativa. Cuenta con un buffer de renombrado así como con el buffer de reorden (ROB).
+    \item [Etapa para \emph{write-back}.] Formada por la unidad de la columna 15, implementa la consistencia secuencial del procesador así como la ejecución especulativa. Trabaja con el Buffer de renombrado, así como con el de reorden (ROB).
 
         Además, elimina las ejecuciones de instrucciones incorrectas producidas por predicciones erróneas, en relación a los riesgos de control (para ello usamos el ROB).
 
@@ -157,7 +157,7 @@ R4 = R3 + 1
 R3 = R5 + 1
 R7 = R3 * R4
     \end{minted}
-    \caption{Código a ejecutar}
+    \caption{Código a ejecutar.}
     \label{cod:ejm1_T4}
     \end{listing}
     Donde ningún registro ha sido renombrado todavía salvo el registro \verb|R5|, cuya entrada en el buffer de renombrado observamos en la Tabla~\ref{tab:ejm1_T4}. El registro 3 tiene como valor inicial 62.
@@ -170,7 +170,7 @@ R7 = R3 * R4
         0 & 1 & 5 & 58 & 1 & 1 \\
         \hline
     \end{tabular}
-    \caption{Estado inicial del buffer de renombrado}
+    \caption{Estado inicial del buffer de renombrado.}
     \label{tab:ejm1_T4}
     \end{table}
     Así pues, el buffer de renombrado tras la ejecución de nuestro programa de 4 líneas será el que podemos observar en la Tabla~\ref{tab:ejm1_T4_2}. Describimos los pasos que nos han llevado a obtener dicho estado en el buffer:
@@ -198,7 +198,7 @@ R7 = R3 * R4
         4 & 1 & 7 &   & 0 & 1 \\
         \hline
     \end{tabular}
-    \caption{Estado del buffer de renombrado}
+    \caption{Estado del buffer de renombrado.}
     \label{tab:ejm1_T4_2}
     \end{table}
     Tras este renombramiento, el Código~\ref{cod:ejm1_T4} pasaría a ser para el procesador (notando por \verb|RR| a los registros de renombrado) el que muestra el Código~\ref{cod:ejm1_T4_2}, que ya no tiene las dependencias WAW y WAR que tenía el anterior Código~\ref{cod:ejm1_T4} (una dependencia WAW entre las líneas 1 y 3, y una WAR entre las líneas 2 y 3). Sin embargo, observamos que siguen existiendo dependencias RAW (entre las líneas 1 y 2), las cuales se eliminarán con el uso de las estaciones de reserva.
@@ -209,7 +209,7 @@ RR2 = RR1 + 1
 RR3 = RR0 + 1
 RR4 = RR3 * RR2
     \end{minted}
-    \caption{Código ejecutado por el procesador}
+    \caption{Código ejecutado por el procesador.}
     \label{cod:ejm1_T4_2}
     \end{listing}
 \end{ejemplo}
@@ -256,12 +256,12 @@ A continuación, mostramos un par de ejemplos para familiarizarnos con el uso de
 \begin{ejemplo}
     Queremos ejecutar el Código ensamblador~\ref{cod:ejm2_T4} (donde suponemos que el primer registro es el destino) en un procesador con una estación de reserva centralizada, que suponemos que sólo emite una instrucción por ciclo y además lo hace de forma ordenada. Mostrar cómo van cambiando las tablas del buffer de renombrado y de la estación de reserva. El estado inicial del banco de registros es el que se observa en la Tabla~\ref{tab:ejm2_T4_registros}.\\
     \begin{listing}[H]
-    \begin{minted}[xleftmargin=6cm, linenos]{c++}
-mult r2, r0, r1        
-add  r3, r1, r2
-sub  r2, r0, r1
+    \begin{minted}[xleftmargin=4cm, linenos]{asm}
+mult r2, r0, r1     # r2 = r0 * r1     
+add  r3, r1, r2     # r3 = r1 + r2
+sub  r2, r0, r1     # r2 = r0 - r1
     \end{minted}
-    \caption{Código a ejecutar}
+    \caption{Código a ejecutar.}
     \label{cod:ejm2_T4}
     \end{listing}
 
@@ -274,11 +274,11 @@ sub  r2, r0, r1
         0 & 10 & 20 & 30 & 40 & 50 \\
         \hline
     \end{tabular}
-    \caption{Estado inicial de los registros}
+    \caption{Estado inicial de los registros.}
     \label{tab:ejm2_T4_registros}
     \end{table}
 
-    A continuación, describimos las accesiones que realiza el procesador en el proceso de emisión, mostrando finalmente las Tablas~\ref{tab:ejm2_T4_renombrado} y~\ref{tab:ejm2_T4_estacion}, que contienen respectivamente el estado final del buffer de renombrado y de la estación de reserva (en estas, no borramos lo que había antes, sino que lo tachamos para que puedan verse los diferentes estados por los que han pasado los campos).
+    A continuación, describimos las acciones que realiza el procesador en el proceso de emisión, mostrando finalmente las Tablas~\ref{tab:ejm2_T4_renombrado} y~\ref{tab:ejm2_T4_estacion}, que contienen respectivamente el estado final del buffer de renombrado y de la estación de reserva (en estas, no borramos lo que había antes, sino que lo tachamos para que puedan verse los diferentes estados por los que han pasado los campos).
     \begin{enumerate}
         \item La instrucción 1 llega a emisión, con lo que se abre un campo en la estación de reserva para la misma, así como un campo en el buffer de renombrado, por ser una intrucción aritmético-lógica (tiene salida a un registro). Esto no se comentará en las siguientes instrucciones.
 
@@ -291,7 +291,7 @@ sub  r2, r0, r1
 
             En la estación de reserva se introduce la operación, con el registro de renombrado destino el 1.
 
-            A la instrucción le falta el 2o operando, por lo que tendrá que esperar a la finalización de la instrucción 1.
+            A la instrucción le falta el 2º operando, por lo que tendrá que esperar a la finalización de la instrucción 1.
         \item En el buffer de renombrado se introduce como registro el 2, cambiando el 1 del campo ``Último''  de la entrada 0 a 0.
 
             En la estación de reserva se introduce la operación, con el registro de renombrado destino el 2.
@@ -460,7 +460,7 @@ loop:   ld   r1, 0x1C(r2)     # r1 <-- M[1C + [r2]]
         subi r4, r4, #1       # r4--
         bnz  r4, loop         # Si r4 != 0, jump loop
     \end{minted}
-    \caption{Código a ejecutar}
+    \caption{Código a ejecutar.}
     \label{cod:ejm5_T4}
     \end{listing}
 
@@ -541,7 +541,7 @@ st   r1, 0x1CA      # M[0x1CA] <-- r1
 add  r1, r4, r3     # r1 <-- r4 + r3
 xor  r1, r1, r3     # r1 <-- r1 XOR r3
     \end{minted}
-    \caption{Código a ejecutar}
+    \caption{Código a ejecutar.}
     \label{cod:ejm6_T4}
     \end{listing}
 
@@ -727,7 +727,7 @@ cmp r8, r4, r7
 jz  r8, 0x2300000F
 ld  r2, a
     \end{minted}
-    \caption{Código a ejecutar}
+    \caption{Código a ejecutar.}
     \label{cod:ejm7_T4}
     \end{listing}
     El cual tiene una dependencias de datos tipo RAW entre las líneas 2 y 3, que introducirá tiempos de penalización, al tener que esperar la instrucción 3 a la 2 en la estación de reserva. Sin embargo, el compilador puede darse cuenta de esta dependencia RAW, así como que las instrucciones 1 y 2 no tienen dependencias entre sí, para intercambiar las instrucciones 1 y 2, reduciendo el tiempo de penalización de la instrucción 3 provocada por la dependencia RAW (que no eliminamos pero hacemos que su efecto se vea reducido).
