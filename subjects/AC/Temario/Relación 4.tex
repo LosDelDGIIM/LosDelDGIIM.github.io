@@ -26,14 +26,148 @@ y suponiendo que se pueden captar, decodificar, y emitir cuatro instrucciones po
     \item Una estación de reserva de tres líneas para cada unidad funcional, con envío ordenado.
 \end{enumerate}
 
-Nota: considere que hay una unidad funcional para la carga (2 ciclos), otra para el almacenamiento (1 ciclo), tres para la suma/resta (1 ciclo), y una para la multiplicación (4 ciclos). También puede considerar que, en la práctica, no hay límite para el número de instrucciones que pueden almacenarse en la ventana de instrucciones o en el buffer de instrucciones.
+Nota: considere que hay una unidad funcional para la carga (2 ciclos), otra para el almacenamiento (1 ciclo), tres para la suma/resta (1 ciclo), y una para la multiplicación (4 ciclos). También puede considerar que, en la práctica, no hay límite para el número de instrucciones que pueden almacenarse en la ventana de instrucciones o en el buffer de instrucciones.\\
+
+Según el enunciado del ejercicio, el cauce de instrucciones tiene la siguiente forma:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+    \node[draw, square] (A) at (0,1.75) {IF};
+    \node[draw, square] (B) at (1,1.75) {ID};
+
+    \node[draw, square] (C) at (4,3.5) {LOAD 2c};
+    \node[draw, square] (D) at (4,2.8) {STORE 1c};
+    \node[draw, square] (E) at (4,2.1) {ADD 1c};
+    \node[draw, square] (F) at (4,1.4) {ADD 1c};
+    \node[draw, square] (G) at (4,0.7) {ADD 1c};
+    \node[draw, square] (H) at (4,0) {MULT 4c};
+
+    \node[draw, square] (I) at (7,1.75) {WB};
+
+    \draw (A) -- (B)
+    \draw (B) to[out=0,in=180] (C)
+    \draw (B) to[out=0,in=180] (D)
+    \draw (B) to[out=0,in=180] (E)
+    \draw (B) to[out=0,in=180] (F)
+    \draw (B) to[out=0,in=180] (G)
+    \draw (B) to[out=0,in=180] (H)
+    \draw (C) to[out=0,in=180] (I)
+    \draw (D) to[out=0,in=180] (I)
+    \draw (E) to[out=0,in=180] (I)
+    \draw (F) to[out=0,in=180] (I)
+    \draw (G) to[out=0,in=180] (I)
+    \draw (H) to[out=0,in=180] (I)
+\end{tikzpicture}
+\end{figure}
+
+A continuación, para cada caso, desarrollamos una tabla que muestre la evolución de la ejecución del código según el número de ciclos:
+
+\begin{table}[H]
+\centering
+\scriptsize
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+    \hline
+    Instrucción / Ciclos & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12  & 13 & 14 \\
+    \hline
+    \verb|lw  r1, 0x1ac|     & IF & ID & EX & EX & & & & & & & & & & \\
+    \hline        
+    \verb|lw  r2, 0xc1f|     & IF & ID & & & EX & EX & & & & & & & & \\
+    \hline           
+    \verb|add r3, r0, r0|    & IF & ID & & & EX & & & & & & & & & \\
+    \hline                        
+    \verb|mul r4, r2, r1|    & IF & ID & & & & & EX & EX & EX & EX & & & & \\
+    \hline            
+    \verb|add r3, r3, r4|    & & IF & ID & & & & & & & & EX & & & \\
+    \hline            
+    \verb|add r5, r0, 0x1ac| & & IF & ID & & & & & & & & EX & & & \\
+    \hline            
+    \verb|add r6, r0, 0xc1f| & & IF & ID & & & & & & & & EX & & & \\
+    \hline        
+    \verb|sub r5, r5, #4|    & & IF & ID & & & & & & & & & EX & & \\
+    \hline
+    \verb|sub r6, r6, #4|    & & & IF & ID & & & & & & & & EX & & \\
+    \hline
+    \verb|sw  (r5), r3|      & & & IF & ID & & & & & & & & & EX & \\
+    \hline          
+    \verb|sw  (r6), r4|      & & & IF & ID & & & & & & & & & & EX \\
+    \hline
+\end{tabular}
+\caption{Ejecución con ventana centralizada y emisión ordenada}
+\end{table}
+
+\begin{table}[H]
+\centering
+\scriptsize
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|c|}
+    \hline
+    Instrucción / Ciclos & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12  \\
+    \hline
+    \verb|lw  r1, 0x1ac|     & IF & ID & EX & EX & & & & & & & & \\
+    \hline        
+    \verb|lw  r2, 0xc1f|     & IF & ID & & & EX & EX & & & & & & \\
+    \hline           
+    \verb|add r3, r0, r0|    & IF & ID & EX & & & & & & & & & \\
+    \hline                        
+    \verb|mul r4, r2, r1|    & IF & ID & & & & & EX & EX & EX & EX & & \\
+    \hline            
+    \verb|add r3, r3, r4|    & & IF & ID & & & & & & & & EX & \\
+    \hline
+    \verb|add r5, r0, 0x1ac| & & IF & ID & EX & & & & & & & & \\
+    \hline
+    \verb|add r6, r0, 0xc1f| & & IF & ID & EX & & & & & & & & \\
+    \hline
+    \verb|sub r5, r5, #4|    & & IF & ID & & EX & & & & & & & \\
+    \hline            
+    \verb|sub r6, r6, #4|    & & & IF & ID & EX & & & & & & & \\
+    \hline
+    \verb|sw  (r5), r3|      & & & IF & ID & & & & & & &  & EX \\
+    \hline
+    \verb|sw  (r6), r4|      & & & IF & ID & & & & & & & EX &  \\
+    \hline
+\end{tabular}
+\caption{Ejecución con ventana centralizada y emisión desordenada}
+\end{table}
+
+\begin{table}[H]
+\centering
+\scriptsize
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+    \hline
+    Instrucción / Ciclos & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 \\
+    \hline
+    \verb|lw  r1, 0x1ac|     & IF & ID & EX & EX & & & & & & & & & \\
+    \hline        
+    \verb|lw  r2, 0xc1f|     & IF & ID & & & EX & EX & & & & & & & \\
+    \hline           
+    \verb|add r3, r0, r0|    & IF & ID & EX & & & & & & & & & & \\
+    \hline                        
+    \verb|mul r4, r2, r1|    & IF & ID & & & & & EX & EX & EX & EX & & & \\
+    \hline            
+    \verb|add r3, r3, r4|    & & IF & ID & & & & & & & & EX & & \\
+    \hline
+    \verb|add r5, r0, 0x1ac| & & IF & ID & EX & & & & & & & & & \\
+    \hline
+    \verb|add r6, r0, 0xc1f| & & IF & ID & EX & & & & & & & & & \\
+    \hline
+    \verb|sub r5, r5, #4|    & & IF & ID & & EX & & & & & & & & \\
+    \hline            
+    \verb|sub r6, r6, #4|    & & & IF & ID & EX & & & & & & & & \\
+    \hline
+    \verb|sw  (r5), r3|      & & & IF & ID & & & & & & & & EX & \\
+    \hline
+    \verb|sw  (r6), r4|      & & & IF & ID & & & & & & & & & EX \\
+    \hline
+\end{tabular}
+\caption{Ejecución con ventanas repartidas y emisión ordenada}
+\end{table}
+
 \end{ejercicio}
 
 \begin{ejercicio}
     Cosidere que el fragmento de Código~\ref{cod:ej2_R4}:
     \begin{listing}[H]
     \begin{minted}[xleftmargin=4cm, linenos]{asm}
-
 lw   r3,0x10a   ; r3  M(0x10a)
 addi r2,r0,#128 ; r2  r0+128
 add  r1,r0,0x0a ; r1  r0+0x0a

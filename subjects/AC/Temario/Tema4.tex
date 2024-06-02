@@ -69,11 +69,11 @@ Desarrollamos a continuación varios aspectos relevantes del cauce de procesamie
     \item Observamos que en la etapa amarillo pastel encontramos entre cada módulo y el siguiente 4 flechas representando puentes de datos, los cuales pasan a 8 en la etapa verde pastel. Esto sucede siempre en los x86 (son computadores CISC): sucede cuando una instrucción está implementada mediante varias microinstrucciones.
     \item En la etapa de emisión hay dos partes importantes:
         \begin{itemize}
-            \item Una en la que las instrucciones son almacenadas para su ejecución en lo que se llaman estaciones de reserva (o ventana de instrucciones en el caso de Intel), mientras que la operación no está lista para pasar a su ejecución las unidades funcionales.
+            \item Una en la que las instrucciones son almacenadas para su ejecución en lo que se llaman estaciones de reserva (o ventana de instrucciones en el caso de Intel), mientras que la operación no está lista para pasar a su ejecución en las unidades funcionales.
             \item Una en la que se mandan a la primera unidad funcional desde las estaciones de reserva.
         \end{itemize}
         Depende de la implementación del procesador, pero normalmente cada unidad funcional tiene sus propias estaciones de reserva. Podemos observarlas en la Figura~\ref{fig:Cauce_ARM_cortex_a76}, las cajas de color azul claro etiquetadas con ``Queue'' antes de las unidades funcionales de la etapa de ejecución.
-    \item En relación al punto anterior, Intel llama \textbf{emisión} a ventana de instrucciones y \textbf{envío} a unidades funcionales; mientras que manuales de ARM enuncian \textbf{envío} a estaciones de reserva y \textbf{emisión} a unidades funcionales.
+    \item En relación al punto anterior, Intel llama \textbf{emisión} a ventana de instrucciones y \textbf{envío} a unidades funcionales; mientras que los manuales de ARM hablan de \textbf{envío} a estaciones de reserva y de \textbf{emisión} a unidades funcionales.
     \item En la Figura~\ref{fig:Cauce_ARM_cortex_a76}, destacamos las unidades de \verb|AGU| y \verb|LSU|, que son las últimas a las que van a parar las instrucciones de acceso a memoria.
         \begin{itemize}
             \item Las \verb|AGU| son unidades de cálculo arimético que se encargan de calcular direcciones de acceso a memoria, la generación del address de una instrucción de acceso a memoria\footnote{Esta es la unidad que se encarga de procesar las instrucciones leaq de ASM, que se vieron en EC.}.
@@ -84,7 +84,7 @@ Desarrollamos a continuación varios aspectos relevantes del cauce de procesamie
     Si viene una nueva instrucción y es de escritura, se introduce en su cola correspondiente. Si es de lectura, tenemos dos posibilidades:
     \begin{itemize}
         \item Si el cerebro de la \verb|LSU| no encuentra ninguna escritura con la misma dirección de memeoria en la cola de escrituras, simplemente se introduce en la cola correspondiente para lecturas.
-        \item Si el cerebro de la \verb|LSU| detecta al menos una escritura a la última posición de memoria, coge el contenido de la última y se lo devuelve como resultado a la instrucción de lectura, sin llegar a leer dicha instrucción de memoria, al nunca introducirse en la cola.
+        \item Si el cerebro de la \verb|LSU| detecta al menos una escritura a la posición de memoria, coge el contenido de la última y se lo devuelve como resultado a la instrucción de lectura, sin llegar a leer dicha instrucción de memoria, al nunca introducirse en la cola.
     \end{itemize}
     Si los \verb|LSU| funcionan al igual que una cola FIFO (puede llevar quizás implementaciones más complejas, como sucede en los ARM), entonces los órdenes $W\rightarrow W$ y $R\rightarrow R$ son garantizados por el procesador (esto es lo que sucede en los Intel).
 
@@ -112,14 +112,14 @@ A continuación, en la Figura~\ref{fig:Cauce_ARM_cortex_a72} podemos volver a ob
         \begin{itemize}
             \item Elimina riesgos WAW y WAR (renombrando registros con el buffer de renombrado).
             \item Elimina riesgos RAW y estructurales (mediante las estaciones de reserva).
-            \item Reduce los riesgos de control (eejcución especulativa usando ROB).
+            \item Reduce los riesgos de control (ejecución especulativa usando ROB).
             \item Captura de operandos desde registros de la arquitectura, o desde registros de renombrado.
         \end{itemize}
         Cuenta con la ventana de instrucciones o estación de reserva (las unidades de la columna 13, que preceden a la etapa de ejecución), con el Buffer de renombrado y con el Buffer de reorden (\emph{ReOrder Buffer} o ROB), que permite eliminar los riegos de control de forma sencilla. En el bloque de ``Rename/Dispatch'' tiene acceso a los registros de la arquitectura.
     \item [Etapa de ejecución.] Formada por todas las unidades de la columna 14, recibe las instrucciones de las ventanas de instrucciones o estaciones de reserva.
     \item [Etapa para \emph{write-barck}.] Formada por la unidad de la columna 15, implementa la consistencia secuencial del procesador así como la ejecución especulativa. Cuenta con un buffer de renombrado así como con el buffer de reorden (ROB).
 
-        Además, elimina los riesgos de control que no fueron detectados por predicciones incorrectas (para ello usamos el ROB).
+        Además, elimina las ejecuciones de instrucciones incorrectas producidas por predicciones erróneas, en relación a los riesgos de control (para ello usamos el ROB).
 
         Tiene acceso a los registros de la arquitectura.
 \end{description}
