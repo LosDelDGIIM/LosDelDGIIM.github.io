@@ -100,7 +100,7 @@ De esta forma (suponiendo que la multiplicación tarda 4 ciclos), se realiza la 
   
 Ante una operación que provoca un RAW de `n` ciclos, un desenrollado de `n` puede ser buena idea, aunque con realizar un desenrollado de menor número ya eliminamos ciertas latencias.  
 Por ejemplo, si en el ejemplo hubiésemos puesto sólo `tmp0` y `tmp1`, eliminamos la latencia de cada RAW en 1 ciclo frente al bucle original.  
-Cabe destacar que no siempre un mayor desenrollado nos va a dar unos mejores tiempos, el número de registros de la arquitectura es principal limitante (cuando se gasten, las variables se almacenan en memoria, ralentizando el programa).  
+Cabe destacar que no siempre un mayor desenrollado nos va a dar unos mejores tiempos, el número de registros de la arquitectura es el principal limitante (cuando se gasten, las variables se almacenan en memoria, ralentizando el programa).  
   
 A partir del desenrollado, el compilador generará el código según su optimización, añadiendo operaciones vectoriales o no. Los compiladores aplican desenrollado.
 
