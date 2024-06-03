@@ -15,7 +15,7 @@ En esta sesión aprenderemos a optimizar los códigos de nuestro programas, apro
 - Es un error no programar sin tener en cuenta la arquitectura, ya que genera códigos muy ineficientes cuyos tiempos pueden reducirse fácilmente pensando un poco en la arquitectura.
 - No se debe reducir el tiempo de ejecución eliminando funcionalidades del programa.
 - A la hora de optimizar, debemos fijarnos en la parte del código que más tiempo suponga en la ejecución del programa, eliminando cuellos de botella.
-- No es necesario bajar a código ensamblaor para optimizar, aunque a veces es la única opción.
+- No es necesario bajar a código ensamblador para optimizar, aunque a veces es la única opción.
   
 Hay optimizaciones con las que veremos mejoras en todos los núcleos de procesamiento actuales, por tener características comunes a tener en cuenta (por ejemplo, todas las CPUs actuales tienen varias ALUs).  
 Además, hay características propias de implementaciones concretas que si se tienen en cuenta podemos reducir tiempos de ejecución.  
@@ -83,7 +83,7 @@ for(int i = 0; i < ARR; i++){
 return tmp;
 ```
 Tenemos una dependencia RAW en cada iteración (varias operaciones que escriben en `tmp`). Por lo que antes de escribir en `tmp` debemos esperar a que termine la multiplicación (puede llegar a tardar 4 ciclos) anterior, por lo que nuestro bucle está siendo afectado por la latencia de la multiplicación.  
-Sin embargo, podemos reducir tiempos aprovechando la estructura segmentada del procesador, usando desenrollado de bucle: sustituir el ucle por otra en el que cada iteración son varias del original.  
+Sin embargo, podemos reducir tiempos aprovechando la estructura segmentada del procesador, usando desenrollado de bucle: sustituir el bucle por otra en el que cada iteración son varias del original.  
   
 Suponiendo que `ARR % 4 = 0` (si no, debemos añadir, tras dividir todas las veces posibles entre 4, tantas operaciones como el resto `ARR % 4`), realizamos un desenrollado de 4:
 ```c
@@ -124,7 +124,7 @@ for(int i = 0; i < 100; i+=2){
 ```
 
 ## Códigos difíciles para el compilador
-Antes de generar el código ejecutable, el compilador optimiza el código existente aunque, puede tener problemas a la hora de optimizarlas.  
+Antes de generar el código ejecutable, el compilador optimiza el código existente, aunque puede tener problemas a la hora de optimizarlas.  
   
 Por ejemplo, muchos sabemos que el uso de punteros en código puede ayudar mucho a la hora de obtener unos menores tiempos de ejecución. Sin embargo, a veces este uso es contraproducente.  
 Ante el siguiente código:
