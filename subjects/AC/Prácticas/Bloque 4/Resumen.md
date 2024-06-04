@@ -77,7 +77,7 @@ Permite aprovechar la productividad de las unidades reduciendo latencias produci
 Por ejemplo, en el siguiente código:
 ```c
 int i, float tmp = 0.0;
-for(int i = 0; i < ARR; i++){
+for(i = 0; i < ARR; i++){
     tmp += a[i] * b[i];
 }
 return tmp;
@@ -88,7 +88,7 @@ Sin embargo, podemos reducir tiempos aprovechando la estructura segmentada del p
 Suponiendo que `ARR % 4 = 0` (si no, debemos añadir, tras dividir todas las veces posibles entre 4, tantas operaciones como el resto `ARR % 4`), realizamos un desenrollado de 4:
 ```c
 int i, float tmp0 = 0.0, tmp1 = 0.0, tmp2 = 0.0, tmp3 = 0.0; 
-for(int i = 0; i < ARR; i+=4){
+for(i = 0; i < ARR; i+=4){
     tmp0 += a[i]*b[i];
     tmp1 += a[i+1]*b[i+1];
     tmp2 += a[i+2]*b[i+2];
