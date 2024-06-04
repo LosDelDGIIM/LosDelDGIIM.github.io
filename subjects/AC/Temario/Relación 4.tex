@@ -413,7 +413,7 @@ Según el enunciado del ejercicio, el cauce de instrucciones tiene la siguiente 
             \hline
             \verb|sw  -8(r1),r5|        & & & IF & ID & & & & & & & &\\
             \hline
-            \verb|sub  r2,r2,#16|       & & & IF & ID & EX & & & & & & & \\
+            \verb|sub  r2,r2,#16|       & & & IF & ID & EX & ROB & & & & & & \\
             \hline \\ \hline \\ \hline
             \hline
             Instrucción / Ciclos & 13 & 14 & 15 & 16 & 17 & 18 & 19 \\
@@ -472,7 +472,7 @@ Según el enunciado del ejercicio, el cauce de instrucciones tiene la siguiente 
             \hline
             \verb|sw  -8(r1),r5|        & & & IF & ID & & & & & & EX & ROB & WB\\
             \hline
-            \verb|sub  r2,r2,#16|       & & & IF & ID & EX & & & & & & & WB \\
+            \verb|sub  r2,r2,#16|       & & & IF & ID & EX & ROB & & & & & & WB \\
             \hline
         \end{tabular}
         \caption{Emisión desordenada reduciendo la multiplicación del Ejercicio~\ref{ej:2_R4}.}
@@ -486,16 +486,99 @@ Según el enunciado del ejercicio, el cauce de instrucciones tiene la siguiente 
 
 \begin{ejercicio}
     En un procesador superescalar con renombramiento de registros se utiliza un buffer de renombramiento para implementar el mismo. Indique como evolucionarían los registros de renombramiento al realizar el renombramiento para las instrucciones del Código~\ref{cod:e5_R4}.
-   \begin{listing}[H]
-   \begin{minted}[xleftmargin=4cm, linenos]{asm}
+    \begin{listing}[H]
+    \begin{minted}[xleftmargin=4cm, linenos]{asm}
 mul r2, r0, r1  ; r2 <-- r0*r1
 add r3,r1,r2    ; r3 <-- r1+r2
 sub r2,r0,r1    ; r2 <-- r0-r1
 add r3,r3,r2    ; r3 <-- r3+r2
-   \end{minted}
-   \caption{Instrucciones para renombrar}
-   \label{cod:e5_R4}
-   \end{listing}
+    \end{minted}
+    \caption{Instrucciones para renombrar.}
+    \label{cod:e5_R4}
+    \end{listing}
+
+    Suponemos que \verb|r0| y \verb|r1| ya se encuentran en el buffer de renombramiento, siendo este inicialmente como sigue:
+    \begin{center}
+        \scriptsize
+        \begin{tabular}{|c|c|c|c|c|c|}
+            \hline
+            \# & Entrada Válida & Registro destino & Valor & Válido & Último \\
+            \hline
+            0 & 1 & r0 & [r0] & 1 & 1 \\
+            1 & 1 & r1 & [r1] & 1 & 1 \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    Tras decodificar la primera instrucción, \verb|mul r2, r0, r1|, el buffer de renombramiento queda como sigue:
+    \begin{center}
+        \scriptsize
+        \begin{tabular}{|c|c|c|c|c|c|}
+            \hline
+            \# & Entrada Válida & Registro destino & Valor & Válido & Último \\
+            \hline
+            0 & 1 & r0 & [r0] & 1 & 1 \\
+            1 & 1 & r1 & [r1] & 1 & 1 \\
+            2 & 1 & r2 &  & 0 & 1 \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    Tras decodificar la segunda instrucción, \verb|add r3,r1,r2|, el buffer de renombramiento queda como sigue:
+    \begin{center}
+        \scriptsize
+        \begin{tabular}{|c|c|c|c|c|c|}
+            \hline
+            \# & Entrada Válida & Registro destino & Valor & Válido & Último \\
+            \hline
+            0 & 1 & r0 & [r0] & 1 & 1 \\
+            1 & 1 & r1 & [r1] & 1 & 1 \\
+            2 & 1 & r2 &  & 0 & 1 \\
+            3 & 1 & r3 &  & 0 & 1 \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    Notemos que esta última instrucción no puede completarse hasta que la primera no lo haya hecho, ya que \verb|r2| no se encuentra en el buffer de renombramiento.
+    Estará por tanto esperando en la estación de reserva hasta que se complete la primera instrucción. Tras la captación de la tercera instrucción, \verb|sub r2,r0,r1|, el buffer de renombramiento queda como sigue:
+    \begin{center}
+        \scriptsize
+        \begin{tabular}{|c|c|c|c|c|c|}
+            \hline
+            \# & Entrada Válida & Registro destino & Valor & Válido & Último \\
+            \hline
+            0 & 1 & r0 & [r0] & 1 & 1 \\
+            1 & 1 & r1 & [r1] & 1 & 1 \\
+            2 & 1 & r2 &  & 0 & 0 \\
+            3 & 1 & r3 &  & 0 & 1 \\
+            4 & 1 & r2 &  & 0 & 1 \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    Como \verb|r0| y \verb|r1| tienen valores válidos, esta instrucción podría empezar a ejecutarse si existe una unidad funcional
+    disponible. El resultado de esta operación se almacenará en la línea 4 (último renombrado de \verb|r2|) y de ahí se
+    tomarán los operandos \verb|r2| en instrucciones posteriores (para eso se utiliza el ``Bit de Último'').
+    No obstante, supongamos que esta no se ejecuta todavía (por ejemplo, se podrián decodificar 4 instrucciones a la vez). Tras la decodificación de la última instrucción, \verb|add r3,r3,r2|, el buffer de renombramiento queda como sigue:
+    \begin{center}
+        \scriptsize
+        \begin{tabular}{|c|c|c|c|c|c|}
+            \hline
+            \# & Entrada Válida & Registro destino & Valor & Válido & Último \\
+            \hline
+            0 & 1 & r0 & [r0] & 1 & 1 \\
+            1 & 1 & r1 & [r1] & 1 & 1 \\
+            2 & 1 & r2 &  & 0 & 0 \\
+            3 & 1 & r3 &  & 0 & 0 \\
+            4 & 1 & r2 &  & 0 & 1 \\
+            5 & 1 & r3 &  & 0 & 1 \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    Cuando la instrucción \verb|mull r2,r0,r1| se complete, se actualizará la línea 2 con el valor de \verb|r2|,
+    de forma que la instrucción \verb|add r3,r1,r2| pueda completarse. Cuando además se termine la instrucción \verb|sub r2,r0,r1|, se actualizará la línea 3 con el valor de \verb|r2|, de forma que la instrucción \verb|add r3,r3,r2|
+    ya pueda completarse.
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:6_R4}
@@ -516,17 +599,145 @@ etiqueta: //..
     \label{cod:ej6_R4}
     \end{listing}
 
-Indique cuál es la penalización efectiva debida a los saltos, en función del valor inicial de \verb|c| (número entero), considerando que el procesador utiliza:
+Indique cuál es la penalización efectiva debida a los saltos, en función del valor inicial de \verb|c| (número entero). Considere que la penalización por saltos incorrectamente predichos es de 4 ciclos y para los saltos correctamente predichos es 0 ciclos. Diferencie según el procesador utilice:
 \begin{enumerate}
     \item Predicción fija (siempre se considera que se va a producir el salto).
-    \item Predicción estática (si el desplazamiento es negativo se toma y si es positivo no).
-    \item Predicción dinámica con un bit (\verb|1=Saltar|; \verb|0=No Saltar|; Inicialmente está a 1).
+    
+    Distinguimos en función del valor de \verb|c|, sabiendo que como mucho se van a realizar 10 iteraciones del bucle.
+    \begin{itemize}
+        \item Si \verb|c <= 0|:
+        
+        En este caso, por cada iteración del bucle, se va a producir un error de predicción,
+        puesto que en ningún caso saltará. Por último, cuando sea \verb|i==10|, se predecirá saltar, lo que será un error. Por tanto,
+        en total se producen $11$ predicciones fallidas, por lo que la penalización es de $44$ ciclos.
+
+        \item Si \verb|c >= 10|:
+        
+        En este caso, se predecirá saltar cuando se llegue a la línea 6, y se acertara, terminando entonces el programa. Por tanto,
+        no se producirá penalización ninguna.
+
+        \item Si \verb|0<c<10|:
+        
+        En este caso, el salto etiquetado como $2$ nunca producirá penalización, porque siempre se saltará y nunca se llegará a \verb|i==10|.
+        Se producirán $10-c$ errores de predicción, por lo que la penalización será de $4(10-c)$ ciclos.
+    \end{itemize}
+
+    \item Predicción estática según desplazamiento.
+    
+    \begin{itemize}
+        \item Si \verb|c <= 0|:
+        
+        En este caso, en cada iteración del bucle, como el salto $1$ es hacia delante, se predecirá no saltar, acertando en la predicción.
+        Además, en cada iteración se predecirá también de forma correcta saltar hacia atrás para volver a comenzar el bucle. Tan solo se producirá error
+        en la última iteración, donde se tenga que terminar el bucle y se prediga saltar hacia atrás. Por tanto,
+        tan solo se producirá un error de predicción; es decir, una penalización de 4 ciclos.
+
+        \item Si \verb|c >= 10|:
+        
+        En este caso, como el salto $1$ es hacia delante, se predecirá no saltar, cuando en realidad sí se produce el salto. Por tanto,
+        se trata de un error de predicción, que supone 4 ciclos de penalización.
+
+        \item Si \verb|0<c<10|:
+        
+        En este caso, el salto etiquetado como $2$ nunca producirá penalización, porque siempre se saltará y es lo que se predice por ser un salto hacia detrás.
+        Asimismo, el salto $1$ tan solo producirá error de predicción cuando se llegue a \verb|c==11|, que es cuando, aunque habiendo predicho que no se salte por ser un salto hacia delante,
+        se saltará. Por tanto, el coste es de $4$ ciclos.
+    \end{itemize}
+
+    \item Predicción dinámica con un bit (Inicialmente está a 1).
+    
+    En este caso, necesitamos la Tabla de Saltos. Distinguimos en función del valor de \verb|c|, sabiendo que como mucho se van a realizar 10 iteraciones del bucle.
+    \begin{itemize}
+        \item Si \verb|c <= 0|:
+        
+        La Tabla de Saltos, en cada iteración del bucle, se actualizará de la siguiente forma:
+        \begin{center}
+            \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|}
+                \hline
+                \# & Init. & It. 1& It. 2 & It. 3 & It. 4 & It. 5 & It. 6 & It. 7 & It. 8 & It. 9 & It. 10 \\ 
+                \hline
+                1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+                2 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 0\\
+                \hline \hline
+                & & 1 err & & & & & & & & & 1 err \\
+                \hline
+            \end{tabular}
+        \end{center}
+
+        En este caso, se producen dos errores de predicción, uno en la primera iteración en el salto 1 y otro en la última en el salto 2, por lo que la penalización es de $8$ ciclos.
+
+        \item Si \verb|c >= 10|:
+        
+        La Tabla de Saltos, en cada iteración del bucle, se actualizará de la siguiente forma:
+        \begin{center}
+            \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|}
+                \hline
+                \# & Init. & It. 1& It. 2 & It. 3 & It. 4 & It. 5 & It. 6 & It. 7 & It. 8 & It. 9 & It. 10 \\ 
+                \hline
+                1 & 1 & 1 & - & - & - & - & - & - & - & - & -\\
+                2 & 1 & - & - & - & - & - & - & - & - & - & -\\
+                \hline \hline
+                & & & & & & & & & & &\\
+                \hline
+            \end{tabular}
+        \end{center}
+
+        Notemos que en la primera iteración, se produce correctamente saltar, por lo que se termina el bucle. Por tanto, no se produce penalización alguna, y los
+        guiones se han empleado para indicar que no se ejecutan más iteraciones.
+
+        \item Si \verb|0<c<10|:
+        
+        En este caso, se realizarán $10-c$ 
+        
+        la Tabla de Saltos, en cada iteración del bucle, se actualizará de la siguiente forma:
+        \begin{center}
+            \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+                \hline
+                \# & Init. & It. 1& It. 2 & \dots & It. $10-c-1$ & It. $10-c$ & \dots & It. 10\\
+                \hline
+                1 & 1 & 0 & 0 & \dots & 0 & 1 & - & - \\
+                2 & 1 & 1 & 1 & \dots & 1 & 1 & - & - \\
+                \hline \hline
+                & & 1 err & & & & 1 err & &\\
+                \hline
+            \end{tabular}
+        \end{center}
+
+        En este caso, se producen dos errores de predicción, uno en la primera iteración en el salto 1 y otro en la última iteración en el mismo salto, por lo que la penalización es de $8$ ciclos.
+    \end{itemize}
 \end{enumerate}
-Nota: La penalización por saltos incorrectamente predichos es de 4 ciclos y para los saltos correctamente predichos es 0 ciclos.
 \end{ejercicio}
 
 \begin{ejercicio}
-    En la situación descrita en el problema~\ref{ej:6_R4}. ¿Cuál de los tres esquemas es más eficaz por término medio si hay un 25\% de probabilidades de que c sea menor o igual a 0, un 30\% de que sea mayor o igual a 10; y un 45\% de que sea cualquier número entre 1 y 9, siendo todos equiprobables? 
+    En la situación descrita en el problema~\ref{ej:6_R4}. ¿Cuál de los tres esquemas es más eficaz por término medio si hay un 25\% de probabilidades de que \verb|c| sea menor o igual a 0, un 30\% de que sea mayor o igual a 10; y un 45\% de que sea cualquier número entre 1 y 9, siendo todos equiprobables?\\
+
+    Distinguimos en función de cada uno de los tipos de predicciones:
+    \begin{itemize}
+        \item Predicción fija:
+        
+        La penalización media es de:
+        \begin{equation*}
+            P_{\text{fija}} = 0.25\cdot 44 + 0.45\cdot \dfrac{\sum_{i=1}^9(10-c)\cdot 4}{9} + 0.30\cdot 0 = \unit[20]{ciclos}
+        \end{equation*}
+
+        \item Predicción estática según desplazamiento:
+        
+        La penalización media es de:
+        \begin{equation*}
+            P_{\text{estática}} = 0.25\cdot 4 + 0.45\cdot \dfrac{\sum_{i=1}^9 4}{9} + 0.30\cdot 4 = \unit[4]{ciclos}
+        \end{equation*}
+
+        \item Predicción dinámica con un bit:
+        
+        La penalización media es de:
+        \begin{equation*}
+            P_{\text{dinámica}} = 0.25\cdot 8 + 0.45\cdot \dfrac{\sum_{i=1}^9 8}{9} + 0.30\cdot 0 = \unit[5.6]{ciclos}
+        \end{equation*}
+    \end{itemize}
+
+    Como se puede ver, para este bucle, y para la distribución de probabilidad de los valores de \verb|c|, el esquema de
+    predicción más eficiente corresponde a la predicción estática.
+    En cualquier caso, esta situación depende de las probabilidades de los distintos valores de \verb|c|.
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -534,20 +745,73 @@ En un programa, una instrucción de salto condicional (a una dirección de salto
 \begin{equation*}
     SSNNNSSNSNSNSSSSSN
 \end{equation*}
-donde $S$ indica que se produce el salto y N que no. Indique la penalización efectiva que se introduce si se utiliza:
+donde $S$ indica que se produce el salto y N que no. Indique la penalización efectiva (teniendo en cuenta que la penalización por saltos incorrectamente predichos es de 5 ciclos y para los saltos correctamente predichos es 0 ciclos) que se introduce si se utiliza:
 \begin{enumerate}
     \item Predicción fija (siempre se considera que se no se va a producir el salto).
-    \item Predicción estática (si el desplazamiento es negativo se toma y si es positivo no).
+    
+    Tenemos que el número de errores producidos es igual al número de veces que sí se salta, que es de 11 veces. Por tanto, la penalización es de $11\cdot 5 = 55$ ciclos.
+    \item Predicción estática según desplazamiento.
+    
+    Como el salto es hacia atrás, siempre se predice que se va a saltar.
+    Por tanto, el número de errores producidos es igual al número de veces que no se salta, que es de 7 veces. Por tanto, la penalización es de $7\cdot 5 = 35$ ciclos.
     \item Predicción dinámica con dos bits, inicialmente en el estado (11).
+    
+    Para este caso, es necesario la Tabla de Saltos, que se actualiza en cada ejecución de la siguiente forma:
+    \begin{center}
+        \scriptsize
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+            \hline
+            Estado & 11 & 11 & 11 & 10 & 01 & 00 & 01 & 10 & 01 & 10 & 01 & 10 & 01 & 10 & 11 & 11 & 11 & 11 
+            \\ \hline
+            Predicción & S & S & S & S & N & N & N & S & N & S & N & S & N & S & S & S & S & S 
+            \\ \hline
+            Ejecución  & S & S & N & N & N & S & S & N & S & N & S & N & S & S & S & S & S & N \\ \hline
+            Penalización & &   & P & P &   & P & P & P & P & P & P & P & P &   &   &   &   & P \\ \hline
+        \end{tabular}
+    \end{center}
+
+    Por tanto, tenemos que hay 11 errores de predicción, por lo que la penalización es de $11\cdot 5 = 55$ ciclos.
     \item Predicción dinámica con tres bits, inicialmente en el estado (111).
+    
+    Para este caso, es necesario la Tabla de Saltos, que se actualiza en cada ejecución de la siguiente forma:
+    \begin{center}
+        \scriptsize
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+            \hline
+            Est. & 111 & 111 & 111 & 011 & 001 & 000 & 100 & 110 & 011 & 101 & 010 & 101 & 010 & 101 & 110 & 111 & 111 & 111
+            \\ \hline
+            Pred.  & S & S & S & S & N & N & N & S & S & S & N & S & N & S & S & S & S & S 
+            \\ \hline
+            Ejec.  & S & S & N & N & N & S & S & N & S & N & S & N & S & S & S & S & S & N \\ \hline
+            Penal. &   &   & P & P &   & P & P & P &   & P & P & P & P &   &   &   &   & P \\ \hline
+        \end{tabular}
+    \end{center}
+
+    Por tanto, tenemos que hay 10 errores de predicción, por lo que la penalización es de $10\cdot 5 = 50$ ciclos.
 \end{enumerate}
-Nota: La penalización por saltos incorrectamente predichos es de 5 ciclos y para los saltos correctamente predichos es 0 ciclos.
+
+Como se puede ver, en la secuencia de ejecuciones de la instrucción de salto considerada en este problema,
+el mejor esquema de predicción es la predicción estática que aquí se utiliza. El esquema de predicción de
+salto dinámico con dos bits es igual de bueno (o malo) que la predicción fija.
+
+Así, se puede indicar que la eficacia de un esquema de salto depende del perfil de saltos a que de lugar la
+correspondiente instrucción de salto condicional. En la práctica, los esquemas de predicción dinámica suelen
+funcionar mejor que los de predicción estática porque las instrucciones de salto suelen repetir el
+comportamiento de su ejecución previa. En ese sentido, la secuencia utilizada en este problema es bastante
+atípica.
 \end{ejercicio}
 
 \subsection{Cuestiones}
 
 \begin{cuestion}
 ¿Qué tienen en común un procesador superescalar y uno VLIW? ¿En qué se diferencian?
+
+Tanto un procesador superescalar como uno VLIW son procesadores segmentados que aprovechan el
+paralelismo entre instrucciones (ILP) procesando varias instrucciones u operaciones escalares en cada una de
+ellas. La diferencia principal entre ellos es que mientras que el procesador superescalar incluye elementos
+hardware para realizar la planificación de instrucciones (enviar a ejecutar las instrucciones decodificadas
+independientes para las que existen recursos de ejecución disponibles) dinámicamente, los procesadores
+VLIW se basan en el compilador para realizar dicha planificación (planificación estática).
 \end{cuestion}
 
 \begin{cuestion}
@@ -563,7 +827,7 @@ Nota: La penalización por saltos incorrectamente predichos es de 5 ciclos y par
 \end{cuestion}
 
 \begin{cuestion}
-¿En qué momento se lleva a cabo la predicción estática de saltos condiciones? ¿Se puede aprovechar la predicción estática en un procesador con predicción dinámica de saltos?
+¿En qué momento se lleva a cabo la predicción estática de saltos condicionales? ¿Se puede aprovechar la predicción estática en un procesador con predicción dinámica de saltos?
 \end{cuestion}
 
 \begin{cuestion}
