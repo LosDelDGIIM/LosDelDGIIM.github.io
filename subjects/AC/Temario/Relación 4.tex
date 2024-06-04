@@ -201,7 +201,7 @@ Indique el número de ciclos que tardaría en ejecutarse el programa suponiendo 
     \item Emisión desordenada.
     
     Se encuentra resuelto en la Tabla~\ref{tab:ej2_R4_2}. Notemos que, como
-    no pueden escribir en el ROB más de una instrucción por ciclo,
+    no pueden escribir en el ROB más de dos instrucciones por ciclo,
     la instrucción \verb|sub r2,r2,#16| ha de esperar un ciclo más.
 \end{enumerate}
 Nota: Considere que tiene una unidad funcional de carga (2 ciclos), una de almacenamiento (1 ciclo), tres unidades de suma/resta (1 ciclo), y una de multiplicación (6 ciclos), y que no hay limitaciones para el número de líneas de la cola de instrucciones, ventana de instrucciones, buffer de reorden, puertos de lectura/escritura etc.
@@ -481,7 +481,137 @@ Según el enunciado del ejercicio, el cauce de instrucciones tiene la siguiente 
 \end{ejercicio}
 
 \begin{ejercicio}
-    En el caso descrito en el problema~\ref{ej:3_R4}, indique cómo evolucionaría el buffer de reorden utilizado para implementar finalización ordenada, en la mejor de las opciones. 
+    En el caso descrito en el problema~\ref{ej:3_R4}, indique cómo evolucionaría el buffer de reorden utilizado para implementar finalización ordenada, en la mejor de las opciones.
+
+    En todo momento, nos referiremos a la tabla~\ref{tab:ej3_R4_2} para describir la evolución del buffer de reorden, ya que es la que da mejores resultados.
+    Tras terminar el ciclo $1$, tan solo se han captado instrucciones, pero todavía no se han decodificado las instrucciones ni se han emitido (que es el momento en el que se añaden al buffer de reorden).
+    Por tanto, en este momento dicho buffer está vacío. Tras terminar el ciclo $2$, se añaden las 4 instrucciones emitidas:
+    \begin{center}
+        \scriptsize
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+            \hline
+            \multicolumn{8}{|c|}{Ciclo 2} \\
+            \hline
+            \# & Codop      & Unidad & Destino & Valor & Válido & Último & Marca \\ \hline
+            0  & \verb|lw|  & LOAD   & r3      &       & 0      & 1      & i     \\ \hline
+            1  & \verb|addi|& ADD    & r2      &       & 0      & 1      & i     \\ \hline
+            2  & \verb|add| & ADD    & r1      &       & 0      & 1      & i     \\ \hline
+            3  & \verb|lw|  & LOAD   & r4      &       & 0      & 1      & i     \\ \hline
+        \end{tabular}
+    \end{center}
+
+    En el ciclo $3$, otras 4 instrucciones se decodifican y se emiten, y de las que ya estaban emitidas tres entran a la etapa de ejecución. Expresamos ya
+    todos los ciclos a continuación, teniendo en cuenta que la marca \verb|f| se escribe en la etapa ROB.
+    \begin{center}
+        \scriptsize
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+            \hline
+            \multicolumn{8}{|c|}{Ciclo 3} \\
+            \hline
+            \# & Codop      & Unidad & Destino & Valor & Válido & Último & Marca \\ \hline
+            0  & \verb|lw|  & LOAD   & r3      &       & 0      & 1      & x     \\ \hline
+            1  & \verb|addi|& ADD    & r2      &       & 0      & 1      & x     \\ \hline
+            2  & \verb|add| & ADD    & r1      &       & 0      & 1      & x     \\ \hline
+            3  & \verb|lw|  & LOAD   & r4      &       & 0      & 1      & i     \\ \hline
+            4  & \verb|lw|  & LOAD   & r5      &       & 0      & 0      & i     \\ \hline
+            5  & \verb|mult|& MULT   & r6      &       & 0      & 0      & i     \\ \hline
+            6  & \verb|add| & ADD    & r5      &       & 0      & 1      & i     \\ \hline
+            7  & \verb|add| & ADD    & r6      &       & 0      & 1      & i     \\ \hline
+            \hline
+            \multicolumn{8}{|c|}{Ciclo 4} \\
+            \hline
+            \# & Codop      & Unidad & Destino & Valor & Válido & Último & Marca \\ \hline
+            0  & \verb|lw|  & LOAD   & r3      &       & 0      & 1      & x     \\ \hline
+            1  & \verb|addi|& ADD    & r2      & [r0+\#128] & 1 & 0      & f     \\ \hline
+            2  & \verb|add| & ADD    & r1      & [r0+0x0A]  & 1 & 1      & f     \\ \hline
+            3  & \verb|lw|  & LOAD   & r4      &       & 0      & 1      & x     \\ \hline
+            4  & \verb|lw|  & LOAD   & r5      &       & 0      & 0      & x     \\ \hline
+            5  & \verb|mult|& MULT   & r6      &       & 0      & 0      & i     \\ \hline
+            6  & \verb|add| & ADD    & r5      &       & 0      & 1      & i     \\ \hline
+            7  & \verb|add| & ADD    & r6      &       & 0      & 1      & i     \\ \hline
+            8  & \verb|sw|  & STORE  & -       &       & 0      & 1      & i     \\ \hline
+            9  & \verb|sw|  & STORE  & -       &       & 0      & 1      & i     \\ \hline
+            10 & \verb|sub| & ADD    & r2      &       & 0      & 1      & i     \\ \hline
+        \end{tabular}
+        \end{center}
+
+    \begin{table}[H]
+        \centering
+        \scriptsize
+        \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+            \hline
+            \multicolumn{8}{|c|}{Ciclo 5} \\
+            \hline
+            \# & Codop      & Unidad & Destino & Valor & Válido & Último & Marca \\ \hline
+            0  & \verb|lw|  & LOAD   & r3      &  M[0x10a]  & 1 & 1      & f     \\ \hline
+            1  & \verb|addi|& ADD    & r2      & [r0+\#128] & 1 & 0      & f     \\ \hline
+            2  & \verb|add| & ADD    & r1      & [r0+0x0A]  & 1 & 1      & f     \\ \hline
+            3  & \verb|lw|  & LOAD   & r4      &       & 0      & 1      & x     \\ \hline
+            4  & \verb|lw|  & LOAD   & r5      &       & 0      & 0      & x     \\ \hline
+            5  & \verb|mult|& MULT   & r6      &       & 0      & 0      & i     \\ \hline
+            6  & \verb|add| & ADD    & r5      &       & 0      & 1      & i     \\ \hline
+            7  & \verb|add| & ADD    & r6      &       & 0      & 1      & i     \\ \hline
+            8  & \verb|sw|  & STORE  & -       &       & 0      & 1      & i     \\ \hline
+            9  & \verb|sw|  & STORE  & -       &       & 0      & 1      & i     \\ \hline
+            10 & \verb|sub| & ADD    & r2      &       & 0      & 1      & x     \\ \hline\hline
+            \multicolumn{8}{|c|}{Ciclo 6} \\
+            \hline
+            \# & Codop      & Unidad & Destino & Valor & Válido & Último & Marca \\ \hline
+            3  & \verb|lw|  & LOAD   & r4      & M[r1] & 1      & 1      & f     \\ \hline
+            4  & \verb|lw|  & LOAD   & r5      & M[-8(ri)] & 1  & 0      & f     \\ \hline
+            5  & \verb|mult|& MULT   & r6      &       & 0      & 0      & x     \\ \hline
+            6  & \verb|add| & ADD    & r5      &       & 0      & 1      & i     \\ \hline
+            7  & \verb|add| & ADD    & r6      &       & 0      & 1      & x     \\ \hline
+            8  & \verb|sw|  & STORE  & -       &       & 0      & 1      & i     \\ \hline
+            9  & \verb|sw|  & STORE  & -       &       & 0      & 1      & i     \\ \hline
+            10 & \verb|sub| & ADD    & r2      & [r2-\#16] & 1  & 1      & f     \\ \hline\hline
+            \multicolumn{8}{|c|}{Ciclo 7} \\
+            \hline
+            \# & Codop      & Unidad & Destino & Valor & Válido & Último & Marca \\ \hline
+            5  & \verb|mult|& MULT   & r6      &       & 0      & 0      & x     \\ \hline
+            6  & \verb|add| & ADD    & r5      &       & 0      & 1      & i     \\ \hline
+            7  & \verb|add| & ADD    & r6      & [r4+r3]  & 1   & 1      & f     \\ \hline
+            8  & \verb|sw|  & STORE  & -       &       & 0      & 1      & x     \\ \hline
+            9  & \verb|sw|  & STORE  & -       &       & 0      & 1      & i     \\ \hline
+            10 & \verb|sub| & ADD    & r2      & [r2-\#16] & 1  & 1      & f     \\ \hline\hline
+            \multicolumn{8}{|c|}{Ciclo 8} \\
+            \hline
+            \# & Codop      & Unidad & Destino & Valor & Válido & Último & Marca \\ \hline
+            5  & \verb|mult|& MULT   & r6      &       & 0      & 0      & x     \\ \hline
+            6  & \verb|add| & ADD    & r5      &       & 0      & 1      & i     \\ \hline
+            7  & \verb|add| & ADD    & r6      & [r4+r3]  & 1   & 1      & f     \\ \hline
+            8  & \verb|sw|  & STORE  & -       & -     & 0      & 1      & f     \\ \hline
+            9  & \verb|sw|  & STORE  & -       &       & 0      & 1      & i     \\ \hline
+            10 & \verb|sub| & ADD    & r2      & [r2-\#16] & 1  & 1      & f     \\ \hline\hline
+            \multicolumn{8}{|c|}{Ciclo 9} \\
+            \hline
+            \# & Codop      & Unidad & Destino & Valor & Válido & Último & Marca \\ \hline
+            5  & \verb|mult|& MULT   & r6      & [r5*r3] & 1    & 0      & f     \\ \hline
+            6  & \verb|add| & ADD    & r5      &       & 0      & 1      & x     \\ \hline
+            7  & \verb|add| & ADD    & r6      & [r4+r3]  & 1   & 1      & f     \\ \hline
+            8  & \verb|sw|  & STORE  & -       &  -    & 0      & 1      & f     \\ \hline
+            9  & \verb|sw|  & STORE  & -       &       & 0      & 1      & i     \\ \hline
+            10 & \verb|sub| & ADD    & r2      & [r2-\#16] & 1  & 1      & f     \\ \hline\hline
+            \multicolumn{8}{|c|}{Ciclo 10} \\
+            \hline
+            \# & Codop      & Unidad & Destino & Valor & Válido & Último & Marca \\ \hline
+            6  & \verb|add| & ADD    & r5      & [r6+r3] & 0    & 1      & f     \\ \hline
+            7  & \verb|add| & ADD    & r6      & [r4+r3] & 0    & 1      & f     \\ \hline
+            8  & \verb|sw|  & STORE  & -       & -     & 0      & 1      & f     \\ \hline
+            9  & \verb|sw|  & STORE  & -       &       & 0      & 1      & x     \\ \hline
+            10 & \verb|sub| & ADD    & r2      & [r2-\#16] & 1  & 1      & f     \\ \hline\hline
+            \multicolumn{8}{|c|}{Ciclo 11} \\
+            \hline
+            \# & Codop      & Unidad & Destino & Valor & Válido & Último & Marca \\ \hline
+            9  & \verb|sw|  & STORE  & -       & -     & 0      & 1      & f     \\ \hline
+            10 & \verb|sub| & ADD    & r2      & [r2-\#16] & 1  & 1      & f     \\ \hline\hline
+            \multicolumn{8}{|c|}{Ciclo 12} \\
+            \hline
+            \# & Codop      & Unidad & Destino & Valor & Válido & Último & Marca \\ \hline
+            \multicolumn{8}{|c|}{} \\
+            \hline
+        \end{tabular}
+    \end{table}
 \end{ejercicio}
 
 \begin{ejercicio}
