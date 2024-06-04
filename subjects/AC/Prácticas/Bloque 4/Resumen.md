@@ -83,7 +83,7 @@ for(i = 0; i < ARR; i++){
 return tmp;
 ```
 Tenemos una dependencia RAW en cada iteración (varias operaciones que escriben en `tmp`). Por lo que antes de escribir en `tmp` debemos esperar a que termine la multiplicación (puede llegar a tardar 4 ciclos) anterior, por lo que nuestro bucle está siendo afectado por la latencia de la multiplicación.  
-Sin embargo, podemos reducir tiempos aprovechando la estructura segmentada del procesador, usando desenrollado de bucle: sustituir el bucle por otra en el que cada iteración son varias del original.  
+Sin embargo, podemos reducir tiempos aprovechando la estructura segmentada del procesador, usando desenrollado de bucle: sustituir el bucle por otro en el que cada iteración son varias del original.  
   
 Suponiendo que `ARR % 4 = 0` (si no, debemos añadir, tras dividir todas las veces posibles entre 4, tantas operaciones como el resto `ARR % 4`), realizamos un desenrollado de 4:
 ```c
