@@ -36,7 +36,7 @@ A continuación, enumeramos una serie de estrategias a realizar con la finalidad
 
 # Optimización de la ejecución
 ## Reducción de fuerza
-Muchas veces usamos operaciones sobre nuestros datos de forma natural pero que podrían realizarse de formas más rápidas (empleando menos bucles) con otro tipo de operaciones que nos proporcionan el mismo resultado.  
+Muchas veces usamos operaciones sobre nuestros datos de forma natural pero que podrían realizarse de formas más rápidas (empleando menos ciclos) con otro tipo de operaciones que nos proporcionan el mismo resultado.  
   
 Vemos algunos ejemplos en los que se aplica esta técnica:
 
