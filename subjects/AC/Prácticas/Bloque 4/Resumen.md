@@ -68,8 +68,8 @@ Además, de esta forma podemos llegar a emitir dos instrucciones de cálculo a l
   
 En el ejemplo anterior:
 ```asm
-lea ecx, [eax + eax]    # ecx <-- 2eax
-lea eax, [ecx + eax*8]  # eax <-- 2eax + 8eax = 10eax
+lea ecx, [eax + eax]    ; ecx <-- 2eax
+lea eax, [ecx + eax*8]  ; eax <-- 2eax + 8eax = 10eax
 ```
 
 ## Desenrollado de bucles
@@ -269,21 +269,21 @@ ebx = (A < B) ? C1 : C2;
 podemos traducirlo a ensamblador como:
 ```asm
         cmp A, B
-        jge L30         # Si A >= B, jump L30
-        mov ebx, C1     # ebx <-- C1
-        jmp L31         # jump L31
-L30:    mov ebx, C2     # ebx <-- C2
+        jge L30         ; Si A >= B, jump L30
+        mov ebx, C1     ; ebx <-- C1
+        jmp L31         ; jump L31
+L30:    mov ebx, C2     ; ebx <-- C2
 L31:
 ```
 sin embargo, podemos también hacer el siguiente código, donde eliminamos los saltos y el posible retardo introducido por malas predicciones:
 ```asm
-xor ebx, ebx    # ebx <-- 0
+xor ebx, ebx    ; ebx <-- 0
 cmp A, B
-setge bl        # Si A >= B, bl = 1
+setge bl        ; Si A >= B, bl = 1
 
-dec ebx             # ebx--, si ebx = 0 => ebx = FFFFFFFFF; si ebx = 1 => ebx = 0
-and ebx, (C1-C2)    # ebx <-- ebx & C1-C2
-add ebx, C2         # ebx += C2
+dec ebx             ; ebx--, si ebx = 0 => ebx = FFFFFFFFF; si ebx = 1 => ebx = 0
+and ebx, (C1-C2)    ; ebx <-- ebx & C1-C2
+add ebx, C2         ; ebx += C2
 ```
 Con este código inteligente:
 - Si `A<B`: `bl = 0`, luego `ebx = FFFFFFFF`, de donde `ebx <-- C1-C2` y finalizará con `ebx += C2`, luego `ebx = C1`.
