@@ -357,53 +357,93 @@
 
         \item[Opción 2.] Usando el algoritmo de Quine-McCluskey:
         
-        \begin{comment}
-        \begin{table}[ht]
+        En primer lugar, generamos los implicantes primos:
+        \begin{table}[H]
             \centering
-            \begin{minipage}[t]{0.2\textwidth}
-                \centering
-                \caption{Tabla 1}
-                \begin{tabular}{|c|c|}
-                    \hline
-                    A & B \\
-                    \hline
-                    1 & 2 \\
-                    \hline
-                    3 & 4 \\
-                    \hline
-                \end{tabular}
-            \end{minipage}%
-            \hspace{0.05\textwidth} % Espacio entre tablas
-            \begin{minipage}[t]{0.2\textwidth}
-                \centering
-                \caption{Tabla 2}
-                \begin{tabular}{|c|c|}
-                    \hline
-                    C & D \\
-                    \hline
-                    5 & 6 \\
-                    \hline
-                    7 & 8 \\
-                    \hline
-                \end{tabular}
-            \end{minipage}%
-            \hspace{0.05\textwidth} % Espacio entre tablas
-            \begin{minipage}[t]{0.2\textwidth}
-                \centering
-                \caption{Tabla 3}
-                \begin{tabular}{|c|c|}
-                    \hline
-                    E & F \\
-                    \hline
-                    9 & 10 \\
-                    \hline
-                    11 & 12 \\
-                    \hline
-                \end{tabular}
-            \end{minipage}
+            \begin{tabular}{rcc|rcc|rcc}
+                \multicolumn{3}{c}{Columna 1} & \multicolumn{3}{|c|}{Columna 2} & \multicolumn{3}{c}{Columna 3} \\ \hline
+                1 & 0001 & \checkmark & \{1,3\} & 00\_1 & \checkmark & \{1,3,9,11\} & \_0\_1 & $\ast$
+                \\
+                2 & 0010 & \checkmark & \{1,9\} & \_001 & \checkmark & \{2,3,10,11\} & \_01\_ & $\ast$
+                \\ \cline{1-3} \cline{7-9}
+                3 & 0011 & \checkmark & \{2,3\} & 001\_ & \checkmark & \{3,7,11,15\} & \_\_11 & $\ast$
+                \\
+                9 & 1001 & \checkmark & \{2,10\} & \_010 & \checkmark & \{9,11,13,15\} & 1\_\_1 & $\ast$
+                \\ \cline{4-6} \cline{7-9}
+                10 & 1010& \checkmark & \{3,7\} & 0\_11 & \checkmark
+                \\ \cline{1-3}
+                7 & 0111 & \checkmark & \{3,11\} & \_011 & \checkmark
+                \\
+                11 & 1011 & \checkmark& \{9,11\} & 10\_1 & \checkmark
+                \\
+                13 & 1101 & \checkmark& \{9,13\} & 1\_01 & \checkmark
+                \\ \cline{1-3}
+                15 & 1111 & \checkmark& \{10,11\} & 101\_ & \checkmark
+                \\ \cline{1-3} \cline{4-6}
+                & & & \{7,15\} & \_111 & \checkmark
+                \\
+                & & & \{11,15\} & 1\_11 & \checkmark
+                \\
+                & & & \{13,15\} & 11\_1 & \checkmark
+                \\ \cline{4-6}
+            \end{tabular}
         \end{table}
-    \end{comment}
+        
+        Los implicantes primos son, por tanto, los que se han marcado con $\ast$.
+        Ahora, reducimos la tabla de implicantes primos:
+        \begin{table}[H]
+            \centering
+            \begin{tabular}{c|ll|cccccc}
+                && & \tikzmark{col2Start}2 & \tikzmark{col3Start}3 & 7 & \tikzmark{col9Start}9 & \tikzmark{col11Start}11 & 13 \\ \hline
+                &\{1,3,9,11\} & \_0\_1 & & $\circ$ && $\circ$ & $\circ$ \\
+                {\color{red}$\ast$}&\{2,3,10,11\} & \_01\_ &\tikzmark{fil2Start}$\circ$ & $\circ$ &&&$\circ$ & \tikzmark{fil2End} \\
+                {\color{teal}$\ast$}&\{3,7,11,15\} & \_\_11 &\tikzmark{fil7Start}& $\circ$ & $\circ$ & & $\circ$ & \tikzmark{fil7End}\\
+                {\color{blue}$\ast$}&\{9,11,13,15\} & 1\_\_1 &\tikzmark{col2End}\tikzmark{fil13Start}&\tikzmark{col3End}&& \tikzmark{col9End}$\circ$ &\tikzmark{col11End}$\circ$ & $\circ$\tikzmark{fil13End} \\
+            \end{tabular}
+            \tikz[remember picture] \draw[overlay, red] ([yshift=.25em]pic cs:fil2Start) -- ([yshift=.25em]pic cs:fil2End);
+            \tikz[remember picture] \draw[overlay, red] ([xshift=.25em]pic cs:col2Start) -- (pic cs:col2End);
+            \tikz[remember picture] \draw[overlay, red] ([xshift=.25em]pic cs:col3Start) -- (pic cs:col3End);
+            \tikz[remember picture] \draw[overlay, red] ([xshift=.45em]pic cs:col11Start) -- ([xshift=.30em]pic cs:col11End);
+            \tikz[remember picture] \draw[overlay, teal] ([yshift=.25em]pic cs:fil7Start) -- ([yshift=.25em]pic cs:fil7End);
+            \tikz[remember picture] \draw[overlay, blue] ([yshift=.25em]pic cs:fil13Start) -- ([yshift=.25em]pic cs:fil13End);
+            \tikz[remember picture] \draw[overlay, blue] ([xshift=.25em]pic cs:col9Start) -- ([xshift=.25em]pic cs:col9End);
+        \end{table}
+
+        Por tanto, la expresión minimal de $f$ es:
+        \begin{equation*}
+            f(a,b,c,d) = \ol{b}~c + cd + ad
+        \end{equation*}
     \end{description}
+
+    Calculemos ahora cuál es el coste de la función $f$:
+    \begin{figure}[H]
+        \centering
+        \begin{forest}
+            [$+$
+                [$\cdot$
+                    [$\ol{b}$]
+                    [$c$]
+                ]
+                [$\cdot$
+                    [$c$]
+                    [$d$]
+                ]
+                [$\cdot$
+                    [$a$]
+                    [$d$]
+                ]
+            ]
+        \end{forest}
+    \end{figure}
+
+    Tenemos que hay:
+    \begin{itemize}
+        \item $1$ suma.
+        \item $3$ productos.
+        \item $9$ ejes.
+    \end{itemize}
+
+    Por tanto, el coste es $1+3+9=13$.
 \end{ejercicio}
 
 
