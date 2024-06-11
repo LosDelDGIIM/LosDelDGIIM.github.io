@@ -15,7 +15,7 @@
 
 using namespace std;
 
-const int COL_VACIA = INT_MIN;      // Valor que indica que una columna está vacía
+const int COL_VACIA = -1;      // Valor que indica que una columna está vacía
 int cont_soluciones = 0;            // Contador de soluciones
 
 
