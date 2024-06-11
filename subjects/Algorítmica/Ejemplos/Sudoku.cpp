@@ -79,7 +79,12 @@ bool factible (const Sudoku &sudoku, int fil, int col, int num){
 }
 
 
-
+/**
+ * @brief Método que resuelve el sudoku mediante backtracking
+ * 
+ * @param sudoku Sudoku que queremos resolver
+ * @param k Número de la casilla que queremos rellenar
+ */
 void resolverSudoku(Sudoku &sudoku, int k){
     
     if (k >= sudoku.size()*sudoku.size()){
