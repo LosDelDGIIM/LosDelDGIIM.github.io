@@ -67,10 +67,10 @@ Nodo asignarTareas(const vector<vector<double>> &C){
     priority_queue<Nodo> Q; // Cola de prioridad para almacenar los nodos vivos
 
     // Solución inicial, en este caso asignar la tarea i a la persona i (Criterio trivial)
-    Nodo Solucion;
+    Nodo sol;
     for (int i = 0; i < C.size(); ++i){
-        Solucion.asig.push_back(i);
-        Solucion.coste += C[i][Solucion.asig[i]];
+        sol.asig.push_back(i);
+        sol.coste += C[i][sol.asig[i]];
     }
 
     Nodo raiz;
@@ -79,18 +79,18 @@ Nodo asignarTareas(const vector<vector<double>> &C){
 
     Q.push(raiz);
     while (!Q.empty()){
-        Nodo nodo_expansion = Q.top();
+        Nodo e_nodo = Q.top();
         Q.pop();
 
         // Buscamos la primera persona sin tarea asignada
-        auto a_asignar = find(nodo_expansion.asig.begin(), nodo_expansion.asig.end(), NO_ASIGNADO);
-        int n_persona_asignar = a_asignar - nodo_expansion.asig.begin();
+        auto a_asignar = find(e_nodo.asig.begin(), e_nodo.asig.end(), NO_ASIGNADO);
+        int n_persona_asignar = a_asignar - e_nodo.asig.begin();
 
         // Si hemos asignado todas las tareas, hemos encontrado una solución
-        if ( a_asignar == nodo_expansion.asig.end()){
+        if ( a_asignar == e_nodo.asig.end()){
             // Comprobamos si es mejor que la buscada
-            if (nodo_expansion.coste < Solucion.coste)
-                Solucion = nodo_expansion;
+            if (e_nodo.coste < sol.coste)
+                sol = e_nodo;
         }
         else{
             
@@ -98,16 +98,16 @@ Nodo asignarTareas(const vector<vector<double>> &C){
             for (int i=0; i < C.size(); ++i){
 
                 // Comprobamos si la tarea i está ya asignada
-                if (find(nodo_expansion.asig.begin(), nodo_expansion.asig.end(), i) != nodo_expansion.asig.end())
+                if (find(e_nodo.asig.begin(), e_nodo.asig.end(), i) != e_nodo.asig.end())
                     continue;
                 
-                Nodo hijo = nodo_expansion;
+                Nodo hijo = e_nodo;
                 hijo.asig[n_persona_asignar] = i;
                 hijo.coste += C[n_persona_asignar][i];
 
                 // Si la cota inferior es menor que el coste de la mejor solución encontrada,
                 // añadimos el nodo a la cola de prioridad
-                if (cotaInferior(C, hijo) < Solucion.coste)
+                if (cotaInferior(C, hijo) < sol.coste)
                     Q.push(hijo);
                 
             } // Creamos los nodos hijos
@@ -116,7 +116,7 @@ Nodo asignarTareas(const vector<vector<double>> &C){
 
     } // Mientras haya nodos en la cola de prioridad
 
-    return Solucion;
+    return sol;
 }
 
 

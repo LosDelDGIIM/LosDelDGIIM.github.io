@@ -63,16 +63,18 @@ bool factible(const vector<vector<int>>& mapa, Nodo& e_nodo, int color){
  */
 void colorearMapa(const vector<vector<int>>& mapa, Nodo& e_nodo, Nodo& sol){
 
+    // Obtenemos el primer nodo sin colorear
+    int a_pintar = find(e_nodo.colores.begin(), e_nodo.colores.end(), INVALIDO) - e_nodo.colores.begin();
+
     // Si ya hemos coloreado todas las regiones, comprobamos si es una solución mejor
-    if(find(e_nodo.colores.begin(), e_nodo.colores.end(), INVALIDO) == e_nodo.colores.end()){
+    if(a_pintar == e_nodo.colores.size()){
         if (e_nodo.nColores < sol.nColores){
             sol = e_nodo;
         }
         return;
     }
     
-    // Obtenemos el primer nodo sin colorear
-    int a_pintar = find(e_nodo.colores.begin(), e_nodo.colores.end(), INVALIDO) - e_nodo.colores.begin();
+    
 
     // Coloreamos el nodo con todos los colores posibles.
     // Como ya sabemos que hay una sol con nColores, limitamos el número de colores a nColores
@@ -98,13 +100,14 @@ int main(){
 
     // Matriz de adyacencia del mapa
     vector<vector<int>> mapa = {
-        {INVALIDO, 1, 1, 0, 1, 1, 0},
-        {1, INVALIDO, 0, 0, 1, 0, 1},
-        {1, 0, INVALIDO, 1, 1, 1, 1},
-        {0, 0, 1, INVALIDO, 1, 0, 1},
-        {1, 1, 1, 1, INVALIDO, 0, 1},
-        {1, 0, 1, 0, 0, INVALIDO, 1},
-        {0, 1, 1, 1, 1, 1, INVALIDO}
+        {INVALIDO, 1, 0, 0, 0, 0, 0, 1},
+        {1, INVALIDO, 1, 0, 0, 0, 1, 1},
+        {0, 1, INVALIDO, 1, 1, 0, 1, 0},
+        {0, 0, 1, INVALIDO, 1, 0, 0, 0},
+        {0, 0, 1, 1, INVALIDO, 1, 1, 0},
+        {0, 0, 0, 0, 1, INVALIDO, 0, 0},
+        {0, 1, 1, 0, 1, 0, INVALIDO, 1},
+        {1, 1, 0, 0, 0, 0, 1, INVALIDO}
     };
 
 
