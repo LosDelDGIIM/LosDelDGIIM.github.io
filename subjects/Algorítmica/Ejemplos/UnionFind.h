@@ -3,7 +3,8 @@
  * @author Arturo Olivares Martos
  * @brief Implementación de la estructura de datos Union-Find para enteros
  */
-
+#ifndef UNIONFIND_H
+#define UNIONFIND_H
 #include <vector>
 #include <iostream>
 
@@ -38,29 +39,6 @@ public:
     UnionFind(int n);
 
     /**
-     * @brief Método para encontrar el representante (primer elemento) del conjunto al que pertenece el nodo x
-     * 
-     * @param x Nodo
-     * @return Representante del conjunto al que pertenece el nodo x
-     * @note Eficiencia: O(1)
-     */
-    inline int find_primero(int x){
-        return nodos[x].representante;
-    }
-
-    /**
-     * @brief Método para encontrar el último elemento del conjunto al que pertenece el nodo x
-     * 
-     * @param x Nodo
-     * @return Último elemento del conjunto al que pertenece el nodo x
-     * @note Eficiencia: O(1)
-     */
-    inline int find_ultimo(int x){
-        return ult_conjunto[find_primero(x)];
-    }
-
-
-    /**
      * @brief Método para unir los conjuntos a los que pertenecen los nodos x e y
      * 
      * @param x Nodo
@@ -73,6 +51,57 @@ public:
      * @note Eficiencia: O(n)
      */
     void union_(int x, int y, bool invierte_x = false, bool invierte_y = false);
+
+    /**
+     * @brief Método para comprobar si los nodos x e y pertenecen al mismo conjunto
+     * 
+     * @param x  Nodo
+     * @param y  Nodo
+     * @return true  Si los nodos x e y pertenecen al mismo conjunto
+     * @return false  Si los nodos x e y pertenecen a conjuntos distintos
+     * 
+     * @note Eficiencia: O(1)
+     */
+    inline bool mismoConjunto(int x, int y) const{
+        return find_primero(x) == find_primero(y);
+    }
+
+    /**
+     * @brief Método para obtener el conjunto al que pertenece el nodo x
+     * 
+     * @param x Nodo de un conjunto
+     * @return vector<vector<int>> Vector que representa el conjunto al que pertenece el nodo x
+     * 
+     * @note Eficiencia: O(n)
+     */
+    std::vector<int> obtenerConjunto(int x) const;
+
+
+    friend std::ostream &operator<<(std::ostream &os, const UnionFind &uf);
+
+private:
+
+    /**
+     * @brief Método para encontrar el representante (primer elemento) del conjunto al que pertenece el nodo x
+     * 
+     * @param x Nodo
+     * @return Representante del conjunto al que pertenece el nodo x
+     * @note Eficiencia: O(1)
+     */
+    inline int find_primero(int x) const{
+        return nodos[x].representante;
+    }
+
+    /**
+     * @brief Método para encontrar el último elemento del conjunto al que pertenece el nodo x
+     * 
+     * @param x Nodo
+     * @return Último elemento del conjunto al que pertenece el nodo x
+     * @note Eficiencia: O(1)
+     */
+    inline int find_ultimo(int x) const{
+        return ult_conjunto[find_primero(x)];
+    }
 
 
     /**
@@ -252,19 +281,91 @@ public:
 
 
     /**
-     * @brief Método para obtener el conjunto al que pertenece el nodo x
+     * @brief Clase iteradora constante para recorrer los hijos de un nodo
      * 
-     * @param x Nodo de un conjunto
-     * @return vector<vector<int>> Vector que representa el conjunto al que pertenece el nodo x
-     * 
-     * @note Eficiencia: O(n)
      */
-    std::vector<int> obtenerConjunto(int x);
+    class const_iterator{
+        private:
+            const UnionFind* uf;      // Puntero a la clase UnionFind
+            int id_nodo_actual; // Índice del nodo actual
+        public:
+            
+            /**
+            * @brief Constructor de la clase UnionFind::const_iterator
+            * 
+            * @param uf Puntero a la clase UnionFind
+            * @param id_nodo Índice del nodo actual
+            */
+            const_iterator(const UnionFind* uf, int id_nodo): uf(uf), id_nodo_actual(id_nodo){}
+
+            /**
+            * @brief Constructor sin parámetros de la clase UnionFind::const_iterator
+            * @post Crea un iterador inválido. Apunta a nullptr y no tiene hijo
+            * 
+            */
+            const_iterator(): const_iterator(nullptr, SIN_HIJO){}
+
+            /**
+            * @brief Sobrecarga del operador de desreferenciación
+            * 
+            * @return int Índice del nodo actual
+            */
+            inline int operator*() const{ return id_nodo_actual; }
+
+            /**
+            * @brief Sobrecarga del operador de incremento. Avanza al siguiente hijo
+            * 
+            * @return const_iterator&  Referencia al iterador del siguiente hijo
+            */
+            const_iterator& operator++(){
+                id_nodo_actual = uf->nodos[id_nodo_actual].hijo;
+                return *this;
+            }
+
+            /**
+            * @brief Sobrecarga del operador de decremento. Retrocede al padre
+            * 
+            * @return const_iterator&  Referencia al iterador del padre
+            */
+            const_iterator& operator--(){
+                id_nodo_actual = uf->nodos[id_nodo_actual].padre;
+                return *this;
+            }
+
+            /**
+            * @brief Sobrecarga del operador de comparación de desigualdad
+            * 
+            * @param it Iterador con el que se compara
+            * @return true Si los iteradores son distintos
+            * @return false Si los iteradores son iguales
+            */
+            inline bool operator!=(const const_iterator& it) const{
+                return id_nodo_actual != it.id_nodo_actual;
+            }
+    };
+
+    /**
+     * @brief Método para obtener un iterador constante que recorre el conjunto al que pertenece el nodo x
+     * 
+     * @param x Nodo
+     * @return const_iterator Iterador que apunta al representante del conjunto al que pertenece el nodo x
+     */
+    inline const_iterator cbegin(int x) const{
+        return const_iterator(this, find_primero(x));
+    }
+
+    /**
+     * @brief Método para obtener un iterador constante que apunta al final del conjunto al que pertenece el nodo x
+     * 
+     * @param x Nodo
+     * @return const_iterator  Iterador que apunta al final del conjunto al que pertenece el nodo x
+     */
+    inline const_iterator cend(int x) const{
+        return const_iterator(this, SIN_HIJO);
+    }
 
 
-    friend std::ostream &operator<<(std::ostream &os, const UnionFind &uf);
 
-private:
     /**
      * @brief Método para invertir el orden de los nodos del conjunto al que pertenece x
      * 
@@ -282,3 +383,4 @@ private:
  * @return std::ostream&  Referencia al flujo de salida
  */
 std::ostream &operator<<(std::ostream &os, const UnionFind &uf);
+#endif

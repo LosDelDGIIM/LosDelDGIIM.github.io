@@ -85,12 +85,12 @@ void UnionFind::union_(int x, int y, bool invierte_x, bool invierte_y){
 }
 
 
-std::vector<int> UnionFind::obtenerConjunto(int x){
+std::vector<int> UnionFind::obtenerConjunto(int x) const{
 
     std::vector<int> conjunto;
 
     // Recorremos el conjunto al que pertenece el nodo x
-    for(auto it = begin(x); it != end(x); ++it)
+    for(auto it = cbegin(x); it != cend(x); ++it)
         conjunto.push_back(*it);
 
     return conjunto;
