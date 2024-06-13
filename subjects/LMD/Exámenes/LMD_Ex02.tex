@@ -1,0 +1,640 @@
+\documentclass[12pt]{article}
+
+\input{../../_assets/preambulo.tex}
+% Define a custom command for email addresses
+\newcommand{\email}[1]{\href{mailto:#1}{{{\color{blue}#1}}}}
+
+% Comando para \bf en vez de \mathbf
+\renewcommand{\bf}[1]{\mathbf{#1}}
+
+% Operador matemático para \Con
+\DeclareMathOperator{\Con}{Con}
+
+% Operador matemático para los átomos
+\DeclareMathOperator{\Atm}{Atm}
+
+% Operador matemático para el cardinal
+\DeclareMathOperator{\Car}{Car}
+
+% Comando para \mcd y \mcm
+\DeclareMathOperator{\mcd}{mcd}
+\DeclareMathOperator{\mcm}{mcm}
+
+
+% Paquete para mapas de Karnaugh
+\usepackage{karnaugh-map}
+
+% Tachar filas
+\usetikzlibrary{tikzmark}
+
+\usepackage{forest}
+
+
+\begin{document}
+
+     % 1. Foto de fondo
+    % 2. Título
+    % 3. Encabezado Izquierdo
+    % 4. Color de fondo
+    % 5. Coord x del titulo
+    % 6. Coord y del titulo
+    % 7. Fecha
+
+    
+    \input{../../_assets/portada}
+    \portadaExamen{etsiitA4.jpg}{LMD\\Examen II}{Lógica y Métodos Discretos. Examen I}{MidnightBlue}{-8}{28}{2023-2024}{Arturo Olivares Martos}
+
+    \begin{description}
+        \item[Asignatura] Lógica y Métodos Discretos.
+        \item[Curso Académico] 2022-23.
+        \item[Grado] Doble Grado en Ingienería Informática y Matemáticas.
+        \item[Grupo] Único.
+        \item[Profesor] Francisco Miguel García Olmedo.
+        \item[Descripción] Convocatoria ordinaria.
+        \item[Fecha] 19 de junio de 2023.
+        % \item[Duración] 60 minutos.
+    
+    \end{description}
+    \newpage
+
+\begin{ejercicio} Demuestre que las siguientes recurrencias son dos definiciones
+    equivalentes de una misma sucesión de números naturales, digamos $\{u_n\}_{n\geq 1}$.
+    \begin{equation*}
+        \begin{array}{ll}
+            f_1 = 2 & g_1 = 2 \\
+            f_2 = 4 & g_2 = 4 \\
+            f_3 = 8 & g_3 = 8 \\
+            & g_4 = 14 \\
+            f_n = f_{n-1} + f_{n-2} + f_{n-3} \quad (n > 3) \qquad & g_n = 2g_{n-1} - g_{n-4} \quad (n > 4)
+        \end{array}
+    \end{equation*}
+    ¿Puede decir, razonando la respuesta, cuánto valría el elemento $u_{49}$? ¿Puede imaginar un problema
+    combinatorio de tamaño $n\geq 1$ que sea contado por cualquiera de las dos definiciones recurrentes?\\
+
+    Fijado $n\in \bb{N}$, $n\geq 5$, tenemos que:
+    \begin{align*}
+        f_n &= f_{n-1} + f_{n-2} + f_{n-3} =\\
+        &= 2f_{n-1} - f_{n-1} + f_{n-2} + f_{n-3} =\\
+        &= 2f_{n-1} - \cancel{f_{n-2}} - \cancel{f_{n-3}} - f_{n-4} + \cancel{f_{n-2}} + \cancel{f_{n-3}} =\\
+        &= 2f_{n-1} - f_{n-4}        
+    \end{align*}
+
+    Además, tenemos que $f_4=2+4+8=14=g_4$, por lo que las dos definiciones coinciden en los primeros cuatro términos.
+    Por tanto, tenemos que:
+    \begin{equation*}
+        f_n = g_n \quad \forall n\in \bb{N}\setminus \{0\}
+    \end{equation*}
+
+    Esta recurrencia cuenta el número de formas de lanzar una moneda $n$ veces sin que aparezca
+    una secuencia de $4$ caras seguidas, explicada en \href{https://oeis.org/A135491}{\color{blue}\underline{esta web}}.
+    % // TODO: Calcular u_{49}
+    % Problema combinatorio explicado
+    % https://math.stackexchange.com/questions/3749177/fibonacci-and-tossing-coins
+\end{ejercicio}
+
+
+\begin{ejercicio}
+    Establezca y seguidamente resuelva un problema de recurrencia que permita contar el número $a_n$
+    $(n \geq 2)$ de cadenas de $n$ elementos del conjunto $\{0, 1, 2\}$ (i.e. elementos de $3^n$) cumpliendo cada
+    una de ellas la condición de contener un único $0$ y un único $1$.\\
+
+    Resolvamos en primer este problema mediante un enfoque combinatorio. Para ello, fijado $n\in \bb{N}$, $n\geq 2$, tenemos que:
+    \begin{itemize}
+        \item Hay $n$ formas de elegir la posición del $0$.
+        \item Hay $n-1$ formas de elegir la posición del $1$.
+        \item El resto de elementos, $n-2$, serán el número $2$, por lo que hay $1$ forma de elegirlos.
+    \end{itemize}
+
+    Por tanto, tenemos que:
+    \begin{equation*}
+        a_n = n(n-1) = n^2 - n \quad \forall n\in \bb{N}, n\geq 2
+    \end{equation*}
+
+    Ahora, establezcamos la recurrencia. Fijado $n\in \bb{N}$, $n\geq 2$, tenemos que:
+    \begin{itemize}
+        \item Si en la posición $n$ hay un $2$, entonces hay $a_{n-1}$ formas de completar la cadena.
+        \item Si en la posición $n$ hay un $0$, entonces hay $n-1$ formas de elegir la posición del $1$ y $1$ forma de elegir el resto de elementos,
+        por lo que hay $n-1$ formas de completar la cadena.
+        \item Si en la posición $n$ hay un $1$, de igual forma hay $n-1$ formas de completar la cadena.
+    \end{itemize}
+
+    Por tanto, tenemos que la recurrencia queda establecida como:
+    \begin{equation*}
+        \left\{
+            \begin{array}{ll}
+                a_2 = 2 & \\
+                a_n = a_{n-1} + 2(n-1) \quad \forall n\in \bb{N}, n\geq 3
+            \end{array}
+        \right.
+    \end{equation*}
+
+    Resolvamos ahora la recurrencia lineal no homogénea de primer orden. Tenemos que la ecuación
+    característica es $x-1=0$, por lo que $\lm=1$ es la única raíz, con multiplicidad simple.
+    Por tanto, la solución homogénea es:
+    \begin{equation*}
+        \{a_n^{(h)}\} = c_1\cdot 1^n = c_1 \quad \forall n\in \bb{N}\hspace{1cm} (c_1\in \bb{C})
+    \end{equation*}
+    
+    
+    Respecto a la parte no homogénea,
+    tenemos que $f(n)=2(n-1)=1^n(2n-2)$, por lo que una solución particular es:
+    \begin{equation*}
+        \{a_n^{(p)}\} = n^1\cdot 1^n \cdot (c_2n + c_3) = n(c_2n + c_3) \quad \forall n\in \bb{N}\hspace{1cm} (c_2, c_3\in \bb{C})
+    \end{equation*}
+
+    Para determinar los valores de las constantes, como $\{a_n^{(p)}\}$ es una solución particular,
+    para todo $n\in \bb{N}$, $n\geq 2$, tenemos que:
+    \begin{equation*}
+        a_n =a_{n-1} + 2(n-1) \Longrightarrow n(c_2n + c_3) = (n-1)(c_2(n-1) + c_3) + 2(n-1)
+    \end{equation*}
+
+    Operando, obtenemos para todo $n\in \bb{N}$, $n\geq 2$:
+    \begin{align*}
+        {c_2n^2}+{c_3n} &= c_2(n-1)^2 + (n-1)(2+c_3)\\
+        \cancel{c_2n^2}+\bcancel{c_3n} &=  \cancel{c_2n^2} - 2c_2n + c_2 + 2n - 2 + \bcancel{nc_3} - c_3\\
+        0 &= -2c_2n + c_2 + 2n - 2 - c_3\\
+        0 &= 2n(1-c_2) + c_2 - 2 - c_3
+    \end{align*}
+
+    Igualando los coeficientes, obtenemos el sistema:
+    \begin{equation*}
+        \left\{
+            \begin{array}{l}
+                2(1-c_2) = 0  \Longrightarrow c_2 = 1\\
+                c_2 - 2 - c_3 = 0  \Longrightarrow 1 - 2 - c_3 = 0 \Longrightarrow c_3 = -1
+            \end{array}
+        \right.
+    \end{equation*}
+
+    Por tanto, la solución particular es:
+    \begin{equation*}
+        \{a_n^{(p)}\} = n(1\cdot n - 1) = n(n-1) \quad \forall n\in \bb{N},~n\geq 2
+    \end{equation*}
+
+    Por tanto, la solución general es:
+    \begin{equation*}
+        a_n = \{a_n^{(h)}\} + \{a_n^{(p)}\} = c_1 + n(n-1) \quad \forall n\in \bb{N}\hspace{1cm} (c_1\in \bb{C})
+    \end{equation*}
+
+    Para determinar el valor de la constante, tenemos que $a_2=2$, por lo que:
+    \begin{align*}
+        a_2 = 2  = c_1 + 2(2-1) = c_1 + 2 \Longrightarrow c_1 = 0
+    \end{align*}
+
+    Por tanto, la solución a la recurrencia es:
+    \begin{equation*}
+        a_n = n(n-1) \quad \forall n\in \bb{N},~n\geq 2
+    \end{equation*}
+
+    Llegamos efectivamente al mismo resultado que en el enfoque combinatorio.
+\end{ejercicio}
+
+
+\begin{ejercicio} \label{ej:3}
+    Considere el conjunto de fórmulas proposicionales $\Gamma$ siguiente:
+    \begin{align*}
+        \Gamma = \left\{ \right.&
+            a\lor b, \\ &
+            a\rightarrow (c\lor d), \\ &
+            (a\land d) \rightarrow c, \\ &
+            (a\land \lnot d) \rightarrow e, \\ &
+            b\rightarrow (d\lor e), \\ &
+            (c\lor \lnot d) \rightarrow e, \\ &
+            e\rightarrow d \left.\right\}
+    \end{align*}
+    Considere también la fórmula $\varphi \equiv c\land d$. Haciendo uso del
+    algoritmo de Davis\&Putman, decida si es cierta o no la afirmación $\Gamma \models \varphi$. En caso de
+    no serlo, caracterice a las asignaciones que servirían para poner de manifiesto ese hecho.\\
+
+    Para resolver este ejercicio, vamos a aplicar el algoritmo de Davis\&Putman. Para ello, primero
+    vamos a transformar las fórmulas a su forma normal conjuntiva:
+    \begin{align*}
+        \varphi_1 :& = a\lor b\\ \\
+        \varphi_2 :& = a\rightarrow (c\lor d)\\
+        & = \lnot a \lor (c\lor d) = \lnot a \lor c \lor d\\ \\
+        \varphi_3 :& = (a\land d) \rightarrow c\\
+        & = \lnot (a\land d) \lor c = \lnot a \lor \lnot d \lor c\\ \\
+        \varphi_4 :& = (a\land \lnot d) \rightarrow e\\
+        & = \lnot (a\land \lnot d) \lor e = \lnot a \lor d \lor e\\ \\
+        \varphi_5 :& = b\rightarrow (d\lor e)\\
+        & = \lnot b \lor (d\lor e) = \lnot b \lor d \lor e\\ \\
+        \varphi_6 :& = (c\lor \lnot d) \rightarrow e\\
+        & = \lnot (c\lor \lnot d) \lor e = \lnot c \lor d \lor e\\ \\
+        \varphi_7 :& = e\rightarrow d\\
+        & = \lnot e \lor d \\ \\
+        \lnot \varphi & = \lnot (c\land d) = \lnot c \lor \lnot d
+    \end{align*}
+
+    Queremos por tanto estudiar la satisfacibilidad del conjunto $\Sigma = \Gamma \cup \{\lnot \varphi\}$
+    mediante el algoritmo de Davis\&Putman, cuyo árbol de decisión se muestra en la Figura~\ref{fig:DyP_3}.
+    \begin{figure}
+        \centering
+        \begin{forest}
+            for tree={draw=none, minimum size=2em, l=2cm, s sep=5mm, align=center, edge={-stealth}}
+            [
+                $\Sigma~{=}~\{a\lor b; \lnot a \lor c \lor d; \lnot a \lor \lnot d \lor c; \lnot a \lor d \lor e; \lnot b \lor d \lor e; \lnot c \lor d \lor e; \lnot e \lor d; \lnot c \lor \lnot d\}$\\~\\
+                \fbox{R4. $\lm=a$. {\color{red} $v(\lnot a)=1$}}
+                [
+                    \fbox{$\lm=a$}\\
+                    $\Sigma_1~{=}~\{b; \lnot b \lor d \lor e; \lnot c \lor d \lor e;\lnot e \lor d; \lnot c \lor \lnot d\}$\\~\\
+                    \fbox{R2. $\lm=b$. {\color{red} $v(b)=1$}}
+                    [
+                        $\Sigma_1'~{=}~\{\lnot b \lor d \lor e; \lnot c \lor d \lor e;\lnot e \lor d; \lnot c \lor \lnot d\}{\color{red}~\neq \emptyset}$
+                        [
+                            $\Sigma_{11}~{=}~\{d \lor e; \lnot c \lor d \lor e;\lnot e \lor d; \lnot c \lor \lnot d\}$\\~\\
+                            \fbox{R3. $\lm=\lnot c$ es un literal puro. {\color{red} $v(\lnot c)=1$}}                            
+                            [
+                                $\Sigma_{111}~{=}~\{d \lor e; \lnot e \lor d\}$\\~\\
+                                \fbox{R3. $\lm=d$ es un literal puro. {\color{red} $v(d)=1$}}
+                                [
+                                    $\Sigma_{1111} ~{=}~\emptyset$
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+                [
+                    \fbox{$\lm^c=\lnot a$}\\
+                    $\Sigma_2~{=}~\{c \lor d; \lnot d \lor c; \lnot d \lor e; \lnot b \lor d \lor e;$\\\qquad  $ \lnot c \lor d \lor e;\lnot e \lor d; \lnot c \lor \lnot d\}$\\~\\
+                ]
+            ]
+        \end{forest}
+        \caption{Algoritmo de Davis y Putman del Ejercicio~\ref{ej:3}.}
+        \label{fig:DyP_3}
+    \end{figure}
+
+    Como podemos ver, sin haber terminado el árbol de decisión, ya hemos visto que
+    $\Sigma$ es satisfacible, con la asignación siguiente:
+    \begin{align*}
+        1 &= v(b) = v(d) \\
+        0 &= v(a) = v(c)
+    \end{align*}
+    El valor de $v(e)$ es indiferente. Por tanto, como
+    $\Sigma$ es satisfacible, tenemos que $\Gamma \not\models \varphi$.
+\end{ejercicio}
+
+\begin{ejercicio}
+    Demuestre que, para todo conjunto de fórmulas proposicionales $\Gamma\cup \{\varphi\}$ son
+    equivalentes las siguientes afirmaciones:
+    \begin{enumerate}
+        \item $\Gamma \models \varphi$.
+        \item Existe un subconjunto finito de $\Gamma$, digamos $\Gamma_{f, \varphi}$, tal que $\Gamma_{f, \varphi} \models \varphi$.
+    \end{enumerate}
+    \begin{proof}
+        Demostramos mediante una doble implicación.
+        \begin{description}
+            \item[$\Longrightarrow)$]
+            \begin{comment}
+            %Supongamos que $\Gamma \models \varphi$. Entonces, por definición, tenemos que para toda asignación $v$ tal que $v_{\ast}(\Gamma) = 1$, se tiene que $v(\varphi) = 1$.
+
+            Demostraremos el recíproco. Supongamos que para todo subconjunto finito $\Gamma_{f, \varphi}\subset~\Gamma$ se tiene que $\Gamma_{f, \varphi} \not \models \varphi$,
+            o equivalentemente, que $\Gamma_{f, \varphi} \cup \{\lnot \varphi\}$ es satisfacible.
+            Es decir, supongamos que para todo subconjunto finito $\Gamma_{f, \varphi}\subset~\Gamma$, existe una asignación $v$ tal que $v_{\ast}(\Gamma_{f, \varphi} \cup \{\lnot \varphi\}) \subset \{1\}$.
+
+            Buscamos ahora una asignación $v$ tal que $v_{\ast}(\Gamma \cup \{\lnot \varphi\}) \subset \{1\}$.
+            Para cada $n\in \bb{N}$, $n\geq 1$, definimos $\Gamma_n = \{p_1, \ldots, p_n\}$, con $p_i\in \Gamma$ para todo $i\in \{1, \ldots, n\}$.
+            Como $\Gamma_n \cup \{\lnot \varphi\}$ es finito, tenemos que existe una asignación $\wt{v}_n$ tal que se tiene $(\wt{v}_{n})_{\ast}(\Gamma_n \cup \{\lnot \varphi\}) \subset \{1\}$.
+
+            Pues bien, queremos construir una secuencia de asignaciones $\{v_n\}$
+            tal que $(v_n)_\ast(\Gamma_n\cup \{\lnot \varphi\})\subset \{1\}$ para todo $n\in \bb{N}$, $n\geq 1$
+            y tal que $v_{n+1}$ extienda a $v_n$ para todo $n\in \bb{N}$, $n\geq 1$.
+            \begin{itemize}
+                \item Para $n=1$, definimos $v_1 = \wt{v}_1$.
+                \item Supongamos que hemos definido $v_n$ para algún $n\in \bb{N}$, $n\geq 1$.
+                Definimos $v_{n+1}$ como sigue:
+                \begin{equation*}
+                    v_{n+1}(p) = \left\{
+                        \begin{array}{ll}
+                            v_n(p) & \text{si } p\in \Gamma_n \cup \{\lnot \varphi\}\\
+                            1 & \text{si } p = p_{n+1}\\
+                        \end{array}
+                    \right.
+                \end{equation*}
+            \end{itemize}
+
+            Por tanto, tenemos que para todo $n\in \bb{N}$, $n\geq 1$, se tiene que $(v_n)_{\ast}(\Gamma_n \cup \{\lnot \varphi\}) \subset \{1\}$.
+            Como $\Gamma$ es numerable, entonces $\Gamma = \bigcup_{n\geq 1} \Gamma_n$. Definimos entonces
+            $v$ para cada $p_n\in \Gamma$ como sigue:
+            \begin{equation*}
+                v(p_n) = v_n(p_n) \quad \forall n\in \bb{N}, n\geq 1
+            \end{equation*}
+
+            Para $\varphi$, tenemos que:
+            \begin{equation*}
+                v(\lnot \varphi) = v_n(\lnot \varphi) = 1 \quad \forall n\in \bb{N}, n\geq 1
+            \end{equation*}
+
+            Por tanto, tenemos que $v_{\ast}(\Gamma \cup \{\lnot \varphi\}) \subset \{1\}$, por lo que $\Gamma \not \models \varphi$.
+            Por haber demostrado en recíproco, tenemos que $\Gamma \models \varphi$.
+            \end{comment}
+            % // TODO: Subconjunto finito de $\Gamma$.
+
+
+            \item[$\Longleftarrow)$]
+            
+            Supongamos que existe un subconjunto finito $\Gamma_{f, \varphi}\subset \Gamma$ tal que $\Gamma_{f, \varphi} \models \varphi$.
+            Entonces, tenemos que para toda asignación $v$ tal que $v_{\ast}(\Gamma_{f, \varphi}) \subset \{1\}$, se tiene que $v(\varphi) = 1$.
+
+            Sea entonces $v$ una asignación tal que $v_{\ast}(\Gamma) \subset \{1\}$. Como $\Gamma_{f, \varphi}\subset \Gamma$, entonces
+            $v_{\ast}(\Gamma_{f, \varphi}) \subset \{1\}$, por lo que $v(\varphi) = 1$ y tenemos que $\Gamma \models \varphi$.
+        \end{description}
+    \end{proof}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Sea $\mathbf{B}$ un álgebra de Boole. Demuestre que, para todo $a, b, c \in B$, son
+    equivalentes las siguientes afirmaciones:
+    \begin{enumerate}
+        \item $b=c$
+        \item $a+b = a+c$ y $ab=ac$
+    \end{enumerate}
+
+    \begin{proof}
+        Demostramos mediante una doble implicación.
+        \begin{description}
+            \item[$\Longleftarrow)$]
+            
+            Supongamos que $a+b=a+c$ y $ab=ac$. Entonces, tenemos que:
+            \begin{figure}[H]
+                \centering
+                \begin{subfigure}[c]{0.4\linewidth}
+                    \centering
+                    \begin{align*}
+                        b &= b + 0\\
+                        &= b + (a\ol{a})\\
+                        &= (b+a) \cdot (b+\ol{a})\\
+                        &= (a+c) \cdot (\ol{a}+b)\\
+                        &= (a+c)\ol{a} + (a+c)b\\
+                        &= a\ol{a} + c\ol{a} + ab + cb\\
+                        &= 0 + c\ol{a} + ac + cb\\
+                        &= c\ol{a} + c(a+b)\\
+                        &= c(\ol{a} + a + b)\\
+                        &= c(1+b)\\
+                        &= c\cdot 1\\
+                        &= c.
+                    \end{align*}
+                    \caption{Opción 1.}
+                \end{subfigure}\hfill
+                \begin{subfigure}[c]{0.4\linewidth}
+                    \centering
+                    \begin{align*}
+                        b &= b\cdot 1\\
+                        &= b\cdot (1+a) \\
+                        &= b+ab\\
+                        &= b+ac\\
+                        &= (b+a)(b+c)\\
+                        &= (a+c)(b+c)\\
+                        &= c+ab\\
+                        &= c+ac\\
+                        &= c(1+a)\\
+                        &= c\cdot 1\\
+                        &= c.
+                    \end{align*}
+                    \caption{Opción 2.}
+                \end{subfigure}
+            \end{figure}
+
+            \item[$\Longrightarrow)$]
+            
+            Como $a=a$ y $b=c$, entonces trivialmente $a+b=a+c$ y $ab=ac$.
+        \end{description}
+    \end{proof}
+\end{ejercicio}
+
+
+
+\begin{ejercicio}
+    Sea $f:B_2^5\rightarrow B_2$ la función:
+    \begin{equation*}
+        f(a,b,c,d,e) = \sum m(2,3,7,10,12,15,27) + \sum d(5,18,19,21,23)
+    \end{equation*}
+
+    Mediante el algoritmo de Quine-McCluskey, encuentre todas sus expresiones minimales a condición de ser suma de productos.\\
+
+    Generamos los implicantes primos de la función $f$:
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{rcc|rcc|rcc}
+            \multicolumn{3}{c}{Columna 1} & \multicolumn{3}{|c|}{Columna 2} & \multicolumn{3}{c}{Columna 3} \\ \hline
+            2 & 00010 & \checkmark & \{2,3\} & 0001\_ & \checkmark & \{2,3,18,19\} & \_001\_ & $\ast$
+            \\ \cline{1-3} \cline{7-9}
+            3 & 00011 & \checkmark & \{2,10\} & 0\_010 & $\ast$ & \{3,7,19,23\} & \_0\_11 & $\ast$
+            \\
+            5 & 00101 & \checkmark & \{2,18\} & \_0010 & \checkmark & \{5,7,21,23\} & \_01\_1 & $\ast$
+            \\ \cline{4-6} \cline{7-9}
+            10 & 01010 & \checkmark & \{3,7\} & 00\_11 & \checkmark
+            \\
+            12 & 01100 & $\ast$ & \{3,19\} & \_0011 & \checkmark
+            \\
+            18 & 10010 & \checkmark & \{5,7\} & 001\_1 & \checkmark
+            \\ \cline{1-3}
+            7 & 00111 & \checkmark & \{5,21\} & \_0101 & \checkmark
+            \\
+            19 & 10011 & \checkmark & \{18,19\} & 1001\_ & \checkmark
+            \\ \cline{4-6}
+            21 & 10101 & \checkmark & \{7,15\} & 0\_111 & $\ast$
+            \\ \cline{1-3}
+            15 & 01111 & \checkmark & \{7,23\} & \_0111 & \checkmark
+            \\
+            23 & 10111 & \checkmark & \{19,23\} & 10\_11 & \checkmark
+            \\
+            27 & 11011 & \checkmark & \{19,27\} & 1\_011 & $\ast$
+            \\ \cline{1-3}
+            &&& \{21,23\} & 101\_1 & \checkmark
+            \\ \cline{4-6}
+        \end{tabular}
+    \end{table}
+
+    Los implicantes primos son, por tanto, los que se han marcado con $\ast$. Reducimos la tabla de implicantes primos:
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{c|ll|ccccccc}
+            && & \tikzmark{col2Start}2 & 3 & \tikzmark{col7Start}7 & 10 & 12 & 15 & 27 \\ \hline
+            {\color{red}$\ast$}& \{12\} & 01100 &\tikzmark{Ej5fil1Start} & & & & $\circ$ & &\tikzmark{Ej5fil1End}
+            \\
+            {\color{blue}$\ast$}& \{2,10\} & 0\_010 &\tikzmark{Ej5fil2Start}$\circ$ & & & $\circ$ & & &\tikzmark{Ej5fil2End}
+            \\
+            {\color{teal}$\ast$}& \{7,15\} & 0\_111 &\tikzmark{Ej5fil3Start} & & $\circ$ & & & $\circ$ &\tikzmark{Ej5fil3End}
+            \\
+            {\color{purple}$\ast$}& \{19,27\} & 1\_011 &\tikzmark{Ej5fil4Start} & & & & & & $\circ$ \tikzmark{Ej5fil4End}
+            \\
+            & \{2,3,18,19\} & \_001\_ & $\circ$ & $\circ$ & & & & &
+            \\
+            & \{3,7,19,23\} & \_0\_11 & & $\circ$ & $\circ$ & & & &
+            \\
+            & \{5,7,21,23\} & \_01\_1 &\tikzmark{col2End} & & \tikzmark{col7End}$\circ$ & & & &
+            \\ \hline
+        \end{tabular}
+        \tikz[remember picture] \draw[overlay, red]  ([yshift=0.25em]pic cs:Ej5fil1Start) -- ([yshift=0.25em]pic cs:Ej5fil1End);
+        \tikz[remember picture] \draw[overlay, blue] ([yshift=0.25em]pic cs:Ej5fil2Start) -- ([yshift=0.25em]pic cs:Ej5fil2End);
+        \tikz[remember picture] \draw[overlay, teal] ([yshift=0.25em]pic cs:Ej5fil3Start) -- ([yshift=0.25em]pic cs:Ej5fil3End);
+        \tikz[remember picture] \draw[overlay, purple] ([yshift=0.25em]pic cs:Ej5fil4Start) -- ([yshift=0.25em]pic cs:Ej5fil4End);
+
+        \tikz[remember picture] \draw[overlay, blue] ([xshift=0.25em]pic cs:col2Start) -- (pic cs:col2End);
+        \tikz[remember picture] \draw[overlay, teal] ([xshift=0.25em]pic cs:col7Start) -- ([xshift=0.25em]pic cs:col7End);
+    \end{table}
+
+    Tras haber llegado a este paso, hemos detectado ya cuatro implicantes primos esenciales. No obstante, para cubrir el minterm $3$ tenemos dos opciones,
+    $\{2,3,18,19\}$ y $\{3,7,19,23\}$. Por tanto, las 2 expresiones minimales dadas en forma SOP son:
+    \begin{align*}
+        f(a,b,c,d,e) &= \ol{a}~b~c~\ol{d}~\ol{e} + \ol{a}~\ol{c}~d~\ol{e} + \ol{a}~c~d~e + a~\ol{c}~d~e + \ol{b}~\ol{c}~d\\
+        f(a,b,c,d,e) &= \ol{a}~b~c~\ol{d}~\ol{e} + \ol{a}~\ol{c}~d~\ol{e} + \ol{a}~c~d~e + a~\ol{c}~d~e + \ol{b}~d~e
+    \end{align*}
+\end{ejercicio}
+
+
+\begin{ejercicio}
+    Considere las siguientes fórmulas en un cierto lenguaje de primer orden:
+    \begin{align*}
+        \varphi_1 & = q(x) \land \forall y\left( p(y) \rightarrow r(x,y) \right) \\
+        \varphi_2 & = \forall x\left( q(x) \rightarrow \exists y\left( p(y) \land s(x,y) \right) \right) \\
+        \varphi_3 & = \forall x\left( \exists y\left(s(x,y) \land r(x,y) \right) \rightarrow t(x) \right) \\
+        \varphi_4 & = \exists x\left( t(x) \land q(x) \right)
+    \end{align*}
+    Diga justificadamente si es cierta o no la siguiente afirmación:
+    \begin{equation*}
+        \varphi_1, \varphi_2, \varphi_3 \models \varphi_4
+    \end{equation*}
+
+    Veamos que $\varphi_1, \varphi_2, \varphi_3 \not\models \varphi_4$.
+    Sea $\bf{A}$ una estructura tal que:
+    \begin{align*}
+        A &= \{0,1\}\\
+        (p)^{\bf{A}} &= \{0\}\\
+        (q)^{\bf{A}} &= \{0\}\\
+        (r)^{\bf{A}} &= \{\langle 0,0\rangle\}\\
+        (s)^{\bf{A}} &= \{\langle 0,0\rangle\}\\
+        (t)^{\bf{A}} &= \{1\}
+    \end{align*}
+
+    Sea una asignación $v$ tal que $v(x) = 0$, y consideramos la interpretación $\langle \bf{A}, v\rangle$.
+    Veamos qué ocurre con cada una de las fórmulas:
+    \begin{enumerate}
+        \item \ul{Primera fórmula $\varphi_1$}:
+        \begin{align*}
+            I_{\bf{A}}^v(\varphi_1) = 1 &\Longleftrightarrow
+            I_{\bf{A}}^v(q(x)) = 1 \text{ y } I_{\bf{A}}^v(\forall y\left( p(y) \rightarrow r(x,y) \right)) = 1\\
+            & \Longleftrightarrow v(x)\in (q)^{\bf{A}} \text{ y } \forall a\in A, I_{\bf{A}}^{v(y|a)} (p(y) \rightarrow r(x,y)) = 1\\
+            & \Longleftrightarrow v(x)\in (q)^{\bf{A}} \text{ y } \forall a\in A, I_{\bf{A}}^{v(y|a)}(p(y))I_{\bf{A}}^{v(y|a)}(r(x,y)) + I_{\bf{A}}^{v(y|a)}(p(y)) +1 = 1\\
+            & \Longleftrightarrow v(x)\in (q)^{\bf{A}} \text{ y } \forall a\in A, I_{\bf{A}}^{v(y|a)}(p(y))I_{\bf{A}}^{v(y|a)}(r(x,y)) = I_{\bf{A}}^{v(y|a)}(p(y))
+        \end{align*}
+        Por tanto, en primer lugar, tenemos que $v(x)=0\in (q)^{\bf{A}}$. Veamos qué ocurre con cada $a\in A$:
+        \begin{itemize}
+            \item Si $a=0$, entonces:
+            \begin{align*}
+                I_{\bf{A}}^{v(y|0)}(p(y)) = 1 &\Longleftrightarrow v(y|0)(y) = 0 \in (p)^{\bf{A}} \qquad \checkmark \\
+                I_{\bf{A}}^{v(y|0)}(r(x,y)) = 1 &\Longleftrightarrow \langle v(y|0)(x), v(y|0)(y)\rangle = \langle v(x), 0\rangle = \langle 0, 0\rangle \in (r)^{\bf{A}} \qquad \checkmark
+            \end{align*}
+            Por tanto, para $a=0$ tenemos $1\cdot 1 = 1$, lo cual es correcto.
+    
+            \item Si $a=1$, entonces:
+            \begin{equation*}
+                I_{\bf{A}}^{v(y|1)}(p(y)) = 1 \Longleftrightarrow v(y|1)(y) = 1 \in (p)^{\bf{A}} \qquad \times
+            \end{equation*}
+            Por tanto, para $a=1$ tenemos $0\cdot I_{\bf{A}}^{v(y|1)}(r(x,y)) = 0$, lo cual es correcto.
+        \end{itemize}
+        Por tanto, tenemos que $I_{\bf{A}}^v(\varphi_1) = 1$.
+        \begin{comment}
+            Además, para cada $a\in A$ tal que
+            $I_{\bf{A}}^{v(y|a)}(p(y)) = 1$, tenemos que $I_{\bf{A}}^{v(y|a)}(r(x,y)) = 1$.
+            Es decir, para cada $a\in A$ tal que $a\in (p)^{\bf{A}}$, tenemos que $\langle v(x), a\rangle\in (r)^{\bf{A}}$.
+        \end{comment}
+
+        \item \ul{Segunda fórmula $\varphi_2$}:
+        \begin{align*}
+            I_{\bf{A}}^v(\varphi_2) = 1 &\Longleftrightarrow
+            I_{\bf{A}}^v(\forall x\left( q(x) \rightarrow \exists y\left( p(y) \land s(x,y) \right) \right)) = 1\\
+            & \Longleftrightarrow \forall a\in A, I_{\bf{A}}^{v(x|a)}(q(x) \rightarrow \exists y\left( p(y) \land s(x,y) \right)) = 1\\
+            & \Longleftrightarrow \forall a\in A, I_{\bf{A}}^{v(x|a)}(q(x))I_{\bf{A}}^{v(x|a)}(\exists y\left( p(y) \land s(x,y) \right))  + I_{\bf{A}}^{v(x|a)}(q(x)) + 1 = 1\\
+            & \Longleftrightarrow \forall a\in A, I_{\bf{A}}^{v(x|a)}(q(x))I_{\bf{A}}^{v(x|a)}(\exists y\left( p(y) \land s(x,y) \right)) = I_{\bf{A}}^{v(x|a)}(q(x))
+        \end{align*}
+        Veamos qué ocurre con cada $a\in A$:
+        \begin{itemize}
+            \item Si $a=0$, entonces:
+            \begin{align*}
+                I_{\bf{A}}^{v(x|0)}(q(x)) = 1 &\Longleftrightarrow v(x|0)(x) = 0 \in (q)^{\bf{A}} \qquad \checkmark \\
+                I_{\bf{A}}^{v(x|0)}(\exists y\left( p(y) \land s(x,y) \right)) = 1 &\Longleftrightarrow \exists b\in A, I_{\bf{A}}^{v(x|0,y|b)}(p(y) \land s(x,y)) = 1
+            \end{align*}
+            Para el segundo caso, para $b=0$ tenemos:
+            \begin{align*}
+                I_{\bf{A}}^{v(x|0,y|0)}(p(y) \land s(x,y)) = 1 &\Longleftrightarrow \left\{
+                    \begin{array}{l}
+                        v(x|0,y|0)(x) = 0 \in (p)^{\bf{A}}\\
+                        \langle v(x|0,y|0)(x), v(x|0,y|0)(y)\rangle = \langle 0, 0\rangle \in (s)^{\bf{A}}
+                    \end{array}
+                \right. \checkmark
+            \end{align*}
+            Por tanto, para $a=0$ tenemos $1\cdot 1 = 1$, lo cual es correcto.
+    
+            \item Si $a=1$, entonces:
+            \begin{equation*}
+                I_{\bf{A}}^{v(x|1)}(q(x)) = 1 \Longleftrightarrow v(x|1)(x) = 1 \in (q)^{\bf{A}} \qquad \times
+            \end{equation*}
+            Por tanto, para $a=1$ tenemos $0\cdot I_{\bf{A}}^{v(x|1)}(\exists y\left( p(y) \land s(x,y) \right)) = 0$, lo cual es correcto.
+        \end{itemize}
+        Por tanto, tenemos que $I_{\bf{A}}^v(\varphi_2) = 1$.
+        \begin{comment}
+        Por tanto, para cada $a\in A$ tal que $I_{\bf{A}}^{v(x|a)}(q(x)) = 1$, por la segunda fórmula hemos deducido que $I_{\bf{A}}^{v(x|a)}(\exists y\left( p(y) \land s(x,y) \right)) = 1$.
+        Es decir, para cada $a\in A$ tal que $a\in (q)^{\bf{A}}$, existe un $b\in A$ tal que $b\in (p)^{\bf{A}}$ y $\langle a, b\rangle\in (s)^{\bf{A}}$.
+        \end{comment}
+
+
+        \item \ul{Tercera fórmula $\varphi_3$}:
+        \begin{align*}
+            I_{\bf{A}}^v(\varphi_3) = 1 &\Longleftrightarrow
+            I_{\bf{A}}^v(\forall x\left( \exists y\left(s(x,y) \land r(x,y) \right) \rightarrow t(x) \right)) = 1\\
+            & \Longleftrightarrow \forall a\in A, I_{\bf{A}}^{v(x|a)}\left( \exists y\left(s(x,y) \land r(x,y) \right) \rightarrow t(x) \right) = 1\\
+            & \Longleftrightarrow \forall a\in A, \exists b\in A, I_{\bf{A}}^{v(x|a,y|b)}\left((s(x,y) \land r(x,y)) \rightarrow t(x) \right) = 1\\
+            & \Longleftrightarrow \forall a\in A, \exists b\in A,I_{\bf{A}}^{v(x|a,y|b)}\left(s(x,y)\right)I_{\bf{A}}^{v(x|a,y|b)}\left(r(x,y)\right)=\\&\hspace{3cm}=I_{\bf{A}}^{v(x|a,y|b)}\left(s(x,y)\right)I_{\bf{A}}^{v(x|a,y|b)}\left(r(x,y)\right)I_{\bf{A}}^{v(x|a,y|b)}\left(t(x)\right)
+        \end{align*}
+        Para cada $a\in A$, consideramos $b=1\in A$. Veamos qué ocurre:
+        \begin{align*}
+            I_{\bf{A}}^{v(x|a,y|1)}\left(s(x,y)\right) = 1 &\Longleftrightarrow \langle v(x|a,y|1)(x), v(x|a,y|1)(y)\rangle = \langle v(x|a)(x), 1\rangle = \langle a, 1\rangle \in (s)^{\bf{A}}
+        \end{align*}
+        Esto último no ocurreo, luego, independientemente de $a\in A$, tenemos:
+        \begin{equation*}
+            0 = 0 \cdot I_{\bf{A}}^{v(x|a,y|1)}\left(r(x,y)\right) = 0\cdot I_{\bf{A}}^{v(x|a,y|1)}\left(r(x,y)\right) \cdot I_{\bf{A}}^{v(x|a,y|1)}\left(t(x)\right) = 0
+        \end{equation*}
+        Esto es correcto, por lo que $I_{\bf{A}}^v(\varphi_3) = 1$.\\
+        \begin{comment}
+        Por tanto, para cada $a\in A$ existe un $b\in A$ tal que si $I_{\bf{A}}^{v(x|a,y|b)}\left(s(x,y)\right) = 1$ y $I_{\bf{A}}^{v(x|a,y|b)}\left(r(x,y)\right) = 1$, entonces $I_{\bf{A}}^{v(x|a,y|b)}\left(t(x)\right) = 1$.
+        Es decir, para cada $a\in A$ existe un $b\in A$ tal que si $\langle a, b\rangle\in (s)^{\bf{A}}\cap (r)^{\bf{A}}$, entonces $a\in (t)^{\bf{A}}$.
+        \end{comment}
+
+        \item \ul{Cuarta fórmula $\varphi_4$}:
+        \begin{align*}
+            I_{\bf{A}}^v(\varphi_4) = 1 &\Longleftrightarrow
+            I_{\bf{A}}^v(\exists x\left( t(x) \land q(x) \right)) = 1\\
+            & \Longleftrightarrow \exists a\in A, I_{\bf{A}}^{v(x|a)}\left( t(x) \land q(x) \right) = 1\\
+            & \Longleftrightarrow \exists a\in A, I_{\bf{A}}^{v(x|a)}\left( t(x) \right)I_{\bf{A}}^{v(x|a)}\left( q(x) \right) = 1\\
+            & \Longleftrightarrow \exists a\in A, a\in (t)^{\bf{A}}\cap (q)^{\bf{A}}
+        \end{align*}
+    
+        Tenemos que:
+        \begin{align*}
+            (t)^{\bf{A}}\cap (q)^{\bf{A}} &= \{1\}\cap \{0\} = \emptyset
+            \Longrightarrow
+            I_{\bf{A}}^v(\varphi_4) = 0
+        \end{align*}
+    \end{enumerate}
+    
+    En conclusión, tenemos que:   
+    \begin{gather*}
+        I_{\bf{A}}^v(\varphi_1) = I_{\bf{A}}^v(\varphi_2) = I_{\bf{A}}^v(\varphi_3) = 1\\
+        I_{\bf{A}}^v(\varphi_4) = 0
+    \end{gather*}
+
+    Por tanto, concluimos que $\varphi_1, \varphi_2, \varphi_3 \not\models \varphi_4$.
+\end{ejercicio}
+
+\begin{ejercicio}
+    ¿Es cierto que todo grafo (simple) con al menos dos nodos
+    tiene al menos dos vértices con el mismo grado? Si es cierto,
+    dé una demostración; en caso contrario, dé un contraejemplo.
+
+    % // TODO: Dos nodos con el mismo grado.
+    % https://www.quora.com/How-would-we-prove-that-every-graph-with-at-least-two-vertices-has-two-vertices-of-the-same-degree
+\end{ejercicio}
+
+    
+\end{document}
