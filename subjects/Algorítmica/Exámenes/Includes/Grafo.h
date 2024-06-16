@@ -156,6 +156,23 @@ public:
     }
 
 
+    /**
+     * @brief Calcula la suma de los pesos de los arcos de un grafo
+     * 
+     * @param arcos  Vector con los arcos de los que se quiere calcular la suma de los pesos
+     * @return double  Suma de los pesos de los arcos
+     */
+    double sumaPesos() const{
+        vector<Arco> arcos = getArcos();
+        double suma = 0;
+        for (const Arco &arco : arcos){
+            suma += arco.peso;
+        }
+
+        return suma;
+    }
+
+
 
     friend ostream &operator<<(ostream &os, const Grafo &G);
 

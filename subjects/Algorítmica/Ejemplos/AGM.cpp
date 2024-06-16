@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <iomanip>
 #include "./UnionFind.h"
+#include <climits>
 
 using namespace std;
 
@@ -155,9 +156,6 @@ vector<Arco> Prim(const Grafo &G){
     for (int i = 0; i < G.size(); i++)
         candidatos.push_back(i);
 
-    // Estructura para evitar ciclos
-    UnionFind uf(candidatos.size());
-
 
     // Añadimos un nodo inicial a los seleccionados
     seleccionados.push_back(*candidatos.begin());
@@ -176,11 +174,9 @@ vector<Arco> Prim(const Grafo &G){
                 }
             }
         }
-        // Si no genera ciclo, lo añadimos al árbol
-        if (!uf.mismoConjunto(arco_minimo.u, arco_minimo.v)){
-            arbol_exp_minima.push_back(arco_minimo);
-            uf.union_(arco_minimo.u, arco_minimo.v);
-        }
+        
+        // Añadimos el arco
+        arbol_exp_minima.push_back(arco_minimo);
 
         // Añadimos el nodo seleccionado a los seleccionados y lo eliminamos de los candidatos
         seleccionados.push_back(*it_seleccionado);

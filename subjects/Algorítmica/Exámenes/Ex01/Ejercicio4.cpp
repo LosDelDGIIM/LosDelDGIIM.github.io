@@ -66,7 +66,7 @@ bool esKSobre2_DyV(int n, int ini, int fin){
     // Caso base: si ini > fin, no hay valores de k que cumplan la condición, por lo que devolvemos false
     if(ini > fin) return false;
 
-    int mitad = (ini + fin) / 2;
+    int mitad = ini + (fin - ini) / 2;
     int mitad_sobre_2 = mitad * (mitad - 1) / 2;
 
 

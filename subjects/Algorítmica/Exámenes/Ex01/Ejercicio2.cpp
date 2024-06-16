@@ -28,20 +28,13 @@
 
 using namespace std;
 
-/**
- * @brief Calcula la suma de los pesos de unos arcos dados
- * 
- * @param arcos  Vector con los arcos de los que se quiere calcular la suma de los pesos
- * @return double  Suma de los pesos de los arcos
- */
-double sumaPesos(const vector<Arco> &arcos){
-    double suma = 0;
-    for (const Arco &arco : arcos){
-        suma += arco.peso;
-    }
-    return suma;
-}
 
+/**
+ * @brief Calcula el Árbol Generador Mínimo de un grafo no dirigido mediante el algoritmo de Kruskal
+ * 
+ * @param G  Grafo no dirigido a partir del cual se quiere calcular el AGM
+ * @return GrafoNoDirigido Árbol Generador Mínimo del grafo
+ */
 GrafoNoDirigido Kruskal(const GrafoNoDirigido &G){
 
     GrafoNoDirigido arbol_exp_minima(G.getNumNodos());
@@ -107,7 +100,7 @@ int main(int argc, char const *argv[]){
     GrafoNoDirigido infraestructura = Kruskal(Conexiones);
 
 
-    cout << "Coste total de la infraestructura: " << sumaPesos(infraestructura.getArcos()) << endl;
+    cout << "Coste total de la infraestructura: " << infraestructura.sumaPesos() << endl;
     cout << "Arcos de la infraestructura:" << endl;
     // Pueblos numerados de 0 a N-1
     for (const Arco &arco : infraestructura.getArcos()){

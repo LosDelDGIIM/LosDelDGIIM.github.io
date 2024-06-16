@@ -45,7 +45,7 @@ bool esProductoDeTresConsecutivos(int N, int ini, int fin){
     if (ini > fin) return false;
 
     // Calculamos el candidato intermedio
-    int mitad = (ini + fin) / 2;
+    int mitad = ini + (fin - ini) / 2;
     int Y = mitad;
 
     // Calculamos el producto
