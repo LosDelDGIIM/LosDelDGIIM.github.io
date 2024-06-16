@@ -73,8 +73,6 @@ void SumaSubconjuntos(const vector<int> &w, int M, Nodo &nodo){
     if (nodo.a_asignar == w.size()){        
         if (nodo.suma == M) // Tan solo se imprime si la suma es M
             cout << sol_toString(w, M, nodo) << endl;
-        
-        return;
     }
     else{
         
