@@ -13,32 +13,34 @@
 #include <vector>
 #include <algorithm>
 #include <iomanip>
+#include "../Exámenes/Includes/Grafo.h"
 
 using namespace std;
 
-const int NO_CONECTADO = INT_MAX;       // Valor que indica que no hay arco entre dos nodos
 const int SIN_PREDECESOR = -2;          // Valor que indica que un nodo no tiene predecesor
 
 
 /**
  * @brief Algoritmo de Floyd para hallar los caminos mínimos entre cualquier par de nodos de un grafo ponderado
  *        con pesos no negativos
- * @param G  Matriz de adyacencia del grafo
+ * @param G  Grafo con el que trabajamos
  * @param D  Matriz de distancias mínimas
  * @param P  Matriz de predecesores
  */
-void Floyd(vector<vector<int>> &G, vector<vector<int>> &D, vector<vector<int>> &P){
-    int n = G.size();
+void Floyd(const Grafo &G, vector<vector<int>> &D, vector<vector<int>> &P){
+    int n = G.getNumNodos();
     
     // Inicializamos la matriz de distancias y la matriz de predecesores
-    D = G;
+    D = vector<vector<int>>(n, vector<int>(n, Grafo::charNoConectado()));
     P = vector<vector<int>>(n, vector<int>(n, SIN_PREDECESOR));
 
-    // Inicializamos la matriz de predecesores
+    // Inicializamos la matriz de predecesores y la matriz de distancias
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++)
-            if (G[i][j] != NO_CONECTADO)
+            if (G.conectados(i, j)){
+                D[i][j] = G.getPeso(i, j);
                 P[i][j] = i;
+            }
 
     
     // Algoritmo de Floyd
@@ -68,10 +70,10 @@ void Floyd(vector<vector<int>> &G, vector<vector<int>> &D, vector<vector<int>> &
             for (int j = 0; j < n; j++){
 
                 // Si puedo ir de i a j pasando por k,
-                if (D[i][k] != NO_CONECTADO && D[k][j] != NO_CONECTADO){
+                if (D[i][k] != Grafo::charNoConectado() && D[k][j] != Grafo::charNoConectado()){
 
                     // Si no había camino directo de i a j, o si el camino por k es mejor
-                    if ( (D[i][j] == NO_CONECTADO) || (D[i][j] > D[i][k] + D[k][j]) ){
+                    if ( (D[i][j] == Grafo::charNoConectado()) || (D[i][j] > D[i][k] + D[k][j]) ){
                         D[i][j] = D[i][k] + D[k][j];
                         P[i][j] = k;
                     }
@@ -118,6 +120,7 @@ void recuperarCamino(vector<vector<int>> &P, int origen, int destino, vector<int
 
 int main(){
 
+    const int NO_CONECTADO = Grafo::charNoConectado();
     vector<vector<int>> G = {
         {0, 5, NO_CONECTADO, NO_CONECTADO},
         {50, 0, 15, 5},

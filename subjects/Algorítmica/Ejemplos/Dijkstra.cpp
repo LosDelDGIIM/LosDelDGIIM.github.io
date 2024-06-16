@@ -18,37 +18,43 @@
 #include <vector>
 #include <algorithm>
 #include <iomanip>
+#include "../Exámenes/Includes/Grafo.h"
 
 using namespace std;
 
-const int NO_CONECTADO = INT_MAX;       // Valor que indica que no hay arco entre dos nodos
 const int SIN_PREDECESOR = -2;          // Valor que indica que un nodo no tiene predecesor
 
 
 /**
  * @brief Algoritmo de Dijkstra para hallar el camino mínimo desde un nodo origen a cualquier otro nodo del grafo
  * 
- * @param G  Matriz de adyacencia del grafo
+ * @param G  Grafo con el que trabajamos
  * @param origen  Nodo origen
  * @param D  Vector donde se almacenarán las distancias mínimas
  * @param P  Vector donde se almacenarán los predecesores
  */
-void Dijkstra(const vector<vector<int>> &G, int origen, vector<int> &D, vector<int> &P){
+void Dijkstra(const Grafo &G, int origen, vector<int> &D, vector<int> &P){
     
     // D[i] almacena la distancia mínima desde el nodo origen hasta el nodo i pasando solo por nodos seleccionados
     // P[i] almacena el nodo predecesor de i en el camino mínimo desde origen hasta i
 
     vector <int> C; // Conjunto de candidatos, nodos no seleccionados
-    for (int i = 0; i < G.size(); i++)
+    for (int i = 0; i < G.getNumNodos(); i++)
         if (i != origen)
             C.push_back(i);    
 
     // Inicializamos D y P
-    D = G[origen];
-    P = vector<int>(G.size(), origen);
-    for (int i = 0; i < P.size(); i++)  // Actualizamos los que no son adyacentes al origen
-        if (D[i] == NO_CONECTADO) P[i] = SIN_PREDECESOR;
-    P[origen] = SIN_PREDECESOR;
+    D.clear();
+    P.clear();
+    for (int i = 0; i < G.getNumNodos(); i++){
+        D.push_back(G.getPeso(origen, i));
+        
+        // Si el nodo i es adyacente al origen, su predecesor es el origen
+        if (G.conectados(origen, i))
+            P.push_back(origen);
+        else
+            P.push_back(SIN_PREDECESOR);
+    }
 
     // Buscamos el camino mínimo a cada nodo
     while (!C.empty()){
@@ -66,11 +72,11 @@ void Dijkstra(const vector<vector<int>> &G, int origen, vector<int> &D, vector<i
 
         // Actualizamos las distancias y predecesores de los nodos no seleccionados
         for (int no_seleccionado : C){
-            if (G[seleccionado][no_seleccionado] != NO_CONECTADO){  // Solo actualizamos los nodos adyacentes a seleccionado
+            if (G.conectados(seleccionado, no_seleccionado)){ // Solo actualizamos los nodos adyacentes a seleccionado
 
                 // Si es más corto pasar por seleccionado, actualizamos la distancia y el predecesor
-                if (D[seleccionado] + G[seleccionado][no_seleccionado] < D[no_seleccionado]){
-                    D[no_seleccionado] = D[seleccionado] + G[seleccionado][no_seleccionado];
+                if (D[seleccionado] + G.getPeso(seleccionado, no_seleccionado) < D[no_seleccionado]){
+                    D[no_seleccionado] = D[seleccionado] + G.getPeso(seleccionado, no_seleccionado);
                     P[no_seleccionado] = seleccionado;
                 }
             }
@@ -118,6 +124,8 @@ void recuperarCamino(vector<int> &P, int origen, int destino, vector<int> &camin
 
 
 int main(){
+
+    const int NO_CONECTADO = Grafo::charNoConectado();
 
     vector<vector<int>> G = {
         {0, 50, 30, 100, 10},
