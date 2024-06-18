@@ -172,11 +172,6 @@ public:
         return suma;
     }
 
-
-
-    friend ostream &operator<<(ostream &os, const Grafo &G);
-
-protected:
     /**
      * @brief Obtiene el peso de un arco
      * 
@@ -187,6 +182,11 @@ protected:
     double getPeso(int origen, int destino) const{
         return matriz_adyacencia[origen][destino];
     }
+
+
+
+    friend ostream &operator<<(ostream &os, const Grafo &G);
+
 };
 
 
