@@ -204,6 +204,18 @@ Por ejemplo:
 sinfo -pac -o"%10D %10G %20b %f"
 ```
 
+##### Cola por defecto
+Podemos usar el comando `sinfo` para averiguar cuál es la cola por defecto del sistema. Por ejemplo, tras ejecutar `sinfo` en un computador, hemos obtenido el siguiente resultado:
+```bash
+$ sinfo
+PARTITION AVAIL TIMELIMIT NODES STATE      NODELIST
+ac*          up      1:00     3  idle  atcgrid[1-3]
+ac4          up      1:00     1  idle      atcgrid4
+aapt         up      2:00     3  idle  atcgrid[1-3]
+acap         up      1:00     3  idle  atcgrid[1-3]
+```
+El `*` nos indica cuál es la cola por defecto del sistema.
+
 #### Obtener informacion sobre trabajos
 Para obtener información sobre los trabajos realizados y por realizar, así como sus identificadores de trabajos:
 ```bash
