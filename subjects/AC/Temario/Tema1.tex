@@ -13,7 +13,7 @@ Como ítems a conocer en esta sección, destacamos:
 \subsection{Niveles y tipos de paralelismo}
 En una aplicación, podemos encontrar distintos niveles de paralelismo. Para facilitar su comprensión, trataremos de clasificarlos en esta parte inicial de la asignatura. Comenzaremos por marcar varias capas de abstracción que se siguen a la hora de desarrollar una aplicación, lo que nos facilitará marcar el paralelismo dentro de esta.
 
-Podemos considerar que un programa está compuesto de funciones, las cuales a su vez están compuestas de bloques de código en la que abundan los bucles (para simplificar esto, diremos que las funciones están compuestas de bucles). Los cuales están basados en operaciones. Asimismo, puede que nuestra aplicación esté compuesta por distintos programas (como en el caso de LibreOffice con LibreOffice Writer, LibreOffice Calc, $\ldots$). Por todo esto, nos es natural tratar de clasificar el paralelismo de una aplicación en función de distintos niveles, los cuales serán:
+Podemos considerar que un programa está compuesto de funciones, las cuales a su vez están compuestas de bloques de código en la que abundan los bucles (para simplificar esto, diremos que las funciones están compuestas de bucles). Estos últimos están basados en operaciones. Asimismo, puede que nuestra aplicación esté compuesta por distintos programas (como en el caso de LibreOffice con LibreOffice Writer, LibreOffice Calc, $\ldots$). Por todo esto, nos es natural tratar de clasificar el paralelismo de una aplicación en función de distintos niveles, los cuales serán:
 \begin{itemize}
     \item Nivel de programas.
     \item Nivel de funciones.
@@ -21,7 +21,7 @@ Podemos considerar que un programa está compuesto de funciones, las cuales a su
     \item Nivel de operaciones.
 \end{itemize}
 
-En general, el paralelismo lo podremos encontrar en distinta granularidad (en mayor o menor medida) en relación al nivel en el que nos encontremos. Para detectar mejor este grado de paralelismo, es cómodo tener una clara distinción del tipo de paralelismo (como estamos haciendo), lo que facilita la tarea del programador y del compilador. Destacamos la ventaja de poder transformar el código secuencial (que ya sabemos manejar) en código con funcionalidades paralelas, lo que nos libra de tener que conocer tecnologías nuevas para poder implementar paralelismo en nuestras aplicaciones.
+En general, el paralelismo lo podemos encontrar en distinta granularidad (en mayor o menor medida) en relación al nivel en el que nos encontremos. Para detectar mejor este grado de paralelismo, es cómodo tener una clara distinción de los tipos de paralelismo (como estamos haciendo), lo que facilita la tarea del programador y del compilador. Destacamos la ventaja de poder transformar el código secuencial (que ya sabemos manejar) en código con funcionalidades paralelas, lo que nos libra de tener que conocer tecnologías nuevas para poder implementar paralelismo en nuestras aplicaciones.
 
 A continuación, justificamos los niveles ya elegidos, junto con ejemplos de paralelismo en cada uno de ellos:
 \begin{description}
@@ -30,7 +30,7 @@ A continuación, justificamos los niveles ya elegidos, junto con ejemplos de par
     \item [Nivel de funciones]~\\
     Las funciones llamadas en un programa se pueden ejecutar en paralelo, siempre que no haya dependencias (riesgos) inevitables entre ellas, como dependencias de datos verdaderas (RAW). Como ejemplo, recomendamos la familiarización de la directiva \verb|#pragma| \verb|omp| \verb|parallel| \verb|sections| de OpenMP de la Sesión 1 de Prácticas, donde podemos practicar con el paralelismo a nivel de funciones de forma explícita.
     \item [Nivel de bucles (de bloques)]~\\
-        Una función puede estar basada en la ejecución de uno o varios bucles. En muchas ocasiones, el código que se encuentra dentro de un bucle no está íntegramente asociado con la iteración en sí; sino que deseamos que una cierta tarea se ejecute un cierto número de veces. Se pueden ejecutar en paralelo las iteraciones de un bucle, siempre que eliminen los problemas derivados de las dependencias de datos verdaderas (RAW), en caso de haberlas.
+        Una función puede estar basada en la ejecución de uno o varios bucles. En muchas ocasiones, el código que se encuentra dentro de un bucle no está íntegramente asociado con la iteración en sí; sino que deseamos que una cierta tarea se ejecute un cierto número de veces. Se pueden ejecutar en paralelo las iteraciones de un bucle, siempre que se eliminen los problemas derivados de las dependencias de datos verdaderas (RAW), en caso de haberlas.
     \item [Nivel de operaciones]~\\
         En este nivel se extrae el paralelismo disponible entre operaciones. Las operaciones independientes se pueden ejecutar en paralelo. Por otra parte, podemos encontrar instrucciones compuestas de varias operaciones que se aplican en secuencia al mismo tipo de datos de entrada. Por ejemplo, la instrucción \verb|mac| nos permite realizar una suma tras una multiplicación. En este nivel se puede detectar la posiblidad de usar instrucciones compuestas como la ya mencionada.
 \end{description}
@@ -70,7 +70,7 @@ Una vez que conocemos que existe una dependencia de datos entre dos bloques de c
 int a = b * c;
 int d = a + c;
     \end{minted}
-Tenemos en la segunda línea el uso (lectura) de la variable \verb|a|, tras modificarla (escribir en ella) en la primera línea. Si empleamos paralelismo puede suceder que se ejecute la segunda línea antes que la primera, provocando condiciones catastróficas. De hecho, cuando esto se haga, la variable \verb|a| no estará ni siquiera inicializada (en este ejemplo).
+Tenemos en la segunda línea el uso (lectura) de la variable \verb|a|, tras modificarla (escribir en ella) en la primera línea. Si empleamos paralelismo puede suceder que se ejecute la segunda línea antes que la primera, provocando condiciones que conlleven un mal funcionamiento de nuestro programa. De hecho, cuando esto se haga, la variable \verb|a| no estará ni siquiera inicializada (en este ejemplo).
 
     \item [WAW (Write after Write)]~\\
         También llamada anti-dependencia, sucede cuando tratamos de modificar una variable por segunda vez (después de haberla modificado ya). Esto puede plantear, al igual que explicábamos en RAW, condiciones de carrera. Mostramos un ejemplo a continuación:
@@ -91,7 +91,7 @@ Donde en la primera línea leemos \verb|a| y en la segunda modificamos su valor.
 \end{description}
 
 \subsection{Unidades de ejecución}
-El hardware es el encargado de la administración y ejecución de las \ul{instrucciones}, mientras que a nivel superior nos encontramos con el SO, haciéndolo (no en el sentido que estás pensando) con las \ul{hebras} y los \ul{procesos}. Cada proceso en ejecución tiene su propia asignación de memoria. Los SO multihebra permiten que un proceso se conforme por una o varias hebras (o hilos). Cada hebra tiene su propia pila y banco de registros, mientras que comparte con sus hermanas la memoria que les oferta el proceso. Esto permite que las hebras puedan crearse, destruirse y comunicarse entre ellas de una forma más rápida que los procesos. Todo esto permite que las hebras dispongan de una menor granularidad que estos. 
+El hardware es el encargado de la administración y ejecución de las \ul{instrucciones}, mientras que a nivel superior nos encontramos con el SO, haciéndolo con las \ul{hebras} y los \ul{procesos}. Cada proceso en ejecución tiene su propia asignación de memoria. Los SO multihebra permiten que un proceso se conforme por una o varias hebras (o hilos). Cada hebra tiene su propia pila y banco de registros, mientras que comparte con sus hermanas la memoria que les oferta el proceso. Esto permite que las hebras puedan crearse, destruirse y comunicarse entre ellas de una forma más rápida que los procesos. Todo esto permite que las hebras dispongan de una menor granularidad que estos. 
 
 Esta sección nos ha servido para repasar entes que nos permiten hacer explícito el paralelismo, los cuales simplificarán el diseño de las aplicaciones, al ser las hebras y procesos automáticamente gestionadas por el sistema operativo; y las instrucciones por la arquitectura.
 
@@ -190,7 +190,7 @@ Según el segmento de mercado, observamos que el número de ventas es inversamen
 \end{itemize}
 
 \subsection{Clasificación de Flynn o de flujos}
-La taxonomía de Flynn nos permite dividir el universo de los computadores en relación a la cantidad de flujos de instrucción y de datos que estos soportan. A continuación, definimos las 4 clases de Flynn, donde usaremos la notación \verb|xIxD| donde \verb|I| y \verb|D| significan ``Instruction'' y ``Data'', respectivamente. El carácter \verb|x| lo sustituiremos por \verb|S| en el caso de que queramos especificar ``Single''; y por \verb|M| en el caso de que queramos especificar ``Multiple''. De esta forma, ``SIMD'' significa ``Single Instruction Multiple Data'' y no será necesario nunca más indicar el significado de estas siglas.
+La taxonomía de Flynn nos permite dividir el universo de los computadores en relación a la cantidad de flujos de instrucción y de datos que estos soportan. A continuación, definimos las 4 clases de Flynn, donde usaremos la notación \verb|xIxD| donde \verb|I| y \verb|D| denotan \emph{Instruction} y \emph{Data}, respectivamente. El carácter \verb|x| lo sustituiremos por \verb|S| en el caso de que queramos especificar \emph{Single}; y por \verb|M| en el caso de que queramos especificar \emph{Multiple}. De esta forma, ``SIMD'' significa \emph{Single Instruction Multiple Data} y en adelante no será necesario indicar el significado de estas siglas.
 \begin{description}
     \item [SISD]~\\
         Estos son los que presentan un único flujo de instrucciones y un único flujo de datos. Por tanto, tendremos sólo una única unidad de control, así como una única unidad de procesamiento. 
@@ -232,7 +232,7 @@ Asumiendo que el código superior se basa en instrucciones máquina a bajo nivel
 
     Hemos podido comprobar cómo en SIMD podemos tener paralelismo a nivel de datos; mientras que en MIMD podemos tener tanto paralelismo a nivel de datos como a nivel de tareas, tanto de forma simultánea como de forma independiente.
 
-    Además, en computadores MIMD tenemos más libertad en cuanto a entes del sistema operativo (procesos o threads) podemos usar para llevar a cabo la paralelización.
+    Además, en computadores MIMD tenemos más libertad en cuanto a qué entes del sistema operativo (procesos o \emph{threads}) podemos usar para llevar a cabo la paralelización.
 \end{observacion}
 
 \subsubsection{Multiprocesadores y Multicomputadores}
