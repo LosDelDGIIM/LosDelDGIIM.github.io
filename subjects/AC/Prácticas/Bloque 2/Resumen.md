@@ -329,4 +329,4 @@ Tras la ejecución de la región afectada por su `single` asociado, por cada var
 ```
 De esta forma, todas las componentes del vector `v` se inicializan a la variable privada `a`, que tras la región del `single` queda su valor igual en todas las variables privadas.  
 
-La cláusula `copyprivate` es un ejemplo de `dijusión` de datos.
+La cláusula `copyprivate` es un ejemplo de `difusión` de datos.
