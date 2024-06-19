@@ -22,7 +22,7 @@ La programación paralela requiere de algún ente (ya sea la herramienta que use
     \item [Localicación o detección de paralelismo]~\\
         Para poder implementar paralelismo dentro de una aplicación, esto es, dividir las aplicaciones en unidades de cómputo independientes que recibirán el nombre de \emph{tareas}, es necesario primero localizar de dónde podemos extraer este paralelismo. Lo más cómodo y usual será, a partir del código secuencial que resuelve nuestra aplicación (o a partir de la definición de la aplicación), analizarlo para ver de dónde podemos extraer paralelismo (y en qué parte del código es donde debemos intentar introducir paralelismo). Los grafos pueden ser una gran herramienta en esta tarea, ya que nos permiten ver las tareas que pueden ejecutarse en paralelo (estos serán los nodos a misma altura, si la altura representa el tiempo de ejecución); así como las dependencias que hay entre ellas (los datos que una tarea requiere de otra para su ejecución). Finalmente, también nos permite ver cuál es el número máximo de tareas que se ejecutarán en paralelo. A este número máximo se le suele llamar \emph{grado de paralelismo} de una aplicación.
     \item [Asignación de carga de trabajo]~\\
-        Tenemos que decidir qué tareas corresponderán a qué ente del sistema operativo (como procesos o threads), así como la asignación de flujos de instrucciones a los procesadores disponibles. Cabe destacar que no suele ser rentable usar más flujos de instrucciones que procesadores ni que los flujos cambien de procesador en tiempo de ejecución. Así, las asignaciones de flujos a procesadores puede hacerse estática o dinámicamente (en tiempo de ejecución); y explícita o implícita (lo hace la herramienta de forma automática). Notemos que la asignación dinámica requiere un costo extra, lo que introduce un retardo adicional. La asignación dinámica es la única posible cuando no puede conocerse el número de tareas a ejecutar. 
+        Tenemos que decidir qué tareas corresponderán a qué ente del sistema operativo (como procesos o \emph{threads}), así como la asignación de flujos de instrucciones a los procesadores disponibles. Cabe destacar que no suele ser rentable usar más flujos de instrucciones que procesadores ni que los flujos cambien de procesador en tiempo de ejecución. Así, las asignaciones de flujos a procesadores puede hacerse estática o dinámicamente (en tiempo de ejecución); y explícita o implícita (lo hace la herramienta de forma automática). Notemos que la asignación dinámica requiere un costo extra, lo que introduce un retardo adicional. La asignación dinámica es la única posible cuando no puede conocerse el número de tareas a ejecutar. 
     \item [Comunicación o sincronización]~\\
         Muchas veces necesitaremos mecanismos de comunicación entre los distintos flujos de instrucciones, ya que todos estos están colaborando en la ejecución del programa (uno puede generar una variable que otro necesite). 
 \end{description}
@@ -69,7 +69,7 @@ main(int argc, char** argv){
     // ...
 }
     \end{minted}
-Donde primero, hemos detectado qué parte podríamos mejorar del código. En este caso, repartir las iteraciones del bucle entre distintas hebras, ya que las iteraciones no están relacionadas entre sí. A continuación, hemos decidido que vamos a usar 4 hebras, y que vamos a repartir las \verb|intervalos| iteraciones de forma equitativa entre las 4 hebras. Finalmente, comunicamos las hebras entre sí gracias a dos palabras:
+En primer lugar, hemos detectado qué parte podríamos mejorar del código. En este caso, repartir las iteraciones del bucle entre distintas hebras, ya que las iteraciones no están relacionadas entre sí. A continuación, hemos decidido que vamos a usar 4 hebras, y que vamos a repartir las \verb|intervalos| iteraciones de forma equitativa entre las 4 hebras. Finalmente, comunicamos las hebras entre sí gracias a dos palabras:
 \begin{itemize}
     \item La cláusula \verb|reduction(+:sum)| nos permite sumar en \verb|sum| los distintos valores de la variable \verb|sum| de cada hebra (cabe destacar que lo podríamos haber hecho con un proceso menos automático y más personalizado, como usando directivas \verb|critical|, aunque en este caso la mejor elección es \verb|atomic|).
     \item La directiva \verb|for| tiene una barrera implícita al final que hace que todas las hebras se esperen entre sí (tarea de sincronización).
@@ -78,13 +78,13 @@ Donde primero, hemos detectado qué parte podríamos mejorar del código. En est
 \subsubsection{Modos de programación}
 A la hora de programar una aplicación paralela, podemos distinguir dos modos de programación:
 \begin{description}
-    \item [SPMD (Single-Programa Multiple Data)]~\\
+    \item [SPMD (\emph{Single-Program Multiple Data})]~\\
         También denominado a veces paralelismo de datos, todos los códigos que se ejecutan en paralelo se obtienen compilando el mismo programa. Cada copia trabaja con un conjunto de datos distintos y se ejecuta en un procesador diferente.
-    \item [MPMD (Multiple-Program Multiple Data)]~\\
+    \item [MPMD (\emph{Multiple-Program Multiple Data})]~\\
         También llamado a veces paralelismo de tareas o funciones, los códigos que se ejecutan en paralelo se obtienen compilando programas independientes. En este caso, la aplicación a ejecutar (o el código secuencial inicial) se divide en unidades independientes. Cada unidad trabaja con un conjunto de datos distintos y se ejecutan en un procesador diferente.
 \end{description}
 
-SPMD es recomendable en sistemas masivamente paralelos. Es más fácil resolver la aplicación escribiendo un único programa. Usado en sistemas con memoria distribuida, evita la necesidad de tener que distribuir el código entre los nodos, sólo habría que distribuir datos. En la práctica, se aplica en mayor medida SPMD antes que MPMD.
+SPMD es recomendable en sistemas masivamente paralelos. Es más fácil resolver la aplicación escribiendo un único programa. Usado en sistemas con memoria distribuida, evita la necesidad de tener que distribuir el código entre los nodos, solo habría que distribuir datos. En la práctica, se aplica en mayor medida SPMD antes que MPMD.
 
 En los programas paralelos se pueden utilizar combinaciones de MPMD y SPMD\@. La programación dueño-esclavo se puede considerar una variante del modo MPMD (se verá a lo largo de esta sección). Si todos los esclavos tienen el mismo código, sería una mezcla de MPMD y SPMD\@. Los programas que conforman una solución dueño-esclavo con MPMD se pueden juntar en un único programa SPMD con el uso de estructuras condicionales.
 
@@ -97,17 +97,16 @@ Las herramientas de programación paralela debería permitirnos de forma explíc
     \item Comunicar y sincronizar procesos.
     \item Asignar procesos a procesadores.
 \end{enumerate}
-
-Donde este último es el SO o el hardware quien realiza esta tarea (usualmente).\\
+Respecto a este último aspecto, es el SO o el hardware quien se encarga (usualmente) de ello.\\
 
 Cuanto mayor sea la abstracción que desarrolle la herramienta paralela, menor serán las labores que debe desarrollar el programador de aplicaciones paralelas. La labor más difícil para la herramienta es la primera, la detección del paralelismo. Podemos realizar una clasificación de las herramientas de programación paralela en función de la abstracción en la que sitúan al programador. Las enumeramos desde el mayor al menor nivel de abstracción:
 \begin{description}
     \item [Compiladores paralelos]~\\
         Un compilador paralelo pretende ser aquella automatización capaz de extraer paralelismo a nivel de bucle (paralelismo de datos) y de función (paralelismo de tareas) a partir de un código secuencial. Para ello, realizan análisis de dependencias entre bloques de código. No generan código eficiente para cualquier programa y todavía se investiga en este campo.
     \item [Lenguajes paralelos y APIs de funciones y directivas]~\\
-        Generalmente, los lengaujes paralelos y directivas sitúan al programador en un nivel de abstracción superior a sólo bibliotecas de funciones. Encontramos lenguajes como Occam, Ada o Java, los cuales tienen construcciones particulares y bibliotecas de funciones que requieren un compilador exclusivo. Por otra parte, las APIs mencionadas (formadas tanto por directivas para el lenguaje como por bibliotecas de funciones) nos permiten trabajar en cualquier lenguaje para el que fueron diseñadas, como \verb|C++| o \verb|Fortran|, en el caso de OpenMP\@. En este nivel, el programador es el encargado de detectar el paralelísmo implícito en la aplicación. Sin embargo, el programador no hace el reparto (la asignación directa) de este paralelismo, así de eximir al programador las tareas de creación y terminación de flujos o de detalles para comunicación. Como ventaja, es más sencillo desarrollar aplicaciones paralelas, obteniendo códigos más cortos.
+        Generalmente, los lengaujes paralelos y directivas sitúan al programador en un nivel de abstracción superior a solo bibliotecas de funciones. Encontramos lenguajes como Occam, Ada o Java, los cuales tienen construcciones particulares y bibliotecas de funciones que requieren un compilador exclusivo. Por otra parte, las APIs mencionadas (formadas tanto por directivas para el lenguaje como por bibliotecas de funciones) nos permiten trabajar en cualquier lenguaje para el que fueron diseñadas, como \verb|C++| o \verb|Fortran|, en el caso de OpenMP\@. En este nivel, el programador es el encargado de detectar el paralelísmo implícito en la aplicación. Sin embargo, el programador no hace el reparto (la asignación directa) de este paralelismo, así de eximir al programador las tareas de creación y terminación de flujos o de detalles para comunicación. Como ventaja, es más sencillo desarrollar aplicaciones paralelas, obteniendo códigos más cortos.
     \item [APIs de funciones]~\\
-        Como por ejemplo Pthreads o MPI, las cuales sólo consisten en una biblioteca de funciones que se añaden a un compilador de un lenguaje sencuencial. El cuerpo de procesos y hebras es escrito en lenguaje secuencial y es el programador quien se encarga de distribuir las tareas entre los procesos, crear o gestionar procesos, e implementar la comunicación y sincronización usando funciones de la biblioteca. Como ventajas a destacar:
+        Como por ejemplo Pthreads o MPI, las cuales solo consisten en una biblioteca de funciones que se añaden a un compilador de un lenguaje sencuencial. El cuerpo de procesos y hebras es escrito en lenguaje secuencial y es el programador quien se encarga de distribuir las tareas entre los procesos, crear o gestionar procesos, e implementar la comunicación y sincronización usando funciones de la biblioteca. Como ventajas a destacar:
         \begin{itemize}
             \item Los programadores están familiarizados con los lenguajes secuenciales.
             \item Las bibliotecas están disponibles para todos los sistemas paralelos.
@@ -132,31 +131,31 @@ Las herramientas para la programación paralela también pueden ofrecer al progr
 
 Por tanto, se intenta que las herramientas de programación paralela nos permitan implementar dichas funcionalidades mediante comunicaciones entre procesos (flujos de instrucciones). A lo largo de esta sección, cada vez que aparezca ``mensaje'', estaremos haciendo referencia a un dato o estructura de datos. A continuación, enumeramos los distintos tipos de comunicaciones entre procesos que podemos encontrarnos:
 \begin{description} 
-    \item [Comunicación múltiple uno-a-uno.] Hay componentes del grupo que envían un único mensaje y componentes que reciben un único mensaje. Si todos los componentes del grupo envían y reciben, diremos que se trata de una \emph{permutación}. Nos podemos encontrar \emph{rotaciones} (el proceso $P_i$ envía al proceso $P_{i+1}$ y el $P_n$ al $P_0$), \emph{intercambios}, \emph{barajes}, \emph{desplazamientos}, etc. (Ver Figura~\ref{graph:uno_uno}).
+    \item [Comunicación múltiple uno-a-uno] Hay componentes del grupo que envían un único mensaje y componentes que reciben un único mensaje. Si todos los componentes del grupo envían y reciben, diremos que se trata de una \emph{permutación}. Nos podemos encontrar \emph{rotaciones} (el proceso $P_i$ envía al proceso $P_{i+1}$ y el $P_n$ al $P_0$), \emph{intercambios}, \emph{barajes}, \emph{desplazamientos}, etc. (Ver Figura~\ref{graph:uno_uno}).
 
-    \item [Comunicación uno-a-todos.] Un proceso envía y todos los procesos del grupo reciben el mensaje (Ver Figura~\ref{graph:uno_todos}). Destacamos aquí:
+    \item [Comunicación uno-a-todos] Un proceso envía y todos los procesos del grupo reciben el mensaje (Ver Figura~\ref{graph:uno_todos}). Destacamos aquí:
         \begin{description}
-            \item [Difusión (broadcast).] Todos los procesos reciben el mismo mensaje.
-            \item [Dispersión (scatter).] Cada proceso recibe un mensaje diferente.
+            \item [Difusión (broadcast)] Todos los procesos reciben el mismo mensaje.
+            \item [Dispersión (scatter)] Cada proceso recibe un mensaje diferente.
         \end{description}
 
-    \item [Comunicación todos-a-uno.] Todos los procesos en el grupo envían un mensaje a un único proceso (Ver Figura~\ref{graph:todos_uno}). Destacamos:
+    \item [Comunicación todos-a-uno] Todos los procesos en el grupo envían un mensaje a un único proceso (Ver Figura~\ref{graph:todos_uno}). Destacamos:
         \begin{description}
-            \item [Reducción.] Los mensajes enviados por los procesos se combinan en un sólo mensaje mediante algún operador (como por ejemplo, el proceso recibe una suma de distintas variables de cada proceso).
-            \item [Acumulación (gather).] Los mensajes se reciben de forma concatenada en el receptor.
+            \item [Reducción] Los mensajes enviados por los procesos se combinan en un solo mensaje mediante algún operador (como por ejemplo, el proceso recibe una suma de distintas variables de cada proceso).
+            \item [Acumulación (gather)] Los mensajes se reciben de forma concatenada en el receptor.
         \end{description}
 
-    \item [Comunicación todos-a-todos.] Todos los procesos del grupo ejecutan una comunicación uno-a-todos (Ver Figura~\ref{graph:todos_todos}). Puede ser:
+    \item [Comunicación todos-a-todos] Todos los procesos del grupo ejecutan una comunicación uno-a-todos (Ver Figura~\ref{graph:todos_todos}). Puede ser:
         \begin{description}
-            \item [Todos difunden (all-broadcast).] Todos los procesos realizan una difusión.
-            \item [Todos dispersan (all-scatter).] Todos los procesos realizan una dispersión.
+            \item [Todos difunden (all-broadcast)] Todos los procesos realizan una difusión.
+            \item [Todos dispersan (all-scatter)] Todos los procesos realizan una dispersión.
         \end{description}
 
-    \item [Comunicaciones colectivas compuestas.] Hay servicios que resultan de la combinación de algunos anteriores, como:
+    \item [Comunicaciones colectivas compuestas] Hay servicios que resultan de la combinación de algunos anteriores, como:
         \begin{description}
-            \item [Todos combinan, o reducción y extensión.] El resultado de aplicar una reducción se obtiene en todos los procesos (Ver Figura~\ref{graph:colectivas1}).
-            \item [Barrera.] Es un punto de sincronización que todos los procesos de un grupo deben alcanzar para que cualquier proceso del grupo pueda continuar con su ejecución.
-            \item [Recorrido (scan).] Todos los procesos envían un mensaje, recibiendo cada uno de ellos el resultado de reducir un conjunto de estos mensajes (Ver Figura~\ref{graph:colectivas2}).
+            \item [Todos combinan, o reducción y extensión] El resultado de aplicar una reducción se obtiene en todos los procesos (Ver Figura~\ref{graph:colectivas1}).
+            \item [Barrera] Es un punto de sincronización que todos los procesos de un grupo deben alcanzar para que cualquier proceso del grupo pueda continuar con su ejecución.
+            \item [Recorrido (scan)] Todos los procesos envían un mensaje, recibiendo cada uno de ellos el resultado de reducir un conjunto de estos mensajes (Ver Figura~\ref{graph:colectivas2}).
                 \begin{itemize}
                     \item Recorrido prefijo: El proceso $P_i$ recibe el resultado de reducir los mensajes de $P_0, P_1, \ldots, P_i$.
                     \item Recorrido sufijo: El proceso $P_i$ recibe el resultado de reducir los mensajes de $P_i, P_{i+1}, \ldots, P_n$.
@@ -488,17 +487,17 @@ Cada tipo de arquitectura paralela (según la taxonomía de Flynn anteriormente 
     \item Variables compartidas (para multiprocesadores). 
     \item Paralelismo de datos (para computadores SIMD).
 \end{itemize}
-Con \emph{paso de mensajes} se supone que cada procesador del sistema tiene su propio espacio de direcciones. Los mensajes llevan datos de un espacio de direcciones a otro y pueden aprovecharse para sincronizar procesos. Los datos transferidos estarán duplicados en el sistema de memoria. Con \emph{variables compartidas}, se supone que los procesasdores comparten espacio de direcciones. Se realiza la transferencia de forma implícita usando instrucciones de lectura y escritura en memoria. Con \emph{paralelismo de datos} la misma instrucción se ejecuta en paralelo en múltiples cores de forma que cada uno actúa sobre un conjunto de datos distinto. Este paradigma es apropiado para aquellas arquitecturas que sólo soportan paralelismo a nivel de bucle. La sincronización se encuentra implícita. 
+Con \emph{paso de mensajes} se supone que cada procesador del sistema tiene su propio espacio de direcciones. Los mensajes llevan datos de un espacio de direcciones a otro y pueden aprovecharse para sincronizar procesos. Los datos transferidos estarán duplicados en el sistema de memoria. Con \emph{variables compartidas}, se supone que los procesasdores comparten espacio de direcciones. Se realiza la transferencia de forma implícita usando instrucciones de lectura y escritura en memoria. Con \emph{paralelismo de datos} la misma instrucción se ejecuta en paralelo en múltiples cores de forma que cada uno actúa sobre un conjunto de datos distinto. Este paradigma es apropiado para aquellas arquitecturas que solo soportan paralelismo a nivel de bucle. La sincronización se encuentra implícita. 
 
 Asimismo, también podemos encontrar herramientas que permiten programar multiprocesadores mediante paso de mensajes, un software que se apoya en el hardware para variables compartidas. De igual forma, hay herramientas que permiten variables compartidas en multicomputadores. Hay lenguajes que soportan paralelismo de datos, tanto en multiprocesadores como en multicomputadores.
 
 \begin{description}
-    \item [Paso de mensajes.]~\\
+    \item [Paso de mensajes]~\\
         Se dispone de diversas herramientas software, como lenguajes de programación (Ada, Occam, \ldots) o bibliotecas de funciones (como MPI). Los fabricantes de supercomputadores suelen proporcionar este tipo de software, capaz de extraer un gran rendimiento de sus máquinas. Las funciones básicas de comunicación suelen ser \verb|send()| y \verb|receive()|. Generalmente, en la función \verb|send| se especifica el proceso destino y el mensaje a enviar, mientras que en \verb|receive| se especifica la fuente y la estructura de datos en la que se almacenará el mensaje. Podemos encontrar implementaciones \emph{síncronas} (el proceso que ejecuta un \verb|send| se bloquea hasta que el destinatario hace uso de \verb|receive| y viceversa) o \emph{asíncronas} (\verb|send| no tiene por qué bloquear el proceso). Para esta última, es necesario usar un buffer en su implementación. 
-    \item [Variables compartidas.]~\\
+    \item [Variables compartidas]~\\
         Encontramos software como lenguajes de programación (Ada 95 o Java), bibliotecas de funciones y APIs de directivas y funciones (como OpenMP). Los propios fabricantes ofrecen compiladores secuenciales con estas extensiones para programar sus máquinas. Para la comunicación se suelen desarrollar instrucciones de \emph{lectura} y \emph{escritura} en memoria, las cuales serán usadas por distintos procesos (en el SO, las hebras comparten memoria entre sí, por lo que no es necesario que usen estas instrucciones). El software ofrece mecanismos para implementar sincronización (para que un proceso no lea antes de que el otro escriba), como cerrojos, semáforos, variables condicionales, \ldots 
         OpenMP dispone además de directivas para llevar a cabo paralelismo de datos (directiva \verb|for|), de tareas (directiva \verb|sections|), y muchas más funcionalidades. 
-    \item [Paralelismo de datos.]~\\
+    \item [Paralelismo de datos]~\\
         En este paradigma se aprovecha el paralelismo de datos inherente a aplicaciones en la que los datos se organizan en estructuras como vectores o matrices. El programador escribe un programa con construcciones que permiten aprovechar paralelismo de datos (como paralelización de bucles, instrucciones vectoriales, \ldots), así como construcciones para distribuir los datos (la carga de trabajo) entre los núcleos de procesamiento. El programador no lleva a cabo las sincronizaciones (se encuentran implícitas). Ejemplos software son Fortran 95, HPF (High Performance Fortran), NVIDIA CUDA, \ldots
 \end{description}
 
@@ -511,7 +510,7 @@ Analizando las estructuras (los grafos) de las tareas y de los procesos (junto c
     \item Estructura segmentada (\emph{pipeline}), o flujo de datos.
     \item Divide y vencerás (\emph{divide and conquer}), o descomposición recursiva. 
 \end{itemize}
-Hay estructuras que quizás no se puedan clasificar en un sólo tipo de los anteriores. Por otra parte, nos podemos encontrar dentro de un mismo programa paralelo varias de estas estructuras, en distintos niveles.
+Hay estructuras que quizás no se puedan clasificar en un solo tipo de los anteriores. Por otra parte, nos podemos encontrar dentro de un mismo programa paralelo varias de estas estructuras, en distintos niveles.
 
 \subsubsection{Dueño-esclavo} 
 En este caso, contamos con un proceso denominado dueño (o master) y con varios procesos denominados esclavos (o slaves). El dueño se encarga de distribuir las tareas de un conjunto entre el grupo de esclavos, y de ir recolectando los resultados parciales que van calculando los esvlavos, con los que el dueño obtiene el resultado final. Usualmente, no hay comunicación entre los esclavos.
@@ -642,8 +641,8 @@ Esta sección está dedicada a:
 \subsection{Descomposición en tareas} 
 En esta etapa, tenemos que buscar unidades de trabajo en la aplicación que puedan ejecutarse en paralelo (es decir, que sean independientes). Estas unidades, junto con los datos que usan, forman las \emph{tareas}. Es conveniente en este paso representar las tareas y las relaciones entre ellas mediante un grafo, para observar las dependencias entre estas y el nivel de paralelización de la aplicación. Podemos situarnos en dos niveles de abstracción:
 \begin{description}
-    \item [Nivel de función.] Analizando las dependencias entre las funciones del código podemos encontrar aquellas que son independientes (o aquellas que pueden hacerse independientes), que serán las que se ejecutarán en paralelo. Estamos extrayendo paralelismo de tareas en nuestra aplicación.
-    \item [Nivel de bucle.] Analizando las iteraciones de los bucles dentro de una función, podemos encontrar si son (o se pueden hacer) independientes. Podemos así detectar paralelismo de datos. Además, si una función consta de varios bucles, puede verse la relación entre estos, para así ver si pueden ejecutarse en paralelo.
+    \item [Nivel de función] Analizando las dependencias entre las funciones del código podemos encontrar aquellas que son independientes (o aquellas que pueden hacerse independientes), que serán las que se ejecutarán en paralelo. Estamos extrayendo paralelismo de tareas en nuestra aplicación.
+    \item [Nivel de bucle] Analizando las iteraciones de los bucles dentro de una función, podemos encontrar si son (o se pueden hacer) independientes. Podemos así detectar paralelismo de datos. Además, si una función consta de varios bucles, puede verse la relación entre estos, para así ver si pueden ejecutarse en paralelo.
 \end{description}
 
 \subsubsection{Ejemplo} 
@@ -681,7 +680,7 @@ Para su paralelización, tratamos de determinar si las iteraciones del bucle son
 \subsection{Asignación de tareas} 
 En esta etapa, tratamos de realizar la asignación de las tareas del grafo de dependencias a procesos y a hebras. Por lo general, no es conveniente asignar más de un proceso o hebra por procesador dentro de una misma aplicación (para que no compitan entre ellos). Por tanto, la asignación a procesos o hebras está ligada a la asignación en procesadores. Podemos incluso realizar asignaciones de procesos a procesadores. 
 
-La granularidad de los procesos y las hebras depende del número de procesadores: cuanto mayor sea, menos tareas se asignarán a cada proceso (o hebra). Además, la granularidad depende del tiempo de comunicación y sincronización, debido a que el tiempo de ejecución en paralelo no sólo depende del código en sí mismo, sino de las comunicaciones y sincronizaciones entre procesos. Para disminuir este tiempo, pueden asignarse más tareas a un proceso (o hebra), reduciendo así el número de interacciones (comunicaciones o sincronizaciones) entre las tareas a través de la red de comunicación. 
+La granularidad de los procesos y las hebras depende del número de procesadores: cuanto mayor sea, menos tareas se asignarán a cada proceso (o hebra). Además, la granularidad depende del tiempo de comunicación y sincronización, debido a que el tiempo de ejecución en paralelo no solo depende del código en sí mismo, sino de las comunicaciones y sincronizaciones entre procesos. Para disminuir este tiempo, pueden asignarse más tareas a un proceso (o hebra), reduciendo así el número de interacciones (comunicaciones o sincronizaciones) entre las tareas a través de la red de comunicación. 
 
 La posibilidad de usar procesos o hebras depende de varios factores:
 \begin{itemize}
@@ -749,19 +748,19 @@ main(int argc, char** argv){
 \end{minted}
 
 \begin{description}
-    \item [Crear y terminar hebras.] En el programa OpenMP se incluyen funciones que permiten la creación dinámica del grupo de hebras que van a intervenir en el cálculo y que permiten fijar el número de hebras que se crean:
+    \item [Crear y terminar hebras] En el programa OpenMP se incluyen funciones que permiten la creación dinámica del grupo de hebras que van a intervenir en el cálculo y que permiten fijar el número de hebras que se crean:
         \begin{itemize}
             \item \verb|omp_set_num_threads()| es una función OpenMP que modifica en tiempo de ejecución el número de hebras que se pueden utilizar en paralelo. Para ello, se sobrescribe el contenido de la variable \verb|OMP_NUM_THREADS|, que contiene dicho número.
             \item \verb|#pragma omp parallel| es una directiva OpenMP que crea un conjunto de hebras. El número será el que tenga la variable \verb|OMP_NUM_THREADS| menos uno, ya que también interviene la hebra \verb|master| en el cálculo. El código de las hebras creadas es el que sigue a esta directiva, que puede ser una o varias sentencias.
         \end{itemize}
-    \item [Asignar tareas a procesos y localizar paralelismo.] El programador ha dejado el trabajo de repartir las tareas al compilador, simplemente le ha especificado una distribución dinámica, mediante la cláusula \verb|schedule(dynamic)|.
+    \item [Asignar tareas a procesos y localizar paralelismo] El programador ha dejado el trabajo de repartir las tareas al compilador, simplemente le ha especificado una distribución dinámica, mediante la cláusula \verb|schedule(dynamic)|.
         \begin{itemize}
             \item \verb|#pragma omp for| es una directiva que identifica un conjunto de trabajo compartido iterativo paralelizable y especifica que se distribuyan las iteraciones del bucle \verb|for| entre las hebras del grupo cuya creación se ha especificado con una directiva \verb|parallel|. La política de distribución de las iteraciones del bucle puede especificarse a la directiva mediante la cláusula \verb|schedule(kind[, chunk_size]);|, donde el tipo de distribución puede ser \verb|static, dynamic, runtime| o \verb|guided|.
 
             \item La cláusula \verb|private(x)| hace que cada hebra tenga una copia privada de la variable \verb|x|. Es decir, no será una variable compartida. La cláusula \verb|reduction(+:sum)| hace que cada hebra utilice una variable local \verb|sum| y que una vez terminada la ejecución de todas las hebras, se sumen todas las variables locales \verb|sum|, almacenando el resultado en una variable compartida \verb|sum|. La directiva \verb|for| obliga a que todas las hebras se sincronicen al terminar el bucle (a no ser que se especifique \verb|nowait|).
         \end{itemize}
         Usando esta directiva \verb|for| se libera trabajo al programador, al no tener que implementar la distribución dinámica ni comunicaciones y sincronizaciones para obtener la suma total (así como las declaraciones de las variable locales \verb|sum|). Además, incluye una barrera implícita que tampoco tiene que incluir el programador. La asignación de hebras a procesadores la hará el sistema operativo, aunque para incrementar las prestaciones, el programador puede orientarlo sobre dicha asignación.
-    \item [Comunicación y sincronización.] 
+    \item [Comunicación y sincronización] 
         Como ya se ha mencionado, se distribuyen las iteraciones del bucle entre hebras de forma dinámica, de forma que cada una cuenta con su variable local \verb|sum| que resulta en una variable compartida \verb|sum| que al final contiene a la suma de todas las variables locales (todo esto gracias a la cláusula \verb|reduction(+:sum)|). Se está utilizando una comunicación colectiva. Además, se usa una barrera implícita tras la finalización de la región afectada por \verb|for| y tras la finalización de la región afectada por \verb|parallel|.
 \end{description}
 
@@ -793,9 +792,9 @@ Es decir, dividiendo las prestaciones en un sistema con $p$ procesadores frente 
     S(p) = \dfrac{T_S}{T_P(p)}\qquad \text{con\ }\qquad  T_P(p) = T_C(p) + T_O(p)
 \end{equation}
 
-Donde $T_S$ sería el tiempo de ejecución del programa secuencial y $T_P(p)$ el tiempo de ejecución del programa paralelo con $p$ procesadores. Para obtener $T_S$, se debería escoger el mejor programa secuencial que resuelva la aplicación (para sólo centrarnos en el cambio de la implementación del paralelismo).
+Donde $T_S$ sería el tiempo de ejecución del programa secuencial y $T_P(p)$ el tiempo de ejecución del programa paralelo con $p$ procesadores. Para obtener $T_S$, se debería escoger el mejor programa secuencial que resuelva la aplicación (para solo centrarnos en el cambio de la implementación del paralelismo).
 
-El tiempo de ejecución en paralelo no sólo depende del tiempo de cómputo (de cálculo) en paralelo de las tareas detectadas en la aplicación ($T_C(p)$), sino también de un tiempo de penalización o sobrecarga (\verb|overhead|) $T_O(p)$. Este tiempo de sobrecarga es debido a:
+El tiempo de ejecución en paralelo no solo depende del tiempo de cómputo (de cálculo) en paralelo de las tareas detectadas en la aplicación ($T_C(p)$), sino también de un tiempo de penalización o sobrecarga (\verb|overhead|) $T_O(p)$. Este tiempo de sobrecarga es debido a:
 \begin{itemize}
     \item El tiempo dedicado a comunicación y sincronización entre procesos.
     \item El tiempo para crear y terminar los procesos y hebras que permiten la paralelización.

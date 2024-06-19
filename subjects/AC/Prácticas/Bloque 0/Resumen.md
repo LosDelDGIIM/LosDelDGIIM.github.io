@@ -187,7 +187,7 @@ Para asegurarnos de que se crea un sólo proceso, indicar el número de cores qu
   
 Tanto con `srun` como con `sbatch`, se recomienda escribir las órdenes directamente en el shell en vez de copiar y pegar.  
   
-*Nota:* a la hora de compilar arhivos en `c` (o en cualquier otro lenguaje), se recomienda usar `srun` para realizar este trabajo en un nodo y no en la máquina host, ya que puede laggearse fácilmente, al tener que adminisitrar muchos usuarios al mismo tiempo.
+*Nota:* a la hora de compilar archivos en `c` (o en cualquier otro lenguaje), se recomienda usar `srun` para realizar este trabajo en un nodo y no en la máquina host, ya que puede laggearse fácilmente, al tener que adminisitrar muchos usuarios al mismo tiempo.
 
 ## Comandos 
 #### Obtener información sobre colas
@@ -211,7 +211,7 @@ qstat
 ```
 
 #### Matar trabajos
-Para matar un trabajo, conocido su identificador de trabavo (con `qstat`):
+Para matar un trabajo, conocido su identificador de trabajo (con `qstat`):
 ```bash
 scancel [identificador]
 ```
@@ -250,7 +250,7 @@ En este ejemplo, que se debe compilar con:
 ```bash
 gcc -O2 -fopenmp -o HelloOMP HelloOMP.c
 ```
-Podemos ver que en cada hilo que le aportemos en su ejecución (se recomienda que se use el parámetro `-c` a la hora de ejecutar con `srun` o `sbatch`), imprime el identificardor de cada hilo (que se obtiene con la función `omp_get_thread_num()`), un número de entre 0 y `n-1` siendo `n` el número de hilos del computador; además de un `!!!Hello world!!!` en cada hilo.  
+Podemos ver que en cada hilo que le aportemos en su ejecución (se recomienda que se use el parámetro `-c` a la hora de ejecutar con `srun` o `sbatch`), imprime el identificardor de cada hilo (que se obtiene con la función `omp_get_thread_num()`), un número entre 0 y `n-1` siendo `n` el número de hilos del computador; además de un `!!!Hello world!!!` en cada hilo.  
   
 La función de que la rutina `printf()` se ejecute en todos los hilos proporcionados al proceso la hemos obtenido mediante la directiva `pragma omp parallel`. A lo largo de la asignatura, se desarrollarán más directivas y funcionalidades de OpenMP.
 

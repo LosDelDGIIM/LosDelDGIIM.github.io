@@ -21,7 +21,7 @@ OpenMP nos aporta:
 - Funciones: Para fijar (por ejemplo, indicar el número de hilos) y preguntar (consultar el número de hilos) por parámetros en tiempo de ejecución.
 - Variables de entorno: Para fijar variables antes de la ejecución del programa. No se modifican en el programa; las establece el usuario que va a ejecutar nuestro programa para cambiar parámetros de ejecución.
   
-Se trata de una herramienta no automática. Esto es, no extrae paralelismo implícito, sino que es el programador el que tiene que hacerlo explícito. 
+Se trata de una herramienta no automática. Esto es, no extrae paralelismo implícito, sino que es el programador quien tiene que hacerlo explícito. 
   
 Para usar la herramienta, al compilar debemos utilizar:
 ```bash
