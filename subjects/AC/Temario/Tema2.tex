@@ -711,7 +711,7 @@ La asignación de tareas (procesos o hebras) a procesadores puede realizarse de 
 Un ejemplo de asignación estática es asignar iteraciones consecutivas de un mismo bucle a procesos consecutivos (\textit{round-robin}), mientras que también podemos asignar iteraciones consecutivas a un mismo proceso (continua), como es el caso del bucle \verb|for| en OpenMP\@ (en su asignación por defecto). Un ejemplo de asignación dinámica es almacenar en una variable el índice de la siguiente iteración a ejecutar, de forma que el primer procesador desocupado lea el índice que le indique qué iteración ejecutar, aumentando su valor para que el siguiente procesador desocupado realice la siguiente. Notemos que este acceso a una variable que indique la siguiente iteración debe realizarse en exclusión mutua (por ejemplo, usando un cerrojo). Con paso de mensajes, la asignación dinámica podría hacerse desde el proceso dueño en un sistema dueño-esclavo. Hay herramientas como OpenMP que permiten que el procesador deje al compilador la asignación de tareas a procesos (o hebras).
 
 \begin{ejemplo}
-    Si retomamos el ejemplo de la sección anterior en un sistema (por ejemplo) homogéneo uniforme, nos gustaría que la carga de trabajo se distribuya por igual en todos los procesadores. Por tanto, nos interesa más usar una asignación estática frente a una dinámica, debido a que esta última perjudicarían considerablemente las prestaciones debido a la comunicación adicional que añaden.
+    Si retomamos el ejemplo de la sección anterior en un sistema (por ejemplo) homogéneo uniforme, nos gustaría que la carga de trabajo se distribuya por igual en todos los procesadores. Por tanto, nos interesa más usar una asignación estática frente a una dinámica, debido a que esta última perjudicaría considerablemente las prestaciones debido a la comunicación adicional que añaden.
 \end{ejemplo}
 \subsection{Código paralelo}
 El código que queremos desarrollar va a depender del estilo de programación que se utilice (variables compartidas, paso de mensajes, paralelismo de datos), del modo de programación (SPMD, MPMD, mixto), del punto de partida (versión secuencial, descripción del problema), de la herramienta software que usemos (lenguajes de programación, compiladores, bibliotecas de funciones, APIs de funciones y directivas,~\ldots) y de la estructura (granja de tareas, segmentada, descomposición de datos, divide y vencerás, maestro-esclavo, \ldots) elegida. Todas estas a su vez dependen de la aplicación que queremos paralelizar.
@@ -755,7 +755,7 @@ main(int argc, char** argv){
             \item \verb|omp_set_num_threads()| es una función OpenMP que modifica en tiempo de ejecución el número de hebras que se pueden utilizar en paralelo. Para ello, se sobrescribe el contenido de la variable \verb|OMP_NUM_THREADS|, que contiene dicho número.
             \item \verb|#pragma omp parallel| es una directiva OpenMP que crea un conjunto de hebras. El número será el que tenga la variable \verb|OMP_NUM_THREADS| menos uno, ya que también interviene la hebra \verb|master| en el cálculo. El código de las hebras creadas es el que sigue a esta directiva, que puede ser una o varias sentencias.
         \end{itemize}
-    \item [Asignar tareas a procesos y localizar paralelismo.] El programador ha dejado el trabajo de repartir las tareas al compilador, simplemente le ha especificado una distribución dinámica, mediante la cláusula \verb|schedule(dynamic)|.
+    \item [Asignar tareas a procesos y localizar paralelismo.] El programador ha dejado el trabajo de repartir las tareas a la herramienta de programación (OpenMP). Simplemente ha especificado una distribución dinámica, mediante la cláusula \verb|schedule(dynamic)|.
         \begin{itemize}
             \item \verb|#pragma omp for| es una directiva que identifica un conjunto de trabajo compartido iterativo paralelizable y especifica que se distribuyan las iteraciones del bucle \verb|for| entre las hebras del grupo cuya creación se ha especificado con una directiva \verb|parallel|. La política de distribución de las iteraciones del bucle puede especificarse a la directiva mediante la cláusula \verb|schedule(kind[, chunk_size]);|, donde el tipo de distribución puede ser \verb|static, dynamic, runtime| o \verb|guided| (todo esto se verá en el bloque práctico 3).
 
@@ -767,11 +767,11 @@ main(int argc, char** argv){
 \end{description}
 
 \subsection{Evaluación de prestaciones}
-Una vez redactado el programa paralelo, se pueden evaluar sus prestaciones. Si las prestaciones alcanzadas no son las que se requieren, se debe volver a etapas anteriores del proceso de planteamiento y programación. Probablemente se retrocederá más en la abstracción realizada cuando mayor queramos que sea la mejora a realizar. Podemos también elegir otra herramienta de programación que más se adecúe a conseguir la aplicación a desarrollar. Además, no todas estas herramientas ofrecen las mismas prestaciones: depende de su nivel de aprovechamiento de la arquitectura (a menor nivel de abstracción estas sean, mayor será su eficacia).
+Una vez redactado el programa paralelo, se pueden evaluar sus prestaciones. Si las prestaciones alcanzadas no son las que se requieren, se debe volver a etapas anteriores del proceso de planteamiento y programación. Probablemente se deberá retrocer más en la abstracción realizada cuando mayor queramos que sea la mejora a realizar. Podemos también elegir otra herramienta de programación que más se adecúe a conseguir la aplicación a desarrollar. Además, no todas estas herramientas ofrecen las mismas prestaciones: depende de su nivel de aprovechamiento de la arquitectura (a menor nivel de abstracción estas sean, mayor será su eficacia).
 
 \newpage
 \section{Evaluación de prestaciones}
-En la sección del capítulo anterior de evaluación de prestaciones vimos cómo evaluar mejoras realizadas en programas secuenciales. Nos toca ahora evaluar programas paralelos para comprobar si hemos conseguido alcanzar las prestaciones mínimas que requiere la aplicación programada gracias a la paralelización. En programacion paralela, se usa para evaluar las prestaciones de un código paralelo su tiempo de respuesta (\verb|elapsed time| o tiempo de ejecución) y, adicionalmente, su escalabilidad y eficiencia.
+En la sección del capítulo anterior de evaluación de prestaciones vimos cómo evaluar mejoras realizadas en programas secuenciales. Nos toca ahora evaluar programas paralelos para comprobar si hemos conseguido alcanzar las prestaciones mínimas que requiere la aplicación programada gracias a la paralelización. En programación paralela, se usa para evaluar las prestaciones de un código paralelo su tiempo de respuesta (\verb|elapsed time| o tiempo de ejecución) y, adicionalmente, su escalabilidad y eficiencia.
 
 \subsection{Objetivos}
 Siguiendo con la evaluación en prestaciones de los computadores con aplicaciones paralelas, en esta sección aprenderemos a:
@@ -813,7 +813,7 @@ for(int i = 0; i < 16; i++){
     \end{minted}
     Las iteraciones no están relacionadas entre sí, luego decidimos paralelizar el bucle. Disponemos de 4 procesadores y decidimos dividir el bucle de forma que cada procesador ejecute 4 iteraciones. Tenemos por tanto, unos tiempos:
     \begin{gather*}
-        T_S = \unit[60]{s} \\
+        T_S = \unit[16]{s} \\
         T_C(4) = \nicefrac{16}{4} = \unit[4]{s}
     \end{gather*}
     Cabe destacar que tenemos $T_C(4)=\unit[4]{s}$ y no $T_P(4)=\unit[4]{s}$, ya que los costos de creación, comunicación, sincronización, borrado (y probablemente más acciones) de procesos (o hebras) se encuentran presentes. Por tanto, como esperamos un $T_O(4) > 0$, tenemos que $T_P(4) > 4$.
