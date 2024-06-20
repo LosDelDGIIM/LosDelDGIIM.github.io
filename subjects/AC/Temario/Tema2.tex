@@ -22,7 +22,7 @@ La programación paralela requiere de algún ente (ya sea la herramienta que use
     \item [Localicación o detección de paralelismo]~\\
         Para poder implementar paralelismo dentro de una aplicación, esto es, dividir las aplicaciones en unidades de cómputo independientes que recibirán el nombre de \emph{tareas}, es necesario primero localizar de dónde podemos extraer este paralelismo. Lo más cómodo y usual será, a partir del código secuencial que resuelve nuestra aplicación (o a partir de la definición de la aplicación), analizarlo para ver de dónde podemos extraer paralelismo (y en qué parte del código es donde debemos intentar introducir paralelismo). Los grafos pueden ser una gran herramienta en esta tarea, ya que nos permiten ver las tareas que pueden ejecutarse en paralelo (estos serán los nodos a misma altura, si la altura representa el tiempo de ejecución); así como las dependencias que hay entre ellas (los datos que una tarea requiere de otra para su ejecución). Finalmente, también nos permite ver cuál es el número máximo de tareas que se ejecutarán en paralelo. A este número máximo se le suele llamar \emph{grado de paralelismo} de una aplicación.
     \item [Asignación de carga de trabajo]~\\
-        Tenemos que decidir qué tareas corresponderán a qué ente del sistema operativo (como procesos o \emph{threads}), así como la asignación de flujos de instrucciones a los procesadores disponibles. Cabe destacar que no suele ser rentable usar más flujos de instrucciones que procesadores ni que los flujos cambien de procesador en tiempo de ejecución. Así, las asignaciones de flujos a procesadores puede hacerse estática o dinámicamente (en tiempo de ejecución); y explícita o implícita (lo hace la herramienta de forma automática). Notemos que la asignación dinámica requiere un costo extra, lo que introduce un retardo adicional. La asignación dinámica es la única posible cuando no puede conocerse el número de tareas a ejecutar. 
+        Tenemos que decidir qué tareas corresponderán a qué ente del sistema operativo (como procesos o \emph{threads}), así como la asignación de flujos de instrucciones\footnote{Cada vez que mencionemos este concepto, nos estaremos refierendo a procesos o hilos (entes del sistema operativo).} a los procesadores disponibles. Cabe destacar que no suele ser rentable usar más flujos de instrucciones que procesadores ni que los flujos cambien de procesador en tiempo de ejecución. Así, las asignaciones de flujos a procesadores puede hacerse estática o dinámicamente (en tiempo de ejecución); y de forma explícita o implícita (lo hace la herramienta de forma automática). Notemos que la asignación dinámica requiere un costo extra, lo que introduce un retardo adicional. La asignación dinámica es la única posible cuando no puede conocerse el número de tareas a ejecutar. 
     \item [Comunicación o sincronización]~\\
         Muchas veces necesitaremos mecanismos de comunicación entre los distintos flujos de instrucciones, ya que todos estos están colaborando en la ejecución del programa (uno puede generar una variable que otro necesite). 
 \end{description}
@@ -71,7 +71,7 @@ main(int argc, char** argv){
     \end{minted}
 En primer lugar, hemos detectado qué parte podríamos mejorar del código. En este caso, repartir las iteraciones del bucle entre distintas hebras, ya que las iteraciones no están relacionadas entre sí. A continuación, hemos decidido que vamos a usar 4 hebras, y que vamos a repartir las \verb|intervalos| iteraciones de forma equitativa entre las 4 hebras. Finalmente, comunicamos las hebras entre sí gracias a dos palabras:
 \begin{itemize}
-    \item La cláusula \verb|reduction(+:sum)| nos permite sumar en \verb|sum| los distintos valores de la variable \verb|sum| de cada hebra (cabe destacar que lo podríamos haber hecho con un proceso menos automático y más personalizado, como usando directivas \verb|critical|, aunque en este caso la mejor elección es \verb|atomic|).
+    \item La cláusula \verb|reduction(+:sum)| nos permite sumar en \verb|sum| los distintos valores de la variable \verb|sum| de cada hebra (cabe destacar que lo podríamos haber hecho con un proceso menos automático y más personalizado, como con la directiva \verb|critical|, aunque en este caso la mejor elección es \verb|atomic| debido a la simplicidad de la comunicación a realizar).
     \item La directiva \verb|for| tiene una barrera implícita al final que hace que todas las hebras se esperen entre sí (tarea de sincronización).
 \end{itemize}
 
@@ -79,7 +79,7 @@ En primer lugar, hemos detectado qué parte podríamos mejorar del código. En e
 A la hora de programar una aplicación paralela, podemos distinguir dos modos de programación:
 \begin{description}
     \item [SPMD (\emph{Single-Program Multiple Data})]~\\
-        También denominado a veces paralelismo de datos, todos los códigos que se ejecutan en paralelo se obtienen compilando el mismo programa. Cada copia trabaja con un conjunto de datos distintos y se ejecuta en un procesador diferente.
+        También denominado a veces paralelismo de datos, todos los códigos que se ejecutan en paralelo se obtienen compilando el mismo programa. Cada copia trabaja con un conjunto de datos distinto y se ejecuta en un procesador diferente.
     \item [MPMD (\emph{Multiple-Program Multiple Data})]~\\
         También llamado a veces paralelismo de tareas o funciones, los códigos que se ejecutan en paralelo se obtienen compilando programas independientes. En este caso, la aplicación a ejecutar (o el código secuencial inicial) se divide en unidades independientes. Cada unidad trabaja con un conjunto de datos distintos y se ejecutan en un procesador diferente.
 \end{description}
@@ -104,7 +104,7 @@ Cuanto mayor sea la abstracción que desarrolle la herramienta paralela, menor s
     \item [Compiladores paralelos]~\\
         Un compilador paralelo pretende ser aquella automatización capaz de extraer paralelismo a nivel de bucle (paralelismo de datos) y de función (paralelismo de tareas) a partir de un código secuencial. Para ello, realizan análisis de dependencias entre bloques de código. No generan código eficiente para cualquier programa y todavía se investiga en este campo.
     \item [Lenguajes paralelos y APIs de funciones y directivas]~\\
-        Generalmente, los lengaujes paralelos y directivas sitúan al programador en un nivel de abstracción superior a solo bibliotecas de funciones. Encontramos lenguajes como Occam, Ada o Java, los cuales tienen construcciones particulares y bibliotecas de funciones que requieren un compilador exclusivo. Por otra parte, las APIs mencionadas (formadas tanto por directivas para el lenguaje como por bibliotecas de funciones) nos permiten trabajar en cualquier lenguaje para el que fueron diseñadas, como \verb|C++| o \verb|Fortran|, en el caso de OpenMP\@. En este nivel, el programador es el encargado de detectar el paralelísmo implícito en la aplicación. Sin embargo, el programador no hace el reparto (la asignación directa) de este paralelismo, así de eximir al programador las tareas de creación y terminación de flujos o de detalles para comunicación. Como ventaja, es más sencillo desarrollar aplicaciones paralelas, obteniendo códigos más cortos.
+        Generalmente, los lenguajes paralelos y APIs de directivas sitúan al programador en un nivel de abstracción superior al proporionado solo por bibliotecas de funciones. Encontramos lenguajes como Occam, Ada o Java, los cuales tienen construcciones particulares y bibliotecas de funciones que requieren un compilador exclusivo. Por otra parte, las APIs mencionadas (formadas tanto por directivas para el lenguaje como por bibliotecas de funciones) nos permiten trabajar en cualquier lenguaje para el que fueron diseñadas, como C\verb|++| o Fortran, en el caso de OpenMP\@. En este nivel, el programador es el encargado de detectar el paralelismo implícito en la aplicación. Sin embargo, el programador no hace el reparto (la asignación directa) de este paralelismo, así de eximir al programador las tareas de creación y terminación de flujos o de detalles para comunicación. Como ventaja, es más sencillo desarrollar aplicaciones paralelas, obteniendo códigos más cortos.
     \item [APIs de funciones]~\\
         Como por ejemplo Pthreads o MPI, las cuales solo consisten en una biblioteca de funciones que se añaden a un compilador de un lenguaje sencuencial. El cuerpo de procesos y hebras es escrito en lenguaje secuencial y es el programador quien se encarga de distribuir las tareas entre los procesos, crear o gestionar procesos, e implementar la comunicación y sincronización usando funciones de la biblioteca. Como ventajas a destacar:
         \begin{itemize}
@@ -114,7 +114,7 @@ Cuanto mayor sea la abstracción que desarrolle la herramienta paralela, menor s
             \item Se pueden utilizar a la vez bibliotecas para programar con hebras y con procesos.
         \end{itemize}
     \item [Lenguajes paralelos para arquitecturas de propósito específico]~\\
-        Como por ejemplo CUDA (de NVIDIA). Consisten en construcciones del lenguaje y bibliotecas de funciones que requieren un compilador exclusivo. El programador debe participar en todas las labores salvo quizás en la asignación de instrucciones a unidades de procesamiento. Debe tener un gran conocimiento de las arquitecturas para poder escribr el código paralelo.
+        Como por ejemplo CUDA (de NVIDIA). Consisten en construcciones del lenguaje y bibliotecas de funciones que requieren un compilador exclusivo. El programador debe participar en todas las labores salvo quizás en la asignación de flujos de instrucciones a unidades de procesamiento. Debe tener un gran conocimiento de las arquitecturas para poder escribr el código paralelo.
 \end{description}
 
 Comentamos ahora que, mientras OpenMP es el estándar industrial en programación paralela (gracias al alto nivel de abstracción que provee al programador), MPI es el estándar industrial para la programación de multicomputadores. OpenMP realiza de forma automática el reparto de trabajo, mientras que en MPI es el programador quien debe llevarlo a cabo (esto es lógico, debido al estar orientado a multicomputadores, donde el reparto de la carga de trabajo es más difícil de realizar, como ya vimos en el capítulo anterior).
@@ -498,11 +498,11 @@ Asimismo, también podemos encontrar herramientas que permiten programar multipr
         Encontramos software como lenguajes de programación (Ada 95 o Java), bibliotecas de funciones y APIs de directivas y funciones (como OpenMP). Los propios fabricantes ofrecen compiladores secuenciales con estas extensiones para programar sus máquinas. Para la comunicación se suelen desarrollar instrucciones de \emph{lectura} y \emph{escritura} en memoria, las cuales serán usadas por distintos procesos (en el SO, las hebras comparten memoria entre sí, por lo que no es necesario que usen estas instrucciones). El software ofrece mecanismos para implementar sincronización (para que un proceso no lea antes de que el otro escriba), como cerrojos, semáforos, variables condicionales, \ldots 
         OpenMP dispone además de directivas para llevar a cabo paralelismo de datos (directiva \verb|for|), de tareas (directiva \verb|sections|), y muchas más funcionalidades. 
     \item [Paralelismo de datos]~\\
-        En este paradigma se aprovecha el paralelismo de datos inherente a aplicaciones en la que los datos se organizan en estructuras como vectores o matrices. El programador escribe un programa con construcciones que permiten aprovechar paralelismo de datos (como paralelización de bucles, instrucciones vectoriales, \ldots), así como construcciones para distribuir los datos (la carga de trabajo) entre los núcleos de procesamiento. El programador no lleva a cabo las sincronizaciones (se encuentran implícitas). Ejemplos software son Fortran 95, HPF (High Performance Fortran), NVIDIA CUDA, \ldots
+        En este paradigma se aprovecha el paralelismo de datos inherente a aplicaciones en la que los datos se organizan en estructuras como vectores o matrices. El programador escribe un programa con construcciones que permiten aprovechar paralelismo de datos (como paralelización de bucles, instrucciones vectoriales,~\ldots), así como construcciones para distribuir los datos (la carga de trabajo) entre los núcleos de procesamiento. El programador no lleva a cabo las sincronizaciones (se encuentran implícitas). Ejemplos software son Fortran 95, HPF (High Performance Fortran), NVIDIA CUDA, \ldots
 \end{description}
 
 \subsection{Estructuras típicas de códigos paralelos}
-Analizando las estructuras (los grafos) de las tareas y de los procesos (junto con las conmunicaciones y sincronizaciones entre estos) que componen distintos programas paralelos, se puede encontrar que hay ciertos patrones que se repiten en distintos programas y dentro de un programa. Entre estras estructuras encontramos:
+Analizando las estructuras (los grafos) de las tareas y de los procesos (junto con las comunicaciones y sincronizaciones entre estos) que componen distintos programas paralelos, se puede encontrar que hay ciertos patrones que se repiten en distintos programas y dentro de un programa. Entre estas estructuras encontramos:
 \begin{itemize}
     \item Dueño-esclavo (\emph{master-slave}), o ``granja de tareas'' (\emph{task-farming}).
     \item Cliente-servidor (\emph{client-server}).
@@ -513,7 +513,7 @@ Analizando las estructuras (los grafos) de las tareas y de los procesos (junto c
 Hay estructuras que quizás no se puedan clasificar en un solo tipo de los anteriores. Por otra parte, nos podemos encontrar dentro de un mismo programa paralelo varias de estas estructuras, en distintos niveles.
 
 \subsubsection{Dueño-esclavo} 
-En este caso, contamos con un proceso denominado dueño (o master) y con varios procesos denominados esclavos (o slaves). El dueño se encarga de distribuir las tareas de un conjunto entre el grupo de esclavos, y de ir recolectando los resultados parciales que van calculando los esvlavos, con los que el dueño obtiene el resultado final. Usualmente, no hay comunicación entre los esclavos.
+En este caso, contamos con un proceso denominado dueño (o \emph{master}) y con varios procesos denominados esclavos (o \emph{slaves}). El dueño se encarga de distribuir las tareas de un conjunto entre el grupo de esclavos, y de ir recolectando los resultados parciales que van calculando los esclavos, con los que el dueño obtiene el resultado final. Usualmente, no hay comunicación entre los esclavos.
 Puede implementarse con un único programa si el código de los esclavos no es muy complicado (SPMD), con dos programas, si el código de los esclavos es igual (modo mixto MPMD-SPMD), o con múltiples programas (MPMD).
 La repartición de carga puede hacerse de forma estática o dinámica.
 Un ejemplo de esto es un programa que tiene que calcular los primos hasta un número $n$, y que hace uso de $r$ esclavos para que cada uno calcule los primos que se encuentran en un vector de tamaño $ \nicefrac{n}{r} $. Combinando el resultado de cada esclavo, obtendremos todos los primos.
@@ -535,8 +535,8 @@ Un ejemplo de esto es un programa que tiene que calcular los primos hasta un nú
 
 
 \subsubsection{Cliente-Servidor} 
-También llamado \emph{client-server}, se trata de una estructura similar a dueño-esclavo, pero con los roles invertidos: contamos con múltiples procesos denominados clientes y con un ente (puede ser un proceso, o tener a su vez una estructura paralela distinta en su interior) denominado servidor. En este caso, los clientes son procesos que en un momento determinado solicitan cierta información al servidor. Este, se encarga de procesar la petición y de dar al cliente correspondiente la respuesta esperada. 
-Notemos que el servidor puede estar formado a su vez de otras estructuras, como de un sistema dueño-esclavo. Por tanto, podemos tener por un lado a los clientes, que necesitan del servidor información. Este es el encargado de gestionar los mensajes y de repartir las tareas entre sus esclavos, quienes realizan el cómputo, devolviendo el trabajo al maestro y este a los clientes. 
+También llamado \emph{client-server}, se trata de una estructura similar a dueño-esclavo, pero con los roles invertidos: contamos con múltiples procesos denominados clientes y con un ente (puede ser un proceso, o tener a su vez una estructura paralela distinta en su interior) denominado servidor. En este caso, los clientes son procesos que en un momento determinado solicitan cierta información o servicio al servidor. Este se encarga de procesar la petición y de dar al cliente correspondiente la respuesta esperada. 
+Notemos que el servidor puede estar formado a su vez de otras estructuras, como de un sistema dueño-esclavo. Por tanto, podemos tener por un lado a los clientes, que necesitan del servidor un servicio a realizar. Este es el encargado de gestionar los mensajes y de repartir las tareas entre sus esclavos, quienes realizan el cómputo, devolviendo el trabajo realizado al maestro y este a los clientes. 
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}
@@ -562,17 +562,17 @@ Notemos que el servidor puede estar formado a su vez de otras estructuras, como 
 \subsubsection{Descomposición de datos} 
 Alternativa muy utilizada para obtener tareas paralelas en programas con grandes estructuras de datos. La estructura de datos de entrada (o la de salida, o ambas) es dividida en varias partes. A partir de esta división se derivan las tareas paralelas. Estas generalmente realizan operaciones similares. Los algoritmos con imágenes, por ejemplo, admiten una descomposición de datos.
 En este esquema, cada proceso puede englobar una o varias tareas. Los diferentes procesos ejecutan normalmente el mismo código (SPMD), que se ejecuta sobre distintos conjuntos de datos. Puede haber comunicaciones entre los distintos procesos.
-Un ejemplo de descomposición de datos es el siguiente código, donde se invierten los colores de una imagen de tamaño $N\times N$:
+Un ejemplo de descomposición de datos es el siguiente código, donde se invierten los colores de una imagen de tamaño~$N\times N$:
     \begin{minted}[xleftmargin=1cm]{c++}
+#pragma omp parallel for
 for(int i = 0; i < N; i++)
-    #pragma omp parallel for
     for(int j = 0; j < N; j++){
         imagen[i][j] = 255 - imagen[i][j];
     }
     \end{minted}
 
 \subsubsection{Estructura segmentada o flujo de datos} 
-Esta estructura aparece en problemas en los que se aplican funciones a un flujo de datos en secuencia distintas (paralelismo de tareas). La estructura de los procesos y de las tareas es la de un cauce segmentado: cada proceso ejecuta por tanto distinto código. Es un caso típico de un programa MPMD puro. Para que resulte apropiada la estructura segmentada, se ebe aplicar el proceso a una secuencia de datos de entrada.
+Esta estructura aparece en problemas en los que se aplican funciones a un flujo de datos en secuencia distintas (paralelismo de tareas). La estructura de los procesos y de las tareas es la de un cauce segmentado: cada proceso ejecuta por tanto distinto código. Es un caso típico de un programa MPMD puro. Para que resulte apropiada la estructura segmentada, se debe aplicar el proceso a una secuencia de datos de entrada.
 Por ejemplo, podemos tener un decodificador de imágenes JPEG, que aplica a una secuencia de $N\times N$ píxeles (la imagen de entrada) las siguientes funciones: decodificación de entropía, cuantificación inversa, transformada del coseno inversa y conversión RGB\@. Este programa podría implementarse con cuatro procesos en una estructura segmentada.
 En este tipo de estructura, la comunicación entre procesos es necesaria, y suele ser unidireccional.
 \begin{figure}[H]
@@ -584,10 +584,12 @@ En este tipo de estructura, la comunicación entre procesos es necesaria, y suel
     \node[draw, circle] (D) at (9,0) {Task 4};
     \node[draw, circle] (E) at (12,0) {Task 5};
 
-    \draw (A) -- (B);
-    \draw (B) -- (C);
-    \draw (C) -- (D);
-    \draw (D) -- (E);
+    \draw[-stealth] (-1.5,0) -- (A);
+    \draw[-stealth] (A) -- (B);
+    \draw[-stealth] (B) -- (C);
+    \draw[-stealth] (C) -- (D);
+    \draw[-stealth] (D) -- (E);
+    \draw[-stealth] (E) -- (13.5,0);
 \end{tikzpicture}
 \caption{Representación gráfica de una estructura segmentada.}
 \label{graph:estructura_segmentada}
@@ -601,12 +603,12 @@ Un ejemplo de uso de esta estructura podemos verlo cuando nos disponemos a sumar
 \centering
 \begin{tikzpicture}
     \node[draw, circle, scale=1.8] (A) at (0,3) {$n$};
-    \node[draw, circle, scale=1.3] (B) at (2,1.5) {$\nicefrac{n}{2}$};
-    \node[draw, circle, scale=1.3] (C) at (2,4.5) {$\nicefrac{n}{2}$};
-    \node[draw, circle, scale=1.3] (D) at (4,0) {$\nicefrac{n}{4}$};
-    \node[draw, circle, scale=1.3] (E) at (4,2) {$\nicefrac{n}{4}$};
-    \node[draw, circle, scale=1.3] (F) at (4,4) {$\nicefrac{n}{4}$};
-    \node[draw, circle, scale=1.3] (G) at (4,6) {$\nicefrac{n}{4}$};
+    \node[draw, circle, scale=1.3] (B) at (-2,1) {$\nicefrac{n}{2}$};
+    \node[draw, circle, scale=1.3] (C) at (2,1) {$\nicefrac{n}{2}$};
+    \node[draw, circle, scale=1.3] (D) at (-3,-1) {$\nicefrac{n}{4}$};
+    \node[draw, circle, scale=1.3] (E) at (-1,-1) {$\nicefrac{n}{4}$};
+    \node[draw, circle, scale=1.3] (F) at (1,-1) {$\nicefrac{n}{4}$};
+    \node[draw, circle, scale=1.3] (G) at (3,-1) {$\nicefrac{n}{4}$};
 
     \draw (A) -- (B);
     \draw (A) -- (C);
@@ -622,7 +624,7 @@ Un ejemplo de uso de esta estructura podemos verlo cuando nos disponemos a sumar
 
 \newpage
 \section{Proceso de paralelización}
-Cuando queremos obtener una versión paralela de una aplicación con una biblioteca de funciones con directivas o con un lenguaje de programación, pueden seguirse los siguientes pasos:
+Cuando queremos obtener una versión paralela de una aplicación con una biblioteca de funciones con directivas o con un lenguaje de programación paralelo, pueden seguirse los siguientes pasos:
 \begin{itemize}
     \item Descomposición de la aplicación en tareas independientes.
     \item Asignación de las tareas a procesos o hebras. 
@@ -657,7 +659,7 @@ Podemos definir el cálculo de $\pi$ como un problema de integración, susceptib
         \text{arctg}(0) & = & 0 
     \end{array}\right\} \Longrightarrow \int_{0}^{1} \dfrac{dx}{1+x^2} = [\text{arctg}(x)]_0^1 = \dfrac{\pi}{4} - 0
 \end{equation*}
-Y así multiplicar por 4 para obtener $\pi$. Esta integral puede obtenerse mediante métodos de integración numérica (rectángulo izquierdo, rectángulo derecho, punto medio, trapecio, fórmula de Simpson, \ldots). Podemos dividir el área de la derivada del arcotangente en $[0,1]$ en subintervalos, calculando el área de la función en cada subintervalo y sumando. Cuantos más subintervalos tengamos, más exacta será la aproximción.
+Y así multiplicar por 4 para obtener $\pi$. Esta integral puede obtenerse mediante métodos de integración numérica (rectángulo izquierdo, rectángulo derecho, punto medio, trapecio, fórmula de \emph{Simpson}, \ldots). Podemos dividir el área de la derivada del arcotangente en $[0,1]$ en subintervalos, calculando el área de la función en cada subintervalo y sumando. Cuantos más subintervalos tengamos, más exacta será la aproximción.
 Notemos que el cálculo del área de los diferentes intervalos es independiente, por lo que podemos repartir estos cálculos en un conjunto de procesadores. Si se divide el intervalo en 100 subintervalos y tenemos 10 procesadores, podemos asignar a cada procesador el cálculo de 10 subintervalos. Sobre código, tenemos lo siguiente:
     \begin{minted}[xleftmargin=1cm]{c++}
 main(int argc, char** argv){
@@ -684,7 +686,7 @@ La granularidad de los procesos y las hebras depende del número de procesadores
 
 La posibilidad de usar procesos o hebras depende de varios factores:
 \begin{itemize}
-    \item La arquitectura en la que se va a ejecutar: en un SMP y en procesadores multihebra es más eficiente usar hebras\footnote{Como bien ya sabemos gracias a Sistemas Operativos.}. En arquitecturas mixtas (como cluster de SMP), sería conveniente usar tanto hebras como procesos, especialmente si el número de procesadores en un SMP es mayor que el número de nodos en un cluster.
+    \item La arquitectura en la que se va a ejecutar: en un SMP y en procesadores multihebra es más eficiente usar hebras\footnote{Como bien ya sabemos gracias a Sistemas Operativos.}. En arquitecturas mixtas (como clúster de SMP), sería conveniente usar tanto hebras como procesos, especialmente si el número de procesadores en un SMP es mayor que el número de nodos en un cúster.
     \item El sistema operativo debe ser multihebra para poder utilizar hebras (a no ser que las emulemos mediante una biblioteca de hebras, lo que introduce un costo adicional).
     \item Para usar hebras (también para procesos), las herramientas de programación que utilicemos deben permitir poder crearlas.
 \end{itemize}
@@ -698,7 +700,7 @@ Por un lado, la arquitectura puede ser \textbf{heterogénea} u \textbf{homogéne
 Una arquitectura homogénea (aquella donde los nodos de cómputo son iguales, o casi) puede ser a su vez \textbf{uniforme} o \textbf{no uniforme} (decimos que las arquitecturas uniformes y no uniformes están dentro de las homogéneas porque las heterogéneas son normalmente no uniformes, luego no merece la pena concretar esos casos):
 \begin{description}
     \item [Uniforme]~\\
-        Si es uniforme, la comunicación de los procesadores con memoria (y probablemente con otros componentes, como E/S) supone el mismo tiempo sean cuales sean los dos componentes que intervienen. Las arquitecturas homogéneas uniformes son en las que menos tenemos que tener en cuenta la arquitectura para la asignación de tareas. Sin embargo, hay arquitecturas homogéneas uniformes en las que una buena asignación puede disminuir el número de colisiones en el acceso a la red. 
+        Si es uniforme, la comunicación de los procesadores con memoria (y probablemente con otros componentes, como E/S) supone el mismo tiempo sean cuales sean los dos componentes que intervienen. Las arquitecturas homogéneas uniformes son en las que menos tenemos que tener en cuenta la arquitectura para la asignación de tareas. Sin embargo, hay arquitecturas homogéneas uniformes en las que una buena asignación puede disminuir el número de colisiones en el acceso a la red.
     \item [No uniforme]~\\
         Si es no uniforme, la velocidad de comunicación entre procesadores con memoria (y probablemente con otros componentes) depende del procesador que queramos que acceda a qué posición de memoria. En este tipo de arquitecturas es más difícil asignar las tareas (código y datos) de forma que se minimice el tiempo de comunicación y sincronización y, en general, el tiempo de ejecución. Pueden eliminarse comunicaciones asignando varias tareas al mismo procesador. 
 \end{description}
@@ -706,13 +708,13 @@ Una arquitectura homogénea (aquella donde los nodos de cómputo son iguales, o 
 \subsubsection{Asignar tareas a procesadores}
 La asignación de tareas (procesos o hebras) a procesadores puede realizarse de forma \textbf{estática} (en tiempo de compilación o al escribir el programa) o \textbf{dinámica} (en tiempo de ejecución). La asignación dinámica es útil para evitar repartos complejos de tareas en sistemas heterogéneos, especialmente cuando no se conoce el número total de tareas que se van a ejecutar antes de la ejecución. Además, permite que la aplicación se ejecute exitosamente si algún procesador falla. Sin embargo, esta asignación consume un tiempo adicional de sincronización y comunicación.
 
-Un ejemplo de asignación estática es asignar iteraciones consecutivas de un mismo bucle a procesos consecutivos (\textit{round-robin}), mientras que también podemos asignar iteraciones consecutivas a un mismo proceso (continua), como es el caso del bucle \verb|for| en OpenMP\@. Un ejemplo de asignación dinámica es almacenar en una variable el índice de la siguiente iteración a ejecutar, de forma que el primer procesador desocupado lea el índice que le indique qué iteración ejecutar, aumentando su valor para que el siguiente procesador desocupado realice la siguiente. Notemos que este acceso a una variable que indique la siguiente iteración debe realizarse en exclusión mutua (por ejemplo, usando un cerrojo). Con paso de mensajes, la asignación dinámica podría hacerse desde el proceso dueño en un sistema dueño-esclavo. Hay herramientas como OpenMP que permiten que el procesador deje al compilador la asignación de tareas a procesos (o hebras).
+Un ejemplo de asignación estática es asignar iteraciones consecutivas de un mismo bucle a procesos consecutivos (\textit{round-robin}), mientras que también podemos asignar iteraciones consecutivas a un mismo proceso (continua), como es el caso del bucle \verb|for| en OpenMP\@ (en su asignación por defecto). Un ejemplo de asignación dinámica es almacenar en una variable el índice de la siguiente iteración a ejecutar, de forma que el primer procesador desocupado lea el índice que le indique qué iteración ejecutar, aumentando su valor para que el siguiente procesador desocupado realice la siguiente. Notemos que este acceso a una variable que indique la siguiente iteración debe realizarse en exclusión mutua (por ejemplo, usando un cerrojo). Con paso de mensajes, la asignación dinámica podría hacerse desde el proceso dueño en un sistema dueño-esclavo. Hay herramientas como OpenMP que permiten que el procesador deje al compilador la asignación de tareas a procesos (o hebras).
 
 \begin{ejemplo}
     Si retomamos el ejemplo de la sección anterior en un sistema (por ejemplo) homogéneo uniforme, nos gustaría que la carga de trabajo se distribuya por igual en todos los procesadores. Por tanto, nos interesa más usar una asignación estática frente a una dinámica, debido a que esta última perjudicarían considerablemente las prestaciones debido a la comunicación adicional que añaden.
 \end{ejemplo}
 \subsection{Código paralelo}
-El código que queremos desarrollar va a depender del estilo de programación que se utilice (variables compartidas, paso de mensajes, paralelismo de datos), del modo de programación (SPMD, MPMD, mixto), del punto de partida (versión secuencial, descripción del problema), de la herramienta software que usemos (lenguajes de programación, compiladores, bibliotecas de funciones, APIs de funciones y directivas, \ldots) y de la estructura (granja de tareas, segmentada, descomposición de datos, divide y vencerás, maestro-esclavo, \ldots) elegida. Todas estas a su vez dependen de la aplicación que queremos paralelizar.
+El código que queremos desarrollar va a depender del estilo de programación que se utilice (variables compartidas, paso de mensajes, paralelismo de datos), del modo de programación (SPMD, MPMD, mixto), del punto de partida (versión secuencial, descripción del problema), de la herramienta software que usemos (lenguajes de programación, compiladores, bibliotecas de funciones, APIs de funciones y directivas,~\ldots) y de la estructura (granja de tareas, segmentada, descomposición de datos, divide y vencerás, maestro-esclavo, \ldots) elegida. Todas estas a su vez dependen de la aplicación que queremos paralelizar.
 Habrá que añadir o utilizar en el programa las funciones, directivas o construcciones del lenguaje que hagan falta para:
 \begin{enumerate}
     \item Crear y terminar procesos (o hebras).
@@ -755,7 +757,7 @@ main(int argc, char** argv){
         \end{itemize}
     \item [Asignar tareas a procesos y localizar paralelismo] El programador ha dejado el trabajo de repartir las tareas al compilador, simplemente le ha especificado una distribución dinámica, mediante la cláusula \verb|schedule(dynamic)|.
         \begin{itemize}
-            \item \verb|#pragma omp for| es una directiva que identifica un conjunto de trabajo compartido iterativo paralelizable y especifica que se distribuyan las iteraciones del bucle \verb|for| entre las hebras del grupo cuya creación se ha especificado con una directiva \verb|parallel|. La política de distribución de las iteraciones del bucle puede especificarse a la directiva mediante la cláusula \verb|schedule(kind[, chunk_size]);|, donde el tipo de distribución puede ser \verb|static, dynamic, runtime| o \verb|guided|.
+            \item \verb|#pragma omp for| es una directiva que identifica un conjunto de trabajo compartido iterativo paralelizable y especifica que se distribuyan las iteraciones del bucle \verb|for| entre las hebras del grupo cuya creación se ha especificado con una directiva \verb|parallel|. La política de distribución de las iteraciones del bucle puede especificarse a la directiva mediante la cláusula \verb|schedule(kind[, chunk_size]);|, donde el tipo de distribución puede ser \verb|static, dynamic, runtime| o \verb|guided| (todo esto se verá en el bloque práctico 3).
 
             \item La cláusula \verb|private(x)| hace que cada hebra tenga una copia privada de la variable \verb|x|. Es decir, no será una variable compartida. La cláusula \verb|reduction(+:sum)| hace que cada hebra utilice una variable local \verb|sum| y que una vez terminada la ejecución de todas las hebras, se sumen todas las variables locales \verb|sum|, almacenando el resultado en una variable compartida \verb|sum|. La directiva \verb|for| obliga a que todas las hebras se sincronicen al terminar el bucle (a no ser que se especifique \verb|nowait|).
         \end{itemize}
@@ -769,7 +771,7 @@ Una vez redactado el programa paralelo, se pueden evaluar sus prestaciones. Si l
 
 \newpage
 \section{Evaluación de prestaciones}
-En la sección del capítulo anterior de evaluación de prestaciones vimos cómo evaluar mejoras realizadas en programas secuenciales. Nos toca ahora, evaluar programas paralelos, para comprobar si hemos conseguido alcanzar las prestaciones mínimas que requiere la aplicación programada gracias a la paralelización. En programacion paralela, se usa para evaluar las prestaciones de un código paralelo su tiempo de respuesta (\verb|elapsed time| o tiempo de ejecución) y, adicionalmente, su escalabilidad y eficiencia.
+En la sección del capítulo anterior de evaluación de prestaciones vimos cómo evaluar mejoras realizadas en programas secuenciales. Nos toca ahora evaluar programas paralelos para comprobar si hemos conseguido alcanzar las prestaciones mínimas que requiere la aplicación programada gracias a la paralelización. En programacion paralela, se usa para evaluar las prestaciones de un código paralelo su tiempo de respuesta (\verb|elapsed time| o tiempo de ejecución) y, adicionalmente, su escalabilidad y eficiencia.
 
 \subsection{Objetivos}
 Siguiendo con la evaluación en prestaciones de los computadores con aplicaciones paralelas, en esta sección aprenderemos a:
@@ -782,7 +784,7 @@ Siguiendo con la evaluación en prestaciones de los computadores con aplicacione
 \subsection{Ganancia en velocidad}
 La ganancia en velocidad ($S$) se utiliza para estudiar en qué medida se incrementan las prestaciones al ejecutar una aplicación en paralelo en un sistema con múltiples procesadores frente a un sistema uniprocesador. Este estudio puede interesarnos tanto por evaluar el computador paralelo como por evaluar la implementación paralela de la aplicación.
 
-La ganancia en prestaciones (o ganancia de velocidad, \verb|speedup|) con $p$ procesadores alcanzada al aplicar paralelismo puede obtenerse como:
+La ganancia en prestaciones (o ganancia de velocidad, \emph{speedup}) con $p$ procesadores alcanzada al aplicar paralelismo puede obtenerse como:
 \begin{equation*}
     S(p) = \dfrac{\text{Prestaciones}(p)}{\text{Prestaciones}(1)}
 \end{equation*}
@@ -791,10 +793,9 @@ Es decir, dividiendo las prestaciones en un sistema con $p$ procesadores frente 
 \begin{equation}
     S(p) = \dfrac{T_S}{T_P(p)}\qquad \text{con\ }\qquad  T_P(p) = T_C(p) + T_O(p)
 \end{equation}
+donde $T_S$ sería el tiempo de ejecución del programa secuencial y $T_P(p)$ el tiempo de ejecución del programa paralelo con $p$ procesadores. Para obtener $T_S$, se debería escoger el mejor programa secuencial que resuelva la aplicación (para solo centrarnos en el cambio de la implementación del paralelismo).
 
-Donde $T_S$ sería el tiempo de ejecución del programa secuencial y $T_P(p)$ el tiempo de ejecución del programa paralelo con $p$ procesadores. Para obtener $T_S$, se debería escoger el mejor programa secuencial que resuelva la aplicación (para solo centrarnos en el cambio de la implementación del paralelismo).
-
-El tiempo de ejecución en paralelo no solo depende del tiempo de cómputo (de cálculo) en paralelo de las tareas detectadas en la aplicación ($T_C(p)$), sino también de un tiempo de penalización o sobrecarga (\verb|overhead|) $T_O(p)$. Este tiempo de sobrecarga es debido a:
+El tiempo de ejecución en paralelo no solo depende del tiempo de cómputo (de cálculo) en paralelo de las tareas detectadas en la aplicación ($T_C(p)$), sino también de un tiempo de penalización o sobrecarga (\emph{overhead}) $T_O(p)$. Este tiempo de sobrecarga es debido a:
 \begin{itemize}
     \item El tiempo dedicado a comunicación y sincronización entre procesos.
     \item El tiempo para crear y terminar los procesos y hebras que permiten la paralelización.
@@ -812,20 +813,20 @@ for(int i = 0; i < 16; i++){
     \end{minted}
     Las iteraciones no están relacionadas entre sí, luego decidimos paralelizar el bucle. Disponemos de 4 procesadores y decidimos dividir el bucle de forma que cada procesador ejecute 4 iteraciones. Tenemos por tanto, unos tiempos:
     \begin{gather*}
-        T_S = 16 \\
-        T_C(4) = \nicefrac{16}{4} = 4
+        T_S = \unit[60]{s} \\
+        T_C(4) = \nicefrac{16}{4} = \unit[4]{s}
     \end{gather*}
-    Cabe destacar que tenemos $T_C(4)=4$ y no $T_P(4)=4$, ya que los costos de creación, comunicación, sincronización, borrado (y probablemente más acciones) de procesos (o hebras) se encuentran presentes. Por tanto, como esperamos un $T_O(4) > 0$, tenemos que $T_P(4) > 4$.
+    Cabe destacar que tenemos $T_C(4)=\unit[4]{s}$ y no $T_P(4)=\unit[4]{s}$, ya que los costos de creación, comunicación, sincronización, borrado (y probablemente más acciones) de procesos (o hebras) se encuentran presentes. Por tanto, como esperamos un $T_O(4) > 0$, tenemos que $T_P(4) > 4$.
 \end{ejemplo}
 
-En el ejemplo anterior, cada iteración del bucle tardaba 1 segundo que, en comparación con los tiempos actuales de creación, comunicación, \ldots de procesos (o hebras) es ridículamente grande. Por tanto, podemos esperar un $T_P(4) \sim T_C(4)$. Sin embargo, si cada iteración del bucle tardase en vez de 1 segundo 1 milisegundo, ya sí tendríamos que probablemente el tiempo de ejecución tendría una diferencia relativa mayor con el tiempo de cálculo.
+En el ejemplo anterior, cada iteración del bucle tardaba 1 segundo que, en comparación con los tiempos actuales de creación, comunicación, etc. de procesos (o hebras) es ridículamente grande. Por tanto, podemos esperar un $T_P(4) \approx T_C(4)$. Sin embargo, si cada iteración del bucle tardase 1 milisegundo en vez de 1 segundo, ya sí tendríamos que probablemente el tiempo de ejecución tendría una diferencia relativa mayor con el tiempo de cálculo.
 
 \subsubsection{Escalabilidad}
-La representación de la ganancia en función del número de procesadores ($p$) nos permite evaluar la escalabilidad de una implementación o arquitectura paralela. Idealmente, esperaríamos conseguir un tiempo de ejecución paralelo de ${T_P(p) = \nicefrac{T_S}{p}}$ (como se vio en el ejemplo anterior). Para lograrlo, se debería poder \underline{distribuir} todo el programa secuencia en \underline{partes iguales} entre los procesadores, y el tiempo de \underline{sobrecarga} debería ser \underline{despreciable}. En este caso, la ganancia sería:
+La representación de la ganancia en función del número de procesadores ($p$) nos permite evaluar la escalabilidad de una implementación o arquitectura paralela. Idealmente, esperaríamos conseguir un tiempo de ejecución paralelo de ${T_P(p) = \nicefrac{T_S}{p}}$ (como se vio en el ejemplo anterior). Para lograrlo, se debería poder \underline{distribuir} todo el programa secuencial en \underline{partes iguales} entre los procesadores, y el tiempo de \underline{sobrecarga} debería ser \underline{despreciable}. En este caso, la ganancia sería:
 \begin{equation*}
     S(p) = \dfrac{T_S}{T_P(p)} = \dfrac{T_S}{\nicefrac{T_S}{p}} = p
 \end{equation*}
-de forma que la escalabilidad sería \emph{lineal}. Para que siempre pueda ser $p$ la ganancia independientemente del valor de $p$, el \underline{grado de paralelismo} debe ser \underline{ilimitado}, es decir, siempre podremos dividir el código entre los $p$ procesadores posibles sea cual sea $p$. Debido a estas tres limitaciones, nos planteamos estudiar qué posibilidades se pueden plantear.
+de forma que la escalabilidad sería \emph{lineal}. Para que siempre pueda ser $p$ la ganancia independientemente del valor de $p$, el \underline{grado de paralelismo} debe ser \underline{ilimitado}; es decir, siempre debemos poder dividir el código entre los $p$ procesadores posibles sea cual sea $p$. Debido a estas tres limitaciones, nos planteamos estudiar qué posibilidades se pueden plantear.
 Podemos encontrarnos con \emph{escalabilidades superlineales}, casos donde $S(p)>p$ (no son de relevancia ahora mismo). Dos ejemplos de este suceso pueden ser:\label{ej:superlineal}
 \begin{itemize}
     \item Estamos trabajando con una estructura de datos grande (como por ejemplo, un vector muy largo) y puede que al repartir el trabajo, reducimos los fallos de caché (un único procesador debería cargar en cada momento un subvector del vector con el que trabajamos. Sin embargo, puede darse que al repartir el vector entre los procesadores, se disminuya su tamaño y se den menos fallos en cada procesador).
@@ -834,13 +835,12 @@ Podemos encontrarnos con \emph{escalabilidades superlineales}, casos donde $S(p)
 Además, hemos considerado que todo el programa secuencial se puede paralelizar, pero en la práctica podemos encontrarnos (de forma bastante frecuente) tareas que no se puedan ejecutar en paralelo y que suponen un tiempo no despreciable. Más aún, no hemos considerado ninguna limitación en el grado de paralelismo, que sí estará limitado en la práctica (por ejemplo, un bucle de $n$ iteraciones tiene un grado de paralelismo de, a lo sumo, $n$). Finalmente, tampoco hemos considerado tiempos de sobrecarga.
 
 Generalizando lo ya visto, impondremos como mínimo que la carga paralelizable pueda repartirse por igual entre los procesadores disponibles (para simplificar), y además que el tiempo de ejecución $T_S$ es constante (aún variando el número de procesadores). Con estas restricciones generales, procedemos a estudiar casos concretos donde ya damos cierta libertad al problema, con la finalidad de estudiar la escalabilidad de cada sistema:
-% // TODO: Incluir gráfica escabilidad
 \begin{enumerate}
     \item Comenzamos suponiendo que la fracción no paralelizable del código secuencial es despreciable, que tenemos un grado de paralelismo ilimitado y un tiempo de sobrecarga despreciable. Estamos en el caso inicialmente estudiado como motivación de esta sección, el caso de \textbf{escalabilidad lineal} (o ganancia lineal):
         \begin{equation*}
             S(p) = \dfrac{T_S}{T_P(p)} = \dfrac{T_S}{\nicefrac{T_S}{p}} = p
         \end{equation*}
-    \item Ahora, suponemos la presencia de una fracción no despreciable del código secuencial que no puede ser paralelizada. A esta fracción la llamaremos $f$. Además, consideramos al igual que en el punto anterior, un grado de paralelismo ilimitado y una sobrecarga despreciable. En este caso tendremos $T_P(p) = T_C(p) = f\cdot T_S + \frac{1-f}{p}\cdot T_S$ debido a que hay una fracción del código secuencial $f$ que no podemos paralelizar y paralelizamos la otra parte, $1-f$, reduciendo el tiempo de forma lineal (al encontrarnos en el caso anterior), obteniendo así una ganancia de:
+    \item Ahora, suponemos la presencia de una fracción no despreciable del código secuencial que no puede ser paralelizada. A esta fracción la llamaremos $f$. Además, consideramos al igual que en el punto anterior un grado de paralelismo ilimitado y una sobrecarga despreciable. En este caso tendremos $T_P(p) = T_C(p) = f\cdot T_S + \frac{1-f}{p}\cdot T_S$ debido a que hay una fracción del código secuencial $f$ que no podemos paralelizar y paralelizamos la otra parte, $1-f$, reduciendo el tiempo de forma lineal (al encontrarnos en el caso anterior), obteniendo así una ganancia de:
         \begin{equation*}
             S(p) = \dfrac{1}{f+\dfrac{1-f}{p}}
         \end{equation*}
@@ -904,7 +904,7 @@ Cabe destacar que para conseguir la Ley de Amdahl, hemos supuesto constante el t
 \subsection{Ganancia escalable. Ley de Gustafson}
 Los objetivos a la hora de paralelizar una aplicación pueden ser:
 \begin{itemize}
-    \item Dismiuir el tiempo de ejecución hasta uno razonable.
+    \item Disminuir el tiempo de ejecución hasta uno razonable.
     \item Aumentar el tamaño del problema a resolver, lo que puede llegar (a veces) a incrementar la precisión en el resultado.
 \end{itemize}
 
@@ -919,13 +919,13 @@ Mientras que la Ley de Amdahl asume que el tiempo de ejecución secuencial (o ta
 \subsection{Eficiencia}
 La eficiencia permite evaluar qué tan cerca está la solución a una aplicación con código paralelo (carga de trabajo en general) respecto a la solución que idealmente deberíamos obtener dados los recursos disponibles. Dicho de otra forma, permite evaluar el grado de aprovechamiento de los recursos del sistema. Las prestaciones que se pueden esperar idealmente con $p$ recursos serían las prestaciones que se obtienen con un recurso multiplicado por $p$:
 \begin{equation*}
-    E(p) = \dfrac{Prestaciones(p)}{p\cdot Prestaciones(1)}
+    E(p) = \dfrac{\text{Prestaciones}(p)}{p\cdot \text{Prestaciones}(1)}
 \end{equation*}
 Teniendo en cuenta la definición de la ganancia, llegamos a que:
 \begin{equation}
     E(p) = \dfrac{S(p)}{p}
 \end{equation}
-es decir, la eficiencia se obtiene dividiendo la ganancia entre el número de recursos (que es la ganancia ideal). La ganancia máxima es $p$, por lo que la eficiencia máxima es 1. Por otra parte, la ganancia mínima es 1, por lo que la eficiencia mínima será $\nicefrac{1}{p}$.
+Es decir, la eficiencia se obtiene dividiendo la ganancia entre el número de recursos (que es la ganancia ideal). La ganancia máxima es $p$, por lo que la eficiencia máxima es 1. Por otra parte, la ganancia mínima es 1, por lo que la eficiencia mínima será $\nicefrac{1}{p}$.
 % Una expresión que refleje en qué medida hay que incrementar el tamaño de los datos para conseguir una eficiencia constante, incluyendo el tiempo de sobrecarga, es una buena forma de evaluar una implementación paralela y/o arquitectura. 
 
 
