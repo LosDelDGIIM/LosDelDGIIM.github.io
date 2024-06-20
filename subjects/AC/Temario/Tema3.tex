@@ -651,9 +651,9 @@ En una implementación distribuida entre los módulos de memoria principal y cac
 \subsubsection{Protocolo MSI para multiprocesadores NUMA}
 A continuación, vamos a describir dos protocolos MSI con prosescritra e invalidación para NUMA basados en directorios: uno que difunde las peticiones a todos los nodos (con difusión) y uno que envía las peticiones solo al nodo que tiene el bloque en el trozo de memoria principal más cercano al nodo (sin difusión). Al seguir esta filosofía, nos aparecen tres roles que desempeñan los nodos en la red NUMA\@:
 \begin{description}
-    \item [Nodo solicitante de un bloque.] (S)\textbf{.} Es un nodo que genera un paquete de petición (\verb|PtLec|, \verb|PtEx|, \verb|PtLecEx| o \verb|PtPEsc|).
-    \item [Nodo origen de un bloque.] (O)\textbf{.} Recordamos que en un multiprocesador NUMA la memoria está repartida físicamente entre los nodos, de forma que cada uno tiene en módulos de memoria más cercanos un trozo del espacio de direcciones total del multiprocesador. Decimos que esos módulos de memoria más cercanos se hospedan en el nodo. El nodo origen o \emph{home} de un bloque es aquél que tiene el bloque en el trozo de memoria que hospeda.
-    \item [Nodo propietario de un bloque.] (P)\textbf{.} Es un nodo que tiene una copia válida del bloque en su caché.
+    \item [Nodo solicitante de un bloque,] (S)\textbf{.} Es un nodo que genera un paquete de petición (\verb|PtLec|, \verb|PtEx|, \verb|PtLecEx| o \verb|PtPEsc|).
+    \item [Nodo origen de un bloque,] (O)\textbf{.} Recordamos que en un multiprocesador NUMA la memoria está repartida físicamente entre los nodos, de forma que cada uno tiene en módulos de memoria más cercanos un trozo del espacio de direcciones total del multiprocesador. Decimos que esos módulos de memoria más cercanos se hospedan en el nodo. El nodo origen o \emph{home} de un bloque es aquél que tiene el bloque en el trozo de memoria que hospeda.
+    \item [Nodo propietario de un bloque,] (P)\textbf{.} Es un nodo que tiene una copia válida del bloque en su caché.
 \end{description}
 De esta forma, en la situación más compleja (que estos tres nodos sean distintos), tenemos al controlador de caché de un nodo $S$ que solicita un bloque \verb|B| de memoria principal, por no tenerlo en su caché. Dicha petición la procesará el controlador de caché del nodo $O$ (origen del bloque), ya que la dirección de \verb|B| corresponde a un módulo de memoria alojado en $O$. Dado que $O$ no tendrá a \verb|B| en estado válido (suponíamos que $O\neq P$), solicitará al nodo $P$ el bloque, que lo tiene en estado válido para así poder devolver a $S$ el bloque solicitado.
 
@@ -719,7 +719,7 @@ A continuación, desarrollamos varias interacciones que pueden suceder entre los
         \item Cuando $O$ recibe el paquete \verb|PtLec(B)| y el bloque \verb|B| está en estado Inválido en memoria principal, entonces algún nodo dispone del bloque válido en su caché. Si es el nodo $O$, no se crea paquete de reenvío y se devuelve \verb|RpBloque(B)|; por otra parte, si no es el nodo $O$, se envía el paquete de reenvío de lectura del bloque \verb|RvLec(B)| a algún nodo que tenga a \verb|B| válido en su caché.
 
             El nodo $O$ pone el bloque en el directorio en estado Pendiente de válido hasta que se actualice el bloque en memoria una vez recibido de la única caché con copia válida. Entonces, pasará a estado Válido y podrá responder a $S$.
-        \item Cuando $O$ recibe el paquete \verb|PtEx(B)| de $S$ y el bloque \verb|B| está válido en cachés de otros nodos ó recibe el paquete \verb|PtLecEx(B)| de $S$ y el bloque \verb|B| está válido tanto en cachés de otros nodos como en memoria, se envía el paquete de invalidación \verb|RvInv(B)| a los nodos que tengan válido el bloque \verb|B|.
+        \item Cuando $O$ recibe el paquete \verb|PtEx(B)| de $S$ y el bloque \verb|B| está válido en cachés de otros nodos o recibe el paquete \verb|PtLecEx(B)| de $S$ y el bloque \verb|B| está válido tanto en cachés de otros nodos como en memoria, se envía el paquete de invalidación \verb|RvInv(B)| a los nodos que tengan válido a \verb|B|.
 
             El nodo $O$ pondrá el estado de \verb|B| en su directorio a Pendiente de inválido (para que el resto de llamadas no sean atendidas). Cuando $O$ confirma la invalidación en el resto de cachés:
             \begin{itemize}
@@ -728,7 +728,7 @@ A continuación, desarrollamos varias interacciones que pueden suceder entre los
                 \item Responderá a $S$ confirmando su invalidación en memoria y en otras cachés con \verb|RpInv(B)| (en caso de \verb|PtLecEx(B)|, incluirá el bloque en el paquete y será de tipo \verb|RpBloqueInv(B)|).
             \end{itemize}
 
-        \item Cuando $O$ recibe el paquete \verb|PtLecEx(B)| de $S$ y el bloque \verb|B| está Inválido en memoria principal, entonces algún nodo dispone del bloque válido en su caché. Si es el nodo $O$, no se crea paquete de reenvío y se devuelve \verb|RpBloqueInv(B)|; por otra parte, si no es el nodo $O$, se envía el paquete de reenvío de lectura con invalidación, al nodo que tenga válido a \verb|B|.
+        \item Cuando $O$ recibe el paquete \verb|PtLecEx(B)| de $S$ y el bloque \verb|B| está Inválido en memoria principal, entonces algún nodo dispone del bloque válido en su caché. Si es el nodo $O$, no se crea paquete de reenvío y se devuelve \verb|RpBloqueInv(B)|; por otra parte, si no es el nodo $O$, se envía el paquete de reenvío de lectura con invalidación \verb|RvLecEx(B)|, al nodo que tenga válido a \verb|B|.
 
             El nodo $O$ pondrá el estado de \verb|B| a Pendiente de inválido. Cuando $O$ reciba la confirmación de invalidación así como el bloque, pasará a estado Inválido y responderá a $S$ con el bloque confirmando la invalidación, mediante el paquete \verb|RpBloqueInv(B)|.
     \end{enumerate}
@@ -797,7 +797,7 @@ A continuación, desarrollamos igual que en el caso sin difusión varias interac
 
 \newpage
 \section{Consistencia del sistema de memoria}
-El modelo de programación de memoria compartida ofrece varias ventajas al programador respecto al modelo basado en paso de mensajes: evita (o al menos relaja) la necesidad de distribuir la carga de trabajo (código y datos) entre los distintos procesadores. Esta es la principal razón por la que los multiprocesadores han tenido una amplia aceptación tanto en el mundo comercial como en computación científica (frente a los multicomputadores).\\
+El modelo de programación de memoria compartida ofrece varias ventajas al programador respecto al modelo basado en paso de mensajes: evita (o al menos relaja) la necesidad de distribuir la carga de trabajo (código y datos) entre los distintos procesadores. Esta es la principal razón por la que los multiprocesadores han tenido una amplia aceptación tanto en el mundo comercial como en computación científica (frente a los multicomputadores).
 
 Sin embargo, para programar de forma correcta un multiprocesador, los programadores deben conocer bien cómo se comporta el sistema de memoria frente a las instrucciones que el programador coloca en el código paralelo a ejecutar.
 
@@ -815,11 +815,11 @@ Para ejecutar instrucciones en el procesador es necesario (a veces) disponer de 
 
 Notemos que mientras que las lecturas son un simple acceso a caché (de un ciclo) o una serie de envío de paquetes para traer el bloque a caché (en caso de fallo de caché) según lo visto en el apartado de coherencia de memoria, las escrituras siempre provocan el envío de múltiples paquetes, lo que implica un retardo mucho mayor al de las lecturas en promedio.\\
 
-Podríamos también plantear un modelo en el que lecturas adelanten a lecturas (a aquellas que den fallo en caché y por tanto deben esperar a que la caché obtenga la información, introduciendo un retardo), escrituras que adelanten a lecturas o escrituras que adelanten a otras, obteniendo en cada tipo una leve optimización del código. De hecho, un código que no implemente ningún tipo de adelantamiento, probablemente se ejecute de forma anormalmente lenta. Las herramientas de programación, los compiladores y el propio hardware pueden realizar adelantamientos de instrucciones de acceso a memoria, con el fin de mejorar las prestaciones y reducir tiempos de forma considerable.\\
+Podríamos también plantear un modelo en el que lecturas adelanten a lecturas (a aquellas que den fallo en caché y por tanto deban esperar a que la caché obtenga la información, introduciendo un retardo), escrituras que adelanten a lecturas o escrituras que adelanten a otras, obteniendo en cada tipo una leve optimización del código. De hecho, un código que no implemente ningún tipo de adelantamiento, probablemente se ejecute de forma anormalmente lenta. Las herramientas de programación, los compiladores y el propio hardware pueden realizar adelantamientos de instrucciones de acceso a memoria, con el fin de mejorar las prestaciones y reducir tiempos de forma considerable.\\
 
 Este tipo de adelantamientos entre instrucciones de acceso a memoria (tanto de lectura como de escritura) solo se pueden realizar si los accesos a memoria son sobre distintas posiciones de memoria (ya que si no nos toparíamos con dependencias de datos, como de tipo RAW).\\
 
-Antes de continuar con la sección, introducimos una notación que usaremos a lo largo de esta:
+Antes de continuar con la sección, introducimos una notación que usaremos a lo largo de esta.
 \begin{notacion}
     Cuando notemos $A\rightarrow B$, estaremos diciendo que la instrucción $A$ precede a la instrucción $B$, pero que por un cierto motivo se ejecutó la instrucción $B$ antes que la $A$. Podemos leer $A\rightarrow B$ como ``$B$ adelanta a $A$''.
     Usualmente usaremos esta notación para indicar que, por ejemplo, las lecturas adelantan a las escrituras: $W \rightarrow R$.
@@ -862,7 +862,6 @@ Antes de definir el modelo de consistencia secuencial, hablábamos de lo provech
 Por ello, cuando queramos definir un modelo de consistencia que seguirá un multicomputador, bastará con especificar qué parte del orden del programa no se cumple (como permitir que lecturas adelanten a escrituras) o qué parte del orden global no se cumple.\\
 
 Todavía no hemos dado un ejemplo ventajoso que sea resultado de no cumplir el orden global. Procedemos a desarrollarlo: puede ser deseable que, en un mismo procesador, una lectura de una posición de memoria $k$ adelante a una escritura de la misma posición de memoria $k$. Si permitiéramos esto cumpliendo con el orden global, se produciría una clarísima falta de consistencia en el programa (obtenemos una lectura que no coincide con una escritura anterior). Es por esto por lo que puede relajarse el orden global (no cumplirse), de forma que la lectura en vez de acceder a memoria, lea el contenido de la petición de escritura (y por tanto, pudiendo acceder al contenido de la posición $k$ antes que el resto de procesadores).
-
 Notemos que este ejemplo también relaja el orden del programa (al permitir que lecturas adelanten a escrituras).\\
 
 Actualmente, todos los modelos de consistencia de memoria permiten, al menos, el adelantamiento $W\rightarrow R$ (lecturas adelantan escrituras), debido al retardo que eliminan en los programas. El modelo de consistencia secuencial solo tiene utilidad teórica, al producir programas con grandes latencias en la práctica.
@@ -934,7 +933,7 @@ int B = B + 1;
 \end{listing}
 Por ejemplo, en el pseudocódigo de el Código fuente~\ref{uso_dmb} (la instrucción \verb|dmb| es a nivel de ensamblador y el resto de código es código de C), ninguna de las instrucciones de la línea 5 hacia abajo puede adelantar a ninguna de las instrucciones hasta la lína 3; y ninguna de las instrucciones de hasta la línea 3 puede ser ejecutada tras una instrucción que comienza a partir de la línea 5.
 
-Podemos pensar en la instrucción \verb|dmb| como en una especia de barrera (no confundir con una barrera en el contexto de sincronización) relativa a la memoria: cuando llegamos a una instrucción \verb|dmb| se asegura que ninguna de las instrucciones anteriores se haya ejecutado y que todas las siguientes no han comenzado a ejecutarse todavía.
+Podemos pensar en la instrucción \verb|dmb| como en una especia de barrera (no confundir con una barrera en el contexto de sincronización) relativa a la memoria: cuando llegamos a una instrucción \verb|dmb| se asegura que todas de las instrucciones anteriores se hayan ejecutado y que todas las siguientes no han comenzado a ejecutarse todavía.
 
 
 \newpage
