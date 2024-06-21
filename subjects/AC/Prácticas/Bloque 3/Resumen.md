@@ -126,7 +126,7 @@ Cuyo ámbito es de dispositivo, se trata de la planificación por defecto de los
 la planificación por defecto en `gcc` es `monotonic:static`, con el chunk por defecto (se verá en la cláusula `schedule`).
 
 
-la planificación por defecto en `gcc` es la asignación estática de forma que interacciones consecutivas se asignan a un mismo hilo.  
+La planificación por defecto en `gcc` es la asignación estática de forma que interacciones consecutivas se asignan a un mismo hilo.  
   
 No puede consultarse ni modificarse.
 
