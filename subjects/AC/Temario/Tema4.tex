@@ -32,7 +32,7 @@ Las dos implementaciones segmentan el procesamiento de las instrucciones en etap
 Debido al menor uso de hardware que requieren los núcleos VLIW, suelen usarse en computadores empotrados.\\
 
 \section{Microarquitectura de ILP superescalares}
-Las instrucciones se captan según el orden del programa, que pasan al buffer de instrucciones, donde esperan a decodificrase en este mismo orden. Una vez decodificada la instrucción, ya se saben los recursos a utilizar por la misma, por lo que pasa a la fase de emisión.
+Las instrucciones se captan según el orden del programa, que pasan al buffer de instrucciones, donde esperan a decodificarse en este mismo orden. Una vez decodificada la instrucción, ya se saben los recursos a utilizar por la misma, por lo que pasa a la fase de emisión.
 
 La emisión a ejecución puede realizarse con el orden del programa o de forma desordenada, con el fin de ahorrar tiempos de ejecución (suele hacerse lo segundo). Ya sea ordenada o no, como cada instrucción supone un tiempo distinto, la finalización de las instrucciones será desordenada. Esto es, podemos tener una instrucción que pase antes a ejecución y que termine después que una instrucción que entró después a ejecución, ya que esta segunda era mucho más corta que la primera.\\
 
@@ -47,7 +47,7 @@ La segmentación nos permite disminuir el tiempo de ciclo de la CPU, reduciéndo
 
 Sin embargo, en los códigos a ejecutar nos encontramos con dependencias (de datos, de control o estructurales) que dan lugar a problemas en el cauce segmentado, los cuales pueden conducir a los programas a un resultado incorrecto en su ejecución. Todos estos problemas reciben el nombre de \emph{hazards} (o riesgos).\\
 
-Para eliminar riesgos en los núcleos VLIW se deben introducir operaciones de no operación (\verb|nop|). Esto provoca una disminución en las prestaciones del núcleo (al desperdiciar ciclos de instrucción). Esta disminuición de las prestaciones es aún peor en los procesadores VLIW superescalares (núcleos capaces de dar por un ciclo varias instrucciones VLIW), donde obtenemos un IPC mucho mayor (al introducir operaciones \verb|nop|) que el que ya obteníamos en el VLIW escalar.
+Para eliminar riesgos en los núcleos VLIW se deben introducir operaciones de no operación (\verb|nop|). Esto provoca una disminución en las prestaciones del núcleo (al desperdiciar ciclos de instrucción). Esta disminución de las prestaciones es aún peor en los procesadores VLIW superescalares (núcleos capaces de dar por un ciclo varias instrucciones VLIW), donde obtenemos un IPC mucho mayor (al introducir operaciones \verb|nop|) que el que ya obteníamos en el VLIW escalar.
 
 Todo esto sin considerar las dependencias estructurales (las cuales se detectan cuando, en tiempo de ejecución, dos instrucciones tratan de acceder a la misma unidad funcional), lo que ralentiza aún más los tiempos de ejecución.\\
 
@@ -74,16 +74,16 @@ Desarrollamos a continuación varios aspectos relevantes del cauce de procesamie
         \end{itemize}
         Depende de la implementación del procesador, pero normalmente cada unidad funcional tiene sus propias estaciones de reserva. Podemos observarlas en la Figura~\ref{fig:Cauce_ARM_cortex_a76}, las cajas de color azul claro etiquetadas con \emph{``Queue''} antes de las unidades funcionales de la etapa de ejecución.
     \item En relación al punto anterior, Intel llama \textbf{emisión} a ventana de instrucciones y \textbf{envío} a unidades funcionales; mientras que los manuales de ARM hablan de \textbf{envío} a estaciones de reserva y de \textbf{emisión} a unidades funcionales.
-    \item En la Figura~\ref{fig:Cauce_ARM_cortex_a76}, destacamos las unidades de \verb|AGU| y \verb|LSU|, que son las últimas a las que van a parar las instrucciones de acceso a memoria.
+    \item En la Figura~\ref{fig:Cauce_ARM_cortex_a76}, destacamos las unidades de \verb|AGU| (\emph{Address Generator Unit}) y \verb|LSU| (\emph{Load-Store Unit}), que son las últimas a las que van a parar las instrucciones de acceso a memoria.
         \begin{itemize}
-            \item Las \verb|AGU| son unidades de cálculo arimético que se encargan de calcular direcciones de acceso a memoria, la generación del \emph{address} de una instrucción de acceso a memoria\footnote{Esta es la unidad que se encarga de procesar las instrucciones leaq de ASM, que se vieron en EC. Es por esto que se vio que, siempre que fuese posible usarlas, aumentarían el rendimiento, ya que al tratarse de unidades funcionales distintas se evitan dependencias estructurales.}.
+            \item Las \verb|AGU| son unidades de cálculo arimético que se encargan de calcular direcciones de acceso a memoria, la generación del \emph{address} de una instrucción de acceso a memoria\footnote{Esta es la unidad que se encarga de procesar las instrucciones leaq de ASM, que se vieron en EC\@. Es por esto que se vio que, siempre que fuese posible usarlas, aumentarían el rendimiento, ya que al tratarse de unidades funcionales distintas se evitan dependencias estructurales.}.
             \item Las \verb|LSU| son colas FIFO en las que esperan las instrucciones de acceso a memoria. Hay una cola dedicada a las instrucciones de lectura y otra a las de escritura. 
         \end{itemize}
     La implementación de adelantamiento de lecturas a escrituras propias (que vimos en el Capítulo~\ref{chapter:Tema3} que todos los procesadores incumplían en cuanto a orden global) se implementa en estas colas LSU\@. El protocolo genérico y más sencillo para realizarlo es el siguiente.
 
     Si viene una nueva instrucción y es de escritura, se introduce en su cola correspondiente. Si es de lectura, tenemos dos posibilidades:
     \begin{itemize}
-        \item Si el cerebro de la \verb|LSU| no encuentra ninguna escritura con la misma dirección de memeoria en la cola de escrituras, simplemente se introduce en la cola correspondiente para lecturas.
+        \item Si el cerebro de la \verb|LSU| no encuentra ninguna escritura con la misma dirección de memoria en la cola de escrituras, simplemente se introduce en la cola correspondiente para lecturas.
         \item Si el cerebro de la \verb|LSU| detecta al menos una escritura a la posición de memoria, coge el contenido de la última y se lo devuelve como resultado a la instrucción de lectura, sin llegar a leer dicha instrucción de memoria, al nunca introducirse en la cola.
     \end{itemize}
     Si los \verb|LSU| funcionan al igual que una cola FIFO (puede llevar quizás implementaciones más complejas, como sucede en los ARM), entonces los órdenes $W\rightarrow W$ y $R\rightarrow R$ son garantizados por el procesador (esto es lo que sucede en los Intel).
