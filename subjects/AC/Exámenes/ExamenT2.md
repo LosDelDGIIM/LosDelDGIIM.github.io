@@ -58,7 +58,7 @@ Se pude generar una imagen fractal calculando el color que debe tener cada uno d
 </details>
 
 ### Ejercicio 6.
-Indique en el siguiente supuesto cual de las respuestas representa la solución al problema. Suponga un bucle en el que no se conoce el número de iteraciones a ejecutar y se sabe que la carga de cada iteración depende de datos de entrada que provocarán que el cómputo para cada iteración sea más o menos intenso. Indique qué mecanismos deberá implementar el programa para adaptarse al problema conociendo que el número de procesadores disponibles es conocido y son heterogéneos.
+Indique en el siguiente supuesto cuál de las respuestas representa la solución al problema. Suponga un bucle en el que no se conoce el número de iteraciones a ejecutar y se sabe que la carga de cada iteración depende de datos de entrada que provocarán que el cómputo para cada iteración sea más o menos intenso. Indique qué mecanismos deberá implementar el programa para adaptarse al problema conociendo que el número de procesadores disponibles es conocido y son heterogéneos.
 
 - a) Equilibrio de carga y asignación dinámica.
 - b) Asignación dinámica explícita sin balanceo de carga.
