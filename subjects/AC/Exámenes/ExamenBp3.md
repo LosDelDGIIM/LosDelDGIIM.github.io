@@ -5,7 +5,7 @@
 - **Asignatura:** Arquitectura de Computadores.
 - **Curso Académico:** 2023-24.
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
-<!--- **Grupo:** .-->
+- **Grupo:** A2.
 - **Profesor:** Mancia Anguita López.
 - **Descripción:** Examen del bloque práctico 3.
 - **Fecha:** 22 de mayo de 2024.
