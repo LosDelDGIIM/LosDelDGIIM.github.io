@@ -63,10 +63,16 @@ Indique en el siguiente supuesto cuál de las respuestas representa la solución
 - a) Equilibrio de carga y asignación dinámica.
 - b) Asignación dinámica explícita sin balanceo de carga.
 - c) Asignación estática y descomposición uniforme sin equilibrio de carga.
-- d) Equilibrado de carga y una signación estática.
+- d) Equilibrado de carga y una asignación estática.
+
+<details>
+  <summary>Respueta</summary>
+  <p>La respuesta correcta es la opción 'a':
+    Necesitamos asignación dinámica porque no sabemos cuánto se tarda en cada caso, y siempre tiene que haber equilibrio de carga para un buen reparto entre las unidades de cómputo.</p>
+</details>
 
 ### Ejercicio 9.
-Se desea reapartir los datos de una matriz entre los diferentes procesadores que forman parte de un multiprocesador que ejecuta una aplicación paralela, asignando partes de igual tamaño a cada procesador. El tamaño de la matriz es divisible entre el número de procesadores. ¿Qué operación de comunicación colectiva se debería implementar para que la final la matriz esté distribuida?
+Se desea reapartir los datos de una matriz entre los diferentes procesadores que forman parte de un multiprocesador que ejecuta una aplicación paralela, asignando partes de igual tamaño a cada procesador. El tamaño de la matriz es divisible entre el número de procesadores. ¿Qué operación de comunicación colectiva se debería implementar para que al final la matriz esté distribuida?
 
 - a) Todos difunden.
 - b) Reducción.
@@ -75,7 +81,7 @@ Se desea reapartir los datos de una matriz entre los diferentes procesadores que
 
 <details>
   <summary>Respueta</summary>
-    <p>La respuesta correcta es la opción 'c'.</p>
+    <p>La respuesta correcta es la opción 'c'. Es la única que realiza una comunicación uno-a-todos, que es lo que necesitamos.</p>
 </details>
 
 ### Ejercicio 10.
