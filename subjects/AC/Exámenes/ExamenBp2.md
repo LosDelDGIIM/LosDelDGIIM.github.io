@@ -8,7 +8,7 @@
 - **Grupo:** A2.
 - **Profesor:** Mancia Anguita López.
 - **Descripción:** Examen del bloque práctico 2.
-<!--- **Fecha:** 22 de mayo de 2024.-->
+- **Fecha:** 26 de abril de 2024.
 - **Duración:** 30 minutos.
 
 ***
@@ -82,6 +82,11 @@ Suponiendo que todas las posiciones de `M` y `v1` se inicializan a 1, ¿cuál es
 - b) Un valor indefinido.
 - c) Todas las posiciones del vector `v2` con valor 0.
 - d) El resultado de multiplicar `M` ($N\times N$) por el vector `v1` ($N\times 1$).
+
+<details>
+  <summary>Respueta</summary>
+  <p>La respuesta correcta es la opción 'd'.</p>
+</details>
 
 ### Ejercicio 5.
 ¿Con qué directiva se debe usar la cláusula `copyprivate`?
