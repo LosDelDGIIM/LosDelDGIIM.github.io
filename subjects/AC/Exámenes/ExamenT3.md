@@ -58,7 +58,7 @@ Para un multiprocesador NUMA con 8 nodos con 16 GB de memoria por nodo se quiere
 ### Ejercicio 4.
 En un Numa con protocolo MSI sin difusión, relacionar la secuencia de paquetes de la figura con uno de los siguientes cambios de estado:
 
-![test](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Exámenes/GrafoT3.png)
+![test](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/AC/Exámenes/img/GrafoT3.png)
 
 - a) Ninguna de las otras respuestas es correcta.
 - b) Inicialmente el bloque está en estado `I` en la caché del procesador (nodo) solicitante, Válido en el directorio de memoria principal, y `S` en las cachés del resto de procesadores (nodos). Al terminar el acceso el bloque queda en estado `M` en la caché del solicitante, Inválido en el directorio de memoria principal y `I` en el resto de cachés.
