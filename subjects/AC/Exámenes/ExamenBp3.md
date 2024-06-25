@@ -88,8 +88,7 @@ for(i=0; i<2000; i++){
 
 <details>
   <summary>Respueta</summary>
-  <p>
-    Las opciones 'a' y 'b' son trivialmente falsas, la cláusula 'dynamic' reparte iteraciones en bloques de tamaño variable, e introduce sobrecarga al tener que determinar en tiempo de ejecución la mejor forma de repartir las iteraciones entre las hebras.</p>
+  <p> Las opciones 'a' y 'b' son trivialmente falsas, la cláusula 'dynamic' reparte iteraciones en bloques de tamaño variable, e introduce sobrecarga al tener que determinar en tiempo de ejecución la mejor forma de repartir las iteraciones entre las hebras. Tras preguntar a muchos compañeros, hemos llegado a la conclusión de que ni los profesores saben si es la 'c' o la 'd'. Si les toca esta pregunta, buena suerte.</p>
 </details>
 
 ### Ejercicio 10.
