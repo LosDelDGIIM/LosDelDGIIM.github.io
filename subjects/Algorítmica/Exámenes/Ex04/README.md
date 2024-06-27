@@ -40,7 +40,7 @@ Tenemos que pagar la cuenta en un restaurante por valor de $M$ euros, y disponem
 
 Diseñar un algoritmo eficiente que determine la cantidad mı́nima que tenemos que pagar y cómo hacerlo. 
 
-Aplicadlo para resolver el siguiente caso: hay $n = 3$ tipos de monedas de valores $5$, $7$ y $13$, y queremos pagar una cantidad de $M = 11$ unidades.* 
+Aplicadlo para resolver el siguiente caso: hay $n = 3$ tipos de monedas de valores $5$, $7$ y $13$, y queremos pagar una cantidad de $M = 11$ unidades.
 
 ## Ejercicio 5
  Un aficionado al póker juega una partida cada dı́a, y anota los euros que gana o pierde. Por ejemplo, la siguiente tabla muestra los resultados del último mes.
