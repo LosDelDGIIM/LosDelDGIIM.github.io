@@ -1,6 +1,7 @@
 # Arquitectura de Computadores. Seminario Adicional.
 
 **Autor:** Luchas Hidalgo Herrera.
+
 **Autor:** José Juan Urrutia Milán
 ***
 
