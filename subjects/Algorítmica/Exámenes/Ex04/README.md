@@ -25,12 +25,14 @@ Diseñad un algoritmo de exploración de grafos que determine cómo asignar los 
 La empresa $X$ ha decidido instalar una red de fibra óptica para interconectar sus seis centros de trabajo. El coste (positivo) del tendido de cable entre ellos aparece en la figura siguiente. (En el examen se aportaba un grafo, pero por simplicidad aquí aportaremos la matriz de adyacencia)
 
 ```cpp
-M = {{0, 3, X, 7, X, 3},
-     {3, 0, 4, 8, X, 6},
-     {X, 4, 0, 9, X, 5},
-     {7, 8, 9, 0, 8, X},
-     {X, X, X, 8, 0, 6},
-     {3, 6, 5, X, 6, 0}};
+M =  {
+          {0, 3, X, 7, X, 3},
+          {3, 0, 4, 8, X, 6},
+          {X, 4, 0, 9, X, 5},
+          {7, 8, 9, 0, 8, X},
+          {X, X, X, 8, 0, 6},
+          {3, 6, 5, X, 6, 0}
+     };
 ```
 
 Especificad un algoritmo que sea capaz de encontrar la forma de interconectar todos los centros con un coste mı́nimo, y aplicadlo para resolver el problema de la figura, describiendo el proceso paso a paso.
