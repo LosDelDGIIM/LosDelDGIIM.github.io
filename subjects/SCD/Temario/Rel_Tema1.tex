@@ -188,9 +188,9 @@
                             P3 ; P4 ; P5 ; P6 ;
                         coend ;
                         P7 ;
-                    coend ;
+                    coend
                     P8 ;
-                end ;
+                end
             \end{minted}
             \caption{Programa 1.}
             \label{code:prog1_Ej4}
@@ -228,3 +228,388 @@
         \item Programa de la figura \ref{code:prog2_Ej4}.
     \end{enumerate}
 \end{ejercicio}
+
+\begin{ejercicio} \label{ej:5}
+    Suponer un sistema de tiempo real que dispone de un captador de impulsos conectado a un
+    contador de energía eléctrica. La función del sistema consiste en contar el número de impulsos
+    producidos en 1 hora (cada Kwh consumido se cuenta como un impulso) e imprimir este número
+    en un dispositivo de salida. Para ello se dispone de un programa concurrente con 2 procesos: un
+    proceso acumulador (lleva la cuenta de los impulsos recibidos) y un proceso escritor (escribe
+    en la impresora). En la variable común a los 2 procesos \verb|n| se lleva la cuenta de los impulsos. El
+    proceso acumulador puede invocar un procedimiento \verb|Espera_impulso| para esperar a que llegue
+    un impulso, y el proceso escritor puede llamar a \verb|Espera_fin_hora| para esperar a que termine
+    una hora. El código de los procesos de este programa podría ser el descrito en el Código Fuente \ref{code:ej5}.
+    \begin{observacion}
+        En el programa se usan sentencias de acceso a la variable \verb|n| encerradas entre los símbolos \verb|<| y
+        \verb|>|. Esto significa que cada una de esas sentencias se ejecuta en exclusión mutua entre los dos
+        procesos, es decir, esas sentencias se ejecutan de principio a fin sin entremezclarse entre ellas.
+        Supongamos que en un instante dado el acumulador está esperando un impulso, el escritor está
+        esperando el fin de una hora, y la variable \verb|n| vale \verb|k|. Después se produce de forma simultánea
+        un nuevo impulso y el fin del periodo de una hora.
+    \end{observacion}
+
+    Obtener las posibles secuencias de interfolicación de las instrucciones (1),(2), y (3) a partir de
+    dicho instante, e indicar cuales de ellas son correctas y cuales incorrectas (las incorrectas son
+    aquellas en las cuales el impulso no se contabiliza).
+    \begin{listing}
+        \begin{minted}{pascal}
+            { variable compartida: }
+            var n : integer; { contabiliza impulsos }
+            begin
+            while true do begin
+                Espera_impulso();
+                < n := n+1 > ; { (1) }
+                end
+            end
+            process Escritor ;
+            begin
+            while true do begin
+                Espera_fin_hora();
+                write( n ) ; { (2) }
+                < n := 0 > ; { (3) }
+                end
+            end
+        \end{minted}
+        \caption{Código acumulador-escritor del ejercicio \ref{ej:5}.}
+        \label{code:ej5}
+    \end{listing}
+\end{ejercicio}
+
+
+
+\begin{ejercicio} \label{ej:6}
+    Supongamos un programa concurrente en el cual hay, en memoria compartida dos vectores \verb|a| y
+    \verb|b| de enteros y con tamaño par, declarados como sigue:
+    \begin{minted}{pascal}
+        var a,b : array[1..2*n] of integer ; { n es una constante predefinida }
+    \end{minted}
+    Queremos escribir un programa para obtener en \verb|b| una copia ordenada del contenido de \verb|a| (nos
+    da igual el estado en que queda \verb|a| después de obtener \verb|b|). Para ello disponemos de la función
+    \verb|Sort| que ordena un tramo de \verb|a| (entre las entradas \verb|s| y \verb|t|, ambas incluidas). También disponemos
+    la función \verb|Copiar|, que copia un tramo de \verb|a| (desde \verb|s| hasta \verb|t|) en \verb|b| (a partir de \verb|o|). Estas funciones
+    se muestran en el Código Fuente \ref{code:ej_6SortCopiar}.
+    \begin{listing}
+        \begin{minted}{pascal}
+            procedure Sort( s,t : integer );
+                var i, j : integer ;
+                begin
+                    for i := s to t do
+                    for j:= s+1 to t do
+                        if a[i] < a[j] then
+                            swap( a[i], b[j] ) ;
+                end
+
+            procedure Copiar( o,s,t : integer );
+                var d : integer ;
+                begin
+                    for d := 0 to t-s do
+                        b[o+d] := a[s+d] ;
+                end
+        \end{minted}
+        \caption{Procedimientos \mintinline{pascal}{Sort} y \mintinline{pascal}{Copiar} del ejercicio \ref{ej:6}.}
+        \label{code:ej_6SortCopiar}
+    \end{listing}
+
+    El programa para ordenar se puede implementar de dos formas:
+    \begin{enumerate}
+        \item Ordenar todo el vector \verb|a|, de forma secuencial con la función \verb|Sort|, y después copiar cada
+        entrada de \verb|a| en \verb|b|, con la función \verb|Copiar|.
+        \item Ordenar las dos mitades de \verb|a| de forma concurrente, y después mezclar dichas dos mitades
+        en un segundo vector \verb|b| (para mezclar usamos un procedimiento \verb|Merge|).
+    \end{enumerate}
+    En el Código Fuente \ref{code:ej6_2versiones} se muestra el código de ambas versiones.
+    \begin{listing}
+        \begin{minted}{pascal}
+            procedure Secuencial() ;
+                var i : integer ;
+                begin
+                    Sort( 1, 2*n ); { ordena a }
+                    Copiar( 1, 2*n ); { copia a en b }
+                end
+
+            procedure Concurrente() ;
+                begin
+                    cobegin
+                        Sort( 1, n );
+                        Sort( n+1, 2*n );
+                    coend
+                    Merge( 1, n+1, 2*n );
+                end
+        \end{minted}
+        \caption{Procedimientos \mintinline{pascal}{Secuencial} y \mintinline{pascal}{Concurrente} del ejercicio \ref{ej:6}.}
+        \label{code:ej6_2versiones}
+    \end{listing}
+
+    El código de la función \verb|Merge|, disponible en el Código Fuente \ref{code:ej6_Merge}, se encarga de ir leyendo las dos mitades de \verb|a|, en cada paso, seleccionar el menor elemento de los dos siguientes por leer (uno en cada mitad), y escribir dicho menor elemento en la siguiente mitad del vector mezclado \verb|b|.
+    \begin{listing}
+        \begin{minted}{pascal}
+            procedure Merge( inferior, medio, superior: integer ) ;
+                { siguiente posicion a escribir en b }
+                var escribir : integer := 1 ;
+                { siguiente pos. a leer en primera mitad de a }
+                var leer1 : integer := inferior ;
+                { siguiente pos. a leer en segunda mitad de a }
+                var leer2 : integer := medio ;
+                begin
+                    { mientras no haya terminado con alguna mitad }
+                    while leer1 < medio and leer2 <= superior do begin
+                        if a[leer1] < a[leer2] then begin { minimo en la primera mitad }
+                            b[escribir] := a[leer1] ;
+                            leer1 := leer1 + 1 ;
+                        end else begin { minimo en la segunda mitad }
+                            b[escribir] := a[leer2] ;
+                            leer2 := leer2 + 1 ;
+                        end
+                        escribir := escribir+1 ;
+                    end
+                    { se ha terminado de copiar una de las mitades,
+                    copiar lo que quede de la otra }
+                    if leer2 > superior then
+                        { copiar primera } Copiar( escribir, leer1, medio-1 );
+                    else Copiar( escribir, leer2, superior ); { copiar segunda }
+                end
+        \end{minted}
+        \caption{Procedimiento \mintinline{pascal}{Merge} del ejercicio \ref{ej:6}.}
+        \label{code:ej6_Merge}
+    \end{listing}
+
+    Llamaremos $T_s(k)$ al tiempo que tarda el procedimiento \verb|Sort| cuando actúa sobre un segmento del vector con $k$ entradas. Suponemos que el tiempo que (en media) tarda cada iteración del bucle interno que hay en \verb|Sort| es la unidad (por definición). Es evidente que ese bucle tiene $\dfrac{k(k-1)}{2}$ iteraciones, luego:
+    \[
+        T_s(k) = \dfrac{k(k-1)}{2} = \dfrac{1}{2}\cdot k^2 - \dfrac{1}{2}\cdot k
+    \]
+
+    El tiempo que tarda la versión secuencial sobre $2n$ elementos (llamaremos $S$ a dicho tiempo) será evidentemente $T_s(2n)$, luego:
+    \[
+        S = T_s(n) = \dfrac{1}{2}\cdot (2n)^2 - \dfrac{1}{2}\cdot 2n = 2n^2 - n
+    \]
+
+    Con estas definiciones, calcular el tiempo que tardará la versión paralela, en dos casos:
+    \begin{enumerate}
+        \item Las dos instancias concurrentes de \verb|Sort| se ejecutan en el mismo procesador (llamamos $P_1$ al tiempo que tarda).
+        \item Cada instancia de \verb|Sort| se ejecuta en un procesador distinto (lo llamamos $P_2$).
+    \end{enumerate}
+
+    Escribe una comparación cualitativa de los tres tiempos ($S$, $P_1$ y $P_2$). Para esto, hay que suponer que cuando el procedimiento \verb|Merge| actúa sobre un vector con $p$ entradas, tarda $p$ unidades de tiempo en ello, lo cual es razonable teniendo en cuenta que en esas circunstancias \verb|Merge| copia $p$ valores desde \verb|a| hacia \verb|b|. Si llamamos a este tiempo $T_m(p)$, podemos escribir $T_m(p) = p$.
+
+\end{ejercicio}
+
+\begin{ejercicio} \label{ej:7}
+    SSupongamos que tenemos un programa con tres matrices (\verb|a|, \verb|b| y \verb|c|) de valores flotantes declaradas
+    como variables globales. La multiplicación secuencial de \verb|a| y \verb|b| (almacenando el resultado en \verb|c|)
+    se puede hacer mediante un procedimiento \verb|MultiplicacionSec| declarado como aparece aquí:
+    \begin{minted}{pascal}
+        var a, b, c : array[1..3,1..3] of real ;
+        procedure MultiplicacionSec()
+            var i,j,k : integer ;
+            begin
+                for i := 1 to 3 do
+                    for j := 1 to 3 do begin
+                        c[i,j] := 0 ;
+                        for k := 1 to 3 do
+                            c[i,j] := c[i,j] + a[i,k]*b[k,j] ;
+                    end
+            end
+    \end{minted}
+    Escribir un programa con el mismo fin, pero que use 3 procesos concurrentes. Suponer que
+    los elementos de las matrices \verb|a| y \verb|b| se pueden leer simultáneamente, así como que elementos
+    distintos de \verb|c| pueden escribirse simultáneamente.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:8}
+    Un trozo de programa ejecuta nueve rutinas o actividades (\verb|P1|, \verb|P2|, . . . , \verb|P9|), repetidas veces,
+    de forma concurrentemente con \verb|cobegin-coend| (ver trozo de código de la figura \ref{code:ej8_enunciado}), pero que requieren
+    sincronizarse según determinado grafo (ver la figura \ref{fig:ej8_grafo}).
+    \begin{figure}
+        \centering
+        \begin{subfigure}{0.45\textwidth}
+            \centering
+            \begin{minted}{pascal}
+                while true do
+                cobegin
+                    P1 ; P2 ; P3 ;
+                    P4 ; P5 ; P6 ;
+                    P7 ; P8 ; P9 ;
+                coend
+            \end{minted}
+            \caption{Código del ejercicio \ref{ej:8}.}
+            \label{code:ej8_enunciado}
+        \end{subfigure} \hfill
+        \begin{subfigure}{0.45\textwidth}
+            \centering
+            \resizebox{\linewidth}{!}{
+                \begin{tikzpicture}[
+                    node/.style={circle, draw, minimum size=0.5cm},
+                    edge/.style={-stealth}
+                    ]
+        
+                    % Nodos
+                    \node[node] (P0) {P0};
+                    \node[node, below left=of P0] (P1) {P1};
+                    \node[node, below right=of P0] (P2) {P2};
+                    \node[node, below=of P1] (P3) {P3};
+                    \node[node, below left=of P3] (P4) {P4};
+                    \node[node, below right=of P3] (P5) {P5};
+                    \node[node, below=of P5] (P6) {P6};
+                    \node[node, below=of P2] (P7) {P7};
+                    \node[node, below left=of P7] (P8) {P8};
+                    \node[node, below right=of P7] (P9) {P9};
+        
+                    % Aristas
+                    \draw[edge] (P0) -- (P1);
+                    \draw[edge] (P0) -- (P2);
+                    \draw[edge] (P1) -- (P3);
+                    \draw[edge] (P3) -- (P4);
+                    \draw[edge] (P3) -- (P5);
+                    \draw[edge, bend right] (P4) to (P6);
+                    \draw[edge] (P5) -- (P6);
+                    \draw[edge] (P2) -- (P7);
+                    \draw[edge] (P7) -- (P8);
+                    \draw[edge] (P7) -- (P9);
+                
+                \end{tikzpicture}
+            }
+            \caption{DAG del ejercicio \ref{ej:8}.}
+            \label{fig:ej8_grafo}
+        \end{subfigure}
+        \caption{Figuras del ejercicio \ref{ej:8}.}
+    \end{figure}
+
+    Supón que queremos realizar la sincronización indicada en el grafo, usando para ello llamadas
+    desde cada rutina a dos procedimientos (\verb|EsperarPor| y \verb|Acabar|). Se dan los siguientes hechos:
+    \begin{itemize}
+        \item El procedimiento \verb|EsperarPor(i)| es llamado por una rutina cualquiera (la número $k$) para esperar a que termine la rutina número $i$, usando espera ocupada. Por tanto, se usa por la rutina $k$ al inicio para esperar la terminación de las otras rutinas que corresponda según el grafo.
+        \item El procedimiento \verb|Acabar(i)| es llamado por la rutina número $i$, al final de la misma, para indicar que dicha rutina ya ha finalizado.
+        \item Ambos procedimientos pueden acceder a variables globales en memoria compartida.
+        \item Las rutinas se sincronizan única y exclusivamente mediante llamadas a estos procedimientos, siendo la implementación de los mismos completamente transparente para las rutinas.
+    \end{itemize}
+    Escribe una implementación de \verb|EsperarPor| y \verb|Acabar| (junto con la declaración e inicialización de las variables compartidas necesarias) que cumpla con los requisitos dados.
+    
+\end{ejercicio}
+
+
+\begin{ejercicio}
+    En el ejercicio \ref{ej:8} los procesos \verb|P1|, \verb|P2|, . . ., \verb|P9| se ponen en marcha usando \verb|cobegin-coend|.
+    Escribe un programa equivalente, que ponga en marcha todos los procesos, pero que use declaración
+    estática de procesos, usando un vector de procesos \verb|P|, con índices desde 1 hasta 9, ambos incluidos. El proceso \verb|P[n]| contiene una secuencia de instrucciones desconocida, que llamamos \verb|S_n|, y además debe incluir las llamadas necesarias a \verb|Acabar| y \verb|EsperarPor| (con la misma implementación que antes) para lograr la sincronización adecuada. Se incluye aquí una plantilla:
+    \begin{minted}{pascal}
+        Process P[ n : 1..9 ]
+        begin
+            ..... { esperar (si es necesario) a los procesos que corresponda }
+            S_n ; { sentencias especificas de este proceso (desconocidas) }
+            ..... { senalar que hemos terminado }
+        end
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Para los siguientes fragmentos de código, obtener la \emph{poscondición} adecuada para convertirlo en un triple demostrable con la Lógica de Programas:
+    \begin{enumerate}
+        \item $\{i < 10\} \quad i = 2 \astº i + 1 \quad \{ \}$
+        \item $\{i > 0\} \quad i = i - 1; \quad \{ \}$
+        \item $\{i > j\} \quad i = i + 1;~j = j + 1 \quad \{ \}$
+        \item $\{\text{falso}\} \quad a = a + 7; \quad \{ \}$
+        \item $\{\text{verdad}\} \quad i = 3;~j = 2 \ast i \quad \{ \}$
+        \item $\{\text{verdad}\} \quad c = a + b;~c = \nicefrac{c}{2} \quad \{ \}$
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    ¿Cuáles de los siguientes triples no son demostrables con la Lógica de Programas?
+    \begin{enumerate}
+        \item $\{i > 0\} \quad i = i - 1; \quad \{i \geq 0\}$
+        \item $\{x \geq 7\} \quad x = x + 3; \quad \{x \geq 9\}$
+        \item $\{i < 9\} \quad i = 2 \ast i + 1; \quad \{ i \leq 20\}$
+        \item $\{a > 0\} \quad a = a - 7; \quad \{a > -6\}$
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Si el triple $\{P\} C \{Q\}$ es demostrable, indicar por qué los siguientes triples también lo son (o no se pueden demostrar y por qué):
+    \begin{enumerate}
+        \item $\{P\} C \{Q \lor P\}$
+        \item $\{P \land D\} C \{Q\}$
+        \item $\{P \lor D\} C \{Q\}$
+        \item $\{P\} C \{Q \lor D\}$
+        \item $\{P\} C \{Q \land P\}$
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Si el triple $\{P\} C \{Q\}$ es demostrable, ¿cuál de los siguientes triples no se puede demostrar?
+    \begin{enumerate}
+        \item $\{P \land D\} C \{Q\}$
+        \item $\{P \lor D\} C \{Q\}$
+        \item $\{P\} C \{Q \lor D\}$
+        \item $\{P\} C \{Q \lor P\}$
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Dado el siguiente programa, obtener:
+    \begin{minted}{pascal}
+        int x = 5, y = 2;
+        cobegin
+            < x = x + y >;
+            < y = x * y >;
+        coend
+    \end{minted}
+    \begin{enumerate}
+        \item Valores finales de $x$ e $y$.
+        \item Valores finales de $x$ e $y$ si quitamos los símbolos \verb|< >| de instrucción atómica.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Comprobar si la demostración del siguiente triple interfiere con los teoremas siguientes:
+    \[
+        \{x \geq 2\} \quad < x = x - 2 > \quad \{x \geq 0\}
+    \]
+    \begin{enumerate}
+        \item $\{x \geq 0\} \quad < x = x + 3 > \quad \{x \geq 3\}$
+        \item $\{x \geq 0\} \quad < x = x + 3 > \quad \{x \geq 0\}$
+        \item $\{x \geq 7\} \quad < x = x + 3 > \quad \{x \geq 10\}$
+        \item $\{y \geq 0\} \quad < y = y + 3 > \quad \{y \geq 3\}$
+        \item $\{x \text{ es impar}\} \quad < y = x + 1 > \quad \{y \text{ es par}\}$
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Dado el siguiente triple:
+    \begin{gather*}
+        \{x == 0\} \\
+        \text{cobegin} \\
+        <x = x + a> || <x = x + b> || <x = x + c> \\
+        \text{coend} \\
+        \{x == a + b + c\}
+    \end{gather*}
+    
+    Demostrarlo utilizando la lógica de asertos para cada una de las tres instrucciones atómicas y después que se llega a la poscondición final $x == a + b + c$ utilizando para ello la regla \emph{de la composición concurrente} de instrucciones atómicas.
+\end{ejercicio}
+
+\begin{comment}
+    . Si el triple {P} C {Q} es demostrable, ¿cuál de los siguientes triples no se puede demostrar?
+(a) {P ∧ D} C {Q}
+(b) {P ∨ D} C {Q}
+(c) {P} C {Q ∨ D}
+(d) {P} C {Q ∨ P}
+14. Dado el programa int x = 5, y = 2; cobegin < x = x + y >; < y = x ∗ y > coend;,
+obtener:
+(a) Valores finales de x e y
+(b) Valores finales de x e y si quitamos los símbolos < > de instrucción atómica.
+15. Comprobar si la demostración del triple {x ≥ 2} < x = x − 2 >; {x ≥ 0} interfiere con
+los teoremas siguientes:
+(a) {x ≥ 0} < x = x + 3 > {x ≥ 3 }
+(b) {x ≥ 0} < x = x + 3 > {x ≥ 0 }
+(c) {x ≥ 7} < x = x + 3 > {x ≥ 10 }
+(d) {y ≥ 0} < y = y + 3 > {y ≥ 3 }
+(e) {x es impar} < y = x + 1 > {y es par}
+16. Dado el siguiente triple:
+{x==0}
+cobegin
+<x=x+a> || <x=x+b> || <x=x+c>
+coend
+{x==a+b+c}
+Demostrarlo utilizando la lógica de asertos para cada una de las tres instruccciones
+atómicas y después que se llega a la poscondición final x==a+b+c utilizando para ello
+la regla de la composición concurrente de instrucciones atómicas
+\end{comment}
