@@ -60,33 +60,47 @@ double calcular_integral_secuencial(){
  * @param i Índice de la hebra, (0 <= i < n)
  */
 double funcion_hebra(long i){
-  	double suma_parcial = 0.0 ;
-	for (long j = i*num_muestras ; j < i+num_muestras ; ++j){
-		const double x_j = double(j+0.5)/num_muestras;
-		suma_parcial += f(x_j);
-	}
+
+	double suma_parcial = 0.0 ;
+	
+	#define OPT_1
+
+	#if defined(OPT_1)
+		double muestras_por_hebra = num_muestras/num_hebras;
+		for (long j = i*num_muestras ; j < i+muestras_por_hebra ; ++j){
+			const double x_j = double(j+0.5)/num_muestras;
+			suma_parcial += f(x_j);
+		}
+	#elif defined(OPT_2)
+		for (long j = i ; j < num_muestras ; j+=num_hebras){
+			const double x_j = double(j+0.5)/num_muestras;
+			suma_parcial += f(x_j);
+		}
+	#endif
+
 	return suma_parcial;
 }
 
-// -----------------------------------------------------------------------------
-// calculo de la integral de forma concurrente
+/**
+ * @brief Calcula la integral de forma concurrente.
+ * 
+ * Crea un array de futuros, uno por cada hebra, y lanza cada hebra.
+ */
 double calcular_integral_concurrente(){
 	
-	future<double> futuros[num_hebras] ; 						// array de futuros
-	for (long i = 0 ; i < num_hebras ; i++){
-		futuros[i] = async(launch::async, funcion_hebra, i);	// lanzar hebra
-		cout << "Lanzada hebra " << i << endl;
-		cout << "Analiza desde " << i << " hasta " << i+num_muestras-1 << endl;
-	}
+	future<double> futuros[num_hebras];
 
-	double suma = 0.0 ; 										// inicializar suma total
-	for (long i = 0 ; i < num_hebras ; i++){
-		suma += futuros[i].get(); 								// sumar resultados
-	}
+	// Lanzamos cada una de las hebras
+	for (long i = 0 ; i < num_hebras ; i++)
+		futuros[i] = async(launch::async, funcion_hebra, i);
+	
+	// Acumulamos cada suma parcial
+	double suma = 0.0 ;
+	for (long i = 0 ; i < num_hebras ; i++)
+		suma += futuros[i].get();
 
 	return suma/num_muestras;
 }
-// -----------------------------------------------------------------------------
 
 
 /**

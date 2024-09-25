@@ -2,6 +2,30 @@
 
 \input{../../_assets/preambulo.tex}
 
+\renewcommand{\theFancyVerbLine}{\sffamily
+\textcolor[rgb]{0.5,0.5,1.0}{\scriptsize
+\oldstylenums{\arabic{FancyVerbLine}}}}
+
+\definecolor{LightGray}{rgb}{0.95,0.95,0.92}
+\setminted{
+    linenos=true,
+    stepnumber=5,
+    numberfirstline=true,
+    autogobble,
+    breaklines=true,
+    breakautoindent=true,
+    breaksymbolleft=,
+    breaksymbolright=,
+    breaksymbolindentleft=0pt,
+    breaksymbolindentright=0pt,
+    breaksymbolsepleft=0pt,
+    breaksymbolsepright=0pt,
+    fontsize=\footnotesize,
+    bgcolor=LightGray,
+    numbersep=10pt
+}
+
+
 \begin{document}
 
     % 1. Foto de fondo
@@ -34,6 +58,62 @@
     Implementar el programa paralelo multihebra para aproximar el número $\pi$ mediante integración numérica propuesto en el Seminario 1 (incluyendo la medición de tiempos de ejecución).
 
     \section{Resolución}
+    Definimos la siguiente función:
+    \Func{f}{[0,1]}{\bb{R}}{x}{\dfrac{4}{1+x^2}}
 
-    Partimos de la plantilla disponible en el Seminario 1, disponible en el seminario 1.
+    El algoritmo consiste en, mediante integración numérica, resolver la siguiente integral:
+    \[
+        \int_{0}^{1} f(x) \, dx = 4\left[\arctan(x)\right]_{0}^{1} = \pi
+    \]
+
+    Esto lo haremos dividiendo el intervalo $[0,1]$ en \verb|num_muestras| ($m$) muestras equiespaciados, y calculando la suma de Riemman media de la función $f$ en dichos puntos.
+    \begin{equation*}
+        \pi \approx \frac{1}{m} \sum_{i=0}^{m-1} f\left(\frac{i+0.5}{m}\right) 
+    \end{equation*}
+    Para paralelizar este cálculo, crearemos \verb|num_hebras| ($n$) hebras que se encargarán cada una de calcular la suma de Riemman en una parte del intervalo $[0,1]$.\\
+
+    Al implementar esto en código, partimos de la plantilla disponible en el Seminario 1, disponible \href{https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Seminarios/Programas/S1_Integracion_Plantilla.cpp}{\color{blue}\ul{aquí}}.
+    En el presente documento describiremos los cambios realizados para llegar a la solución final, \verb|S1_Integracion.cpp|, disponible \href{https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Seminarios/Programas/S1_Integracion.cpp}{\color{blue}\ul{aquí}}.
+    Este último se puede compilar con la siguiente orden:
+    \begin{minted}[linenos=false]{bash}
+        $ g++ -std=c++11 -pthread S1_Integracion.cpp -o S1_Integracion
+    \end{minted}
+
+    
+    \subsection{Función \mintinline{c++}{calcular_integral_concurrente()}}
+
+    Esta función se encargará de crear las distintas hebras y de acumular las sumas parciales de cada una de ellas. Se encuentra en el Código Fuente \ref{lst:calcular_integral_concurrente}.
+    En primer lugar, y tras crear el array correspondiente de futuros, se lanza cada una de las hebras llamándola con su correspondiente función \mintinline{c++}{funcion_hebra()} que describiremos más adelante y su identificador \verb|i|.
+    Posteriormente, recogemos cada una de las sumas parciales llamando al método \mintinline{c++}{get()} de cada uno de los futuros creados.
+    \begin{listing}
+        \inputminted[firstline=89, lastline=103]{c++}{./Programas/S1_Integracion.cpp}
+        \caption{Función \mintinline{c++}{calcular_integral_concurrente()}.}
+        \label{lst:calcular_integral_concurrente}
+    \end{listing}
+
+    \subsection{Función \mintinline{c++}{funcion_hebra()}}
+
+    Esta es la función que se ejecutará en cada una de las hebras de forma concurrente.
+    Suponiendo que hay $n$ hebras y $m$ muestras, cada hebra $i$ calculará la suma de Riemman de $\nicefrac{m}{n}$ muestras.
+    No obstante, la división de ese número de muestras en $n$ partes (cada una de las hebras) no es trivial, ya que hay distintas formas de hacerlo
+    (como podemos ver en el Código Fuente \ref{lst:funcion_hebra}).
+    \begin{listing}
+        \inputminted[firstline=62, lastline=82]{c++}{./Programas/S1_Integracion.cpp}
+        \caption{Función \mintinline{c++}{funcion_hebra()}.}
+        \label{lst:funcion_hebra}
+    \end{listing}
+    \begin{description}
+        \item[Opción 1] Cada hebra $i$ procesa muestras consecutivas.
+        Partiendo de la muestra \mintinline{c++}{i*num_muestras}, procesa las siguientes $\nicefrac{m}{n}$ muestras.
+
+        \item[Opción 2] Cada hebra $i$ procesa muestras de forma alternativa.
+        Es decir, partiendo de la muestra \mintinline{c++}{i}, procesa las muestras \mintinline{c++}{i}, \mintinline{c++}{i+n}, \mintinline{c++}{i+2n}, \ldots
+    \end{description}
+
+    En el análisis de los resultados se compararán ambas opciones.
+
+    \subsection{Análisis de Resultados}
+
+
+    
 \end{document}
