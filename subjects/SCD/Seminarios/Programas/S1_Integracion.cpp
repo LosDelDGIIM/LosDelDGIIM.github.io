@@ -66,8 +66,8 @@ double funcion_hebra(long i){
 	#define OPT_1
 
 	#if defined(OPT_1)
-		double muestras_por_hebra = num_muestras/num_hebras;
-		for (long j = i*num_muestras ; j < i+muestras_por_hebra ; ++j){
+		double muest_hebra = num_muestras/num_hebras;
+		for (long j = i*muest_hebra; j < (i+1)*muest_hebra; ++j){
 			const double x_j = double(j+0.5)/num_muestras;
 			suma_parcial += f(x_j);
 		}
