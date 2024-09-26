@@ -59,7 +59,6 @@ Este último es el mejor medio guiado existente.
 
 Una cosa es topología física y otra lógica.
 
-### Topologías Físicas:
 #### Ethernet
 Para compartir un medio común como un bus utiliza `CSMA/CD`: Acceso múltiple sintiendo la portadora (Carrier sense).
 CD detecta colisiones: si lo que hay en el cable no es lo que he puesto (si hay más ruido), hay error.
@@ -71,21 +70,20 @@ Cuenta on CSMA/CA:
 Wifi no puede escuchar el medio.
 Primero escucha que no haya nadie, envía el mensaje y recibe confirmación. Si no recibe confirmación, hay colisión.
 
-### Topologías Lógicas:
-#### Bus.
+### Bus.
 Ventaja: es la más sencilla.
 Desventaja: Que varios intenten usar la red a vez (colisiones). El bus es común para todos.
 
 Se implementa mediante:
 HUB: bocas ethernet que internamente funcionan como bus
 
-#### Anillo.
+### Anillo.
 Un círculo en el que tenemos los distintos computadores. Se parece al bus ya que el medio es compartido.
 
 Una versión habitual es `token rings`: testigo de anillo.
 Como el medio es común, se va pasando el testigo entre los computadores para evitar que haya colisiones.
 
-#### Estrella.
+### Estrella.
 Todos están conectados a un centro principal, típicamente un switch.
 Es típica.
 
@@ -98,7 +96,7 @@ Para ir de un equipo a otro, envía el paquete, lo recibe y lo envía. El resto 
 
 No compartimos el medio y hay más seguridad porque el resto no ve lo que se envía.
 
-#### Árbol
+### Árbol
 Típica para redes empresariales en tres niveles:
 
 Primer nivel: red troncal.
@@ -112,7 +110,7 @@ Existe el protocolo STP que hace que cualquier topología quite los enlaces que 
 
 En el nivel de red (IP) hay ya un protocolo que evita que se formen bucles.
 
-#### Mallada
+### Mallada
 Todos los nodos están conectados entre sí por medios independientes.
 
 Ventaja: Es muy fiable, si se cae un enlace hay enlaces que usar.
@@ -120,7 +118,7 @@ Problema: Falta de escabilidad, al meter un nuevo nodo hay que meter $n-1$ enlac
 
 Dentro de una empresa la red troncal puede seguir dicha topología para evitar caídas importantes.
 
-#### Híbrida
+### Híbrida
 Se usa una mezcla de todas. Es la más típica.
 
 ## Clasificación de redes
@@ -245,7 +243,19 @@ Garantizar que la información llega de forma fiable se hace en los extremos.
 
 # Terminología, conceptos y servicios
 
-## Proceso de encapsulamiento
+- Entidad de nivel n:   Entidad que ejecuta la capa n-ésima.
+- Entidades pares:      Entidades iguales, son de la misma capa, en distintos equipos y hablan entre sí.
+- Protocolo:            Cómo hablan entidades pares.
+- Interfaz:             Cómo interactúan los protocolos de la misma entidad.
+- Servicio:             Lo que proporciona una capa a otra.
+
+- Las capas proveedoras son usuarias de las capas inferiores que les sirven de servicio. Las capas superiores son productoras.
+- Pila de protocolos: Todos los protocolos juntos en una misma máquina.
+- Arquitectura de red: Qué entidades hay en la red. OSI: Capas, TCP/IP: Capas.
+- SAP: Dónde me dan servicio las distintas capas (cómo se comunican).
+
+## Proceso de encapsulamiento y transmisión de datos
+Ver diapositiva 12.
 Los datos del nivel anterior se encapsulan en los datos del siguiente (debajo) nivel:
 
 - Datos del nivel de aplicación: datos + cabecera.
@@ -267,3 +277,95 @@ Hay dos tipos de comunicaciones:
 
 Las capas de transporte y aplicaciones sólo hablan entre los extremos.
 
+## Retardos en comunicación
+Tenemos una entidad que va a hablar con otra a través de otra (por ejemplo, dos computadores y un router en medio). Queremos transmitir un paquete.
+
+En Ethernet un paquete típico son 1500 Bytes x 8 bits = 12000 bits. El tiempo que se tarda en transmitir sale como resultado de dividirlo entre los x bps.
+
+- Desde que se pone el 1er bit hasta que se pone el último hay un **tiempo de transmisión** que depende exclusivamente de la tarjeta gráfica: bits / velocidad de transmisión.
+- Una vez transmitido, hay un retardo. El **tiempo de propagación** (distancia / velocidad de transmisión) es el tiempo que sucede entre que se escribe el primer bit y llega el primer bit. 
+   La velocidad de transmisión inalámbrica es a la velocidad de la luz. La velocidad de un cable (depende del cable) es a 2/3 de la velocidad de la luz. En los cables se pierde un bit por cada millón de bits. La pérdida de bits es usualmente por colas llenas.
+- El paquete llega al intermediario, que ha de decidir qué hace con dicho paquete (si fuera un router, mirar tablas de encaminamiento). 
+  El equipo intermedio tiene unas colas donde va metiendo los paquetes que recibe, que irá procesando. El tiempo que nuestro paquete está en la cola depende de la situación del equipo intermedio. Hay un **tiempo de procesamiento** más un **tiempo en cola** que el paquete permanece en el equipo intermedio.
+- Se envía desde el equipo intermedio hasta el equipo destino. El **tiempo de propagación** de ahora probablmente no coincidirá con el anterior.
+
+Ver página 14.
+
+Al hacer ping hay tiempos distintos debido al tiempo de procesamiento.
+
+##### Cómo funciona ping (se verá)
+Mediante el protocolo ICMP y paquetes `echo-req` y `echo-reply`
+
+## Tipos de servicios
+Relacionado con el nivel de transporte, hay dos clasificaciones importantes: orientadas a conexión y a fiabilidad.
+
+### Orientadas a conexión
+Antes de enviar datos nos aseguramos de que el otro dispositivo esté encendido.
+- TCP es orientado a conexión.
+- UDP no es orientado a conexión.
+
+### Orientados a fiabilidad
+fiabilidad = que funcione bien (todos los bits de un archivo estén bien). Si es fiable, la conexión terminará una vez no vaya bien.
+
+Para tener un protocolo fiable, contamos con los mecanismos de:
+- Control de conexión:    Me conecto y sé que el otro esté encendido. Ser fiable => ser orientado a conexión.
+- Control de errores.
+- Control de congestión:  Relativa a red.
+- Control de flujo:       "Garantizar que hay suficientes sillas para cada persona".
+                          Ocurre en los extremos, normalmente al nivel de aplicación, con dispositivos con poca memoria.
+- Entrega ordenada:       Si se envían muchos paquetes, estos llegan en orden.
+
+Una red congestionada significa que los routers tienen colas de forma que se meten muchos paquetes por un lado y salen pocos por el otro: las redes no son capaces de ir tan rápidos.
+Hay mecanismos para arreglarlo, basado en que las fuentes envíen datos deforma más lenta.
+
+- TCP es un servicio fiable.
+- UDP no es un servicio fiable.
+
+La misión de UDP es ser rápido.
+
+# Internet (Historia y organizamiento)
+
+Dos cosas importantes: cuáles son los protocolos y cómo se gestiona internet.
+Las direcciones IP son únicas en todo el mundo, así como las direcciones de DNS.
+
+Antes había un protocolo por el que se enviaba un:
+Requests for comments (Se quedó y se llaman RFC).
+
+## Organización topológica
+
+Los operadores se establecen en 3 jerarquías, llamando a cada nivel tier.
+
+- Tier 3: los más cercanos a los usuarios, ISPs (Internet Service Provider).
+- Tier 2: hacen de distribución entre tier 1 y tier 3.
+- Tier 1: los que componen la estructura troncal de Internet. Todos comunicados entre sí y como mínimo en dos continentes.
+
+Dos tipos de relaciones:
+- Tránsito: un tier 3 paga a tier superior por enviar datos.
+- Peering: entre el mismo nivel.
+
+Antigüamente, para que un ISP de un país hable con otro del mismo país había que ir a EEUU, por falta de recursos.
+Se pusieron los NIC (Neutra Interchange ...) en los que se pueden enviar datos a operadores del mismo país.
+
+## Red Iris
+
+Red real española para investigación.
+Todas las universidades públicas y centros de investigación conectados en ella.
+
+Las redes se dividen según autonomías (RICA).
+Tiene conexiones externas con la red científica europea.
+
+## Cómo se realiza el direccionamiento en las capas
+Tenemos direccionamiento en varios niveles:
+
+- Enlace: depende de la tarjeta. Si pensamos en Ethernet:
+    - Se divide en dos niveles (MAC y LLC). Las direcciones se llaman direcciones MAC: AA:BB:CC:DD:EE:FF.
+    - Las direcciones MAC en teoría son únicas en todo el mundo (los 3 primeros bites identifican el fabricante). 
+      Si sabemos la MAC de una tarjeta, podemos hacer seguimiento de paquetes.
+      Podemos aleatoriezar las direcciones MAC en redes pequeñas para evitar seguimientos (se hace en Apple y luego en Android).
+      Programa macchanger para cambiar la dirección MAC.
+- Red: Direcciones IP: A.B.C.D. Las públicas son únicas en todo el mundo y las privadas no.
+- Transporte: Direccionamiento a través de puertos. Los puertos identifican a qué proceso va un determinado paquete.
+- Aplicación: Nombres de dominio mediante DNS.
+
+Se transmite punto a punto. Necesitamos saber direcciones MAC de entes punto a punto.
+El protocolo ARP nos permite preguntar por direcciones MAC.
