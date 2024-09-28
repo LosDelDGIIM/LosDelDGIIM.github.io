@@ -60,7 +60,7 @@ Este último es el mejor medio guiado existente.
 Una cosa es topología física y otra lógica.
 
 #### Ethernet
-Para compartir un medio común como un bus utiliza `CSMA/CD`: Acceso múltiple sintiendo la portadora (Carrier sense).
+Para compartir un medio común como un bus utiliza `CSMA/CD`: Acceso múltiple sintiendo la portadora (Carrier Sense).
 CD detecta colisiones: si lo que hay en el cable no es lo que he puesto (si hay más ruido), hay error.
 
 Cuando no estoy en un medio compartido no utilizo CSMA/CD, para mayor velocidad.
@@ -85,23 +85,22 @@ Como el medio es común, se va pasando el testigo entre los computadores para ev
 
 ### Estrella.
 Todos están conectados a un centro principal, típicamente un switch.
-Es típica.
+Es muy típica.
 
-Su diferencia con el bus es que cada cable que sale del bus es independiente del resto.
+Su diferencia con el bus es que cada cable que sale del switch es independiente del resto.
 Si un pc pone algo en una toma el resto de pcs no la escuchan.
 Cada una de las líneas tienen colas para guardar a dónde enviar los paquetes.
-TEnemos un procesador que coge los paquetes de las colas y los envían a las salidas.
+Tenemos un procesador en el switch que coge los paquetes de las colas y los envían a las salidas.
 
-Para ir de un equipo a otro, envía el paquete, lo recibe y lo envía. El resto de usuarios no ven el paquete.
-
+Para enviar un mensaje de un equipo a otro, envía el paquete, lo recibe el switch y lo pone en la cola de envíos al equipo correspondiente. El resto de equipos no ven dicho paquete.
 No compartimos el medio y hay más seguridad porque el resto no ve lo que se envía.
 
 ### Árbol
-Típica para redes empresariales en tres niveles:
+Típica para redes empresariales. Normalmente se estructura en tres niveles:
 
-Primer nivel: red troncal.
-Segundo nivel: red de división.
-Tercer nivel: red de acceso.
+- Primer nivel: red troncal.
+- Segundo nivel: red de división.
+- Tercer nivel: red de acceso.
 
 Los equipos de primer y segundo nivel suelen ser switches. Pueden aparecer ciclos en el árbol.
 Ethernet y otros mecanismos no tienen ningún mecanismo para evitar que un paquete circule en círculo. Esto echa la red abajo en 2 segudos.
@@ -125,10 +124,10 @@ Se usa una mezcla de todas. Es la más típica.
 Pueden clasificarse según:
 
 ### Según tamaño o área de extensión
-Redes de área personal: PAN, todos los dispositivos de un escritorio (reloj, portátil, cascos, ...).
-Redes locales: LAN (Local Area Network), decenas de metros.
-Redes de áreas metropolitanas: MAN (como un campus o ciudad).
-Red de área extensa: WAN (redes disponibles en todo el país), como redes telefónicas.
+Redes de área personal (PAN): todos los dispositivos de un escritorio, como relojes, portátiles, cascos, ...
+Redes locales (LAN, Local Area Network): decenas de metros.
+Redes de áreas metropolitanas (MAN): para conectar un campus o ciudad.
+Red de área extensa (WAN): redes disponibles en todo el país, como las redes telefónicas.
 
 ### Según difusión o punto a punto
 Difusión: lo que pone alguien llega a todos.
@@ -139,9 +138,9 @@ Un HUB es una conexión de difusión.
 
 ### Según tipo de transferencias de datos
 
-full-duplex: transmite y recibe simultáneamente.
-half-duplex: transmite en un sentido y recibe en el otro simultáneamente.
-simple: sólo recibe en un sentido (no transmite), o viceversa. Los TDT son simples.
+- full-duplex: transmite y recibe simultáneamente.
+- half-duplex: transmite en un sentido y recibe en el otro simultáneamente.
+- simple: sólo recibe en un sentido (no transmite), o viceversa. Los TDT son simples.
 
 Wifi o transmite o recibe, pero lo hace muy rápido.
 
@@ -154,17 +153,16 @@ Los importantes son los de la columna izquierda.
 - Router: Caja redonda con 4 flechas o una cruz.
 - Cortafuegos: Un muro.
 - NAT: 
- 
 
 Los switches funcionan a nivel de enlace y los routers a nivel de red (a nivel 3).
 Cómo diferenciar switches y routers:
-Los switches tienen muchas bocas para conectar muchos equipos.
+Los switches tienen muchas bocas para conectar muchos equipos (lo normal es un switch de 48 bocas).
 Los routers tienen pocas bocas, porque conectan 2, 3, 4 redes.
 
 ### Switch multicapa
 No entra pero nos comenta idea:
 
-Cuando tenemos un switch con 48 bocas (es algo normal), todas esas bocas son de la misma red de área local.
+Cuando tenemos un switch, todas esas bocas son de la misma red de área local.
 Hay veces que no nos interesan que estén en la misma red (LAN). Hay un concepto para decir que ciertas bocas pertenecen a cierta red.
 Este concepto es VLAN (redes virtuales). Sirve para dividir el switch en varios switches, haciendo que sean redes distintas.
 
@@ -172,9 +170,8 @@ Si tenemos otro switches, podemos asociarle las mismas redes virtuales que las d
 Permite extender zonas de redes locales a zonas más extensas.
 
 
-No se pueden conectar dos VLAN distintas entre sí: hace falta pasar por un router.
-Por norma general, para conectar dos redes hay que trabajar a nivel de red.
-Si un switch permite conmutación entre LANs, se supone que tiene alguna funcionalidad a nivel de red.
+No se pueden conectar dos VLAN distintas entre sí: hace falta pasar por un router, ya que por norma general, para conectar dos redes hay que trabajar a nivel de red.
+Si un switch permite conmutación entre LANs, se supone que tiene alguna funcionalidad a nivel de red, debido al punto anterior.
 
 Por tanto, un switch normal funciona a nivel de capa mientras que un switch multicapa funciona a nivel de red.
 
@@ -182,7 +179,7 @@ La red de la UGR tiene en primer lugar switches para conectarnos hacia ellos. Po
 
 ### Bridge
 Un bridge es lo mismo que un switch, funciona a nivel 2 pero actúa como puente entre dos tecnologías distintas (como Ethernet y ATM).
-En muchos protocolos se verán bridges, aunque en realidad se estará hablando de switches.
+En muchos protocolos mencionaremos usualmente a los bridges, aunque en realidad se estará hablando de switches.
 
 # Diseño y estandarización de redes
 Estandarización = modelo de capas. 
@@ -203,15 +200,42 @@ L1 | Física
    
 Problemas a resolver dada una red: muchos
 
-Por capas:
-- A nivel físico: ver cómo transmitir los datos. Hay varios tipos de codificaciones para enviar bits.
-    Codificación de canal: añadir redundancia a los datos. De ello se encarga la capa física.
-- Capa de enlace: Se encarga principalmente de los mecanismos de acceso al medio. SI hay un medio común: detectar si hay gente transmitiendo, si no transmito.
-    Protocolo MAC: de control de acceso al medio. LLC: Control de acceso lógico para primeras retransmisiones. Si paquete llega mal, retransmite unas cuantas veces.
-- Capa de red: (Se supone que no haya colisiones) Lo importante es llegar al otro extremo salto a salto: Direccionamiento (dar una dirección y ser alguien en la red) y encaminamiento (saber cómo llegar al destino).
-- Transporte: Encargado de ver qué pasa con los paquetes (el enlace intenta recuperar paquetes pero no lo consigue). 
-    Se encarga de fiabilidad (corregir errores, congestion de red, extremo lento que recibe datos y regula velocidad (control de flujo)) y de multiplexación de datos (por la tarjeta de red tenemos información que llega a varias aplicaciones que usamos. Para que el SO sepa qué datos corresponden a qué aplicaciones, contamos con los puertos, que nos definen a qué aplicaciones corresponden los datos ).
-- Aplicación: Lo que queremos hacer pero los clientes y servidores tienen que buscar mecanismos para hacerlo.
+Los detallaremos por capas:
+
+### A nivel físico
+- Tenemos que ver cómo transmitir los datos.
+- Hay varios tipos de codificaciones para enviar bits de información.
+- Codificación de canal: Se añade redundancia a los datos para comprobar si se han producido fallos o no en la transmisión.
+
+### Capa de enlace
+Esta se encarga de los mecanismos de acceso al medio.
+- En caso de existir un medio común a varios dispositivos, debe encargarse de comprobar si hay algún equipo transmitiendo y, en caso negativo, transmitir datos.
+- Suele haber dos protocolos:
+    - MAC: De control de acceso al medio.
+    - LLC: De control de acceso lógico para las primeras retransmisiones, de forma que si un paquete llega mal, retransmite unas cuantas veces.
+
+### Capa de red
+Una vez llegado a esta capa de abstracción, se presupone que no han habido colisiones en la comunicación.
+Lo más importante de esta capa es:
+- El direccionamiento: Saber dar una dirección y tener un identificador dentro de la red.
+- El encaminamiento: Saber cómo llegar al destino.
+
+### Capa de transporte
+Es la capa encargada de ver qué pasa con los paquetes. La capa de enlace ya intenta recuperar paquetes, pero es normal que a veces no lo consiga.
+Es la capa encargada de la fiabilidad:
+- Corregir errores.
+- Congestión de red.
+- Control de flujo: Si un extremo lento recibe datos y no es capaz de procesarlos a la velocidad a la que el productor la envía, debe ser capaz de decirle al productor que disminuya la velocidad de emisión, para adecuarse a la del receptor.
+
+Y de la multiplexación de datos:
+Por la tarjeta de red del equipo recibimos información de distinta naturaleza, ya que cada paquetes es de una aplicación distinta que usamos que usa la red.
+Para que el SO sepa qué datos corresponden a qué aplicaciones, contamos con los puertos, que nos definen a qué aplicaciones corresponden los datos.
+
+### Capa de aplicación
+Lo que queremos hacer pero los clientes y servidores tienen que buscar mecanismos para hacerlo.
+
+
+
 
 Modelo de referencia: Algo abstracto que nos gustaría tener (no es una implementación).
 Llegó ISO y puso un modelo, que dividía los problemas de cierta forma.
@@ -219,8 +243,12 @@ Modelo TCP/IP fue el que hizo internet.
 
 Una cosa es una implementación y otra una abstracción.
 
-OSI: 7 niveles, TCP/IP: 4
-Copiar diapositiva 9.
+OSI cuenta con 7 niveles:
+Físico | Enlace | Red | Transporte | Sesión | Presentación | ... (completar) |
+
+Mientras que TCP/IP cuenta con 4 niveles:
+Físico          | Red | Transporte | Aplicación                              |
+
 
 RFC: Estándar que permite saber cómo funciona TCP/IP.
 
@@ -343,7 +371,7 @@ Dos tipos de relaciones:
 - Tránsito: un tier 3 paga a tier superior por enviar datos.
 - Peering: entre el mismo nivel.
 
-Antigüamente, para que un ISP de un país hable con otro del mismo país había que ir a EEUU, por falta de recursos.
+Antiguamente, para que un ISP de un país hable con otro del mismo país había que ir a EEUU, por falta de recursos.
 Se pusieron los NIC (Neutra Interchange ...) en los que se pueden enviar datos a operadores del mismo país.
 
 ## Red Iris
