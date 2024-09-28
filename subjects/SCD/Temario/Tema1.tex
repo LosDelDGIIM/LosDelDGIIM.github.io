@@ -243,18 +243,236 @@ Para cumplir con las condiciones de sincronización, deberemos añadir instrucci
     \item Se impida un segundo ciclo del productor hasta que el dato anterior no haya sido leído por el consumidor.
 \end{itemize}
 
-\section{Corrección en los programas concurrentes}
-En los programas secuenciales, para comprobar la corrección de los mismos, debemos probar que el programa termina dando salidas previstas ante determinadas entradas.
+\section{Propiedades de los sistemas concurrentes}
+Una propiedad de un sistema concurrente es un atributo que se cumple en toda la ejecución del sistema, mientras que el conjunto de todas sus ejecuciones (de todas las posibles trazas generadas en la ejecución) nos dan el comportamiento del sistema.
+
+Cualquier propiedad de un sistema concurrente puede ser formulada como combinación de dos tipos de propiedades fundamentales:
+
+\begin{itemize}
+    \item Propiedades de seguridad (\textit{safety}): Una propiedad de este tipo afirma que hay un estado del programa que es inalcanzable.
+    \item Propiedades de vivacidad (\textit{liveness}): Propiedades que afirman que en algún momento se alcanzará un estado deseado.
+\end{itemize}
+
+\subsection{Propiedades de seguridad (\textit{safety})}
+Estas propiedades expresan determinadas condiciones que han de cumplirse durante toda la ejecución del programa. Cualquier propiedad que pueda ser formulada por la existencia de un estado inalcanzable, es una propiedad de seguridad. En dicho caso, deberíamos poder definir qué estado es inalcanzable y demostrar que el programa concurrente nunca puede llegar a dicho estado.
+
+Las propiedades de seguridad pueden ya comprobarse en tiempo de compilación, ya que se cumplen independientemente de la ejecución concreta que sigue el sistema en tiempo de ejecución. Es por esto que se trata de una propiedad estática.\\
+
+Ejemplos de problemas donde vemos propiedades de seguridad son:
+\begin{itemize}
+    \item El problema de la exclusión mutua: La condición de que dos procesos del programa no puedan ejecutar simultáneamente las instrucciones de una sección crítica es de seguridad.
+    \item Problema del productor/consumidor: Todos los estados que lleven a una traza distinta de \verb|E, L, E, L,| \ldots son estados prohibidos.
+    \item La situación de interbloqueo: Es una de las situaciones más críticas que se dan tras quebrantar una propiedad de seguridad, ya que hay procesos ocupando recursos que no están usando y que no liberarán.
+\end{itemize}
+
+\subsection{Propiedades de vivacidad (\textit{liveness})}
+Las propiedades de vivacidad expresan que el sistema llegará en un futuro a cumplir determinadas condiciones (en un tiempo no indeterminado). En determinados ejemplos, dichas propiedades pueden entenderse como que las condiciones dinámicas de ejecución no lleven a que determinados procesos sean sistemáticamente adelantados por otros, no pudiendo avanzar en la ejecución de instrucciones útiles, de forma que el proceso sufra inanición (\textit{starvation}).
+
+Para demostrar que una propiedad es de vivacidad, debemos definir un ``buen estado'' del programa, y demostrar que es alcanzable para todos los procesos en un determinado tiempo.\\
+
+Ejemplos de problemas donde vemos propiedades de vivacidad son:
+\begin{itemize}
+    \item El problema de la exclusión mutua: Las secciones críticas se ejecutan por un proceso a vez. El sistema debe garantizar que, en la espera por entrar a una región crítica, no ocurra que un proceso sea siempre adelantado por otros procesos, llevando a que dicho proceso nunca ejecute la región crítica (que es nuestro estado deseado).
+    \item El problema del productor/consumidor: Un proceso que quiera escribir o leer de la variable compartida ha de poder hacerlo en un tiempo finito.
+\end{itemize}
+
+Debemos notar que el axioma de proceso finito expuesto en secciones anteriores no tiene nada que ver con la ausencia de inanición:
+\begin{itemize}
+    \item El axioma de proceso finito afirma que los procesos no pueden quedarse parados arbitrariamente, sino que estos deben intentar ejecutar instrucciones conforme les sea posible.
+    \item Un proceso puede estar ejecutando instrucciones en un bucle indefinido pero no avanzar en la ejecución de las instrucciones de su código (es decir, puede estar realizando un trabajo inútil). En este caso, se cumpliría el axioma del proceso finito pero no se cumpliría la propiedad de vivacidad, ya que el proceso sufriría inanición.
+\end{itemize}
+
+Como ya venimos avisando, el no cumplimiento de la propiedad de vivacidad puede llevar a uno o más procesos a un estado de inanición (es indefinidamente pospuesto por otros, de forma que no pueda realizar aquello para lo que está programado). Aunque dicha situación es menos grave que una situación de interbloqueo (ya que hace que el programa no avance nada), tenemos procesos inoperantes (que no realizan su trabajo), por lo que consideraríamos que el programa concurrente no es correcto.\\
+
+De esta forma, un programa concurrente solo podrá ser completamente correcto cuando se demuestre que los procesos que lo integran no sufren inanición en ninguna de sus posibles ejecuciones.
+
+\begin{ejemplo}[Cena de filósofos]
+    Disponemos de cinco filósofos, $F_0$, $F_1$, $F_2$, $F_3$ y $F_4$, que dedican su vida a pensar y en algún momento desean comer. Acceden a una mesa redonda en la que hay un plato del que todos pueden comer, siempre y cuando dispongan de dos palillos. Sólo hay 5 palillos, estos distribuidos de forma que entre dos filósofos hay un palillo.
+
+    Los filósofos son cabezotas, por lo que una vez congen un palillo, no están dispuestos a soltarlo. Ademś, no pueden arrebatar un palillo a otro filósofo por ir en contra de sus ideales morales.\\
+
+    Ante la situación descrita, podemos llegar a ver los dos ejemplos siguientes:
+    \begin{itemize}
+        \item Si todos los filósofos cogen a la vez el palillo de su derecha, cada filósofo dispondrá de un palillo y no habrá más palillos libres. 
+
+            Estamos ante una situación de interbloqueo: ningún filósofo puede comer y no podrá hacerlo jamás. Como resultado, todos los filósofos se morirán de hambre.
+        \item Si, por ejemplo, los filósofos $F_0$ y $F_2$ (que rodean al filósofo $F_1$ en la mesa) conspiran para dejar morir de hambre al filósofo $F_1$ de forma que cuando $F_0$ deje el palillo que hay entre $F_0$ y $F_1$, $F_2$ coja el palillo que hay entre él y $F_1$ (y viceversa), conseguirán que $F_1$ nunca consiga sus dos palillos, llevando al filósofo a un estado de inanición y, posteriormente, la muerte.
+    \end{itemize}
+\end{ejemplo}
+
+Esta asignatura trata de crear protocolos que podamos demostrar que cumplen con las propiedades de seguridad y vivacidad, con el fin de no llevar nunca a situaciones de interbloqueos, inanición de algún (os) proceso (s), o alguna de las malas situaciones comentadas anteriormente.
+
+\section{Lógica de programas de Hoare y verificación de programas concurrentes}
+\subsection{Corrección de los programas concurrentes}
+En los programas secuenciales, para comprobar la corrección de los mismos, debemos probar que el programa \textbf{termina} dando \textbf{salidas esperadas} ante determinadas entradas.
 
 En un programa secuencial, hay un único conjunto de datos de entrada que provoca un único conjunto de datos de salida. Esto no sucede en programas concurrentes, ya que el indeterminismo en la ejecución provoca distintas trazas posibles del programa, y es bastante probable que todas las trazas posibles no provoquen los mismos resultados.\\
 
-Para comprobar que un programa concurrente es correcto o no, podemos decir que lo es o no en función de los requisitos del programa requeridos.
+Para extender la definición de programa correcto a los programs concurrentes, notemos primero que muchos de ellos están pensado para no terminar nunca, de forma que su fin esté relacionado con alguna situación de error. Los sistemas operativos o los cajeros automáticos son programas concurrentes que están pensados para que nunca terminen, por lo que no podemos decir que una condición necesaria para que un programa concurrente sea correcto es que termine.\\
 
-Por ejemplo, dada la especificación del paradigma del productor/consumidor, decimos que un programa que lo implemente es correcto si en todas sus ejecuciones garantiza una traza que se corresponde con \verb|L, E, L, E,| \ldots. Probar esto es algo difícil todavía.
+Para llevar a cabo la verificación de software, es decir, la demostración de que un programa es correcto, podemos emplear diferentes métodos:
+\begin{description}
+    \item [Depuración de código.] Explorar algunas ejecuciones de un código y comprobar que dichas ejecuciones son aceptables porque se cumplen las propiedades previamente fijadas.
 
-\subsection{Propiedades de los programas concurrentes}
-Observando el software concurrente, hay dos tipos de especificaciones que son estáticas y están perfectamente definidas durante la ejecución del programa; que pueden definirse en el momento de la compilación.
+        Este método sirve para programas secuenciales, pero no para programas paralelos, ya que nos es imposible depurar un código ante todas las posibles combinaciones de distintas trazas de ejecución.
+    \item [Razonamiento operacional.] Realizar un análisis de casos exhaustivo para explorar todas las posibilidades de secuencias de ejecución de un código con el fin de garantizar que todas son correctas.
 
-\subsubsection{Propiedades de seguridad}
-Son condiciones que deben cumplirse en cada instante de la traza de un programa.
+        Es un método inviable para programas concurrentes. Por ejemplo, en un programa que use dos procesos, cada uno con 3 instrucciones atómicas, el número de posibles trazas de ejecución es de 20.
+    \item [Razonamiento asertivo.] Realizar un análisis abstracto basado en Lógica Matemática que permita representar de forma abstracta los estados\footnote{Un estado del programa viene definido por los valores que tienen las variables del programa en determinado instante durante su ejecución.} concretos que un programa alcanza.
+\end{description}
+De esta forma, el únifco enfoque posibles es el razonamiento asertivo.
 
+\subsection{Lógica de Hoare}
+\subsubsection{Axiomática del lenguaje}
+Construiremos ahora un sistema lógico formal (SLF) que facilite la elaboración de asertos o proposiciones lógicas ciertas con una base lógico-matemática precisa.\\
+
+Nuestro SLF estará formado por:
+\begin{itemize}
+    \item Símbolos: Como sentencias del lenguaje de programación, variables proposicionales, operadores, \ldots
+    \item Fórmulas: Secuencias de símbolos bien formadas\footnote{Entendemos por esto a sucesiones de símbolos con un significado fácilmente entendible.}.
+    \item Axiomas: Proposiciones que mediante un consenso se consideran verdaderas.
+    \item Reglas de inferencia o de derivación: Reglas que nos permiten derivar fórmulas ciertas a partir de axiomas o de fórmulas que ya conocemos que son ciertas.
+\end{itemize}
+
+Podemos pensar en las reglas de inferencia como teoremas matemáticos: tienen unas hipótesis y unas tesis de forma que, en cualquier situación que las hipótesis sean ciertas, las tesis lo serán.
+
+\begin{notacion}
+    Notaremos a las reglas de inferencia por:
+    \begin{equation*}
+        (\text{nombre de la regla})\dfrac{H_1, H_2, \ldots, H_n}{C}
+    \end{equation*}
+    De forma que disponemos de $n$ hipótesis ($H_1$, $H_2$, \ldots, $H_n$) en conjunción que nos llevan a la tesis $C$.
+\end{notacion}
+
+Para proseguir con el detallamiento del SLF, es necesario antes la definición de interpretación:
+\begin{definicion}[Interpretación]
+    Sea $A$ el conjunto de todos los asertos o fórmulas lógicas, una interpretación será una aplicación de dominio $A$ y codominio el conjunto $\{V, F\}$\footnote{Cuyos elementos interpretamos como verdadero y falso.}.
+\end{definicion}
+De esta forma, dada una interpretación y un aserto $v$, podemos ver la veracidad o falsedad de $v$ gracias a la interpretación.\\
+
+Para que las demostraciones de nuestro SLF sean confiables, este sistema debe ser seguro y completo. Fijada una interpretación:
+\begin{itemize}
+    \item Decimos que un sistema es seguro si todos los asertos son hechos ciertos.
+    \item Decimos que un sistema es completo si todos los hechos ciertos son asertos.
+\end{itemize}
+A partir de ahora, supondremos que no hay diferencia entre asertos y hechos ciertos. Es decir, que nuestro sistema es seguro y completo.
+
+\subsubsection{Lógica proposicional}
+Las fórmulas del SLF que estamos construyendo se llaman proposiciones, y están formadas por:
+\begin{itemize}
+    \item Constantes proposicionales $\{V,F\}$.
+    \item Variables proposicionales $\{p,q,r,\ldots\}$.
+    \item Operadores lógicos $\{\lnot,\land,\lor,\rightarrow,\leftarrow, \longleftrightarrow \}$.
+    \item Expresiones formadas por constantes, variables y operadores.
+\end{itemize}
+Al igual que sucedía en la asignatura de Lógica y Métodos Discretos, podemos extender la definición de las interpretaciones y aplicarlas sobre las proposiciones del lenguaje, mediante unas reglas ya conocidas.\\
+
+De esta forma, diremos que:
+\begin{itemize}
+    \item Una fórmula es satisfacible si existe alguna ínterpretación que la satisfaga.
+    \item Una fórmula será válida si se satisface en cualquier estado del programa (es decir, si cualquier interpretación la satisface).
+\end{itemize}
+Llamaremos a las fórmulas válidas tautologías.\\
+
+Dentro de la lógica proposicional de este SLF son tautologías algunas fórmulas ya conocidas, como la distributiva de $\land$ y de $\lor$, la conmutatividad de las mismas, \ldots
+
+\begin{definicion}
+    Dadas dos fórmulas $P$ y $Q$, diremos que son equivalentes siempre y cuando que $P$ se satisfaga para una cierta interpretación si y solo si $Q$ se satisface para la misma interpretación.
+\end{definicion}
+Por ejemplo, $p\rightarrow q$ y $\lnot q\rightarrow p$ son fórmulas equivalentes.
+
+\subsubsection{Lógica de programas}
+Este SLF trata de hacer afirmaciones sobre la ejecución de un programa. Incluimos por tanto a los triples, que tienen la forma
+\begin{equation*}
+    \{P\}S\{Q\}
+\end{equation*}
+donde $P$ y $Q$ son asertos (llamados precondición y postcondición, respectivamente) y $S$ es una sentencia simple o estructurada de un lenguaje de programación. En $P$ y $Q$ podrán aparecer tanto variables lógico-matemáticas como variables del propio programa. Para distinguirlas, notaremos a las primeras con letas mayúsculas y a las segundas con minúsculas.\\
+
+Un triple $\{P\}S\{Q\}$ se interpreta como cierto si, ante cualquier estado del programa que satisfaga $P$ y después de la ejecución de cualquier entrelazamiento de instrucciones atómicas de $S$\footnote{Por tanto, $S$ ha de finalizar en algún momento.}, llegamos a un estado del programa que satisfaga $Q$.\\
+
+\begin{notacion}
+    A partir de la notación de los triples, y siendo $P$ una fórmula del lenguaje, notaremos por
+    \begin{equation*}
+        \{P\}
+    \end{equation*}
+    Al conjunto de los estados del programa que verifican $P$.
+\end{notacion}~\\
+
+De esta forma, $\{V\}$ es el conjunto de todos los estados de un programa, ya que todos los estados de dicho programa verifican $V$.
+
+Análogamente, $\{F\}$ se corresponde con el conjunto vacío.\\
+
+\begin{notacion}
+    Dadas $P$ y $Q$ asertos equivalentes, entonces obtenemos el mismo conjunto de estados del programa que verifican dichos asertos:
+    \begin{equation*}
+        \{P\} = \{Q\}
+    \end{equation*}
+    Sin embargo, para evitar la confusión con el operador de asignación, notaremos las igualdades entre los conjuntos de estados de un programa con el operador $\equiv$.
+\end{notacion}
+
+\begin{definicion}[Sustitución textual]
+    Dado un aserto $P$, que contiene al menos una aparición libre de la variable $x$ y una expresión $e$, definimos la sustitución textual de $x$ por $e$, notado por $P_e^x$ como la sustitución textual de todas las ocurrencias libres de $x$ en $P$ por $e$.
+\end{definicion}
+
+Enumeramos ahora los axiomas de nuestra Lógica de programas:
+\begin{description}
+    \item [Axioma de la sentencia nula $\{P\}\ null\ \{P\}$.]~\\
+        Es decir, si el aserto $P$ es cierto antes de la ejecución de la sentencia nula (esta es, la que no cambia nada en el programa), $P$ seguirá siendo cierto tras la ejecución de la misma.
+    \item [Axioma de asignación $\{P_e^x\}\ x=e\ \{P\}$.]~\\
+        Es decir, la asignación de un determinado valor $e$ a una variable $x$ solo cambia en el programa el valor de dicha variable $x$.
+\end{description}
+
+\begin{ejemplo}
+    Un ejemplo de uso del axioma de asignación es el siguiente:
+
+    Tratamos de probar que el triple $\{V\}\ x=5\ \{x=5\}$ es cierto. Es decir, que desde cualquier estado del programa, si asignamos $5$ a $x$, acabaremos en cualquier estado del programa en el que $x$ valga $5$.
+    \begin{proof}
+        Sea $P$ la fórmula dada por $x=5$ y $e$ el valor numérico $5$, sabemos que el axioma de asignación es cierto, luego se cumplirá que:
+        \begin{equation*}
+            \{P_e^x\}\ x=e\ \{P\}
+        \end{equation*}
+        de donde:
+        \begin{equation*}
+            \{V\} \equiv \{5=5\}\ x=e\ \{x=5\}
+        \end{equation*}
+        
+    \end{proof}
+\end{ejemplo}
+
+Seguidamente, para cada una de las sentencias que afectan al flujo de control en un programa secuencial, contamos con reglas de inferencia para poder formar triples correctos en las demostraciones; además de dos reglas básicas de consecuencia.
+
+\begin{description}
+    \item [Regla de la consecuencia (1).] 
+        \begin{equation*}
+            \dfrac{\{P\}S\{Q\}, \{Q\}\rightarrow\{R\}}{\{P\}S\{R\}}
+        \end{equation*}
+        Es decir, siempre podemos hacer más débil la postcondición de un triple, de forma que este siga siendo cierto.
+    \item [Regla de la consecuencia (2).] 
+        \begin{equation*}
+            \dfrac{\{R\}\rightarrow\{P\},\{P\}S\{Q\}}{\{R\}S\{Q\}}
+        \end{equation*}
+        Es decir, siempre podemos hacer más fuerta la precondición de un triple, manteniendo su veracidad.
+    \item [Regla de la composición.] 
+        \begin{equation*}
+            \dfrac{\{P\}S_1\{Q\}, \{Q\}S_2\{R\}}{\{P\}S_1;S_2\{R\}}
+        \end{equation*}
+        Es decir, podemos condensar dos triples en uno, siempre y cuando la postcondición de uno sea la precondición del otro.
+    \item [Regla del \textit{if}.] 
+        \begin{equation*}
+            \dfrac{\{P\land B\}S_1\{Q\}, \{P\land \lnot B\}S_2\{Q\}}{\{P\}\ \texttt{if B then}\ S_1\ \texttt{else}\ S_2\ \{Q\}}
+        \end{equation*}
+        De esta forma, siempre que queramos probar que una tripleta de la forma
+        \begin{equation*}
+            \{P\}\ \texttt{if X then}\ S_1\ \texttt{else}\ S_2\ \{Q\}
+        \end{equation*}
+        es cierta, tendremos que probar que las tripletas
+        \begin{equation*}
+            \{P\land X\}S_1\{Q\}\qquad \{P\land \lnot X\}S_2\{Q\}
+        \end{equation*}
+        son ciertas.
+    \item [Regla de la iteración.] 
+        Suponiendo que una sentencia \verb|while| puede iterar un número arbitrario de veces (incluso 0), tenemos que:
+        \begin{equation*}
+            \dfrac{\{I\land B\}S\{I\}}{\{I\}\ \texttt{while B do}\ S\ \texttt{end do}\ \I\land \lnot B\}}
+        \end{equation*}
+\end{description}
