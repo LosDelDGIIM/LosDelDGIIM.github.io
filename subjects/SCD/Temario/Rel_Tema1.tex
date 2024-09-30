@@ -8,7 +8,7 @@
     \setlength{\columnsep}{2cm} % Ajusta el espacio entre columnas
     \begin{multicols}{2}
         \begin{minted}{pascal}
-        { variables compartidas }
+        {variables compartidas}
         var x : integer := 0 ;
         Process P1;
         var i: integer;
@@ -35,6 +35,40 @@
         end
         \end{minted}
     \end{multicols}
+
+\noindent
+Observando el código, cada proceso hace 2 lecturas y dos escrituras en \verb|x|, por lo que, como mínimo, el valor de \verb|x| ha de ser $2$; y como máximo, $4$.
+
+Notando por $l_{ij}$ a la $j$-ésima lectura del proceso $i$ y por $e_{ij}$ a la $j$-ésima escritura del proceso $i$, ambas referidas a la variable \verb|x|, podemos obtener cualquiera de las siguientes trazas de ejecución:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c||c|c|c||c|c|c||c|c|c|}
+    \hline
+    \verb|P1| & \verb|P2| & \verb|x| & \verb|P1| & \verb|P2| & \verb|x| & \verb|P1| & \verb|P2| & \verb|x| & \verb|P1| & \verb|P2| & \verb|x| \\
+    \hline
+    \hline
+    $l_{11}$ & - & 0 & $l_{11}$ & - & 0 & $l_{11}$ & - & 0 & $l_{11}$ & - & 0 \\
+    \hline
+    $e_{11}$ & - & 1 & - & $l_{21}$ & 0 & $e_{11}$ & - & 1 & - & $l_{21}$ & 0 \\
+    \hline
+    - & $l_{21}$ & 1 & $e_{11}$ & - & 1 & - & $l_{21}$ & 1 & $e_{11}$ & - & 1 \\
+    \hline
+    - & $e_{21}$ & 2 & - & $e_{21}$ & 1 & - & $e_{21}$ & 2 & - & $e_{21}$ & 1 \\
+    \hline
+    $l_{12}$ & - & 2 & $l_{12}$ & - & 1 & $l_{12}$ & - & 2 & $l_{12}$ & - & 1 \\
+    \hline
+    $e_{12}$ & - & 3 & $e_{12}$ & - & 2 & - & $l_{22}$ & 2 & - & $l_{22}$ & 1 \\
+    \hline
+    - & $l_{22}$ & 3 & - & $l_{22}$ & 2 & $e_{12}$ & - & 3 & $e_{12}$ & - & 2 \\
+    \hline
+    - & $e_{22}$ & 4 & - & $e_{22}$ & 3 & - & $e_{22}$ & 3 & - & $e_{22}$ & 2  \\
+    \hline
+\end{tabular}
+\end{table}
+
+Luego los posibles valores resultantes para \verb|x| son: 2, 3 y 4.
+
 \end{ejercicio}
 
 
@@ -50,11 +84,41 @@
 
         \item El orden de los items escritos en \verb|g| debe coincidir con el de \verb|f|.
         \item Dos accesos a dos archivos distintos pueden solaparse en el tiempo.
-    \end{enumerate}
+    \end{enumerate}~\\
+
+\noindent
+La copia del fichero \verb|f| en el fichero \verb|g| se podría realizar siguiendo el paradigma productor/consumidor que hemos visto en teoría en el Tema 1, mediante el uso de dos procesos:
+\begin{itemize}
+    \item Uno que lea un ítem del fichero \verb|f| y lo escriba en una variable compartida.
+    \item Otro que lea dicha variable compartida y escriba el ítem en el fichero \verb|g|.
+\end{itemize}
+En dicho código, debemos garantizar que:
+\begin{itemize}
+    \item El consumidor no lea la variable antes de que el productor escriba en ella.
+    \item En la segunda escritura del productor, debemos esperar a que antes la haya leído el consumidor.
+    \item En la segundaa lectura del consumidor, debemos esperar a que antes haya modificado la variable el productor.
+\end{itemize}
+Siguiendo estos pasos, obtendríamos un código como el siguiente:
+\begin{minted}{pascal}
+    process CopiaFicheros ;
+    var ant, sig : T ;
+    begin
+      sig = leer(f) ;
+      while not fin(f) do begin
+        ant = sig ;
+        cobegin
+          escribir(g, anterior) ;
+          sig = leer(f) ;
+        coend
+      end
+    end
+\end{minted}
+
+
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:3}
-    Construir, utilizando las instrucciones concurrentes \verb|cobegin-coend| y \verb|fork-join|, programas concurrentes que se correspondan con los grafos de precedencia que se muestran en la figura \ref{fig:grafoEj2}.
+    Construir, utilizando las instrucciones concurrentes \verb|cobegin-coend| y \verb|fork-join|, programas concurrentes que se correspondan con los grafos de precedencia que se muestran en la figura~\ref{fig:grafoEj3}.
     \begin{figure}
         \centering
         \begin{subfigure}{0.3\textwidth}
@@ -86,7 +150,7 @@
                 
                 \end{tikzpicture}
             }
-            \caption{DAG del apartado \ref{ej:3.1}.}
+            \caption{DAG del apartado~\ref{ej:3.1}.}
             \label{fig:grafoEj3.1}
             
         \end{subfigure}
@@ -120,7 +184,7 @@
                 
                 \end{tikzpicture}
             }
-            \caption{DAG del apartado \ref{ej:3.2}.}
+            \caption{DAG del apartado~\ref{ej:3.2}.}
             \label{fig:grafoEj3.2}
             
         \end{subfigure}
@@ -153,28 +217,142 @@
                 
                 \end{tikzpicture}
             }
-            \caption{DAG del apartado \ref{ej:3.3}.}
+            \caption{DAG del apartado~\ref{ej:3.3}.}
             \label{fig:grafoEj3.3}
             
         \end{subfigure}
-        \caption{Grafos de precedencia del ejercicio \ref{ej:3}.}
+        \caption{Grafos de precedencia del ejercicio~\ref{ej:3}.}
         \label{fig:grafoEj3}
     \end{figure}
+
+
     \begin{enumerate}
         \item \label{ej:3.1}
-         Grafo de precedencia de la figura \ref{fig:grafoEj3.1}:
+         Grafo de precedencia de la figura~\ref{fig:grafoEj3.1}:
+
+         \begin{figure}[H]
+             \centering
+             \begin{subfigure}[b]{0.45\textwidth}
+                \centering
+                 \begin{minted}{pascal}
+                     begin
+                       P0;
+                       fork P2; P1;
+                       P3;
+                       fork P5; P4;
+                       join P2; join P5;
+                       P6;
+                     end
+                 \end{minted}
+             \end{subfigure}\hfill
+             \begin{subfigure}[b]{0.45\textwidth}
+                \centering
+                 \begin{minted}{pascal}
+                     begin
+                       P0;
+                       cobegin
+                         P2;
+                         begin
+                           P1;
+                           P3;
+                           cobegin P4; P5; coend
+                         end
+                       coend
+                       P6;
+                     end
+                 \end{minted}
+             \end{subfigure}
+         \end{figure}
+                 
         \item \label{ej:3.2}
-        Grafo de precedencia de la figura \ref{fig:grafoEj3.2}:
+        Grafo de precedencia de la figura~\ref{fig:grafoEj3.2}:
+        \begin{figure}[H]
+            \centering
+            \begin{subfigure}[b]{0.45\textwidth}
+                \centering
+                \begin{minted}{pascal}
+                begin
+                  P0;
+                  fork P2; P1;
+                  fork P5; fork P3; P4;
+                  join P2; join P5; join P3;
+                  P6;
+                end
+                \end{minted}
+            \end{subfigure}\hfill
+            \begin{subfigure}[b]{0.45\textwidth}
+                \centering
+                \begin{minted}{pascal}
+                begin
+                  P0;
+                  cobegin
+                    P2;
+                    begin
+                      P1;
+                      cobegin P4; P3; P5; coend
+                    end
+                  coend
+                  P6;
+                end
+                \end{minted}
+            \end{subfigure}
+        \end{figure}
+        
          \item \label{ej:3.3}
-         Grafo de precedencia de la figura \ref{fig:grafoEj3.3}:
+         Grafo de precedencia de la figura~\ref{fig:grafoEj3.3}:
+         \begin{minted}{pascal}
+         begin
+           P0;
+           fork P2; P1;
+           P3;
+           fork P4; join P2; P5;
+           join P4;
+           P6;
+         end
+         \end{minted}
+
+         Sin embargo, no podemos hacer al 100\% el DAG de la figura~\ref{fig:grafoEj3.3}, ya que tras \verb|P3| debemos crear una estructura \verb|cobegin-coend|. Sin embargo, este debe esperar a \verb|P2|, por lo que la estructura \verb|cobegin-coend| tendrá que esperar a \verb|P2|, pero es que \verb|P4| no necesita que \verb|P2| termine. 
+
+         Por tanto, no se puede programar con creación de hebras de forma estructurada. Sin embargo, podemos ofrecer dos soluciones, cada una que impone algo que el grafo no nos dice:
+         \begin{enumerate}
+             \item Si obligamos a que \verb|P4| también espere a \verb|P2|, obtendríamos el código:
+                 \begin{minted}{pascal}
+                     begin
+                       P0;
+                       cobegin
+                         P2;
+                         begin
+                           P1; P3;
+                         end
+                       coend
+                       cobegin P4; P5; coend
+                       P6;
+                     end
+                 \end{minted}
+                 
+             \item Si ahora queremos ejecutar de forma concurrente el flujo que tiene a \verb|P1|, \verb|P3| y \verb|P4| con el flujo que tiene a \verb|P2|, entonces obligamos a que \verb|P5| espere a \verb|P4| (que no nos lo especifica el DAG, pero lo necesitamos para poder programarlo de forma estructurada):
+                 \begin{minted}{pascal}
+                     begin
+                       P0;
+                       cobegin
+                         begin P1; P3; P4; end
+                         P2;
+                       coend
+                       P5;
+                       P6;
+                     end
+                 \end{minted}
+                 
+         \end{enumerate}
     \end{enumerate}
+
 \end{ejercicio}
 
 
 
 \begin{ejercicio} \label{ej:4}
     Dados los siguientes fragmentos de programas concurrentes, obtener sus grafos de precedencia asociados:
-    \begin{figure}
+    \begin{figure}[H]
         \centering
         \begin{subfigure}[b]{0.45\textwidth}
             \centering
@@ -220,12 +398,79 @@
             \caption{Programa 2.}
             \label{code:prog2_Ej4}
         \end{subfigure}
-        \caption{Programas concurrentes del ejercicio \ref{ej:4}.}
+        \caption{Programas concurrentes del ejercicio~\ref{ej:4}.}
     \end{figure}
     
     \begin{enumerate}
-        \item Programa de la figura \ref{code:prog1_Ej4}.
-        \item Programa de la figura \ref{code:prog2_Ej4}.
+        \item Programa de la figura~\ref{code:prog1_Ej4}.
+
+            \begin{figure}[H]
+            \centering
+            \begin{tikzpicture}[
+                    node/.style={circle, draw, minimum size=1cm},
+                    edge/.style={-stealth}
+                    ]
+                \node[node] (P0) {P0};
+                \node[node, below=of P0] (P4) {P4};
+                \node[node, left=of P4] (P3) {P3};
+                \node[node, left=of P3] (P2) {P2};
+                \node[node, left=of P2] (P1) {P1};
+                \node[node, right=of P4] (P5) {P5};
+                \node[node, right=of P5] (P6) {P6};
+                \node[node, right=of P6] (P7) {P7};
+                \node[node, below=of P4] (P8) {P8};
+
+                \draw[edge] (P0) -- (P1);
+                \draw[edge] (P0) -- (P2);
+                \draw[edge] (P0) -- (P3);
+                \draw[edge] (P0) -- (P4);
+                \draw[edge] (P0) -- (P5);
+                \draw[edge] (P0) -- (P6);
+                \draw[edge] (P0) -- (P7);
+
+                \draw[edge] (P1) -- (P8);
+                \draw[edge] (P2) -- (P8);
+                \draw[edge] (P3) -- (P8);
+                \draw[edge] (P4) -- (P8);
+                \draw[edge] (P5) -- (P8);
+                \draw[edge] (P6) -- (P8);
+                \draw[edge] (P7) -- (P8);
+            \end{tikzpicture}
+            \caption{DAG para la figura~\ref{code:prog1_Ej4}.}
+            \end{figure}
+        \item Programa de la figura~\ref{code:prog2_Ej4}.
+            \begin{figure}[H]
+            \centering
+            \begin{tikzpicture}[node/.style={circle, draw, minimum size=1cm},
+                                edge/.style={-stealth}]
+                \node[node] (P0) {P0};
+                \node[node, below left=of P0] (P2) {P2};
+                \node[node, left=of P2] (P1) {P1};
+                \node[node, below right=of P0] (P3) {P3};
+                \node[node, right=of P3] (P4) {P4};
+                % // TODO: Arreglar esto, para que salga P5 entre P1 y P2
+                \node[node, below right=of P1] (P5) {P5};
+                % // TODO: Arreglar esto, para que salga P6 entre P3 y P4
+                \node[node, below left=of P4] (P6) {P6};
+
+                % // TODO: Arreglar esto, para que salga P7 entre P5 y P6
+                \node[below=of P0] (A) {};
+                \node[below=of A] (B) {};
+                \node[node, below=of B] (P7) {P7};
+                
+                \draw[edge] (P0) -- (P1);
+                \draw[edge] (P0) -- (P2);
+                \draw[edge] (P0) -- (P3);
+                \draw[edge] (P0) -- (P4);
+                \draw[edge] (P1) -- (P5);
+                \draw[edge] (P2) -- (P5);
+                \draw[edge] (P3) -- (P6);
+                \draw[edge] (P4) -- (P6);
+                \draw[edge] (P5) -- (P7);
+                \draw[edge] (P6) -- (P7);
+            \end{tikzpicture}
+            \caption{DAG para la figura~\ref{code:prog2_Ej4}.}
+            \end{figure}
     \end{enumerate}
 \end{ejercicio}
 
@@ -238,7 +483,7 @@
     en la impresora). En la variable común a los 2 procesos \verb|n| se lleva la cuenta de los impulsos. El
     proceso acumulador puede invocar un procedimiento \verb|Espera_impulso| para esperar a que llegue
     un impulso, y el proceso escritor puede llamar a \verb|Espera_fin_hora| para esperar a que termine
-    una hora. El código de los procesos de este programa podría ser el descrito en el Código Fuente \ref{code:ej5}.
+    una hora. El código de los procesos de este programa podría ser el descrito en el Código Fuente~\ref{code:ej5}.
     \begin{observacion}
         En el programa se usan sentencias de acceso a la variable \verb|n| encerradas entre los símbolos \verb|<| y
         \verb|>|. Esto significa que cada una de esas sentencias se ejecuta en exclusión mutua entre los dos
@@ -270,7 +515,7 @@
                 end
             end
         \end{minted}
-        \caption{Código acumulador-escritor del ejercicio \ref{ej:5}.}
+        \caption{Código acumulador-escritor del ejercicio~\ref{ej:5}.}
         \label{code:ej5}
     \end{listing}
 \end{ejercicio}
@@ -287,7 +532,7 @@
     da igual el estado en que queda \verb|a| después de obtener \verb|b|). Para ello disponemos de la función
     \verb|Sort| que ordena un tramo de \verb|a| (entre las entradas \verb|s| y \verb|t|, ambas incluidas). También disponemos
     la función \verb|Copiar|, que copia un tramo de \verb|a| (desde \verb|s| hasta \verb|t|) en \verb|b| (a partir de \verb|o|). Estas funciones
-    se muestran en el Código Fuente \ref{code:ej_6SortCopiar}.
+    se muestran en el Código Fuente~\ref{code:ej_6SortCopiar}.
     \begin{listing}
         \begin{minted}{pascal}
             procedure Sort( s,t : integer );
@@ -306,7 +551,7 @@
                         b[o+d] := a[s+d] ;
                 end
         \end{minted}
-        \caption{Procedimientos \mintinline{pascal}{Sort} y \mintinline{pascal}{Copiar} del ejercicio \ref{ej:6}.}
+        \caption{Procedimientos \mintinline{pascal}{Sort} y \mintinline{pascal}{Copiar} del ejercicio~\ref{ej:6}.}
         \label{code:ej_6SortCopiar}
     \end{listing}
 
@@ -317,7 +562,7 @@
         \item Ordenar las dos mitades de \verb|a| de forma concurrente, y después mezclar dichas dos mitades
         en un segundo vector \verb|b| (para mezclar usamos un procedimiento \verb|Merge|).
     \end{enumerate}
-    En el Código Fuente \ref{code:ej6_2versiones} se muestra el código de ambas versiones.
+    En el Código Fuente~\ref{code:ej6_2versiones} se muestra el código de ambas versiones.
     \begin{listing}
         \begin{minted}{pascal}
             procedure Secuencial() ;
@@ -336,11 +581,11 @@
                     Merge( 1, n+1, 2*n );
                 end
         \end{minted}
-        \caption{Procedimientos \mintinline{pascal}{Secuencial} y \mintinline{pascal}{Concurrente} del ejercicio \ref{ej:6}.}
+        \caption{Procedimientos \mintinline{pascal}{Secuencial} y \mintinline{pascal}{Concurrente} del ejercicio~\ref{ej:6}.}
         \label{code:ej6_2versiones}
     \end{listing}
 
-    El código de la función \verb|Merge|, disponible en el Código Fuente \ref{code:ej6_Merge}, se encarga de ir leyendo las dos mitades de \verb|a|, en cada paso, seleccionar el menor elemento de los dos siguientes por leer (uno en cada mitad), y escribir dicho menor elemento en la siguiente mitad del vector mezclado \verb|b|.
+    El código de la función \verb|Merge|, disponible en el Código Fuente~\ref{code:ej6_Merge}, se encarga de ir leyendo las dos mitades de \verb|a|, en cada paso, seleccionar el menor elemento de los dos siguientes por leer (uno en cada mitad), y escribir dicho menor elemento en la siguiente mitad del vector mezclado \verb|b|.
     \begin{listing}
         \begin{minted}{pascal}
             procedure Merge( inferior, medio, superior: integer ) ;
@@ -369,7 +614,7 @@
                     else Copiar( escribir, leer2, superior ); { copiar segunda }
                 end
         \end{minted}
-        \caption{Procedimiento \mintinline{pascal}{Merge} del ejercicio \ref{ej:6}.}
+        \caption{Procedimiento \mintinline{pascal}{Merge} del ejercicio~\ref{ej:6}.}
         \label{code:ej6_Merge}
     \end{listing}
 
@@ -394,7 +639,7 @@
 \end{ejercicio}
 
 \begin{ejercicio} \label{ej:7}
-    SSupongamos que tenemos un programa con tres matrices (\verb|a|, \verb|b| y \verb|c|) de valores flotantes declaradas
+    Supongamos que tenemos un programa con tres matrices (\verb|a|, \verb|b| y \verb|c|) de valores flotantes declaradas
     como variables globales. La multiplicación secuencial de \verb|a| y \verb|b| (almacenando el resultado en \verb|c|)
     se puede hacer mediante un procedimiento \verb|MultiplicacionSec| declarado como aparece aquí:
     \begin{minted}{pascal}
@@ -416,9 +661,9 @@
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:8}
-    Un trozo de programa ejecuta nueve rutinas o actividades (\verb|P1|, \verb|P2|, . . . , \verb|P9|), repetidas veces,
-    de forma concurrentemente con \verb|cobegin-coend| (ver trozo de código de la figura \ref{code:ej8_enunciado}), pero que requieren
-    sincronizarse según determinado grafo (ver la figura \ref{fig:ej8_grafo}).
+    Un trozo de programa ejecuta nueve rutinas o actividades (\verb|P1|, \verb|P2|, \ldots, \verb|P9|), repetidas veces,
+    de forma concurrentemente con \verb|cobegin-coend| (ver trozo de código de la figura~\ref{code:ej8_enunciado}), pero que requieren
+    sincronizarse según determinado grafo (ver la figura~\ref{fig:ej8_grafo}).
     \begin{figure}
         \centering
         \begin{subfigure}{0.45\textwidth}
@@ -431,7 +676,7 @@
                     P7 ; P8 ; P9 ;
                 coend
             \end{minted}
-            \caption{Código del ejercicio \ref{ej:8}.}
+            \caption{Código del ejercicio~\ref{ej:8}.}
             \label{code:ej8_enunciado}
         \end{subfigure} \hfill
         \begin{subfigure}{0.45\textwidth}
@@ -468,10 +713,10 @@
                 
                 \end{tikzpicture}
             }
-            \caption{DAG del ejercicio \ref{ej:8}.}
+            \caption{DAG del ejercicio~\ref{ej:8}.}
             \label{fig:ej8_grafo}
         \end{subfigure}
-        \caption{Figuras del ejercicio \ref{ej:8}.}
+        \caption{Figuras del ejercicio~\ref{ej:8}.}
     \end{figure}
 
     Supón que queremos realizar la sincronización indicada en el grafo, usando para ello llamadas
@@ -488,7 +733,7 @@
 
 
 \begin{ejercicio}
-    En el ejercicio \ref{ej:8} los procesos \verb|P1|, \verb|P2|, . . ., \verb|P9| se ponen en marcha usando \verb|cobegin-coend|.
+    En el ejercicio~\ref{ej:8} los procesos \verb|P1|, \verb|P2|, \ldots, \verb|P9| se ponen en marcha usando \verb|cobegin-coend|.
     Escribe un programa equivalente, que ponga en marcha todos los procesos, pero que use declaración
     estática de procesos, usando un vector de procesos \verb|P|, con índices desde 1 hasta 9, ambos incluidos. El proceso \verb|P[n]| contiene una secuencia de instrucciones desconocida, que llamamos \verb|S_n|, y además debe incluir las llamadas necesarias a \verb|Acabar| y \verb|EsperarPor| (con la misma implementación que antes) para lograr la sincronización adecuada. Se incluye aquí una plantilla:
     \begin{minted}{pascal}
@@ -504,43 +749,220 @@
 \begin{ejercicio}
     Para los siguientes fragmentos de código, obtener la \emph{poscondición} adecuada para convertirlo en un triple demostrable con la Lógica de Programas:
     \begin{enumerate}
-        \item $\{i < 10\} \quad i = 2 \astº i + 1 \quad \{ \}$
-        \item $\{i > 0\} \quad i = i - 1; \quad \{ \}$
-        \item $\{i > j\} \quad i = i + 1;~j = j + 1 \quad \{ \}$
-        \item $\{\text{falso}\} \quad a = a + 7; \quad \{ \}$
-        \item $\{\text{verdad}\} \quad i = 3;~j = 2 \ast i \quad \{ \}$
-        \item $\{\text{verdad}\} \quad c = a + b;~c = \nicefrac{c}{2} \quad \{ \}$
+        \item $\{i < 10\} \quad i = 2 \astº i + 1 \quad \{ \}$\\
+            Obtenemos la postcondición de este triple razonando matemáticamente:
+            \begin{align*}
+                i &< 10 \\
+                2\astº i &< 20 \\
+                i' = 2\astº i + 1 &< 21
+            \end{align*}
+            donde hemos notado por $i'$ al nuevo valor que adopta la variable $i$.\\
+
+            Por tanto, la postcondición del triple es: $i < 21$.
+
+            Pasamos ahora a demostrar el triple
+            \begin{equation*}
+               \{i < 10\} \quad i = 2 \astº i + 1 \quad \{i<21\}
+            \end{equation*}
+            
+            usando el axioma de asignación:
+            \begin{gather*}
+                \{i<21\}^i_{2\astº i + 1}\quad i=2\astº i + 1\quad \{i<21\} \\
+                \{i<21\}^i_{2\astº i + 1} \equiv \{2\astº i + 1 < 21\} \equiv \{i < 10\} 
+            \end{gather*}
+            y obteniendo finalmente
+            \begin{equation*}
+                \{i<10\}\quad i=2\astº i + 1\quad \{i<21\} \\
+            \end{equation*}
+
+        \item $\{i > 0\} \quad i = i - 1; \quad \{ \}$\\
+            Obtenemos la postcondición:
+            \begin{align*}
+                i &> 0 \\
+                i' = i-1 &> -1
+            \end{align*}
+            Y pasamos ahora a demostrar el triple
+            \begin{equation*}
+                \{i>0\} \quad i=i-1 \quad\{i>-1\}
+            \end{equation*}
+            usando el axioma de asignación:
+            \begin{equation*}
+                \{i>0\} \equiv \{i-1>-1\} \equiv \{i>-1\}^i_{i-1} \quad i=i-1 \quad\{i>-1\}
+            \end{equation*}
+
+        \item $\{i > j\} \quad i = i + 1;~j = j + 1 \quad \{ \}$\\
+            De forma matemática y notando por $i'$ y $j'$ a las modificaciones de $i$ y $j$, respectivamente:
+            \begin{align*}
+                i &> j \\
+                i' = i+1 &> j+1\\
+                i' &> j+1 = j' \\
+                i' &> j'
+            \end{align*}
+            Demostramos ahora el triple
+            \begin{equation*}
+                \{i > j\} \quad i = i + 1;~j = j + 1 \quad \{i>j\}
+            \end{equation*}
+            usando la regla de la composición:
+            \begin{equation*}
+                \dfrac{\{P\}S_1\{Q\}, \{Q\}S_2\{R\}}{\{P\}S_1;S_2\{R\}} \\
+            \end{equation*}
+                Por lo que bastará probar los triples
+                \begin{equation*}
+                    \{i>j\}\ i=i+1\ \{i>j+1\} \qquad \{i>j+1\}\ j=j+1\ \{i>j\}
+                \end{equation*}
+                para tener demostrado el triple que nos interesa.
+
+                \begin{enumerate}
+                    \item Probamos el primer triple mediante el axioma de asignación:
+                        \begin{equation*}
+                            \{i>j\} \equiv \{i+1>j+1\} \equiv \{i>j+1\}^i_{i+1}\ i=i+1\ \{i>j+1\}
+                        \end{equation*}
+                    \item Y finalmente probamos el segundo trambién mediante el axioma de asignación:
+                        \begin{equation*}
+                            \{i>j+1\} \equiv \{i>j\}^j_{j+1}\ j=j+1\ \{i>j\}
+                        \end{equation*}
+                \end{enumerate}
+                Como ambos son ciertos, el triple que queríamos demostrar también lo es, gracias a la regla de composición.
+        \item $\{\text{falso}\} \quad a = a + 7; \quad \{ \}$\\
+            En este caso, partimos de un estado del programa inalcanzable, por lo que en la postcondición podemos poner cualquier estado del programa, es decir, $\{\text{verdad}\}$.
+        \item $\{\text{verdad}\} \quad i = 3;~j = 2 \ast i \quad \{ \}$\\
+            Como partimos de cualquier estado del programa y sólo se realizan asignaciones, es fácil intuir cuál será la postcondición:
+            \begin{gather*}
+                i = 3 \\
+                j = 2\astº i = 2\astº 3 = 6
+            \end{gather*}
+            Pasamos a demostrar el triple
+            \begin{equation*}
+                \{\text{verdad}\} \quad i = 3;~j = 2 \ast i \quad \{i=3\ \land\ j=6\}
+            \end{equation*}
+            usando la regla de composición, por lo que nos será suficiente probar los triples:
+            \begin{equation*}
+                \{\text{verdad}\}\ i=3\ \{i=3\} \qquad \{i=3\}\ j=2\astº i\ \{i=3\ \land\ j=6\}
+            \end{equation*}
+            \begin{enumerate}
+                \item Para el primer triple, usamos el axioma de asignación:
+                    \begin{equation*}
+                        \{\text{verdad}\} \equiv \{3=3\} \equiv \{i=3\}^i_3\ i=3\ \{i=3\}
+                    \end{equation*}
+                \item Para el segundo, volvemos a usar el axioma de asignación:
+                    \begin{gather*}
+                        \{i=3\ \land\ j=6\}^j_{2\astºi}\ j=2\astº i\ \{i=3\ \land\ j=6\}\\
+                        \{i=3\ \land\ j=6\}^j_{2\astºi} \equiv \{i=3\ \land\ 2\astº i=6\} \equiv\\ 
+                        \equiv \{i=3\ \land 2\astº 3=6\} \equiv \{i=3\ \land\ 6=6\} \equiv \{i=3\}
+                    \end{gather*}
+            \end{enumerate}
+            Ambos triples son ciertos, luego por la regla de la composición tenemos demostrado nuestro triple.
+        \item $\{\text{verdad}\} \quad c = a + b;~c = \nicefrac{c}{2} \quad \{ \}$\\
+            Notando por $c'$ al nuevo valor de $c$:
+            \begin{align*}
+                c &= a + b \\
+                c' = \nicefrac{c}{2} &= \frac{a+b}{2}
+            \end{align*}
+            Tratamos de probar el triple
+            \begin{equation*}
+                \{\text{verdad}\} \quad c = a + b;~c = \nicefrac{c}{2} \quad \left\{c=\frac{a+b}{2}\right\}
+            \end{equation*}
+            usando la regla de la composición, basta con probar los triples
+            \begin{equation*}
+                \{\text{verdad}\}\ c=a+b;\ \{c=a+b\} \qquad \{c=a+b\}\ c=\nicefrac{c}{2};\ \left\{c=\frac{a+b}{2}\right\}
+            \end{equation*}
+            \begin{enumerate}
+                \item Para el primero, usamos el axioma de asignación:
+                    \begin{equation*}
+                        \{\text{verdad}\}\equiv\{a+b=a+b\}\equiv \{c=a+b\}^c_{a+b}\ c=a+b\ \{c=a+b\}
+                    \end{equation*}
+                \item Para la segunda, también usamos el axioma de asignación:
+                    \begin{equation*}
+                        \{c=a+b\}\equiv \left\{\frac{c}{2} = \frac{a+b}{2}\right\} \equiv \left\{c=\frac{a+b}{2}\right\}^c_{\nicefrac{c}{2}}\ c=\nicefrac{c}{2}\ \left\{c=\frac{a+b}{2}\right\}
+
+                    \end{equation*}
+            \end{enumerate}
+            Usando la relga de composición, tenemos demostrado nuestro triple.
     \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
     ¿Cuáles de los siguientes triples no son demostrables con la Lógica de Programas?
     \begin{enumerate}
-        \item $\{i > 0\} \quad i = i - 1; \quad \{i \geq 0\}$
-        \item $\{x \geq 7\} \quad x = x + 3; \quad \{x \geq 9\}$
-        \item $\{i < 9\} \quad i = 2 \ast i + 1; \quad \{ i \leq 20\}$
-        \item $\{a > 0\} \quad a = a - 7; \quad \{a > -6\}$
+        \item $\{i > 0\} \quad i = i - 1; \quad \{i \geq 0\}$\\
+            Tratamos de aplicar el axioma de asignación:
+            \begin{equation*}
+                \{i\geq 1\} \equiv \{i-1\geq 0\}\equiv\{i\geq 0\}^i_{i-1}\ i=i-1\ \{i\geq 0\}
+            \end{equation*}
+            En dicho caso, el triple es cierto siempre y cuando $i \in \mathbb{Z}$, ya que si $i$ es natural y tenemos que $i>0$, entonces $i\geq 1$.
+        \item $\{x \geq 7\} \quad x = x + 3; \quad \{x \geq 9\}$\\
+            Tratamos de aplicar el axioma de asignación:
+            \begin{equation*}
+                \{x\geq 6\} \equiv \{x+3\geq 9\} \equiv \{x\geq 9\}^x_{x+3}\ x = x + 3; \quad \{x \geq 9\}
+            \end{equation*}
+            Como $\{x\geq 7\}\rightarrow\{x\geq 6\}$, tenemos que el triple es cierto, por la segunda regla de la consecuencia:
+            \begin{equation*}
+                \dfrac{\{R\}\rightarrow\{P\},\{P\}S\{Q\}}{\{R\}S\{Q\}}
+            \end{equation*}
+
+        \item $\{i < 9\} \quad i = 2 \ast i + 1; \quad \{ i \leq 20\}$\\
+            Tratamos de aplicar el axioma de asignación:
+            \begin{equation*}
+                \{i\leq 20\}^i_{2\ast i+1}\ i = 2 \ast i + 1; \ \{ i \leq 20\}
+            \end{equation*}
+            \begin{gather*}
+                \{i\leq 20\}^i_{2\ast i+1}\equiv \{2\ast i+1 \leq 20\} \equiv \{2\ast i \leq 19\} \equiv \left\{i\leq \frac{19}{2} = 9.5\right\}
+            \end{gather*}
+            y llegamos a que el triple
+            \begin{equation*}
+                \{i\leq 9.5\}\ i = 2 \ast i + 1; \ \{ i \leq 20\}
+            \end{equation*}
+            es cierto. Como $\{i<9\}\rightarrow\{i\leq 9.5\}$, tenemos que nuestro triple es cierto, por la segunda regla de la consecuencia.
+        \item $\{a > 0\} \quad a = a - 7; \quad \{a > -6\}$\\
+            Tratamos de aplicar el axioma de asignación:
+            \begin{equation*}
+                \{a>1\} \equiv \{a-7>-6\} \equiv \{a>-6\}^a_{a-7}\ a=a-7\ \{a>-6\}
+            \end{equation*}
+            Como $\{a>0\}\not\rightarrow \{a>1\}$, nuestro triple es falso. Como contraejemplo, basta considerar:
+            \begin{align*}
+                a &= 1 \\
+                a &> 0 \\
+                a' = a-7 = 1-7 = -6 &\not > -6
+            \end{align*}
     \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
     Si el triple $\{P\} C \{Q\}$ es demostrable, indicar por qué los siguientes triples también lo son (o no se pueden demostrar y por qué):
     \begin{enumerate}
-        \item $\{P\} C \{Q \lor P\}$
-        \item $\{P \land D\} C \{Q\}$
-        \item $\{P \lor D\} C \{Q\}$
-        \item $\{P\} C \{Q \lor D\}$
-        \item $\{P\} C \{Q \land P\}$
+        \item $\{P\} C \{Q \lor P\}$\\
+           Es demostrable, ya que $\{Q\}\rightarrow\{Q \lor P\}$ y por la primera regla de la consecuencia, tomando $R=Q \lor P$:
+         \begin{equation*}
+            \dfrac{\{P\}C\{Q\}, \{Q\}\rightarrow\{R\}}{\{P\}C\{R\}}
+        \end{equation*}
+
+        \item $\{P \land D\} C \{Q\}$\\
+            No podemos demostrarlo, ya que $\{P\}\not\rightarrow\{P \land D\}$.
+        \item $\{P \lor D\} C \{Q\}$\\
+            Es demostrable, ya que $\{P\}\rightarrow\{P \lor D\}$ y por la segunda regla de la consecuencia, tomando $R=P \lor D$:
+        \begin{equation*}
+            \dfrac{\{P\}\rightarrow\{R\},\{R\}C\{Q\}}{\{P\}C\{Q\}}
+        \end{equation*}
+
+        \item $\{P\} C \{Q \lor D\}$\\
+            Al igual que hemos hecho en el apartado 1, es demostrable ya que ${\{Q\}\rightarrow\{Q \lor D\}}$ y usando la primera regla de la consecuencia.
+        \item $\{P\} C \{Q \land P\}$\\
+            No podemos demostrarlo, ya que $\{Q\}\not\rightarrow\{Q \land P\}$.
     \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
     Si el triple $\{P\} C \{Q\}$ es demostrable, ¿cuál de los siguientes triples no se puede demostrar?
     \begin{enumerate}
-        \item $\{P \land D\} C \{Q\}$
-        \item $\{P \lor D\} C \{Q\}$
-        \item $\{P\} C \{Q \lor D\}$
-        \item $\{P\} C \{Q \lor P\}$
+        \item $\{P \land D\} C \{Q\}$\\
+            No puede demostrarse, ya que $\{P\}\not\rightarrow\{P \land D\}$.
+        \item $\{P \lor D\} C \{Q\}$\\
+            Puede demostrarse mediante la segunda regla de la consecuencia, ya que $\{P\}\rightarrow\{P \lor D\}$.
+        \item $\{P\} C \{Q \lor D\}$\\
+            Puede demostrarse mediante la primera regla de la consecuencia, ya que ${\{Q\}\rightarrow\{Q \lor D\}}$.
+
+        \item $\{P\} C \{Q \lor P\}$\\
+        Puede demostrarse mediante la primera regla de la consecuencia, ya que ${\{Q\}\rightarrow\{Q \lor P\}}$.
     \end{enumerate}
 \end{ejercicio}
 

@@ -151,7 +151,7 @@ int main(){
     cout << resultado_hebra << endl;
 }
 ```
-Aunque funciona el código, se trata de un mecanismo **inseguro**, cualquier hebra puede modificar el valor de la variable `resultado_hebra` y no tenemos ningún mecanismo para hacer que sólo la hebra correspondiente pueda escribir en la variabel y la hebra que obtiene el resultado pueda leerla.
+Aunque funciona el código, se trata de un mecanismo **inseguro**, cualquier hebra puede modificar el valor de la variable `resultado_hebra` y no tenemos ningún mecanismo para hacer que sólo la hebra correspondiente pueda escribir en la variable y la hebra que obtiene el resultado pueda leerla.
 
 ### Usar un parámetro de salida
 En vez de usar una variable global, podemos en su lugar hacer uso de un parámetro de la función como si fuera un parámetro de salida:
@@ -267,5 +267,8 @@ int main(){
     
     // Obtener la duración en microsegundos
     duration<float, micro> duracion = instante_final - instante_inicial;
+    
+    // Consultar la duracion
+    cout << "tiempo de ejecucion: " << duracion.count() << " microsegundos." << endl;
 }
 ```
