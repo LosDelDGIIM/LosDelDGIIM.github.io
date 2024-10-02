@@ -1,15 +1,24 @@
-# Seminario 1
+# Sistemas Concurrentes y Distribuidos. Seminario 1 de Prácticas.
+
+**Autor:** José Juan Urrutia Milán
+***
+
+- **Asignatura:** Sistemas Concurrentes y Distribuidos.  
+- **Curso Académico:** 2024-25.
+- **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
+- **Profesor:** Mancia Anguita López.
+- **Descripción:** Resúmen del Seminario 1 de Prácticas.
 
 En este seminario aprenderemos a manejar hebras nativas de C++11, así como ver las principales clases para manejarlas y sincronizarlas.  
 Este seminario nos servirá para las prácticas P1 y P2.
 
-# Definiciones
+# 1. Definiciones
 
 La teoría de procesos y hebras se vió ya en la asignatura de Sistemas Operativos. Por tanto, aquí sólo destacamos lo siguiente:  
 Los procesos son devoradores de memoria y son pesados al cambiar de contexto, por lo que se crearon las hebras, flujos de control que trabajan de forma concurrente y comparten zona de memoria del proceso, como el código y variables.  
 Las hebras sólo necesitan una pila, pc y sp. Es una entidad ligera en cuanto al uso de recursos.
 
-# Hebras en C++11
+# 2. Hebras en C++11
 
 Usaremos C++11 porque introduce funcionalidad para gestión de hebras, como tipos de datos, clases y funciones.  
   
