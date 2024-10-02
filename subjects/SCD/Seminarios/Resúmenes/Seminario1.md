@@ -281,3 +281,224 @@ int main(){
     cout << "tiempo de ejecucion: " << duracion.count() << " microsegundos." << endl;
 }
 ```
+# 3. Sincronización básica
+
+Aprenderemos ahora el uso de dos clases de `C++11` que nos permiten garantizar la exclusión mutua en regiones críticas (vea en los apuntes de teoría qué es la exclusión mutua).  
+  
+Disponemos de dos clases que nos permiten esta funcionalidad:
+
+## Tipos atómicos
+(Incluir la librería `<atomic>`)  
+Se trata de un tipo de dato genérico, `atomic<T>` que nos permite crear variables que tienen protegidas operaciones pequeñas, para que estas se hagan de forma atómica.  
+  
+Si `expr` es un literal simple (no una variable) y `k` es una variable de tipo `atomic<T>>`, podremos hacer las operaciones:  
+`k = expr`, `k++`, `k--`, `k += expr` y `k -= expr`  
+de forma atómica.  
+  
+Este tipo de dato aprovecha instrucciones máquina que permiten dichos funcionamientos.
+
+## Objetos mutex
+Los objetos `mutex` son una implementación de los cerrojos en `C++11`. Con ellos podemos tener en nuestro códigos secciones críticas más complicadas de las que nos permiten los tipos atómicos.  
+  
+Para usar un objeto `mutex`, lo declaramos (no hace falta pasar ningún valor) y posteriormente, podremos usar sobre él dos métodos: `lock` y `unlock`. El lector debería estar familiarizado con los cerrojos y dichos métodos (si no, consultar los apuntes de Arquitectura de Computadores).  
+```c++
+mutex cerrojo;
+
+cerrojo.lock();
+// Sección crítica
+cerrojo.unlock();
+```
+  
+A tener en cuenta:
+- Por cada sección crítica que tengamos, hace falta tener una variable `mutex` distinta.  
+- La espera de la función `lock` se trata de una espera ocupada.
+- Los tiempos obtenidos con `mutex` son mucho más superiores para los obtenidos con tipos atómicos en un mismo código.  
+  
+Por tanto, cuando queramos hacer operaciones sencillas, usaremos tipos atómicos y cuando queramos hacer cosas más complejas, usaremos objetos `mutex`.
+
+# 4. Introducción a los semáforos
+Los semáforos son una herramienta usada en programación concurrente con un nivel de abstracción superior al de los cerrojos, aunque encontramos a los monitores (se verán en el siguiente seminario), con un nivel de abstracción mayor.  
+  
+Los semáforos no utilizan espera ocupada como los cerrojos, sino que directamente bloquean los procesos que se encuentran en espera.  
+Resuelven fácilmente la exclusión mutua, así como **cualquier** problema de sincronización. Sin embargo, hay problemas de sincronización que son difíciles de resolver con semáforos. Para ello, tenemos a los monitores.  
+  
+Los semáforos se implementan mediante una estructura de datos accesible únicamente mediante subprogramas específicos, lo que aumenta la seguridad.  
+Un semáforo almacena un conjunto de procesos bloqueados (que empieza inicialmente vacío) y un valor entero no negativo.  
+  
+Debemos pensar en los semáforos como en una generalización de los cerrojos. Ahora, en vez de tener un sólo proceso en la región que envuelve el cerrojo, podremos tener tantos como queramos.
+  
+## Funciones
+Existen dos funciones relativas a los semáforos, `sem_wait` y `sem_signal`, cuyo código podemos ver a continuación:
+
+```c++
+sem_wait(s){
+    if(s.valor == 0)
+        // Bloquea el proceso
+    
+    s.valor -= 1;
+}
+
+sem_signal(s){
+    s.valor += 1;
+    if(/*Hay procesos esperando*/)
+        // Reanuda un proceso
+}
+```
+El semáforo se iniciará en un valor determinado, entendiendo el valor `0` como que ningún proceso más puede pasar el semáforo (intuitivamente, el semáforo está en rojo).  
+  
+Cada vez que un proceso quiera pasar un semáforo, usaremos la función `sem_wait`, para que compruebe si el semáforo es mayor que 0 y, en cuyo caso, se meta el proceso y decremente el valor del semáforo.  
+Cuando un proceso salga de la zona del semáforo, usaremos la función `sem_signal`, para incrementar el valor del semáforo, dejando pasar a otro proceso en caso de haber procesos esperando.
+  
+Por la forma en la que están programadas las funciones `sem_wait` y `sem_signal`, el valor del semáforo nunca será negativo.
+
+## Ejemplos de uso de semáforos
+### Espera única
+Tenemos un proceso $P$ que espera la finalización de una operación de un proceso $Q$:
+```pascal
+process P;
+begin
+    {Funcionalidad 1}
+end
+```
+
+```
+process Q;
+begin
+    {Funcionalidad 2}
+end
+```
+***
+Queremos que `Funcionalidad 1` suceda antes que `Funcionalidad 2`.  
+  
+Para ello, haremos uso de un semáforo, de la siguiente forma:
+```pascal
+{Variable que comparten P y Q}
+var s : semaphore := 0;
+```
+
+```
+process P;
+begin
+    {Funcionalidad 1}
+    sem_signal(s);  {Pone semáforo a 1}
+end
+```
+
+```
+process Q;
+begin
+    sem_wait(s);    {Espera a que suceda Funcionalidad 1}
+    {Funcionalidad 2}
+end
+```
+
+### Exclusión mutua
+En este caso, tenemos una sección crítica que queremos que se ejecute en exclusión mutua:
+```pascal
+process Procesos[i : 0..n-1];
+begin
+    while true do begin
+        {Sección crítica}
+    end
+end
+```
+***
+Lo solucionamos con un semáforo, esta vez en la misma región de código:
+```pascal
+var s : semaphore := 1;
+
+process Procesos[i : 0..n-1];
+begin
+    while true do begin
+        sem_wait(s) 
+        {Sección crítica}
+        sem_signal(s)
+    end
+end
+```
+Acabamos de simular el funcionamiento de un cerrojo con un semáforo.  
+Aunque hemos solucionado el problema con un semáforo, se recomienda resolverlo con cerrojos, por ser más eficiente.
+
+### Productor/Consumidor
+Queremos ahora recrear el paradigma del productor/consumidr visto en teoría:
+```pascal
+var x : integer;
+```
+```pascal
+process Productor; {calcula x}
+var a : integer;
+begin
+    while true do begin
+        a := ProducirValor();
+        x := a;
+    end
+end
+```
+```pascal
+process Consumidor; {lee x}
+var b : integer;
+begin
+    while true do begin
+        b := x;
+        UsarValor(b);
+    end
+end
+```
+***
+Para ello, usamos 2 semáforos:
+```pascal
+var x : integer;
+    s1 : semaphore = 0;
+    s2 : semaphore = 1;
+```
+```pascal
+process Productor; {calcula x}
+var a : integer;
+begin
+    while true do begin
+        a := ProducirValor();
+        sem_wait(s2)
+        x := a;
+        sem_signal(s1)
+    end
+end
+```
+```pascal
+process Consumidor; {lee x}
+var b : integer;
+begin
+    while true do begin
+        sem_wait(s1)
+        b := x;
+        sem_signal(s2)
+        UsarValor(b);
+    end
+end
+```
+
+# 5. Usos de semáforos en C++
+En este caso, usaremos una clase `Semaphore` creada por los profesores de la asignatura, la cual puede encontrarse en los ficheros `scd.h` y `scd.cpp`. En los mismos, tenemos creadas las funciones `sem_wait` y `sem_signal`.  
+Para usarlos, incluimos: `#include "scd.h"`, el espacio de nombres `using namespace scd;` y al compilar, incluir el fichero `scd.cpp`.
+  
+- La inicialización del valor de un semáforo debe hacerse obligatoriamente en su declaración.
+- Las variables de tipo `Semaphore` pueden pasarse como parámetros, pero no se pueden copiar mediante asignaciones. Se destruyen automáticamente.  
+  
+Para usar semáforos:
+```c++
+Semaphore s1 = 1;
+Semaphore s2(0);
+
+sem_wait(s1);
+sem_signal(s1);
+```
+  
+Pueden declararse arrays y vectores de semáforos:
+```c++
+const int N = 3;
+Semaphore s[N] = {1, 2, 3};
+```
+
+```c++
+vector<Semaphore> s;
+s.push_back(Semaphore(0));
+```
