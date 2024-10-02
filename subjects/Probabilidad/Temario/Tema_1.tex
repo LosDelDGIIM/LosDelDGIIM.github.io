@@ -458,7 +458,7 @@ Su gráfica es ampliamente conocida y tiene forma de campana, como podemos ver e
             \addlegendentry{$\mu=1, \sigma^2=2.0$}
         \end{axis}
     \end{tikzpicture}
-    \caption{Gráfica de la función de densidad de una variable aleatoria con distribución normal.}
+    \caption{Función de densidad de una v. a. con distribución normal.}
     \label{fig:normal}
 \end{figure}
 
@@ -510,7 +510,7 @@ Esto es incoherente, por lo que se introduce una \emph{corrección por continuid
 Esta corrección por continuidad siempre se realiza sumando o restando 0.5 (Este valor se ha establecido así porque, empíricamente, se ha comprobado que mejora la aproximación.) a los extremos de la desigualdad (según convenga).
 Lo que buscaremos es cubrir los valores de la variable aleatoria discreta en un intervalo de la variable aleatoria continua. Veamos algunos ejemplos:
 \begin{itemize}
-    \item Para aproximar $P[X= x_i]$ en la binomial, se calculará $P[x_i-0.5 \leq X\leq x_i+0.5]$ en la normal.
+    \item Para aproximar $P[X= x_i]$ en la binomial, se calculará con la expresión dada por $P[x_i-0.5 \leq X\leq x_i+0.5]$ en la normal.
     \item Para aproximar $P[X\leq x_i]$ en la binomial, se calculará $P[X\leq x_i+0.5]$ en la normal.
     \item Para aproximar $P[X\geq x_i]$ en la binomial, se calculará $P[X\geq x_i-0.5]$ en la normal.
 \end{itemize}
@@ -606,8 +606,388 @@ Veamos algunas aplicaciones de esta distribución:
 \end{proof}
 
 \begin{prop}
-    Sea $X$ una variable aleatoria tal que $X\sim \exp(\lambda)$. Entonces, sus momentos no centrados de orden $k\in \bb{N}\cup \{0\}$ son:
+    Sea $X$ una variable aleatoria tal que $X\sim \exp(\lambda)$. Entonces, sus momentos no centrados de orden $k\in \bb{N}$ son:
     \begin{equation*}
         E[X^k] = \dfrac{k!}{\lambda^k}
     \end{equation*}
 \end{prop}
+\begin{proof}
+    Demostramos por inducción sobre $k$ que:
+    \begin{equation*}
+        \dfrac{d^k}{dt^k} M_X(t) = \dfrac{k!\cdot \lm}{(\lambda-t)^{k+1}}
+    \end{equation*}
+    \begin{itemize}
+        \item \ul{Caso base}: $k=1$.
+        \begin{equation*}
+            \dfrac{d}{dt} M_X(t) = \dfrac{\lambda}{(\lambda-t)^2} = \dfrac{1! \cdot \lm}{(\lambda-t)^{1+1}}
+        \end{equation*}
+
+        \item \ul{Supuesto cierto para $k$, demostramos para $k+1$}:
+        \begin{align*}
+            \dfrac{d^{k+1}}{dt^{k+1}} M_X(t) &= \dfrac{d}{dt} \left( \dfrac{d^k}{dt^k} M_X(t) \right)
+            = \dfrac{d}{dt} \left( \dfrac{k!\cdot \lm}{(\lambda-t)^{k+1}} \right)
+            = \dfrac{k!\cdot \lm}{(\lambda-t)^{2k+2}}\cdot (k+1)(\lambda-t)^k
+            =\\&= \dfrac{(k+1)k! \cdot \lm}{(\lambda-t)^{k+2}}
+            = \dfrac{(k+1)! \cdot \lm}{(\lambda-t)^{k+2}}
+        \end{align*}        
+    \end{itemize}
+
+    Por tanto, una vez demostrado este resultado, tenemos que:
+    \begin{align*}
+        E[X^k] &= \dfrac{d^k}{dt^k} M_X(t) \Big|_{t=0}
+        = \dfrac{k! \cdot \lm}{(\lambda-0)^{k+1}}
+        = \dfrac{k!}{\lambda^k}
+    \end{align*}
+\end{proof}
+
+Como consecuencia, tenemos que:
+\begin{equation*}
+    E[X] = \dfrac{1}{\lambda} \qquad \Var[X] = E[X^2] - E[X]^2 = \dfrac{2}{\lambda^2} - \dfrac{1}{\lambda^2} = \dfrac{1}{\lambda^2}
+\end{equation*}
+
+
+\begin{prop}[Falta de memoria]
+    Sea $X$ una variable aleatoria tal que $X\sim \exp(\lambda)$. Entonces, se cumple la propiedad de falta de memoria:
+    \begin{equation*}
+        P(X\geq t + s \mid X\geq s) = P(X\geq t) \qquad \forall t,s \in \bb{R^+}
+    \end{equation*}
+    \begin{proof}
+        Tenemos que:
+        \begin{align*}
+            P(X\geq t + s \mid X\geq s) &= \frac{P(X\geq t+s, X\geq s)}{P(X\geq s)} = \frac{P(X\geq t+s)}{P(X\geq s)} \AstIg\\
+            \AstIg & \dfrac{e^{-\lm(t+s)}}{e^{-\lm s}} = e^{-\lm t} \AstIg P(X\geq t)
+        \end{align*}
+        donde en $(\ast)$ hemos usado que:
+        \begin{equation*}
+            P(X\geq x) = 1-P(X<x) = 1-P(X\leq x) = 1-(1-e^{-\lm x}) = e^{-\lm x}
+        \end{equation*}
+    \end{proof}
+    % // TODO : Interpretación ?
+\end{prop}
+
+La gráfica de la función de densidad de la exponencial es decreciente y asintótica al eje de abscisas, como podemos ver en la Figura \ref{fig:exp}.
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            no markers, domain=0:3, samples=100,
+            axis lines*=left, xlabel=$x$, ylabel=$f_X(x)$,
+            height=5cm, width=12cm,
+            xtick={0,1,2,3}, ytick=\empty,
+            enlargelimits=false, clip=false, axis on top,
+            grid = major
+        ]
+
+            % Bucle para distintos valores de lambda, con leyenda
+            \addplot [very thick,cyan!50!black] {1*exp(-1*x)};
+            \addlegendentry{$\lambda=1.0$}
+
+            \addplot [very thick,red!50!black] {2*exp(-2*x)};
+            \addlegendentry{$\lambda=2.0$}
+
+            \addplot [very thick,green!50!black] {0.5*exp(-0.5*x)};
+            \addlegendentry{$\lambda=0.5$}
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Función de densidad de una v. a. con distribución exponencial.}
+    \label{fig:exp}
+\end{figure}
+
+\subsection{Relación con la Distribución Poisson}
+
+La distribución exponencial está estrechamente relacionada con la distribución de Poisson.
+\begin{itemize}
+    \item Sea $Y$ una variable aleatoria que indica
+    el número de sucesos aleatorios que ocurren en un intervalo de tiempo de longitud $t$
+    cuando la razón de ocurrencia de dichos sucesos es $\lambda$. Entonces, $Y\sim \cc{P}(\lambda t)$.
+
+    \item Sea $X$ una variable aleatoria que indica el tiempo que transcurre hasta que se produce el primer suceso aleatorio,
+    o bien el tiempo que transcurre entre dos sucesos consecutivos, cuando la razón de ocurrencia de dichos sucesos es $\lambda$.
+    Entonces, $X\sim \exp(\lambda)$.
+\end{itemize}
+
+Su relación es la siguiente:
+\begin{equation*}
+    P[Y=0] = e^{-\lambda t} = P[X\geq t] = 1-P[X<t] = 1-1+e^{-\lambda t} = e^{-\lambda t}
+\end{equation*}
+Esto es coherente, ya que la probabilidad de que no se produzca ningún suceso en un intervalo de tiempo de longitud $t$ ($P[Y=0]$) es la misma que la probabilidad de que
+el tiempo que transcurra hasta que se produzca el primer suceso sea mayor que $t$ ($P[X\geq t]$).
+
+\section{Distribución de Erlang}
+
+\begin{definicion}[Distribución de Erlang]
+    Una variable aleatoria continua $X$ sigue una distribución de Erlang con parámetros $n\in \bb{N}$ y $\lambda\in \bb{R}^+$,
+    si modela el tiempo que transcurre hasta que se producen $n$ sucesos aleatorios consecutivos, cuando la razón de ocurrencia de dichos sucesos es $\lambda$.
+    Lo denotaremos como $X\sim \cc{E}(n,\lambda)$.
+\end{definicion}
+\begin{observacion}
+    La distribución de Erlang es una generalización de la distribución exponencial.
+    En efecto, si $n=1$, entonces la distribución de Erlang se reduce a la distribución exponencial.
+\end{observacion}
+
+\begin{prop}
+    Sea $X$ una variable aleatoria tal que $X\sim \cc{E}(n,\lambda)$. Entonces, su función de densidad es:
+    \begin{equation*}
+        f_X(x) = \begin{cases}
+            \dfrac{\lambda^n}{\Gamma(n)}x^{n-1}e^{-\lambda x} & x\geq 0\\
+            0 & x<0
+        \end{cases}
+    \end{equation*}
+    donde $\Gamma(n) = (n-1)!$.
+    % // TODO: Por qué
+\end{prop}
+\begin{proof}
+    La función de densidad debe cumplir las siguientes propiedades:
+    \begin{itemize}
+        \item $f_X(x)\geq 0$ para todo $x\in \mathbb{R}$.
+        
+        Esto es directo puesto que el término exponencial siempre es positivo.
+        
+        \item $\displaystyle \int_{-\infty}^{\infty} f_X(x) \, dx = 1$.
+        \begin{align*}
+            \int_{-\infty}^{\infty} f_X(x) \, dx &= \int_{0}^{\infty} \dfrac{\lambda^n}{\Gamma(n)}x^{n-1}e^{-\lambda x}~dx
+            = \dfrac{\lambda^n}{\Gamma(n)} \int_{0}^{\infty} x^{n-1}e^{-\lambda x}~dx
+        \end{align*}
+
+        Para calcular la última integral, realizamos inducción sobre $n$ para demostrar que:
+        \begin{equation*}
+            \int_{0}^{\infty} x^{n-1}e^{-\lambda x}~dx = \dfrac{(n-1)!}{\lambda^n} \qquad
+            \forall n\in \bb{N}
+        \end{equation*}
+        \begin{itemize}
+            \item \ul{Caso base}: $n=1$.
+            \begin{equation*}
+                \int_{0}^{\infty} e^{-\lambda x}~dx = \left[ -\dfrac{e^{-\lambda x}}{\lambda} \right]_{0}^{\infty} = \dfrac{1}{\lambda}
+            \end{equation*}
+
+            \item \ul{Supuesto cierto para $n$, demostramos para $n+1$}:
+            \begin{align*}
+                \int_{0}^{\infty} x^{n}e^{-\lambda x}~dx &=
+                \MetInt{u(x) = x^n \quad v'(x) = e^{-\lambda x}}{u'(x) = nx^{n-1} \quad v(x) = -\dfrac{e^{-\lambda x}}{\lambda}}
+                =\\&= \left[ -\dfrac{x^n e^{-\lambda x}}{\lambda} \right]_{0}^{\infty} + \dfrac{n}{\lambda} \int_{0}^{\infty} x^{n-1}e^{-\lambda x}~dx
+                \AstIg \dfrac{n}{\lambda} \dfrac{(n-1)!}{\lambda^n} = \dfrac{n!}{\lambda^{n+1}}
+            \end{align*}
+            donde en $(\ast)$ hemos usado la hipótesis de inducción.
+        \end{itemize}
+        Por tanto, tenemos que:
+        \begin{align*}
+            \int_{-\infty}^{\infty} f_X(x) \, dx &=
+            \dfrac{\lambda^n}{\Gamma(n)} \cdot \dfrac{(n-1)!}{\lambda^n} = 1
+        \end{align*}
+    \end{itemize}
+\end{proof}
+
+\begin{prop}
+    Sea $X$ una variable aleatoria tal que $X\sim \cc{E}(n,\lambda)$. Entonces, su función generatriz de momentos es:
+    \begin{equation*}
+        M_X(t) = \left( \dfrac{\lambda}{\lambda-t} \right)^n \quad \text{si } t<\lambda
+    \end{equation*}
+\end{prop}
+\begin{proof}
+    Tenemos que:
+    \begin{align*}
+        M_X(t) &= E\left[e^{tX}\right] = \int_{0}^{\infty} e^{tx} \dfrac{\lambda^n}{\Gamma(n)}x^{n-1}e^{-\lambda x}~dx
+        = \dfrac{\lambda^n}{\Gamma(n)} \int_{0}^{\infty} x^{n-1}e^{(t-\lambda)x}~dx
+    \end{align*}
+    
+    Mediante una inducción análoga a la realizada en la demostración anterior, podemos demostrar (asumiendo que $t<\lambda$) que:
+    \begin{equation*}
+        \int_{0}^{\infty} x^{n-1}e^{(t-\lambda)x}~dx = \dfrac{\Gamma(n)}{(\lambda-t)^n} \qquad \forall n\in \bb{N}
+    \end{equation*}
+
+    Por tanto, tenemos que:
+    \begin{align*}
+        M_X(t) &= \dfrac{\lambda^n}{\Gamma(n)} \cdot \dfrac{\Gamma(n)}{(\lambda-t)^n} = \left( \dfrac{\lambda}{\lambda-t} \right)^n
+    \end{align*}
+\end{proof}
+
+
+\section{Distribución Gamma}
+
+\subsection{Función Gamma}
+Previamente al estudio de la distribución Gamma, vamos a estudiar la función Gamma, que es la función que da nombre a la distribución.
+Esta es:
+\Func{\Gamma}{\bb{R}^+}{\bb{R}^+}{x}{\displaystyle \int_{0}^{\infty} t^{x-1}e^{-t}~dt}
+
+Algunas propiedades son:
+\begin{enumerate}
+    \item $\Gamma(1) = 1$. \label{prop:gamma1}
+    \begin{align*}
+        \Gamma(1) &= \int_{0}^{\infty} e^{-t}~dt = \left[ -e^{-t} \right]_{0}^{\infty} = 1
+    \end{align*}
+
+    \item $\Gamma(x+1) = x\Gamma(x),\qquad \forall x\in \bb{R}^+$. \label{prop:gamma2}
+    
+    Mediante integración por partes, tenemos que:
+    \begin{align*}
+        \Gamma(x+1) &= \int_{0}^{\infty} t^{x}e^{-t}~dt
+        = \MetInt{u(t) = t^x \quad v'(t) = e^{-t}}{u'(t) = xt^{x-1} \quad v(t) = -e^{-t}}
+        =\\&= \left[ -t^xe^{-t} \right]_{0}^{\infty} + x\int_{0}^{\infty} t^{x-1}e^{-t}~dt
+        = x\Gamma(x)
+    \end{align*}
+
+    \item $\Gamma(n) = (n-1)!,\qquad \forall n\in \bb{N}$. \label{prop:gamma3}
+    
+    Se deduce directamente de las dos propiedades anteriores.
+
+    \item \label{prop:gamma4}
+    Si $\lm\in \bb{R}^+$, entonces $\displaystyle \int_{0}^{\infty} t^{x-1}e^{-\lm t}~dt = \dfrac{\Gamma(x)}{\lm^x}$.
+    
+    Hacemos el cambio de variable $t = \nicefrac{u}{\lm}$:
+    \begin{align*}
+        \int_{0}^{\infty} t^{x-1}e^{-\lm t}~dt
+        &= \MetInt{t=\nicefrac{u}{\lm}}{\frac{dt}{du} = \nicefrac{1}{\lm}}
+        = \int_{0}^{\infty} \left( \dfrac{u}{\lm} \right)^{x-1}e^{-u}~\dfrac{du}{\lm}
+        =\\&= \dfrac{1}{\lm^x} \int_{0}^{\infty} u^{x-1}e^{-u}~du
+        = \dfrac{\Gamma(x)}{\lm^x}
+    \end{align*}
+
+    \item $\Gamma\left(\nicefrac{1}{2}\right) = \sqrt{\pi}$. \label{prop:gamma5}
+    \begin{align*}
+        \Gamma\left(\nicefrac{1}{2}\right) &= \int_{0}^{\infty} t^{\nicefrac{-1}{2}}e^{-t}~dt
+        = \MetInt{t = \nicefrac{u^2}{2}}{\nicefrac{dt}{du} = u}
+        = \int_{0}^{\infty}\sqrt{2}\cdot u^{-1}\cdot  e^{\nicefrac{-u^2}{2}}\cdot u~du
+        =\\&= \sqrt{2} \int_{0}^{\infty} e^{\nicefrac{-u^2}{2}}~du
+    \end{align*}
+
+    Como la función $x\mapsto e^{-x^2}$ es par, tenemos que:
+    \begin{align*}
+        \Gamma\left(\nicefrac{1}{2}\right) &= \sqrt{2} \int_{0}^{\infty} e^{\nicefrac{-u^2}{2}}~du
+        = \dfrac{\sqrt{2}}{2} \int_{-\infty}^{\infty} e^{\nicefrac{-u^2}{2}}~du
+        = \dfrac{1}{\sqrt{2}} \int_{-\infty}^{\infty} e^{\nicefrac{-u^2}{2}}~du
+        =\\&= \dfrac{\red{\sqrt{\pi}}}{\sqrt{2\red{\pi}}} \int_{-\infty}^{\infty} e^{\nicefrac{-u^2}{2}}~du
+        = \sqrt{\pi}\cdot \int_{-\infty}^{\infty} \dfrac{1}{\sqrt{2\pi}} e^{\nicefrac{-u^2}{2}}~du
+        \AstIg \sqrt{\pi}
+    \end{align*}
+    donde en $(\ast)$ hemos usado que el integrando es la función de densidad de una distribución $\cc{N}(0,1)$.
+\end{enumerate}
+
+\subsection{Distribución Gamma}
+
+\begin{definicion}[Distribución Gamma]
+    Una variable aleatoria continua $X$ sigue una distribución Gamma con parámetros $u,\lm\in \bb{R}^+$,
+    si su función de densidad es:
+    \begin{equation*}
+        f_X(x) = \begin{cases}
+            \dfrac{\lambda^u}{\Gamma(u)}x^{u-1}e^{-\lambda x} & x\geq 0\\
+            0 & x<0
+        \end{cases}
+    \end{equation*}
+    Lo denotaremos como $X\sim \Gamma(u,\lambda)$.
+    \begin{itemize}
+        \item El parámetro $u$ se conoce como \emph{parámetro de forma}.
+        \item El parámetro $\lm$ se conoce como \emph{parámetro de escala}.
+    \end{itemize}
+\end{definicion}
+\begin{observacion}
+    La distribución Gamma es una generalización de la distribución de Erlang.
+    En efecto, si $u\in \bb{N}$, entonces la distribución Gamma se reduce a la distribución de Erlang.
+\end{observacion}
+
+\begin{prop}
+    Sea $X$ una variable aleatoria tal que $X\sim \Gamma(u,\lambda)$. Entonces,
+    su función de densidad cumple las condiciones de una función de densidad.
+\end{prop}
+\begin{proof}
+    La función de densidad debe cumplir las siguientes propiedades:
+    \begin{itemize}
+        \item $f_X(x)\geq 0$ para todo $x\in \mathbb{R}$.
+        
+        Esto es directo puesto que el término exponencial siempre es positivo.
+        
+        \item $\displaystyle \int_{-\infty}^{\infty} f_X(x) \, dx = 1$.
+        \begin{align*}
+            \int_{-\infty}^{\infty} f_X(x) \, dx &= \int_{0}^{\infty} \dfrac{\lambda^u}{\Gamma(u)}x^{u-1}e^{-\lambda x}~dx
+            = \dfrac{\lambda^u}{\Gamma(u)} \int_{0}^{\infty} x^{u-1}e^{-\lambda x}~dx
+            \AstIg \\& \AstIg \dfrac{\lambda^u}{\Gamma(u)}\cdot \dfrac{\Gamma(u)}{\lambda^u} = 1
+        \end{align*}
+        donde en $(\ast)$ hemos usado la propiedad \ref{prop:gamma4} de la función Gamma.
+    \end{itemize}
+\end{proof}
+
+\begin{prop}
+    Sea $X$ una variable aleatoria tal que $X\sim \Gamma(u,\lambda)$. Entonces, su función generatriz de momentos es:
+    \begin{equation*}
+        M_X(t) = \left( \dfrac{\lambda}{\lambda-t} \right)^u \quad \text{si } t<\lambda
+    \end{equation*}
+\end{prop}
+\begin{proof}
+    Tenemos que:
+    \begin{align*}
+        M_X(t) &= E\left[e^{tX}\right] = \int_{0}^{\infty} e^{tx} \dfrac{\lambda^u}{\Gamma(u)}x^{u-1}e^{-\lambda x}~dx
+        = \dfrac{\lambda^u}{\Gamma(u)} \int_{0}^{\infty} x^{u-1}e^{(t-\lambda)x}~dx
+    \end{align*}
+    
+    Usando de nuevo la propiedad \ref{prop:gamma4} de la función Gamma, como $\lm-t>0$, tenemos:
+    \begin{align*}
+        M_X(t) &= \dfrac{\lambda^u}{\Gamma(u)} \cdot \dfrac{\Gamma(u)}{(\lambda-t)^u} = \left( \dfrac{\lambda}{\lambda-t} \right)^u
+    \end{align*}
+\end{proof}
+
+\begin{prop}
+    Sea $X$ una variable aleatoria tal que $X\sim \Gamma(u,\lambda)$. Entonces, sus momentos no centrados de orden $k\in \bb{N}$ son:
+    \begin{equation*}
+        E[X^k] = \dfrac{\Gamma(u+k)}{\lambda^k~\Gamma(u)}
+    \end{equation*}
+\end{prop}
+\begin{proof}
+    Hay dos maneras de demostrar este resultado:
+    \begin{description}
+        \item[Opción 1] Usar la función generatriz de momentos.
+        
+        Demostramos por inducción sobre $k$ que:
+        \begin{equation*}
+            \dfrac{d^k}{dt^k} M_X(t) = \left(\dfrac{\lambda}{\lambda-t}\right)^u \cdot \dfrac{\prod\limits_{i=0}^{k-1}(u+i)}{(\lambda-t)^k}
+            \qquad \forall k\in \bb{N}
+        \end{equation*}
+        \begin{itemize}
+            \item \ul{Caso base}: $k=1$.
+            \begin{equation*}
+                \dfrac{d}{dt} M_X(t)
+                = u\left( \dfrac{\lambda}{\lambda-t} \right)^{u-1} \cdot \dfrac{\lambda}{(\lambda-t)^2}
+                = \left( \dfrac{\lambda}{\lambda-t} \right)^u \cdot \dfrac{u}{\lambda-t}
+            \end{equation*}
+
+            \item \ul{Supuesto cierto para $k$, demostramos para $k+1$}:
+            \begin{align*}
+                \dfrac{d^{k+1}}{dt^{k+1}} M_X(t) &= \dfrac{d}{dt} \left( \dfrac{d^k}{dt^k} M_X(t) \right)
+                = \dfrac{d}{dt} \left( \left(\dfrac{\lambda}{\lambda-t}\right)^u \cdot \dfrac{\prod\limits_{i=0}^{k-1}(u+i)}{(\lambda-t)^k} \right)
+                =\\&= \left(\dfrac{\lambda}{\lambda-t}\right)^u \cdot \dfrac{u}{\lm-t}
+                \cdot \dfrac{\prod\limits_{i=0}^{k-1}(u+i)}{(\lm-t)^k}
+                + \left(\dfrac{\lambda}{\lambda-t}\right)^u \cdot \dfrac{\prod\limits_{i=0}^{k-1}(u+i)}{(\lambda-t)^{k+1}} \cdot k
+                =\\&= \left(\dfrac{\lambda}{\lambda-t}\right)^u \cdot \dfrac{\prod\limits_{i=0}^{k}(u+i)}{(\lambda-t)^{k+1}}
+            \end{align*}        
+        \end{itemize}
+
+        Por tanto, una vez demostrado este resultado, tenemos que:
+        \begin{align*}
+            E[X^k] &= \dfrac{d^k}{dt^k} M_X(t) \Big|_{t=0}
+            = \left(\dfrac{\lambda}{\lambda-0}\right)^u \cdot \dfrac{\prod\limits_{i=0}^{k-1}(u+i)}{(\lambda-0)^k}
+            = \dfrac{\prod\limits_{i=0}^{k-1}(u+i)}{\lambda^k} = \dfrac{\Gamma(u+k)}{\lambda^k~\Gamma(u)}
+        \end{align*}
+
+        \item[Opción 2] Usar la definición de los momentos no centrados.
+        \begin{align*}
+            E[X^k] &= \int_{0}^{\infty} x^k \dfrac{\lambda^u}{\Gamma(u)}x^{u-1}e^{-\lambda x}~dx
+            = \dfrac{\lambda^u}{\Gamma(u)} \int_{0}^{\infty} x^{u+k-1}e^{-\lambda x}~dx
+            \AstIg \\ &\AstIg \dfrac{\Gamma(u+k)\lm^u}{\lambda^{u+k}~\Gamma(u)}
+            = \dfrac{\Gamma(u+k)}{\lambda^k~\Gamma(u)}
+        \end{align*}
+        donde en $(\ast)$ hemos usado la propiedad \ref{prop:gamma4} de la función Gamma.
+    \end{description}
+\end{proof}
+
+Como consecuencia, tenemos que:
+\begin{equation*}
+    E[X] = \dfrac{u}{\lambda} \qquad
+    \Var[X] = E[X^2] - E[X]^2 = \dfrac{u(u+1)}{\lambda^2} - \dfrac{u^2}{\lambda^2} = \dfrac{u}{\lambda^2}
+\end{equation*}
+
+
+Algunas de sus utilidades son:
+\begin{itemize}
+    \item Tiene muchas aplicaciones en experimentos o fenómenos aleatorios que tienen asociadas v.a. que siempre son no negativas
+    y cuyas distribuciones son sesgadas a la derecha.
+    \item Algunos ejemplos y aplicaciones son: intervalos de tiempo entre dos fallos de un motor, también entre dos llegadas de automóviles a una gasolinera 
+    o tiempos de vida de sitemas electrónicos. % // TODO: Esto no es Erlang?
+\end{itemize}
