@@ -1,4 +1,13 @@
-# Seminario 1
+# Fundamentos de Redes. Seminario 1 de Prácticas.
+
+**Autor:** José Juan Urrutia Milán
+***
+
+- **Asignatura:** Fundamentos de Redes.  
+- **Curso Académico:** 2024-25.
+- **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
+- **Profesor:** Jorge Navarro Ortiz.
+- **Descripción:** Resúmen del Seminario 1 de Prácticas.
 
 Este seminario trata de la creación y configuración de 3 máquinas virtuales, 2 que simularán ser computadores y una tercera que simulará ser un router. Configuraremos las máquinas virtuales, las lanzaremos y cambiaremos en cada una su IP, para comprobar que están bien conectadas.
 
