@@ -361,7 +361,7 @@ begin
 end
 ```
 
-```
+```pascal
 process Q;
 begin
     {Funcionalidad 2}
@@ -376,7 +376,7 @@ Para ello, haremos uso de un semáforo, de la siguiente forma:
 var s : semaphore := 0;
 ```
 
-```
+```pascal
 process P;
 begin
     {Funcionalidad 1}
@@ -384,7 +384,7 @@ begin
 end
 ```
 
-```
+```pascal
 process Q;
 begin
     sem_wait(s);    {Espera a que suceda Funcionalidad 1}
