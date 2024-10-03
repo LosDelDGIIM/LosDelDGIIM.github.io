@@ -6,7 +6,7 @@
 - **Asignatura:** Sistemas Concurrentes y Distribuidos.  
 - **Curso Académico:** 2024-25.
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
-- **Profesor:** Mancia Anguita López.
+- **Profesor:** José Miguel Mantas Ruíz.
 - **Descripción:** Resúmen del Seminario 1 de Prácticas.
 
 En este seminario aprenderemos a manejar hebras nativas de C++11, así como ver las principales clases para manejarlas y sincronizarlas.  
@@ -361,7 +361,7 @@ begin
 end
 ```
 
-```
+```pascal
 process Q;
 begin
     {Funcionalidad 2}
@@ -376,7 +376,7 @@ Para ello, haremos uso de un semáforo, de la siguiente forma:
 var s : semaphore := 0;
 ```
 
-```
+```pascal
 process P;
 begin
     {Funcionalidad 1}
@@ -384,7 +384,7 @@ begin
 end
 ```
 
-```
+```pascal
 process Q;
 begin
     sem_wait(s);    {Espera a que suceda Funcionalidad 1}
