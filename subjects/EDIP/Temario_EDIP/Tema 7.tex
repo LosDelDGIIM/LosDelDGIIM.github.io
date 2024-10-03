@@ -476,6 +476,7 @@ Veamos que, efectivamente, se trata de una función masa de probabilidad.
             P(X\geq x) = 1-P(X<x) = 1-P(X\leq x-1) = 1-(1-(1-p)^x) = (1-p)^x
         \end{equation*}
     \end{proof}
+    % // TODO: Interpretación falta de memoria de Geométrica? No es la misma que la exponencial
 \end{prop}
 
 \section{Distribución binomial negativa}
@@ -726,6 +727,9 @@ Comprobemos que se trata de una función masa de probabilidad:
         \Var[X]=\frac{n(N-n)N_1(N-N_1)}{N^2(N-1)}
     \end{equation*}
 \end{prop}
+% // TODO: Esperanza y varianza de la hipergeométrica
+% https://www.ugr.es/~cdpye/CursoProbabilidad/pdf/P_T05_MediaVarianzaHipergeometrica.pdf
+
 
 \begin{prop}[Aproximación de Hipergeométrica a Binomial]
     Sea $X\leadsto H(N,N_1,n)$. Entonces, tenemos que, definiendo $p=\frac{N_1}{N}$, $X$ se aproxima a una distribución binomial $B(n,p)$.
@@ -734,12 +738,25 @@ Comprobemos que se trata de una función masa de probabilidad:
     
 \end{prop}
 \begin{proof}
-
-    Demostremos el siguiente resultado:
-    
-    \begin{equation*}
-        \lim_{N\to \infty}f(x) = \lim_{N\to \infty}\frac{\binom{N_1}{x}\binom{N-N_1}{n-x}}{\binom{N}{n}} = \binom{n}{x}p^x(1-p)^{n-x}
-    \end{equation*}
+    Tomando $N_1=Np$, consideremos la función masa de probabilidad de la variable $X$ y la desarrollamos de la siguiente forma:
+    \begin{align*}
+        P(X=x)
+        &= \frac{\binom{Np}{x}\binom{N(1-p)}{n-x}}{\binom{N}{n}}
+        = \frac{(Np)!}{x!(Np-x)!}\frac{(N(1-p))!}{(n-x)!(N(1-p)-n+x)!}\frac{n!(N-n)!}{N!} =\\
+        &= \frac{n!}{x!(n-x)!}\frac{(Np)!}{(Np-x)!}\frac{(N(1-p))!}{(N(1-p)-n+x)!}\frac{(N-n)!}{N!}=\\
+        &= \binom{n}{x} \cdot \dfrac{Np(Np-1)\cdots (Np-x+1)}{N(N-1)\cdots (N-n+1)}
+        \cdot \\&\qquad \cdot \dfrac{N(1-p)(N(1-p)-1)\cdots (N(1-p)-n+x+1)}{N(N-1)\cdots (N-n+1)}
+    \end{align*}
+    Si observamos la última expresión, tanto el numerador como el denominador son polinomios
+    en $N$ de grado $n$, cuyos términos de mayor grado son, respectivamente, $(Np)^x(N(1-p))^{n-x}$ y $N^n$. Por tanto, tomando límites cuando $N$ tiende a infinito, se tiene:
+    \begin{align*}
+        \lim_{N\to \infty}f(x)
+        &= \lim_{N\to \infty} \binom{n}{x} \cdot \dfrac{Np(Np-1)\cdots (Np-x+1)}{N(N-1)\cdots (N-n+1)}
+        \cdot \\&\qquad \cdot \dfrac{N(1-p)(N(1-p)-1)\cdots (N(1-p)-n+x+1)}{N(N-1)\cdots (N-n+1)}
+        =\\&= \binom{n}{x} \cdot \lim_{N\to \infty} \dfrac{N^x(Np)^x(N(1-p))^{n-x}}{N^n}
+        = \binom{n}{x} \lim_{N\to \infty} \dfrac{N^np^x(1-p)^{n-x}}{N^n}
+        =\\&= \binom{n}{x} p^x(1-p)^{n-x}
+    \end{align*}
 \end{proof}
 
 \begin{ejemplo}
@@ -769,7 +786,7 @@ Comprobemos que se trata de una función masa de probabilidad:
 
         \item Si se considera un intervalo de tiempo muy pequeño (o una región muy pequeña):
         \begin{itemize}
-            \item La probabilidad de una ocurrencia es proporcional a la longitud del intervalo (el volumen de la región)
+            \item La probabilidad de una ocurrencia es proporcional a la longitud del intervalo (el volumen de la región).
             \item La probabilidad de dos o más ocurrencias es despreciable.
         \end{itemize}
     \end{enumerate}
@@ -781,6 +798,7 @@ Comprobemos que se trata de una función masa de probabilidad:
 \end{definicion}
 
 El razonamiento de su función masa de probabilidad no se explica en el presente documento, ya que se basa en la teoría de ecuaciones diferenciales. No obstante, demostramos que, efectivamente, es una función masa de probabilidad:
+% // TODO: Razonamiento f.m.p. Poisson
 \begin{prop} Sea $X\leadsto \mathcal{P}(\lambda)$. Entonces, su función masa de probabilidad es:
     \begin{equation*}
         f(x)=e^{-\lambda}\frac{\lambda^x}{x!}
@@ -883,15 +901,32 @@ El razonamiento de su función masa de probabilidad no se explica en el presente
     Definiendo $\lambda=np$, $X$ se aproxima a una distribución de Poisson $P(\lambda)$.
 
     De forma empírica, se ha demostrado que esta aproximación es adecuada si $np\leq~5$.
-    
 \end{prop}
 \begin{proof}
+    Reescribimos la función de masa de probabilidad de la binomial como sigue:
+    \begin{align*}
+        P[X=x] &= \binom{n}{x}p^x(1-p)^{n-x} = \frac{n!}{x!(n-x)!}\dfrac{(np)^x}{n^x}(1-p)^{n-x}
+        =\\&= \dfrac{(np)^x}{x!}\dfrac{n(n-1)\cdots (n-x+1)}{n^x}(1-p)^{n-x}
+    \end{align*}
 
-    Se deduce de la fórmula de Simeón-Poisson:
-    
+    Consideramos ahora $n\to \infty$ y $np\to\lm$. Entonces, tenemos que:
+    \begin{itemize}
+        \item $\displaystyle \lim_{n\to \infty}\dfrac{n(n-1)\cdots (n-x+1)}{n^x} = 1$
+        \item $\displaystyle \lim_{np\to \lm}\dfrac{(np)^x}{x!} = \dfrac{\lm^x}{x!}$
+        \item Como $n\to \infty$ y $np\to \lm$, tenemos que $p\to 0$, de donde:
+        \begin{equation*}
+            \lim_{\substack{n\to \infty\\np\to \lm}}(1-p)^{n-x}
+            \AstIg e^{\lim\limits_{\substack{n\to \infty\\np\to \lm}}(n-x)(-p)} = e^{-\lm}
+        \end{equation*}
+        donde en $(\ast)$ hemos empleado la Fórmula de Moivre\footnote{Concepto visto en Cálculo I para las indeterminaciones del tipo $1^\infty$.}.
+    \end{itemize}
+
+    Por tanto, tenemos que:
     \begin{equation*}
-        \lim_{n\to \infty,p\to 0}\binom{n}{k}p^k(1-p)^{n-k} = \frac{e^{-\lambda}\lambda^k}{k!} \qquad k\in \mathbb{N}
+        \lim_{\substack{n\to \infty\\np\to \lm}}P[X=x] = \frac{\lm^x}{x!}e^{-\lm}
     \end{equation*}
+
+    Por tanto, hemos demostrado que, si $n$ es muy grande y $p\approx 0$, la distribución binomial se aproxima a una distribución de Poisson.
 \end{proof}
 
 
@@ -918,50 +953,6 @@ El razonamiento de su función masa de probabilidad no se explica en el presente
 
 \section{Distribuciones Reproductivas}
 
-\begin{definicion}[Independencia de Variables Aleatorias]
-    Dadas $n$ variables aleatorias $X_1,X_2,\ldots,X_n$, se dice que son independientes si y solo si:
-    \begin{multline*}
-        P[X_1\leq x_1, X_2\leq x_2,\ldots, X_n\leq x_n] = P[X_1\leq x_1]P[X_2\leq x_2]\cdots P[X_n\leq x_n] \\ \forall x_1,x_2,\ldots,x_n\in \mathbb{R}
-    \end{multline*}    
-\end{definicion}
-\begin{ejemplo}
-    Sea $X=c$ una variable aleatoria degenerada, y sea $Y$ otra variable aleatoria cualquiera. Entonces, $X$ y $Y$ son independientes, ya que:
-    \begin{equation*}
-        P[X\leq x] = \begin{cases}
-            0 & \text{si } x< c \\
-            1 & \text{si } x\geq c
-        \end{cases}
-        \qquad
-        P[X\leq x, Y\leq y] = \begin{cases}
-            0 & \text{si } x< c \\
-            P[Y\leq y] & \text{si } x\geq c
-        \end{cases}
-    \end{equation*}
-
-    Por tanto, $P[X\leq x, Y\leq y] = P[X\leq x]P[Y\leq y]$.
-\end{ejemplo}
-
-\begin{teo}\label{teo:generatriz_momentos_independientes}
-    Sean $X_1,X_2,\ldots,X_n$ variables aleatorias independientes con función generatriz de momentos $M_{X_i}(t)$ para todo $i=1,\dots,n$. Entonces, la función generatriz de momentos de la variable aleatoria $X=\sum\limits_{i=1}^n X_i$ es:
-    \begin{equation*}
-        M_X(t)=\prod_{i=1}^n M_{X_i}(t)
-    \end{equation*}
-\end{teo}
-\begin{proof}
-    \begin{equation*}\begin{split}
-        M_X(t)
-        &= E[e^{tX}]
-        = E\left[e^{t\sum\limits_{i=1}^n X_i}\right]
-        = E\left[\prod_{i=1}^n e^{tX_i}\right]
-        = \prod_{i=1}^n E[e^{tX_i}]
-        = \prod_{i=1}^n M_{X_i}(t)
-    \end{split}\end{equation*}
-
-    % // TODO: Teorema de Multiplicación de Esperanzas
-    % // https://www.ugr.es/~cdpye/CursoProbabilidad/pdf/P_T07_Reproductividad.pdf
-\end{proof}
-
-
 \begin{definicion}[Reproductividad de Variables Aleatorias]
     Una familia $X_1,X_2,\ldots,X_n$ de variables aleatorias independientes con el mismo tipo de distribución
     se dice que es reproductiva si la variable aleatoria $X=\sum\limits_{i=1}^n$ sigue una distribución del mismo tipo.
@@ -981,7 +972,7 @@ El razonamiento de su función masa de probabilidad no se explica en el presente
             M_{X_i}(t) = (1-p+pe^t)^{k_i} \qquad i=1,\dots,n
         \end{equation*}
 
-        Usando el Teorema \ref{teo:generatriz_momentos_independientes}, tenemos que:
+        Usando el Teorema \ref{prop:generatriz_momentos_independientes}, tenemos que:
         \begin{align*}
             M_{\sum\limits_{i=1}^{n}X_i}(t) &= \prod_{i=1}^{n}M_{X_i}(t) = \prod_{i=1}^{n}(1-p+pe^t)^{k_i} = (1-p+pe^t)^{\sum\limits_{i=1}^{n}k_i}
         \end{align*}
@@ -1005,7 +996,7 @@ El razonamiento de su función masa de probabilidad no se explica en el presente
             M_{X_i}(t) = e^{\lambda_i(e^t-1)} \qquad i=1,\dots,n
         \end{equation*}
 
-        Usando el Teorema \ref{teo:generatriz_momentos_independientes}, tenemos que:
+        Usando el Teorema \ref{prop:generatriz_momentos_independientes}, tenemos que:
         \begin{align*}
             M_{\sum\limits_{i=1}^{n}X_i}(t) &= \prod_{i=1}^{n}M_{X_i}(t) = \prod_{i=1}^{n}e^{\lambda_i(e^t-1)} = e^{\left(\sum\limits_{i=1}^{n}\lambda_i\right)(e^t-1)}
         \end{align*}
@@ -1029,7 +1020,7 @@ El razonamiento de su función masa de probabilidad no se explica en el presente
             M_{X_i}(t) = \left(\dfrac{p}{1-(1-p)e^t}\right)^{k_i} \qquad i=1,\dots,n
         \end{equation*}
 
-        Usando el Teorema \ref{teo:generatriz_momentos_independientes}, tenemos que:
+        Usando el Teorema \ref{prop:generatriz_momentos_independientes}, tenemos que:
         \begin{align*}
             M_{\sum\limits_{i=1}^{n}X_i}(t) &= \prod_{i=1}^{n}M_{X_i}(t) = \prod_{i=1}^{n}\left(\dfrac{p}{1-(1-p)e^t}\right)^{k_i} = \left(\dfrac{p}{1-(1-p)e^t}\right)^{\sum\limits_{i=1}^{n}k_i}
         \end{align*}
