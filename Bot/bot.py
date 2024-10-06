@@ -832,6 +832,11 @@ async def captura_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
         context.user_data[SCREENSHOT_KEY].append(file_name)  # Guardar nombre de la captura
         await update.message.reply_text("Captura recibida.")
+
+        # Captura el mensaje adjunto si existe
+        if update.message.caption:
+            context.user_data[SCREENSHOT_KEY][-1] += " : " + update.message.caption
+    
     
     
     if len(context.user_data[SCREENSHOT_KEY]) < SCREENSHOTS_LIMIT:
@@ -907,6 +912,11 @@ async def archivos_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
         context.user_data[FILES_KEY].append(file_name)  # Guardar nombre del archivo
         await update.message.reply_text(f"Archivo recibido: {file_name}.")
+
+        # Captura el mensaje adjunto si existe
+        if update.message.caption:
+            context.user_data[FILES_KEY][-1] += " : " + update.message.caption
+    
 
     
     if len(context.user_data[FILES_KEY]) < FILES_LIMIT:
@@ -1217,7 +1227,9 @@ def gestionar_datos(datos: dict) -> bool:
 
     # Preparamos los ajuntos a enviar, obteniendo la ruta completa de cada archivo
     adjuntos = []
-    for file_name in datos.get(FILES_KEY, []) + datos.get(SCREENSHOT_KEY, []):
+    for file in datos.get(FILES_KEY, []) + datos.get(SCREENSHOT_KEY, []):
+        # Quitamos la caption, si la hubiera
+        file_name = file.split(" : ")[0]
         adjuntos.append(os.path.join(datos.get(DOWNLOADS_DIR_KEY), file_name))
     datos.pop(DOWNLOADS_DIR_KEY)
 
@@ -1244,8 +1256,8 @@ def gestionar_datos(datos: dict) -> bool:
     for key in [FILES_KEY, SCREENSHOT_KEY]:
         if key in datos and len(datos[key]) > 0:
             message_text += f"<li>{key}:\n<ul>\n"
-            for file_name in datos.get(key):
-                message_text += f"<li>{file_name}</li>\n"
+            for file in datos.get(key):
+                message_text += f"<li>{file}</li>\n"
             message_text += "</ul></li>\n"
 
             message_text += "<li>" + SEPARACION + "</li>\n"
