@@ -518,6 +518,27 @@ Siguiendo estos pasos, obtendríamos un código como el siguiente:
         \caption{Código acumulador-escritor del ejercicio~\ref{ej:5}.}
         \label{code:ej5}
     \end{listing}
+
+    En primer lugar, notemos que la intrucción $2$ siempre se ejecutará
+    antes que la instrucción $3$, ya que están ambas en el mismo proceso (el escritor).
+    Por tanto, las secuencia de instrucciones que se pueden dar son las intercalaciones de la instrucción $1$ con las otras dos instrucciones; es decir: $A)~1-2-3$, $B)~2-1-3$ y $C)~2-3-1$. El análisis de cada una de ellas está en la Tabla~\ref{tab:ej5}.
+    \begin{table}
+        \centering
+        \begin{tabular}{|lcc|lcc|lcc|}
+            \hline
+            \multicolumn{3}{|c|}{Opción $A$} & \multicolumn{3}{|c|}{Opción $B$} & \multicolumn{3}{|c|}{Opción $C$} \\ \hline
+            Operación & \verb|n| & Salida & Operación & \verb|n| & Salida & Operación & \verb|n| & Salida\\
+            \hline
+            $-$ & $k$ & $-$ & $-$ & $k$ & $-$ & $-$ & $k$ & $-$ \\
+            \verb|1|$\to$ \verb|n:=n+1| & $k+1$ & $-$ & \verb|2|$\to$ \verb|write(n)| & $k$ & $k$ & \verb|2|$\to$ \verb|write(n)| & $k$ & $k$ \\
+            \verb|2|$\to$ \verb|write(n)| & $k+1$ & $k+1$ & \verb|1|$\to$ \verb|n:=n+1| & $k+1$ & $k$ & \verb|3|$\to$ \verb|n:=0| & $0$ & $k$ \\
+            \verb|3|$\to$ \verb|n:=0| & $0$ & $k+1$ & \verb|3|$\to$ \verb|n:=0| & $0$ & $k$ & \verb|1|$\to$ \verb|n:=n+1| & $1$ & $k$ \\
+            \hline
+        \end{tabular}
+        \caption{Tabla de opciones del ejercicio~\ref{ej:5}.}
+        \label{tab:ej5}
+    \end{table}
+    Notemos que tanto la opción $A$ como la $C$ son válidas, ya que en ambas se contabiliza el impulso. No obstante, difieren entre sí, puesto que en la opción $A$ se contabiliza el impulso en la hora que termina (imprimiéndose entonces), mientras que en la opción $C$ se contabiliza el impulso en la hora siguiente (no imprimiéndose entonces en esta salida). No obstante, la opción $B$ es incorrecta, ya que no se contabiliza el impulso en la hora que termina ni en la siguiente.
 \end{ejercicio}
 
 
@@ -625,16 +646,27 @@ Siguiendo estos pasos, obtendríamos un código como el siguiente:
 
     El tiempo que tarda la versión secuencial sobre $2n$ elementos (llamaremos $S$ a dicho tiempo) será evidentemente $T_s(2n)$, luego:
     \[
-        S = T_s(n) = \dfrac{1}{2}\cdot (2n)^2 - \dfrac{1}{2}\cdot 2n = 2n^2 - n
+        S = T_s(2n) = \dfrac{1}{2}\cdot (2n)^2 - \dfrac{1}{2}\cdot 2n = 2n^2 - n
     \]
 
-    Con estas definiciones, calcular el tiempo que tardará la versión paralela, en dos casos:
+    Con estas definiciones, calcular el tiempo que tardará la versión paralela, en los dos siguientes casos. Para esto, hay que suponer que cuando el procedimiento \verb|Merge| actúa sobre un vector con $p$ entradas, tarda $p$ unidades de tiempo en ello, lo cual es razonable teniendo en cuenta que en esas circunstancias \verb|Merge| copia $p$ valores desde \verb|a| hacia \verb|b|. Si llamamos a este tiempo $T_m(p)$, podemos escribir $T_m(p) = p$. Escribe también una comparación cualitativa de los tres tiempos ($S$, $P_1$ y $P_2$). 
     \begin{enumerate}
         \item Las dos instancias concurrentes de \verb|Sort| se ejecutan en el mismo procesador (llamamos $P_1$ al tiempo que tarda).
+        
+        En este caso, tenemos que hay ganancia de tiempo, ya que las dos instancias de \verb|Sort| no pueden ejecutarse simultáneamente. Por tanto, tenemos que:
+        \begin{equation*}
+            P_1 = 2\cdot T_s(n) + T_m(2n) = 2\cdot \left( \dfrac{1}{2}\cdot n^2 - \dfrac{1}{2}\cdot n \right) + 2n = n^2 - n + 2n = n^2 + n
+        \end{equation*}
         \item Cada instancia de \verb|Sort| se ejecuta en un procesador distinto (lo llamamos $P_2$).
+        
+        Al poder ejecutarse ahora de forma simultánea, tenemos que:
+        \begin{equation*}
+            P_2 = \max\{ T_s(n), T_s(n) \} + T_m(2n) = \left( \dfrac{1}{2}\cdot n^2 - \dfrac{1}{2}\cdot n \right) + 2n = \dfrac{1}{2}\cdot n^2 + \dfrac{3}{2}\cdot n
+        \end{equation*}
     \end{enumerate}
 
-    Escribe una comparación cualitativa de los tres tiempos ($S$, $P_1$ y $P_2$). Para esto, hay que suponer que cuando el procedimiento \verb|Merge| actúa sobre un vector con $p$ entradas, tarda $p$ unidades de tiempo en ello, lo cual es razonable teniendo en cuenta que en esas circunstancias \verb|Merge| copia $p$ valores desde \verb|a| hacia \verb|b|. Si llamamos a este tiempo $T_m(p)$, podemos escribir $T_m(p) = p$.
+    Como podemos ver, en los tres casos la eficiencia es del orden cuadrático. No obstante,
+    el coeficiente de $n^2$ es distinto en cada caso, siendo el mayor en la versión secuencial. Deducimos por tanto que las versiones concurrentes son más eficientes que la secuencial, y estas mejoras son significativas para valores de $n$ grandes.    
 
 \end{ejercicio}
 
@@ -656,8 +688,50 @@ Siguiendo estos pasos, obtendríamos un código como el siguiente:
             end
     \end{minted}
     Escribir un programa con el mismo fin, pero que use 3 procesos concurrentes. Suponer que
-    los elementos de las matrices \verb|a| y \verb|b| se pueden leer simultáneamente, así como que elementos
-    distintos de \verb|c| pueden escribirse simultáneamente.
+    los elementos de las matrices \verb|a| y \verb|b| se pueden leer simultáneamente, así como que elementos distintos de \verb|c| pueden escribirse simultáneamente.\\
+
+    Esta solución puede llevarse a cabo de dos formas (tal y como vimos en la asigantura de AC). Crearemos tres procesos, y cada uno puede calcular una fila de la matriz \verb|c| (Código Fuente~\ref{code:ej7_fila}) o bien cada uno puede calcular una columna de la matriz \verb|c| (Código Fuente~\ref{code:ej7_columna}). No obstante, en la asignatura de AC se vio que, por norma general, es más eficiente calcular por filas que por columnas, ya que en el primer caso se accede a la matriz \verb|a| de forma secuencial, aprovechando así la localidad espacial y provocando un número menor de fallos de caché.
+    \begin{figure}
+        \centering
+        \begin{subfigure}{0.45\textwidth}
+            \centering
+            \begin{minted}{pascal}
+                var a, b, c : array[1..3,1..3] of real ;
+                process CalcularFila[ i : 1..3] ;
+                    var j, k : integer ;
+                    begin
+                        for j := 1 to 3 do begin
+                            c[i,j] := 0 ;
+                            for k := 1 to 3 do
+                                c[i,j] := c[i,j] + a[i,k]*b[k,j] ;
+                        end
+                    end
+                end
+            \end{minted}
+            \caption{Procesos concurrentes para calcular por filas.}
+            \label{code:ej7_fila}
+        \end{subfigure}\hfill
+        \begin{subfigure}{0.45\textwidth}
+            \centering
+            \begin{minted}{pascal}
+                var a, b, c : array[1..3,1..3] of real ;
+                process CalcularColumna[j : 1..3] ;
+                    var i, k : integer ;
+                    begin
+                        for i := 1 to 3 do begin
+                            c[i,j] := 0 ;
+                            for k := 1 to 3 do
+                                c[i,j] := c[i,j] + a[i,k]*b[k,j] ;
+                        end
+                    end
+                end
+            \end{minted}
+            \caption{Procesos concurrentes para calcular por columnas.}
+            \label{code:ej7_columna}
+        \end{subfigure}
+        \caption{Códigos para el ejercicio~\ref{ej:7}.}
+    \end{figure}
+    % // TODO: Se lanzan solos?
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:8}
@@ -681,38 +755,36 @@ Siguiendo estos pasos, obtendríamos un código como el siguiente:
         \end{subfigure} \hfill
         \begin{subfigure}{0.45\textwidth}
             \centering
-            \resizebox{\linewidth}{!}{
-                \begin{tikzpicture}[
-                    node/.style={circle, draw, minimum size=0.5cm},
-                    edge/.style={-stealth}
-                    ]
-        
-                    % Nodos
-                    \node[node] (P0) {P0};
-                    \node[node, below left=of P0] (P1) {P1};
-                    \node[node, below right=of P0] (P2) {P2};
-                    \node[node, below=of P1] (P3) {P3};
-                    \node[node, below left=of P3] (P4) {P4};
-                    \node[node, below right=of P3] (P5) {P5};
-                    \node[node, below=of P5] (P6) {P6};
-                    \node[node, below=of P2] (P7) {P7};
-                    \node[node, below left=of P7] (P8) {P8};
-                    \node[node, below right=of P7] (P9) {P9};
-        
-                    % Aristas
-                    \draw[edge] (P0) -- (P1);
-                    \draw[edge] (P0) -- (P2);
-                    \draw[edge] (P1) -- (P3);
-                    \draw[edge] (P3) -- (P4);
-                    \draw[edge] (P3) -- (P5);
-                    \draw[edge, bend right] (P4) to (P6);
-                    \draw[edge] (P5) -- (P6);
-                    \draw[edge] (P2) -- (P7);
-                    \draw[edge] (P7) -- (P8);
-                    \draw[edge] (P7) -- (P9);
-                
-                \end{tikzpicture}
-            }
+            \begin{tikzpicture}[
+                node/.style={circle, draw, minimum size=0.5cm},
+                edge/.style={-Stealth}
+                ]
+    
+                % Nodos
+                \node[node] (P1) {P1};
+                \node[node, right =of P1] (P2) {P2};
+                \node[node, right =of P2] (P3) {P3};
+                \node[node, below =of P1] (P4) {P4};
+                \node[node, right =of P4] (P5) {P5};
+                \node[node, right =of P5] (P6) {P6};
+                \node[node, below =of P4] (P7) {P7};
+                \node[node, right =of P7] (P8) {P8};
+                \node[node, right =of P8] (P9) {P9};
+
+                % Aristas
+                \draw[edge] (P1) -- (P4);
+                \draw[edge] (P1) -- (P2);
+                \draw[edge] (P2) -- (P3);
+                \draw[edge] (P2) -- (P5);
+                \draw[edge] (P3) -- (P6);
+                \draw[edge] (P4) -- (P5);
+                \draw[edge] (P4) -- (P7);
+                \draw[edge] (P5) -- (P6);
+                \draw[edge] (P5) -- (P8);
+                \draw[edge] (P6) -- (P9);
+                \draw[edge] (P7) -- (P8);
+                \draw[edge] (P8) -- (P9);
+            \end{tikzpicture}
             \caption{DAG del ejercicio~\ref{ej:8}.}
             \label{fig:ej8_grafo}
         \end{subfigure}
@@ -727,7 +799,34 @@ Siguiendo estos pasos, obtendríamos un código como el siguiente:
         \item Ambos procedimientos pueden acceder a variables globales en memoria compartida.
         \item Las rutinas se sincronizan única y exclusivamente mediante llamadas a estos procedimientos, siendo la implementación de los mismos completamente transparente para las rutinas.
     \end{itemize}
-    Escribe una implementación de \verb|EsperarPor| y \verb|Acabar| (junto con la declaración e inicialización de las variables compartidas necesarias) que cumpla con los requisitos dados.
+    Escribe una implementación de \verb|EsperarPor| y \verb|Acabar| (junto con la declaración e inicialización de las variables compartidas necesarias) que cumpla con los requisitos dados.\\
+
+    Usaremos para ello un vector de variables booleanas \verb|finalizado|, donde \verb|finalizado[i]| indica si la rutina $i$ ha finalizado o no. Inicialmente estará inicializado a \verb|false|, puesto que ningún proceso ha finalizado. Es decir:
+    \begin{minted}{pascal}
+        var finalizado : array[1..9] of boolean := (false,...,false) ;
+    \end{minted}
+
+    El procedimiento \verb|EsperarPor| se implementa de la siguiente forma:
+    \begin{minted}{pascal}
+        procedure EsperarPor( i : integer ) ;
+        begin
+            while not finalizado[i] do
+            begin
+                { no hacer nada }
+            end;
+        end.
+    \end{minted}
+    % // TODO: ¿Cuando es procedure y cuándo es process?
+
+    Respecto a la función \verb|Acabar|, podríamos pensar que tan solo se necesita cambiar el valor de la variable \verb|finalizado[i]| a \verb|true|. No obstante, hemos de tener en cuenta que este programa de ejecuta de forma repetida, por lo que si no se reinicia el vector \verb|finalizado| al final de cada ejecución, en la siguiente ejecución ya no habrá la sincronización necesaria. Por tanto, tras el fin del proceso \verb|P9|, se reinicia el vector \verb|finalizado| a \verb|false|.
+    \begin{minted}{pascal}
+        procedure Acabar( i : integer ) ;
+        begin
+            finalizado[i] := true ;
+            if i >= 9 then
+                finalizado := (false,...,false) ;
+        end
+    \end{minted}
     
 \end{ejercicio}
 
@@ -744,125 +843,178 @@ Siguiendo estos pasos, obtendríamos un código como el siguiente:
             ..... { senalar que hemos terminado }
         end
     \end{minted}
+
+    En primer lugar, hemos de especificar, en función de $n$, a qué procesos ha de esperar cada uno, lo cual se hará mediante una matriz compartida. Tenemos que:
+    \begin{minted}{pascal}
+        var espera : array[1..9,1..2] of integer := (
+            (-1, -1),   { P1 }
+            (1, -1),    { P2 }
+            (2, -1),    { P3 }
+            (1, -1),    { P4 }
+            (2, 4),     { P5 }
+            (3, 5),     { P6 }
+            (4, -1),    { P7 }
+            (5, 7),     { P8 }
+            (6, 8)      { P9 }
+        ) ;
+        Process P[ n : 1..9 ]
+        begin
+            for i := 1 to 2 do
+                if espera[n,i] <> -1 then { != -1 }
+                    EsperarPor( espera[n,i] ) ;
+            
+            S_n ;
+            Acabar( n ) ;
+        end
+    \end{minted}
+    % // TODO: Sintaxis en Pascal? Relevante?
 \end{ejercicio}
 
 \begin{ejercicio}
     Para los siguientes fragmentos de código, obtener la \emph{poscondición} adecuada para convertirlo en un triple demostrable con la Lógica de Programas:
     \begin{enumerate}
-        \item $\{i < 10\} \quad i = 2 \astº i + 1 \quad \{ \}$\\
+        \item $\{i < 10\} \quad i = 2 \ast i + 1 \quad \{ \}$\\
             Obtenemos la poscondición de este triple razonando matemáticamente:
             \begin{align*}
                 i &< 10 \\
-                2\astº i &< 20 \\
-                i' = 2\astº i + 1 &< 21
+                2\ast i &< 20 \\
+                i' = 2\ast i + 1 &< 21
             \end{align*}
             donde hemos notado por $i'$ al nuevo valor que adopta la variable $i$.\\
 
             Por tanto, la poscondición del triple es: $i < 21$.
 
-            Pasamos ahora a demostrar el triple
+            Pasamos ahora a demostrar el triple siguiente:
             \begin{equation*}
-               \{i < 10\} \quad i = 2 \astº i + 1 \quad \{i<21\}
+               \{i < 10\} \quad i = 2 \ast i + 1 \quad \{i<21\}
             \end{equation*}
             
-            usando el axioma de asignación:
-            \begin{gather*}
-                \{i<21\}^i_{2\astº i + 1}\quad i=2\astº i + 1\quad \{i<21\} \\
-                \{i<21\}^i_{2\astº i + 1} \equiv \{2\astº i + 1 < 21\} \equiv \{i < 10\} 
-            \end{gather*}
-            y obteniendo finalmente
+            Usando el axioma de asignación, tenemos que:
             \begin{equation*}
-                \{i<10\}\quad i=2\astº i + 1\quad \{i<21\} \\
+                \{i<21\}^i_{2\ast i + 1}\quad i=2\ast i + 1\quad \{i<21\}
+            \end{equation*}
+
+            No obstante, de la definición de Sustitución Textual, tenemos que:
+            \begin{equation*}
+                \{i<21\}^i_{2\ast i + 1} \equiv \{2\ast i + 1 < 21\} \equiv \{i < 10\} 
+            \end{equation*}
+            
+            Uniendo ambas ecuaciones, obtenemos que el triple es cierto.
+            \begin{equation*}
+                \{i<10\}\quad i=2\ast i + 1\quad \{i<21\} \\
             \end{equation*}
 
         \item $\{i > 0\} \quad i = i - 1; \quad \{ \}$\\
-            Obtenemos la poscondición:
+            Obtenemos la poscondición de este triple razonando matemáticamente:
             \begin{align*}
                 i &> 0 \\
-                i' = i-1 &> -1
+                i' = i - 1 &> -1
             \end{align*}
-            Y pasamos ahora a demostrar el triple
+            donde hemos notado por $i'$ al nuevo valor que adopta la variable $i$.\\
+
+            Por tanto, la poscondición del triple es: $i > -1$.
+
+            Pasamos ahora a demostrar el triple siguiente:
             \begin{equation*}
-                \{i>0\} \quad i=i-1 \quad\{i>-1\}
+                \{i > 0\} \quad i = i - 1; \quad \{i > -1\}
             \end{equation*}
-            usando el axioma de asignación:
+
+            Usando el axioma de asignación, tenemos que:
             \begin{equation*}
-                \{i>0\} \equiv \{i-1>-1\} \equiv \{i>-1\}^i_{i-1} \quad i=i-1 \quad\{i>-1\}
+                \{i > -1\}^i_{i-1}\quad i=i-1\quad \{i>-1\}
+            \end{equation*}
+
+            No obstante, de la definición de Sustitución Textual, tenemos que:
+            \begin{equation*}
+                \{i > -1\}^i_{i-1} \equiv \{i-1 > -1\} \equiv \{i > 0\}
+            \end{equation*}
+
+            Uniendo ambas ecuaciones, obtenemos que el triple es cierto.
+            \begin{equation*}
+                \{i > 0\}\quad i = i - 1\quad \{i > -1\}
             \end{equation*}
 
         \item $\{i > j\} \quad i = i + 1;~j = j + 1 \quad \{ \}$\\
             De forma matemática y notando por $i'$ y $j'$ a las modificaciones de $i$ y $j$, respectivamente:
             \begin{align*}
                 i &> j \\
-                i' = i+1 &> j+1\\
-                i' &> j+1 = j' \\
+                i' = i+1 &> j+1=j'\\
                 i' &> j'
             \end{align*}
-            Demostramos ahora el triple
+
+            Por tanto, la poscondición del triple es: $i > j$. Pasamos a demostrar el triple:
             \begin{equation*}
                 \{i > j\} \quad i = i + 1;~j = j + 1 \quad \{i>j\}
             \end{equation*}
-            usando la regla de la composición:
+
+            Usando la regla de la composición, tenemos que:
             \begin{equation*}
                 \dfrac{\{P\}S_1\{Q\}, \{Q\}S_2\{R\}}{\{P\}S_1;S_2\{R\}} \\
             \end{equation*}
-                Por lo que bastará probar los triples
-                \begin{equation*}
-                    \{i>j\}\ i=i+1\ \{i>j+1\} \qquad \{i>j+1\}\ j=j+1\ \{i>j\}
-                \end{equation*}
-                para tener demostrado el triple que nos interesa.
 
-                \begin{enumerate}
-                    \item Probamos el primer triple mediante el axioma de asignación:
-                        \begin{equation*}
-                            \{i>j\} \equiv \{i+1>j+1\} \equiv \{i>j+1\}^i_{i+1}\ i=i+1\ \{i>j+1\}
-                        \end{equation*}
-                    \item Y finalmente probamos el segundo trambién mediante el axioma de asignación:
-                        \begin{equation*}
-                            \{i>j+1\} \equiv \{i>j\}^j_{j+1}\ j=j+1\ \{i>j\}
-                        \end{equation*}
-                \end{enumerate}
-                Como ambos son ciertos, el triple que queríamos demostrar también lo es, gracias a la regla de composición.
+            Identificando $Q$ con $i>j+1$, tenemos que bastará con probar los triples:
+            \begin{enumerate}
+                \item $\{i>j\}\ i=i+1\ \{i>j+1\}$
+                
+                Mediante el axioma de asignación, tenemos que:
+                \begin{equation*}
+                    \{i>j\} \equiv \{i+1>j+1\} \equiv \{i>j+1\}^i_{i+1}\ i=i+1\ \{i>j+1\}
+                \end{equation*}
+
+                \item $\{i>j+1\}\ j=j+1\ \{i>j\}$
+                
+                Mediante el axioma de asignación, tenemos que:
+                \begin{equation*}
+                    \{i>j+1\} \equiv \{i>j\}^j_{j+1}\ j=j+1\ \{i>j\}
+                \end{equation*}
+            \end{enumerate}
+
+            Como ambos son ciertos, el triple que queríamos demostrar también lo es gracias a la regla de composición.
         \item $\{\text{falso}\} \quad a = a + 7; \quad \{ \}$\\
             En este caso, partimos de un estado del programa inalcanzable, por lo que en la poscondición podemos poner cualquier estado del programa, es decir, $\{\text{verdad}\}$.
         \item $\{\text{verdad}\} \quad i = 3;~j = 2 \ast i \quad \{ \}$\\
             Como partimos de cualquier estado del programa y sólo se realizan asignaciones, es fácil intuir cuál será la poscondición:
             \begin{gather*}
                 i = 3 \\
-                j = 2\astº i = 2\astº 3 = 6
+                j = 2\ast i = 2\ast 3 = 6
             \end{gather*}
             Pasamos a demostrar el triple
             \begin{equation*}
                 \{\text{verdad}\} \quad i = 3;~j = 2 \ast i \quad \{i=3\ \land\ j=6\}
             \end{equation*}
-            usando la regla de composición, por lo que nos será suficiente probar los triples:
+            Usando la regla de composición, nos será suficiente probar los triples:
             \begin{equation*}
-                \{\text{verdad}\}\ i=3\ \{i=3\} \qquad \{i=3\}\ j=2\astº i\ \{i=3\ \land\ j=6\}
+                \{\text{verdad}\}\ i=3\ \{i=3\} \qquad \{i=3\}\ j=2\ast i\ \{i=3\ \land\ j=6\}
             \end{equation*}
             \begin{enumerate}
                 \item Para el primer triple, usamos el axioma de asignación:
-                    \begin{equation*}
-                        \{\text{verdad}\} \equiv \{3=3\} \equiv \{i=3\}^i_3\ i=3\ \{i=3\}
-                    \end{equation*}
+                \begin{equation*}
+                    \{\text{verdad}\} \equiv \{3=3\} \equiv \{i=3\}^i_3\ i=3\ \{i=3\}
+                \end{equation*}
                 \item Para el segundo, volvemos a usar el axioma de asignación:
-                    \begin{gather*}
-                        \{i=3\ \land\ j=6\}^j_{2\astºi}\ j=2\astº i\ \{i=3\ \land\ j=6\}\\
-                        \{i=3\ \land\ j=6\}^j_{2\astºi} \equiv \{i=3\ \land\ 2\astº i=6\} \equiv\\ 
-                        \equiv \{i=3\ \land 2\astº 3=6\} \equiv \{i=3\ \land\ 6=6\} \equiv \{i=3\}
-                    \end{gather*}
+                \begin{equation*}
+                    \{i=3\ \land\ j=6\}^j_{2\ast i}\ j=2\ast i\ \{i=3\ \land\ j=6\}
+                \end{equation*}
+
+                No obstante, de la definición de Sustitución Textual, tenemos que:
+                \begin{multline*}
+                    \{i=3\ \land\ j=6\}^j_{2\ast i} \equiv \{i=3\ \land\ 2\ast i=6\} \equiv \{i=3\ \land 2\ast 3=6\} \equiv \\ \equiv \{i=3\ \land\ 6=6\} \equiv \{i=3\}
+                \end{multline*}
+
+                Uniendo ambas ecuaciones, obtenemos que el triple es cierto.
             \end{enumerate}
             Ambos triples son ciertos, luego por la regla de la composición tenemos demostrado nuestro triple.
         \item $\{\text{verdad}\} \quad c = a + b;~c = \nicefrac{c}{2} \quad \{ \}$\\
-            Notando por $c'$ al nuevo valor de $c$:
+            Notando por $c'$ al nuevo valor de $c$, tenemos que:
             \begin{align*}
                 c &= a + b \\
                 c' = \nicefrac{c}{2} &= \frac{a+b}{2}
             \end{align*}
-            Tratamos de probar el triple
+            Tratamos por tanto de probar el siguiente triple
             \begin{equation*}
                 \{\text{verdad}\} \quad c = a + b;~c = \nicefrac{c}{2} \quad \left\{c=\frac{a+b}{2}\right\}
             \end{equation*}
-            usando la regla de la composición, basta con probar los triples
+            Usando la regla de la composición, basta con probar los triples:
             \begin{equation*}
                 \{\text{verdad}\}\ c=a+b;\ \{c=a+b\} \qquad \{c=a+b\}\ c=\nicefrac{c}{2};\ \left\{c=\frac{a+b}{2}\right\}
             \end{equation*}
@@ -885,20 +1037,23 @@ Siguiendo estos pasos, obtendríamos un código como el siguiente:
     (Considerando que $i,x,a \in \mathbb{Z}$)
     \begin{enumerate}
         \item $\{i > 0\} \quad i = i - 1; \quad \{i \geq 0\}$\\
+            El siguiente triple sabemos que es cierto:
             \begin{equation*}
                 \{i>0\}\ i=i-1\ \{i>-1\} 
             \end{equation*}
             $\{i>-1\}\rightarrow \{i\geq 0\}$, luego es cierto por la primera regla de la consecuencia.
         \item $\{x \geq 7\} \quad x = x + 3; \quad \{x \geq 9\}$\\
+            El siguiente triple sabemos que es cierto:    
             \begin{equation*}
                 \{x\geq 7\}\ x=x+3\ \{x\geq 10\}
             \end{equation*}
             $\{x\geq 10\}\rightarrow\{x\geq 9\}$, luego es cierto por la primera regla de la consecuencia.
         \item $\{i < 9\} \quad i = 2 \ast i + 1; \quad \{ i \leq 20\}$\\
+            El siguiente triple sabemos que es cierto:
             \begin{equation*}
                 \{i<9\}\ i=2\ast i+1\ \{i<19\}
             \end{equation*}
-            $\{i<19\}\rightarrow\{i\leq 20\}$, luego es cierto por la segunda regla de la consecuencia.
+            $\{i<19\}\rightarrow\{i\leq 20\}$, luego es cierto por la primera regla de la consecuencia.
         \item $\{a > 0\} \quad a = a - 7; \quad \{a > -6\}$\\
             \begin{equation*}
                 \{a>0\}\ a=a-7\ \{a>-7\}
@@ -912,17 +1067,19 @@ Siguiendo estos pasos, obtendríamos un código como el siguiente:
     \begin{enumerate}
         \item $\{P\} C \{Q \lor P\}$\\
            Es demostrable, ya que $\{Q\}\rightarrow\{Q \lor P\}$ y por la primera regla de la consecuencia, tomando $R=Q \lor P$:
-         \begin{equation*}
-            \dfrac{\{P\}C\{Q\}, \{Q\}\rightarrow\{R\}}{\{P\}C\{R\}}
-        \end{equation*}
+            \begin{equation*}
+                \dfrac{\{P\}C\{Q\}, \{Q\}\rightarrow\{R\}}{\{P\}C\{R\}}
+            \end{equation*}
+            Tenemos que se debilita la poscondición.
 
         \item $\{P \land D\} C \{Q\}$\\
             Es demostrable, ya que $\{P \land D\}\rightarrow\{P\}$ y por la segunda regla de la consecuencia, tomando $R = P \land D$:
-        \begin{equation*}
-            \dfrac{\{P\}\rightarrow\{R\},\{R\}C\{Q\}}{\{P\}C\{Q\}}
-        \end{equation*}
+            \begin{equation*}
+                \dfrac{\{P\}\rightarrow\{R\},\{R\}C\{Q\}}{\{P\}C\{Q\}}
+            \end{equation*}
+            Tenemos que se fortalece la precondición.
         \item $\{P \lor D\} C \{Q\}$\\
-            No es demostrable, porque se debilita la condición.
+            No es demostrable, porque se debilita la precondición.
 
         \item $\{P\} C \{Q \lor D\}$\\
             Al igual que hemos hecho en el apartado 1, es demostrable ya que ${\{Q\}\rightarrow\{Q \lor D\}}$ y usando la primera regla de la consecuencia.
@@ -935,14 +1092,14 @@ Siguiendo estos pasos, obtendríamos un código como el siguiente:
     Si el triple $\{P\} C \{Q\}$ es demostrable, ¿cuál de los siguientes triples no se puede demostrar?
     \begin{enumerate}
         \item $\{P \land D\} C \{Q\}$\\
-            $\{P \land D\}\rightarrow\{P\}$, luego puede demostrarse, por la segunda regla de la consecuencia.
+            Sabemos que $\{P \land D\}\rightarrow\{P\}$, luego puede demostrarse por la segunda regla de la consecuencia (se fortalece la precondición).
         \item $\{P \lor D\} C \{Q\}$\\
             No puede demostrarse, porque se debilita la precondición.
         \item $\{P\} C \{Q \lor D\}$\\
-            Puede demostrarse mediante la primera regla de la consecuencia, ya que ${\{Q\}\rightarrow\{Q \lor D\}}$.
+            Puede demostrarse mediante la primera regla de la consecuencia, ya que se tiene que ${\{Q\}\rightarrow\{Q \lor D\}}$.
 
         \item $\{P\} C \{Q \lor P\}$\\
-        Puede demostrarse mediante la primera regla de la consecuencia, ya que ${\{Q\}\rightarrow\{Q \lor P\}}$.
+        Puede demostrarse mediante la primera regla de la consecuencia, ya que se tiene que ${\{Q\}\rightarrow\{Q \lor P\}}$.
     \end{enumerate}
 \end{ejercicio}
 
@@ -957,15 +1114,15 @@ Siguiendo estos pasos, obtendríamos un código como el siguiente:
     \end{minted}
     \begin{enumerate}
         \item Valores finales de $x$ e $y$.
+        Tenemos dos posibles trazas de ejecución:
+        \begin{enumerate}
+            \item Primero se ejecuta la primera instrucción, por lo que obtendríamos $x = 7$ y $y = 14$.
+            \item Primero se ejecuta la segunda instrucción, por lo que obtendríamos $x = 15$ y $y = 10$.
+        \end{enumerate}
         \item Valores finales de $x$ e $y$ si quitamos los símbolos \verb|< >| de instrucción atómica.
-    \end{enumerate}
-    \begin{enumerate}
-        \item Tenemos dos posibles trazas de ejecución:
-            \begin{enumerate}
-                \item Primero se ejecuta la primera instrucción, por lo que obtendríamos $x = 7$ y $y = 14$.
-                \item Primero se ejecuta la segunda instrucción, por lo que obtendríamos $x = 15$ y $y = 10$.
-            \end{enumerate}
-        \item Encontramos cada uno de los dos estados anteriores, además de $x = 7$ y $y= 10$.
+        
+        Encontramos cada uno de los dos estados anteriores, además de $x = 7$ y $y= 10$.
+        % // TODO: ¿Por qué?
     \end{enumerate}
 \end{ejercicio}
 
