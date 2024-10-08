@@ -173,7 +173,7 @@ Permite extender zonas de redes locales a zonas más extensas.
 No se pueden conectar dos VLAN distintas entre sí: hace falta pasar por un router, ya que por norma general, para conectar dos redes hay que trabajar a nivel de red.
 Si un switch permite conmutación entre LANs, se supone que tiene alguna funcionalidad a nivel de red, debido al punto anterior.
 
-Por tanto, un switch normal funciona a nivel de capa mientras que un switch multicapa funciona a nivel de red.
+Por tanto, un switch normal funciona a nivel de enlace mientras que un switch multicapa funciona a nivel de red.
 
 La red de la UGR tiene en primer lugar switches para conectarnos hacia ellos. Por encima, switches multicapa y más arriba routers.
 
