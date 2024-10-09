@@ -504,10 +504,10 @@ Sin embargo, puede suceder que un proceso ejecute una instrucción atómica de s
     cuya corrección puede comprobarse fácilmente usando el axioma de asignación.\\
 
     Ahora, nos disponemos a ejecutar el siguiente código concurrente:
-    \begin{minted}{pascal}
+    \begin{minted}[escapeinside=\#\#]{pascal}
         x = 0;
         cobegin
-          <x = x + 2;> || <x = 0;>
+          <x = x + 2;> #||# <x = 0;>
         coend
     \end{minted}
     donde podemos ver que la ejecución de una instrucción \textit{interfiere} con la poscondición de la otra instrucción:
@@ -525,29 +525,28 @@ Sin embargo, puede suceder que un proceso ejecute una instrucción atómica de s
     \end{gather*}
     haciendo que estos sigan siendo correctos. Si ahora tratamos de ejecutar de forma concurrente estas dos instrucciones, observamos que independientemente de la traza de ejecución, la ejecución de una instrucción no hace falsas las pre o poscondición de la otra.
 \end{ejemplo}
-Antes de proceder a la formalización del concepto de interferencia, hemos de comentar ciertos detalles:\\
-
+Antes de proceder a la formalización del concepto de interferencia, hemos de comentar ciertos detalles:
 \begin{itemize}
     \item Una acción atómica elemental o sección crítica realiza una transformación indivisible del estado del programa, de forma que cualquier estado intermedio que pudiera existir no sería visible para el resto de los procesos.
 
         En los programas concurrentes, puede suceder que las asignaciones no sean atomicas, por estar típicamente implementadas por varias instrucciones máquina:
 
-        \begin{minted}{pascal}
+        \begin{minted}[escapeinside=\#\#]{pascal}
             y = 0; z = 0;
             cobegin
-              x = y + z; || y = 1; z = 2
+              x = y + z; #||# y = 1; z = 2
             coend
         \end{minted}
-        El programa superior puede dar como resultados esperados de \verb|x| 0, 1, 3 (como el lector habrá podido adivinar) y 2. Este último valor sería resultado de haber leído la instrucción de la izquierda \verb|y|, la ejecución de las dos instrucciones de la derecha, y finalmente añadir \verb|z| al valor leído, guardándolo en \verb|x|.
+        El programa superior puede dar como resultados esperados de \verb|x| 0, 1, 3 (como el lector habrá podido adivinar) y 2. Este último valor sería resultado de haber leído en la instrucción de la izquierda el valor de \verb|y|, la ejecución de las dos instrucciones de la derecha, y finalmente añadir \verb|z| al valor leído, guardándolo en \verb|x|.
 
         Se trata de un ejemplo curioso, ya que $z+y=2$ no se correponde con ningún estado del programa. Esta situación puede resolverse con el uso de secciones críticas.
         
     \item Una expresión que no hace referencia a ninguna variable modificada por otro proceso será evaludad de forma atómica, ya que ninguno de los valores de la variable puede ser modfiicada mientras la expresión resulta evaludada.
 
         De esta forma, si consideramos el siguiente programa concurrente en el que los procesos se encuentran usando variables disjuntas:
-        \begin{minted}{pascal}
+        \begin{minted}[escapeinside=\#\#]{pascal}
             x = 0; y = 0;
-            cobegin x = x + 1; || y = y + 1; coend
+            cobegin x = x + 1; #||# y = y + 1; coend
         \end{minted}
         La ejecución de una instrucción no tiene nada que ver con la ejecución de la otra.
 \end{itemize}
@@ -560,7 +559,7 @@ Dado un triple $\{P\}S\{Q\}$, este puede contener varios asertos: $\{P\}$, $\{Q\
 \begin{definicion}[Interferencia]
     Dado un triple $\{P\}S\{Q\}$ y una sentencia $R$ con precondición $pre(R)$, decimos que $R$ no interfiere con $\{P\}S\{Q\}$ si para todo aserto $a$ del triple se cumple el triple
     \begin{equation*}
-        NI(a, R) \equiv \{a \land pre(R)\} R \{a\}
+        NI(a, R) :\equiv \{a \land pre(R)\} R \{a\}
     \end{equation*}
     Es decir, si el aserto $a$ es invariante para la sentencia $R$.
 \end{definicion}
@@ -578,12 +577,12 @@ La falta de interferencia significa que la ejecución atómica de pasos de un pr
                     \begin{equation*}
                         \{x=0\} \equiv \{V \land x = 0\}\ x=x+2\ \{V\}
                     \end{equation*}
-                    se cumple por la regla de la consecuencia (1), ya que se verifican $\{x=0\}\ x=x+2\ \{x=2\}$, $\{x=2\} \rightarrow \{V\}$.
+                    Se cumple por la regla de la consecuencia (1), ya que se verifica que $\{x=0\}\ x=x+2\ \{x=2\}$, $\{x=2\} \rightarrow \{V\}$.
                 \item Para la poscondición:
                     \begin{equation*}
                         \{x=0\} \equiv \{(x=0 \lor x=2)\land x=0\}\ x=x+2\ \{x=0 \lor x=2\}
                     \end{equation*}
-                    se cumple por la regla de la consecuencia (1), ya que se verifican $\{x=0\}\ x=x+2\ \{x=2\}$, $\{x=2\} \rightarrow\{x=0 \lor x=2\}$.
+                    Se cumple por la regla de la consecuencia (1), ya que se verifica que $\{x=0\}\ x=x+2\ \{x=2\}$, $\{x=2\} \rightarrow\{x=0 \lor x=2\}$.
             \end{enumerate}
         \item $x=0$ no interfiere con $\{x=0\}\ x=x+2\ \{x=0 \lor x=2\}$:
             \begin{enumerate}
@@ -591,12 +590,12 @@ La falta de interferencia significa que la ejecución atómica de pasos de un pr
                     \begin{equation*}
                         \{x=0\} \equiv \{x=0 \land V\}\ x=0\ \{x=0 \lor x=2\}
                     \end{equation*}
-                    se cumple lor la regla de la consecuencia (1), ya que se verifican $\{x=0\}\ x=0\ \{x=0\}$ y $\{x=0\}\rightarrow \{x=0 \lor x=2\}$.
+                    Se cumple por la regla de la consecuencia (1), ya que se verifica que $\{x=0\}\ x=0\ \{x=0\}$ y $\{x=0\}\rightarrow \{x=0 \lor x=2\}$.
                 \item Para la poscondición:
                     \begin{equation*}
                         \{x=0 \lor x = 2\} \equiv \{(x=0 \lor x=2)\land V\}\ x=0\ \{x=0 \lor x=2\}
                     \end{equation*}
-                    se cumple por la regla de la consecuencia (1), ya que se verifican $\{x=0 \lor x=2\}\ x=0\ \{x=0\}$ y $\{x=0\}\rightarrow \{x=0 \lor x=2\}$.
+                    Se cumple por la regla de la consecuencia (1), ya que se verifica que $\{x=0 \lor x=2\}\ x=0\ \{x=0\}$ y $\{x=0\}\rightarrow \{x=0 \lor x=2\}$.
             \end{enumerate}
     \end{itemize}
 \end{ejemplo}
@@ -606,13 +605,12 @@ Finalmente, llegamos a una regla de inferencia que nos permitirá demostrar la c
 \begin{description}
     \item [Regla de la composición concurrente segura de procesos.] 
         \begin{equation*}
-            \dfrac{\{P_i\}\ S_i\ \{Q_i\} \text{ son triples libres de interferencia } 1\leq i \leq n}{\{P_1 \land P_2 \land \ldots \land P_n\} \texttt{ cobegin } S_1\ ||\ S_2\ ||\ \ldots\ ||\ S_n \texttt{ coend } \{Q_1 \land Q_2 \land \ldots \land Q_n\}}
+            \dfrac{\{P_i\}\ S_i\ \{Q_i\} \text{ son triples libres de interferencia } \forall 1\leq i \leq n}{\{P_1 \land P_2 \land \ldots \land P_n\} \texttt{ cobegin } S_1\ ||\ S_2\ ||\ \ldots\ ||\ S_n \texttt{ coend } \{Q_1 \land Q_2 \land \ldots \land Q_n\}}
         \end{equation*}
 \end{description}
 
 \begin{ejemplo}
-    Aplicando la regla de la composición concurrente al ejemplo que venimos manejando, como los triples $\{x=0\}\ x=x+2\ \{x=0 \lor x=2\}$, $\{V\}\ x=0\ \{x=0 \lor x=2\}$ están libres de interferencia, podemos aplicar la regla de la composición concurrente, llegando a que el triple
-
+    Aplicamos ahora la regla de la composición concurrente al ejemplo que venimos manejando. Como hemos visto, los triples $\{x=0\}\ x=x+2\{x=0 \lor x=2\}$ y $\{V\}\ x=0\ \{x=0 \lor x=2\}$ están libres de interferencia, por lo que podemos aplicar la regla de la composición concurrente, llegando a que el triple
     \begin{gather*}
         \{x=0\} \\
         \texttt{cobegin } x=x+2;\ ||\ x=0; \texttt{ coend} \\
