@@ -489,7 +489,8 @@ Si entendemos la ejecución de un programa concurrente como un entrelazamiento d
 \begin{itemize}
     \item Secciones críticas en el código para evitar condiciones de carrera.
     \item Sincronización con una condición (hacer que un proceso espere hasta que se dé una determinada condición en el estado del programa).
-\end{itemize}~\\
+\end{itemize}
+Usando estas operaciones, conseguiremos hacer correctos nuestros programas concurrentes (que es de lo que trata la asignatura), para luego demostrar matemáticamente que, efectivamente, dichos programas son correctos.\\
 
 Dados varios triples de Hoare que representan secciones de programas secuenciales de los que hemos probado su corrección parcial, tratamos ahora de introducir estas secciones de programa en un programa concurrente.
 
@@ -516,9 +517,9 @@ Sin embargo, puede suceder que un proceso ejecute una instrucción atómica de s
         \item La poscondición $\{x=2\}$ de la instrucción de la izquierda no se cumple tras la ejecución de \verb|<x = 0;>| (en caso de que esta se ejecute después).
         \item Notemos que la ejecución de una instrucción no \textit{interfiere} con la precondición de la otra.
     \end{itemize}
-    La ejecución de una instrucción hace falsa la poscondición de la otra, invalidando la demostración del programa concurrente.\\
+    La ejecución de una instrucción hace falsa la poscondición de la otra, invalidando la demostración que hicimos del trozo de programa secuencial y, por tanto, del programa concurrente.
 
-    Sin embargo, podemos hacer un cambio en los triples iniciales para no tener este problema: usando la regla de la consecuencia (1), podemos relajar las poscondiciones de ambos triples:
+    Sin embargo, podemos hacer un cambio en los triples iniciales para no tener este problema: usando la primera regla de la consecuencia, podemos relajar las poscondiciones de ambos triples:
     \begin{gather*}
         \{x=0\}\ x=x+2\ \{x=0 \lor x=2\} \\
         \{V\}\ x=0\ \{x=0 \lor x=2\}
@@ -539,9 +540,9 @@ Antes de proceder a la formalización del concepto de interferencia, hemos de co
         \end{minted}
         El programa superior puede dar como resultados esperados de \verb|x| 0, 1, 3 (como el lector habrá podido adivinar) y 2. Este último valor sería resultado de haber leído en la instrucción de la izquierda el valor de \verb|y|, la ejecución de las dos instrucciones de la derecha, y finalmente añadir \verb|z| al valor leído, guardándolo en \verb|x|.
 
-        Se trata de un ejemplo curioso, ya que $z+y=2$ no se correponde con ningún estado del programa. Esta situación puede resolverse con el uso de secciones críticas.
+        Se trata de un ejemplo curioso, ya que $z+y=2$ no se correponde con ningún estado del programa. Esta situación puede resolverse con el uso de secciones críticas, ya que en este caso lo que falla es el programa concurrente, que está mal programado.
         
-    \item Una expresión que no hace referencia a ninguna variable modificada por otro proceso será evaludad de forma atómica, ya que ninguno de los valores de la variable puede ser modfiicada mientras la expresión resulta evaludada.
+    \item Una expresión que no hace referencia a ninguna variable modificada por otro proceso será evaluada de forma atómica, ya que ninguno de los valores de la variable puede ser modfiicada mientras la expresión resulta evaludada.
 
         De esta forma, si consideramos el siguiente programa concurrente en el que los procesos se encuentran usando variables disjuntas:
         \begin{minted}[escapeinside=\#\#]{pascal}
@@ -554,58 +555,73 @@ Antes de proceder a la formalización del concepto de interferencia, hemos de co
 \subsubsection{Interferencia}
 Dado un triple $\{P\}S\{Q\}$, este puede contener varios asertos: $\{P\}$, $\{Q\}$ y cualquiera que sirve como pre y poscondición entre las acciones atómicas incluidas en la sección de código $S$.
 \begin{ejemplo}
-    De esta forma, el triple $\{V\}x=0;x=x+1\{x=1\}$ contiene los asertos $\{V\}$, $\{x=0\}$ y $\{x=1\}$.
+    De esta forma, el triple 
+    \begin{equation*}
+        \{V\}\ x=0;\ x=x+1;\ \{x=1\} 
+    \end{equation*}
+    contiene los asertos $\{V\}$, $\{x=0\}$ y $\{x=1\}$. Sin embargo, el triple 
+    \begin{equation*}
+        \{V\}\ <x=0;\ x=x+1;>\ \{x=1\}
+    \end{equation*}
+    contiene los asertos $\{V\}$ y $\{x=1\}$, ya que la ejecución de las dos instrucciones se hace de forma atómica y ningún otro proceso puede ver el estado intermedio ($x=0$) de la variable $x$, ya que como hemos mencionado en el primer punto, las regiones críticas realizan una transformación \textbf{indivisible} del estado del programa.
 \end{ejemplo}
 \begin{definicion}[Interferencia]
-    Dado un triple $\{P\}S\{Q\}$ y una sentencia $R$ con precondición $pre(R)$, decimos que $R$ no interfiere con $\{P\}S\{Q\}$ si para todo aserto $a$ del triple se cumple el triple
+    Dado un triple $\{P\}S\{Q\}$ y una sentencia atómica $a$\footnote{Esta puede contener tantas líneas de código como queramos, lo importante es que su ejecución se haga de forma atómica.} con precondición $pre(a)$, decimos que $a$ no interfiere con $\{P\}S\{Q\}$ si para todo aserto $A$ del triple se cumple el triple
     \begin{equation*}
-        NI(a, R) :\equiv \{a \land pre(R)\} R \{a\}
+        NI(A, a) :\equiv \{A \land pre(a)\} a \{A\}
     \end{equation*}
-    Es decir, si el aserto $a$ es invariante para la sentencia $R$.
+    Es decir, si el aserto $A$ es invariante para la sentencia $a$.
 \end{definicion}
 \begin{definicion}
     Dados $n$ triples $\{P_i\}S_i\{Q_i\}$, decimos que están libres de interferencia si $S_i$ no interfiere con $\{P_j\}S_j\{Q_j\}$, para cada par $(i,j)$ con $i\neq j$.
 \end{definicion}
-La falta de interferencia significa que la ejecución atómica de pasos de un proceso del programa nunca falsifica los asertos usados en las demostraciones de los otros procesos.
+La falta de interferencia significa que la ejecución atómica de pasos de un proceso del programa nunca falsifica los asertos usados en las demostraciones individuales de los otros procesos.
+
+Esto es de especial relevancia en los programas concurrentes, ya que para demostrar su corrección, primero hemos de demostrar que la ejecución secuencial de cada proceso es correcta (en caso de no serlo, directamente el programa concurrente no es correcto), para luego demostrar que la ejecución de un proceso no interfiere con otro, para así garantizar que, aunque tengamos varios procesos ejecutándose de forma concurrente, como no interfieren entre sí, no se modifica la corrección del programa.
+
+Veremos próximamente que con garantizar la corrección secuencial de los procesos y la no interferencia entre los mismos, nos es suficiente para garantizar la corrección de los programas concurrentes, gracias a este razonamiento intuitivo que acabamos de realizar (lo único que cambia al ejecutar los procesos de forma concurrente es que puedan modificar variables de otros procesos, interfiriendo en su ejecución, sin embargo, si no interfieren en la misma, todo saldrá bien).
 
 \begin{ejemplo}
-    Recuperando el ejemplo del inicio de la sección, nos disponemos a demostrar que los triples $\{x=0\}\ x=x+2\ \{x=0 \lor x=2\}$, $\{V\}\ x=0\ \{x=0 \lor x=2\}$ están libres de interferencia:
+    Recuperando el ejemplo del inicio de la sección, nos disponemos a demostrar que los triples $\{x=0\}\ x=x+2\ \{x=0 \lor x=2\}$, $\{V\}\ x=0\ \{x=0 \lor x=2\}$ están libres de interferencia. Para ello, hemos de demostrar $2\cdot 2=4$ triples (ya que tenemos dos instrucciones, cada una con 2 asertos).
     \begin{itemize}
-        \item $x=x+2$ no interfiere con $\{V\}\ x=0\ \{x=0 \lor x=2\}$:
+        \item $x=x+2$ no interfiere con $\{V\}\ x=0\ \{x=0 \lor x=2\}$:\newline
+            Notemos que $pre(x=x+2) \equiv \{x=0\}$
             \begin{enumerate}
-                \item Para la precondición:
+                \item Para la precondición $\{V\}$:
                     \begin{equation*}
                         \{x=0\} \equiv \{V \land x = 0\}\ x=x+2\ \{V\}
                     \end{equation*}
-                    Se cumple por la regla de la consecuencia (1), ya que se verifica que $\{x=0\}\ x=x+2\ \{x=2\}$, $\{x=2\} \rightarrow \{V\}$.
-                \item Para la poscondición:
+                    Se cumple por la primera regla de la consecuencia, ya que se verifica que $\{x=0\}\ x=x+2\ \{x=2\}$ y $\{x=2\} \rightarrow \{V\}$, luego por la regla de la composición, tenemos demostrado el triple $NI(V, x=x+2)$.
+                \item Para la poscondición $\{x=0 \lor x = 2\}$:
                     \begin{equation*}
                         \{x=0\} \equiv \{(x=0 \lor x=2)\land x=0\}\ x=x+2\ \{x=0 \lor x=2\}
                     \end{equation*}
-                    Se cumple por la regla de la consecuencia (1), ya que se verifica que $\{x=0\}\ x=x+2\ \{x=2\}$, $\{x=2\} \rightarrow\{x=0 \lor x=2\}$.
+                    Se cumple por la primera regla de la consecuencia, ya que se verifica que $\{x=0\}\ x=x+2\ \{x=2\}$, $\{x=2\} \rightarrow\{x=0 \lor x=2\}$; y por la regla de la composición, tenemos $NI(x=0 \lor x=2, x=x+2)$.
             \end{enumerate}
-        \item $x=0$ no interfiere con $\{x=0\}\ x=x+2\ \{x=0 \lor x=2\}$:
+        \item $x=0$ no interfiere con $\{x=0\}\ x=x+2\ \{x=0 \lor x=2\}$:\newline
+            Notemos que $pre(x=0)\equiv \{V\}$
             \begin{enumerate}
-                \item Para la precondición:
+                \item Para la precondición $\{x=0\}$:
                     \begin{equation*}
                         \{x=0\} \equiv \{x=0 \land V\}\ x=0\ \{x=0 \lor x=2\}
                     \end{equation*}
-                    Se cumple por la regla de la consecuencia (1), ya que se verifica que $\{x=0\}\ x=0\ \{x=0\}$ y $\{x=0\}\rightarrow \{x=0 \lor x=2\}$.
-                \item Para la poscondición:
+                    Se cumple por la primera regla de la consecuencia, ya que se verifica que $\{x=0\}\ x=0\ \{x=0\}$ y $\{x=0\}\rightarrow \{x=0 \lor x=2\}$ y tenemos $NI(x=0, x=0)$\footnote{Aunque parezcan iguales, el primer $x=0$ es la precondición de $x=x+2$ y el segundo es la instrucción del lenguaje que estamos usando.}.
+                \item Para la poscondición $\{x=0 \lor x=2\}$:
                     \begin{equation*}
                         \{x=0 \lor x = 2\} \equiv \{(x=0 \lor x=2)\land V\}\ x=0\ \{x=0 \lor x=2\}
                     \end{equation*}
-                    Se cumple por la regla de la consecuencia (1), ya que se verifica que $\{x=0 \lor x=2\}\ x=0\ \{x=0\}$ y $\{x=0\}\rightarrow \{x=0 \lor x=2\}$.
+                    Se cumple por la primera regla de la consecuencia, ya que se verifica que $\{x=0 \lor x=2\}\ x=0\ \{x=0\}$ y $\{x=0\}\rightarrow \{x=0 \lor x=2\}$, luego tendríamos el triple $NI(x=0 \lor x=2, x=0)$.
             \end{enumerate}
     \end{itemize}
 \end{ejemplo}
 
-Finalmente, llegamos a una regla de inferencia que nos permitirá demostrar la corrección de un programa concurrente:
+A continuación, veremos una regla de inferencia relacionada con lo que explicamos tras la definición de interferencia, y es que nos es suficiente con demostrar la corrección secuencial de los procesos y la no interferencia entre los mismos para poder garantizar la corrección de un programa concurrente.\\
+Un programa concurrente pueden entenderse como la ejecución secuencial de estructuras \texttt{cobegin-coend}, por lo que será suficiente con demostrar la corrección parcial de cada una de estas estructuras para luego demostrar la corrección parcial de todo el programa, que se reducirá a una demostración de un programa secuencial.
 
 \begin{description}
     \item [Regla de la composición concurrente segura de procesos.] 
         \begin{equation*}
-            \dfrac{\{P_i\}\ S_i\ \{Q_i\} \text{ son triples libres de interferencia } \forall 1\leq i \leq n}{\{P_1 \land P_2 \land \ldots \land P_n\} \texttt{ cobegin } S_1\ ||\ S_2\ ||\ \ldots\ ||\ S_n \texttt{ coend } \{Q_1 \land Q_2 \land \ldots \land Q_n\}}
+            \dfrac{\{P_i\}\ S_i\ \{Q_i\} \text{\ son\ triples\ libres\ de\ interferencia\ } 1\leq i \leq n}{\{P_1 \land P_2 \land \ldots \land P_n\} \texttt{\ cobegin\ } S_1\ ||\ S_2\ ||\ \ldots\ ||\ S_n \texttt{\ coend\ } \{Q_1 \land Q_2 \land \ldots \land Q_n\}}
         \end{equation*}
 \end{description}
 
@@ -619,19 +635,128 @@ Finalmente, llegamos a una regla de inferencia que nos permitirá demostrar la c
     es cierto.
 \end{ejemplo}
 
+\begin{ejemplo}
+    Ante el siguiente código:
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        x = 0; y = 0;
+        cobegin x = y + 1; #||# y = x + 1; coend
+    \end{minted}
+    Notemos que los posibles resultados de ejecución del mismo son (donde se ha notado por $l(x)$ la lectura de la variable $x$ y por $e(x)$ a la escritura en la variable $x$, respectivamente con $y$):
+    \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c||c|c|c||c|c|c|}
+        \hline
+        Traza & $x$ & $y$ &Traza & $x$ & $y$ &Traza & $x$ & $y$ \\
+        \hline
+        $l(x)$ & 0 & 0 & $l(x)$ & 0 & 0 & $l(y)$ & 0 & 0      \\
+        \hline                                                        
+        $l(y)$ & 0 & 0 & $e(y)$ & 0 & 1 & $e(x)$ & 1 & 0  \\
+        \hline                                                            
+        $e(x)$ & 1 & 0 & $l(y)$ & 0 & 1 & $l(x)$ & 1 & 0      \\
+        \hline                                                            
+        $e(y)$ & 1 & 1 & $e(x)$ & 2 & 1 & $e(y)$ & 1 & 2  \\
+        \hline
+    \end{tabular}
+    \end{table}
+    Vemos en la tabla que hay tres posibles resultados del programa:
+    \begin{enumerate}
+        \item Uno en el que primero se leen las variables y luego se modifican.
+        \item Otro en el que primero se modifica $y$ y luego $x$.
+        \item Un último en el que primero se modifica $x$ y luego $y$.
+    \end{enumerate}
+    Vemos que al tener varios procesos que escriben y modifican varias variables, debemos distinguir varias casuísticas para luego determinar los posibles resultados del programa.\\
+
+    Sin embargo, ante el siguiente código:
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        x = 0; y = 0;
+        z = x;
+        cobegin x = y + 1; #||# y = z + 1; coend
+    \end{minted}
+    obtenemos los siguientes posibles resultados:
+    \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c||c|c|c||c|c|c|}
+        \hline
+        Traza & $x$ & $y$ &Traza & $x$ & $y$ &Traza & $x$ & $y$ \\
+        \hline
+        $l(z)$ & 0 & 0 & $l(z)$ & 0 & 0 & $l(y)$ & 0 & 0      \\
+        \hline                                                        
+        $l(y)$ & 0 & 0 & $e(y)$ & 0 & 1 & $e(x)$ & 1 & 0  \\
+        \hline                                                            
+        $e(x)$ & 1 & 0 & $l(y)$ & 0 & 1 & $l(z)$ & 1 & 0      \\
+        \hline                                                            
+        $e(y)$ & 1 & 1 & $e(x)$ & 2 & 1 & $e(y)$ & 1 & 1  \\
+        \hline
+    \end{tabular}
+    \end{table}
+    Donde sólo hay una única variable compartida que es leida y escrita por un único proceso, el número de casos a tener en cuenta disminuye, ya que sólo debemos distinguir dos casos:
+    \begin{enumerate}
+        \item Al ejecutar el código de la izquierda, la variable $y$ todavía no ha sido modificada.
+        \item Al ejecutar el código de la izquierda, la variable $y$ ha sido modificada ya.
+    \end{enumerate}
+    Esta propiedad de los programa recibe el nombre de \textbf{como máximo una vez}, donde solo encontramos una variable que es leída por varios procesos pero que solo es modificada por uno de ellos. De esta forma, el número de casuísticas disminuye considerablemente, ya que sólo hemos de distinguir el caso de que la variable haya sido modificada y el caso de que todavía no lo haya sido.
+\end{ejemplo}
+
 \subsection{Verificación usando invariantes globales}
-La demostración de verificación de programas concurrntes usando la regla de la composición concurrentes es tediosa, ya que es necesario comprobar la veracidad de muchos triples antes de poder aplicarla. Es por tanto que buscamos otra forma predominante de probar los programas concurrentes.\\
+La demostración de verificación de programas concurrentes usando la regla de la composición concurrente es tediosa, ya que es necesario comprobar la veracidad de muchos triples antes de poder aplicarla. Es por tanto que buscamos otra forma predominante de probar los programas concurrentes.\\
 
 Los invariantes globales (IG) de un programa pueden entenderse como expresiones definidas a partir de las variables globales de un programa. Estas suelen definirse como un predicado de la Lógica de Programas que captura la relación que existe entre las variables compartidas por los procesos de un programa concurrente.\\
 
-Si cualquier aserto crítico $\{C\}$ (esto es, un aserto que aparece en un triple) de las demostraciones individuales de los programas concurrntes $\{P_i\}\ S_i\ \{Q_i\}$ se puede escribir como una conjunción del tipo $\{IG \land L\}$ donde $IG$ es un invariante global del programa y $\{L\}$ es un predicado en el que intervienen solo variables de un proceso o parámetros de una función, entonces las demostraciones de los procesos secuenciales estarán libres de interferencias.\\
+Si cualquier aserto $\{C\}$ de un triple $\{P_i\}\ S_i\ \{Q_i\}$ se puede escribir como una conjunción del tipo $\{IG \land L\}$ donde $IG$ es un invariante global del programa y $\{L\}$ es un predicado en el que intervienen solo variables de un proceso o parámetros de una función, entonces las demostraciones de los procesos secuenciales estarán libres de interferencias.\\
 
-Para que un predicado $\{I\}$ definido a partir de las variables compartidas entre los procesos pueda ser considerado un IG válido, se han de cumplir:
+De esta forma, para que un predicado $\{I\}$ definido a partir de las variables compartidas entre los procesos pueda ser considerado un IG válido, se ha de cumplir que:
 \begin{enumerate}
-    \item Es cierto para los valores iniciales de las variables que aparecen en $\{I\}$.
-    \item Se ha de poder demostrar la no interferencia de dicho aserto con cualquier sentencia elemental de $S_i$, es decir, se ha de poder probar el triple
+    \item Sea cierto para los valores iniciales de las variables del programa que aparecen en $\{I\}$.
+    \item Se ha de poder demostrar la no interferencia de dicho aserto $I$ con cualquier sentencia atómica de $S_i$, es decir, se ha de poder probar el triple
         \begin{equation*}
-            NI(I, R) \equiv \{I \land pre(R)\}\ R\ \{I\}
+            NI(I, a) \equiv \{I \land pre(a)\}\ a\ \{I\}
         \end{equation*}
-        para toda $R$ de $S_i$.
+        para toda $a$ sentencia atómica de $S_i$.
 \end{enumerate}
+
+\begin{ejemplo}
+    Si tenemos un programa que sigue el paradigma del productor/consumidor y queremos probar su corrección parcial (esto es, que el programa hace lo que esperamos), suponiendo que ya tenemos demostrada las correcciones parciales del productor y del consumidor, faltaría probar la no interferencia entre ambos. Para ello, y con el fin de evitar comprobar múltiples triples de Hoare, decidimos realizar la prueba mediante un invariante global, de foma que dicho invariante nos dé la corrección parcial de nuestro programa. Si conseguimos probar la invarianza de dicha propiedad, tendremos demostrada la corrección del programa.\\
+
+Para la corrección parcial, queremos probar que el consumidor no lea una determinada variable $x$ antes de que el productor no escriba en ella, y que el productor espere a que el consumidor lea el valor anterior de $x$ antes de modificarlo. Debemos buscar una forma de representar esto matemáticamente, para así definir $I$ como la relación matemática que cumpla esto, y proceder a demostrar que $I$ es un invariante global, para así tener la corrección de nuestro programa probado.\\
+
+\noindent
+Una forma de hacerlo es contando el número de veces que se lee y escribe en la variable:\newline
+Sea $n$ el número de veces que el productor ha producido y escrito un valor en $x$ y $m$ el número de veces que el consumidor ha leído el valor de $x$, debe cumplirse que consumidor no lea $x$ más veces que el productor haya escrito en ella, es decir, que
+\begin{equation*}
+    m \leq n
+\end{equation*}
+Así mismo, el productor no puede escribir en $x$ más veces de las que el consumidor haya leido $x$, sino que sólo puede hacerlo una vez que este lo haya hecho. Es decir, si $m = n$, entonces el productor podrá volver a escribir en $x$, por lo que tendremos que $n = m+1$. Sin embargo, este no puede volver a escribir hasta que el consumidor haya leido la variable. De esta forma, limitamos al productor de generar más datos de las que el productor pueda consumir, con la expresión:
+\begin{equation*}
+    n \leq m+1
+\end{equation*}
+En resumen, el buen funcionamiento del programa dependerá del invariante global:
+\begin{equation*}
+    I = m \leq n \leq m+1
+\end{equation*}
+siendo $m$ y $n$ las variables anteriormente definidas.\\
+
+Pasamos ahora a la demostración de la corrección de nuestro programa:
+\begin{enumerate}
+    \item Primero, debemos comprobar que el invariante es cierto al inicio del programa.\\
+        
+        Inicialmente, el productor no ha escrito todavía en $x$, al igual que el consumidor no ha leido todavía $x$, por lo que:
+        \begin{equation*}
+            0 = m \leq n = 0 \leq m+1 = 0+1
+        \end{equation*}
+        Y vemos que se verifica $I$.
+    \item Posteriormente, debemos dividir el programa en bloques de forma que debemos probar que antes y después de cada bloque el invariante sigue siendo válido. Los bloques que consideraremos estarán formados por una iteración del productor y por una del consumidor.\\
+
+        Suponiendo que al inicio de un bloque se verifica $I$, es decir, que $m\leq n\leq m+1$, debemos probar que las la escritura de $x$ por el productor y tras la lectura de $x$ por el consumidor se verifica $m'\leq n' \leq m'+1$, siendo $m'$ y $n'$ el número actualizado de veces que se ha leido y escrito en la variable, respectivamete.
+
+        Para ello, suponemos que se verifica $I$. Como demostramos anteriormente la corrección parcial de cacda programa (del productor y del consumidor), sabemos que tras un bloque (es decir, una iteración de cada uno de los dos programas), el productor habrá generado un dato que el consumidor habrá leido (o que el consumidor habrá leido un dato y el productor habrá generado el siguiente). En cualquier traza de ejecución, tendremos que:
+        \begin{equation*}
+            m' = m+1 \qquad n' = n+1
+        \end{equation*}
+        Y ahora tendremos que comprobar que el invariante se sigue cumpliendo:
+        \begin{equation*}
+            m\leq n\leq m+1 \Longrightarrow m+1\leq n+1\leq m+2 \Longrightarrow m' \leq n' \leq m'+1
+        \end{equation*}
+        Notemos que hemos supuesto que se verificaba $I$ al inicio del bloque. En principio nada nos garantiza esto, pero como anteriormente probamos que se cumplía al inicio del programa, se cumple antes de la primera ejecución del bloque, y como hemos demostrado que se cumple tras el bloque, se cumplirá antes de la segunda ejecución del bloque, \ldots Hemos realizado una especie de inducción en nuestro SLF.
+\end{enumerate}
+Hemos demostrado ya que $I$ es un invariante global. Como este nos garantiza la corrección de nuestro programa concurrente, tenemos ya demostrada la corrección del mismo.
+\end{ejemplo}
