@@ -29,13 +29,13 @@
 \begin{ejercicio}
    Si la unidad de datos de protocolo en la capa de enlace se llama trama y la unidad de datos de protocolo en la capa de red se llama paquete, ¿son las tramas las que encapsulan los paquetes o son los paquete los que encapsulan las tramas? Explicar la respuesta. \\
    
-   Son las tramas las que encapsulan a los paquetes, ya que son las capas inferiores (en este caso, la de enlace) las que encapsulan la información de las capas superiores (en este caso, la de red) para su envío.\\
+   Son las tramas las que encapsulan a los paquetes, ya que son las capas inferiores (en este caso, la de enlace) las que encapsulan la información de las capas superiores (en este caso, la de red) para su envío.
 
-   De esta forma, los paquetes son la PDU de la capa de red, que se convierte en el SDU de la capa de enlace, la cual añade su cabecera al mismo convirtiéndolo en su PDU\@.
+   De esta forma, los paquetes son la PDU (\emph{Protocol Data Unit})  de la capa de red, que se convierte en el SDU (\emph{Servie Data Unit}) de la capa de enlace, la cual añade su cabecera al mismo convirtiéndolo en su PDU\@.
 \end{ejercicio}
 
 \begin{ejercicio}
-    Averigüe qué son los sistemas de representación de datos ``\textit{Little Endian}'' y ``\textit{Big Endian}''. ¿puede un host que utilice representación \textit{Little Endian} interpretar mensajes de datos numéricos provenientes de un host que utilice representación \textit{Big Endian} y viceversa? Discuta la respuesta.\\
+    Averigüe qué son los sistemas de representación de datos ``\textit{Little Endian}'' y ``\textit{Big Endian}''. ¿Puede un host que utilice representación \textit{Little Endian} interpretar mensajes de datos numéricos provenientes de un host que utilice representación \textit{Big Endian} y viceversa? Discuta la respuesta.\\
 
     Sí que puede, para ello, debe haber un determinado protocolo que permita indicar qué codificación llevan los datos en binario. De esta forma, en alguna parte de la cabecera de los paquetes enviados, debe haber un bit que indique si los valores numéricos que se envían estén en \textit{Big Endian} o en \textit{Little Endian}.
 \end{ejercicio}
@@ -45,7 +45,8 @@
 
     Suponiendo que enviamos $n$ paquetes de datos, la primera forma envía de vuelta al emisor $n$ paquetes de confirmación, uno por cada paquete. De la segunda forma, el receptor espera a unir todos los paquetes en un fichero completo (y a verificar que no se ha perdido ningún paquete del mismo) para enviar el mensaje de verificación.\\
 
-    De la segunda forma se envían menos mensajes de verificación al emisor, por lo que la posibilidad de congestión de red por paquetes de verificación es menor. Sin embargo, en caso de que un paquete no consiga llegar o llegue en mal estado, no será hasta el final del envío de todos los paquetes que el receptor no genere el mensaje al emisor, por lo que en caso de errores en la comunicación, hay un mayor tiempo en la comunicación, al tener que esperar a que el receptor tenga todos los paquetes.\\
+    De la segunda forma se envían menos mensajes de verificación al emisor, por lo que la posibilidad de congestión de red por paquetes de verificación es menor. Sin embargo, en caso de que un paquete no consiga llegar o llegue en mal estado, no será hasta el final del envío de todos los paquetes que el receptor no genere el mensaje al emisor, por lo que en caso de errores en la comunicación, hay un mayor tiempo en la comunicación, al tener que esperar a que el receptor tenga todos los paquetes. Además, en el caso de error,
+    el receptor no informará de qué paquete ha llegado mal, por lo que deberá pedir al emisor que reenvíe todos los paquetes de nuevo.\\
 
     Resumiendo, ambas estrategias de confirmación tienen sus pros y sus contras. Dependiendo de la situación (si queremos mayor velocidad en la comunicación o si queremos menor saturación de red), puede interesarnos una u otra.
 \end{ejercicio}
@@ -53,23 +54,43 @@
 \begin{ejercicio}
    ¿Para qué sirve el programa \textit{ping}? ¿y el programa \textit{traceroute}? \\
 
-   El programa \textit{ping} usa el protocolo ICMP para enviar un paquete a un equipo, el cual tratará de responder con un paquete de confirmación de recepción del primer paquete. Sirve para comprobar la conexión y el buen funcionamiento de la red existente entre dos equipos.
+   El programa \textit{ping} usa el protocolo ICMP para enviar un paquete a un equipo, el cual tratará de responder con un paquete de confirmación de recepción del primer paquete. Sirve para comprobar la conexión y el buen funcionamiento de la red existente entre dos equipos. También sirve para calcular empíricamente la latencia de la conexión.\\
 
-   Por otra parte, el programa \textit{traceroute} sirve para consultar todos los nodos intermedios por los que pasan los paquetes que salen de un emisor y llegan a un receptor.
+   Por otra parte, el programa \textit{traceroute} sirve para consultar todos los nodos intermedios por los que pasan los paquetes que salen de un emisor y llegan a un receptor, junto con la latencia de cada salto. Se usan varios paquetes ICMP con un valor creciente del campo TTL (\textit{Time To Live}) para que cada salto intermedio devuelva un paquete de error ICMP con el valor del TTL que ha recibido. De esta forma, el emisor puede saber cuántos saltos intermedios hay entre él y el receptor, así como la latencia de cada uno de ellos.
 \end{ejercicio}
 
 \begin{ejercicio}
     ¿Qué protocolos de un paquete puede cambiar un router? ¿En qué circunstancias?\\
 
     Puede cambiar el TTL (\textit{time to life}) del paquete\footnote{Todavía no se ha mencionado en clase nada más acerca de esto.}.
-\end{ejercicio}
-
-\begin{ejercicio} % // TODO: this
-    Averigue qué ISPs operan en España.
+    % // TODO: This
+    \begin{comment}
+        Un router puede cambiar los protocolos situados debajo de la capa de red, siempre
+        que sea necesario debido a que las redes que interconecta tengan dichos protocolos
+        diferentes. Por ejemplo, una red doméstica típica es aquella basada en wifi (IEEE
+        802.11) y con acceso a Internet contratado con tecnología ADSL. En este caso, el
+        router inalámbrico deberá modificar el protocolo de las capas físicas y de enlace
+        convenientemente.
+    \end{comment}
 \end{ejercicio}
 
 \begin{ejercicio}
-    ¿Qué es una aplicación cliente-servidor?¿y una aplicación \textit{peer-to-peer}?\\
+    Averigue qué ISPs operan en España.\\
+
+    Algunos de los ISPs (\textit{Internet Service Providers}) que operan en España son:
+    \begin{itemize}
+        \item Movistar.
+        \item Vodafone.
+        \item Orange.
+        \item Jazztel.
+        \item MásMóvil.
+        \item Yoigo.
+        \item Digi.
+    \end{itemize}
+\end{ejercicio}
+
+\begin{ejercicio}
+    ¿Qué es una aplicación cliente-servidor? ¿y una aplicación \textit{peer-to-peer}?\\
 
     Una aplicación cliente-servidor es una aplicación que depende de otra que probablemente esté en un equipo remoto (llamado servidor) para su funcionamiento. 
 
@@ -83,11 +104,11 @@
 
     Para responder a la pregunta, usamos además información que hemos aprendido en el Tema 2:
     \begin{itemize}
-        \item Un switch es un nodo en una red que permite conectar tantos equipos como deseemos (normalmente, estos tienen 48 bocas de entrada RJ45 en el caso de conectar los equipos por ethernet) a un router. Funcionan a nivel de enlace, luego no tienen una dirección IP asociada.
+        \item Un switch es un nodo en una red que permite conectar tantos equipos como deseemos (normalmente, estos tienen 48 bocas de entrada RJ45 en el caso de conectar los equipos por ethernet) a una red. Funcionan a nivel de enlace, luego no tienen una dirección IP asociada.
         \item Un router es un nodo en una red que permite conectar redes distintas entre sí. Para ello, disponen de distintas tarjetas de red, cada una asociada a una red que se encuentra conectada al router. Disponen por tanto de varias direcciones IP, una por cada red a la que se conecta. Funciona a nivel de red.
 
-            Presenta en su interior la tabla de encaminamientos, que permite el encaminamiento en la capa de red. Cuenta además con el NAT, que permite traducir direcciones de IP privadas a públicas y viceversa.
-        \item Un \textit{hub} es un nodo en una red que permite implementar la difusión. Se trata de un conjunto de bocas ethernet que internamente funcionan como un bus\footnote{No se ha ahondado mucho más en el concepto de \textit{hub}.}.
+            Presenta en su interior la tabla de enrutamientos, que permite el encaminamiento en la capa de red. Cuenta además con el NAT, que permite traducir direcciones de IP privadas a públicas y viceversa.
+        \item Un \textit{hub} es un nodo en una red que permite implementar la difusión. Se trata de un conjunto de bocas ethernet que internamente funcionan como un bus. Cada vez que un paquete se envía por una de las bocas, este es reenviado a todas las demás bocas, por lo que todos los equipos conectados al \textit{hub} reciben el paquete.
     \end{itemize}
 \end{ejercicio}
 
@@ -95,8 +116,10 @@
     ¿Qué diferencia, en el contexto de una red de computadores, existe entre la tecnología de difusión y la tecnología punto-a-punto?\\
 
     La tecnología de difusión permite enviar un paquete desde un equipoo y hacer que este sea recibido por el resto de equipos que estén conectados a la misma red (o hacer llegar estos a equipos en distintas redes).
+    Es cada dispositivo el que decide si el paquete es para él o no.
 
-    Por otra parte, la teconología punto-a-punto permite el envío de paquetes desde un equipo a otro que no necesariamente han de estar en la misma red, mediante el uso de nodos intermedios que conectan los dos equipos.
+    Por otra parte, la teconología punto-a-punto permite el envío de paquetes desde un equipo a otro usando un medio directo, por lo que el destino está implícito desde que se envía el paquete.
+    Esta tecnología es más rápida y segura, pero su escalabilidad es mucho menor.
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -119,14 +142,14 @@
  \end{equation*}
 \end{ejercicio}
 
-\begin{ejercicio} % // TODO: this
+\begin{ejercicio}
     Clasifique como de \textit{difusión} o \textit{punto a punto} cada uno de los siguientes sistemas de transmisión:
-    \begin{enumerate}[label=\alph*.]
+    \begin{enumerate}
         \item Radio y TV\@: Difusión, ya que es un emisor (en este caso, una cadena de televisión o radio) que difunde paquetes a cualquiera que tenga sintonizado dicho canal.
-        \item Redes inalámbricas (WLAN).
-        \item ADSL\@.
-        \item Redes de cable.
-        \item Comunicaciones móviles (por ejemplo, GSM, UMTS, \ldots).
+        \item Redes inalámbricas (WLAN): Difusión, ya que cualquier equipo puede conectarse a la red y recibir los paquetes que se envían de forma inalámbrica.
+        \item ADSL\@: Punto a punto, ya que la conexión se establece mediante un cable. Usa en medio único.
+        \item Redes de cable: Puede implementar ambas tecnologías, ya que puede ser punto a punto (si cada equipo tiene su propio cable) o de difusión (si todos los equipos comparten el mismo cable).
+        \item Comunicaciones móviles (por ejemplo, GSM, UMTS, \ldots): Difusión, ya que (de nuevo) cualquier equipo puede recibir los paquetes que se envían por la red.
     \end{enumerate}
 \end{ejercicio}
 
@@ -134,12 +157,48 @@
     Clasifique los siguientes servicios como orientados a conexión/no orientados a conexión y confirmados/sin confirmación. Justifique la respuesta.\\
 
     Recordamos que los medios orientados a conexión son aquellos que comprueban si el receptor está disponible antes de enviar la información, y que los confirmados son aquellos que confirman la recepción del mensaje.
-    \begin{enumerate}[label=\alph*.]
+    \begin{enumerate}
         \item Correo postal ordinario: No es orientado a conexión (ya que no comprobamos anteriormente que el destinatario esté disponible, simplemente enviamos la carta) y es sin confirmación, ya que tras enviar la carta nada nos garantiza que el destinatario nos responda, pese a pedirlo explícitamente.
         \item Correo certificado: No es orientado a conexión por la misma razón que el correo normal. Sin embargo, es confirmado, ya que al recibir el destinatario la carta debe firmar para que el emisor sea consciente de que la carta ha sido recibida.
-        \item Envío y recepción de fax. % // TODO: NO sé cómo funciona xd
-        \item Conversación telefónica. % // TODO: NO sé cómo funciona xd
-        \item Domiciliación bancaria de recibos. % // TODO: NO sé cómo funciona xd
-        \item Solicitud de certificado de empadronamiento. % // TODO: NO sé cómo funciona xd
+        \item Envío y recepción de fax.
+        \item Conversación telefónica. Es orientado a conexión, puesto que no se puede establecer una llamada si la otra persona no coge el teléfono. Además, es confirmado, ya que la otra persona ha de responder para que se produzca una comunicación.
+        \item Domiciliación bancaria de recibos.
+        \item Solicitud de certificado de empadronamiento. Es no orientado a conexión, ya que no se comprueba si el destinatario está disponible antes de enviar la solicitud. Además, es con confirmación, ya que el ayuntamiento envía un documento que certifica que el solicitante está empadronado.
     \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}
+    ¿Cuál es el tiempo necesario en enviar un paquete de 1000 Bytes, incluidos 50 Bytes de cabecera, por un enlace de 100 Mbps y 10Km? ¿cuál es el tiempo mínimo desde que se envía hasta que se recibe confirmación? ¿qué relación hay entre este tiempo y los temporizadores en, por ejemplo, las capas de enlace y transporte?\\
+
+    En primer lugar, hemos de calcular el retardo de transmisión $T_t$, que es el tiempo que se tarda en enviar el paquete por el enlace. Para ello, tenemos que:
+    \begin{equation*}
+        T_t = \unit[10^3]{B} \cdot \dfrac{\unit[8]{b}}{\unit[1]{B}} \cdot \dfrac{\unit[1]{s}}{\unit[100 \cdot 10^6]{b}} = \unit[80\cdot 10^{-6}]{s} = \unit[80]{\mu s}
+    \end{equation*}
+
+    Por otra parte, el retardo de propagación $T_p$ es el tiempo que se tarda en enviar el paquete por los 10Km de cable. Para ello, suponiendo que la velocidad de transmisión es $\nicefrac{2}{3}c = \unit[2\cdot 10^8]{m/s}$, tenemos que:
+    \begin{equation*}
+        T_p = \unit[10\cdot 10^3]{m} \cdot \dfrac{\unit[1]{s}}{\unit[2\cdot 10^8]{m/s}} = \unit[50\cdot 10^{-6}]{s} =\unit[50]{\mu s}
+    \end{equation*}
+
+    Por tanto, el tiempo total que se tarda en enviar el paquete es de $T_t + T_p = \unit[130]{\mu s}$.\\
+
+    Veamos ahora el tiempo mínimo desde que se envía hasta que se recibe confirmación. Además de los tiempos anteriores, hemos de tener en cuenta el tiempo de procesamiento del paquete, el retardo de transmisión del paquete de confirmación y el retardo de propagación del paquete de confirmación. Tenemos que:
+    \begin{itemize}
+        \item No se proporciona información del tiempo de procesamiento del paquete. No obstante, en los dispositivos modernos, este retardo es de varios órdenes de magnitud menor que los otros, por lo que se puede considerar despreciable.
+        \item El retardo de propagación del paquete de confirmación es el mismo, puesto que la distancia recorrida es la misma.
+        \item EL retardo de transmisión sí difiere, puesto que el tamaño del paquete de confirmación difiere. Normalmente, estos solo incluyen una cabecera, por lo que este tiempo, notado por $T_{\text{ACK}}$, es:
+        \begin{equation*}
+            T_{\text{ACK}} = \unit[50]{B} \cdot \dfrac{\unit[8]{b}}{\unit[1]{B}} \cdot \dfrac{\unit[1]{s}}{\unit[100 \cdot 10^6]{b}} = \unit[4\cdot 10^{-6}]{s} = \unit[4]{\mu s}
+        \end{equation*}
+
+        Un temporizador de control de flujo en capa de enlace o de transporte debe ser
+        suficientemente mayor a este tiempo mínimo para evitar un re-envío inmediato de
+        paquetes ante cualquier eventualidad mínima en la red, como un retardo en las colas
+        (mayor retardo de procesamiento) por un cierto nivel de congestión.
+    \end{itemize}
+
+    Por tanto, el tiempo total mínimo que se tarda en enviar el paquete y recibir confirmación es de:
+    \begin{equation*}
+        T_{\text{total}} = T_t + T_p + T_{\text{ACK}} + T_p = \unit[80]{\mu s} + \unit[50]{\mu s} + \unit[4]{\mu s} + \unit[50]{\mu s} = \unit[184]{\mu s}
+    \end{equation*}
 \end{ejercicio}
