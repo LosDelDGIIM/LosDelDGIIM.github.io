@@ -180,3 +180,15 @@ void consumidor(){
    }
 }
 ```
+
+# Problema del productor/consumidor con varias hebras
+Ahora, manejaremos el mismo problema con varias hebras que funcionen de productoras y varias que funcionen de consumidoras. Para implementar estas versiones a partir de las que ya tenemos, es necesario con resolver pequeños problemas.  
+  
+Además, trataremos de que cada productor produzca el mismo número de datos y que cada consumidor consuma el mismo número de datos.  
+  
+Las soluciones a estos problemas dependen de si el vector en el que se escribe queremos manejarlo con planificación FIFO o LIFO.
+
+## Productores/consumidores con vector FIFO
+En este caso, los productores comparten índice de escritura y los consumidores comparten índice de lectura. El acceso a estas ha de hacerse dentro de un objeto `mutex`.
+
+## Productores/consumidores con vector LIFO
