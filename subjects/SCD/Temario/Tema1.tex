@@ -414,6 +414,24 @@ De esta forma, $\{V\}$ es el conjunto de todos los estados de un programa, ya qu
     Sin embargo, para evitar la confusión con el operador de asignación, notaremos las igualdades entre los conjuntos de estados de un programa con el operador $\equiv$.
 \end{notacion}
 
+\begin{observacion}
+    Notemos que, dados cualesquiera asertos $\{P\}$ y $\{Q\}$, podemos pensar en:
+    \begin{itemize}
+        \item $\{P \land Q\}$ como en  $\{P\} \cap \{Q\}$.
+        \item $\{P \lor Q\}$ como en $\{P\} \cup \{Q\}$.
+        \item $\{P\} \rightarrow \{Q\}$ como en $\{P\} \subseteq \{Q\}$
+    \end{itemize}
+    De esta forma, notemos que siempre se verifica que:
+    \begin{itemize}
+        \item $\{V \land P\} = \{P\}$.
+        \item $\{V \lor P\} = \{V\}$.
+        \item $\{F \land P\} = \{F\}$.
+        \item $\{F \lor P\} = \{P\}$.
+        \item $\{F\}\rightarrow \{P\} \rightarrow \{V\}$.
+        \item $\{P \land Q\}\rightarrow \{P\} \rightarrow\{P \lor Q\}$.
+    \end{itemize}
+\end{observacion}
+
 \begin{definicion}[Sustitución textual]
     Dado un aserto $P$, que contiene al menos una aparición libre de la variable $x$, y una expresión $e$, definimos la sustitución textual de $x$ por $e$, notado por $P_e^x$, como la sustitución textual de todas las ocurrencias libres de $x$ en $P$ por $e$.
 \end{definicion}
@@ -582,37 +600,71 @@ Esto es de especial relevancia en los programas concurrentes, ya que para demost
 Veremos próximamente que con garantizar la corrección secuencial de los procesos y la no interferencia entre los mismos, nos es suficiente para garantizar la corrección de los programas concurrentes, gracias a este razonamiento intuitivo que acabamos de realizar (lo único que cambia al ejecutar los procesos de forma concurrente es que puedan modificar variables de otros procesos, interfiriendo en su ejecución, sin embargo, si no interfieren en la misma, todo saldrá bien).
 
 \begin{ejemplo}
-    Recuperando el ejemplo del inicio de la sección, nos disponemos a demostrar que los triples $\{x=0\}\ x=x+2\ \{x=0 \lor x=2\}$, $\{V\}\ x=0\ \{x=0 \lor x=2\}$ están libres de interferencia. Para ello, hemos de demostrar $2\cdot 2=4$ triples (ya que tenemos dos instrucciones, cada una con 2 asertos).
-    \begin{itemize}
-        \item $x=x+2$ no interfiere con $\{V\}\ x=0\ \{x=0 \lor x=2\}$:\newline
-            Notemos que $pre(x=x+2) \equiv \{x=0\}$
-            \begin{enumerate}
-                \item Para la precondición $\{V\}$:
-                    \begin{equation*}
-                        \{x=0\} \equiv \{V \land x = 0\}\ x=x+2\ \{V\}
-                    \end{equation*}
-                    Se cumple por la primera regla de la consecuencia, ya que se verifica que $\{x=0\}\ x=x+2\ \{x=2\}$ y $\{x=2\} \rightarrow \{V\}$, luego por la regla de la composición, tenemos demostrado el triple $NI(V, x=x+2)$.
-                \item Para la poscondición $\{x=0 \lor x = 2\}$:
-                    \begin{equation*}
-                        \{x=0\} \equiv \{(x=0 \lor x=2)\land x=0\}\ x=x+2\ \{x=0 \lor x=2\}
-                    \end{equation*}
-                    Se cumple por la primera regla de la consecuencia, ya que se verifica que $\{x=0\}\ x=x+2\ \{x=2\}$, $\{x=2\} \rightarrow\{x=0 \lor x=2\}$; y por la regla de la composición, tenemos $NI(x=0 \lor x=2, x=x+2)$.
-            \end{enumerate}
-        \item $x=0$ no interfiere con $\{x=0\}\ x=x+2\ \{x=0 \lor x=2\}$:\newline
-            Notemos que $pre(x=0)\equiv \{V\}$
-            \begin{enumerate}
-                \item Para la precondición $\{x=0\}$:
-                    \begin{equation*}
-                        \{x=0\} \equiv \{x=0 \land V\}\ x=0\ \{x=0 \lor x=2\}
-                    \end{equation*}
-                    Se cumple por la primera regla de la consecuencia, ya que se verifica que $\{x=0\}\ x=0\ \{x=0\}$ y $\{x=0\}\rightarrow \{x=0 \lor x=2\}$ y tenemos $NI(x=0, x=0)$\footnote{Aunque parezcan iguales, el primer $x=0$ es la precondición de $x=x+2$ y el segundo es la instrucción del lenguaje que estamos usando.}.
-                \item Para la poscondición $\{x=0 \lor x=2\}$:
-                    \begin{equation*}
-                        \{x=0 \lor x = 2\} \equiv \{(x=0 \lor x=2)\land V\}\ x=0\ \{x=0 \lor x=2\}
-                    \end{equation*}
-                    Se cumple por la primera regla de la consecuencia, ya que se verifica que $\{x=0 \lor x=2\}\ x=0\ \{x=0\}$ y $\{x=0\}\rightarrow \{x=0 \lor x=2\}$, luego tendríamos el triple $NI(x=0 \lor x=2, x=0)$.
-            \end{enumerate}
-    \end{itemize}
+    Recuperando el ejemplo del inicio de la sección, nos disponemos a demostrar que los triples $\{x=0\}\ x=x+2\ \{x=0 \lor x=2\}$, $\{V\}\ x=0\ \{x=0 \lor x=2\}$ están libres de interferencia. Para ello, hemos de demostrar $2\cdot 2=4$ triples (ya que tenemos dos instrucciones, cada una con 2 asertos):
+    \begin{align*}
+        NI(x=0,\ x=0) &\equiv \{x=0 \land V\}\ x=0\ \{x=0\} \\
+        NI(x=0 \lor x=2,\ x=0) &\equiv \{(x=0 \lor x=2) \land V\}\ x=0\ \{x=0 \lor x=2\} \\
+        NI(V,\ x=x+2) &\equiv \{V \land x=0\}\ x=x+2\ \{V\} \\
+        NI(x=0 \lor x=2,\ x=x+2) &\equiv \{(x=0 \lor x=2) \land x=0\}\ x=x+2\ \{x=0 \lor x=2\}
+    \end{align*}
+    \begin{enumerate}
+        \item Para el primer triple:
+            \begin{equation*}
+                \{x=0 \land V\}\ x=0\ \{x=0\}
+            \end{equation*}
+            Tenemos que $\{x=0 \land V\}\equiv \{x=0\}$, por lo que basta con probar:
+            \begin{equation*}
+                \{x=0\}\ x=0\ \{x=0\}
+            \end{equation*}
+            Usando el axioma de asignación:
+            \begin{equation*}
+                \{V\} \equiv \{0=0\} \equiv \{x=0\}^x_0\ x=0\ \{x=0\}
+            \end{equation*}
+            Y como $\{x=0\}\rightarrow\{V\}$, usando la segunda regla de consecuencia, tenemos ya probado $NI(x=0,\ x=0)$.
+        \item Para el segundo triple
+            \begin{equation*}
+                \{(x=0 \lor x=2) \land V\}\ x=0\ \{x=0 \lor x=2\}
+            \end{equation*}
+            Tenemos que $\{(x=0 \lor x=2) \land V\}\equiv \{x= 0 \lor x=2\}$, por lo que basta con probar:
+            \begin{equation*}
+                \{x=0 \lor x=2\}\ x=0\ \{x=0 \lor x=2\}
+            \end{equation*}
+            Usando el axioma de asignación:
+            \begin{equation*}
+                \{V\} \equiv \{V \lor F\} \equiv \{0=0 \lor 0=2\} \equiv \{x=0 \lor x=2\}^x_0\ x=0\ \{x=0 \lor x=2\}
+            \end{equation*}
+            Y como $\{x=0 \lor x=2\} \rightarrow \{V\}$, tenemos el triple probado usando otra vez la segunda regla de la consecuencia.
+        \item Para el tercer triple:
+            \begin{equation*}
+                \{V \land x=0\}\ x=x+2\ \{V\}
+            \end{equation*}
+            Como $\{V \land x=0\}\equiv \{x=0\}$, probamos:
+            \begin{equation*}
+                \{x=0\}\ x=x+2\ \{V\}
+            \end{equation*}
+            Dado que el triple $\{x=0\}\ x=x+2\ \{x=2\}$ es cierto (se comprueba trivialmente con el axioma de asignación) y como $\{x=2\}\rightarrow\{V\}$, tenemos el triple probado usando la primera regla de la consecuencia.
+        \item Para el cuarto triple:
+            \begin{equation*}
+                \{(x=0 \lor x=2)\land x=0\}\ x=x+2\ \{x=0 \lor x=2\}
+            \end{equation*}
+            Como:
+            \begin{equation*}
+                \{(x=0 \lor x=2) \land x=0\} \equiv \{x=0\}
+            \end{equation*}
+            Tenemos que probar:
+            \begin{equation*}
+                \{x=0\}\ x=x+2\ \{x=0 \lor x=2\}
+            \end{equation*}
+            Usando el axioma de asignación:
+            \begin{equation*}
+                \{x=0 \lor x=2\}^x_{x+2}\ x=x+2\ \{x=0 \lor x=2\}
+            \end{equation*}
+            \begin{equation*}
+                \{x=0 \lor x=2\}^x_{x+2}\ \equiv \{x+2=0 \lor x+2=2\} \equiv \{x=-2 \lor x=0\}
+            \end{equation*}
+            Y como $\{x=0\}\rightarrow\{x=0 \lor x=2\}$, lo tenemos demostrado usando la segunda regla de consecuencia.
+    \end{enumerate}
+    
 \end{ejemplo}
 
 A continuación, veremos una regla de inferencia relacionada con lo que explicamos tras la definición de interferencia, y es que nos es suficiente con demostrar la corrección secuencial de los procesos y la no interferencia entre los mismos para poder garantizar la corrección de un programa concurrente.\\
