@@ -126,6 +126,7 @@ Podemos comprobar si ha surgido efecto con el comando:
 ```
 ip address print
 ```
+Podremos comprobar si todo está correcto realizando ping desde un computador al router, ejecutando `ping 33.1.1.1` desde `PC1` (por ejemplo).
 
 ## winbox
 
