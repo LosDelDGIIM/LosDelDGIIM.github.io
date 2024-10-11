@@ -1285,7 +1285,7 @@ Por tanto, y tras aplicar la Regla de la Composición Concurrente, tenemos de fo
     Veamos cuál ha de ser la poscondición de cada instrucción atómica:
     \begin{align*}
         Q_1 &= x=a\land (y=0 \lor y=b)\land z=0 \\
-        Q_2 &= (x=0\lor x=a) \land (y=b \lor y=a+b) \land z=0
+        Q_2 &= [(x=0\land y=b) \lor (x=a\land y=a+b)] \land z=0
     \end{align*}
 
     Vemos por tanto que ambos triples son ciertos:
@@ -1308,13 +1308,12 @@ Por tanto, y tras aplicar la Regla de la Composición Concurrente, tenemos de fo
         
         De la definición de Sustitución Textual, tenemos que:
         \begin{multline*}
-            \{(x=0\lor x=a) \land (y=b \lor y=a+b) \land z = 0\}_{x+b}^y \equiv \\ \equiv \{(x=0\lor x=a) \land (x+b=b \lor x+b=a+b) \land z = 0\} \equiv \\ \equiv \{(x=0\lor x=a) \land (x=0\lor x=a) \land z=0\}
-            \equiv \{(x=0\lor x=a) \land z=0\}
+            \{[(x=0\land y=b) \lor (x=a\land y=a+b)] \land z=0\}_{x+b}^y \equiv \\ \equiv \{[(x=0\land x+b=b) \lor (x=a\land x+b=a+b)] \land z = 0\} \equiv \\ \equiv \{(x=0\lor x=a) \land z = 0\}
         \end{multline*}
 
         Por tanto, del Axioma de Asignación, tenemos que:
         \begin{multline*}
-            \{(x=0\lor x=a) \land z=0\} <y = x + b> \\ \{(x=0\lor x=a) \land (y=b \lor y=a+b) \land z = 0\}
+            \{(x=0\lor x=a) \land z = 0\} <y = x + b> \\ \{[(x=0\land y=b) \lor (x=a\land y=a+b)] \land z=0\}
         \end{multline*}
 
         Por tanto, usando la segunda regla de la consecuencia, como se tiene que $\{P_2\}\rightarrow\{(x=0\lor x=a) \land z = 0\}$, tenemos que el triple es cierto.
@@ -1331,11 +1330,41 @@ Por tanto, y tras aplicar la Regla de la Composición Concurrente, tenemos de fo
     Veamos por tanto en qué queda cada uno de ellos:
     \begin{align*}
         NI(P_2, S_1) & \equiv \{x=0 \land y=0 \land z=0\} <x=z+a> \{(x=0\lor x=a) \land y=0 \land z=0\} \\
-        NI(Q_2, S_1) & \equiv \{x=0 \land y=b \land z=0\} <x=z+a>\\&\hspace{5cm} \{(x=0\lor x=a) \land (y=b \lor y=a+b) \land z=0\} \\
+        NI(Q_2, S_1) & \equiv \{x=0 \land y=b \land z=0\} <x=z+a>\\&\hspace{5cm} \{[(x=0\land y=b) \lor (x=a\land y=a+b)] \land z=0\} \\
         NI(P_1, S_2) & \equiv \{x=0 \land y=0 \land z=0\} <y=x+b> \{x=0 \land (y=0\lor y=b) \land z=0\} \\
         NI(Q_1, S_2) & \equiv \{x=a \land y=0 \land z=0\} <y=x+b> \{x=a \land (y=0\lor y=b) \land z=0\}
     \end{align*}
-    % // TODO: Cont
+
+    Intentemos demostrar el segundo. Usando la definición de Sustitución Textual, tenemos que:
+    \begin{multline*}
+        \{[(x=0\land y=b) \lor (x=a\land y=a+b)] \land z=0\}_{z+a}^x \equiv \\ \equiv \{[(z+a=0\land y=b) \lor (z+a=a\land y=a+b)] \land z=0\} \equiv \\ \equiv \{y=a+b \land z=0\}
+    \end{multline*}
+    Por tanto, del Axioma de Asignación, tenemos que:
+    \begin{multline*}
+        \{y=a+b \land z=0\} <x=z+a> \{[(x=0\land y=b) \lor (x=a\land y=a+b)] \land z=0\}
+    \end{multline*}
+    No obstante, de forma general, tenemos que $\{x=0\land y=b\land z=0\}\not\rightarrow\{y=a+b \land z=0\}$, por lo que $NI(Q_2, S_1)$ no es demostrable. No obstante, si $a=0$, entonces sí que sería demostrable. Supongamos por tanto a partir de ahora que \ul{$a=0$}.
+
+    Intentemos ahora demostrar el cuarto. Usando la definición de Sustitución Textual, tenemos que:
+    \begin{multline*}
+        \{x=a \land (y=0 \lor y=b) \land z = 0\}_{x+b}^y \equiv \\ \equiv \{x=a \land (x+b=0 \lor x+b=b) \land z = 0\} \equiv \\ \equiv \{x=a \land (x=-b\lor x=0) \land z = 0\} \equiv 
+        \{x=0 \land z = 0\}
+    \end{multline*}
+    donde en la última igualdad hemos usado que \ul{$a=0$}. Por tanto, del Axioma de Asignación, tenemos que:
+    \begin{multline*}
+        \{x=0 \land z = 0\} <y=x+b> \{x=a \land (y=0 \lor y=b) \land z = 0\}
+    \end{multline*}
+    Además, como \ul{$a=0$}, tenemos que $\{x=0\land z=0\}\rightarrow\{x=a \land y=0 \land z=0\}$, tenemos que es cierto. Por tanto, $NI(P_1, S_2)$ es demostrable.
+
+    Los otros dos triples son análogamente ciertos, por lo que podemos aplicar la regla de la composición concurrente y llegar al siguiente triple:
+    \begin{gather*}
+        \{x=0 \land y = 0 \land z = 0\} \\
+        <x = z + a> || <y = x+b> \\
+        \{x = a \land  y = a +b \land z = 0\}
+    \end{gather*}
+    Este es el triple que queríamos demostrar, suponiendo que \ul{$a=0$}. Por tanto, la respuesta correcta es la \textbf{a)}, ya que no es demostrable salvo que se cumpla siempre que $a=0$.
+
+    % // TODO: JJ Revisar. Me ha parecido bastante difícil
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -1413,6 +1442,48 @@ Por tanto, y tras aplicar la Regla de la Composición Concurrente, tenemos de fo
         \item Porque al aplicar directamente la regla de inferencia de la \textit{composición concurrente} utilizo unas condiciones (pre y post-condiciones) demasiado débiles.
         \item Porque tengo que incluir en los asertos el valor del contador de programa de cada procesador.
     \end{enumerate}
+
+    Notamos cada instrucción atómica de la siguiente forma:
+    \begin{equation*}
+        S_1 = S_2 = <x=x+a>
+    \end{equation*}
+
+    Veamos cuál ha de ser la precondición de cada instrucción atómica:
+    \begin{equation*}
+        P_1 = P_2 = x=0 \lor x=a
+    \end{equation*}
+
+    Veamos cuál ha de ser la poscondición de cada instrucción atómica:
+    \begin{equation*}
+        Q_1 = Q_2 = x=a \lor x=2a
+    \end{equation*}
+
+    Veamos ahora que cada triple es cierto. Como son los mismos, hemos de demostrar:
+    \begin{equation*}
+        \{x=0 \lor x=a\} <x=x+a> \{x=a \lor x=2a\}
+    \end{equation*}
+    
+    Este se demuestra de forma directa. Además, también hemos de demostrar que no interfieren entre sí. Tenemos que demostrar:
+    \begin{align*}
+        NI(P_1, S_2) &\equiv \{x=0 \lor x=a\} <x=x+a> \{x=0 \lor x=a\} \\
+        NI(Q_1, S_2) &\equiv \{x=a\} <x=x+a> \{x=a \lor x=2a\}
+    \end{align*}
+
+    Estos también son ciertos, por lo que podemos aplicar la regla de la composición concurrente y llegar al siguiente triple:
+    \begin{equation*}
+        \{x=0 \lor x=a\} cobegin <x=x+a>; <x=x+a> coend; \{x=a\lor x=2a\}
+    \end{equation*}
+
+    Por la primera regla de la consecuencia, podemos debilitar la precondición, llegando al siguiente triple:
+    \begin{equation*}
+        \{x=0\} cobegin <x=x+a>; <x=x+a> coend; \{x=a\lor x=2a\}
+    \end{equation*}
+    
+    No obstante, la poscondición no se puede debilitar, por lo que la respuesta correcta es la \textbf{b)}, ya que falta incluir en los asertos el valor final de $x$ sea también $\{x=a\}$.
+
+    % // TODO: Preguntar a Capel
+    % {x=0} cobegin <x=x+a>; <x=x+a> coend; {x=2*a}       no se puede demostrar
+    % {x=0} cobegin <x=x+a>; <x=x+a> coend; {x=2*a  o   x=a}    es cierto
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -1446,6 +1517,55 @@ Por tanto, y tras aplicar la Regla de la Composición Concurrente, tenemos de fo
         \texttt{coend} \\
         \{x=7\}
     \end{gather*}
+
+    Notamos cada instrucción atómica de la siguiente forma:
+    \begin{align*}
+        S_1 &= <x=x+1> \\
+        S_2 &= <x=x+2> \\
+        S_3 &= <x=x+4>
+    \end{align*}
+
+    Veamos cuál ha de ser la precondición de cada instrucción atómica:
+    \begin{align*}
+        P_1 = x=0 \lor x=2 \lor x=4 \lor x=6 \\
+        P_2 = x=0 \lor x=1 \lor x=4 \lor x=5 \\
+        P_3 = x=0 \lor x=1 \lor x=2 \lor x=3
+    \end{align*}
+
+    Veamos cuál ha de ser la poscondición de cada instrucción atómica:
+    \begin{align*}
+        Q_1 = x=1 \lor x=3 \lor x=5 \lor x=7 \\
+        Q_2 = x=2 \lor x=3 \lor x=6 \lor x=7 \\
+        Q_3 = x=4 \lor x=5 \lor x=6 \lor x=7
+    \end{align*}
+
+    Cada triple es directamente cierto por el Axioma de Asignación. Veamos ahora que no interfieren entre sí. Tenemos que demostrar:
+    \begin{align*}
+        NI(P_2, S_1) &\equiv \{x=0 \lor x=4\} <x=x+1> \{x=0\lor x=1\lor x=4\lor x=5\} \\
+        NI(Q_2, S_1) &\equiv \{x=2 \lor x=6\} <x=x+1> \{x=2\lor x=3\lor x=6\lor x=7\} \\
+        NI(P_3, S_1) &\equiv \{x=0 \lor x=2\} <x=x+1> \{x=0\lor x=1\lor x=2\lor x=3\} \\
+        NI(Q_3, S_1) &\equiv \{x=4 \lor x=6\} <x=x+1> \{x=4\lor x=5\lor x=6\lor x=7\} \\ \\
+        NI(P_1, S_2) &\equiv \{x=0 \lor x=4\} <x=x+2> \{x=0\lor x=2\lor x=4\lor x=6\} \\
+        NI(Q_1, S_2) &\equiv \{x=1 \lor x=5\} <x=x+2> \{x=1\lor x=3\lor x=5\lor x=7\} \\
+        NI(P_3, S_2) &\equiv \{x=0 \lor x=1\} <x=x+2> \{x=0\lor x=1\lor x=2\lor x=3\} \\
+        NI(Q_3, S_2) &\equiv \{x=4 \lor x=5\} <x=x+2> \{x=4\lor x=5\lor x=6\lor x=7\} \\ \\
+        NI(P_1, S_3) &\equiv \{x=0 \lor x=2\} <x=x+4> \{x=0\lor x=2\lor x=4\lor x=6\} \\
+        NI(Q_1, S_3) &\equiv \{x=1 \lor x=3\} <x=x+4> \{x=1\lor x=3\lor x=5\lor x=7\} \\
+        NI(P_2, S_3) &\equiv \{x=0 \lor x=1\} <x=x+4> \{x=0\lor x=1\lor x=4\lor x=5\} \\
+        NI(Q_2, S_3) &\equiv \{x=2 \lor x=3\} <x=x+4> \{x=2\lor x=3\lor x=6\lor x=7\}
+    \end{align*}
+
+    Todos estos son ciertos, por lo que podemos aplicar la regla de la composición concurrente y llegar al siguiente triple:
+    \begin{gather*}
+        \{x=0\} \\
+        \texttt{cobegin} \\
+        <x=x+1> || <x=x+2> || <x=x+4> \\
+        \texttt{coend} \\
+        \{x=7\}
+    \end{gather*}
+
+    % // TODO: JJ Revisar
+    % // Este ha sido fácil. Intuición? Cómo verlo directo sin escribir todo?
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -1457,26 +1577,26 @@ Por tanto, y tras aplicar la Regla de la Composición Concurrente, tenemos de fo
     \end{gather*}
     demostrar que se cumple la invarianza de $\{x=y\}$, es decir, que $\{x=y\}\ P\ \{x=y\}$ es un triple cierto.\\
 
-Para ello, comenzamos demostrando los triples:
+Para ello, comenzamos demostrando los siguientes triples (se ha de mantener la invarianza en el código secuencial)
 \begin{gather*}
     \{x=y\}\ x=x-1;x=x+1;\ \{x=y\} \\
     \{x=y\}\ y=y-1;y=y+1;\ \{x=y\} \\
 \end{gather*}
 \begin{enumerate}
-    \item 
+    \item Respecto al primero, tenemos que los siguientes triples son ciertos:
         \begin{gather*}
             \{x=y\}\ x=x-1\ \{x+1=y\} \\
             \{x+1=y\}\ x=x+1\ \{x=y\}
         \end{gather*}
-        y usamos la regla de la composición.
-    \item 
+        Usando la regla de la composición, se tiene.
+    \item Respecto al segundo, tenemos que los siguientes triples son ciertos:
         \begin{gather*}
             \{y=x\}\ y=y-1\ \{y+1=x\} \\
             \{y+1=x\}\ y=y+1\ \{y=x\}
         \end{gather*}
-        y usamos la regla de la composición.
+        Usando la regla de la composición, se tiene.
 \end{enumerate}
-Ahora, los triples son libres de interferencia, por tener variables disjuntas. Podemos aplicar por tanto la regla de la composición concurrente, llegando a que:
+Ahora, los triples son libres de interferencia por tener variables disjuntas. Podemos aplicar por tanto la regla de la composición concurrente, llegando a lo que queríamos probar:
 \begin{gather*}
     \{x=y\} \\
     \texttt{cobegin} \\
@@ -1484,7 +1604,6 @@ Ahora, los triples son libres de interferencia, por tener variables disjuntas. P
     \texttt{coend} \\
     \{x=y\}
 \end{gather*}
-Que era lo que queríamos probar.
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -1492,6 +1611,7 @@ Que era lo que queríamos probar.
     \begin{equation*}
         \{i>2\}\ i=2\ast i\ \{i>4\}
     \end{equation*}
+    % // TODO: JJ. Regla de la conjunción?. Se demuestra directamente con el axioma de asignación
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -1505,10 +1625,42 @@ Que era lo que queríamos probar.
         \{j>1 \land i>2\}\ i=i+2;\ j=j+3\ \{j>4 \land i>4\}
     \end{equation*}
     ¿Qué regla se debe utilizar para la demostración?
+
+    % // TODO: JJ. Cómo??
 \end{ejercicio}
 
 \begin{ejercicio}
-    Sean $A$ y $B$ los valores iniciales de $a$ y $b$ respectivamente. Escribir un fragmento de código que tenga $\{a=A+B \land b =A-B\}$ como poscondición y demostrar que el código es correcto.
+    Sean $A$ y $B$ los valores iniciales de $a$ y $b$ respectivamente. Escribir un fragmento de código que tenga $\{a=A+B \land b =A-B\}$ como poscondición y demostrar que el código es correcto.\\
+
+    En este caso, nos piden un código $C$ que cumpla:
+    \begin{equation*}
+        \{a=A \land b=B\}\ C\ \{a=A+B \land b =A-B\}
+    \end{equation*}
+
+    Sea $C=<a=a+b; b=a-2b>$. Buscamnos entonces demostrar los siguientes triples:
+    \begin{gather*}
+        \{a=A \land b=B\}\ a=a+b\ \{a=A+B \land b=B\} \\
+        \{a=A+B \land b=B\}\ b=a-2b\ \{a=A+B \land b=A-B\}
+    \end{gather*}
+
+    Demostramos cada uno por separado:
+    \begin{enumerate}
+        \item Usando el axioma de asignación:
+            \begin{align*}
+                \{a=A+B \land b=B\}_{a+b}^a
+                &\equiv \{a+b=A+B \land b=B\}
+                \equiv\\&\equiv \{a=A\land b=B\}\ a=a+b\ \{a=A+B \land b=B\}
+            \end{align*}
+        \item Usando el axioma de asignación:
+            \begin{align*}
+                \{a=A+B &\land b=A-B\}_{a-2b}^b
+                \equiv \{a=A+B \land a-2b=A-B\}
+                \equiv\\& \equiv \{a=A+B \land A+B-2b=A-B\}
+                \equiv\\& \equiv \{a=A+B \land b=B\}\ b=a-2b\ \{a=A+B \land b=A-B\}
+            \end{align*}
+    \end{enumerate}
+    Usando la regla de la composición, tenemos que el código es correcto.
+
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -1544,7 +1696,7 @@ Que era lo que queríamos probar.
     El siguiente fragmento de código tiene $\{P\}\equiv \left\{sum = \frac{j(j-1)}{2}\right\}$ como precondición y poscondición. Demostrar que es verdadero:
     \begin{equation*}
         \{P\}\ sum=sum+j;\ j=j+1;\ \{P\}
-    \end{equation*}~\\
+    \end{equation*}
 
     Queremos demostrar el triple:
     \begin{equation*}
@@ -1562,6 +1714,7 @@ Que era lo que queríamos probar.
             \begin{equation*}
                 \left\{sum = \frac{(j+1)j}{2} \right\}^{sum}_{sum+j}\ sum = sum + j;\ \left\{sum = \frac{(j+1)j}{2} \right\} 
             \end{equation*}
+            Usando la definición de Sustitución Textual, tenemos que:
             \begin{gather*}
                 \left\{sum = \frac{(j+1)j}{2} \right\}^{sum}_{sum+j} \equiv \left\{sum+j = \frac{(j+1)j}{2} \right\} \equiv \\ 
                 \equiv \left\{sum = \frac{(j+1)j}{2}-j \right\} \equiv \left\{sum = \frac{j(j-1)}{2} \right\}
@@ -1570,6 +1723,7 @@ Que era lo que queríamos probar.
             \begin{equation*}
                 \left\{sum = \frac{j(j-1)}{2}\right\}^j_{j+1} j=j+1;\ \left\{sum = \frac{j(j-1)}{2}\right\}
             \end{equation*}
+            Usando de nuevo la definición de Sustitución Textual, tenemos que:
             \begin{gather*}
                 \left\{sum = \frac{j(j-1)}{2}\right\}^j_{j+1} \equiv \left\{sum = \frac{(j+1)(j+1-1)}{2}\right\} \equiv \left\{sum = \frac{(j+1)j}{2}\right\}
             \end{gather*}
@@ -1583,32 +1737,60 @@ Que era lo que queríamos probar.
     \begin{equation*}
         \{i\ast j + 2 \ast j + 3\ast i = 0\}\ j=j+3;\ i=i+2;\ \{i\ast j=6\}
     \end{equation*}
+
+    Vamos buscando aplicar la regla de la composición. Para ello, y como desconocemos el estado intermedio por el que debemos pasar, usamos directamente la Sustitución Textual al final, para así obtener la precondición del segundo triple.
+    \begin{equation*}
+        \{i\ast j=6\}_{i+2}^i \equiv \{(i+2)\ast j=6\} \equiv \{i\ast j+2\ast j=6\} \equiv \{j\ast(i+2)=6\}
+    \end{equation*}
+
+    Usando esa precondición, el segundo libre se demuestra directamente con el axioma de asignación. Demostramos ahora el primer triple:
+    \begin{gather*}
+        \{i\ast j + 2 \ast j + 3\ast i = 0\}\ j=j+3;\ \{j\ast(i+2)=6\}
+    \end{gather*}
+
+    Usando la sustitución textual, tenemos que:
+    \begin{align*}
+        \{j\ast(i+2)=6\}_{j+3}^j &\equiv \{(j+3)\ast(i+2)=6\} \equiv
+        \{j\ast(i+2)+3\ast(i+2)=6\} \equiv \\ &\equiv \{i\ast j + 2 \ast j + 3\ast i = 0\}
+    \end{align*}
+
+    Por lo que, tras usar la regla de la composición, vemos que el triple del enunciado es cierto.
 \end{ejercicio}
 
 \begin{ejercicio}
     ¿Por qué en la regla del \verb|while B|, la condición \verb|B| debe ser verdadera al comienzo del bucle?
+
+    % // TODO: No entiendo a qué se refiere
 \end{ejercicio}
 
 \begin{ejercicio}
     Considerar una función con dos argumentos que se usa en un programa. Explicar por qué el uso de alias puede ser un problema en este caso.
+
+    % // TODO: No entiendo a qué se refiere
 \end{ejercicio}
 
 \begin{ejercicio}
     Demostrar la corrección parcial del siguiente fragmento de programa:
-    \begin{gather*}
-        sum = 0;  \\
-        j = 1; \\
-        \texttt{while}(j\ != c) \texttt{do begin}\\
-          sum = sum + j;\\
-          j = j + 1;\\
-          \texttt{end}\\
-        \{sum = c*(c-1)/2\}
-    \end{gather*}~\\
+    \begin{minted}{pascal}
+        sum:= 0; j:= 1;
+        while j <> c do begin {<> es !=}
+            sum:= sum+j;
+            j:= j+1;
+        end
+        {sum = c*(c-1)/2}
+    \end{minted}
 
     Para ello, tenemos que hacer uso de la regla de la iteración: 
     \begin{equation*}
         \dfrac{\{I\land B\}S\{I\}}{\{I\}\ \texttt{while B do}\ S\ \texttt{end do}\ \{I\land \lnot B\}}
     \end{equation*}
+
+    Identificando términos, sean:
+    \begin{align*}
+        I &\equiv sum = \frac{j(j-1)}{2} \\
+        B &\equiv j \neq c \\
+        S &= sum = sum+j;\ j = j+1
+    \end{align*}
     Luego tendremos que probar que se cumple el triple
     \begin{equation*}
         \left\{sum=\frac{j(j-1)}{2} \land j\neq c\right\}\ sum=sum+j;j=j+1;\ \left\{sum=\frac{j(j-1)}{2}\right\}
@@ -1636,12 +1818,18 @@ Que era lo que queríamos probar.
             \begin{gather*}
                 \left\{sum = \frac{j(j-1)}{2}\right\}^j_{j+1} \equiv \left\{sum = \frac{(j+1)(j+1-1)}{2}\right\} \equiv \left\{sum = \frac{(j+1)j}{2}\right\}
             \end{gather*}
-            y como:
+            Además, tenemos que se tiene:
             \begin{equation*}
                 \left\{sum = \frac{(j+1)j}{2} \land j \neq c\right\} \rightarrow \left\{sum = \frac{(j+1)j}{2}\right\}
             \end{equation*}
-            tenemos el segundo triple, usando la segunda regla de la consecuencia.
+            Por tanto, usando la segunda regla de la consecuencia, tenemos que el segundo triple es cierto.
     \end{enumerate}
+
+    Por tanto, mediante la regla de la iteración, tenemos que:
+    \begin{equation*}
+        \left\{sum=\frac{j(j-1)}{2}\right\}\ \texttt{while j <> c do begin sum:= sum+j; j:= j+1 end}\ \left\{sum=\frac{c(c-1)}{2}\right\}
+    \end{equation*}
+    Como inicialmente $j=1$ y $sum=0$, tenemos que este triple coincide con el enunciado del ejercicio.
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -1670,6 +1858,8 @@ Que era lo que queríamos probar.
         \texttt{end} \\
         \left\{\bigwedge_{i=1}^n (a[i]=b[i])\right\}
     \end{gather*}
+
+    % // TODO: Arturo se ha quedado por este ejercicio
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -1687,18 +1877,21 @@ Que era lo que queríamos probar.
 \begin{ejercicio}
     Hallar la precondición $\{P\}$ que hace que el siguiente triple sea correcto:
     \begin{equation*}
-        \{P\}\ a[i]=2\ast b;\ \{j\leq i \land k < i \land a[i] + a[j-1]+a[k]>b\}
+        \{P\}\ a[i]=2\ast b;\ \{j\leq i ~\land~ k < i ~\land~ a[i] + a[j-1]+a[k]>b\}
     \end{equation*}
     Para ello, basta aplicar el axioma de asignación:
     \begin{gather*}
-        \{j\leq i \land k < i \land a[i] + a[j-1]+a[k]>b\}_{2\cdot b}^{a[i]} a[i]=2\ast b;\\ \{j\leq i \land k < i \land a[i] + a[j-1]+a[k]>b\}
+        \{j\leq i~\land~ k < i ~\land~ a[i] + a[j-1]+a[k]>b\}_{2\cdot b}^{a[i]} a[i]=2\ast b;\\ \{j\leq i ~\land~ k < i ~\land~ a[i] + a[j-1]+a[k]>b\}
     \end{gather*}
+
+    Usando la definición de Sustitución Textual, tenemos que:
     \begin{gather*}
-        \{j\leq i \land k < i \land a[i] + a[j-1]+a[k]>b\}_{2\cdot b}^{a[i]} \equiv \\ \equiv \{j\leq i \land k < i \land 2\cdot b + a[j-1]+a[k]>b\}
+        \{j\leq i~\land~ k < i ~\land~ a[i] + a[j-1]+a[k]>b\}_{2\cdot b}^{a[i]} \equiv \\ \equiv \{j\leq i ~\land~ k < i ~\land~ 2\cdot b + a[j-1]+a[k]>b\}
+        \ \equiv\\ \equiv \{j\leq i ~\land~ k < i ~\land~ b + a[j-1]+a[k]>0\}
     \end{gather*}
     Luego estamos buscando la precondición:
     \begin{equation*}
-        \{P\} \equiv \{j\leq i \land k < i \land 2\cdot b + a[j-1]+a[k]>b\}
+        \{P\} \equiv \{j\leq i ~\land~ k < i ~\land ~b + a[j-1]+a[k]>0\}
     \end{equation*}
 \end{ejercicio}
 
@@ -1711,6 +1904,7 @@ Que era lo que queríamos probar.
           f = f * r;
         end
     \end{minted}
+    % // TODO: JJ. Cómo demostrar que termina?
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -1722,11 +1916,12 @@ Que era lo que queríamos probar.
     \begin{equation*}
         \{a[j]=2\ast b\} \equiv \{a[j]=2\ast a[i]\}_{b}^{a[i]}\ a[i]=b;\ \{a[j] = 2\ast a[i]\}
     \end{equation*}
+    % // TODO: JJ. Tenemos que considerar i=j?
 \end{ejercicio}
 
 \begin{ejercicio}
     Para cada uno de los siguientes fragmentos de código, obtener la poscondición apropiada:
-    \begin{enumerate}[label=(\alph*)]
+    \begin{enumerate}
         \item $\{i<10\}\ i=2\ast i+1;$.\\
             La poscondición es $\{i<21\}$:
             \begin{equation*}
@@ -1745,7 +1940,7 @@ Que era lo que queríamos probar.
                 \{i>j\}\ i=i+1;\ \{i>j+1\} \\
                 \{i>j+1\}\ j=j+1;\ \{i>j\}
             \end{gather*}
-            ambos pueden demostrarse aplicando el axioma de asignación y finalmente tenemos que:
+            Ambos pueden demostrarse aplicando el axioma de asignación y finalmente tenemos que:
             \begin{equation*}
                 \{i>j\}\ i=i+1;\ j=j+1;\ \{i>j\}
             \end{equation*}
@@ -1761,7 +1956,7 @@ Que era lo que queríamos probar.
 
 \begin{ejercicio}
     Para cada uno de los siguientes fragmentos de código, obtener las precondiciones apropiadas.
-    \begin{enumerate}[label=(\alph*)]
+    \begin{enumerate}
         \item $i=3\ast k;\ \{i>6\}$.\\
             Aplicando el axioma de asignación:
             \begin{equation*}
@@ -1783,6 +1978,7 @@ Que era lo que queríamos probar.
     \begin{equation*}
         \{y>0\}\ xa=x+y;\ xb=x-y;
     \end{equation*}
+    % // TODO: JJ. No hay poscondición??
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -1794,9 +1990,9 @@ Que era lo que queríamos probar.
     \begin{equation*}
         \{x<0\} \equiv \{-x\geq 0\} \equiv \{x\geq 0\}^x_{-x}\ x=-x;\ \{x\geq 0\}
     \end{equation*}
-    Posteriormente, como sabemos que $\{V \land x<0\}\equiv \{x<0\}$ y que ${\{x\geq 0\}\ null\ \{x\geq 0\}}$ por el axioma de la sentencia nula, podemos aplicar la regla del \texttt{if}:
+    Posteriormente, como sabemos que $\{V \land (x<0)\}\equiv \{x<0\}$ y que ${\{x\geq 0\}\ null\ \{x\geq 0\}}$ por el axioma de la sentencia nula, podemos aplicar la regla del \texttt{if}:
     \begin{equation*}
-        \dfrac{\{V \land x<0\}\ x=-x;\ \{x\geq 0\}, \{V \land x\geq 0\}\ null\ \{x\geq 0\}}{\{V\}\ \texttt{if\ }x<0 \texttt{\ then\ }x=-x \texttt{\ else\ null\ } \{x\geq 0\}}
+        \dfrac{\{V \land (x<0)\}\ x=-x;\ \{x\geq 0\}, \{V \land x\geq 0\}\ null\ \{x\geq 0\}}{\{V\}\ \texttt{if\ }x<0 \texttt{\ then\ }x=-x \texttt{\ else\ null\ } \{x\geq 0\}}
     \end{equation*}
 \end{ejercicio}
 
