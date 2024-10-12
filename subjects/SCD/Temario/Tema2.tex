@@ -1,0 +1,540 @@
+\chapter{Sincronización en memoria compartida. Monitores}
+
+Suponiendo que existe una memoria común para los distintos procesos que ejecutan un programa concurrente, este Capítulo trata sobre la sincronización de los mismos usando para ello instrucciones que usan dicha memoria compartida. Nos centraremos en el uso de los monitores, construcciones de alto nivel que nos ofrecen mayor libertad que los semáforos.\\
+
+El concepto de semáforo se desarrolló previamente en el Seminario 1 de prácticas\footnote{Por lo que el lector debería estar familiarizado con ellos.}. Los semáforos presentan dos grandes limitaciones:
+\begin{enumerate}
+    \item Están basados en variables compartidas del programa, por lo que no fomentan la modularidad de los programas, impidiendo su reutilización.
+    \item Las operaciones de los semáforos (\verb|sem_wait| y \verb|sem_signal|) se encuentran dispersas a lo largo del código del programa concurrente. Además, estas instrucciones no solo afectan al bloque de código en el que se encuentran, sino a cualquier otro bloque que use el mismo semáforo.
+\end{enumerate}
+En definitiva, los semáforos no son un buen mecanismo de programación concurrente, y además la verificación de programas que usan semáforos es muy complicada. 
+
+Era necesario encontrar un nuevo mecanismo de programación concurrente que permitiera la encapsulación de la información y de la sincronización entre procesos, así como programar las operaciones de sincronización (como \verb|wait| o \verb|signal|) dentro de bloques o procedimientos que se ejecuten con instrucciones atómicas, para que las instrucciones de sincronización no se encuentren desperdigadas por el programa.
+Fue Charles Antony Richard Hoare quien inventó los monitores, concepto en el que ahondaremos a lo largo de este Capítulo.
+
+\section{Definición de un monitor}
+La idea básica de monitor es un módulo que contiene un conjunto de variables a las que llamaremos \textit{variables permanentes}\footnote{A pesar de su nombre, no serán constantes, sino que podremos modificar su valor.}, de forma que dichas variables solo podrán ser alteradas dentro de los procedimientos del módulo monitor. Garantizaremos que la ejecución de cada uno de esos procedimientos se ejecute la mayor parte del tiempo como una única instrucción atómica, salvo que se produzca algo por lo que interrumpir la ejecución del procedimiento.\\
+
+Podemos pensar en un monitor como en un tipo de dato abstracto que define tipos y variables permanentes propias del monitor, así como un conjunto de procedimientos dentro de dicho módulo. No debemos pensar en los monitores como en una clase, ya que no pueden hacer lo mismo que ellas (no se pueden instanciar y tampoco existe polimorfismo o ligadura dinámica).
+
+\subsubsection{Ventajas}
+A continuación, los programas concurrentes estarán formados tanto por procesos que se ejecutarán de forma concurrente, como por monitores, los cuales velarán por la sincronización y acceso a variables compartidas de dichos procesos, de forma que no se produzcan condiciones de carrera o comportamientos indeseados. Podremos modelar tantas relaciones de interacción entre los procesos de un programa concurrente como queramos. De esta forma, el uso de los monitores o de procedimientos asociados a monitores no restringen las posibilidades del modelado de un sistema concurrente. 
+
+Los procesos de un programa concurrente no tendrán que llamar a operaciones de sincronización, sino que llamarán a procedimientos del monitor, los cuales realizarán la funcionalidad deseada sobre las variables compartidas garantizando la sincronización entre los procesos.\\
+
+Además, los monitores nos permiten una alta reusabilidad de código, ya que podremos reutilizar un monitor ya creado para resolver problemas similares. Sin embargo, la reutilización de código no es similar a la usada en programación orientada a objetos mediante instancias de una misma clase, sino que se hará por copias parametrizables: tendremos una definición de un monitor basada en parámetros, y cuando necesitemos usar un monitor, crearemos una copia de dicha definición parametrizándola (pasándole los parámetros que necesitemos para resolver nuestro problema). De esta forma, no es reutilización por instanciación, sino por \textit{parametrización}.\\
+
+Los procesos que usemos en los progrmas concurrentes no verán el acceso a las variables compartidas, sino que será realizado por los procedimientos del monitor, garantizando que se hacen como deben hacerse, evitando condiciones de carrera. De esta forma, los monitores garantizan la ocultación de las variables compartidas, haciéndolas transparentes a los procesos del sistema concurrente.\\
+
+Finalmente, existen unos axiomas que nos permiten verificar los programas concurrentes que usen monitores de forma sencilla. Dichas demostraciones estarán basadas en el uso de los invariables globales. Ahondaremos en la verificación de programas concurrentes que utilicen monitores más adelante.
+
+\subsection{Concepto de monitor}
+A modo de resumen para comenzar a definir lo que es un monitor, podemos decir que:
+\begin{itemize}
+    \item Es un módulo con un conjunto de variables permanentes que solo pueden ser modificadas por los procedimientos del monitor.
+    \item Cada uno de los procedimientos\footnote{Podemos pensar en ellos como en los ``métodos'' de una clase, haciendo hincapié en que los monitores \textbf{no son} clases.} de un monitor se ejecutan en exclusión mutua (garantizando el acceso a las variables compartidas sin condiciones de carrera). Sin embargo, estos no tienen por qué ejecutarse completamente, sino que pueden interrumpirse y en algún momento futuro seguir ejecutándose en exclusión mutua.
+    \item La ejecución de los procedimientos de un monitor modifican el estado interno del mismo (esto es, el conjunto de las variables permanentes asociadas al monitor).
+    \item El estado inicial del monitor (de sus variables permanentes) se establece mediante la ejecución de un procedimiento especial, al que llamaremos \textit{código de inicialización}. Este se ejecuta tras la declaración de una variable de tipo monitor y da valores iniciales a las variables permanentes.
+\end{itemize}
+De esta forma, un monitor puede visualizarse como en la tabla~\ref{esq:monitor_1}, como un conjunto que englobla:
+\begin{itemize}
+    \item Un conjunto de variables, llamadas \textit{variables permanentes}, que no son accesibles desde fuera del monitor.
+    \item Un conjunto de procedimientos que el monitor proporciona como servicio a los procesos de un programa concurrente (para por ejemplo, acceder a las variables permanentes que serán las variables que compartan dichos procesos), llamados \textit{procedimientos exportados} o \textit{exportables}.
+    \item Un procedimiento especial llamado \textit{código de inicialización}, que permite inicializar las variable permanentes.
+\end{itemize}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|}
+\hline
+Variables \\
+permanentes \\
+\hline
+Procedimientos \\
+exportados \\
+\hline
+Código de \\ 
+inicialización \\
+\hline
+\end{tabular}
+\caption{Esquema de un monitor.}
+\label{esq:monitor_1}
+\end{table}
+
+\begin{ejemplo}
+    Aunque todavía no entendemos muy bien qué es un monitor, daremos a continuación un ejemplo de uso del mismo, para ilustrar la definición que queremos dar de monitor, pese a que algunas cosas del ejemplo no podamos entenderlas todavía y deberemos dejarlas para más adelante\footnote{Como el tipo de dato \texttt{cond}.}.\\
+
+    En este ejemplo, queremos solventar un problema mediante el paradigma productor/consumidor. Tendremos dos procesos, un productor y un consumidor, de forma que el productor escribirá en un buffer (o vector) que usaremos como cola cíclica (esto es, que si nos pasamos de la posición final, volvemos al inicio y con planificación FIFO), mientras que el consumidor irá leyendo los datos de dicho buffer. Siendo \verb|Buf| una variable de tipo monitor que luego definiremos en este ejemplo, el código del productor y del consumidor será el siguiente (pensando en que tenemos que usar procedimientos del monitor para el acceso a las variables compartidas, en este caso el buffer):
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        Proceso Prod1::
+          var d : tipo_dato;
+
+          while true do begin
+            d = producir();
+            Buf.insertar(d); {mete d en el buffer}
+          end do
+    \end{minted}
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        Proceso Cons1::
+          var x : tipo_dato;
+
+          while true do begin
+            Buf.retirar(x); {retira del buffer en x}
+            consumir(x);
+          end do
+    \end{minted}
+    El código del monitor será el siguiente en pseudo-pascal (hemos omitido el código de inicialización):
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        Monitor Buf
+          var
+            -elementos_ocupados : int;
+            -frente, atras: 0..N-1;
+            -no_vacio, no_lleno : cond;
+
+          +insertar(d : tipo_dato);
+          +retirar(var x : tipo_dato);
+    \end{minted}
+    Donde vemos 5 variables permanentes: \verb|elementos_ocupados|, que mide la cantidad de posiciones ocupadas del buffer, \verb|frente|, que marca la casilla en la que el productor insertará el próximo dato (por tanto, ha de estar siempre vacía), \verb|atras|, que marca la casilla de la que leerá el consumidor, \verb|no_vacio| y \verb|no_lleno|, variables de tipo \verb|cond|, las cuales aprenderemos lo que hacen más adelante.
+    
+    Contamos además con dos procedimientos: \verb|insertar|, que inserta un dato en el buffer en caso de que haya hueco (si no hay hueco, se bloquea hasta que el consumidor lea un dato y deje un hueco libre):
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        procedure insertar(d : tipo_dato) begin
+          if((frente + 1) mod N = frente) then no_lleno.wait();
+          introducir(buf, frente, d);  {inserta d en la posicion frente en el buffer}
+          elementos_ocupados += 1;
+          frente = (frente + 1) mod N;
+          no_vacio.signal();
+        end
+    \end{minted}
+    Y con el procedimiento \verb|retir|, que retira un dato del buffer y lo devuelve como resultado del procedimiento, siempre que esto sea posible (es decir, si no hay ningún dato que leer en el buffer, se bloquea esperando a que el productor ponga algún dato):
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        procedure retirar(var x : tipo_dato) begin
+          if(frente = atras) then no_vacio.wait();
+          eliminar(buf, atras, x);  {inserta buf[atras] en x y lo borra del buffer}
+          elementos_ocupados -= 1;
+          atras = atras mod N + 1;
+          no_lleno.signal();
+        end
+    \end{minted}
+    Como hemos ya comentado mientras mostrábamos los pseudocódigos del ejemplo, hay que establecer condiciones que identifiquen las dos condiciones inseguras del ejemplo: que el buffer esté lleno o que el buffer esté vacío:
+    \begin{itemize}
+        \item Si \verb|frente = atras|, entonces el último dato que se ha de consumir está en una casilla vacía en la que el productor escribirá. Se trata de la situación en la que el buffer está vacío. Debemos por tanto, evitar que el consumidor lea un dato del buffer.
+        \item Si \verb|(frente + 1) mod N = atras|, entonces el siguiente dato a introducir en el buffer está justo delante del dato a consumir. Se trata de la situación en la que el buffer está lleno. Debemos por tanto, evitar que el productor introduzca un dato en el buffer\footnote{Definimos anteriormente que \texttt{frente} siempre apunta a una casilla vacía, por lo que como máximo el buffer tendrá ocupados $N-1$ elementos.}.
+    \end{itemize}
+    Los procesos del programa llaman a los procedimientos del monitor, y no tienen acceso directo al buffer, por lo que no pueden saber cuándo este está lleno o vacío. De esta forma, lo que sucederá es que los procedimientos internos del monitor realizarán una sincronización interna mediante el uso de llamadas bloqueantes:
+    \begin{itemize}
+        \item Si el buffer está lleno y el productor se dispone a escribir un dato, quedará el proceso bloqueado hasta que un consumidor lea un dato. Este señalará (\verb|signal|) al productor, desbloqueándolo.
+        \item Si el buffer está vacío y el consumidor se disopne a leer un dato, quedará bloqueado el proceso que ejecute el procedimiento del monitor. Cuando el productor escriba un dato, enviará una señal al consumidor, desbloqueándolo.
+    \end{itemize}
+    Esta funcionalidad se consigue mediante las variables de tipo \verb|cond|. Se verán a continuación, pero para entenderlas por ahora digamos que necesitamos tener una variable de tipo \verb|cond| por cada razón por la que queremos bloquear un proceso\footnote{En el caso de productor/consumidor, queremos bloquear un proceso si sucede alguno de los dos puntos superiores, condiciones inseguras, luego nos harán falta dos variables de tipo \texttt{cond}. En otros problemas, el número de variables de tipo \texttt{cond} podría ser otro.}.\\
+
+    El código de los procedimientos es ejecutado por los propios procesos que ejecutan cada proceso (productor o consumidor, en este caso) del programa concurrente. Por tanto, si el productor ejecuta un procedimiento del monitor con un \verb|wait|, dicho proceso se bloqueará y no podrá ejecutar código hasta desbloquearse.\\
+
+    Para que el código que hemos visto funcione adecuadamente, nos falta introducir un último concepto en los monitores, y es que mientras se ejecuta un procedimiento de un monitor, no se puede ejecutar ningún otro, sino que han de ejecutarse en \textbf{exclusión mutua}.
+\end{ejemplo}
+
+\subsection{Características de programación con monitores}
+Una vez ilustrado el uso de la herramienta que estamos construyendo en este Capítulo mediante el ejemplo anterior, vamos ahora a introducir la noción de que sólo puede ejecutarse a la vez un único procedimiento de un monitor.\\
+
+Como ya hemos visto, los procedimientos de los monitores no tienen por qué ejecutarse de principio a fin, sino que un proceso puede comenzar a ejecutar un procedimiento, bloquearse (dejando por tanto libre al monitor) y que otro proceso comience a ejecutar un procedimiento de dicho monitor, sucediéndose un entrelazamiento de las trazas de ejecución de los procedimientos.\\
+
+Cuando un proceso se encuentra ejecutando un procedimiento del monitor, decimos que el monitor está \emph{ocupado}. En caso contrario, diremos que este está \emph{libre}. Notemos que si un proceso se bloquea mientras ejecuta un procedimiento del monitor, el monitor tiene que quedar libre, ya que si no no habría forma de volver a despertar a dicho proceso (tenemos que ejecutar un \verb|signal| sobre la misma variable \verb|cond| que bloqueó al proceso\footnote{Se explicará más adelante.}). La situación de bloquear a un proceso y dejar que entre otro al monitor es delicada y debe hacerse con cuidado, para garantizar que solo haya un único proceso ejecutando un procedimiento del monitor al mismo tiempo.\\
+
+Los monitores son objetos \emph{pasivos}. Esto es, no tienen una hebra dentro que ejecute su código, sino que simplemente proporciona código (sus procedimientos) a otros procesos para que sean ellos quien ejecuten el código del monitor.\\
+
+Para implementar una librería con monitores en un lenguaje de programación base, este debe tener la propiedad de ser \emph{reentrante}.
+\begin{definicion}
+    Un lenguaje de programación tiene la propiedad de ser reentrante si, siempre que tengamos un proceso ejecutando una función y este se bloquea, sea capaz de conservar la siguiente instrucción a ejecutar y el valor de sus variables locales tras desbloquearse. Es decir, el proceso no debe enterarse localmente de que nada haya cambiado mientras estaba bloqueado.
+\end{definicion}
+Notemos que debemos tener esta propiedad en el lenguaje de programación con el que trabajemos para poder hacer uso de funciones bloqueantes (como \verb|wait|) dentro de los procedimientos de un monitor, algo básico en el funcionamiento de este. Afortunadamente, actualmente todos los lenguajes de programación que encontramos en el mercado son reentrantes.\\
+
+\subsubsection{Instanciación de monitores}
+El siguiente ejemplo nos ilustra cómo funciona la instanciación de un monitor:
+
+\begin{ejemplo}
+    Aunque los monitores están pensado para programas concurrentes (ya que no tiene sentido su uso en programas secuenciales), usaremos en este ejemplo un monitor en un programa secuencial, ya que sólo nos interesa la forma en la que los monitores se inicializan\footnote{Además, no hemos terminado de desarrollar cómo es que solo puede ejecutarse a la vez un único procedimiento del monitor, por lo que no entendemos hasta ahora cómo es que sirven para sincronizar programas concurrentes.}.\\
+
+    Tenemos un programa en el que necesitamos dos variables, las cuales queremos consultar e incrementar mediante un incremento previamente fijado que no cambiará. Para ello, creamos un monitor de acceso a una variable, con parámetros de entrada, para luego poder crear dos copias parametrizadas del mismo. El código del monitor será algo parecido a:
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        class monitor VariableProtegida(inicio, incremento : integer);
+          var x, inc : integer;
+
+          procedure incremento();
+          begin
+            x = x + inc;
+          end
+
+          procedure valor(var v : integer);
+          begin
+            v = x;
+          end
+          
+          begin
+            x = inicio; inc = incremento;
+          end
+    \end{minted}
+    De esta forma, podemos usar dos copias del monitor de la forma:
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        var mv1 : VariableProtegida(0,1);   {empieza en 0 e incrementa en 1}
+            mv2 : VariableProtegida(10,4);  {empieza en 10 e incrementa en 4}
+            a, b : integer;
+        begin
+          mv1.incremento();  {+=1}
+          mv1.valor(a);      {a=1}
+          mv2.incremento();  {+=4}
+          mv2.valor(b);      {b=14}
+        end
+    \end{minted}
+\end{ejemplo}
+
+\subsubsection{Exclusión mutua en los procedimientos de un monitor}
+Si tenemso varios procesos del programa concurrente que quieren hacer uso de procedimientos del monitor a la vez, sólo podremos dejar pasar a un proceso al monitor (suponiendo que este se encuentre libre). Para los otros procesos, almacenamos su llamada al procedimiento. 
+
+Para ello, todos los monitores tienen implementada una cola con planificación FIFO, llamada \emph{cola de entrada al monitor}. Si tenemos dos procesos que quieren acceder a un procedimiento de un monitor libre, sólo podrá hacerlo un proceso. La llamada al procedimiento del monitor del otro proceso quedará almacenada en la cola de entrada al monitor, y este pasará a ejecutar el procedimiento deseado una vez el proceso anterior haya dejado libre el monitor. 
+
+En esta asignatura, supondremos que la cola de entrada al monitor es suficientemente larga como para albergar a todos los procesos que necesiten esperar a que el monitor quede libre.\\
+
+Podemos representar la vida de un proceso de un programa concurrente que hace uso de monitores para sincronizar a sus procesos con el siguiente diagrama:
+\begin{figure}[H]
+\begin{tikzpicture}[node/.style={rectangle, draw, minimum size=1cm, align=center},
+                    edge/.style={-stealth}]
+    \node[node] (A) {Procedimiento\\terminado};
+    \node[node, left=of A] (B) {\begin{tabular}{c}Ejecutando código\\del proceso\\(fuera del monitor)\end{tabular}};
+    \node[node, left=of B] (C) {\begin{tabular}{c}Llamando a\\procedimiento\\del monitor\end{tabular}};
+    \node[node, below=of C] (D) {\begin{tabular}{c}Esperando en\\cola de entrada\\al monitor\end{tabular}};
+    \node[node, right=of D] (E) {\begin{tabular}{c}Monitor\\libre\end{tabular}};
+    \node[node, right=of E, xshift=.6cm] (F) {\begin{tabular}{c}Ejecutando procedimiento\\(dentro del monitor)\end{tabular}};
+    
+    \draw[edge] (A) -- (B);
+    \draw[edge] (B) -- (C);
+    \draw[edge] (C) -- (D);
+    \draw[edge] (D) -- (E);
+    \draw[edge] (E) -- (F);
+    \draw[edge] (F) -- (A);
+\end{tikzpicture}
+\caption{Vida de un proceso en un programa concurrente con monitores.}
+\end{figure}
+
+De esta forma, podemos ahora reescribir la descripción gráfica de monitor que hicimos en la tabla~\ref{esq:monitor_1}, incluyendo ahora la cola de entrada al monitor, tal y como vemos en la tabla~\ref{esq:monitor_2}
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|}
+\hline
+Cola del\\
+monitor \\
+\hline
+Variables \\
+permanentes \\
+\hline
+Procedimientos \\
+exportados \\
+\hline
+Código de \\ 
+inicialización \\
+\hline
+\end{tabular}
+\caption{Esquema de un monitor incluyendo la cola de entrada.}
+\label{esq:monitor_2}
+\end{table}
+
+\subsection{Operaciones de sincronización}
+Las operaciones de sincronización entre los procesos de un programa concurrente se programan, como ya hemos visto, dentro de los procedimientos del monitor. Son instrucciones que permiten detener la ejecución de un procedimiento de un monitor y bloquear en una cola al proceso que ha hecho la llamada del procedimiento del monitor. Tenemos para realizar esta acción dos operaciones principales: \verb|wait| y \verb|signal|.\\
+
+Sin embargo, las operaciones \verb|wait| y \verb|signal| que manejamos en monitores no se parecen a las que usábamos en los semáforos:
+\begin{itemize}
+    \item En los semáforos, la ejecución de \verb|wait| ofrecía la posibilidad de bloquear al proceso, ya que no lo hacía si el entero de dentro del semáforo era mayor estricto que $0$. Por contra, en monitores la llamada \verb|wait| siempre será bloqueante.
+    \item Las operaciones \verb|wait| y \verb|signal| eran relativas a un semáforo: hacía falta usar un semáforo por cada razón que tuviéramos dentro de un programa concurrente para bloquear a uno o varios procesos (en el caso del productor/consumidor, usar dos semáforos). Sin embargo, con un solo monitor podremos bloquear procesos por tantas razones como queramos, usando un nuevo tipo de dato.
+\end{itemize}
+
+\subsubsection{Tipo de dato \texttt{cond}}
+En los monitores, para poder usar las operaciones de \verb|wait| y \verb|signal|, será necesario utilizar una variable de tipo de dato condición, o \verb|cond|. 
+
+Las variables tipo \verb|cond| sólo se encuentran junto con las variables permanentes de un monitor. Estas no se inicializan a ningún valor.\\
+
+En nuestro monitor, tendremos varias razones por las que querremos bloquear a los procesos concurrentes de nuestro programa por alguna determinada razón hasta que se cumpla una condición determinada. Por ejemplo, en el problema del productor/consumidor:
+\begin{itemize}
+    \item Queremos bloquear a cualquier productor que intente escribir si la estructura de datos intermedia que usamos está llena. Desbloquearemos a un proceso productor cuando se vacíe un hueco en dicha estructura.
+    \item Además, queremos bloquear a cualquier consumidor que intente leer de la estructura de datos intermedia cuando esta esté vacía. Desbloquearemos a un consumidor cuando algún productor haya escrito algún dato.
+\end{itemize}
+Por cada razón o condición distinta por la que queramos bloquear a los procesos de un programa concurrente en relación a una misma variable compartida (para evitar estados inseguros), crearemos una variable de tipo \verb|cond|. Es decir, una variable por cada una de las razones por las que queramos que esperen los procesos. En el ejemplo del productor/consumidor, son necesarias únicamente dos variables de tipo \verb|cond|.\\
+
+Las variables de tipo \verb|cond| admiten 4 métodos (aunque sólo recomendamos usar los dos primeros):
+\begin{description}
+    \item [wait] Bloquea al proceso que ejecuta este método. Dicho proceso pasa a una cola asociada a la variable condición correspondiente con planificación FIFO.
+    \item [signal] En caso de haber algún proceso bloqueado en la cola asociada a la variable condición correspondiente, lo desbloquea. Si esta cola está vacía, es equivalente a una operación nula\footnote{Esto es, equivalente a la instrucción \texttt{;}.}.
+    \item [queue] Devuelve un booleano que indica (\verb|true|) si la cola asociada a la variable condición contiene al menos un proceso bloqueado.
+    \item [signal\_all] Desbloquea de una sola vez a todos los procesos bloqueados en la cola asociada a la variable condición. El orden de dicha cola no se mantiene para realizar la petición de acceso al monitor, por lo que se produce competencia entre los procesos para entrar al monitor, incumpliendo la propiedad de equidad entre procesos. Depende de la semántica de las señales del lenguaje\footnote{Se explicará más adelante qué es esto.}. Se recomienda \textbf{no usarla}.
+\end{description}
+De esta forma, la representación gráfica final de un monitor es la que se muestra en la tabla~\ref{esq:monitor_3}:
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|}
+\hline
+Cola del\\
+monitor \\
+\hline
+Variables \\
+permanentes \\
+\hline
+Variables \\
+condición y\\
+colas de procesos\\
+bloqueados\\
+\hline
+Procedimientos \\
+exportados \\
+\hline
+Código de \\ 
+inicialización \\
+\hline
+\end{tabular}
+\caption{Esquema de un monitor incluyendo las variables condición.}
+\label{esq:monitor_3}
+\end{table}
+
+\subsubsection{Semántica desplazante}
+Como hemos comentado ya, los monitores solo permiten que un único proceso se encuentre ejecutando un procedimiento del mismo. En este caso, decíamos que el monitor está ocupado. En caso de que un proceso que estaba ejecutando el procedimiento ejecute un \verb|wait| (o salga del procedimiento), hay que dejar el monitor libre para dejar pasar a otro. Se trata de un momento muy delicado, ya que se pueden producir condiciones de carrera entre los procesos que quieran conseguir el monitor. Esta situación la hemos solucionado ya con la cola de entrada al monitor, ya que con la planificación FIFO, solo podrá entrar un único proceso al monitor.\\
+
+Si ahora el proceso nuevo que ejecuta el monitor ejecuta un \verb|signal|, desbloqueará al anterior proceso de la cola de la variable condición correspondiente. Si en dicho momento este proceso sale del procedimiento, dejará el monitor abierto, por lo que podría suceder que un proceso de la cola de entrada al monitor entre antes que el proceso recién desbloqueado, sucediéndose un \emph{robo de señal}, y llegaríamos a una situación de falta de equidad.\\
+
+Para solucionar este segundo problema, algunos lenguajes implementan una \emph{semántica desplazante} en las señales: el proceso que ejecuta el \verb|signal| le pasa el monitor al proceso que recibió la señal (el primero en la cola de bloqueados de la variable condición correspondiente), sin liberar en ningún momento el monitor, de forma que el proceso señalado tiene prioridad. Se dice que la señal usada con la operación \verb|signal| tiene \emph{semántica desplazante}.\\
+
+Cabe destacar que \textbf{no todos los lenguajes con monitores tienen señales con semántica desplazante}, por lo que en dichos lenguajes pueden sucederse robos de señales. De hecho, para demostrar luego la corrección de nuestros programas concurrentes que usan monitores, supondremos que estamos usando un \verb|signal| que envía una señal con semántica desplazante.\\
+
+\noindent
+Como comentario final a la descripción de un monitor y para motivar la siguiente sección:
+\begin{itemize}
+    \item Se presupone que el programador de monitores es un programador experto, de forma que el compilador en ningún momento se dedicará a comprobar si hemos programado de forma correcta un monitor o un procedimiento de él, más allá de la sintaxis del código.
+    \item No deben programarse operaciones \verb|wait| indebidas ni omitirse operaciones \verb|signal| innecesarias. Para comprobar esto, usaremos nuestro sistema de verificación formal.
+\end{itemize}
+
+\section{Verificación de programas con monitores}
+En la verificación de los programas concurrentes que hemos manejado hasta ahora, hemos primero demostrado la corrección secuencial de cada proceso que forma parte de un programa secuencial, para luego demostrar la no interferencia entre los mismos. 
+
+Sin embargo, ahora que introducimos los monitores, esto no podrá ser nunca más así, ya que un programador nunca puede conocer a priori la traza que genera un proceso que forma parte de un programa concurrente con monitores, ya que al ejecutar procedimientos de monitores, estos pueden quedar bloqueados y se ejecutarían en medio instrucciones de otros procesos que podrían alterar las variables compartidas del programa, falseando alguna precondición o poscondición del proceso bloqueado, por lo que tras desbloquearse, no podemos esperar nada de dicho proceso.\\
+
+Es por tanto que ahora la estrategia a seguir en las demostraciones es mediante un Invariante de Monitor.
+
+\subsection{Invariante de monitor}
+\begin{definicion}[Invariante de Monitor]
+    Un Invariante de Monitor (IM) es una relación entre las variables permanentes de un monitor que debe ser cierta en cualquier estado del programa concurrente, excepto cuando un proceso esté ejecutando código de un procedimiento del monitor.
+\end{definicion}
+De esta forma, un IM puede no ser cierto durante la ejecución de un procedimiento por parte de un proceso, pero este ha de cumplirse antes y después de la ejecución de dicho procedimiento.\\
+
+Si conseguimos probar la existencia de un IM en un programa concurrente, entonces bastará con probar cada una de las secciones de código secuenciales entre llamadas a procedimientos del monitor. Para probar finalmente la corrección de los procesos, usaremos que los IM se mantienen antes y después de las llamadas a procedimientos, para conseguir probar finalmente la corrección de cada uno de los procesos. Si nuestro IM estaba relacionado con la solución al problema, como el acceso a variables compartidas estará controlado por los monitores, al final del programa todos los IMs demostrados se seguirán compliendo, por lo que tendremos probada la corrección de nuestro programa concurrente.
+
+Es decir, primero demostraremos que por cada monitor que usamos se verifica un IM, y luego pasaremos a probar la corrección de cada proceso que interviene en el programa concurrente, usando para ello dichos IMs. Finamente, tendremos probado el programa concurrente.
+
+\subsubsection{Esquema de demostración}
+Suponiendo que hemos encontrado una relación matemática entre las variables permanentes de un monitor y queremos probar que se trata de un IM\footnote{A continuación, llamaremos a dicha condición \texttt{IM}, pese a no haber demostrado que se trate de verdad de un IM.}, lo primero será probar que $IM$ se cumple en el estado inicial del monitor, esto es, justo después de la inicialización de las variables permanentes, por lo que tendremos que probar que se verifica el \textbf{triple de inicialización de variables}:
+\begin{equation*}
+    \{V\}\ \text{código de inicialización}\ \{IM\}
+\end{equation*}
+Posteriormente, deberemos probar que $IM$ se mantiene antes y después de la llamada a cada procedimiento. Es decir, notando por $IN$ a las precondiciones que tenemos antes de la ejecución de un procedimiento y por $OUT$ a las poscondiciones que deseamos tener tras dicho procedimiento, debemos demostrar los \textbf{triples de procedimientos del monitor}, es decir, demostrar un triple
+\begin{equation*}
+    \{IM \land IN\}\ \text{procedimiento}\ \{IM \land OUT\}
+\end{equation*}
+por cada procedimiento que tenga nuestro monitor.
+
+Terminaremos de ver esto más adelante, pero es necesario darnos cuenta de un detalle, y es que si un procedimiento modifica el valor de alguna variable compartida que se usa en otro proceso, debemos demostrar la no interferencia entre dichas instrucciones. Ilustramos esto con el siguiente ejemplo.
+\begin{ejemplo}
+    Si tenemos un monitor llamado \verb|Buf| con un procedimientos \verb|retirar(x)|, de forma que modifica el valor del parámetro que le pasamos, ante el siguiente código (si \verb|x| es una variable compartida):
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        cobegin y = x; #||# Buf.retirar(x); coend
+    \end{minted}
+    Tenemos que probar que al cambiar el valor de \verb|x| con el procedimiento \verb|retirar|, no hay interferencia con la instrucción de la izquierda. Es decir, tenemos que probar:
+    \begin{align*}
+        &NI(pre(y=x), Buf.retirar(x)) \\
+        &NI(pos(y=x), Buf.retirar(x))
+    \end{align*}
+    Sin embargo, en caso de ejecutar el siguiente código:
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        z = x;
+        cobegin y=z; #||# Buf.retirar(x); coend
+    \end{minted}
+    No tendríamos que hacerlo, ya que el uso de variables disjuntas nos garantiza la no interferencia entre dichas instrucciones.
+\end{ejemplo}
+
+\subsection{Axiomas para operaciones de sincronización con semántica desplazante}
+Sabemos ya demostrar toda la corrección de un programa secuencial que usa monitores, salvo por un detalle, y es que no sabemos nada sobre cómo demostrar los triples:
+\begin{align*}
+    \{P\}\ &c.wait();\ \{Q\} \\
+    \{P\}\ &c.signal();\ \{Q\}
+\end{align*}
+para cualesquiera asertos $P$ y $Q$.
+
+En esta subsección, trataremos de dar axiomas para la comprobación de dichos triples, razonándolos de forma intuitiva y mediante el uso de Invariantes de Monitores.\\
+
+\subsubsection{Axioma de operación \texttt{wait}}
+Comenzaremos primero con el triple $\{P\}\ c.wait();\ \{Q\}$. Para necesitar ejecutar una instrucción \verb|wait| en un procedimiento de un monitor, lo que sucede es que estamos cerca de un estado inseguro del programa (intuitivamente, que $IM$ está a punto de incumplirse), pero no llegamos a él, porque para ello ejecutamos esta operación, para impedir que el proceso ejecute una instrucción que falsee el $IM$. Por tanto, el proceso se bloquea, dejando libre el monitor, por lo que entra otro proceso a ejecutar otro procedimiento. 
+
+Solo podremos desbloquear al proceso cuando nos alejemos de dicho estado inseguro, por lo que además de cumplirse el $IM$, deberá cumplirse una condición un tanto más estricta que el $IM$ (que nos indique que estamos lejos de aquel estado inseguro por el cual se bloqueó el proceso). Dicha condición recibe el nombre de \textit{condición de sincronización}, y la notaremos por $C$\footnote{Notemos que según hemos definido $C$, ha de verificarse que $IM\rightarrow C$.}. 
+
+Resumiendo:
+\begin{itemize}
+    \item Antes de ejecutar la operación \verb|wait|, hemos de estar en un estado seguro del programa, por lo que ha de cumplirse el $IM$.
+    \item Tras ejecutar la operación \verb|wait| (es decir, después de que el proceso haya sido desbloqueado), ha de cumplirse la condición de sincronización $C$.
+\end{itemize}
+Teniendo en cuenta que además se puede cumplir un invariante local al que llamamos $L$ (esto es, relaciones entre variables permanentes del monitor que se cumplen en un determinado momento) antes y después de dicha instrucción \verb|wait|.
+
+De esta forma, acabamos de razonar de forma intuitiva el \textbf{Axioma de la operación wait}:
+\begin{equation*}
+    \{IM \land L\}\ c.wait();\ \{C \land L\}
+\end{equation*}
+
+\subsubsection{Axioma de operación \texttt{signal}}
+Si nos disponemos a ejecutar una instrucción \verb|signal| en nuestro código, es porque el estado del programa se ha alejado de la condición insegura de la que hablábamos en la subsección anterior, que falsearía el valor de verdad de $IM$. Por tanto, el programa ha llegado a un punto en el que se cumple la condición de sincronización $C$, y ya puede desbloquear al proceso que anteriormente bloqueó. Tras su desbloqueo, este proceso podría ejecutar una instrucción que volviera a acercarnos a un estado inseguro, pero sin llegar a él (ya que $C$ era suficientemente restrictiva), por lo que como poscondición de la instrucción \verb|signal| no podremos garantizar $C$, sino sólo podremos asegurar que se sigue cumpliendo $IM$.
+
+Añadiendo la posibilidad de tener un invariante local $L$ y que si la cola de la variable condición está vacía, la operación \verb|signal| es una instrucción nula, llegamos al \textbf{Axioma de la operación signal}:
+\begin{equation*}
+    \{\lnot vacio(c) \land C \land L\}\ c.signal();\ \{IM \land L\}
+\end{equation*}
+
+o equivalentemente:
+\begin{equation*}
+    \{c.queue() \land C \land L\}\ c.signal();\ \{IM \land L\}
+\end{equation*}
+En caso de cumplirse que $c.queue() = false$, entonces negaría la precondición del triple, haciéndolo la regla cierta por un razonamiento por vacuidad.\\
+
+\begin{observacion}
+    Notemos que el axioma de la operación signal funciona porque hemos supuesto que \textbf{tenemos semántica desplazante}, y es que $IM$ se cumple inmediatamente de desbloquear al proceso que tenemos bloqueado, ya que tras ejecutar \verb|signal| hemos cedido el monitor al proceso anteriormente bloqueado, en vez de liberar el monitor y dejar paso a otro proceso cualquiera, donde nada nos garantizaría que $C$ se siguiera cumpliendo tras la ejecución del procedimiento de dicho proceso, pudiendo ahora ejecutar el proceso que se bloqueó bajo una precondición que no es $C$, lo que podría llevar al programa a adoptar un estado inseguro.
+\end{observacion}~\\
+
+Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincronización de semáforos, estamos listos para desmotrar la corrección de un $IM$. Lo haremos en el siguiente ejemplo.
+
+\begin{ejemplo}
+    En este ejemplo, queremos programar un monitor que simule el funcionamiento de un semáforo. Para ello, se nos ha ocurrido el siguiente código:
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        Monitor Semaforo;
+          var s : integer;
+              c : cond;
+
+          procedure P;
+          begin
+            if s=0 then
+              c.wait;
+            else
+              null;
+            end if
+            s = s - 1;
+          end
+
+          procedure V;
+          begin
+            s = s + 1;
+            c.signal;
+          end
+
+          begin   {código de inicialización}
+            s = 0;
+          end
+    \end{minted}
+    Donde hemos llamado \verb|P| a la función \verb|sem_wait| del semáforo y por \verb|V| a la función \verb|sem_signal|.\\
+
+    Procedemos a realizar la demostración de que existe un Invariante de Monitor que se mantiene tras la inicialización de las variables permanentes de nuestro monitor y antes y después de cada procedimiento, con la finalidad de poder usar dicho IM en las demostraciones de cualquier programa concurrente que use el semáforo que acabamos de implementar mediante un monitor.
+    \begin{proof}
+        Tratamos de demostrar que este monitor tiene como IM el aserto
+        \begin{equation*}
+            IM \equiv \{s \geq 0\}
+        \end{equation*}
+
+        \begin{enumerate}
+            \item Primero, tenemos que demostrar el triple de inicialización de variables:
+                \begin{equation*}
+                    \{V\}\ s=0;\ \{s\geq 0\}
+                \end{equation*}
+                Como el triple $\{V\}\ s=0;\ \{s=0\}$ es cierto por el axioma de asignación y tenemos que $\{s=0\}\rightarrow\{s\geq 0\}$, usando la primera regla de la consecuencia tenemos demostrado el triple.
+            \item Posteriormente, demostraremos el triple de procedimiento del monitor para el procedimiento \verb|P|: $\{IM\}\ P\ \{IM\}$. Para ello, primero tendremos que probar el triple
+                \begin{equation*}
+                    \{IM\}\ \texttt{if\ }s=0\texttt{\ then\ }c.wait;\texttt{\ else\ }null;\texttt{\ end if}\ \{s>0\}
+                \end{equation*}
+                Luego usaremos la regla del \verb|if|, por lo que será suficiente con probar los triples:
+                \begin{gather*}
+                    \{IM \land s=0\}\ c.wait;\ \{s>0\} \\
+                    \{IM \land s>0\}\ null;\ \{s>0\}
+                \end{gather*}
+                \begin{enumerate}
+                    \item Comenzamos por el segundo, por ser más sencillo. Como
+                        \begin{equation*}
+                            {\{IM \land s>0\} \equiv \{s\geq 0 \land s>0\}\equiv \{s>0\}}
+                        \end{equation*}
+                        basta probar el triple ${\{s>0\}\ null;\ \{s>0\}}$, que es cierto por el axioma de la sentencia nula.
+                    \item Para el primer triple, buscamos aplicar el axioma de la operación \verb|wait|, por lo que tenemos que buscar la condición de sincronización. Para ello, buscamos la precondición del \verb|signal| asociado a la misma variable condición, que se encuentra en el procedimiento \verb|V|. Para hallar la precondición de la instrucción \verb|c.signal|, tendremos que demostrar alguna instrucción de dicho procedimiento, con el fin de hallar la precondición.
+
+                        Sobre el código de \verb|V|, vemos que antes de \verb|c.signal| se ejecuta una primera instrucción \verb|s=s+1;|. Suponemos que \verb|V| tiene como precondición $IM$, por lo que buscamos una poscondición para \verb|s=s+1;|:
+                        \begin{equation*}
+                            \{IM\}\equiv \{s\geq 0\}\ s=s+1;
+                        \end{equation*}
+                        Puede comprobarse con el axioma de asignación que la poscondición buscada es $\{s>0\}$. Por tanto, esta será la condición de sincronización de la variable condición \verb|c|:
+                        \begin{equation*}
+                            C \equiv \{s>0\}
+                        \end{equation*}
+                        Como $\{IM \land s=0\}\equiv \{s=0\}$, acabamos de probar el primer triple usando el axioma de la operación \verb|wait|:
+                        \begin{equation*}
+                            \{s=0\}\ c.wait;\ \{s>0\}
+                        \end{equation*}
+                \end{enumerate}
+                Una vez demostrados los dos triples, tenemos probado el triple del \verb|if|, por lo que sólo faltará probar el triple 
+                \begin{equation*}
+                    \{s>0\}\ s=s-1;\ \{IM\}
+                \end{equation*}
+                Para tener probado el triple del procedimiento \verb|P|.
+
+                Como $\{IM\} \equiv \{s\geq 0\}$, basta aplicar el axioma de asignación, para obtener $\{s>0\}\ s=s-1;\ \{s\geq 0\}$.
+
+                Aplicando finalmente la regla de composición sobre el triple del \verb|if| y este último triple, tenemos ya probado $\{IM\}\ P\ \{IM\}$.
+
+            \item Finalmete, hemos de probar el triple $\{IM\}\ V\ \{IM\}$ para garantizar al fin que $IM$ es un IM\@. Para ello, hemos de probar el triple
+                \begin{equation*}
+                    \{IM\}\ s=s+1; c.signal;\ \{IM\}
+                \end{equation*}
+                Basta con probar los triples
+                \begin{gather*}
+                    \{IM\}\ s=s+1;\ \{s>0\} \\
+                    \{s>0\}\ c.signal;\ \{IM\}
+                \end{gather*}
+                y aplicar la regla de composición. El primer triple ya lo demostramos en la demostración del triple del procedimiento \verb|P|, luego bastará probar el segundo, el cual es cierto gracias al axioma de la operación \verb|signal|.
+
+                Acabamos de probar que $\{IM\}\ V\ \{IM\}$, que era el último procedimiento del monitor, luego $IM$ es un IM.
+        \end{enumerate}
+    \end{proof}
+\end{ejemplo}
+
+\begin{ejercicio}
+    Se pide demostrar que el siguiente monitor funciona como un semáforo de Habermann:
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        Monitor Semaforo;
+          var na, np, nv : int;
+              c : cond;
+
+          procedure P;
+          begin
+            na = na + 1;
+            if(na > nv) then c.wait();
+            np = np + 1;
+          end
+
+          procedure V;
+          begin
+            nv = nv + 1;
+            if(na > np) then c.signal();
+          end
+
+          begin
+            na = 0; np = 0; nv = 0;
+          end
+    \end{minted}
+\end{ejercicio}
+
+\subsection{Regla de la concurrencia para la verificación de programas con monitores}
+Dado un programa concurrente en el que tenemos $n$ procesos ejecutándose que podemos representar como triples ciertos de Hoare ciertos $\{P_i\}\ S_i\ \{Q_i\}$ con $i \in \{1, \ldots, n\}$ de forma que ninguna variable en $P_i$ o en $Q_i$ es modificada por ningún $S_j$ con $i\neq j$. Si en dicho código tenemos $m$ monitores de forma que para cada uno hemos conseguido probar un IM $IM_k$ con $1 \leq k \leq m$, entonces podemos aplicar la \textbf{regla de concurrencia para programas con monitores}:
+\begin{equation*}
+    \dfrac{\{P_i\}\ S_i\ \{Q_i\} \quad 1 \leq i \leq n}{
+        \begin{array}{c}
+            \{MI_1 \land \ldots \land MI_m \land P_1 \land \ldots\land P_n\} \\
+            cobegin\ S_1\ ||\ S_2\ ||\ \ldots\ ||\ S_n\ coend \\
+            \{MI_1 \land \ldots \land MI_m \land Q_1 \land  \ldots\land Q_n\} 
+        \end{array}
+    }
+\end{equation*}
+Obteniendo así la verificación de nuestro programa concurrente.
