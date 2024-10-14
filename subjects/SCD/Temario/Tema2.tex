@@ -501,7 +501,14 @@ Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincro
 \end{ejemplo}
 
 \begin{ejercicio}
-    Se pide demostrar que el siguiente monitor funciona como un semáforo de Habermann:
+    Se pide demostrar que el siguiente monitor funciona como un semáforo de Habermann.
+
+    En un semáforo de Habermann, queremos llevar la cuenta de:
+    \begin{itemize}
+        \item El número de recursos que han estado disponibles en algún momento, \verb|nv|.
+        \item El número de procesos que han podido hacer uso de un recurso, \verb|np|.
+        \item El número de procesos que han solicitado hacer uso de un recurso, \verb|na|.
+    \end{itemize}
     \begin{minted}[escapeinside=\#\#]{pascal}
         Monitor Semaforo;
           var na, np, nv : int;
@@ -524,6 +531,41 @@ Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincro
             na = 0; np = 0; nv = 0;
           end
     \end{minted}
+    \begin{itemize}
+        \item Como para poder hacer uso de un recurso hay que haber solicitado acceso a él previamente, siempre tendremos que $na \geq np$.
+        \item Como un proceso solo puede hacer uso de un recurso a la vez, el número de recursos que en algún momento han estado disponibles debe ser menor o igual al número de recursos que en algún momento han sido utilizados por algún proceso: $nv \geq np$.
+        \item Ahora, destacamos dos casos:
+            \begin{itemize}
+                \item Si el número de peticiones para un recurso es mayor que el número de recursos que en algún momento han estado libre, $na \geq nv$, entonces es que no se han podido cumplir todas las peticiones, por lo que tienen que haber más procesos que han podido hacer uso de un recurso que recursos disponibles, es decir, $np \geq nv$.
+                \item Por otra parte, si el número de peticiones es menor al número de recursos que en algún momento han estado disponibles, $na \leq nv$, entonces todas las peticiones se han podido completar, por lo que $np \geq na$.
+            \end{itemize}
+            Combinando estos dos puntos finales, deducimos que $np \geq \min(na, nv)$.
+    \end{itemize}
+    Procedemos a demostrar que el monitor que simula el funcionamiento del semáforo de Habermann tiene como IM:
+    \begin{equation*}
+        \{IM\} = \{np \leq na \land np \leq nv \land np \geq \min(na,nv)\}
+    \end{equation*}
+    En primer lugar, tendremos que demostrar el triple de inicialización de variables, $\{V\}\ \text{código\ de\ inicialización}\ \{IM\}$:
+    \begin{gather*}
+        \{V\}\ na = 0;\ np=0;\ nv=0;\ \{na = 0 \land np = 0 \land nv = 0\} \\
+        \{na = 0 \land np = 0 \land nv = 0\} \rightarrow \{IM\}
+    \end{gather*}
+    Ahora, tendremos que probar los triples de los procedimientos del monitor:
+    \begin{gather*}
+        \{IM\}\ P\ \{IM\} \\
+        \{IM\}\ V\ \{IM\}
+    \end{gather*}
+    \begin{enumerate}
+        \item Para el primero: 
+            \begin{gather*}
+                \{IM\} \equiv \{np \leq na \land np \leq nv \land np \geq \min(na,nv)\} \\
+                na = na + 1; \\
+                \{np \leq na-1 \land np \leq nv \land np \geq \min(na-1,nv)\}  \\
+                \texttt{if\ } (na > nv) \texttt{\ then\ } c.wait(); \\
+                np = np + 1; 
+            \end{gather*}
+        \item 
+    \end{enumerate}
 \end{ejercicio}
 
 \subsection{Regla de la concurrencia para la verificación de programas con monitores}
