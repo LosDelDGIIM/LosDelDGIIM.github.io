@@ -485,7 +485,7 @@
             \node[relacion] (emite) [right of=programa] {Emite} edge(programa);
             \node[entidad] (canal) [right of=emite] {Canal} edge(emite);
 
-            \node[relacion] (presenta_informativo) [right of=informativo] {Presenta} edge(informativo);
+            \node[relacion] (presenta_informativo) [right of=informativo] {Informa} edge(informativo);
             \node[entidad] (presentador) [below of=presenta_informativo] {Presentador} edge(presenta_informativo);
 
             \node[relacion] (presenta_concurso) [below of=concurso] {Presenta} edge(concurso) edge[-Stealth](presentador);
@@ -637,44 +637,50 @@
     \end{itemize}
 
     El Diagrama Entidad-Relación correspondiente se encuentra en la Figura~\ref{fig:ej13}.
+    Notemos que hemos supuesto que, además de planetas y satélites, también se pueden descubrir otros objetos astronómicos de baja emisión de luz.
     \begin{figure}
         \centering
         \begin{tikzpicture}[node distance=6.3 em]
             \node[entidad] (objeto) {Objeto Astronómico};
+            \node[relacion] (descubrimiento) [right of=objeto, node distance=10em] {Descubrimiento} edge(objeto);
+            \node[entidad] (observatorio) [right of=descubrimiento, node distance=8em] {Observatorio} edge[Stealth-](descubrimiento);
+            \node[atributo] (fecha_desc) [below of=descubrimiento] {Fecha} edge(descubrimiento);
+
             \node[herencia] (tipo) [below of=objeto] {Tipo} edge[participacion obligatoria] node[midway, right] {Disjunta} (objeto);
             \node[entidad] (baja_emision) [below left of=tipo, xshift=-4em] {Baja Emisión} edge(tipo);
-            \node[entidad] (estrella) [below right of=tipo, xshift=4em, align=center] {Alta Emisión\\(Estrella)} edge(tipo);
+            \node[entidad] (alta_emision) [below right of=tipo, xshift=4em, align=center] {Alta Emisión} edge(tipo);
             
-            \node[herencia] (tipo_baja) [below of=baja_emision] {Tipo} edge[participacion obligatoria] node[midway, right] {Disjunta} (baja_emision);
+            \node[herencia] (tipo_baja) [below of=baja_emision] {Tipo} edge node[midway, right] {Disjunta} (baja_emision);
             \node[entidad] (planeta) [below right of=tipo_baja] {Planeta} edge(tipo_baja);
             \node[entidad] (satelite) [below left of=tipo_baja] {Satélite} edge(tipo_baja);
 
-            \node[relacion] (gira_satelite) [below right of=satelite] {Gira} edge(satelite) edge[-Stealth](planeta);
-            \node[atributo] (distancia) [below of=gira_satelite] {Distancia} edge(gira_satelite);
+            \node[herencia] (tipo_alta) [below of=alta_emision] {Tipo} edge node[midway, right] {Disjunta} (alta_emision);
+            \node[entidad] (estrella) [below of=tipo_alta] {Estrella} edge(tipo_alta);
 
-            \node[relacion] (gira_planeta) [above right of=planeta] {Gira} edge(planeta) edge[-Stealth](estrella);
+            \node[relacion] (gira_satelite) [below right of=satelite] {Gira} edge(satelite) edge[-Stealth](planeta);
+            \node[atributo] (distancia) [below of=gira_satelite, yshift=2.5em] {Distancia} edge(gira_satelite);
+
+            \node[relacion] (gira_planeta) [above right of=planeta] {Orbita} edge(planeta) edge[-Stealth](estrella);
             \node[atributo] (dist_planeta) [above of=gira_planeta, node distance=5em] {Distancia} edge(gira_planeta);
 
             \node[atributo] (cod_objeto) [left of=objeto, node distance=8em] {\key{Código}} edge(objeto);
-            \node[atributo] (fecha) [right of=objeto, align=center, node distance=10em] {Fecha\\Descubrimiento} edge(objeto);
-            \node[atributo] (observatorio) [left of=objeto, yshift=-3em, node distance=8.5em] {Observatorio} edge(objeto);
 
             \node[atributo] (tipo_planeta) [below of=planeta] {Tipo} edge(planeta);
             \node[atributo] (tipo_satelite) [below of=satelite] {Tipo} edge(satelite);
             \node[relacion] (es) [right of=estrella, node distance=7em] {Es} edge(estrella);
-            \node[entidad] (subtipo_estrella) [below of=es] {Subtipo} edge[Stealth-](es);
+            \node[entidad] (subtipo_estrella) [above of=es, node distance=5em] {Subtipo} edge[Stealth-](es);
             \node[atributo] (cod_subtipo) [right of=subtipo_estrella, yshift=2em] {\key{Código}} edge(subtipo_estrella);
             \node[atributo] (nombre_subtipo) [right of=subtipo_estrella, yshift=-2em] {Nombre} edge(subtipo_estrella);
-            \node[relacion] (es_tipo) [below of=subtipo_estrella] {Es} edge(subtipo_estrella);
-            \node[entidad] (tipo_estrella) [below of=es_tipo] {Tipo} edge[Stealth-](es_tipo);
+            \node[relacion] (es_tipo) [above of=subtipo_estrella, node distance=5em] {Es} edge(subtipo_estrella);
+            \node[entidad] (tipo_estrella) [above of=es_tipo, node distance=5em] {Tipo} edge[Stealth-](es_tipo);
             \node[atributo] (cod_tipo) [right of=tipo_estrella, yshift=2em] {\key{Código}} edge(tipo_estrella);
             \node[atributo] (nombre_tipo) [right of=tipo_estrella, yshift=-2em] {Nombre} edge(tipo_estrella);
 
 
-            \node[relacion] (forman) [below of=estrella] {Forman} edge(estrella);
+            \node[relacion] (forman) [left of=estrella] {Forman} edge(estrella);
             \node[entidad] (constelacion) [below of=forman] {Constelación} edge(forman);
-            \node[atributo] (nombre_const) [left of=constelacion] {Nombre} edge(constelacion);
-            \node[atributo] (cod_const) [below of=constelacion] {\key{Código}} edge(constelacion);
+            \node[atributo] (nombre_const) [right of=constelacion] {Nombre} edge(constelacion);
+            \node[atributo] (cod_const) [above right of=constelacion, yshift=-2em] {\key{Código}} edge(constelacion);
 
         \end{tikzpicture}
         \caption{Diagrama Entidad-Relación del Ejercicio~\ref{ej:13}}
