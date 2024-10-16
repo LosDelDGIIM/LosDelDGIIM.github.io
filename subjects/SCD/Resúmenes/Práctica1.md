@@ -189,6 +189,110 @@ Además, trataremos de que cada productor produzca el mismo número de datos y q
 Las soluciones a estos problemas dependen de si el vector en el que se escribe queremos manejarlo con planificación FIFO o LIFO.
 
 ## Productores/consumidores con vector FIFO
-En este caso, los productores comparten índice de escritura y los consumidores comparten índice de lectura. El acceso a estas ha de hacerse dentro de un objeto `mutex`.
+En este caso, los productores comparten índice de escritura y los consumidores comparten índice de lectura. El acceso a estas ha de hacerse dentro de un objeto `mutex`, para evitar condiciones de carrera.
+
+```c++
+int num_items = n;
+int tam_vec = m;
+int array[m];
+
+Semaphore s_productor = tam_vec, s_consumidor = 0;
+
+int indice_cons = 0;
+int indice_prod = 0;
+
+mutex em_cons, em_prod;
+
+int incindice(int indice){
+   if(indice == tam_vec - 1) return 0;
+   else return indice + 1;
+}
+
+void productor(){
+   int var, indice = 0;
+   for(int i = 0; i < num_items; i++){   // Debe producir n valores
+      var = ProducirValor();
+      
+      // Escribe el valor en el array
+      sem_wait(s_productor);
+      em_prod.lock();
+      
+      array[indice] = var;
+      indice = incindice(indice);
+      
+      em_prod.unlock();
+      sem_signal(s_consumidor);
+   }
+}
+
+void consumidor(){
+   int var, indice = 0;
+   for(int i = 0; i < num_items; i++){  // Debe consumir n valores
+   
+      // Lee del array
+      sem_wait(s_consumidor);
+      em_cons.lock();
+      
+      var = array[indice];
+      indice = incindice(indice);
+      
+      em_cons.unlock();
+      sem_signal(s_productor);
+      
+      ConsumirValor(var);
+   }
+}
+```
 
 ## Productores/consumidores con vector LIFO
+En este caso, el código sería el mismo para el caso de varios productores y consumidores.
+
+# Problema de los fumadores
+Tenemos 4 entidades que interactúan y modelan una situación habitual que se presenta en varios procesos a resolver. Tenemos un estanquero y 3 individuos, de forma que el estanquero trabaja de forma exclusiva para los fumadores y produce tres tipos de productos: papel, cerillas o tabaco, de forma que en el mostrador sólo cabe a la vez una unidad de ellas. En cada iteración, el estanquero decide qué tipo de ingrediente va a poner en el mostrador de forma aleatoria y espera a que se quede vacío para volver a poner otro tipo de ingrediente.  
+  
+Los fumadores son 3 individuos que están continuamente fumando, de forma que:
+- Uno tiene papel y cerillas de sobra (infinitos), le falta tabaco.
+- Uno tiene papel y tabaco de sobra, le faltan cerillas.
+- Uno tiene cerillas y tabaco de sobra, le falta papel.  
+  
+Tenemos un productor y varios consumidores de forma que cada ítem va dirigido a un consumidor específico.  
+  
+La resolución al problema es la siguiente, donde:
+- El productor espera a que el mostrador esté vacío y avisa al fumador i-ésimo de que su elemento ya está producido.
+- El consumidor i-ésimo espera a ser avisado y una vez retira su elemento, avisa al estanquero para que ponga el siguiente.
+
+Suponiendo que la hebra `i` retira el ingrediente `i`:
+```c++
+int x;
+int num_cons;
+
+Semaphore sem_cons[num_cons] = {0, 0, 0, ..., 0};
+Sempahore sem_prod = 1;
+
+void productor(){
+    int a;
+    
+    while(true){
+        a = producir();
+        
+        sem_wait(sem_prod);
+        x = a;
+        sem_signal(sem_cons[a]);
+        
+    }
+}
+
+void consumidor(int i){   // i : Indice del consumidor
+    int b;
+    
+    while(true){
+    
+        sem_wait(sem_cons[i]);
+        b = x;
+        sem_signal(sem_prod);
+        
+        consumir(b);
+    
+    }
+}
+```
