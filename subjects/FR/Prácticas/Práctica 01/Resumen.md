@@ -42,7 +42,7 @@ route add -net A.B.C.D netmask M.N.O.P gw W.X.Y.Z
 ```
 
 ### Configuración de tabla de router
-Para configurar manualmente la tabla de encaminamiento de nuestro router (en este caso, `Rx_1`), nos conectaremos a él usando la herramienta `winbox_ubuntu1204.exe` (ha de ejecutarse con `wine`) y la dirección de gestión del router. 
+Para configurar manualmente la tabla de encaminamiento de nuestro router (en este caso, `Rx_1`), nos conectaremos a él usando la herramienta `winbox_ubuntu1204.exe` (ha de ejecutarse con `wine`). Respecto a la IP, como está en la misma red que nosotros (tenemos conexión directa por cable), podemos usar la IP de la red de datos de nuestro router (`33.x.1.1`). Evidentemente, también podríamos usar su IP de la red de gestión.
 Dentro de este, deberemos configurar el acceso a las redes `33.x.2.0/24` y `33.x.3.0/24`. Para ello:  
 - Accedemos a la interfaz de `IP > Routes`.
 - Pulsamos en Añadir, y añadimos esas dos redes:
@@ -65,7 +65,7 @@ El ejercicio consiste en configurar todos los routers (1, 2, 3, 4, 5 y 6) de nue
 De esta forma, nos pondremos de acuerdo con nuestra isla en qué PC se encarga de configurar cada router (hay 6 PCs y 6 routers, luego cada PC puede configurar un router).  
 Supongamos que somos los encargados de configurar el router `Rx_6`:  
   
-Para ello, nos conectaremos a él usando la herramienta que usamos en el ejercicio anterior (`winbox_ubuntu1204.exe`), de nuevo con la IP de gestión del router.
+Para ello, nos conectaremos a él usando la herramienta que usamos en el ejercicio anterior (`winbox_ubuntu1204.exe`). En este caso, como no estamos en la misma red, estamos obligados a usar la IP de la red de gestión de nuestro router.
 Una vez dentro del router, abriremos la pestaña `Routing > RIP`.  
 Dentro de la pestaña de `Interfaces`, añadiremos dos interfaces para el router (por ejemplo, `ether1` y `ether4`).  
 Posteriormente, nos dirigiremos a la pestaña `Network` e introduciremos las IPs de nuestro router (es decir, cada una de las IPs que tiene nuestro router, en cada red):
