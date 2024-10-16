@@ -538,30 +538,75 @@
         participado.
     \end{itemize}
 
-    El Diagrama Entidad-Relación correspondiente se encuentra en la Figura~\ref{fig:ej12}.
+    El Diagrama Entidad-Relación correspondiente se encuentra en la Figura~\ref{fig:ej12}. Algunas consideraciones son:
+    \begin{itemize}
+        \item Se ha establecido la superclase \emph{Persona} para \emph{Agente} y \emph{Delincuente}, ya que comparten varios atributos.
+        Además, en el hipotético caso de que un agente sea detenido, no habría redundancia.
+        \item La relación \emph{Realiza} tiene cardinalidad $M:N$, ya que una comisión de un delito puede ser realizada por varios delincuentes, y un delincuente puede realizar varias comisiones de delito en su vida.
+        \item La relación \emph{Es} tiene cardinalidad $M:N$, ya que una comisión de delito puede ser de varios tipos (por ejemplo, en un atraco, puede haber robo, secuestro, allanamiento de morada, etc.), y un tipo de delito puede ser cometido en varias ocasiones.
+        \item En un primer momento, podríamos haber establecido \emph{Detención} como una relación entre \emph{Agente} y \emph{Delincuente}, pero los atributos asociados a la detención (lugar, fecha y hora) se repitirían en gran cantidad de ocasiones (si $n$ agentes participan en la misma detención, se repetirían $n$ veces).
+        Por ello, se ha decidido crear una entidad propia para la detención.
+        \item De igual forma, la comisión de un delito se ha considerado como una entidad propia, ya que, si no, si $n$ delincuentes realizan el mismo delito, se repetirían $n$ veces los atributos asociados a la comisión del delito.
+    \end{itemize}
     \begin{figure}
         \centering
         \begin{tikzpicture}[node distance=6.3 em]
-            \node[entidad] (agente) {Agente};
+
+            \node[entidad] (persona) {Persona};
+            \node[herencia] (tipo_persona) [below of=persona] {Tipo} edge[participacion obligatoria] (persona);
+
+            \node[entidad] (agente) [below left of=tipo_persona, xshift=-6.5em, yshift=-2em] {Agente} edge(tipo_persona);
             \node[herencia] (tipo) [below of=agente] {Tipo} edge[participacion obligatoria] node[midway, right] {Disjunta} (agente);
-            \node[entidad] (oficial) [below left of=tipo, xshift=-2em] {Oficial} edge(tipo);
-            \node[entidad] (policia) [below right of=tipo, xshift=2em] {Policía} edge(tipo);
+            \node[entidad] (oficial) [below right of=tipo, xshift=2em] {Oficial} edge(tipo);
+            \node[entidad] (policia) [below left of=tipo, xshift=-2em] {Policía} edge(tipo);
 
-            \node[relacion] (responsable) [below of=tipo, yshift=-2em] {Responsable} edge(oficial) edge(policia);
-            \node[relacion] (dirige) [below of=oficial] {Dirige} edge(oficial);
-            \node[entidad] (comisaria) [below of=dirige] {Comisaría} edge(dirige);
+            \node[relacion] (responsable) [below of=tipo, yshift=-2em] {Responsable} edge[-Stealth](oficial) edge(policia);
+            \node[relacion] (dirige) [below of=oficial, node distance=5.5em] {Dirige} edge[-Stealth](oficial);
+            \node[entidad] (comisaria) [below of=dirige, node distance=5.5em] {Comisaría} edge[Stealth-](dirige);
 
-            \node[relacion] (participa) [right of=agente] {Participa} edge(agente);
-            \node[entidad] (detencion) [right of=participa] {Detención} edge(participa);
-            \node[relacion] (sufre) [right of=detencion] {Sufre} edge(detencion);
-            \node[entidad] (delincuente) [right of=sufre] {Delincuente} edge(sufre);
+            \node[relacion] (participa) [right of=agente, node distance=5.5em] {Participa} edge(agente);
+            \node[entidad] (detencion) [right of=participa, node distance=5.5em] {Detención} edge(participa);
+            \node[relacion] (sufre) [right of=detencion, node distance=5.5em] {Sufre} edge(detencion);
+            \node[entidad] (delincuente) [right of=sufre, node distance=5.5em] {Delincuente} edge(sufre) edge(tipo_persona);
 
             \node[relacion] (realiza) [below of=delincuente] {Realiza} edge(delincuente);
-            \node[entidad] (comision_deltito) [below of=realiza] {$\text{Hola}$} edge(realiza);
+            \node[entidad] (comision_deltito) [below of=realiza, align=center] {Comisión\\Delito} edge(realiza);
+
+            \node[relacion] (es) [below of=comision_deltito, node distance=5.5em] {Es} edge(comision_deltito);
+            \node[entidad] (delito) [below of=es, node distance=5.5em] {Delito} edge(es);
+
+            \node[atributo] (DNI) [right of=persona] {\key{DNI}} edge(persona);
+            \node[atributo] (nombre) [below right of=persona, yshift=2em] {Nombre} edge(persona);
+            \node[atributo] (apellidos) [left of=persona] {Apellidos} edge(persona);
+            \node[atributo] (fecha_nac_delincuentes) [above of=delincuente] {Fecha Nacimiento} edge(delincuente);
+            \node[atributo] (domicilio) [below left of=persona, yshift=2em] {Domicilio} edge(persona);
+            \node[atributo] (nacionalidad_delincuentes) [above right of=delincuente] {Nacionalidad} edge(delincuente);
+
+            \node[atributo] (codigo_delito) [above left of=delito] {\key{Código}} edge(delito);
+            \node[atributo] (nombre_delito) [above right of=delito] {Nombre} edge(delito);
+            \node[atributo] (tipo_delito) [right of=delito] {Tipo} edge(delito);
+            \node[atributo] (pena_max) [left of=delito, yshift=2em, node distance=7em] {Pena Máxima} edge(delito);
+            \node[atributo] (pena_min) [left of=delito, node distance=7em] {Pena Mínima} edge(delito);
+
+            \node[atributo] (num_placa) [above of=agente] {\key{Número Placa}} edge(agente);
+            \node[atributo] (fecha_ingreso) [above left of=agente] {Fecha Ingreso} edge(agente);
+
+            \node[atributo] (nombre_comisaria) [above left of=comisaria, yshift=-2em] {\key{Nombre}} edge(comisaria);
+            \node[atributo] (localizacion) [left of=comisaria, node distance=7.2em] {Localización} edge(comisaria);
+
+            \node[atributo] (especializacion) [below right of=oficial, xshift=1em, yshift=2em] {Especialización} edge(oficial);
+            \node[atributo] (fecha_ascenso) [right of=oficial, node distance=7em] {Fecha Ascenso} edge(oficial);
+
+            \node[atributo] (codigo_detencion) [below right of=detencion] {\key{Código}} edge(detencion);
+            \node[atributo] (lugar_detencion) [below of=detencion] {Lugar} edge(detencion);
+            \node[atributo] (fecha_detencion) [below left of=detencion] {Fecha} edge(detencion);
+
+            \node[atributo] (lugar_comision) [above right of=comision_deltito, yshift=-2em] {Lugar} edge(comision_deltito);
+            \node[atributo] (fecha_comision) [below right of=comision_deltito, yshift=2em] {Fecha} edge(comision_deltito);
+            \node[atributo] (codigo_comision) [right of=comision_deltito] {\key{Código}} edge(comision_deltito);
         \end{tikzpicture}
         \caption{Diagrama Entidad-Relación del Ejercicio~\ref{ej:12}}
         \label{fig:ej12}
-        % // TODO: Cont
     \end{figure}
 \end{ejercicio}
 
@@ -590,6 +635,51 @@
             \item De las constelaciones nos interesa almacenar el código y nombre.
         \end{itemize}
     \end{itemize}
+
+    El Diagrama Entidad-Relación correspondiente se encuentra en la Figura~\ref{fig:ej13}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}[node distance=6.3 em]
+            \node[entidad] (objeto) {Objeto Astronómico};
+            \node[herencia] (tipo) [below of=objeto] {Tipo} edge[participacion obligatoria] node[midway, right] {Disjunta} (objeto);
+            \node[entidad] (baja_emision) [below left of=tipo, xshift=-4em] {Baja Emisión} edge(tipo);
+            \node[entidad] (estrella) [below right of=tipo, xshift=4em, align=center] {Alta Emisión\\(Estrella)} edge(tipo);
+            
+            \node[herencia] (tipo_baja) [below of=baja_emision] {Tipo} edge[participacion obligatoria] node[midway, right] {Disjunta} (baja_emision);
+            \node[entidad] (planeta) [below right of=tipo_baja] {Planeta} edge(tipo_baja);
+            \node[entidad] (satelite) [below left of=tipo_baja] {Satélite} edge(tipo_baja);
+
+            \node[relacion] (gira_satelite) [below right of=satelite] {Gira} edge(satelite) edge[-Stealth](planeta);
+            \node[atributo] (distancia) [below of=gira_satelite] {Distancia} edge(gira_satelite);
+
+            \node[relacion] (gira_planeta) [above right of=planeta] {Gira} edge(planeta) edge[-Stealth](estrella);
+            \node[atributo] (dist_planeta) [above of=gira_planeta, node distance=5em] {Distancia} edge(gira_planeta);
+
+            \node[atributo] (cod_objeto) [left of=objeto, node distance=8em] {\key{Código}} edge(objeto);
+            \node[atributo] (fecha) [right of=objeto, align=center, node distance=10em] {Fecha\\Descubrimiento} edge(objeto);
+            \node[atributo] (observatorio) [left of=objeto, yshift=-3em, node distance=8.5em] {Observatorio} edge(objeto);
+
+            \node[atributo] (tipo_planeta) [below of=planeta] {Tipo} edge(planeta);
+            \node[atributo] (tipo_satelite) [below of=satelite] {Tipo} edge(satelite);
+            \node[relacion] (es) [right of=estrella, node distance=7em] {Es} edge(estrella);
+            \node[entidad] (subtipo_estrella) [below of=es] {Subtipo} edge[Stealth-](es);
+            \node[atributo] (cod_subtipo) [right of=subtipo_estrella, yshift=2em] {\key{Código}} edge(subtipo_estrella);
+            \node[atributo] (nombre_subtipo) [right of=subtipo_estrella, yshift=-2em] {Nombre} edge(subtipo_estrella);
+            \node[relacion] (es_tipo) [below of=subtipo_estrella] {Es} edge(subtipo_estrella);
+            \node[entidad] (tipo_estrella) [below of=es_tipo] {Tipo} edge[Stealth-](es_tipo);
+            \node[atributo] (cod_tipo) [right of=tipo_estrella, yshift=2em] {\key{Código}} edge(tipo_estrella);
+            \node[atributo] (nombre_tipo) [right of=tipo_estrella, yshift=-2em] {Nombre} edge(tipo_estrella);
+
+
+            \node[relacion] (forman) [below of=estrella] {Forman} edge(estrella);
+            \node[entidad] (constelacion) [below of=forman] {Constelación} edge(forman);
+            \node[atributo] (nombre_const) [left of=constelacion] {Nombre} edge(constelacion);
+            \node[atributo] (cod_const) [below of=constelacion] {\key{Código}} edge(constelacion);
+
+        \end{tikzpicture}
+        \caption{Diagrama Entidad-Relación del Ejercicio~\ref{ej:13}}
+        \label{fig:ej13}
+    \end{figure}
 \end{ejercicio}
 
 \begin{ejercicio} \label{ej:14}
