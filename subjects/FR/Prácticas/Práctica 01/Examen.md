@@ -1,17 +1,20 @@
 <br>
 
-# Fundamentos de Redes. Práctica I. Examen I
+# Fundamentos de Redes. Práctica I (Sesiones 1 y 2)
 
 **Autor:** Arturo Olivares Martos
 ***
 
-- **Asignatura:** Estructura de Computadores.
-- **Curso Académico:** 2023-24.
-- **Grado:** Grado en Ingeniería Informática.
+- **Asignatura:** Fundamentos de Redes
+<!--- **Curso Académico:** Actualizado al curso 2023-24-->
+- **Grado:** Preguntas comunes para el Grado en Ingeniería Informática y los Dobles Grados
 <!--- **Grupo:** A.-->
 <!--- **Profesor:** Ignacio Rojas Ruiz.-->
-- **Fecha:** 19-10-2023.
+<!--- **Fecha:** 19-10-2023.-->
 - **Descripción:** Examen de la Práctica 1 (sesiones 1 y 2).
+
+El examen de la Práctica 1 (sesiones 1 y 2) consiste en un cuestionario de 10 preguntas tipo test, donde cada error resta 1/3 puntos.
+La preguntas se sacaron de un banco de preguntas y salían aleatorias, por lo que los exámenes no coincidieron. En este documento hemos buscado juntar todos los exámenes en un mismo fichero.
 ______
 
 
@@ -74,3 +77,45 @@ ______
     - ( ) `33.X.1.0/24`, `33.X.2.0/24`, `33.X.3.0/24` y `172.16.X.0/24`
     - ( ) `33.X.1.0/24`, `33.X.2.0/24`, `33.X.3.0/24`, `172.16.X.0/24`, `172.17.X.0/24` y `220.10.10.0/24`
     - (x) `172.17.X.0/24` y `220.10.10.0/24`
+
+11. Considerando la topología de la red de datos del laboratorio, ¿cuál de las siguientes configuraciones para la tabla de enrutamiento sería válida para que `RX_4` supiera alcanzar cualquier interfaz dentro de su isla `X`?
+    - ( ) Ninguna respuesta es correcta
+    - ( ) <table border="1"><thead><tr><th>Red de Destino</th><th>Pasarela (gw)</th></tr></thead><tbody><tr><td>`172.16.X.0/24`</td><td>`ether1`</td></tr><tr><td>`172.17.X.0/24`</td><td>`ether2`</td></tr><tr><td>`33.X.2.0/24`</td><td>`172.16.X.2`</td></tr><tr><td>`33.X.3.0/24`</td><td>`172.16.X.3`</td></tr><tr><td>`0.0.0.0`</td><td>`172.17.X.4`</td></tr></tbody></table>
+    - ( ) <table border="1"><thead><tr><th>Red de Destino</th><th>Pasarela (gw)</th></tr></thead><tbody><tr><td>`172.16.X.0/24`</td><td>`ether1`</td></tr><tr><td>`172.17.X.0/24`</td><td>`ether2`</td></tr><tr><td>`33.X.1.0/24`</td><td>`172.16.X.1`</td></tr><tr><td>`33.X.2.0/24`</td><td>`172.16.X.2`</td></tr><tr><td>`33.X.3.0/24`</td><td>`172.16.X.3`</td></tr><tr><td>`220.10.10.X/24`</td><td>`172.17.X.4`</td></tr></tbody></table>
+    - (x) <table border="1"><thead><tr><th>Red de Destino</th><th>Pasarela (gw)</th></tr></thead><tbody><tr><td>`172.16.X.0/24`</td><td>`ether1`</td></tr><tr><td>`172.17.X.0/24`</td><td>`ether2`</td></tr><tr><td>`33.X.1.0/24`</td><td>`172.16.X.1`</td></tr><tr><td>`33.X.2.0/24`</td><td>`172.16.X.2`</td></tr><tr><td>`33.X.3.0/24`</td><td>`172.16.X.3`</td></tr><tr><td>`220.10.10.X/24`</td><td>`172.17.X.6`</td></tr></tbody></table>
+
+12. ¿Cuál de los siguientes comandos usaría para configurar la ruta por defecto (`default gateway`) de `PCX_1` a través de la red de datos?
+    - (x) `route add default gw 33.X.1.1`
+    - ( ) `route add default gw 33.X.1.0/24`
+    - ( ) `route add -net 0.0.0.0 netmask 0.0.0.0 gw ether1`
+    - ( ) `route add -net 33.X.1.0 netmask 255.255.255.0 gw 33.X.1.1`
+
+13. Las cadenas básicas en las que se agrupan las reglas de filtrado de paquetes en un router Mikrotik son:
+    - ( ) `INPUT`, `OUTPUT`, `THROUGH`
+    - (x) `INPUT`, `OUTPUT`, `FORWARD`
+    - ( ) `INSIDE`, `OUTSIDE`, `FORWARD`
+    - ( ) `LEFT`, `RIGHT`, `UP`, `DOWN`
+
+14. Asumiendo que la red de datos del laboratorio está correctamente configurada para que haya alcanzabilidad total en la red, si configuramos la acción `DROP` para la cadena `INPUT` en cualquiera de los routers del laboratorio:
+    - ( ) El router donde aplicamos la regla sigue siendo administrable puesto que puede seguir recibiendo mensajes.
+    - ( ) El router donde apliquemos la regla podrá recibir mensajes, pero no podrá contestarlos.
+    - ( ) Todas las respuestas son correctas.
+    - (x) Todas las interfaces seguirán siendo alcanzables.
+
+15. Si toda aquella información que no vaya a la subred a la que pertenece cierto dispositivo se reenvía hacia un punto de salida dentro de dicha subred, ¿de qué se está hablando?
+    - ( ) Máscara de subred
+    - ( ) Dirección de broadcast
+    - ( ) Próximo salto
+    - (x) Pasarela por defecto
+
+16. En el laboratorio existen dos redes principales. Suponga que se ubica en un PC de la isla 1 y desea ver las entradas en las tablas de encaminamiento del `R4_1` ¿es posible?.
+    - ( ) Ninguna de las anteriores afi rmaciones es correcta.
+    - ( ) Sí. Aunque ese router no pertenece a la isla 1, sería alcanzable por la red de datos y por lo tanto se podría.
+    - (x) Sí, utilizando winbox a través de la IP `192.168.4.11`
+    - ( ) Sí, si la interfaz de la red interna está habilitada.
+    
+17. ¿Cuál es el menú que debemos elegir en un router Mikrotik usando Winbox para utilizar el encaminamiento dinámico con RIP?
+    - ( ) IP->RIP.
+    - ( ) Routing->Dynamic Protocols->RIP.
+    - (x) Routing->RIP->Networks.
+    - ( ) IP->Routing Information Protocol.
