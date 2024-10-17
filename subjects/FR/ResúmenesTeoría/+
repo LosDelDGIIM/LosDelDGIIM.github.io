@@ -165,7 +165,6 @@ Permite conectar redes y superredes.
 - Gestiona la fragmentación.
 
 ## Funcionalidad 1. Direccionamiento
-**Dentro de una misma red, no pueden repetirse direcciones IP**.
 Las direcciones IP tienen 32 bits (son 4 bytes). La nomenclatura usada es: A.B.C.D, cada una en decimal. La máxima es 255.255.255.255.
 
 Los nombres de dominio (www.google.com) se usan en la capa de aplicación. En la capa de red se usan las direcciones IP. El DNS traduce los nombres de dominio a direcciones IP (Tema 5).
@@ -464,7 +463,7 @@ DNAT es un proceso de *prerouting*.
 - Normalmente, los routers domésticos están conectados a un router llamado "pasarela del operador" por donde pasan los paquetes al exterior, para conectarnos a internet.
 
 ## Tablas de encaminamiento
-Son necesarios para realizar el encaminamiento de los paquetes. 
+Son necesarios para realizar el encaminamiento de los paquetes. Se configuran a mano o mediante un protocolo automático (como RIP).
 Las tienen todos los equipos con capacidad para conectarse (PCs y routers).
 
 Campos importantes (los no importantes entre paréntesis):
@@ -476,21 +475,13 @@ Campos importantes (los no importantes entre paréntesis):
 Puede tener campos adicionales, como:
 - Interfaz de salida del equipo, puede ser redundante.
 - Protocolo.
-- Flags.
 - Coste, coste esperado para llegar a dicho equipo, como número de saltos.
 
 Una vez que se le asigna una IP a la tarjeta de red, se le configura automáticamente la red de destino de su red, con un salto directo.
 
-- Rutas directas (marcadas con `*` en siguiente salto): Para llegar a redes a las que estamos directamente conectados. No es necesario realizar ningún salto, lo ponemos en la red y será recibido.
+- Rutas directas (marcadas con `*` en siguiente salto): Para llegar a redes a las que estamos directamente conectados.
 - Rutas indirectas: Para llegar a redes a las que no estamos directamente conectados. Es necesario pasar por mínimo un salto para llegar a él.
-- Entrada por defecto (*default*): La red de destino es la *default* , o `0.0.0.0`. Hace referencia a cualquier red que no haya sido accesible. Al equipo en el que hacemos el siguiente salto (el que nos conecta con el exterior) le llamamos *pasarela*. No siempre hace falta.
-
-Dada una dirección IP, para buscar su entrada en la tabla de encaminamiento, se hace la AND con la máscara de red de cada entrada de la tabla. Si el resultado coincide con la red de destino, es una entrada válida para dicha IP.
-Si no hay ninguna entrada válida, se envía hacia detrás un mensaje ICMP.
-
-- Si hay varias entradas válidas para un salto, se escoge el salto más restrictivo (ya que es probable que sea el que menos saltos tiene), aquel cuya máscara tenga más unos.
-- Poner como máscara de red 0 es equivalente a una entrada por defecto.
-- *localhost* tiene que estar en la tabla de encaminamiento. Su interfaz es *lo*.
+- Entrada por defecto (*default*): La red de destino es la *default* , o `0.0.0.0`. Hace referencia a cualquier red que no haya sido accesible. Al equipo en el que hacemos el siguiente salto (el que nos conecta con el exterior) le llamamos *pasarela*.
 
 Ejemplo:
           Red destino | Máscara | Sig. salto
@@ -498,93 +489,5 @@ Ejemplo:
 indirecta 192.168.1.0 |  /27    | 192.168.2.1 (Router)
  defecto    default   |  /0     | 129.168.3.1 (Router para exterior)
  
-Ejemplo 2:
-192.
-... (del estilo 192.x...)
-default 150.100.0.222
-
-No sabemos llegar a 150.100.0.222.
-
-##### Ejercicio de minimizar tablas de encaminamiento (saber agrupar redes)
-Queremos minimizar el tamaño de las tablas de encaminamiento
-Si tenemos n interfaces, como mínimo tenemos que incluir n entradas en la tabla. Este será el número a conseguir.
-Tenemos:
-
-                              /---- Red A  192.168.0.0/24
-                              |
-INTERNET -- R1 -- R2 -- R3 -- R4 -- Red B  192.168.1.0/24
-                        |
-                        \---- R5 -- Red C  192.168.2.0/24
-                              |
-                              \---- Red D  192.168.3.0/24
-                        
-Router 4: dos entradas, A, B y por defecto a R3
-Router 5: dos entradas, C, D y por defecto a R3
-Router 3: el mínimo son 3 entradas, la por defecto a R2 y:
-    Juntar las redes A y B: 192.168.0.0/23 (hacer en binario) (Primera y última direcciones: 192.168.0.0 - 192.168.1.255)
-    Juntar las redes C y D: 192.168.2.0/23 (hacer en binario) (Primera y última direcciones: 192.168.2.0 - 192.168.3.255)
-    (Notemos que podemos hacerlo por cómo hemos puesto las direcciones IP. En un ejercicio, puede suceder que tengamos que primero añadir las IP y luego rellenar la tabla)
-Router 2: el mínimo son 2 entras, la por defecto a R1 y:
-    Juntar las superredes anteriores en una: 192.168.0.0/22 (hacer en binario) (Primera y última dirección: 192.168.0.0 - 192.168.3.255)
-Router 1: la por defecto a un router de internet y la superred anterior.
- 
-## Encaminamiento en sí
-- Las tablas se configuran a mano (encaminamiento estático) o mediante un protocolo automático (encaminamiento dinámico, ya que si un router se cae, la tabla de encaminamiento puede cambiar) (como RIP). 
-- Se realiza paquete a paquete. Usando direccionamiento dinámico, puede pasar que cambie una dirección, luego que no todos los paquetes sigan la misma ruta.
-- Basado en dirección de destino.
-
-### Protocolos de intercambio de información de encaminamiento (protocolos de encaminamiento, pero teniendo en cuenta que estos no son los que encaminan) Routing Protocols
-Internet se organiza en sistemas autónomos (AS, *Autonomous System*), redes muy grandes gestionadas por una misma entidad. Del orden de un país.
-Cada AS se organiza de la forma que le convenga al operador. IGP (Interior gateway protocol)
-Entre sistemas autónomos, se utilizan EGP (exterior gateway protocol). Sólo se utiliza un protocolo, ya que tiene que ser el mismo: BGP (Border Gateway Protocol). Permite mandar prioridades y tener en cuenta políticas. No se verá.
-
-Dentro de un AS podemos tener distintos tipos de protocolos: RIP (Routing Information Protocol), OSPF (Open Source Path First).
-
-#### RIP
-Definida en RFC 1058, 2453, 4822.
-Una cosa es la capa de la funcionalidad y otra la capa en la que se implmenta.
-
-RIP funciona en capa de red pero se implementa en capa de aplicación (ya que usa UDP, para difusión, en puerto 520).
-
-Cuando un router RIP se enciende y es configurado, manda un mensaje a sus vecinos cada 30 segundos, sobre la información con las rutas a las que este router sabe llegar:
-- Se envía: Información de redes que conocemos, el coste y quién lo envía. RIP sólo funciona con el número de saltos, no con velocidades.
-- Esta información se envía a los vecinos mediante IPs de difusión, 224.0.0.9, la escuchan todos los routers que soportan RIP (análogo con OSPF).
-
-R1 --  R2 -- R3
-|            I
-|            I
-R6 -- R5 -- R4
-
-Empieza R1, diciendo que sabe llegar a su red con coste 0. De esta forma, R2 y 6 aprenden que saben llegar a la red A por coste 1.
-R2 dice que sabe llegar a su red con coste 0 y a la red 1 con coste 1. R1 y R3 aprenden y ...
-...
-Hay que dar unas ciertas vueltas hasta que todos lo aprenden.
-
-##### Split Horizon - Problema del infinito
-Si tenemos:
-
-PC -- R1 -- R2 -- R3 -- R4 -- R5 -- PC
-
-En un momento dado, R2 aprende que para llegar a Red A (izquierda), es por R1 y por coste 1.
-R3 aprende que para llegar a Red A voy por R2 por coste 2.
-
-Si derepente R1 explota, R2 puede aprender de R3 que puede llegar a la Red A en 3 saltos.
-
-A partir de 16 saltos se supone que no podemos llegar. Infinito = 16.
-
-- Hold down: Retrasa los mensajes que nos llegan de una direccion que ya conocemos 180 segundos, esperando a que nos respondan los anteriores, si están vivos.
-- Poison reverse: Si no sabemos llegar a algo, decimos que el coste es infinito.
-
-#### OSPF
-RFC 2328
-Existen los mensajes:
-- Hello: para hablar entre vecinos.
-- Database description: Para mandar las BD que conocemos.
-- Link satatus request/update/ack: Para consultar/enviar cambios.
-
-No tiene en cuenta el número de saltos, sino que hace algo un poco más complejo. Permite definir el coste, luego lo podemos poner en base a lo que queramos. Ingeniería de tráficos.
-Tiene un criterio por defecto, de forma que el coste de un enlace es el inverso del ancho de banda (de la velocidad) de dicho enlace.
-Busca el camino global que minimiza la suma de todos los costes, usando Dijkstra.
-
-Permite definir áreas, de forma que la difusión se envía en una áreas.
-Permite que OSPF sea muy escalable, al contrario que RIP.
+- Si hay varias entradas válidas para un salto, se escoge el salto más restrictivo (ya que es probable que sea el que menos saltos tiene), aquel cuya máscara tenga más unos.
+- Poner como máscara de red 0 es equivalente a una entrada por defecto.
