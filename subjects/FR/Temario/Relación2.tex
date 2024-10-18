@@ -37,7 +37,172 @@
 
 \begin{ejercicio}
     Imagine una situación donde hay cinco routers RA‐RE\@. RA, RB y RC se conectan cada uno a una red local A, B y C, siendo cada router única puerta de enlace de cada red. RA, RB y RD están conectados entre sí a través de un switch. RC, RD y RE están conectados entre sí a través de un switch. RE conecta a Internet a través de la puerta de acceso especificada por el ISP\@. Especifique tablas de encaminamiento en los routers. Asigne a voluntad las direcciones IP e interfaces necesarias.
-% // TODO: Copiar figura
+    \begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node/.style={circle, draw, minimum size=1cm}]
+        \node[node] (A) {Red A};
+        \node[node, below=of A] (B) {Red B};
+        \node[node, below=of B] (C) {Red C};
+        \node[node, left=of A] (D) {RA};
+        \node[node, left=of B] (E) {RB};
+        \node[node, left=of C] (F) {RC};
+
+        \node[node, below left=of D] (G) {SW};
+        \node[node, left=of G] (H) {RD};
+
+        \node[node, left=2.8cm of F] (I) {SW};
+        \node[node, left=of I] (J) {RE};
+        \node[node, left=of J] (K) {Internet};
+        
+        \draw[edge] (A) -- node[above=.6cm] {192.168.2.0/24} (D);
+        \draw[edge] (B) -- node[above=.6cm] {192.168.3.0/24} (E);
+        \draw[edge] (C) -- node[above=.6cm] {192.168.4.0/24} (F);
+
+        \draw[edge] (D) -- (G);
+        \draw[edge] (E) -- (G);
+        \draw[edge] (G) -- node[above=.4cm] {192.168.1.0/24} (H);
+
+        \draw[edge] (F) -- (I);
+        \draw[edge] (H) -- (I);
+        \draw[edge] (J) -- node[above=.4cm] {192.168.0.0/24} (I);
+
+        \draw[edge] (J) -- (K);
+    \end{tikzpicture}
+    \caption{Situación del ejercicio 5}
+    \end{figure}
+
+    En primer lugar, asignaremos las direcciones IP y las interfaces de cada router. Cada router presenta una conexión por la izquierda y otra por la derecha, por lo que sólo usaremos dos interfaces de cada router, luego asociaremos dos direcciones IP a cada router.
+
+    Por comodidad, asociaremos las conexiones de la derecha de cada router a la interfaz \textit{ether0}, y las conexiones de la izquierda de cada router a la interfaz \textit{ether1}.
+
+    Una vez añadidas las interfaces, procederemos a asocciar direcciones IP a cada interfaz de cada router:
+    \begin{itemize}
+        \item RA:
+            \begin{itemize}
+                \item Tendrá IP 192.168.2.1 en la red 192.168.2.0/24.
+                \item Tendrá IP 192.168.1.2 en la red 192.168.1.0/24.
+            \end{itemize}
+        \item RB:
+            \begin{itemize}
+                \item Tendrá IP 192.168.3.1 en la red 192.168.3.0/24.
+                \item Tendrá IP 192.168.1.3 en la red 192.168.1.0/24.
+            \end{itemize}
+        \item RD:
+            \begin{itemize}
+                \item Tendrá IP 192.168.1.1 en la red 192.168.1.0/24.
+                \item Tendrá IP 192.168.0.2 en la red 192.168.0.0/24.
+            \end{itemize}
+        \item RC: 
+            \begin{itemize}
+                \item Tendrá IP 192.168.4.1 en la red 192.168.4.0/24.
+                \item Tendrá IP 192.168.0.3 en la red 192.168.0.0/24.
+            \end{itemize}
+        \item RE:
+            \begin{itemize}
+                \item Tendrá IP 192.168.0.1 en la red 192.168.0.0/24.
+                \item Su IP en la red que le conecta con Internet la proveerá el ISP.
+            \end{itemize}
+        \item Suponemos que RE se conecta a Internet a través de un router con IP 33.33.33.33 en la red 33.33.0.0/16.
+    \end{itemize}
+    Procedemos ahora a rellenar las tablas de encaminamiento de cada router:
+    \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        Red destino & Máscara & Siguiente salto & Interfaz \\
+        \hline
+        192.168.2.0 & 255.255.255.0 & * & ether0 \\
+        \hline
+        192.168.1.0 & 255.255.255.0 & * & ether1 \\
+        \hline
+        192.168.3.0 & 255.255.255.0 & 192.168.1.3 (RB) & ether1 \\
+        \hline
+        0.0.0.0 & 0.0.0.0 & 192.168.1.1 (RD) & ether1 \\
+        \hline
+    \end{tabular}\\
+    \caption{Tabla de encaminamiento para RA.}
+    \end{table}
+
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|c|c|}
+            \hline
+            Red destino & Máscara & Siguiente salto & Interfaz \\
+            \hline
+            192.168.3.0 & 255.255.255.0 & * & ether0 \\
+            \hline
+            192.168.1.0 & 255.255.255.0 & * & ether1 \\
+            \hline
+            192.168.2.0 & 255.255.255.0 & 192.168.1.2 (RA) & ether1 \\
+            \hline
+            0.0.0.0 & 0.0.0.0 & 192.168.1.1 (RD) & ether1 \\
+            \hline
+        \end{tabular}\\
+        \caption{Tabla de encaminamiento para RB.}
+        \end{table}
+
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|c|c|}
+            \hline
+            Red destino & Máscara & Siguiente salto & Interfaz \\
+            \hline
+            192.168.4.0 & 255.255.255.0 & * & ether0 \\
+            \hline
+            192.168.0.0 & 255.255.255.0 & * & ether1 \\
+            \hline
+            192.168.0.0 & \textbf{255.255.252.0} & 192.168.0.2 (RD) & ether1 \\
+            \hline
+            0.0.0.0 & 0.0.0.0 & 192.168.0.1 (RE) & ether1 \\
+            \hline
+        \end{tabular}\\
+        \caption{Tabla de encaminamiento para RC.}
+    \end{table}
+    Donde hemos agrupado la Red A (192.168.2.0/24), B (192.168.3.0/24) y la red 192.168.1.0/24 en la superred 192.168.0.0/22.
+    Notemos que dentro de las direcciones de la superred se encuentran las direcciones de la forma 192.168.0.x, que no se encuentran en dicha superred. Sin embargo, tenemos una entrada específica para dichas direcciones, con una máscara de mayor prioridad (más 1s), por lo que no tenemos problema\footnote{Si no tuviéramos dicha entrada, tendríamos un problema, ya que si mandamos un paquete a 192.168.0.26, por ejemplo, iría a la superred que hemos definido pero algún router se daría cuenta de que no sabe llegar a 192.168.0.0/24.}
+
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|c|c|}
+            \hline
+            Red destino & Máscara & Siguiente salto & Interfaz \\
+            \hline
+            192.168.1.0 & 255.255.255.0 & * & ether0 \\
+            \hline
+            192.168.0.0 & 255.255.255.0 & * & ether1 \\
+            \hline
+            192.168.2.0 & 255.255.255.0 & 192.168.1.2 (RA) & ether0 \\
+            \hline
+            192.168.3.0 & 255.255.255.0 & 192.168.1.3 (RB) & ether0 \\
+            \hline
+            192.168.4.0 & 255.255.255.0 & 192.168.0.3 (RC) & ether1 \\
+            \hline
+            0.0.0.0 & 0.0.0.0 & 192.168.0.1 (RE) & ether1 \\
+            \hline
+        \end{tabular}\\
+        \caption{Tabla de encaminamiento para RD.}
+    \end{table}
+
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|c|c|c|c|}
+            \hline
+            Red destino & Máscara & Siguiente salto & Interfaz \\
+            \hline
+            192.168.0.0 & 255.255.255.0 & * & ether0 \\
+            \hline
+            33.33.0.0 & 255.255.0.0 & * & ether1 \\
+            \hline
+            192.168.4.0 & 255.255.255.0 & 192.168.0.3 (RC) & ether0 \\
+            \hline
+            192.168.0.0 & \textbf{255.255.252.0} & 192.168.0.2 (RD) & ether0 \\
+            \hline
+            0.0.0.0 & 0.0.0.0 & 33.33.33.33 (Router ISP) & ether1 \\
+            \hline
+        \end{tabular}\\
+        \caption{Tabla de encaminamiento para RE.}
+    \end{table}
+    Donde hemos vuelto a usar la superred 192.168.0.0/22 que engloba a Red A, B y 192.168.1.0/24.
 \end{ejercicio}
 
 \begin{ejercicio}
