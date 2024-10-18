@@ -148,12 +148,12 @@ Para implementar una librería con monitores en un lenguaje de programación bas
 \end{definicion}
 Notemos que debemos tener esta propiedad en el lenguaje de programación con el que trabajemos para poder hacer uso de funciones bloqueantes (como \verb|wait|) dentro de los procedimientos de un monitor, algo básico en el funcionamiento de este. Afortunadamente, actualmente todos los lenguajes de programación que encontramos en el mercado son reentrantes.\\
 
-\subsubsection{Instanciación de monitores}
+\subsubsection{Instanciación de monitores} % // TODO: Si un monitor no se instancia, por qué este título?
 El siguiente ejemplo nos ilustra cómo funciona la instanciación de un monitor:
 
 \begin{ejemplo}
     Aunque los monitores están pensado para programas concurrentes (ya que no tiene sentido su uso en programas secuenciales), usaremos en este ejemplo un monitor en un programa secuencial, ya que sólo nos interesa la forma en la que los monitores se inicializan\footnote{Además, no hemos terminado de desarrollar cómo es que solo puede ejecutarse a la vez un único procedimiento del monitor, por lo que no entendemos hasta ahora cómo es que sirven para sincronizar programas concurrentes.}.\\
-
+    % // TODO: Si un monitor no es una clase, por qué esta palabra reservada?
     Tenemos un programa en el que necesitamos dos variables, las cuales queremos consultar e incrementar mediante un incremento previamente fijado que no cambiará. Para ello, creamos un monitor de acceso a una variable, con parámetros de entrada, para luego poder crear dos copias parametrizadas del mismo. El código del monitor será algo parecido a:
     \begin{minted}[escapeinside=\#\#]{pascal}
         class monitor VariableProtegida(inicio, incremento : integer);
@@ -188,22 +188,23 @@ El siguiente ejemplo nos ilustra cómo funciona la instanciación de un monitor:
 \end{ejemplo}
 
 \subsubsection{Exclusión mutua en los procedimientos de un monitor}
-Si tenemso varios procesos del programa concurrente que quieren hacer uso de procedimientos del monitor a la vez, sólo podremos dejar pasar a un proceso al monitor (suponiendo que este se encuentre libre). Para los otros procesos, almacenamos su llamada al procedimiento. 
+Si tenemos varios procesos del programa concurrente que quieren hacer uso de procedimientos del monitor a la vez, sólo podremos dejar pasar a un proceso al monitor (suponiendo que este se encuentre libre). Para los otros procesos, almacenamos su llamada al procedimiento. 
 
 Para ello, todos los monitores tienen implementada una cola con planificación FIFO, llamada \emph{cola de entrada al monitor}. Si tenemos dos procesos que quieren acceder a un procedimiento de un monitor libre, sólo podrá hacerlo un proceso. La llamada al procedimiento del monitor del otro proceso quedará almacenada en la cola de entrada al monitor, y este pasará a ejecutar el procedimiento deseado una vez el proceso anterior haya dejado libre el monitor. 
-
-En esta asignatura, supondremos que la cola de entrada al monitor es suficientemente larga como para albergar a todos los procesos que necesiten esperar a que el monitor quede libre.\\
+\begin{observacion}
+    En esta asignatura, supondremos que la cola de entrada al monitor es suficientemente larga como para albergar a todos los procesos que necesiten esperar a que el monitor quede libre.
+\end{observacion}
 
 Podemos representar la vida de un proceso de un programa concurrente que hace uso de monitores para sincronizar a sus procesos con el siguiente diagrama:
 \begin{figure}[H]
 \begin{tikzpicture}[node/.style={rectangle, draw, minimum size=1cm, align=center},
                     edge/.style={-stealth}]
     \node[node] (A) {Procedimiento\\terminado};
-    \node[node, left=of A] (B) {\begin{tabular}{c}Ejecutando código\\del proceso\\(fuera del monitor)\end{tabular}};
-    \node[node, left=of B] (C) {\begin{tabular}{c}Llamando a\\procedimiento\\del monitor\end{tabular}};
-    \node[node, below=of C] (D) {\begin{tabular}{c}Esperando en\\cola de entrada\\al monitor\end{tabular}};
-    \node[node, right=of D] (E) {\begin{tabular}{c}Monitor\\libre\end{tabular}};
-    \node[node, right=of E, xshift=.6cm] (F) {\begin{tabular}{c}Ejecutando procedimiento\\(dentro del monitor)\end{tabular}};
+    \node[node, left =of A] (B) {\begin{tabular}{c}Ejecutando código\\del proceso\\(fuera del monitor)\end{tabular}};
+    \node[node, left =of B] (C) {\begin{tabular}{c}Llamando a\\procedimiento\\del monitor\end{tabular}};
+    \node[node, below =of C] (D) {\begin{tabular}{c}Esperando en\\cola de entrada\\al monitor\end{tabular}};
+    \node[node, right =of D] (E) {\begin{tabular}{c}Monitor\\libre\end{tabular}};
+    \node[node, right =of E, xshift=.6cm] (F) {\begin{tabular}{c}Ejecutando procedimiento\\(dentro del monitor)\end{tabular}};
     
     \draw[edge] (A) -- (B);
     \draw[edge] (B) -- (C);
@@ -294,7 +295,7 @@ inicialización \\
 
 \subsubsection{Semántica desplazante}
 Como hemos comentado ya, los monitores solo permiten que un único proceso se encuentre ejecutando un procedimiento del mismo. En este caso, decíamos que el monitor está ocupado. En caso de que un proceso que estaba ejecutando el procedimiento ejecute un \verb|wait| (o salga del procedimiento), hay que dejar el monitor libre para dejar pasar a otro. Se trata de un momento muy delicado, ya que se pueden producir condiciones de carrera entre los procesos que quieran conseguir el monitor. Esta situación la hemos solucionado ya con la cola de entrada al monitor, ya que con la planificación FIFO, solo podrá entrar un único proceso al monitor.\\
-
+% // TODO: Cuando un proceso se desbloquea, a qué cola va? Por qué tiene preferencia la cola de la variable cond y no la cola del monitor?
 Si ahora el proceso nuevo que ejecuta el monitor ejecuta un \verb|signal|, desbloqueará al anterior proceso de la cola de la variable condición correspondiente. Si en dicho momento este proceso sale del procedimiento, dejará el monitor abierto, por lo que podría suceder que un proceso de la cola de entrada al monitor entre antes que el proceso recién desbloqueado, sucediéndose un \emph{robo de señal}, y llegaríamos a una situación de falta de equidad.\\
 
 Para solucionar este segundo problema, algunos lenguajes implementan una \emph{semántica desplazante} en las señales: el proceso que ejecuta el \verb|signal| le pasa el monitor al proceso que recibió la señal (el primero en la cola de bloqueados de la variable condición correspondiente), sin liberar en ningún momento el monitor, de forma que el proceso señalado tiene prioridad. Se dice que la señal usada con la operación \verb|signal| tiene \emph{semántica desplazante}.\\
@@ -326,7 +327,7 @@ Si conseguimos probar la existencia de un IM en un programa concurrente, entonce
 Es decir, primero demostraremos que por cada monitor que usamos se verifica un IM, y luego pasaremos a probar la corrección de cada proceso que interviene en el programa concurrente, usando para ello dichos IMs. Finamente, tendremos probado el programa concurrente.
 
 \subsubsection{Esquema de demostración}
-Suponiendo que hemos encontrado una relación matemática entre las variables permanentes de un monitor y queremos probar que se trata de un IM\footnote{A continuación, llamaremos a dicha condición \texttt{IM}, pese a no haber demostrado que se trate de verdad de un IM.}, lo primero será probar que $IM$ se cumple en el estado inicial del monitor, esto es, justo después de la inicialización de las variables permanentes, por lo que tendremos que probar que se verifica el \textbf{triple de inicialización de variables}:
+Suponiendo que hemos encontrado una relación matemática entre las variables permanentes de un monitor y queremos probar que se trata de un IM\footnote{A continuación, llamaremos a dicha condición \texttt{IM}, pese a no haber demostrado aún que se trate de verdad de un IM.}, lo primero será probar que $IM$ se cumple en el estado inicial del monitor, esto es, justo después de la inicialización de las variables permanentes, por lo que tendremos que probar que se verifica el \textbf{triple de inicialización de variables}:
 \begin{equation*}
     \{V\}\ \text{código de inicialización}\ \{IM\}
 \end{equation*}
@@ -397,10 +398,10 @@ o equivalentemente:
 En caso de cumplirse que $c.queue() = false$, entonces negaría la precondición del triple, haciéndolo la regla cierta por un razonamiento por vacuidad.\\
 
 \begin{observacion}
-    Notemos que el axioma de la operación signal funciona porque hemos supuesto que \textbf{tenemos semántica desplazante}, y es que $IM$ se cumple inmediatamente de desbloquear al proceso que tenemos bloqueado, ya que tras ejecutar \verb|signal| hemos cedido el monitor al proceso anteriormente bloqueado, en vez de liberar el monitor y dejar paso a otro proceso cualquiera, donde nada nos garantizaría que $C$ se siguiera cumpliendo tras la ejecución del procedimiento de dicho proceso, pudiendo ahora ejecutar el proceso que se bloqueó bajo una precondición que no es $C$, lo que podría llevar al programa a adoptar un estado inseguro.
+    Notemos que el axioma de la operación \verb|signal| funciona porque hemos supuesto que \textbf{tenemos semántica desplazante}, y es que $IM$ se cumple inmediatamente después de desbloquear al proceso que tenemos bloqueado, ya que tras ejecutar \verb|signal| hemos cedido el monitor al proceso anteriormente bloqueado, en vez de liberar el monitor y dejar paso a otro proceso cualquiera, donde nada nos garantizaría que $C$ se siguiera cumpliendo tras la ejecución del procedimiento de dicho proceso, pudiendo ahora ejecutar el proceso que se bloqueó bajo una precondición que no es $C$, lo que podría llevar al programa a adoptar un estado inseguro.
 \end{observacion}~\\
 
-Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincronización de semáforos, estamos listos para desmotrar la corrección de un $IM$. Lo haremos en el siguiente ejemplo.
+Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincronización de monitores, estamos listos para desmotrar la corrección de un $IM$. Lo haremos en el siguiente ejemplo.
 
 \begin{ejemplo}
     En este ejemplo, queremos programar un monitor que simule el funcionamiento de un semáforo. Para ello, se nos ha ocurrido el siguiente código:
@@ -451,14 +452,14 @@ Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincro
                 Luego usaremos la regla del \verb|if|, por lo que será suficiente con probar los triples:
                 \begin{gather*}
                     \{IM \land s=0\}\ c.wait;\ \{s>0\} \\
-                    \{IM \land s>0\}\ null;\ \{s>0\}
+                    \{IM \land s\neq0\}\ null;\ \{s>0\}
                 \end{gather*}
                 \begin{enumerate}
-                    \item Comenzamos por el segundo, por ser más sencillo. Como
+                    \item Comenzamos por el segundo, por ser más sencillo. Tenemos:
                         \begin{equation*}
-                            {\{IM \land s>0\} \equiv \{s\geq 0 \land s>0\}\equiv \{s>0\}}
+                            {\{IM \land s\neq0\} \equiv \{s\geq 0 \land s\neq0\}\equiv \{s>0\}}
                         \end{equation*}
-                        basta probar el triple ${\{s>0\}\ null;\ \{s>0\}}$, que es cierto por el axioma de la sentencia nula.
+                        Por tanto, basta probar el triple ${\{s>0\}\ null;\ \{s>0\}}$, que es cierto por el axioma de la sentencia nula.
                     \item Para el primer triple, buscamos aplicar el axioma de la operación \verb|wait|, por lo que tenemos que buscar la condición de sincronización. Para ello, buscamos la precondición del \verb|signal| asociado a la misma variable condición, que se encuentra en el procedimiento \verb|V|. Para hallar la precondición de la instrucción \verb|c.signal|, tendremos que demostrar alguna instrucción de dicho procedimiento, con el fin de hallar la precondición.
 
                         Sobre el código de \verb|V|, vemos que antes de \verb|c.signal| se ejecuta una primera instrucción \verb|s=s+1;|. Suponemos que \verb|V| tiene como precondición $IM$, por lo que buscamos una poscondición para \verb|s=s+1;|:
@@ -469,10 +470,11 @@ Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincro
                         \begin{equation*}
                             C \equiv \{s>0\}
                         \end{equation*}
-                        Como $\{IM \land s=0\}\equiv \{s=0\}$, acabamos de probar el primer triple usando el axioma de la operación \verb|wait|:
+                        Por tanto, por el axioma de la operación \verb|wait| usado con $L=\{V\}$, tenemos que el siguiente triple es cierto:
                         \begin{equation*}
-                            \{s=0\}\ c.wait;\ \{s>0\}
+                            \{IM\}\ c.wait;\ \{s>0\}
                         \end{equation*}
+                        Como $\{IM \land s=0\}\to \{IM\}$, por la segunda regla de la consecuencia, tenemos demostrado el triple que buscábamos.
                 \end{enumerate}
                 Una vez demostrados los dos triples, tenemos probado el triple del \verb|if|, por lo que sólo faltará probar el triple 
                 \begin{equation*}
@@ -500,9 +502,8 @@ Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincro
     \end{proof}
 \end{ejemplo}
 
-\begin{ejercicio}
+\begin{ejercicio*}
     Se pide demostrar que el siguiente monitor funciona como un semáforo de Habermann.
-
     En un semáforo de Habermann, queremos llevar la cuenta de:
     \begin{itemize}
         \item El número de recursos que han estado disponibles en algún momento, \verb|nv|.
@@ -533,7 +534,7 @@ Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincro
     \end{minted}
     \begin{itemize}
         \item Como para poder hacer uso de un recurso hay que haber solicitado acceso a él previamente, siempre tendremos que $na \geq np$.
-        \item Como un proceso solo puede hacer uso de un recurso a la vez, el número de recursos que en algún momento han estado disponibles debe ser menor o igual al número de recursos que en algún momento han sido utilizados por algún proceso: $nv \geq np$.
+        \item Como un proceso solo puede hacer uso de un recurso a la vez, el número de recursos que en algún momento han estado disponibles debe ser mayor o igual al número de recursos que en algún momento han sido utilizados por algún proceso: $nv \geq np$.
         \item Ahora, destacamos dos casos:
             \begin{itemize}
                 \item Si el número de peticiones para un recurso es mayor que el número de recursos que en algún momento han estado libre, $na \geq nv$, entonces es que no se han podido cumplir todas las peticiones, por lo que tienen que haber más procesos que han podido hacer uso de un recurso que recursos disponibles, es decir, $np \geq nv$.
@@ -598,10 +599,11 @@ Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincro
             %\end{gather*}
         %\item 
     %\end{enumerate}
-\end{ejercicio}
+    % // TODO: Semáforo de Habermann
+\end{ejercicio*}
 
 \subsection{Regla de la concurrencia para la verificación de programas con monitores}
-Dado un programa concurrente en el que tenemos $n$ procesos ejecutándose que podemos representar como triples ciertos de Hoare ciertos $\{P_i\}\ S_i\ \{Q_i\}$ con $i \in \{1, \ldots, n\}$ de forma que ninguna variable en $P_i$ o en $Q_i$ es modificada por ningún $S_j$ con $i\neq j$. Si en dicho código tenemos $m$ monitores de forma que para cada uno hemos conseguido probar un IM $IM_k$ con $1 \leq k \leq m$, entonces podemos aplicar la \textbf{regla de concurrencia para programas con monitores}:
+Consideramos un programa concurrente en el que tenemos $n$ procesos ejecutándose que podemos representar como triples de Hoare ciertos $\{P_i\}\ S_i\ \{Q_i\}$ con $i \in \{1, \ldots, n\}$ de forma que ninguna variable en $P_i$ o en $Q_i$ es modificada por ningún $S_j$ con $i\neq j$. Si en dicho código tenemos $m$ monitores de forma que para cada uno hemos conseguido probar un IM, $IM_k$ con $1 \leq k \leq m$, entonces podemos aplicar la \textbf{regla de concurrencia para programas con monitores}:
 \begin{equation*}
     \dfrac{\{P_i\}\ S_i\ \{Q_i\} \quad 1 \leq i \leq n}{
         \begin{array}{c}
