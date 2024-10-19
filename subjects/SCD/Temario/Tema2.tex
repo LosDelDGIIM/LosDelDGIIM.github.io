@@ -28,7 +28,7 @@ Los procesos que usemos en los progrmas concurrentes no verán el acceso a las v
 
 Finalmente, existen unos axiomas que nos permiten verificar los programas concurrentes que usen monitores de forma sencilla. Dichas demostraciones estarán basadas en el uso de los invariables globales. Ahondaremos en la verificación de programas concurrentes que utilicen monitores más adelante.
 
-\subsection{Concepto de monitor}
+\subsection{Concepto de monitor}\label{sec:concepto_de_monitor}
 A modo de resumen para comenzar a definir lo que es un monitor, podemos decir que:
 \begin{itemize}
     \item Es un módulo con un conjunto de variables permanentes que solo pueden ser modificadas por los procedimientos del monitor.
@@ -36,7 +36,7 @@ A modo de resumen para comenzar a definir lo que es un monitor, podemos decir qu
     \item La ejecución de los procedimientos de un monitor modifican el estado interno del mismo (esto es, el conjunto de las variables permanentes asociadas al monitor).
     \item El estado inicial del monitor (de sus variables permanentes) se establece mediante la ejecución de un procedimiento especial, al que llamaremos \textit{código de inicialización}. Este se ejecuta tras la declaración de una variable de tipo monitor y da valores iniciales a las variables permanentes.
 \end{itemize}
-De esta forma, un monitor puede visualizarse como en la Tabla~\ref{esq:monitor_1}, como un conjunto que englobla:
+De esta forma, un monitor puede visualizarse de forma intuitiva en la Tabla~\ref{esq:monitor_1}, como un conjunto que englobla:
 \begin{itemize}
     \item Un conjunto de variables, llamadas \textit{variables permanentes}, que no son accesibles desde fuera del monitor.
     \item Un conjunto de procedimientos que el monitor proporciona como servicio a los procesos de un programa concurrente (para por ejemplo, acceder a las variables permanentes que serán las variables que compartan dichos procesos), llamados \textit{procedimientos exportados} o \textit{exportables}.
@@ -134,7 +134,7 @@ inicialización \\
 \end{ejemplo}
 
 \subsection{Características de programación con monitores}
-Una vez ilustrado el uso de la herramienta que estamos construyendo en este Capítulo mediante el ejemplo anterior, vamos ahora a introducir la noción de que sólo puede ejecutarse a la vez un único procedimiento de un monitor.\\
+Una vez ilustrado el uso de la herramienta que estamos construyendo en este Capítulo mediante el ejemplo anterior, vamos ahora a introducir la noción de que solo puede ejecutarse a la vez un único procedimiento de un monitor.\\
 
 Como ya hemos visto, los procedimientos de los monitores no tienen por qué ejecutarse de principio a fin, sino que un proceso puede comenzar a ejecutar un procedimiento, bloquearse (dejando por tanto libre al monitor) y que otro proceso comience a ejecutar un procedimiento de dicho monitor, sucediéndose un entrelazamiento de las trazas de ejecución de los procedimientos.\\
 
@@ -144,16 +144,16 @@ Los monitores son objetos \emph{pasivos}. Esto es, no tienen una hebra dentro qu
 
 Para implementar una librería con monitores en un lenguaje de programación base, este debe tener la propiedad de ser \emph{reentrante}.
 \begin{definicion}
-    Un lenguaje de programación tiene la propiedad de ser reentrante si, siempre que tengamos un proceso ejecutando una función y este se bloquea, sea capaz de conservar la siguiente instrucción a ejecutar y el valor de sus variables locales tras desbloquearse. Es decir, el proceso no debe enterarse localmente de que nada haya cambiado mientras estaba bloqueado.
+    Un lenguaje de programación tiene la propiedad de ser reentrante si, siempre que tengamos un proceso ejecutando una función y este se bloquea, sea capaz de conservar la siguiente instrucción a ejecutar y el valor de sus variables locales tras desbloquearse. Es decir, el proceso no debe enterarse localmente\footnote{Las variables locales a la función deben mantenerse, pero puede haber variables globales que sí hayan cambiado.} de que nada haya cambiado mientras estaba bloqueado.
 \end{definicion}
 Notemos que debemos tener esta propiedad en el lenguaje de programación con el que trabajemos para poder hacer uso de funciones bloqueantes (como \verb|wait|) dentro de los procedimientos de un monitor, algo básico en el funcionamiento de este. Afortunadamente, actualmente todos los lenguajes de programación que encontramos en el mercado son reentrantes.\\
 
-\subsubsection{Instanciación de monitores} % // TODO: Si un monitor no se instancia, por qué este título?
-El siguiente ejemplo nos ilustra cómo funciona la instanciación de un monitor:
+\subsubsection{Copias paramétricas de un monitor}
+El siguiente ejemplo nos ilustra cómo podemos crear nuevos monitores a partir de uno ya creado, fijando parámetros que use el código de inicialización.
 
 \begin{ejemplo}
-    Aunque los monitores están pensado para programas concurrentes (ya que no tiene sentido su uso en programas secuenciales), usaremos en este ejemplo un monitor en un programa secuencial, ya que sólo nos interesa la forma en la que los monitores se inicializan\footnote{Además, no hemos terminado de desarrollar cómo es que solo puede ejecutarse a la vez un único procedimiento del monitor, por lo que no entendemos hasta ahora cómo es que sirven para sincronizar programas concurrentes.}.\\
-    % // TODO: Si un monitor no es una clase, por qué esta palabra reservada?
+    Aunque los monitores están pensados para programas concurrentes (ya que no tiene sentido su uso en programas secuenciales), usaremos en este ejemplo un monitor en un programa secuencial, ya que solo nos interesa la forma en la que los monitores inicializan sus variables permanentes\footnote{Además, no hemos terminado de desarrollar cómo es que solo puede ejecutarse a la vez un único procedimiento del monitor, por lo que no entendemos hasta ahora cómo es que sirven para sincronizar programas concurrentes.}.\\
+
     Tenemos un programa en el que necesitamos dos variables, las cuales queremos consultar e incrementar mediante un incremento previamente fijado que no cambiará. Para ello, creamos un monitor de acceso a una variable, con parámetros de entrada, para luego poder crear dos copias parametrizadas del mismo. El código del monitor será algo parecido a:
     \begin{minted}[escapeinside=\#\#]{pascal}
         class monitor VariableProtegida(inicio, incremento : integer);
@@ -187,16 +187,17 @@ El siguiente ejemplo nos ilustra cómo funciona la instanciación de un monitor:
     \end{minted}
 \end{ejemplo}
 
-\subsubsection{Exclusión mutua en los procedimientos de un monitor}
-Si tenemos varios procesos del programa concurrente que quieren hacer uso de procedimientos del monitor a la vez, sólo podremos dejar pasar a un proceso al monitor (suponiendo que este se encuentre libre). Para los otros procesos, almacenamos su llamada al procedimiento. 
+\subsection{Exclusión mutua en los procedimientos de un monitor}
+Si tenemos varios procesos del programa concurrente que quieren hacer uso de procedimientos del monitor a la vez, solo podremos dejar pasar un proceso al monitor (suponiendo que este se encuentre libre). Para los otros procesos, almacenaremos su llamada al procedimiento. 
 
-Para ello, todos los monitores tienen implementada una cola con planificación FIFO, llamada \emph{cola de entrada al monitor}. Si tenemos dos procesos que quieren acceder a un procedimiento de un monitor libre, sólo podrá hacerlo un proceso. La llamada al procedimiento del monitor del otro proceso quedará almacenada en la cola de entrada al monitor, y este pasará a ejecutar el procedimiento deseado una vez el proceso anterior haya dejado libre el monitor. 
+Para ello, todos los monitores tienen implementada una cola con planificación FIFO, llamada \emph{cola de entrada al monitor}. Si tenemos dos procesos que quieren acceder a un procedimiento de un monitor libre, solo podrá hacerlo un proceso. La llamada al procedimiento del monitor del otro proceso quedará almacenada en la cola de entrada al monitor, y este pasará a ejecutar el procedimiento deseado una vez el proceso anterior haya dejado libre el monitor. 
 \begin{observacion}
     En esta asignatura, supondremos que la cola de entrada al monitor es suficientemente larga como para albergar a todos los procesos que necesiten esperar a que el monitor quede libre.
 \end{observacion}
 
 Podemos representar la vida de un proceso de un programa concurrente que hace uso de monitores para sincronizar a sus procesos con el siguiente diagrama:
 \begin{figure}[H]
+\centering
 \begin{tikzpicture}[node/.style={rectangle, draw, minimum size=1cm, align=center},
                     edge/.style={-stealth}]
     \node[node] (A) {Procedimiento\\terminado};
@@ -250,19 +251,19 @@ Sin embargo, las operaciones \verb|wait| y \verb|signal| que manejamos en monito
 \subsubsection{Tipo de dato \texttt{cond}}
 En los monitores, para poder usar las operaciones de \verb|wait| y \verb|signal|, será necesario utilizar una variable de tipo de dato condición, o \verb|cond|. 
 
-Las variables tipo \verb|cond| sólo se encuentran junto con las variables permanentes de un monitor. Estas no se inicializan a ningún valor.\\
+Las variables tipo \verb|cond| se encuentran junto con las variables permanentes de un monitor. Estas no se inicializan a ningún valor.\\
 
-En nuestro monitor, tendremos varias razones por las que querremos bloquear a los procesos concurrentes de nuestro programa por alguna determinada razón hasta que se cumpla una condición determinada. Por ejemplo, en el problema del productor/consumidor:
+En nuestro monitor, tendremos varias razones por las que queramos bloquear a los procesos concurrentes de nuestro programa por alguna determinada razón, hasta que se cumpla una condición determinada, a la que llamaremos \textit{condición de sincronización}. Por ejemplo, en el problema del productor/consumidor:
 \begin{itemize}
     \item Queremos bloquear a cualquier productor que intente escribir si la estructura de datos intermedia que usamos está llena. Desbloquearemos a un proceso productor cuando se vacíe un hueco en dicha estructura.
     \item Además, queremos bloquear a cualquier consumidor que intente leer de la estructura de datos intermedia cuando esta esté vacía. Desbloquearemos a un consumidor cuando algún productor haya escrito algún dato.
 \end{itemize}
 Por cada razón o condición distinta por la que queramos bloquear a los procesos de un programa concurrente en relación a una misma variable compartida (para evitar estados inseguros), crearemos una variable de tipo \verb|cond|. Es decir, una variable por cada una de las razones por las que queramos que esperen los procesos. En el ejemplo del productor/consumidor, son necesarias únicamente dos variables de tipo \verb|cond|.\\
 
-Las variables de tipo \verb|cond| admiten 4 métodos (aunque sólo recomendamos usar los dos primeros):
+Las variables de tipo \verb|cond| admiten 4 métodos (aunque solo recomendamos usar los dos primeros):
 \begin{description}
-    \item [wait] Bloquea al proceso que ejecuta este método. Dicho proceso pasa a una cola asociada a la variable condición correspondiente con planificación FIFO.
-    \item [signal] En caso de haber algún proceso bloqueado en la cola asociada a la variable condición correspondiente, lo desbloquea. Si esta cola está vacía, es equivalente a una operación nula\footnote{Esto es, equivalente a la instrucción \texttt{;}.}.
+    \item [wait] Bloquea al proceso que ejecuta este método. Dicho proceso pasa a una cola asociada a la variable condición correspondiente con planificación FIFO\@.
+    \item [signal] En caso de haber algún proceso bloqueado en la cola asociada a la variable condición correspondiente, lo desbloquea\footnote{Hemos de tener cuidado con esto, se explicará más adelante.}. Si esta cola está vacía, es equivalente a una operación nula\footnote{Esto es, equivalente a la instrucción \texttt{;}.}.
     \item [queue] Devuelve un booleano que indica (\verb|true|) si la cola asociada a la variable condición contiene al menos un proceso bloqueado.
     \item [signal\_all] Desbloquea de una sola vez a todos los procesos bloqueados en la cola asociada a la variable condición. El orden de dicha cola no se mantiene para realizar la petición de acceso al monitor, por lo que se produce competencia entre los procesos para entrar al monitor, incumpliendo la propiedad de equidad entre procesos. Depende de la semántica de las señales del lenguaje\footnote{Se explicará más adelante qué es esto.}. Se recomienda \textbf{no usarla}.
 \end{description}
@@ -293,14 +294,16 @@ inicialización \\
 \label{esq:monitor_3}
 \end{table}
 
-\subsubsection{Semántica desplazante}
+\subsubsection{Semánticas de señales}
 Como hemos comentado ya, los monitores solo permiten que un único proceso se encuentre ejecutando un procedimiento del mismo. En este caso, decíamos que el monitor está ocupado. En caso de que un proceso que estaba ejecutando el procedimiento ejecute un \verb|wait| (o salga del procedimiento), hay que dejar el monitor libre para dejar pasar a otro. Se trata de un momento muy delicado, ya que se pueden producir condiciones de carrera entre los procesos que quieran conseguir el monitor. Esta situación la hemos solucionado ya con la cola de entrada al monitor, ya que con la planificación FIFO, solo podrá entrar un único proceso al monitor.\\
-% // TODO: Cuando un proceso se desbloquea, a qué cola va? Por qué tiene preferencia la cola de la variable cond y no la cola del monitor?
-Si ahora el proceso nuevo que ejecuta el monitor ejecuta un \verb|signal|, desbloqueará al anterior proceso de la cola de la variable condición correspondiente. Si en dicho momento este proceso sale del procedimiento, dejará el monitor abierto, por lo que podría suceder que un proceso de la cola de entrada al monitor entre antes que el proceso recién desbloqueado, sucediéndose un \emph{robo de señal}, y llegaríamos a una situación de falta de equidad.\\
 
-Para solucionar este segundo problema, algunos lenguajes implementan una \emph{semántica desplazante} en las señales: el proceso que ejecuta el \verb|signal| le pasa el monitor al proceso que recibió la señal (el primero en la cola de bloqueados de la variable condición correspondiente), sin liberar en ningún momento el monitor, de forma que el proceso señalado tiene prioridad. Se dice que la señal usada con la operación \verb|signal| tiene \emph{semántica desplazante}.\\
+Si ahora el proceso nuevo que ejecuta el monitor ejecuta un \verb|signal| sobre una variable condición (recordemos que tenemos al menos un proceso bloqueado), desbloqueará al primer proceso de su cola asociada, que estaba ejecutando código del monitor, por lo que ahora tenemos dos procesos ejecutando código del monitor: el proceso que señala y el señalado (el recién desbloqueado). Esta condición no puede darse, ya que los procedimientos de un monitor deben ejecutarse en exclusión mutua. Una solución a este problema es que el procedimiento que señala se bloquee en la cola de entrada al monitor\footnote{Veremos más soluciones.}, dejando paso al recién desbloqueado.
 
-Cabe destacar que \textbf{no todos los lenguajes con monitores tienen señales con semántica desplazante}, por lo que en dichos lenguajes pueden sucederse robos de señales. De hecho, para demostrar luego la corrección de nuestros programas concurrentes que usan monitores, supondremos que estamos usando un \verb|signal| que envía una señal con semántica desplazante.\\
+Esta solución plantea un problema, y es que si el proceso señalador se bloquea, puede que en algún momento deje al monitor libre, por lo que se meta un proceso de la cola de entrada al monitor, planteando nuevamente la situación en la que tenemos dos procesos en el monitor (el desbloqueado y el primero que estaba esperando entrar al monitor). Deberá haber un mecanismo que elija quién de los dos acaba finalmente con el monitor. En caso de que sea el proceso que estaba esperando en la cola de entrada, diremos que se produce un \emph{robo de señal}, donde el proceso recién desbloqueado debe irse al final de la cola de entrada al monitor.\\
+
+Para solucionar este segundo problema, algunos lenguajes implementan una \emph{semántica desplazante}\footnote{Se trabajará más adelante sobre las semánticas de las señales.} en las señales: el proceso que ejecuta el \verb|signal| le pasa el monitor al proceso que recibió la señal (el primero en la cola de bloqueados de la variable condición correspondiente), sin liberar en ningún momento el monitor, de forma que el proceso señalado tiene prioridad. Se dice que la señal usada con la operación \verb|signal| tiene \emph{semántica desplazante}.\\
+
+Cabe destacar que \textbf{no todos los lenguajes con monitores tienen señales con semántica desplazante}, por lo que en dichos lenguajes pueden sucederse robos de señales. En esta sección y en la siguiente, supondremos que estaremos trabajando siempre con señales \verb|signal| con semántica desplazante, de forma que el proceso señalador se bloqueará tras ejecutar un \verb|signal| y podemos pensar que es enviado a la cola de entrada al monitor. En una futura sección veremos los tipos de semánticas de señales que podemos encontrarnos (cada uno hará que el comportamiento de \verb|signal| sea distinto).\\
 
 \noindent
 Como comentario final a la descripción de un monitor y para motivar la siguiente sección:
@@ -337,6 +340,7 @@ Posteriormente, deberemos probar que $IM$ se mantiene antes y después de la lla
 \end{equation*}
 por cada procedimiento que tenga nuestro monitor.
 
+\subsubsection{Cuidado con las intereferencias}
 Terminaremos de ver esto más adelante, pero es necesario darnos cuenta de un detalle, y es que si un procedimiento modifica el valor de alguna variable compartida que se usa en otro proceso, debemos demostrar la no interferencia entre dichas instrucciones. Ilustramos esto con el siguiente ejemplo.
 \begin{ejemplo}
     Si tenemos un monitor llamado \verb|Buf| con un procedimientos \verb|retirar(x)|, de forma que modifica el valor del parámetro que le pasamos, ante el siguiente código (si \verb|x| es una variable compartida):
@@ -356,7 +360,7 @@ Terminaremos de ver esto más adelante, pero es necesario darnos cuenta de un de
     No tendríamos que hacerlo, ya que el uso de variables disjuntas nos garantiza la no interferencia entre dichas instrucciones.
 \end{ejemplo}
 
-\subsection{Axiomas para operaciones de sincronización con semántica desplazante}
+\subsection{Axiomas para operaciones de sincronización desplazantes}\label{sec:ax_desplazantes}
 Sabemos ya demostrar toda la corrección de un programa secuencial que usa monitores, salvo por un detalle, y es que no sabemos nada sobre cómo demostrar los triples:
 \begin{align*}
     \{P\}\ &c.wait();\ \{Q\} \\
@@ -376,7 +380,7 @@ Resumiendo:
     \item Antes de ejecutar la operación \verb|wait|, hemos de estar en un estado seguro del programa, por lo que ha de cumplirse el $IM$.
     \item Tras ejecutar la operación \verb|wait| (es decir, después de que el proceso haya sido desbloqueado), ha de cumplirse la condición de sincronización $C$.
 \end{itemize}
-Teniendo en cuenta que además se puede cumplir un invariante local al que llamamos $L$ (esto es, relaciones entre variables permanentes del monitor que se cumplen en un determinado momento) antes y después de dicha instrucción \verb|wait|.
+Teniendo en cuenta que además se puede cumplir un invariante local al que llamamos $L$ (esto es, relaciones entre variables locales del procedimiento del monitor) antes y después\footnote{Gracias a que estamos en lenguajes reentrantes.} de dicha instrucción \verb|wait|.
 
 De esta forma, acabamos de razonar de forma intuitiva el \textbf{Axioma de la operación wait}:
 \begin{equation*}
@@ -384,7 +388,7 @@ De esta forma, acabamos de razonar de forma intuitiva el \textbf{Axioma de la op
 \end{equation*}
 
 \subsubsection{Axioma de operación \texttt{signal}}
-Si nos disponemos a ejecutar una instrucción \verb|signal| en nuestro código, es porque el estado del programa se ha alejado de la condición insegura de la que hablábamos en la subsección anterior, que falsearía el valor de verdad de $IM$. Por tanto, el programa ha llegado a un punto en el que se cumple la condición de sincronización $C$, y ya puede desbloquear al proceso que anteriormente bloqueó. Tras su desbloqueo, este proceso podría ejecutar una instrucción que volviera a acercarnos a un estado inseguro, pero sin llegar a él (ya que $C$ era suficientemente restrictiva), por lo que como poscondición de la instrucción \verb|signal| no podremos garantizar $C$, sino sólo podremos asegurar que se sigue cumpliendo $IM$.
+Si nos disponemos a ejecutar una instrucción \verb|signal| en nuestro código, es porque el estado del programa se ha alejado de la condición insegura de la que hablábamos en la subsección anterior, que falsearía el valor de verdad de $IM$. Por tanto, el programa ha llegado a un punto en el que se cumple la condición de sincronización $C$, y ya puede desbloquear al proceso que anteriormente bloqueó. Tras su desbloqueo, este proceso podría ejecutar una instrucción que volviera a acercarnos a un estado inseguro, pero sin llegar a él (ya que $C$ era suficientemente restrictiva), por lo que como poscondición de la instrucción \verb|signal| no podremos garantizar $C$, sino solo podremos asegurar que se sigue cumpliendo $IM$.
 
 Añadiendo la posibilidad de tener un invariante local $L$ y que si la cola de la variable condición está vacía, la operación \verb|signal| es una instrucción nula, llegamos al \textbf{Axioma de la operación signal}:
 \begin{equation*}
@@ -398,7 +402,7 @@ o equivalentemente:
 En caso de cumplirse que $c.queue() = false$, entonces negaría la precondición del triple, haciéndolo la regla cierta por un razonamiento por vacuidad.\\
 
 \begin{observacion}
-    Notemos que el axioma de la operación \verb|signal| funciona porque hemos supuesto que \textbf{tenemos semántica desplazante}, y es que $IM$ se cumple inmediatamente después de desbloquear al proceso que tenemos bloqueado, ya que tras ejecutar \verb|signal| hemos cedido el monitor al proceso anteriormente bloqueado, en vez de liberar el monitor y dejar paso a otro proceso cualquiera, donde nada nos garantizaría que $C$ se siguiera cumpliendo tras la ejecución del procedimiento de dicho proceso, pudiendo ahora ejecutar el proceso que se bloqueó bajo una precondición que no es $C$, lo que podría llevar al programa a adoptar un estado inseguro.
+    Notemos que el axioma de la operación \verb|signal| funciona porque hemos suspuesto que \textbf{tenemos semántica desplazante}, ya que después de ejecutar \verb|signal| desbloqueamos al proceso que teníamos bloqueado, cediéndole el monitor, por lo que dicho proceso seguirá procesando su procedimiento. Cuando el proceso señalador vuelva al monitor, solo podremos garantizar que se cumple $IM$, ya que tanto el proceso señalado como cualquier otro que se introduzca en el monitor después del señalado (veremos más adelante si esto es posible), pueden cambiar la condición $C$, por lo que solo podemos esperar $IM$.
 \end{observacion}~\\
 
 Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincronización de monitores, estamos listos para desmotrar la corrección de un $IM$. Lo haremos en el siguiente ejemplo.
@@ -476,7 +480,7 @@ Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincro
                         \end{equation*}
                         Como $\{IM \land s=0\}\to \{IM\}$, por la segunda regla de la consecuencia, tenemos demostrado el triple que buscábamos.
                 \end{enumerate}
-                Una vez demostrados los dos triples, tenemos probado el triple del \verb|if|, por lo que sólo faltará probar el triple 
+                Una vez demostrados los dos triples, tenemos probado el triple del \verb|if|, por lo que solo faltará probar el triple 
                 \begin{equation*}
                     \{s>0\}\ s=s-1;\ \{IM\}
                 \end{equation*}
@@ -497,7 +501,7 @@ Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincro
                 \end{gather*}
                 y aplicar la regla de composición. El primer triple ya lo demostramos en la demostración del triple del procedimiento \verb|P|, luego bastará probar el segundo, el cual es cierto gracias al axioma de la operación \verb|signal|.
 
-                Acabamos de probar que $\{IM\}\ V\ \{IM\}$, que era el último procedimiento del monitor, luego $IM$ es un IM.
+                Acabamos de probar que $\{IM\}\ V\ \{IM\}$, que era el último procedimiento del monitor, luego $IM$ es un IM\@.
         \end{enumerate}
     \end{proof}
 \end{ejemplo}
@@ -602,15 +606,519 @@ Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincro
     % // TODO: Semáforo de Habermann
 \end{ejercicio*}
 
-\subsection{Regla de la concurrencia para la verificación de programas con monitores}
-Consideramos un programa concurrente en el que tenemos $n$ procesos ejecutándose que podemos representar como triples de Hoare ciertos $\{P_i\}\ S_i\ \{Q_i\}$ con $i \in \{1, \ldots, n\}$ de forma que ninguna variable en $P_i$ o en $Q_i$ es modificada por ningún $S_j$ con $i\neq j$. Si en dicho código tenemos $m$ monitores de forma que para cada uno hemos conseguido probar un IM, $IM_k$ con $1 \leq k \leq m$, entonces podemos aplicar la \textbf{regla de concurrencia para programas con monitores}:
+\subsection{Regla de concurrencia para programas con monitores}
+Consideramos un programa concurrente en el que tenemos $n$ procesos ejecutándose que podemos representar como triples de Hoare ciertos $\{P_i\}\ S_i\ \{Q_i\}$ con \newline $i \in \{1, \ldots, n\}$ de forma que ninguna variable en $P_i$ o en $Q_i$ es modificada por ningún $S_j$ con $i\neq j$. Si en dicho código tenemos $m$ monitores de forma que para cada uno hemos conseguido probar un IM, $IM_k$ con $1 \leq k \leq m$, entonces podemos aplicar la \textbf{regla de concurrencia para programas con monitores}:
 \begin{equation*}
-    \dfrac{\{P_i\}\ S_i\ \{Q_i\} \quad 1 \leq i \leq n}{
-        \begin{array}{c}
+    \dfrac{\{P_i\}\ S_i\ \{Q_i\} \quad 1 \leq i \leq n}{\begin{array}{c}
             \{MI_1 \land \ldots \land MI_m \land P_1 \land \ldots\land P_n\} \\
             cobegin\ S_1\ ||\ S_2\ ||\ \ldots\ ||\ S_n\ coend \\
             \{MI_1 \land \ldots \land MI_m \land Q_1 \land  \ldots\land Q_n\} 
-        \end{array}
-    }
+        \end{array}}
 \end{equation*}
 Obteniendo así la verificación de nuestro programa concurrente.
+
+\section{Patrones de uso de un monitor}
+Al programar programas concurrentes que nos resuelvan un problema, encontramos muchas veces ciertos pequeños problemas a resolver que se repiten a menudo. En esta sección, destacamos tres de estos problemas, describiéndolos, planteando una solución mediante un monitor a utilizar en ellos y demostrando que el monitor realiza el funcionamiento esperado.
+
+\subsection{Espera única}
+Puede suceder que en un programa concurrente queramos que un proceso espere a que otro proceso haya realizado una cierta acción para seguir con su ejecución. Llamaremos al proceso que tiene que esperar al otro \textit{consumidor} y a dicho otro \textit{productor}.\\
+
+El problema se resuelve de forma muy sencilla, con una variable compartida que indique si el productor ha realizado ya su acción por la que el consumidor debe esperar o si no lo ha hecho todavía. Cuando el consumidor se acerque a la zona en la que debe esperar al productor, consultará la variable compartida y en caso de que esta indique que no se ha realizado la acción, bloquearemos al proceso. Si se ha realizado la acción, no haremos nada.
+
+Además, cuando el productor haya realizado la acción que ha de realizar, cambiaremos el valor de dicha variable compartida, indicando que ya se ha realizado la acción. En caso de que el consumidor se haya bloqueado antes de realizar la acción, lo desbloquearemos.\\
+
+Observemos que estamos haciendo uso de una variable compartida, que es modificada por un proceso. Debemos por tanto acceder a ella en exclusión mutua. Esto es garantizado por el uso del monitor.
+
+\subsubsection{Monitor a usar}
+El monitor que usaremos tendrá dos procedimentos exportables, uno llamado \verb|esperar| que será el que use el proceso consumidor, y otro llamado \verb|notificar|, que será el que use el proceso productor para avisar al consumidor de que ya ha realizado la acción.
+
+De esta forma, podemos ver el código monitor en pseudo código:
+\begin{minted}[escapeinside=\#\#]{pascal}
+    monitor EU;
+    var terminado : boolean;  {si terminado = true, se ha realizado la acción}
+
+        {variable auxiliar para la demostracion}
+        autorizado : boolean; {si autorizado = true, consumidor puede ejecutarse}
+
+        c : cond;
+
+       procedure esperar(); begin
+          if (not terminado) then
+             c.wait();
+          autorizado = true;
+       end
+
+       procedure notificar(); begin
+          terminado = true; 
+          c.signal();
+       end
+
+       begin {codigo de inicializacion}
+          terminado = false; autorizado = false;
+       end
+\end{minted}
+% // TODO: Capel incorpora un procedimiento terminar que hace lo mismo que el codigo de inicializacion, no se por qué.
+
+Para su demostración, usaremos el invariante
+\begin{equation*}
+    \{IM\} \equiv \{terminado = false \Longrightarrow autorizado = false\}
+\end{equation*}
+La demostración se deja como ejercicio al lector.
+% // TODO: Hacer la demostración y quitar lo de que se deja como ejercicio
+
+\subsection{Exclusión mutua}
+Es muy habitual que en programas concurrentes tengamos una o varias regiones de código que queramos que se ejecuten en exclusión mutua, llamadas secciones críticas. Es decir, mientras que un proceso se encuentre ejecutando una sección crítica, ningún otro proceso podrá estar ejecutando a la vez la misma sección crítica\footnote{Podemos tener dos secciones críticas con distintos códigos pero que sean referidas al acceso para la misma variable compartida. En dicho caso, pensamos que las secciones críticas son iguales, ya que solo puede haber un proceso que ejecute una u otra a la vez.}.\\
+
+Usualmente, querremos tener exclusiones mutuas cuando varios procesos de un programa hagan uso de un recurso compartido, tal como una variable compartida, una salida a un fichero o imprimir información en un entorno gráfico.
+
+\subsubsection{Monitor a usar}
+El monitor que resuelve el problema de la exclusión mutua tendrá dos procedimientos exportables, \verb|entrar|, que se ejecutará antes de cualquier sección crítica, y \verb|salir|, que se ejecutará al final de cada sección crítica.
+
+De esta forma, tenemos el monitor:
+\begin{minted}[escapeinside=\#\#]{pascal}
+    monitor EM;
+    var ocupada : boolean;  {ocuapda = true si hay un proceso en seccion critica}
+        cola : cond;
+
+       procedure entrar(); begin
+          if ocupada then
+             cola.wait();
+          ocupada = true;
+       end
+
+       procedure salir(); begin
+          ocupada = false;
+          cola.signal();
+       end
+
+       begin
+          ocupada = false;
+       end
+\end{minted}
+Para demostrarlo, primero definiremos la variable $num_{sc}$ como el número de procesos que se encuentran ejecutando la sección crítica. Una vez definido, el invariante a usar será
+\begin{equation*}
+    \{IM\} \equiv \{(ocupada = false \Longleftrightarrow num_{sc} = 0) \land 0\leq num_{sc} \leq 1\}
+\end{equation*}
+La demostración se deja como ejercicio al lector.
+
+\subsection{Productores/Consumidores}
+Volvemos otra vez al paradigma del productor/consumidor, el cual hemos explicado varias veces ya en este documento. Ahora, admitiremos la existencia de varios procesos productores que querrán generar datos y escribirlos en una variable compartida, así como varios consumidores, que querrán leer dicha variable compartida y realizar los cálculos pertinentes.
+
+\subsubsection{Monitor a usar}
+Usaremos un monitor con dos procedimientos: \verb|escribir|, que permitirá escribir en la variable compartida el valor indicado, y \verb|leer|, que permitirá leer el valor de la variable compartida. La ventaja de usar un monitor es que los códigos de sincronización solo los tenemos que realizar en el monitor, dejando limpios los códigos de los procesos.
+
+Como tenemos dos condiciones de sincronización, bloquear a productores que quieran escribir en una variable que no se ha leído, o bloquear a consumidores que quieran leer de una variable cuyo valor ya ha sido leído, necesitaremos dos variables de tipo \verb|cond|:
+\begin{minted}[escapeinside=\#\#]{pascal}
+    monitor PC;
+    var valor : integer;  {variable compartida a usar}
+        pendiente : boolean;  {si pendiente = true, valor escrito y no leido}
+        cola_prod, cola_cons : cond;
+
+       procedure escribir(v : integer); begin
+          if pendiente then
+             cola_prod.wait();
+          valor = v;
+          pendiente = true;
+          cola_cons.signal();
+       end
+
+       procedure leer() : integer; begin
+          if (not pendiente) then
+             cola_cons.wait();
+          result = valor;
+          pendiente = false;
+          cola_prod.signal();
+       end
+
+       begin
+          pendiente = false;
+       end
+\end{minted}
+Para la demostración, debemos definir primero:
+\begin{align*}
+    E &= \text{\ número\ de\ llamadas\ a\ escribir\ \textbf{completadas}.} \\
+    L &= \text{\ número\ de\ llamadas\ a\ leer\ \textbf{completadas}.} \\
+\end{align*}
+De esta forma, podemos definir el invariante
+\begin{gather*}
+    \{IM\} \equiv 
+    \left\{E-L = \left\{\begin{array}{rl}
+                0 & \text{\ si\ } pendiente = false \\
+                1 & \text{\ si\ } pendiente = true \\
+    \end{array}\right\}\right\} \equiv  \\
+    \equiv \{(pendiente = false \land E-L=0) \lor (pendiente = true \land E-L=1)\}
+\end{gather*}
+La demostración se deja como ejercicio para el lector.
+
+Asímismo, notemos que la demostración es similar a la del monitor para exclusión mutua, teniendo en cuenta que:
+\begin{align*}
+    E - L &= num_{sc} \\
+    pendiente &= \lnot libre
+\end{align*}
+
+\begin{ejercicio*}
+    Si ahora los productores no escriben sobre una misma variable compartida sino sobre un buffer (por ejemplo, un array con planificación FIFO), plantear un monitor que solucione el problema de los productores/consumidores, así como desmostrar que dicho monitor funciona correctamente.\newline
+    (\textbf{Pista:} para la demostración, sustituir en el IM ``1'' por el tamaño del buffer)
+\end{ejercicio*}
+
+\section{Semánticas de señales}
+Como comentamos ya al inicio del Capítulo, las operaciones \verb|signal| de las variables condición son operaciones delicadas, ya que son ejecutadas por un proceso que se encuentra ejecutando algún procedimiento del monitor y que lo que hacen es desbloquear a algún proceso se que se encontraba ejecutando código del monitor, por lo que (si no hacemos nada), tendremos dos procesos distintos ejecutando a la vez procedimientos (podría ser el mismo procedimiento) de un mismo monitor, algo que no puede darse.\\
+
+Para solucionar el problema que nos plantea la operación \verb|signal|, plantearemos distintas \textit{semánticas de señales} \verb|signal|. Esto es, plantearemos varios paradigmas en los que la señal \verb|signal| tendrá un significado u otro, de forma que su finalidad sea siempre \textit{sacar al primero proceso de la cola de la variable condición} en cuestión y ponerlo en otro sitio que permita que dicho proceso entre al monitor en algún futuro próximo, garantizando la propiedad de vivacidad de que dicho proceso en algún momento volverá a entrar al monitor.\\
+
+Además, clasificaremos los distintos tipos de semánticas de señales que veremos en \textbf{no desplazantes} y \textbf{desplazantes}.
+
+\begin{definicion}
+    Diremos que \textbf{una semántica de señal es desplazante} si, siempre que un proceso ejecute una operación \verb|signal| sobre una variable condición \verb|c|, en dicho instante cederá el monitor al primer proceso de la cola de bloqueados de la variable condición \verb|c| sin que el monitor quede libre en ningún momento\footnote{Evitando que entre al monitor cualquier otro proceos de la cola de entrada al monitor.}. Además, debe garantizarse la propiedad de vivacidad de que el proceso señalador volverá a entrar al monitor en algún momento.
+\end{definicion}
+
+Veremos ahora todas las posibles semánticas de señales que podemos encontrarnos, entendienod que el proceso \textit{señalador} es aquel que ejecuta la operación \verb|signal| sobre una variable condición; y que el proceso \textit{señalado} es aquel que estaba primero en la cola de bloqueados de la misma variable condición.
+
+\subsection{Señalar y Continuar (SC)}
+El proceso señalador no se bloquea tras ejecutar \verb|signal|, sino que sigue con la ejecución del procedimiento en cuestión. El proceso señalado se bloquea hasta que se pueda adquirir de nuevo el monitor.\\
+
+Como podemos ver, se trata de una semántica no desplazante, ya que el proceso señalador no se bloquea tras ejecutar la instrucción \verb|signal|. En relación al proceso señalado, se produce una \textit{competición} contra el resto de procesos que esperan en la cola de entrada al monitor. Esta ``competición'' que hemos mencionado depende de la implementación que se haga, destacando dos posibilidades:
+\begin{enumerate}
+    \item El proceso señalado pasa al final de la cola de entrada al monitor.
+    \item Después de que el proceso señalador deje libre el monitor (ya sea porque termina el procedimiento o se bloquea debido a una instrucción \verb|wait|), se desbloquea al proceso señalado y al primero de la cola de entrada al monitor, se sucede una condición de carrera entre ambos y el vencedor (el que primero llega al monitor), acaba ejecutándolo. El perdedor acaba al final de la cola de entrada al monitor.
+
+        Como podemos entender, la primera opción es mejor, ya que en la segunda puede suceder que un proceso pierda varias veces la competición por el monitor, incumpliendo la condición de equidad entre procesos; además de que no sabemos qué sucede tras desbloquear a dicho proceso, debido a que la competición que es transparente para el programador.
+\end{enumerate}
+De esta forma, podemos representar la vida de un proceso que forma parte de un programa concurrente que usa monitores con semántica de señales de señalar y continuar con el diagrama de la Figura~\ref{fig:sc}.
+
+% // TODO: Ver si fijar o no estos 4 grafos
+\begin{figure}%[H]
+\centering
+\begin{tikzpicture}[node/.style={rectangle, draw, minimum size=1cm, align=center},
+                    edge/.style={-stealth}]
+    \node[node] (A) {Procedimiento\\terminado};
+    \node[node, left =of A] (B) {\begin{tabular}{c}Ejecutando código\\del proceso\\(fuera del monitor)\end{tabular}};
+    \node[node, left =of B] (C) {\begin{tabular}{c}Llamando a\\procedimiento\\del monitor\end{tabular}};
+    \node[node, below =of C] (D) {\begin{tabular}{c}Esperando en\\cola de entrada\\al monitor\end{tabular}};
+    \node[node, right =of D] (E) {\begin{tabular}{c}Monitor\\libre\end{tabular}};
+    \node[node, right =of E, xshift=.6cm] (F) {\begin{tabular}{c}Ejecutando procedimiento\\(dentro del monitor)\end{tabular}};
+
+    \node[node, below right =of F] (G) {\texttt{c.signal()}};
+    \node[node, below =of F] (H) {\texttt{c.wait()}};
+    \node[node, left =of H] (I) {\begin{tabular}{c}Bloqueado en una\\cola condición $c$\end{tabular}};
+    \node[node, left =of I, xshift=-1.3cm] (J) {Señalado};
+    
+    \draw[edge] (A) -- (B);
+    \draw[edge] (B) -- (C);
+    \draw[edge] (C) -- (D);
+    \draw[edge] (D) -- (E);
+    \draw[edge] (E) -- (F);
+    \draw[edge] (F) -- (A);
+
+    % \draw[edge] (F) to[out=0, in=100] (G);
+    % \draw[edge] (G) to[out=180, in=-50] (F);
+
+    \draw[edge] (F) to[out=0, in=90] (G);
+    \draw[edge] (G) to[out=180, in=-90] ([xshift=1.5cm]F.south);
+
+    \draw[edge] (F) -- (H);
+    \draw[edge] (H) -- (I);
+    \draw[edge] (I) -- (J);
+    \draw[edge] (J) -- (D);
+\end{tikzpicture}
+\caption{Vida de un proceso en un programa con monitores con semántica SC.}
+\label{fig:sc}
+\end{figure}
+
+\subsubsection{A tener en cuenta para bloquear}
+Como se trata de una semántica no desplazante, debemos tener cuidado con un detalle:
+
+En semántica desplazante, bloqueamos a un proceso porque se acerca a un estado inseguro del programa. Cuando nos alejemos de dicho estado, realizaremos la instrucción \verb|signal|, por lo que el proceso que bloqueamos se podrá ejecutar al habernos alejado del estado inseguro del programa.\\
+
+Por otra parte, ahora también desbloquearemos al proceso por alejarnos de dicho estado inseguro, pero el proceso señalado no se ejecutará tras esto, por lo que puede que se ejecuten procesos en medio que vuelvan a acercarse a este estado inseguro, luego tendremos que volver a comprobar si estamos cerca o no de dicho estado inseguro.\\
+
+\noindent
+Por tanto, en semánticas se señales no desplazantes, en vez de bloquear a procesos con:
+\begin{minted}[escapeinside=\#\#]{pascal}
+    if (cerca de estado inseguro) then
+       c.wait();
+\end{minted}
+Tendremos que plantear el código
+\begin{minted}[escapeinside=\#\#]{pascal}
+    while (cerca de estado inseguro) do begin
+       c.wait();
+    end
+\end{minted}
+Ya que cuando el proceso señalado vuelva no sabremos si la condición por la que lo bloqueamos es cierta o no. Puede suceder que bloqueemos a un proceso por acercarse a un estado inseguro, que lo desbloqueemos cuando el estado del programa se aleje de dicho estado, que se ejecuten procesos que se acerquen a dicho estado y que cuando el proceso que fue señalado entre al monitor, se encuentre cerca del mismo estado inseguro por el que tuvo que bloquearse, teniendo que hacerlo nuevamente.
+
+\subsection{Señalar y Salir (SS)}
+El proceso señalador \textbf{finaliza} la ejecución de su procedimiento tras la ejecución de una instrucción \verb|signal|. El proceso señalado se desbloquea posteriormente y en todo este tiempo el monitor no queda libre en ningún momento. Se trata, por tanto, de una semántica desplazante, ya que el proceso señalador cede el monitor al proceso señalado.\\
+
+Notemos que en señalar y salir, el proceso señalador \textbf{finaliza} la ejecución de su procedimiento. Es decir, cualquier instrucción que haya tras una operación \verb|signal| no se ejecutará nunca. Obliga por tanto a una disciplina de programación en la que si queremos realizar un \verb|signal| dentro de un procedimiento, esta instrucción debe ser la última dentro del procedimiento, para poder ejecutar antes todas las instrucciones que deseemos. 
+
+Si recordamos el ejemplo de la Sección~\ref{sec:concepto_de_monitor}, observamos que en este las instrucciones \verb|signal| se encuentran al final de los procedimientos de forma natural. Por tanto, la semántica SS funciona bien para este monitor.\\
+
+Al igual que hicimos para SC, podemos representar la vida de un proceso que forma parte de un programa concurrente que usa monitores con semántica de señales de señalar y salir con el diagrama de la Figura~\ref{fig:ss}.
+\begin{figure}%[H]
+\centering
+\begin{tikzpicture}[node/.style={rectangle, draw, minimum size=1cm, align=center},
+                    edge/.style={-stealth}]
+    \node[node] (A) {Procedimiento\\terminado};
+    \node[node, left =of A] (B) {\begin{tabular}{c}Ejecutando código\\del proceso\\(fuera del monitor)\end{tabular}};
+    \node[node, left =of B] (C) {\begin{tabular}{c}Llamando a\\procedimiento\\del monitor\end{tabular}};
+    \node[node, below =of C, yshift=-1.5cm] (D) {\begin{tabular}{c}Esperando en\\cola de entrada\\al monitor\end{tabular}};
+    \node[node, right =of D] (E) {\begin{tabular}{c}Monitor\\libre\end{tabular}};
+    \node[node, right =of E, xshift=.6cm] (F) {\begin{tabular}{c}Ejecutando procedimiento\\(dentro del monitor)\end{tabular}};
+
+    \node[node, below =of B] (G) {\texttt{c.signal()}};
+    \node[node, below right =of F] (H) {Señalado};
+    \node[node, below left =of F] (I) {\texttt{c.wait()}};
+    \node[node, below =of F, yshift=.1cm] (J) {\begin{tabular}{c}Bloqueado en una\\cola condición $c$\end{tabular}};
+
+    \draw[edge] (A) -- (B);
+    \draw[edge] (B) -- (C);
+    \draw[edge] (C) -- (D);
+    \draw[edge] (D) -- (E);
+    \draw[edge] (E) -- (F);
+    \draw[edge] (F) -- (A);
+
+    \draw[edge] (F) -- (G);
+    \draw[edge] (G) -- (B);
+
+    \draw[edge] (F) -- (I);
+    \draw[edge] (I) -- (J);
+
+    \draw[edge] (H) -- (F);
+    \draw[edge] (J) -- (H);
+\end{tikzpicture}
+\caption{Vida de un proceso en un programa con monitores con semántica SS.}
+\label{fig:ss}
+\end{figure}
+
+\subsection{Señalar y Esperar (SE)}
+El proceso señalador se bloquea al final de la cola de entrada al monitor y cede el monitor al proceso señalado. El monitor no queda libre en ningún momento. Se trata de otro tipo de señal con semántica desplazante.\\
+
+Puede considerarse una semántica \textit{injusta}, ya que cada vez que un proceso ejecuta la operación \verb|signal|, debe irse al final de la cola de entrada al monitor, teniendo que esperar entre todos los procesos nuevamente (el proceso probablemente tuvo ya que esperar para entrar al monitor para ejecutar el procedimiento que contenía la operación \verb|signal|).
+
+Podemos representar la vida de un proceso que forma parte de un programa concurrente que usa monitores con semántica de señales de señalar y esperar con el diagrama de la Figura~\ref{fig:se}.
+
+\begin{figure}%[H]
+\centering
+\begin{tikzpicture}[node/.style={rectangle, draw, minimum size=1cm, align=center},
+                    edge/.style={-stealth}]
+    \node[node] (A) {Procedimiento\\terminado};
+    \node[node, left =of A] (B) {\begin{tabular}{c}Ejecutando código\\del proceso\\(fuera del monitor)\end{tabular}};
+    \node[node, left =of B] (C) {\begin{tabular}{c}Llamando a\\procedimiento\\del monitor\end{tabular}};
+    \node[node, below =of C] (D) {\begin{tabular}{c}Esperando en\\cola de entrada\\al monitor\end{tabular}};
+    \node[node, right =of D] (E) {\begin{tabular}{c}Monitor\\libre\end{tabular}};
+    \node[node, right =of E, xshift=.6cm] (F) {\begin{tabular}{c}Ejecutando procedimiento\\(dentro del monitor)\end{tabular}};
+
+    \node[node, below =of F, yshift=-1.5cm] (J) {\begin{tabular}{c}Bloqueado en una\\cola condición $c$\end{tabular}};
+    \node[node, right =of J] (H) {Señalado};
+    \node[node, left =of J] (I) {\texttt{c.wait()}};
+
+    \node[node, below =of E, yshift=.3cm] (G) {\texttt{c.signal()}};
+
+    \draw[edge] (A) -- (B);
+    \draw[edge] (B) -- (C);
+    \draw[edge] (C) -- (D);
+    \draw[edge] (D) -- (E);
+    \draw[edge] (E) -- (F);
+    \draw[edge] (F) -- (A);
+
+    \draw[edge] ([xshift=-2cm]F.south) to[out=-90, in=0] (G);
+    \draw[edge] (G) to[out=180, in=-90] (D);
+
+    \draw[edge] (F) -- (I);
+    \draw[edge] (I) -- (J);
+
+    \draw[edge] (H) -- (F);
+    \draw[edge] (J) -- (H);
+\end{tikzpicture}
+\caption{Vida de un proceso en un programa con monitores con semántica SE.}
+\label{fig:se}
+\end{figure}
+
+\subsection{Señalar y Espera Urgente (SU)}
+El proceso señalador se bloquea en una nueva cola del monitor llamada \textit{cola de procesos urgentes}, cediendo el monitor al proceso señalado. El monitor no queda libre en ningún momento, por lo que se trata de una señal con semántica desplazante.\\
+
+La nueva cola de procesos urgentes actúa como una nueva cola de entrada al monitor, pero con mayor preferencia que la cola de entrada que ya teníamos. De esta forma, es similar a la semántica de señalar y esperar pero sin ser tan \textit{injusta}, ya que da preferencia a los procesos que se bloquearon tras ejecutar un \verb|signal| y deja en segunda posición a los proceos que esperan para ejecutar procedimientos del monitor.\\
+
+Esta semántica modifica la última representación gráfica que teníamos de un monitor en la Tabla~\ref{esq:monitor_3}, dejándola finalmente en la que observamos en la Tabla~\ref{esq:monitor_4}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|}
+\hline
+Cola del\\
+monitor \\
+\hline
+Cola de\\
+urgentes \\
+\hline
+Variables \\
+permanentes \\
+\hline
+Variables \\
+condición y\\
+colas de procesos\\
+bloqueados\\
+\hline
+Procedimientos \\
+exportados \\
+\hline
+Código de \\ 
+inicialización \\
+\hline
+\end{tabular}
+\caption{Esquema de un monitor incluyendo la cola de urgentes.}
+\label{esq:monitor_4}
+\end{table}
+
+Podemos representar la vida de un proceso que forma parte de un programa concurrente que sua monitores con semántica de señalar y espera urgente con el diagrama de la Figura~\ref{fig:su}
+
+\begin{figure}%[H]
+\centering
+\begin{tikzpicture}[node/.style={rectangle, draw, minimum size=1cm, align=center},
+                    edge/.style={-stealth}]
+    \node[node] (A) {Procedimiento\\terminado};
+    \node[node, left =of A] (B) {\begin{tabular}{c}Ejecutando código\\del proceso\\(fuera del monitor)\end{tabular}};
+    \node[node, left =of B] (C) {\begin{tabular}{c}Llamando a\\procedimiento\\del monitor\end{tabular}};
+    \node[node, below =of C] (D) {\begin{tabular}{c}Esperando en\\cola de entrada\\al monitor\end{tabular}};
+    \node[node, right =of D] (E) {\begin{tabular}{c}Monitor\\libre\end{tabular}};
+    \node[node, right =of E, xshift=.6cm] (F) {\begin{tabular}{c}Ejecutando procedimiento\\(dentro del monitor)\end{tabular}};
+
+    \node[node, below =of D] (G) {\texttt{c.wait()}};
+    \node[node, below =of G] (H) {\begin{tabular}{c}Bloqueado en una\\cola condición $c$\end{tabular}};
+    \node[node, right =of H] (I) {Señalado};
+
+    \node[node, below =of F, xshift=4cm] (J) {\begin{tabular}{c}Monitor\\libre\end{tabular}};
+    \node[node, below =of J] (K) {\begin{tabular}{c}Bloqueado en\\cola de urgentes\end{tabular}};
+    \node[node, left =of K] (L) {\texttt{c.signal()}};
+
+    \draw[edge] (A) -- (B);
+    \draw[edge] (B) -- (C);
+    \draw[edge] (C) -- (D);
+    \draw[edge] (D) -- (E);
+    \draw[edge] (E) -- (F);
+    \draw[edge] (F) -- (A);
+
+    \draw[edge] ([xshift=-2cm]F.south) to[out=-90, in=0] (G);
+    \draw[edge] (G) -- (H);
+    \draw[edge] (H) -- (I);
+    \draw[edge] (I) to[out=0, in=-90] ([xshift=-1cm]F.south);
+
+    \draw[edge] (F) to[out=0, in=90] (J);
+    \draw[edge] (J) -- (K);
+    \draw[edge] (K) -- (L);
+    \draw[edge] (L) -- (F);
+\end{tikzpicture}
+\caption{Vida de un proceso en un programa con monitores con semántica SU.}
+\label{fig:su}
+\end{figure}
+
+\subsection{Comparativa}
+Antes de comparar las semánticas de señales que ya hemos descrito, destacamos un último tipo de semántica de señales, las \textit{señales automáticas} (SA). En estas, el programador programa las operaciones \verb|wait| y es el compilador quien analiza los códigos programados y decide cuándo desbloquear a los procesos, por lo que se trata de unas señales implícitas (ya que en ningún moemnto se especifica cuándo hacer una instrucción \verb|signal|). 
+
+A pesar de que este tipo de semántica aparece en la bibliografía, no aparece en ningún lenguaje de programación conocido, por lo que no tendrá relevancia en la asignatura ni en la comparativa que ahora realizaremos.\\
+
+En primer lugar, hemos de destacar que cualquiera de las primeras 4 semánticas vistas es capaz de resolver cualquier problema, por lo que nos guiaremos por la sencillez de uso de cada una y la eficiencia que cada una nos aporta a los programas concurrentes para elegir una u otra semántica.
+\begin{itemize}
+    \item En cuato a sencillez de uso, SC, SE y SU presentan la misma facilidad, mientras que SS nos condiciona a un paradigma de programación en el que las instrucciones \verb|signal| sean las últimas que se ejecuten en los procedimientos de un monitor que contenga alguna operación \verb|signal|.
+    \item En cuanto a eficiencia:
+        \begin{itemize}
+            \item Las semánticas SE y SU resultan ineficientes cuando las instrucciones \verb|signal| se encuentran al final de los procedimientos (ya que habrá procesos que ejecutan un \verb|signal|, se bloquearán, esperarán en la cola correspondiente de entrada al monitor, y cuando por fín tengan acceso a él no realizarán nada, sino que simplemente terminarán la ejecución del procedimiento), por lo que se saturará la cola de entrada al monitor y se realizarán cambios de contexto de formas innecesarias.
+            \item La semántica SC es poco eficiente, al tener que obligarnos a usar un bucle de comprobación para comprobar si estamos cerca de una situación insegura cada vez que entramos al monitor, como consecuencia de no tener semántica desplazante, pudiendo producirse robos de señal.
+        \end{itemize}
+        Por tanto, si no nos resulta incómodo tener que colocar todas las instrucciones \verb|signal| como última instrucción de los procedimientos en los que aparecen, SS será probablemente la semántica se señales más eficientes.
+\end{itemize}
+
+Para concluir la comparativa de las semánticas de señales, veremos el siguiente ejemplo, que muestra que a veces la semántica elegida condiciona la forma en la que programamos los monitores.
+
+\begin{ejemplo}
+    Queremos programar en un programa concurrente una \textit{barrera parcial}.
+
+    A partir del concepto de barrera que ya manejamos en la asignatura de Arquitectura de Computadores\footnote{Consultar los apuntes si no se conoce el concepto.}, ahora no queremos tener a los procesos esperando a que todos los procesos que intervienen en el programa lleguen a un punto en específico, sino solo queremos que lo hagan $n$ procesos.
+
+    De esta forma, cuando el primer proceso llegue al punto de la barrera, este se bloqueará. Estos les sucederá a los primeros $n-1$ procesos en llegar a la barrera. Cuando el proceso $n$-ésimo llegue a esta, se abrirá la barrera, dejando pasar a estos $n$ primeros procesos que llegaron a esta. La barrera no debe dejar pasar al proceso número $n+1$, sino que este deberá esperar al proceso número $2n$ para voler a abrir la barrera.\\
+
+    Una vez descrito el problema a resolver, planteamos el siguiente monitor como primera solución:
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        Monitor BP;
+           var cola : cond;
+               contador : integer;
+
+           procedure barrera(); begin
+              contador = contador + 1;
+              if (contador < n) then
+                 cola.wait();
+              else begin
+                 for i=1 to n-1 do
+                    cola.signal();
+                 end
+                 contador = 0;
+              end
+              {Funcionalidad tras pasar la barrera parcial}
+           end
+
+           begin
+              contador = 0;
+           end
+    \end{minted}
+Veamos ahora el comportamiento del monitor, según la semántica de señales que hayamos escogido:
+\begin{description}
+    \item [Señalar y Continuar.] Cuando llega el $n$-ésimo proceso de un grupo, este desbloquea a los últimos $n-1$ procesos bloqueados, que pasan a competir por el monitor. Puede suceder que algún proceso del siguiente grupo adelante a uno de este grupo, por lo que no sería una solución válida.
+    \item [Señalar y Salir.] El $n$-ésimo proceso solo podría despertar al primer proceso que llegó a la barrera (ya que tras ejecutar \verb|signal|, este terminaría la ejecución de su procedimiento), sin reestablecer el contador a 0, por lo que cualquier proceso que pase por la barrera despertaría al siguiente proceso bloqueado, de forma que los últimos $n$ procesos que ejecuten el protocolo \verb|barrera| quedarán bloqueados de forma indefinida.
+    \item [Señalar y Esperar.] El $n$-ésimo proceso solo podría despertar al primer proceso que llegó a la barrera, volviendo el proceso señalador a la cola de entrada al monitor. El $n+1$-ésimo proceso solo podría despertar al segundo proceso, y se iría a la cola de entrada al monitor. Cuando el $2n$-ésimo proceso entre al monitor, este ya no ejecutará \verb|signal| (ya que como la cola está vacía, es equivalente a una instrucción nula), poniendo por fin el contador a 0 y comenzando otra vez con dicho comportamiento.
+
+        No es una solución válida.
+    \item [Señalar y Espera Urgente.] El $n$-ésimo proceso desbloquea al primer proceso que llegó a la barrera y a continuación se bloquearía en la cola de urgentes, cediendo el monitor al primer proceso, que finalizaría la ejecución del procedimiento y volvería a entrar el $n$-ésimo proceso, por tener la cola de urgentes mayor prioridad que la cola de entrada al monitor. El proceso se repetiría hasta que el $n$-ésimo proceso finalie la ejecución del procedimiento, restaurando la barrera parcial para los siguientes $n$ procesos.
+
+        Sería un funcionamiento correcto de la barrera, pero hace que el $n$-ésimo proceso realice $n-1$ cambios de contexto innecesarios.
+\end{description}
+Mostramos ahora una versión alternativa para el monitor que resuelve el problema de la barrera parcial:
+\begin{minted}[escapeinside=\#\#]{pascal}
+    Monitor BP;
+       var cola : cond;
+           contador : integer;
+
+       procedure barrera(); begin
+          contador = contador + 1;
+          if (contador < n) then
+             cola.wait();
+          contador = contador - 1;
+          {Funcionalidad tras pasar la barrera parcial}
+          if (contador > 0) then
+             cola.signal();
+       end
+
+       begin
+          contador = 0;
+       end
+\end{minted}
+Vemos su comportamiento:
+\begin{itemize}
+    \item No funciona con la semántica SC.
+    \item Funciona con cualquier semántica desplazante, ya que tras llegar a $n$ procesos en la barrera, el $n$-ésimo desbloquea al primero, que desbloquea al segundo, que desbloquea al tercero, \ldots, hasta llegar al $n-1$, que realiza su funcionalidad y viceversa hasta el $n$-ésimo proceso, que deja la barrera en el estado inicial para los siguientes grupos de procesos.
+\end{itemize}
+\end{ejemplo}~\\
+
+En general, tenemos que tener cuidad con la semántica de señales que estemos empleando, sobre todo si las instrucciones \verb|signal| tienen instrucciones detrás. Además, la semántica SC suele complicar como norma general los diseños de los monitores.
+
+\subsection{Axiomas para operaciones de sincronización no desplazantes}
+Como comentamos ya en la Sección~\ref{sec:ax_desplazantes}, los axiomas que sabemos para demostrar las operaciones de sincronización en monitores sólo aplican cuando trabajamos con señales con semánticas desplazantes. Por tanto, si nos encontramos trabajando con semánticas de señales no desplazantes como SC, necesitamos unas nuevas reglas a aplicar.
+
+\begin{description}
+    \item [Axioma de la operación \texttt{wait}.]~\\
+        Sea $c$ una variable de tipo condición, $L$ un invariante local del procedimiento en el que nos encontremos y $IM$ el invariante del monitor que usamos para demostrar la corrección del mismo, se verifica que
+        \begin{equation*}
+            \{IM \land L\}\ c.wait();\ \{IM \land L\}
+        \end{equation*}
+        Es decir, antes y después de la operación \verb|wait| sólo podemos asegurar que se cumple el IM (ya que podrían producirse robos de señal), por lo que para asegurarnos de que estamos lejos de un estado inseguro del programa, debemos hacer uso de un bucle \verb|while|, tal y como expusimos anteriormente:
+        \begin{minted}[escapeinside=\#\#]{pascal}
+            while (cerca de estado inseguro) do begin
+               c.wait();
+            end
+        \end{minted}
+    \item [Axioma de la operación \texttt{signal}.]~\\
+        Como estamos ante una semántica no desplazante, el proceso señalador seguirá ejecutando el procedimiento que estaba ejecutando cuando ejecutó la operación \verb|signal|, por lo que nada habrá cambiado:
+        \begin{equation*}
+            \{P\}\ c.signal();\ \{P\}
+        \end{equation*}
+        Por tanto, la operación \verb|signal| tiene el mismo comportamiento que la instrucción nula en semánticas no desplazantes, ya que podemos poner como pre y poscondición el mismo aserto $P$ y el triple será cierto independientemente del aserto escogido.
+\end{description}

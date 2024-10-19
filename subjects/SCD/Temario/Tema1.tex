@@ -54,7 +54,7 @@ Estos axiomas son:
         No puede hacerse ninguna suposición en la velocidad de ejecución de un proceso, ya que este puede verse suspendido o ralentizado, salvo que esta es positiva.
 
         La corrección en programas concurrentes no debe depender de la velocidad relativa de los procesos.
-    \item [5. Hipótesis del progreso finito.]~
+    \item [5. Hipótesis del progreso finito.]~\\
         \begin{itemize}
             \item Un proceso debe tratar de avanzar todo lo que pueda. Esto es, si un proceso se está ejecutando, debe tratar de ejecutar tantas instrucciones como sea posible.
             \item Una vez que un proceso comienza a ejecutar una sección de código, debe terminar dicha sección.
@@ -385,7 +385,7 @@ Dentro de la lógica proposicional de este SLF son tautologías algunas fórmula
 \end{definicion}
 Por ejemplo, $p\rightarrow q$ y $\lnot q\rightarrow \lnot p$ son fórmulas equivalentes.
 
-\subsubsection{Lógica de programas}
+\subsection{Lógica de programas}
 Este SLF trata de hacer afirmaciones sobre la ejecución de un programa. Incluimos por tanto a los triples, que tienen la forma
 \begin{equation*}
     \{P\}S\{Q\}
@@ -436,6 +436,7 @@ De esta forma, $\{V\}$ es el conjunto de todos los estados de un programa, ya qu
     Dado un aserto $P$, que contiene al menos una aparición libre de la variable $x$, y una expresión $e$, definimos la sustitución textual de $x$ por $e$, notado por $P_e^x$, como la sustitución textual de todas las ocurrencias libres de $x$ en $P$ por $e$.
 \end{definicion}
 
+\subsubsection{Verificación de programas secuenciales}
 Enumeramos ahora los axiomas de nuestra Lógica de programas:
 \begin{description}
     \item [Axioma de la sentencia nula $\{P\}\ null\ \{P\}$.]~\\
@@ -479,6 +480,11 @@ Seguidamente, para cada una de las sentencias que afectan al flujo de control en
             \dfrac{\{P\}S_1\{Q\}, \{Q\}S_2\{R\}}{\{P\}S_1;S_2\{R\}}
         \end{equation*}
         Es decir, podemos condensar dos triples en uno, siempre y cuando la poscondición de uno sea la precondición del otro.
+    \item [Regla de la conjunción.] 
+        \begin{equation*}
+            \dfrac{\{P_1\}\ S\ \{Q_1\}, \{P_2\}\ S\ \{Q_2\}}{\{P_1 \land P_2\}\ S\ \{Q_1 \land Q_2\}}
+        \end{equation*}
+        Es decir, si tenemos distintas pre y poscondiciones para una misma instrucción, podemos juntarlas todas en conjunción.
     \item [Regla del \textit{if}.] 
         \begin{equation*}
             \dfrac{\{P\land B\}S_1\{Q\}, \{P\land \lnot B\}S_2\{Q\}}{\{P\}\ \texttt{if B then}\ S_1\ \texttt{else}\ S_2\ \{Q\}}
@@ -685,7 +691,7 @@ Un programa concurrente pueden entenderse como la ejecución secuencial de estru
     Aplicamos ahora la regla de la composición concurrente al ejemplo que venimos manejando. Como hemos visto, los triples $\{x=0\}\ x=x+2\{x=0 \lor x=2\}$ y $\{V\}\ x=0\ \{x=0 \lor x=2\}$ están libres de interferencia, por lo que podemos aplicar la regla de la composición concurrente, llegando a que el triple
     \begin{gather*}
         \{x=0\} \\
-        \texttt{cobegin } x=x+2;\ ||\ x=0; \texttt{ coend} \\
+        \texttt{cobegin\ } x=x+2;\ ||\ x=0; \texttt{\ coend} \\
         \{x=0 \lor x=2\}
     \end{gather*}
     es cierto.
@@ -815,4 +821,54 @@ Pasamos ahora a la demostración de la corrección de nuestro programa:
         Notemos que hemos supuesto que se verificaba $I$ al inicio del bloque. En principio nada nos garantiza esto, pero como anteriormente probamos que se cumplía al inicio del programa, se cumple antes de la primera ejecución del bloque, y como hemos demostrado que se cumple tras el bloque, se cumplirá antes de la segunda ejecución del bloque, \ldots Hemos realizado una especie de inducción en nuestro SLF.
 \end{enumerate}
 Hemos demostrado ya que $I$ es un invariante global. Como este nos garantiza la corrección de nuestro programa concurrente, tenemos ya demostrada la corrección del mismo.
+\end{ejemplo}
+
+\subsection{Demostrar que un programa termina}
+Para demostrar que un programa concurrente que no realiza llamadas bloqueantes termina, es necesrio para ello el concepto de \textit{vector variante}.
+
+\begin{definicion}[Vector variante]
+    Dado un bucle en un lenguaje de programación:
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        while B do begin
+           {Cuertpo del bucle}
+        end
+    \end{minted}
+    Donde la condición \verb|B| tiene $n$ variables que son modificadas dentro de dicho bucle: $a_1$, $a_2$, \ldots, $a_n$. Entonces, el vector variante para dicho bucle es un conjunto de $n$-uplas de la forma $(p_1, p_2, \ldots, p_n)$ de forma que $p_i$ es un posible valor que puede tomar la variable $a_i$ dentro del bucle, para $i \in \{1, \ldots, n\}$.
+\end{definicion}
+
+Si no admitimos la existencia de llamadas bloqueantes, la única forma en la que un programa puede no terminar es debido a la existencia de un bucle de forma que la condición de iteración $B$ nunca sea falsa, por lo que dicho bucle permanecerá iterando por siempre, haciendo que nuestro programa no termine.\\
+
+Por tanto, cuando nos pregunten demostrar que un programa $\{P\}\ S\ \{Q\}$ termina, deberemos demostrar que cada bucle que lo compone termina. Para ello:
+\begin{enumerate}
+    \item Debemos primero identificar en cada bucle las variables de la condición de iteración $B$ del bucle que adoptan distintos valores a lo largo del bucle.
+    \item Posteriormente, identificaremos cada uno de los posibles valores que pueden tomar cada una de esas variables, con lo que tendremos el vector variante del bucle.
+        En caso de que la condición de salida ($\lnot B$) no forme parte del vector variante, el bucle no terminará y por tanto el programa tampoco.
+    \item Si la condición de salida se encuentra en el vector variante, debemos razonar que en algún momento del bucle se alcanzará esta condición.
+\end{enumerate}
+
+\begin{ejemplo}
+    Imponer condiciones iniciales sobre \verb|n| para demostrar que el siguiente programa termina.
+    \begin{minted}[escapeinside=\#\#]{pascal}
+       max = a[1]; i = 0;
+       while (i <> n+1) do begin
+          if (a[i] >= max) then max = a[i];
+          i = i + 1;
+       end
+    \end{minted}
+    \begin{enumerate}
+        \item La condición de iteración es $i \neq n+1$, y como la instrucción \verb|i=i+1;| está presente en el cuerpo del bucle, la única variable de la condición de iteración que es modificada dentro del bucle es $i$.
+        \item El vector variante para dicho bucle contiene los posibles valores de $i$ dentro del bucle, los cuales se corresponden con:
+            \begin{equation*}
+                \{0, 1, 2, 3, \ldots\} = \mathbb{N}
+            \end{equation*}
+        \item Como $i$ comienza el bucle en $0$ y en cada iteración se incrementa una unidad, tendremos que $i= n+1$ en alguna iteración si $n+1 \in \mathbb{N}\Longleftrightarrow n\in \mathbb{N} \cup \{-1\}$. 
+
+            Distinguiendo casos:
+            \begin{itemize}
+                \item Si $n < -1$, entonces $n-1<0$, por lo que $i_0 = 0 \neq n+1$ y como $i$ se incrementa en una unidad, el programa no terminaría.
+                \item Si $n = -1$, entonces $i_0 = 0 = n+1$, por lo que el bucle no llegaría a ejecutarse y el programa terminaría.
+                \item Si $n>-1$, entonces $n-1>0$ y como $i$ se inicializa a $0$ y se incrementa una unidad en cada iteración, la condición de salida sería cierta tras $n+1$ interaciones, que pueden hacerse en tiempo finito, luego el programa terminaría.
+            \end{itemize}
+    \end{enumerate}
+    Finalmente, concluimos que el programa termina si, y solo si $n+1\in \mathbb{N}$.
 \end{ejemplo}
