@@ -61,7 +61,7 @@ De esta forma, el código final quedaría como:
 ```c++
 int num_items = n;
 int tam_vec = m;
-int array[m];
+int array[tam_vec];
 
 Semaphore s_productor = tam_vec, s_consumidor = 0;
 
@@ -105,10 +105,20 @@ El código quedaría como el siguiente:
 ```c++
 int num_items = n;
 int tam_vec = m;
-int array[m];
+int array[tam_vec];
 
 Semaphore s_productor = tam_vec, s_consumidor = 0;
-atomic<int> tope_pila = 0;
+int tope_pila = 0;
+
+int incindice(int indice){
+    if (indice == tam_vec - 1) return 0;
+    else return i + 1;
+}
+
+int decindice(int indice){
+    if (indice == 0) return tam_vec - 1;
+    else return i - 1;
+}
 
 void productor(){
    int var;
@@ -118,7 +128,7 @@ void productor(){
       // Escribe el valor en el array
       sem_wait(s_productor);
       array[tope_pila] = var;
-      tope_pila++;
+      tope_pila = incindice(tope_pila);
       sem_signal(s_consumidor);
    }
 }
@@ -128,7 +138,7 @@ void consumidor(){
    for(int i = 0; i < num_items; i++){  // Debe consumir n valores
       // Lee del array
       sem_wait(s_consumidor);
-      tope_pila--;
+      tope_pila = decindice(tope_pila);
       var = array[tope_pila];
       sem_signal(s_productor);
       
@@ -136,15 +146,19 @@ void consumidor(){
    }
 }
 ```
+Donde hemos usado las funciones `incindice` y `decindice` para tener en cuenta el caso de que `tope_pila` no sea 0 al inicio del programa.  
+  
 Sin embargo, no hemos tenido en cuenta que el productor puede escribir a la vez que el consumidor lea, lo que produciría un fallo. Por tanto, tenemos que hacer las lecturas y las escrituras en exclusión mutua. De esta forma, ya no nos hace falta el tipo de dato atómico para el tope de la pila.
 ```c++
 int num_items = n;
 int tam_vec = m;
-int array[m];
+int array[tam_vec];
 
 Semaphore s_productor = tam_vec, s_consumidor = 0;
 mutex cerrojo;
 int tope_pila = 0;
+
+// Implementar las funciones incindice y decindice anteriores
 
 void productor(){
    int var;
@@ -156,7 +170,7 @@ void productor(){
       cerrojo.lock();
       
       array[tope_pila] = var;
-      tope_pila++;
+      tope_pila = incindice(tope_pila);
       
       cerrojo.unlock();
       sem_signal(s_consumidor);
@@ -170,7 +184,7 @@ void consumidor(){
       sem_wait(s_consumidor);
       cerrojo.lock();
       
-      tope_pila--;
+      tope_pila = decindice(tope_pila);
       var = array[tope_pila];
       
       cerrojo.unlock();
@@ -209,7 +223,7 @@ int incindice(int indice){
 }
 
 void productor(){
-   int var, indice = 0;
+   int var;
    for(int i = 0; i < num_items; i++){   // Debe producir n valores
       var = ProducirValor();
       
@@ -217,8 +231,8 @@ void productor(){
       sem_wait(s_productor);
       em_prod.lock();
       
-      array[indice] = var;
-      indice = incindice(indice);
+      array[indice_prod] = var;
+      indice_prod = incindice(indice_prod);
       
       em_prod.unlock();
       sem_signal(s_consumidor);
@@ -226,15 +240,15 @@ void productor(){
 }
 
 void consumidor(){
-   int var, indice = 0;
+   int var;
    for(int i = 0; i < num_items; i++){  // Debe consumir n valores
    
       // Lee del array
       sem_wait(s_consumidor);
       em_cons.lock();
       
-      var = array[indice];
-      indice = incindice(indice);
+      var = array[indice_cons];
+      indice_cons = incindice(indice_cons);
       
       em_cons.unlock();
       sem_signal(s_productor);
@@ -263,7 +277,6 @@ La resolución al problema es la siguiente, donde:
 
 Suponiendo que la hebra `i` retira el ingrediente `i`:
 ```c++
-int x;
 int num_cons;
 
 Semaphore sem_cons[num_cons] = {0, 0, 0, ..., 0};
@@ -276,23 +289,17 @@ void productor(){
         a = producir();
         
         sem_wait(sem_prod);
-        x = a;
         sem_signal(sem_cons[a]);
-        
     }
 }
 
 void consumidor(int i){   // i : Indice del consumidor
-    int b;
-    
     while(true){
-    
         sem_wait(sem_cons[i]);
-        b = x;
         sem_signal(sem_prod);
         
-        consumir(b);
-    
+        fumar();
     }
 }
 ```
+Puede ver todos estos códigos implementados en C++ en esta [carpeta](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/tree/main/subjects/SCD/Seminarios/Practica1).
