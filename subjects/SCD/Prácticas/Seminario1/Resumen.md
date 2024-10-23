@@ -242,7 +242,7 @@ for(int i = 0; i < num_futuros; i++)
     
 // Esperar a todos los futuros
 for(int i = 0; i < num_futuros; i++)
-    futuros[i].join();
+    futuros[i].get();
 ```
 
 ***
