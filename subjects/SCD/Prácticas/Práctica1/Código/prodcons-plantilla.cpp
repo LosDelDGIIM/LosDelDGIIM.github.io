@@ -19,10 +19,6 @@ unsigned
    cont_cons[num_items] = {0}, // contadores de verificación: para cada dato, número de veces que se ha consumido.
    siguiente_dato       = 0 ;  // siguiente dato a producir en 'producir_dato' (solo se usa ahí)
 
-int buffer[tam_vec];
-
-Semaphore sem_prod = tam_vec, sem_cons = 0;
-
 //**********************************************************************
 // funciones comunes a las dos soluciones (fifo y lifo)
 //----------------------------------------------------------------------
@@ -71,26 +67,12 @@ void test_contadores()
 
 //----------------------------------------------------------------------
 
-int inc(int i){
-    if(i == tam_vec - 1) return 0;
-    else return i+1;
-}
-
-//----------------------------------------------------------------------
-
 void  funcion_hebra_productora(  )
 {
-    int dato, indice = 0;
-
    for( unsigned i = 0 ; i < num_items ; i++ )
    {
-      dato = producir_dato() ;
-
-      sem_wait(sem_prod);
-      buffer[indice] = dato;
-      sem_signal(sem_cons);
-
-      indice = inc(indice);
+      int dato = producir_dato() ;
+      // completar ........
    }
 }
 
@@ -98,16 +80,11 @@ void  funcion_hebra_productora(  )
 
 void funcion_hebra_consumidora(  )
 {
-    int dato, indice = 0;
-
    for( unsigned i = 0 ; i < num_items ; i++ )
    {
-       sem_wait(sem_cons);
-       dato = buffer[indice];
-       sem_signal(sem_prod);
-
-       indice = inc(indice);
-       consumir_dato( dato ) ;
+      int dato ;
+      // completar ......
+      consumir_dato( dato ) ;
     }
 }
 //----------------------------------------------------------------------

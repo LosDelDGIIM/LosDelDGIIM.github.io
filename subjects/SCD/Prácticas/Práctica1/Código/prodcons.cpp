@@ -11,7 +11,7 @@ using namespace scd ;
 //**********************************************************************
 // Variables globales
 const unsigned 
-   num_items = 40 ,   // número de items
+   num_items = 100 ,   // número de items
 	tam_vec   = 10 ;   // tamaño del buffer
 unsigned  
    cont_prod[num_items] = {0}, // contadores de verificación: para cada dato, número de veces que se ha producido.
@@ -39,7 +39,7 @@ mutex mtx_cout;
 #elif defined FIFO
    int vec[tam_vec];
    int primera_libre = 0;
-   int ultima_libre = 0;
+   int primera_ocupada = 0;
 #endif
 
 
@@ -109,8 +109,8 @@ void  funcion_hebra_productora(  ){
             vec[primera_libre++] = dato;
          mtx.unlock();
       #elif defined FIFO
-         vec[ultima_libre++] = dato;
-         ultima_libre %= tam_vec;
+         vec[primera_libre++] = dato;
+         primera_libre %= tam_vec;
       #endif
       sem_signal(espera_consumidor);
    }
@@ -131,8 +131,8 @@ void funcion_hebra_consumidora(  )
             dato = vec[--primera_libre];
          mtx.unlock();
       #elif defined FIFO
-         dato = vec[primera_libre++];
-         primera_libre %= tam_vec;
+         dato = vec[primera_ocupada++];
+         primera_ocupada %= tam_vec;
       #endif
       sem_signal(espera_productor);
 

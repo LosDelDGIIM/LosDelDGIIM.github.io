@@ -11,12 +11,7 @@ using namespace scd ;
 
 // numero de fumadores 
 
-int n = 20;     // Número de veces que el estanquero produce
-bool fin = false;
 const int num_fumadores = 3 ;
-
-Semaphore sem_estanquero = 1;
-Semaphore sem_fumadores[num_fumadores] = {0, 0, 0};
 
 //-------------------------------------------------------------------------
 // Función que simula la acción de producir un ingrediente, como un retardo
@@ -39,6 +34,14 @@ int producir_ingrediente()
    cout << "Estanquero : termina de producir ingrediente " << num_ingrediente << endl;
 
    return num_ingrediente ;
+}
+
+//----------------------------------------------------------------------
+// función que ejecuta la hebra del estanquero
+
+void funcion_hebra_estanquero(  )
+{
+
 }
 
 //-------------------------------------------------------------------------
@@ -65,38 +68,12 @@ void fumar( int num_fumador )
 }
 
 //----------------------------------------------------------------------
-// función que ejecuta la hebra del estanquero
-
-void funcion_hebra_estanquero(  )
-{
-    int producto;
-    for(int i = 0; i < n; i++){
-        producto = producir_ingrediente();
-
-        sem_wait(sem_estanquero);
-        sem_signal(sem_fumadores[producto]);
-    }
-
-    // Finaliza el programa
-    sem_wait(sem_estanquero);       // Espera a que el ultimo coja su producto
-    fin = true;
-    for(int i = 0; i < num_fumadores; i++){
-        sem_signal(sem_fumadores[i]);   // Despiera a todos los fumadores
-    }
-}
-
-//----------------------------------------------------------------------
-
 // función que ejecuta la hebra del fumador
 void  funcion_hebra_fumador( int num_fumador )
 {
    while( true )
    {
-       sem_wait(sem_fumadores[num_fumador]);
-       if(fin) break;
-       sem_signal(sem_estanquero);
 
-       fumar(num_fumador);
    }
 }
 
@@ -104,17 +81,6 @@ void  funcion_hebra_fumador( int num_fumador )
 
 int main()
 {
-    thread estanquero(funcion_hebra_estanquero);
-    thread fumadores[num_fumadores];
-
-    for(int i = 0; i < num_fumadores; i++){
-        fumadores[i] = thread(funcion_hebra_fumador, i);
-    }
-
-    estanquero.join();
-    for(int i = 0; i < num_fumadores; i++){
-        fumadores[i].join();
-    }
-
-    return 0;
+   // declarar hebras y ponerlas en marcha
+   // ......
 }

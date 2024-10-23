@@ -14,16 +14,7 @@ Semaphore              mostrador_libre = 1;   // 1 si el mostrador está libre, 
 mutex                  mutex_cout ; // mutex que evita salidas por pantalla mezcladas
 Semaphore ingrediente_en_mostrador[2]={0,0} ; // vector de semáforos de fumadores
 
-const int CAPACIDAD_BUZON = 3;
-const int N_ITERACIONES_CONTRABANDISTA = 4;
-int buzon[CAPACIDAD_BUZON];
 
-int indice_buzon_fumadores = 0;   // Variable compartida para fumadores
-mutex mutex_indice;
-int indice_buzon_contrabandista = 0; // Variable para el contrabandista
-
-Semaphore buzon_lleno = CAPACIDAD_BUZON;
-Semaphore buzon_vacio = 0;
 
 //-------------------------------------------------------------------------
 // Función que simula la acción de producir un ingrediente
@@ -87,68 +78,8 @@ void  funcion_hebra_fumador( int num_fumador )
          cout << "                 Fumador " << num_fumador << ": RETIRA ingrediente" << endl;
       mutex_cout.unlock();
       mostrador_libre.sem_signal(  );
-
-      /* fumar(num_fumador); */
-
-      sem_wait(buzon_lleno);
-      mutex_indice.lock();
-
-      // Coloca el sobre en el buzon
-      buzon[indice_buzon_fumadores] = num_fumador;
-      indice_buzon_fumadores = (indice_buzon_fumadores + 1) % CAPACIDAD_BUZON;
-
-      mutex_indice.unlock();
-
-      mutex_cout.lock();
-      cout << "                 Fumador " << num_fumador << ": pone sobre en buzon" << endl;
-      mutex_cout.unlock();
-
-      sem_signal(buzon_vacio);
+      fumar(num_fumador);
    }
-}
-
-//----------------------------------------------------------------------
-// función que ejecuta la hebra del contrabandista
-void funcion_hebra_contrabandista(){
-    int estadisticas[num_fumadores] = {0,0};
-    int num_sobre;
-
-    while(true){
-        for(int i = 0; i < N_ITERACIONES_CONTRABANDISTA; i++){
-
-            // Dormimos al contrabandista
-            chrono::milliseconds duracion_dormir( aleatorio<20,150>() );
-            // Informa de que duerme
-            mutex_cout.lock();
-            cout << "   Contrabandista duerme " << duracion_dormir.count() << " ms" << endl;
-            mutex_cout.unlock();
-            this_thread::sleep_for( duracion_dormir );
-
-
-
-            sem_wait(buzon_vacio);
-
-            // Coge el sobre
-            num_sobre = buzon[indice_buzon_contrabandista];
-            indice_buzon_contrabandista = (indice_buzon_contrabandista + 1) % CAPACIDAD_BUZON;
-
-            mutex_cout.lock();
-            cout << "   Contrabandista toma sobre de " << num_sobre << endl;
-            mutex_cout.unlock();
-
-            sem_signal(buzon_lleno);
-
-            estadisticas[num_sobre]++;
-        }
-
-        cout << "----------------------------------------" << endl;
-        cout << "Datos del contrabandista:" << endl;
-        cout << "Fumador 0 proporciona " << estadisticas[0] << " cigarros" << endl;
-        cout << "Fumador 1 proporciona " << estadisticas[1] << " cigarros" << endl;
-        cout << "----------------------------------------" << endl;
-        cout << endl;
-
-    }
 }
 
 //----------------------------------------------------------------------
@@ -160,12 +91,10 @@ int main()
       hebra_fumador[i] = thread( funcion_hebra_fumador, i );
    // Lanza Hebra Estanquero
    thread hebra_estanquero( funcion_hebra_estanquero );
-   thread hebra_contrabandista( funcion_hebra_contrabandista );
    
 
    // Esperar finalización de hebras:
    hebra_estanquero.join();
-   hebra_contrabandista.join();
    for( unsigned i = 0 ; i < num_fumadores ; i++ )
       hebra_fumador[i].join();
 }
