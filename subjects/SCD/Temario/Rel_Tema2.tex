@@ -46,15 +46,132 @@
 
     Se pide resolver los siguientes problemas de sincronización, considerando que son independientes unos de otros, con semáforos. Las casuísticas son las siguientes:
     \begin{enumerate}
-        \item P2 podrá pasar a ejecutar \verb|e| sólo si P1 ha ejecutado \verb|a| o P3 ha ejecutado \verb|g|.
-        \item P2 podrá pasar a ejecutar \verb|e| sólo si P1 ha ejecutado \verb|a| y P3 ha ejecutado \verb|g|.
-        \item Sólo cuando P1 haya ejecutado \verb|b|, podrá pasar P2 a ejecutar \verb|e| y P3 a ejecutar \verb|h|.
-        \item Sincroniza los procesos de forma que las sentencias \verb|b| en P1, \verb|f| en P2, y \verb|h| en P3, sean ejecutadas como mucho por 2 procesos simultáneamente.
+        \item P2 podrá pasar a ejecutar \verb|e| sólo si P1 ha ejecutado \verb|a| o P3 ha ejecutado \verb|g|.\\
+
+            En este caso, se trata de una espera única en la que P2 debe esperar bien a P1 o bien a P3. Podemos resolverlo usando sólo un semáforo con valor inicial 0, con lo que debemos hacer las siguientes modificaciones en los códigos superiores:
+    \setlength{\columnsep}{1cm} % Ajusta el espacio entre columnas
+    \begin{multicols}{3}
+        P1:
+        \begin{minted}{pascal}
+            a;
+            sem_signal(s);
+            b;
+            c;
+        \end{minted}
+        
+        P2:
+        \begin{minted}{pascal}
+            d;
+            sem_wait(s);
+            e;
+            f;
+        \end{minted}
+
+        P3:
+        \begin{minted}{pascal}
+            g;
+            sem_signal(s);
+            h;
+            i;
+        \end{minted}
+    \end{multicols}
+
+        \item P2 podrá pasar a ejecutar \verb|e| sólo si P1 ha ejecutado \verb|a| y P3 ha ejecutado \verb|g|.\\
+
+            Ahora, debemos resolver dos esperas únicas, ya que P2 ha de esperar tanto a P1 como ha P3. Como hay dos motivos por los que P2 ha de esperar, usaremos dos semáforos, \verb|s1| y \verb|s2|, ambos inicializados a 0. Las modificaciones a realizar son:
+    \begin{multicols}{3}
+        P1:
+        \begin{minted}{pascal}
+            a;
+            sem_signal(s1);
+            b;
+            c;
+        \end{minted}
+        
+        P2:
+        \begin{minted}{pascal}
+            d;
+            sem_wait(s1);
+            sem_wait(s2);
+            e;
+            f;
+        \end{minted}
+
+        P3:
+        \begin{minted}{pascal}
+            g;
+            sem_signal(s2);
+            h;
+            i;
+        \end{minted}
+    \end{multicols}
+        \item Sólo cuando P1 haya ejecutado \verb|b|, podrá pasar P2 a ejecutar \verb|e| y P3 a ejecutar \verb|h|.\\
+            En este caso, tenemos dos procesos esperando a un mismo proceso. En esta ocasión, tenemos que hacer uso de dos semáforos, \verb|s1| y \verb|s2|, ambos inicializados a 0. Notemos que no podemos hacer uso de un semáforo de forma que P2 y P3 usen \verb|wait| y que P1 haga un solo \verb|signal|, ya que si los dos procesos llegan al \verb|wait| a la vez, el \verb|signal| de P1 solo despertará a un proceso, quedándose el otro bloqueado por siempre.
+
+            Por tanto, las modificaciones a realizar son:
+    \begin{multicols}{3}
+        P1:
+        \begin{minted}{pascal}
+            a;
+            b;
+            sem_signal(s1);
+            sem_signal(s2);
+            c;
+        \end{minted}
+        
+        P2:
+        \begin{minted}{pascal}
+            d;
+            sem_wait(s1);
+            e;
+            f;
+        \end{minted}
+
+        P3:
+        \begin{minted}{pascal}
+            g;
+            sem_wait(s2);
+            h;
+            i;
+        \end{minted}
+    \end{multicols}
+    También podríamos haber usado un sólo semáforo y que el proceso P1 realizara dos \verb|signal| después de la instrucción \verb|b|.
+        \item Sincroniza los procesos de forma que las sentencias \verb|b| en P1, \verb|f| en P2, y \verb|h| en P3, sean ejecutadas como mucho por 2 procesos simultáneamente.\\
+            Se trata de una generalización de la exclusión mutua, donde en vez de ejecutar a la vez las instrucciones \verb|b|, \verb|f| y \verb|h| por un solo proceso, deben ejecutarse por como mucho dos procesos a la vez. Usaremos por tanto un solo semáforo inicializado con el valor 2. Las modificaciones a realizar son:
+    \begin{multicols}{3}
+        P1:
+        \begin{minted}{pascal}
+            a;
+            sem_wait(s);
+            b;
+            sem_signal(s);
+            c;
+        \end{minted}
+        
+        P2:
+        \begin{minted}{pascal}
+            d;
+            e;
+            sem_wait(s);
+            f;
+            sem_signal(s);
+        \end{minted}
+
+        P3:
+        \begin{minted}{pascal}
+            g;
+            sem_wait(s);
+            h;
+            sem_signal(s);
+            i;
+        \end{minted}
+    \end{multicols}
     \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
     El cuadro que sigue nos muestra dos procesos concurrentes, P1 y P2, que comparten una variable global \verb|x| y las restantes variables son locales a los procesos.
+    \setlength{\columnsep}{1cm} % Ajusta el espacio entre columnas
     \begin{multicols}{2}
         \begin{minted}{pascal}
         {variables globales}
@@ -84,8 +201,63 @@
     \end{multicols}
     Se pide:
     \begin{enumerate}
-        \item Sincronizar los procesos para que P1 use todos los valores \verb|x| suministrados por P2.
-        \item Sincronizar los procesos para que P1 utilice un valor sí y otro no de la variable \verb|x|, es decir, utilice los valores primero, tercero, quinto, etc. que vaya alcanzando dicha variable.
+        \item Sincronizar los procesos para que P1 use todos los valores \verb|x| suministrados por P2.\\
+
+            Estamos ante un problema del estilo productor/consumidor usando como buffer intermedio una variable. Este problema ya lo aprendimos a solucionar en las prácticas, y nos basta con usar dos semáforos:
+            \begin{itemize}
+                \item \verb|sem_prod| inicializado a 1.
+                \item \verb|sem_cons| inicializado a 0.
+            \end{itemize}
+            Las modificaciones a realizar en los códigos serían las siguientes:
+    \begin{multicols}{2}
+        P1:
+        \begin{minted}{pascal}
+          while true do begin
+            sem_wait(sem_cons);  
+            m:= 2*x - n;
+            sem_signal(sem_prod);  
+            print(m);
+          end
+        \end{minted}
+        
+        P2:
+        \begin{minted}{pascal}
+          while true do begin
+            d:= leer_teclado();
+            sem_wait(sem_prod);  
+            x:= d - c*5;
+            sem_signal(sem_cons);  
+          end
+        \end{minted}
+    \end{multicols}
+        \item Sincronizar los procesos para que P1 utilice un valor sí y otro no de la variable \verb|x|, es decir, utilice los valores primero, tercero, quinto, etc.\ que vaya alcanzando dicha variable.\\
+
+            Para ello, la traza del programa que nos interesa obtener es: \newline \verb|E, L, E, E, L, E, E, L,| \ldots
+
+            Para ello, podemos añadir otra instrucción \verb|wait| en el consumidor, pero inicializando ahora el semáforo \verb|sem_cons| a 1, para que se consuma el primer dato:
+    \begin{multicols}{2}
+        P1:
+        \begin{minted}{pascal}
+          while true do begin
+            sem_wait(sem_cons);  
+            sem_wait(sem_cons);  
+            m:= 2*x - n;
+            sem_signal(sem_prod);  
+            print(m);
+          end
+        \end{minted}
+        
+        P2:
+        \begin{minted}{pascal}
+          while true do begin
+            d:= leer_teclado();
+            sem_wait(sem_prod);  
+            x:= d - c*5;
+            sem_signal(sem_cons);  
+          end
+        \end{minted}
+    \end{multicols}
+    De esta forma, el productor tiene que avisar dos veces al consumidor antes de que este pueda leer, luego los valores segundo, cuarto, \ldots\ no los tendrá en cuenta el consumidor.
     \end{enumerate}
 \end{ejercicio}
 
@@ -98,7 +270,7 @@
         \item Versión feminista del protocolo: las chicas tienen preferencia sobre los chicos. Esto quiere decir que si un chico está esperando y llega una chica, ésta debe pasar antes. Incluso si la chica que ha llegado no puede entrar inmediatamente al servicio porque ya hay una chica dentro, pasará antes que el chico cuando salga la chica que está dentro.
     \end{itemize}
 
-    Se pide implementar las 2 versiones del protocolo anterior utilizando semáforos POSIX. Las cabeceras que estos han de tener los semáforos no nombrados de POSIX 1003 son las siguientes:
+    Se pide implementar las 2 versiones del protocolo anterior utilizando semáforos POSIX\@. Las cabeceras que estos han de tener los semáforos no nombrados de POSIX 1003 son las siguientes:
     \begin{minted}{c++}
         // Inicialización
         int sem_init(sem_t* semaforo, int pcompartido, unsigned int contador);
@@ -125,7 +297,11 @@
 \end{ejercicio}
 
 \begin{ejercicio}
-    Aunque un monitor garantiza la exclusión mutua, los procedimientos tienen que ser reentrantes. Explicar por qué.
+    Aunque un monitor garantiza la exclusión mutua, los procedimientos tienen que ser reentrantes. Explicar por qué.\\
+
+    Los procedimientos han de ser reentrantes porque queremos tener procesos que ejecuten procedimientos del monitor, que estos puedan bloquearse durante la ejecución de los mismos y que puedan desbloquearse tras unas condiciones y que puedan seguir ejecutando la función por donde iban.
+
+    Es necesario que los procedimientos sean reentrantes para que los procesos que ejecutan los procedimientos y que se bloquean sean capaces de seguir la ejecución de la función una vez desbloqueados por la instrucción por la que se quedaron, manteniendo intactos los valores de las variables locales usadas en el procedimiento.
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -149,7 +325,7 @@
 \end{ejercicio}
 
 \begin{ejercicio} \label{ej:2.6}
-    Varios coches que vienen del norte y del sur pretenden cruzar un puente sobre un río (ver Figura \ref{fig:ej2.6}). Sólo existe un carril sobre dicho puente. Por lo tanto, en un momento dado, el puente solo puede ser cruzado por uno o más coches en la misma dirección (pero no en direcciones opuestas).
+    Varios coches que vienen del norte y del sur pretenden cruzar un puente sobre un río (ver Figura~\ref{fig:ej2.6}). Sólo existe un carril sobre dicho puente. Por lo tanto, en un momento dado, el puente solo puede ser cruzado por uno o más coches en la misma dirección (pero no en direcciones opuestas).
     \begin{figure}
         \centering
         \begin{tikzpicture}
