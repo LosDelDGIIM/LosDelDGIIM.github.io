@@ -302,4 +302,4 @@ void consumidor(int i){   // i : Indice del consumidor
     }
 }
 ```
-Puede ver todos estos códigos implementados en C++ en esta [carpeta](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/tree/main/subjects/SCD/Prácticas/Práctica1/Código)
+Puede ver todos estos códigos implementados en C++ en esta [carpeta](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/tree/main/subjects/SCD/Prácticas/Práctica1/Código).
