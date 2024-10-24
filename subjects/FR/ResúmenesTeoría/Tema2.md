@@ -588,3 +588,177 @@ Busca el camino global que minimiza la suma de todos los costes, usando Dijkstra
 
 Permite definir áreas, de forma que la difusión se envía en una áreas.
 Permite que OSPF sea muy escalable, al contrario que RIP.
+
+# Cabeceras
+La cabecera IP tiene 20 Bytes (**IMPORTANTE**). 
+
+TTL es tiempo de vida, time to life. Un campo de 8 bits de un número que se decrementa cada vez que pasa por un router.
+Hay protocolos que se encapsulan en la parte de IP.
+Si el *checksum* de un paquete indica que está mal, el dispositivo descarta el paquete.
+Las cabeceras de un paquete de red son múltiplo de 32.
+Con *wireshark* podemos ver paquetes por dentro.
+
+Ver la cabecera de IP en las diapositivas.
+
+(No me he enterado de nada)
+
+# Fragmentación
+Las redes no permiten paquetes de cualquier tamaño. El tamaño máximo es 2^16 bytes, aunque ninguna red suele aceptar dicho tamaño.
+Las redes cuentan con MTU (Unidad Máxima de Transferencia, Maximum Transfer Unit): que nos dice cuál es el tamaño máximo de lo que podemos meter en el campo de datos de un paquete a nivel de enlace. Lo normal a meter en dicho campo es un paquete IP con sus datos. Esto es, un paquete de red.
+El MTU indica cual es el tamaño máximo del paquete IP **incluyendo su cabecera**
+
+El MTU depende del estándar de una tarjeta.
+- Ethernet: 1500
+- Wifi: Permite más pero el punto de acceso normalmente lo restringe a 1500.
+
+Campos de cabecera de fragmentación:
+Campo de identificación: identifica al datagrama (no al paquete), por lo que si fragmentamos un datagrama en varios paquetes, todos estos tendrán el mismo identificador.
+Campo de indicadores (como more fragments): Si hay más fragmentos a enviar, poner a 1. Si no hay más detrás de este, 0.
+Campo de desplazamiento (offset): Sirve para ensamblar los paquetes en el destino. Nos dice dónde hay que colocar este paquete.
+
+Si no llegan todos los paquetes de un datagrama, el equipo lo descarta todo y debe ser una capa superior la que se encargue de solucionar el problema.
+
+Sólo fragmentamos cuando pasamos a un MTU menor y sólo se ensamblan en el destino.
+
+## Ejemplo
+- Datagrama IP es lo que me gustaría mandar.
+- Paquete IP es lo que mando.
+
+Dado un datagrama (cabecera IP + datos)
+Si tenemos 4180 bytes de datos, tendremos un datagrama de tamaño 4200 bytes (sabemos que la cabecera es de 20 bytes).
+Tenemos dos redes (A y B) conectadas por una red intermedia con MTU de 1500 Bytes.
+
+Sólo fragmentamos cuando pasamos a un MTU menor y sólo se ensamblan en el destino.
+
+De esta forma, montamos un paquete de 1500 bytes como mucho y tenemos que poner la misma cabecera de 20 bytes en todos los paquetes, luego los datos tendrán como máximo 1480 bytes.
+Crearemos a partir del datagrama los siguientes paquetes (el identificador del datagrama no varía en estos):
+
+En el primero: cabecera de 20 bytes + 1480 bytes de datos (todavía quedan 2700)
+- Identificador del datagrama.
+- More fragments: 1.
+- Offset: 0
+
+En el segundo: cabecera de 20 bytes + 1480 bytes de datos (todavía quedan 1220)
+- Identificador del datagrama.
+- More fragments: 1.
+- Offset: 1480
+
+En el tercero: cabecera de 20 bytes + 1220 de datos
+- Identificador del datagrama.
+- More fragments: 0.
+- Offset: 2960
+
+## Ejemplo nº2
+Si ahora tenemos:
+
+         MTU      MTU 
+A -- R1 ----- R2 ----- R3 --- B
+        1500B    1000B
+       
+Si ahora se envian los tres paquetes anteriores por esta red, cuando los paquetes lleguen a R2 tendremos que fragmentarlos, porque todos estos tenían un tamaño mayor a 1000 bytes:
+1. El primero se dividirá en dos:
+- Uno de cabecera 20 + 980 datos con:  Id del datagrama, MF = 1, offset = 0.
+- Otro de cabecera 20 + 500 datos con: Id del datagrama, MF = 1, offset = 980.
+2. El segundo se dividirá en dos:
+- Uno de cabecera 20 + 980 datos con:  Id del datagrama, MF = 1, offset = 1480.
+- Otro de cabecera 20 + 500 datos con: Id del datagrama, MF = 1, offset = 2460.
+3. El tercero se dividirá en dos:
+- Uno de cabecera 20 + 980 datos con:  Id del datagrama, MF = 1, offset = 2960.
+- Otro de cabecera 20 + 240 datos con: Id del datagrama, MF = 0, offset = 3200.
+
+Si ahora el equipo de la red B responde con un datagrama de tamaño 4200 (luego de datos tiene 4180), se fragmentaría en el router R3 y en R2 no se fragmentaría.
+
+# Protocolos: ARP, ICMP, DHCP
+Protocolos importantes
+
+ICMP ayuda, ARP es necesario y DHCP en la práctica es necesario.
+
+# ARP
+PC A --> R1 --> R2 --> PC B
+
+Si tenemos un dispositivo contactando con otro, este le enviará un paquete en el nivel de enlace.
+Como es a nivel de enlace, sólo se encarga de encaminar punto a punto (la capa de enlace sólo se dedica a esto).
+Dicho paquete, tendrá una dirección MAC de origen y de destino.
+Dichas direcciones cambian en cada reenvío que haga un equipo: (A manda a R1) (R1 manda a R2) (R2 manda a B)
+
+En el nivel de Red, encaminamos punto a punto pero en el paquete a nivel de red tendremos:
+IP origen del que envía e IP destino del destinatario. Estos parámetros no cambian en ningún salto (salvo uso de NAT).
+
+
+Un equipo antes de enviar un paquete, consulta su tabla de encaminamiento y mira quién es el siguiente salto.
+De esta forma, se puede conocer el siguiente salto de un equipo a otro.
+Con el diagrama del tema de los datagramas (encapsulación), se entiende mejor.
+
+Una vez el paquete llega de A, R1 sabe su dirección MAC y sabe la dirección IP de R2, pero no sabe la dirección MAC de R2.
+No sabemos determinar la MAC de un equipo antes de realizar el siguiente salto.
+Esto es lo que soluciona ARP (Address Resolution Protocol).
+***
+
+
+Yo sé que soy A y mando un mensaje ARP Request a nivel de enlace, que no sabemos a quién estamos mandando (destino FF:FF:...:FF, la direccion de difusión a nivel de enlace), preguntando con la IP que ya sabemos
+El siguiente router contestará con un mensaje ARP Reply con su dirección MAC en unicast (respuesta única, no difusión), para así poder enviar el paquete a nivel de red.
+
+Esto no se hace siempre (si no, metería mucho tráfico).
+La dirección MAC que recibimos se guarda en una caché y si pasa mucho tiempo, la entrada expira (se reactiva con ARP).
+
+
+ARP es a nivel de enlace.
+Si los campos tienen H delante de su nombre, es relativo a hardware.
+SI los campos tienen P, es relativo a Protocolo.
+Operación: Request o Repply
+
+ARP tiene un protocolo asociado, RARP (Protocolo de Resolución de Direcciones a la inversa).
+ARP: Tengo esta IP y quiero saber la MAC.
+RARP: Tengo esta MAC y quiero saber la IP. Es útil y precursor del protocolo BOUT, precursor de DHCP.
+
+Cuando Internet empezó, había equipos sencilos. Solía haber un workstation (ordenador) y teníamos varios equipos con pocas características (por ejemplo, sin HDD).
+Se conectaban los equipos al workstation para trabajar.
+Como no tenían HDD, no podían guardar su IP. Sin embargo, disponían de tarjetas de red que guardaban la MAC.
+Era necesario por tanto un protocolo que nos de una IP a partir de una MAC.
+
+# ICMP (Internet Control Message Protocol)
+Sirve en general para informar al origen de que ha habido un error.
+IP no arregla cosas pero tiene este protocolo para informar y ya las capas superiores deciden si hacen algo o no.
+
+Cuando hay una situación de error, el equipo le manda un paquete ICMP al origen con varios campos.
+Es un nivel de red que se encapsula dentro de IP.
+
+Cabecera de ICMP:
+Tipo (tipo de error), código (código de error, para detallar) y campo de comprobación (que verifica si el paquete es correcto o si ha llegado mal).
+
+Además, tenemos el caso particular de ping, que usa Echo Request y Echo Repply (8 y 0 respectivamente).
+Hay varios errores típicos:
+- Destino inalcanzable.
+- Tiempo de vida excedido. Cuando el TTL pasa a 0.
+- Sello de tiempo.
+
+## Funcionamiento
+A parte de los mensajes de ping:
+- Un equipo envía Echo Request y el otro responde con Echo Repply.
+
+ICMP informa de errores. 
+Es un protocolo de red que se encapsula dentro de un protocolo de red.
+Se encapsula dentro de un paquete IP y cuenta con los primeros 64 bytes del paquete que provocó el error (a tener en cuenta que dentro de esos 64, los 20 primeros son de la cabecera IP del paquete que provocó el error).
+Por tanto, podemos ver la IP del equipo que detectó el error (gracias a la cabecera IP del paquete ICMP) y la IP del equipo a quien iba destinado (con la cabecera IP del paquete que generó el error, que se encuentra como dato dentro del paquete ICMP).
+
+# DHCP (Dynamic Host Configuration Protocol)
+Funciona a nivel de red pero se implementa en capa de aplicación (porque se encapsula en UDP).
+Un protocolo automático para asignar direcciones IP, máscaras, pasarela por defecto e IP del servidor DNS.
+
+Cuando llegamos a un red y no tenemos IP, la IP es 0.0.0.0.
+En primer lugar, DHCP pregunta si hay un servidor de red con un mensaje *DHCP Discover*. 
+- Lo primero que hace es preguntar si hay alguien. Dirección de origen: 0.0.0.0. Dirección de destino: difusión, 255.255.255.255.
+- El servidor responderá con *DHCP Offer*, con el que responde que es un servidor y de paso le ofrece una dirección IP (es una oferta, no una imperativa).
+- El cliente le responde con *DHCP Request*, con el que le solicita tener una determinada dirección IP (por ejemplo, si anteriormente el dispositivo se conectó a la red y guarda la IP que tubo en el pasado).
+- El servidor responde con *DHCP ACK*, que es la última respuesta del servidor, con la IP definitiva.
+Todos los mensajes se mandan en difusión (el servidor debe y el cliente podría hacerlo pero el estándar diche que se manda en difusión, aunque permite las dos cosas).
+
+Además, los pares de peticiones y respuestas se etiquetan con un identificador de transacción, para que el cliente sepa que el mensaje va para él.
+
+
+
+DHCP es un protocolo de leasing (alquiler), con lo que la IP se asigna (alquila) durante un tiempo.
+- *DHCP Release* para liberar la direccion IP si el dispositivo abandona bien (no surge un error inesperado) la red.
+Sin embargo, si dentro de un rato no ha habido noticias de dicho dispositivo (no ha querido renovarla), se libera.
+
+Es posible configurar un servidor de red para que use algunas direcciones IP fijas (estáticas) para ciertos dispositivos.
