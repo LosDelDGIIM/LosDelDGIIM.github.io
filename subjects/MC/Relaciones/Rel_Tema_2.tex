@@ -539,8 +539,6 @@
         \caption{Autómata Finito Determinista del Ejercicio \ref{ej:1.2.10}.}
         \label{fig:ej:1.2.10.afd}
     \end{figure}
-
-    % // TODO: Lo ha hecho Irina, lo ha copiado Joaquín. Comprobar
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -551,7 +549,7 @@
     \begin{observacion}
         Construir un AFD asociado.
     \end{observacion}
-    % // TODO: No se ha hecho
+    % // TODO: Hecho en clase, no copiado por mí. Estaba comiendo
 \end{ejercicio}
 
 \begin{ejercicio} \label{ej:1.2.12}
@@ -580,19 +578,104 @@
 
     Es directo ver que el lenguaje generado por la gramática tiene como expresión regular asociada:
     \begin{align*}
-        (a+b)^*ab(a+b)^*.
+        (a+b)^*ab(ab+b)^+.
     \end{align*}
 
     Por tanto, el lenguaje es regular.
 \end{ejercicio}
 
-\begin{ejercicio}
+\begin{ejercicio} \label{ej:1.2.14}
     Sobre el alfabeto $A = \{0, 1\}$ realizar las siguientes tareas:
     \begin{enumerate}
-        \item Describir un autómata finito determinista que acepte todas las palabras que contengan a $011$ o a $010$ (o las dos) como subcadenas.
-        \item Describir un autómata finito determinista que acepte todas las palabras que empiecen o terminen (o ambas cosas) por $01$.
+        \item \label{ej:1.2.14.1}
+        Describir un autómata finito determinista que acepte todas las palabras que contengan a $011$ o a $010$ (o las dos) como subcadenas.
+        
+        Tenemos los siguientes estados:
+        \begin{itemize}
+            \item \ul{$q_0$}: No se ha empezado ninguna subcadena.
+            \item \ul{$q_1$}: Se ha empezado una subcadena deseada. Tengo el carácter $0$.
+            \item \ul{$q_2$}: Se continúa la subcadena deseada. Tengo los caracteres $01$.
+            \item \ul{$q_3$}: Se ha encontrado la subcadena deseada. Tengo los caracteres $011$ o $010$.
+        \end{itemize}
+
+        El autómata obtenido es el de la Figura \ref{fig:ej:1.2.14.1}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial] (q0) {$q_0$};
+                \node[state, right of=q0] (q1) {$q_1$};
+                \node[state, right of=q1] (q2) {$q_2$};
+                \node[state, accepting, right of=q2] (q3) {$q_3$};
+
+                \draw   (q0) edge[above] node{0} (q1)
+                        (q1) edge[above] node{1} (q2)
+                        (q2) edge[above] node{0,1} (q3)
+                        (q1) edge[loop above] node{0} (q1)
+                        (q0) edge[loop above] node{1} (q0)
+                        (q3) edge[loop above] node{0,1} (q3);
+            \end{tikzpicture}
+            \caption{Autómata Finito Determinista del Ejercicio \ref{ej:1.2.14} apartado \ref{ej:1.2.14.1}.}
+            \label{fig:ej:1.2.14.1}
+        \end{figure}
+        
+        \item \label{ej:1.2.14.2}
+        Describir un autómata finito determinista que acepte todas las palabras que empiecen o terminen (o ambas cosas) por $01$.
+        
+        Tenemos los siguientes estados:
+        \begin{itemize}
+            \item \ul{$q_0$}: No hemos leído nada.
+            \item \ul{$q_1$}: Hemos empezado con un $0$, por lo que puede comenzar por $01$ (o terminar por $01$).
+            \item \ul{$q_2$}: Hemos empezado con $01$, por lo que ya no hay más restricciones.
+            \item \ul{$q_3$}: No hemos empezado por $01$, por lo que ha de terminar por $01$.
+            \item \ul{$q_4$}: Ha de terminar por $01$, y estamos en $0$, por lo que si introduce un $1$ puede terminar.
+            \item \ul{$q_5$}: Ha de terminar por $01$, y acabamos de leer $01$, por lo que podemos terminar.
+        \end{itemize}
+
+        El autómata obtenido es el de la Figura \ref{fig:ej:1.2.14.2}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial] (q0) {$q_0$};
+                \node[state, above right of=q0] (q1) {$q_1$};
+                \node[state, right of=q1, accepting] (q2) {$q_2$};
+                \node[state, below right of=q0] (q3) {$q_3$};
+                \node[state, right  of=q3] (q4) {$q_4$};
+                \node[state, accepting, right of=q4] (q5) {$q_5$};
+
+                % Uniones directas
+                \draw   (q0) edge[above] node{0} (q1)
+                        (q0) edge[above] node{1} (q3)
+                        (q1) edge[above] node{1} (q2)
+                        (q2) edge[loop above] node{0,1} (q2)
+                        (q3) edge[above] node{0} (q4)
+                        (q4) edge[above] node{1} (q5);
+                
+                % Completamos autómata
+                \draw   (q1) edge[left] node{0} (q4)
+                        (q3) edge[loop below] node{1} (q3)
+                        (q4) edge[loop above] node{0} (q4)
+                        (q5) edge[above, bend right] node{0} (q4)
+                        (q5) edge[below, bend left] node{1} (q3);
+            \end{tikzpicture}
+            \caption{Autómata Finito Determinista del Ejercicio \ref{ej:1.2.14} apartado \ref{ej:1.2.14.2}.}
+            \label{fig:ej:1.2.14.2}
+        \end{figure}
+
         \item Dar una expresión regular para el conjunto de las palabras en las que hay dos ceros separados por un número de símbolos que es múltiplo de $4$ (los símbolos que separan los ceros pueden ser ceros y puede haber otros símbolos delante o detrás de estos dos ceros).
+        \begin{equation*}
+            (0+1)^*\red{0}\left((0+1)(0+1)(0+1)(0+1)\right)^*\red{0}(0+1)^*
+        \end{equation*}
+        Notemos que los dos $0$'s en cuestión están marcados en rojo para facilitar la comprensión.
         \item Dar una expresión regular para las palabras en las que el número de ceros es divisible por $4$.
+        
+        En un primer momento, podríamos pensar en:
+        \begin{equation*}
+            (1^*01^*01^*01^*01^*)^*
+        \end{equation*}
+        No obstante, una palabra con $1$'s y sin $0$'s, que es aceptada por el lenguaje, no está contemplada en la expresión regular. La expresión regular correcta es:
+        \begin{equation*}
+            (1^*01^*01^*01^*0)^*1^*
+        \end{equation*}
     \end{enumerate}
 \end{ejercicio}
 
@@ -601,6 +684,23 @@
     \begin{align*}
         L_1 = \{u \in \{0, 1\}^* \mid \text{el número de $1$'s y de $0$'s es impar}\}.
     \end{align*}
+
+    Tenemos los siguientes estados:
+    \begin{itemize}
+        \item \ul{$E_{01}$}: Tenemos un error en $0$ y $1$, ya que el número de $0$'s y de $1$'s es par.
+        \item \ul{$E_0$}: Tenemos un error en $0$, ya que el número de $0$'s es par. El número de $1$'s es impar.
+        \item \ul{$E_1$}: Tenemos un error en $1$, ya que el número de $1$'s es par. El número de $0$'s es impar.
+        \item \ul{$X$}: No tenemos errores. El número de $0$'s y de $1$'s es impar.
+    \end{itemize}
+
+    La gramática obtenida es $G=(\{E_{01},E_0,E_1,X\}, \{0, 1\}, P, E_{01})$, donde $P$ es:
+    \begin{align*}
+        E_{01} &\to 0E_1 \mid 1E_0, \\
+        E_0 &\to 0X \mid 1E_{01}, \\
+        E_1 &\to 0E_{01} \mid 1X, \\
+        X &\to 0E_0 \mid 1E_1 \mid \veps
+    \end{align*}
+
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -608,13 +708,59 @@
     \begin{align*}
         L_2 = \{0^n1^m \mid n \geq 1, m \geq 0, n \text{ múltiplo de } 3 \text{ y } m \text{ es par}\}.
     \end{align*}
+
+    La expresión regular es:
+    \begin{align*}
+        (000)^*(11)^*
+    \end{align*}
 \end{ejercicio}
 
-\begin{ejercicio}
+\begin{ejercicio} \label{ej:1.2.17}
     Diseña un autómata finito determinista que reconozca el siguiente lenguaje:
     \begin{align*}
         L_3 = \{u \in \{0, 1\}^* \mid \text{el número de $1$'s no es múltiplo de } 3 \text{ y el número de $0$'s es par}\}.
     \end{align*}
+
+    Sean $n_0$ el número de $0$'s y $n_1$ el número de $1$'s.
+
+    Tenemos la siguiente disposición de estados:
+    \begin{itemize}
+        \item Los estados de arriba representan $n_0 \text{ mod } 2 = 0$.
+        \item Los estados de abajo representan $n_0 \text{ mod } 2 = 1$.
+        \item Los estados de la primera columna representan $n_1 \text{ mod } 3 = 0$.
+        \item Los estados de la segunda columna representan $n_1 \text{ mod } 3 = 1$.
+        \item Los estados de la tercera columna representan $n_1 \text{ mod } 3 = 2$.
+    \end{itemize}
+
+    El estado $q_{ij}$ representa $n_0 \text{ mod } 2 = i$ y $n_1 \text{ mod } 3 = j$.
+    
+    El autómata obtenido es el de la Figura \ref{fig:ej:1.2.17}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial] (q00) {$q_{00}$};
+            \node[state, right of=q00, accepting] (q01) {$q_{01}$};
+            \node[state, right of=q01, accepting] (q02) {$q_{02}$};
+            \node[state, below of=q00] (q10) {$q_{10}$};
+            \node[state, right of=q10] (q11) {$q_{11}$};
+            \node[state, right of=q11] (q12) {$q_{12}$};
+
+            \draw   (q00) edge[above] node{1} (q01)
+                    (q01) edge[above] node{1} (q02)
+                    (q02) edge[above, bend right] node{1} (q00)
+                    (q10) edge[above] node{1} (q11)
+                    (q11) edge[above] node{1} (q12)
+                    (q12) edge[below, bend left] node{1} (q10)
+                    (q00) edge[left] node{0} (q10)
+                    (q10) edge[right, bend right] node{0} (q00)
+                    (q01) edge[left] node{0} (q11)
+                    (q11) edge[right, bend right] node{0} (q01)
+                    (q02) edge[left] node{0} (q12)
+                    (q12) edge[right, bend right] node{0} (q02);
+        \end{tikzpicture}
+        \caption{Autómata Finito Determinista del Ejercicio \ref{ej:1.2.17}}
+        \label{fig:ej:1.2.17}
+    \end{figure}
 \end{ejercicio}
 
 \begin{ejercicio} \label{ej:1.2.18}
@@ -635,6 +781,33 @@
         \caption{Autómata Finito Determinista del Ejercicio \ref{ej:1.2.18}}
         \label{fig:ej:1.2.18}
     \end{figure}
+
+    Establecemos una ecuación por cada uno de los estados. El sistema inicial es:
+    \begin{equation*}
+        \begin{cases}
+            q_0 = \veps + aq_1 + bq_1, \\
+            q_1 = aq_1 + bq_2, \\
+            q_2 = \veps + aq_0 + bq_1.
+        \end{cases}
+    \end{equation*}
+
+    Buscamos obtener la expresión regular asociada a $q_1$:
+    \begin{align*}
+        q_1 &= aq_1 + b + baq_0 +bbq_1=\\
+        &= baq_0 + b + (a+bb)q_1\AstIg\\
+        &\AstIg (a+bb)^*(baq_0 + b)
+    \end{align*}
+    donde en $(\ast)$ hemos aplicado el Lema de Arden. Sustituyendo en la ecuación de $q_0$ obtenemos:
+    \begin{align*}
+        q_0 &= \veps + (a+b)q_1 =\\
+        &= \veps + (a+b)(a+bb)^*(baq_0 + b) =\\
+        &= \veps + (a+b)(a+bb)^*b + (a+b)(a+bb)^*baq_0 \AstIg\\
+        &\AstIg ((a+b)(a+bb)^*ba)^*(\veps + (a+b)(a+bb)^*b)
+    \end{align*}
+    donde, de nuevo, en $(\ast)$ hemos aplicado el Lema de Arden. Por tanto, la expresión regular asociada al autómata es:
+    \begin{align*}
+        ((a+b)(a+bb)^*ba)^*(\veps + (a+b)(a+bb)^*b).
+    \end{align*}
 \end{ejercicio}
 
 
@@ -644,6 +817,7 @@
         L = \{u110 \mid u \in \{1, 0\}^*\},
     \end{align*}
     encontrar la expresión regular, la gramática lineal por la derecha, la gramática lineal por la izquierda y el AFD asociado.
+    % // TODO: Hecho en clase
 \end{ejercicio}
 
 \begin{ejercicio}
