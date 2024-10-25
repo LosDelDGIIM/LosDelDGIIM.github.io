@@ -664,7 +664,7 @@ Si ahora se envian los tres paquetes anteriores por esta red, cuando los paquete
 - Otro de cabecera 20 + 500 datos con: Id del datagrama, MF = 1, offset = 2460.
 3. El tercero se dividirá en dos:
 - Uno de cabecera 20 + 980 datos con:  Id del datagrama, MF = 1, offset = 2960.
-- Otro de cabecera 20 + 240 datos con: Id del datagrama, MF = 0, offset = 3200.
+- Otro de cabecera 20 + 240 datos con: Id del datagrama, MF = 0, offset = 3940.
 
 Si ahora el equipo de la red B responde con un datagrama de tamaño 4200 (luego de datos tiene 4180), se fragmentaría en el router R3 y en R2 no se fragmentaría.
 
