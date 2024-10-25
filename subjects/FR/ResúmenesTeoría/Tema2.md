@@ -600,7 +600,20 @@ Con *wireshark* podemos ver paquetes por dentro.
 
 Ver la cabecera de IP en las diapositivas.
 
-(No me he enterado de nada)
+Campos:
+ Versión(V)
+- Tamaño de la cabecera(LC)
+- TS: es el campo encargado de marcar los datagramas para que, una vez lleguen al destino se sepa que se debe hacer una operación con ellos; en caso de que no se haga nada el campo pasa a tomar un valor correcto de forma automática.
+- Longitud total del datagrama
+- Identificador para conocer, en caso de fragmentación, qué paquetes son de qué datagrama y poder recomponerlo.
+- Desplazamiento(offset)
+- TTL: es el número de saltos máximo que puede dar un paquete en la red para evitar paquetes navegando en la red de forma indefinida. En cada salto, este campo se reduce en una unidad, si llega a cero, el paquete se descarta.
+- Protocolo: contiene un identificar de algún protocolo que se usa en ese datagrama; normalmente, estos protocolos están contenidos en el protocolo IP.
+- COmprobación: es un campo donde aparece el complemento a 1 del datagrama de manera que al llegar al destino se realizará la suma, luego si el resultado es todo a 1 el paqeute será correcto; en otro caso, se descarta.(El protocolo IP lo descarta pero no produce ningún mensaje de aviso a nivel de red, esto lo suele hacer ICMP si está implementado).
+- Dirección IP origen del datagrama, es decir, quién lo manda.
+- Dirección IP destino del datagrama, es decir, a quién se manda.
+- Opciones.
+- Relleno; este campo esta compuesto de tantos ceros como sea necesario para que el paquete tenga un tamaño múltiplo de 32.
 
 # Fragmentación
 Las redes no permiten paquetes de cualquier tamaño. El tamaño máximo es 2^16 bytes, aunque ninguna red suele aceptar dicho tamaño.
@@ -696,7 +709,7 @@ Esto es lo que soluciona ARP (Address Resolution Protocol).
 
 
 Yo sé que soy A y mando un mensaje ARP Request a nivel de enlace, que no sabemos a quién estamos mandando (destino FF:FF:...:FF, la direccion de difusión a nivel de enlace), preguntando con la IP que ya sabemos
-El siguiente router contestará con un mensaje ARP Reply con su dirección MAC en unicast (respuesta única, no difusión), para así poder enviar el paquete a nivel de red.
+ ARP es necesario El siguiente router contestará con un mensaje ARP Reply con su dirección MAC en unicast (respuesta única, no difusión), para así poder enviar el paquete a nivel de red.
 
 Esto no se hace siempre (si no, metería mucho tráfico).
 La dirección MAC que recibimos se guarda en una caché y si pasa mucho tiempo, la entrada expira (se reactiva con ARP).
