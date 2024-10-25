@@ -100,10 +100,10 @@
             \centering
             \begin{tikzpicture}
                 \node[state, initial, accepting] (q0) {$q_0$};
-                \node[state, right of=q0] (q1) {$q_1$};
+                \node[state, right of=q0, error] (E) {$E$};
 
-                \draw   (q0) edge[above] node{0, 1} (q1);
-                \draw   (q1) edge[loop above] node{0, 1} (q1);
+                \draw   (q0) edge[above] node{0, 1} (E);
+                \draw   (E) edge[loop above] node{0, 1} (E);
             \end{tikzpicture}
         \end{figure}
         \item El lenguaje formado por la palabra $01$, es decir, $\{01\}$,
@@ -541,7 +541,7 @@
     \end{figure}
 \end{ejercicio}
 
-\begin{ejercicio}
+\begin{ejercicio} \label{ej:1.2.11}
     Obtener una expresión regular para el lenguaje complementario al aceptado por la gramática
     \begin{align*}
         S &\to abA \mid B \mid baB \mid \varepsilon, & A &\to bS \mid b, & B &\to aS.
@@ -550,6 +550,44 @@
         Construir un AFD asociado.
     \end{observacion}
     % // TODO: Hecho en clase, no copiado por mí. Estaba comiendo
+
+    Esta gramática es lineal por la derecha. Algorítmicamente, obtenemos el autómata de la Figura \ref{fig:ej:1.2.11_L} para el lenguaje generado por $S$, $\cc{L}(S)$.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            % Estados: abA, bA, A, B, baB, aB, B, veps, bS, S, b, aS, S
+            \node[state, initial] (S) {$[S]$};
+            \node[state, right of=S] (abA) {$[abA]$};
+            \node[state, right of=abA] (bA) {$[bA]$};
+            \node[state, right of=bA] (A) {$[A]$};
+            \node[state, below of=abA] (B) {$[B]$};
+            \node[state, below of=B] (baB) {$[baB]$};
+            \node[state, right of=baB] (aB) {$[aB]$};
+            \node[state, above of=S, accepting] (veps) {$[\varepsilon]$};
+            \node[state, below of=A] (bS) {$[bS]$};
+            \node[state, right of=A] (b) {$[b]$};
+            \node[state, right of=B] (aS) {$[aS]$};
+
+            \draw   (S) edge[above] node{$\veps$} (abA)
+                    (abA) edge[above] node{$a$} (bA)
+                    (bA) edge[above] node{$b$} (A)
+                    (S) edge[above] node{$\veps$} (B)
+                    (S) edge[below] node{$\veps$} (baB)
+                    (baB) edge[above] node{$b$} (aB)
+                    (aB) edge[above] node{$a$} (B)
+                    (S) edge[left] node{$\veps$} (veps)
+                    (A) edge[left] node{$\veps$} (bS)
+                    (A) edge[below] node{$\veps$} (b)
+                    (b) edge[above] node{$b$} (veps)
+                    (bS) edge[above] node{$b$} (S)
+                    (B) edge[above] node{$\veps$} (aS)
+                    (aS) edge[below] node{$a$} (S);
+        \end{tikzpicture}
+        \caption{Autómata Finito Determinista del lenguaje $\cc{L}(S)$ del Ejercicio \ref{ej:1.2.11}.}
+        \label{fig:ej:1.2.11_L}
+    \end{figure}
+
+    % // TODO: Continuar
 \end{ejercicio}
 
 \begin{ejercicio} \label{ej:1.2.12}
@@ -817,24 +855,110 @@
         L = \{u110 \mid u \in \{1, 0\}^*\},
     \end{align*}
     encontrar la expresión regular, la gramática lineal por la derecha, la gramática lineal por la izquierda y el AFD asociado.
-    % // TODO: Hecho en clase
+    % // TODO: Hecho en clase. Comparar con gente
+    La expresión regular es:
+    \begin{align*}
+        (0+1)^*110.
+    \end{align*}
+
+    La gramática lineal por la derecha es $G=(\{S,A\}, \{0, 1\}, P, S)$, donde $P$ es:
+    \begin{align*}
+        S &\to 0S \mid 1S \mid A\\
+        A &\to 110.
+    \end{align*}
+
+    La gramática lineal por la izquierda es $G=(\{S,A\}, \{0, 1\}, P', S)$, donde $P'$ es:
+    \begin{align*}
+        S &\to X110\\
+        X &\to X0 \mid X1 \mid \varepsilon.
+    \end{align*}
+
+    El AFD asociado es el de la Figura \ref{fig:ej:1.2.19}. Sus estados son:
+    \begin{itemize}
+        \item \ul{$q_0$}: No estoy en la cadena $110$ final.
+        \item \ul{$q_1$}: He leído un $1$ de la cadena final.
+        \item \ul{$q_2$}: He leído un $11$ de la cadena final.
+        \item \ul{$q_3$}: He leído un $110$ de la cadena final.
+    \end{itemize}
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial] (q0) {$q_0$};
+            \node[state, right of=q0] (q1) {$q_1$};
+            \node[state, right of=q1] (q2) {$q_2$};
+            \node[state, accepting, right of=q2] (q3) {$q_3$};
+
+            \draw   (q0) edge[below] node{1} (q1)
+                    (q1) edge[below] node{1} (q2)
+                    (q2) edge[below] node{0} (q3)
+                    (q0) edge[loop above] node{0} (q0)
+                    (q1) edge[above, bend right] node[pos=0.1]{0} (q0)
+                    (q2) edge[above, bend right] node{1} (q0)
+                    (q3) edge[above, bend left] node{0,1} (q0);
+        \end{tikzpicture}
+        \caption{Autómata Finito Determinista del Ejercicio \ref{ej:1.2.19}}
+        \label{fig:ej:1.2.19}
+    \end{figure}
 \end{ejercicio}
 
 \begin{ejercicio}
     Dado un AFD, determinar el proceso que habría que seguir para construir una Gramática lineal por la izquierda capaz de generar el Lenguaje aceptado por dicho autómata.
+    % // TODO: Hecho por Irina, preguntar
 \end{ejercicio}
 
-\begin{ejercicio}
+\begin{ejercicio} \label{ej:1.2.21}
     Construir un autómata finito determinista que acepte el lenguaje de todas las palabras sobre el alfabeto $\{0, 1\}$ que no contengan la subcadena $001$.
-    Construir una gramática regular por la izquierda a partir de dicho autómata.
+    Construir una gramática regular por la izquierda a partir de dicho autómata.\\
+
+    Los estados son los siguientes:
+    \begin{itemize}
+        \item \ul{$q_0$}: No se ha empezado la subcadena $001$
+        \item \ul{$q_1$}: Se ha leído un $0$ de la subcadena $001$.
+        \item \ul{$q_2$}: Se ha leído un $00$ de la subcadena $001$.
+        \item \ul{$E$}: Se ha leído la subcadena $001$, por lo que es el estado de error.
+    \end{itemize}
+
+    El autómata obtenido es el de la Figura \ref{fig:ej:1.2.21}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial, accepting] (q0) {$q_0$};
+            \node[state, right of=q0, accepting] (q1) {$q_1$};
+            \node[state, right of=q1, accepting] (q2) {$q_2$};
+            \node[state, error, right of=q2] (E) {$E$};
+
+            \draw   (q0) edge[below] node{0} (q1)
+                    (q0) edge[loop above] node{1} (q0)
+                    (q1) edge[below] node{0} (q2)
+                    (q1) edge[above, bend right] node[pos=0.1]{1} (q0)
+                    (q2) edge[above, bend right] node{0} (q0)
+                    (q2) edge[below] node{1} (E)
+                    (E) edge[loop above] node{0,1} (E);
+        \end{tikzpicture}
+        \caption{Autómata Finito Determinista del Ejercicio \ref{ej:1.2.21}}
+        \label{fig:ej:1.2.21}
+    \end{figure}
+    % // TODO: Hecho por Irina, preguntar
 \end{ejercicio}
 
 \begin{ejercicio}
-    Sea $B_n = \{a^k \mid k \text{ es múltiplo de } n\}$. Demostrar que $B_n$ es regular para todo $n$.
+    Sea $B_n = \{a^k \mid k \text{ es múltiplo de } n\}$. Demostrar que $B_n$ es regular para todo $n$.\\
+
+    Fijado $n\in \bb{N}$, la expresión regular correspondiente es:
+    \begin{align*}
+        (a\overbrace{\cdots }^{n \text{ veces}}a)^*.
+    \end{align*}
+
+    Equivalentemente, usando la notación de las expresiones regulares de UNIX, la expresión regular sería:
+    \begin{equation*}
+        (a\{n\})^*
+    \end{equation*}
+
+    % // TODO: No corregido
 \end{ejercicio}
 
 \begin{ejercicio}
-    Decimos que $u$ es un prefijo de $v$ si existe $w$ tal que $uw = v$. Decimos que $u$ es un prefijo propio de $v$ si además $u \neq v$ y $u \neq \varepsilon$. Demostrar que si $L$ es regular, también lo son los lenguajes
+    Sea $A$ un alfabeto. Decimos que $u\in A^*$ es un prefijo de $v\in A^*$ si existe $w\in A^*$ tal que $uw = v$. Decimos que $u$ es un prefijo propio de $v$ si además $u \neq v$ y $u \neq \varepsilon$. Demostrar que si $L$ es regular, también lo son los lenguajes siguientes:
     \begin{enumerate}
         \item $NOPREFIJO(L) = \{u \in L \mid \text{ningún prefijo propio de } u \text{ pertenece a } L\}$,
         \item $NOEXTENSION(L) = \{u \in L \mid u \text{ no es un prefijo propio de ninguna palabra de } L\}$.
@@ -857,7 +981,7 @@
     \begin{align*}
         \{a_{\sigma(1)}, \ldots, a_{\sigma(n)} \mid \sigma \text{ es una permutación de } \{1, \ldots, n\}\}.
     \end{align*}
-    Dado un lenguaje $L$, se llama $Per(L) = \bigcup_{u \in L} Per(u)$.
+    Dado un lenguaje $L$, se llama $Per(L) = \bigcup\limits_{u \in L} Per(u)$.
     Dar expresiones regulares y autómatas minimales para $Per(L)$ en los siguientes casos:
     \begin{enumerate}
         \item $L = (00 + 1)^*$,
