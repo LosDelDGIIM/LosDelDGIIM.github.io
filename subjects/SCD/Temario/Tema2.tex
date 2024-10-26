@@ -507,13 +507,14 @@ Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincro
 \end{ejemplo}
 
 \begin{ejercicio*}
-    Se pide demostrar que el siguiente monitor funciona como un semáforo de Habermann.
-    En un semáforo de Habermann, queremos llevar la cuenta de:
+    Se pide demostrar que el siguiente monitor funciona como un semáforo de Habermann. Un semáforo de Habermann se trata de un semáforo normal que lleva la cuenta de:
     \begin{itemize}
-        \item El número de recursos que han estado disponibles en algún momento, \verb|nv|.
-        \item El número de procesos que han podido hacer uso de un recurso, \verb|np|.
-        \item El número de procesos que han solicitado hacer uso de un recurso, \verb|na|.
+        \item El número de llamadas realizadas a \verb|signal|, \verb|nv|.
+        \item El número de llamadas realizadas a \verb|wait|, \verb|na|.
+        \item El número de llamadas completadas a \verb|wait|, \verb|np|.
     \end{itemize}
+    En este caso, llamaremos \verb|P| al procedimiento que simule la operación \verb|wait| y \verb|V| al procedimiento que simule la operación \verb|signal|.
+    
     \begin{minted}[escapeinside=\#\#]{pascal}
         Monitor Semaforo;
           var na, np, nv : int;
@@ -536,74 +537,111 @@ Una vez vistos ya todos los axiomas sobre verificación de operaciones de sincro
             na = 0; np = 0; nv = 0;
           end
     \end{minted}
+    Buscamos un IM para preceder a la demostración del mismo. Notemos que las variables permanentes han de cumplir:
     \begin{itemize}
-        \item Como para poder hacer uso de un recurso hay que haber solicitado acceso a él previamente, siempre tendremos que $na \geq np$.
-        \item Como un proceso solo puede hacer uso de un recurso a la vez, el número de recursos que en algún momento han estado disponibles debe ser mayor o igual al número de recursos que en algún momento han sido utilizados por algún proceso: $nv \geq np$.
-        \item Ahora, destacamos dos casos:
-            \begin{itemize}
-                \item Si el número de peticiones para un recurso es mayor que el número de recursos que en algún momento han estado libre, $na \geq nv$, entonces es que no se han podido cumplir todas las peticiones, por lo que tienen que haber más procesos que han podido hacer uso de un recurso que recursos disponibles, es decir, $np \geq nv$.
-                \item Por otra parte, si el número de peticiones es menor al número de recursos que en algún momento han estado disponibles, $na \leq nv$, entonces todas las peticiones se han podido completar, por lo que $np \geq na$.
-            \end{itemize}
-            Combinando estos dos puntos finales, deducimos que $np \geq \min(na, nv)$.
+        \item $np \leq na$, ya que para completar una llamada \verb|P| hay que realizar una llamada.
+        \item $np \leq nv$, ya que, como inicialmente $np = na = nv = 0$, para poder completar una llamada a \verb|P|, hay que previamente haber hecho una llamada a \verb|V|.
+        \item $np \geq \min(na,nv)$, para no detener innecesariamente a los preocesos, cumpliendo la hipótesis de proceso finito.
     \end{itemize}
-    %Procedemos a demostrar que el monitor que simula el funcionamiento del semáforo de Habermann tiene como IM:
-    %\begin{equation*}
-        %\{IM\} = \{np \leq na \land np \leq nv \land np \geq \min(na,nv)\}
-    %\end{equation*}
-    %En primer lugar, tendremos que demostrar el triple de inicialización de variables, $\{V\}\ \text{código\ de\ inicialización}\ \{IM\}$:
-    %\begin{gather*}
-        %\{V\}\ na = 0;\ np=0;\ nv=0;\ \{na = 0 \land np = 0 \land nv = 0\} \\
-        %\{na = 0 \land np = 0 \land nv = 0\} \rightarrow \{IM\}
-    %\end{gather*}
-    %Ahora, tendremos que probar los triples de los procedimientos del monitor:
-    %\begin{gather*}
-        %\{IM\}\ P\ \{IM\} \\
-        %\{IM\}\ V\ \{IM\}
-    %\end{gather*}
-    %\begin{enumerate}
-        %\item Para el primero: 
-            %\begin{gather*}
-                %\{IM\} \equiv \{np \leq na \land np \leq nv \land np \geq \min(na,nv)\} \\
-                %na = na + 1; \\
-                %\{np \leq na-1 \land np \leq nv \land np \geq \min(na-1,nv)\}  \\
-                %\texttt{if\ } (na > nv) \texttt{\ then\ }\\ 
-                %\{np \leq na-1 \land np \leq nv \land np \geq \min(na-1,nv)\land na > nv\}\equiv \\
-                %\equiv \{np \leq na-1 \land np \leq nv \land np \geq nv\} \equiv \{np \leq na-1 \land np = nv\} \\
-                %c.wait(); \\
-                %\texttt{else} \\
-                %null; \\
-                %\texttt{end} \\
-                %np = np + 1; 
-            %\end{gather*}
-            %Y para obtener la poscondición de la instrucción \verb|c.wait()|, tenemos que ver bajo qué precondición se llama a la instrucción \verb|c.signal()| en el procedimiento \verb|V|:
-            %\begin{gather*}
-                %\{IM\}\equiv \{np \leq na \land np \leq nv \land np \geq \min(na,nv)\} \\
-                %nv = nv + 1; \\
-                %\{np \leq na \land np \leq nv-1 \land np \geq \min(na,nv-1)\} \\
-                %\texttt{if\ } (na > np) \texttt{\ then\ } \\
-                %\{np \leq na \land np \leq nv-1 \land np \geq \min(na,nv-1) \land na > np\} \equiv \\
-                %\equiv \{np < na \land np = nv - 1\} \\
-                %c.signal(); \\
-            %\end{gather*}
-            %Luego tenemos ya la poscondición de \verb|c.wait()| y podemos seguir con la demostración anterior:
-            %\begin{gather*}
-                %\{IM\} \equiv \{np \leq na \land np \leq nv \land np \geq \min(na,nv)\} \\
-                %na = na + 1; \\
-                %\{np \leq na-1 \land np \leq nv \land np \geq \min(na-1,nv)\}  \\
-                %\texttt{if\ } (na > nv) \texttt{\ then\ }\\ 
-                %\{np \leq na-1 \land np \leq nv \land np \geq \min(na-1,nv)\land na > nv\}\equiv \\
-                %\equiv \{np \leq na-1 \land np \leq nv \land np \geq nv\} \equiv \{np \leq na-1 \land np = nv\} \\
-                %c.wait(); \\
-                %\{np < na \land np = nv - 1\} \\
-                %\texttt{else} \\
-                %\{np \leq na-1 \land np \leq nv \land np \geq \min(na-1,nv)\land na \leq nv\}\equiv \\
-                %null; \\
-                %\texttt{end} \\
-                %np = np + 1; 
-            %\end{gather*}
-        %\item 
-    %\end{enumerate}
-    % // TODO: Semáforo de Habermann
+    De estas tres propiedades, deducimos que el invariante a usar es:
+    \begin{equation*}
+        \{IM\} \equiv \{np = \min(na,nv)\}
+    \end{equation*}
+    Pasemos ahora a la demostración del monitor:
+    \begin{enumerate}
+        \item En primer lugar, probaremos el triple de inicialización de variables:
+            \begin{gather*}
+                \{V\} \\
+                na = 0;\ np=0;\ nv=0; \\
+                \{na = 0 \land np = 0 \land nv = 0\} \rightarrow \{IM\}
+            \end{gather*}
+        \item Posteriormente, probaremos el triple del procedimiento \verb|P|:
+            \begin{equation*}
+                \{IM \land L\}\ P\ \{C \land L\}
+            \end{equation*}
+
+            para ello:
+            \begin{gather*}
+                \{IM\}\equiv \{np=\min(na,nv)\} \\
+                na = na + 1;\\
+                \{np = \min(na-1,nv)\} \\
+                \texttt{if\ }(na > nv) \texttt{\ then\ } \\
+                \{na > nv \land np = \min(na-1,nv)\} \rightarrow \{na-1\geq nv \land np = \min(na-1,nv)\} \rightarrow \\ 
+                \rightarrow\{np = nv\} \rightarrow \{np = \min(na,nv)\} \\
+                c.wait();
+            \end{gather*}
+            Donde en la precondición de la operación \verb|c.wait();| hemos necesitado comprobar que $IM$ se seguía compliendo.
+
+            Y para poder seguir, hemos de buscar la precondición de la operación \verb|c.signal();| asociada a la misma variable condición, con lo que comenzamos a demostrar el procedimiento \verb|V|:
+            \begin{gather*}
+                \{IM\} \equiv \{np = \min(na,nv)\} \\
+                nv = nv + 1; \\
+                \{np = \min(na,nv-1)\} \\
+                \texttt{if\ } (na > np) \texttt{\ then\ } \\
+                \{na > np \land np = \min(na,nv-1)\} \rightarrow \{na > np \land np = nv-1\}
+            \end{gather*}
+            Luego tenemos ya la poscondición de la operación \verb|c.wait();|, con lo que podemos volver por donde íbamos:
+            \begin{gather*}
+                \{IM\} \equiv \{np = \min(na,nv)\} \\
+                na = na + 1;\\
+                \{np = \min(na-1,nv)\} \\
+                \texttt{if\ }(na > nv) \texttt{\ then\ } \\
+                \{na > nv \land np = \min(na-1,nv)\} \rightarrow \{na-1\geq nv \land np = \min(na-1,nv)\} \rightarrow \\ 
+                \rightarrow\{np = nv\} \rightarrow \{np = \min(na,nv)\} \\
+                c.wait(); \\
+                \{na > np \land np = nv - 1\} \\
+                \texttt{else do} \\
+                \{na \leq nv \land np = \min(na-1,nv)\} \rightarrow \{na-1 < nv \land np = \min(na-1,nv)\} \rightarrow \\
+                \rightarrow \{na-1 < nv \land np = na-1\} \rightarrow \{np < nv \land np = na-1\} \\
+                \texttt{null;} \\
+                \{np < nv \land np = na -1\} \\
+                \texttt{endif}
+            \end{gather*}
+            Como las poscondiciones de cada bloque del \verb|if| son distintas, debemos relajarlas para buscar dos poscondiciones iguales, para poder aplicar la regla del \verb|if|. Notemos que:
+            \begin{gather*}
+                \{na > np \land np = nv-1\} \rightarrow \{na > nv-1 \land np = nv-1\} \rightarrow \\ \rightarrow \{na \geq nv \land np = nv - 1\} \\
+                \{np < nv \land np = na-1\} \rightarrow \{na-1 < nv \land np = na-1\} \rightarrow\\\rightarrow \{na \leq nv \land np = na-1\}
+            \end{gather*}
+            Podemos por tanto, relajar ambas poscondiciones a la poscondición
+            \begin{equation*}
+                \{np+1 = \min(na,nv)\}
+            \end{equation*}
+            Con lo que ahora sí podemos aplicar la regla del \verb|if|, con lo que podemos finalizar la demostración del triple del procedimiento \verb|P|:
+            \begin{gather*}
+                \{IM\} \equiv \{np = \min(na,nv)\} \\
+                na = na + 1;\\
+                \{np = \min(na-1,nv)\} \\
+                \texttt{if\ }(na > nv) \texttt{\ then\ } \\
+                \{np = \min(na,nv)\} \\
+                c.wait(); \\
+                \{np+1 = \min(na,nv)\} \\
+                \texttt{else do} \\
+                \{np+1 = \min(na,nv)\} \\
+                \texttt{null;} \\
+                \{np+1 = \min(na,nv)\} \\
+                \texttt{endif} \\
+                \{np+1 = \min(na,nv)\} \\
+                np = np + 1; \\
+                \{np = \min(na,nv)\} \equiv \{IM\}
+            \end{gather*}
+        \item Para probar ahora el triple del procedimiento \verb|V|:
+            \begin{gather*}
+                \{IM\} \equiv \{np = \min(na,nv)\} \\
+                nv = nv + 1; \\
+                \{np = \min(na,nv-1)\} \\
+                \texttt{if\ } (na > np) \texttt{\ then\ } \\
+                \{na > np \land np = \min(na,nv-1)\} \rightarrow \{na > np \land np = nv-1\}\\
+                c.signal(); \\
+                \{np = \min(na,nv)\} \\
+                \texttt{else do} \\
+                \{na \leq np \land np = \min(na,nv-1)\}\rightarrow\{np = na\} \rightarrow \{np = \min(na,nv)\} \\
+                \texttt{null;} \\
+                \{np = \min(na,nv)\} \\
+                \texttt{endif} \\
+                \{np = \min(na,nv)\} \equiv \{IM\}
+            \end{gather*}
+    \end{enumerate}
+    Con lo que tenemos provado que $IM$ es un IM\@.
 \end{ejercicio*}
 
 \subsection{Regla de concurrencia para programas con monitores}
@@ -1014,7 +1052,7 @@ Podemos representar la vida de un proceso que forma parte de un programa concurr
 \label{fig:su}
 \end{figure}
 
-\subsection{Comparativa}
+\subsection{Comparativa}\label{cap:comp}
 Antes de comparar las semánticas de señales que ya hemos descrito, destacamos un último tipo de semántica de señales, las \textit{señales automáticas} (SA). En estas, el programador programa las operaciones \verb|wait| y es el compilador quien analiza los códigos programados y decide cuándo desbloquear a los procesos, por lo que se trata de unas señales implícitas (ya que en ningún moemnto se especifica cuándo hacer una instrucción \verb|signal|). 
 
 A pesar de que este tipo de semántica aparece en la bibliografía, no aparece en ningún lenguaje de programación conocido, por lo que no tendrá relevancia en la asignatura ni en la comparativa que ahora realizaremos.\\
@@ -1095,12 +1133,67 @@ Mostramos ahora una versión alternativa para el monitor que resuelve el problem
 \end{minted}
 Vemos su comportamiento:
 \begin{itemize}
-    \item No funciona con la semántica SC.
+    \item No funciona con la semántica SC\@.
     \item Funciona con cualquier semántica desplazante, ya que tras llegar a $n$ procesos en la barrera, el $n$-ésimo desbloquea al primero, que desbloquea al segundo, que desbloquea al tercero, \ldots, hasta llegar al $n-1$, que realiza su funcionalidad y viceversa hasta el $n$-ésimo proceso, que deja la barrera en el estado inicial para los siguientes grupos de procesos.
 \end{itemize}
 \end{ejemplo}~\\
 
-En general, tenemos que tener cuidad con la semántica de señales que estemos empleando, sobre todo si las instrucciones \verb|signal| tienen instrucciones detrás. Además, la semántica SC suele complicar como norma general los diseños de los monitores.
+En general, tenemos que tener cuidado con la semántica de señales que estemos empleando, sobre todo si las instrucciones \verb|signal| tienen instrucciones detrás. Además, la semántica SC suele complicar como norma general los diseños de los monitores.
+
+\begin{ejercicio*}
+    Determinar para qué tipo de semánticas (SC o desplazantes) funcionan los siguientes monitores que tratan de simular el comportamiento de un semáforo:
+    \setlength{\columnsep}{1cm}
+    \begin{multicols}{2}
+        \begin{minted}[escapeinside=\#\#]{pascal}
+            Monitor semaforo_FIFO1;
+            var c : cond;
+                s : int;
+
+            procedure P;
+            begin
+                if (s = 0) then
+                    c.wait();
+                s := s - 1;
+            end;
+
+            procedure V;
+            begin
+                s := s + 1;
+                c.signal();
+            end
+
+            begin
+                s := 0;
+            end
+        \end{minted}
+        \begin{minted}[escapeinside=\#\#]{pascal}
+            Monitor semaforo_FIFO2;
+            var c : cond;
+                s : int;
+
+            procedure P;
+            begin
+                while (s = 0) do
+                    c.wait();
+                end do;
+                s := s - 1;
+            end;
+
+            procedure V;
+            begin
+                c.signal();
+                s := s + 1;
+            end
+
+            begin
+                s := 0;
+            end
+        \end{minted}
+    \end{multicols}
+    En primer lugar, notamos que el monitor de la izquierda realiza una instrucción \verb|if| antes de llamar a la operación \verb|wait|, luego sólo isrve para semánticas desplazantes.
+
+    Posteriormente, observamo que el monitor de la derecha realiza la operación \verb|wait| dentro de un bucle, por lo que este sirve para semánticas SC\@. Sin embargo, no sirve para semánticas desplazantes, ya que la operación \verb|signal| se realiza antes de incrementar la variable \verb|s|, por lo que nunca se realizaría dicho incremento, al bloquear al proceso señalador.
+\end{ejercicio*}
 
 \subsection{Axiomas para operaciones de sincronización no desplazantes}
 Como comentamos ya en la Sección~\ref{sec:ax_desplazantes}, los axiomas que sabemos para demostrar las operaciones de sincronización en monitores sólo aplican cuando trabajamos con señales con semánticas desplazantes. Por tanto, si nos encontramos trabajando con semánticas de señales no desplazantes como SC, necesitamos unas nuevas reglas a aplicar.
@@ -1124,3 +1217,177 @@ Como comentamos ya en la Sección~\ref{sec:ax_desplazantes}, los axiomas que sab
         \end{equation*}
         Por tanto, la operación \verb|signal| tiene el mismo comportamiento que la instrucción nula en semánticas no desplazantes, ya que podemos poner como pre y poscondición el mismo aserto $P$ y el triple será cierto independientemente del aserto escogido.
 \end{description}
+
+\subsection{Intercambio de señales en programas que usan monitores}
+En el Capítulo~\ref{cap:comp}, mencionamos que todas las semánticas de señales eran equivalentes para resolver cualquier problema. Esto se debe a que si se cumplen unas determinadas condiciones, entonces todas las señales (las automáticas, las desplazantes y las no desplazantes) son equivalentes. Esto significa que si estamos trabajando con una semántica, podemos reemplazar las señales de dicha semántica por cierto código que asemeja el comportamiento de otra semántica de señales.\\
+
+Las condiciones que deben cumplirse dentro de un monitor para que podamos simular una semántica mediante otra son:
+\begin{enumerate}
+    \item Se tiene que exigir como poscondición de la operación \verb|wait| el invariante del monitor y nada más estricto (esto es, no podremos usar directamente la condición de sincronización tras la operación \verb|wait|, sino solamente el invariante del monitor\footnote{Notemos que esto no inclumple el axioma de la operación \texttt{wait}, ya que $C\rightarrow IM$.}).
+    \item Con señales continuas, cuando realizamos un \verb|signal| no hay desplazamiento, por lo que para que se puedan asemejar a las señales desplazantes, hemos de obligar a que la llamada a \verb|signal| se haga siempre antes de suspender el proceso y salir del monitor.
+
+        Esto es, que la operación \verb|signal| sea la última instrucción en el procedimiento de un monitor o que tras dicha operación haya una instrucción \verb|wait|.
+    \item Finalmente, para que sean equivalentes los códigos, no podemos usar la operación \verb|signal_all|.
+\end{enumerate}
+
+\subsection{Señales \texttt{wait} con prioridad}
+Como hemos visto hasta ahora, tras ejecutar una operación \verb|wait| sobre una variable condición \verb|c|, pasamos a la cola de bloqueados de la misma, con planificación FIFO\@. Sin embargo, en algunos lenguajes de programación aparece la operación \verb|wait| con prioridad sobre las variables de tipo condición, con el fin de solucionar situaciones en las que no queremos que tras una operación \verb|signal| se desbloquee el primero de la cola, sino aquel que tuviera más prioridad y lleve más tiempo en la misma.\\
+
+En el caso descrito, la operación \verb|wait| aceptará un parámetro entero no negativo llamado \textit{prioridad}, de forma que a menor sea el valor de dicho parámetro, mayor prioridad tendrá en la cola de bloqueados. En este caso, la cola FIFO de la variable condición se sustituye por una cola con prioridad.\\
+
+Mostramos a continuación un ejemplo para motivar por qué algunos lenguajes implementan esta operación \verb|wait|.
+\begin{ejemplo}
+    Queremos programar una alarma para procesos de tal manera que el proceso se bloquee al fijar la alarma y que este se desbloquee al cumplirse la hora previamente fijada. Para ello, implementaremos la alarma haciendo uso de un monitor con dos procedimientos:
+    \begin{itemize}
+        \item \verb|tick|, cableado a la interrupción de reloj del sistema operativo, con el fin de que el reloj sepa el instante en el que se encuentra en cada momento.
+        \item \verb|despiertame|, que servirá para que cada proceso fije el momento en el que quiere ser despertado.
+    \end{itemize}
+    Para simplificar el ejemplo, usaremos como unidad de medida un ``tick''. Planteamos el siguiente monitor como solución al problema, usando señales \verb|wait| con prioridad:
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        monitor despertador;
+        var ahora : Long_integer;
+            despertar : cond;  {variable condición prioritaria}
+
+        procedure despiertame(n : integer);
+        var alarma : Long_integer;
+        begin
+            alarma := ahora + n;    {hora para despertar}
+            while ahora < alarma do 
+                despertar.wait(alarma);
+            end do;
+            despertar.signal();
+        end
+
+        procedure tick();   {cableada a INT CLK}
+        begin
+            ahora := ahora + 1;
+            despertar.signal();
+        end
+
+        begin
+            ahora := 0;
+        end
+    \end{minted}
+    De esta forma, lo que estamos haciendo es ordenar la cola de bloqueados de la variable condición \verb|despertar| poniendo al inicio de la misma el primer proceso a desbloquear.
+
+    Por ejemplo, ante el siguiente uso del monitor por los procesos:
+    \begin{table}
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        Proceso & Instante & Llamada & Cola de variable condición \\
+        \hline
+        P1 & 0 & \verb|despiertame(10)| & (P1) \\
+        \hline
+        P2 & 1 & \verb|despiertame(3)| & (P2 | P1) \\
+        \hline
+        P3 & 2 & \verb|despiertame(5)| & (P2 | P3 | P1) \\
+        \hline
+        P4 & 3 & \verb|despiertame(1)| & (P2 | P4 | P3 | P1) \\
+        \hline
+    \end{tabular}
+    \caption{Ejemplo de uso del monitor}
+    \end{table}
+    Cuando la interrupción de reloj del sistema llame al procedimiento \verb|tick|, se desbloqueará al primer proceso de la cola de la variable condición, P2, que saldrá del bucle \verb|while| y desbloqueará al siguiente proceso de la cola, P4, que hará lo mismo, desbloqueando a P3, y como para P3 \verb|ahora < alarma|, volverá a bloquearse, quedando la cola de la variable condición como (P3 | P1).\\
+
+    Notemos que con el uso de la operación \verb|wait| con prioridad minimizamos el número de procesos a desbloquear en cada nuevo instante, ya que tenemos la cola de bloqueados ordenada de forma que al inicio están los procesos que antes se desbloquearán, con lo que si encontramos el primer proceso que no se desbloquea, hemos terminado en dicho instante de despertar a los procesos.\\
+
+    Si tratamos de programar este mismo problema sin operaciones \verb|wait| con prioridad, sino con la operación \verb|wait| que venimos usando a lo largo de este Capítulo, el procedimiento \verb|despiertame| quedaría como:
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        procedure despiertame(n : integer);
+        var alarma : Long_integer;
+        begin
+            alarma := ahora + n;    {hora para despertar}
+            while ahora < alarma do 
+                despertar.signal();
+                despertar.wait();
+            end do;
+            despertar.signal();
+        end
+    \end{minted}
+    Lo que sucede es que tenemos que estar continuamente desbloqueando a los procesos para comprobar si deben o no despertarse, al no tener ningún orden en dicha cola.
+\end{ejemplo}
+
+\section{Implementación de los monitores}
+Podemos implementar todas las funcionalidades de un monitor usando semáforos. En esta sección, explicaremos cómo implementar un monitor con semántica de señales SU, que nos garantice el comportamiento de un proceso descrito en la Figura~\ref{fig:su}.\\
+
+Para conseguir simular el comportamiento de un monitor, hemos de conseguir:
+\begin{itemize}
+    \item Tener una cola de entrada al monitor, que implementaremos usando un semáforo llamado \verb|mutex|.
+    \item Tener una cola de procesos urgentes, que implementaremos con un semáforo llamado \verb|next|.
+    \item Contabilizar el número de procesos bloqueados en la cola de urgentes\footnote{Con la finalidad de saber si dicha cola está o no vacía}, con una variable entera \verb|next_count|.
+    \item Implementación de las variables condición.
+
+        Para ello, por cada variable condición que queramos tener en un monitor, crearemos un semáforo nuevo y una variable entera que controle el número de procesos que bloquea dicho semáforo. Además, crearemos unas nuevas funciones \verb|wait| y \verb|signal| (llamadas \verb|x_wait| y \verb|x_signal|) que simulen el comportamiento de las operaciones \verb|wait| y \verb|signal| de las variables compartidas.
+\end{itemize}
+
+Inicializaremos las variables que nos permiten controlar el monitor de la forma:
+\begin{minted}[escapeinside=\#\#]{pascal}
+    mutex := 1;
+    next := 0;
+    next_count := 0;
+\end{minted}
+
+\subsubsection{Procedimientos del monitor}
+Cada vez que nos dispongamos a crear un procedimiento nuevo para el monitor, deberemos ejecutar cierto código antes y después del mismo, con la finalidad de garantizar la exclusión mutua dentro del monitor. Para ello, crearemos dos funciones, \verb|entrada| y \verb|salida|, las cuales deberemos invocar antes y después del cuerpo del procedimiento a programar:
+\begin{minted}{pascal}
+    procedure P();
+    begin
+        entrada();
+        {cuerpo del procedimiento}
+        salida();
+    end
+\end{minted}
+De esta forma, el código de entrada al monitor sería:
+\setlength{\columnsep}{1cm}
+\begin{minted}{pascal}
+    procedure entrada();
+    begin
+        sem_wait(mutex);    {garantizar exclusión mutua}
+    end
+\end{minted}    
+Y el de salida:
+\begin{minted}{pascal}
+    procedure salida();
+    begin
+        if(next_count <> 0)    {hay procesos en cola de urgentes}
+            sem_signal(next);
+        else
+            sem_signal(mutex);   {liberamos el monitor}
+        end if
+    end
+\end{minted}
+
+\subsubsection{Variables condición}
+Por cada variable condición a usar dentro del monitor necesitamos tener un par semáforo, entero. Mostramos ahora cómo podemos implementar las operaciones \verb|wait| y \verb|signal| de las variables condición usando semáforos.
+
+Para ello, crearemos una función por cada operación a simular, la cual recibirá dos parámetros: el semáforo que simula la variable condición (\verb|x_sem|) y la cantidad de procesos que dicho semáforo tiene bloqueados (\verb|x_count|):
+\begin{minted}{pascal}
+    procedure x_wait(x_sem : semaphore, x_count : integer);
+    begin
+        x_count := x_count + 1;  {un bloqueado más}
+
+        if(next_count <> 0) then  {hay procesos en cola de urgentes}
+            sem_signal(next);
+        else
+            sem_signal(mutex);  {deja libre el monitor}
+        end if
+
+        sem_wait(x_sem);
+        x_count := x_count - 1;
+    end
+\end{minted}
+\begin{minted}{pascal}
+    procedure x_signal(x_sem : semaphore, x_count : integer);
+    begin
+        if(x_count <> 0) then  {si no hay bloqueado no hace nada}
+            next_count := next_count + 1;
+            sem_signal(x_sem);
+            sem_wait(next);
+            next_count := next_count - 1;
+        end if
+    end
+\end{minted}
+Y con todas estas funciones tenemos \textbf{casi} implementados los monitores. Hay que tener en cuenta que los semáforos no tienen una política de planificación fija, sino que es el sistema operativo quien planifica los procesos desbloqueados por el semáforo.
+
+Es necesario por tanto, usar semáforos con colas FIFO para tener totalmente implementados los monitores.
