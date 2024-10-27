@@ -480,6 +480,121 @@
         \item El uso de este monitor puede dar lugar a interbloqueo. Esto ocurre cuando más de un proceso, en algún punto en su código, tiene la necesidad de usar dos ejemplares de recursos de distinto tipo a la vez. Describe la secuencia de peticiones (llamadas al procedimiento correspondiente del monitor) que da lugar a interbloqueo.
         \item Una posible solución al problema anterior es obligar a que si un proceso necesita dos recursos de distinto tipo a la vez, deba de llamar a \verb|pedir_recurso|, dando un parámetro con valor 0, para indicar que necesita los dos ejemplares. En esta solución, cuando un ejemplar quede libre, se dará prioridad a los posibles procesos esperando usar dos ejemplares, frente a los que esperan usar solo uno de ellos.
     \end{enumerate}
+
+    \begin{enumerate}
+        \item Mostramos la implementación usando pseudocódigo:
+            \begin{minted}{pascal}
+                monitor Recursos (N1, N2 : integer);
+                   var libres : array[1..2] of integer;
+                       colas : array[1..2] of condition;
+
+                   begin
+                      libres[1] = N1;
+                      libres[2] = N2;
+                   end
+
+                   procedure pedir_recurso(tipo : 1..2);
+                   begin
+                      if libres[tipo] = 0 then
+                         colas[tipo].wait();
+                      end;
+                      libres[tipo]--;
+                   end
+
+                   procedure liberar_recurso(tipo : 1..2);
+                   begin
+                      libres[tipo]++;
+                      cola[tipo].signal();
+                   end
+               end
+            \end{minted}
+        \item Para mostrar una situación en la que el uso de este monitor puede dar lugar a un interbloqueo, mostramos los siguientes códigos:
+                \begin{minted}[escapeinside=\#\#]{pascal}
+                    var monitor : Recursos(1,1);
+
+                    process P1;
+                    begin
+                       monitor.pedir_recurso(1);
+                       monitor.pedir_recurso(2);
+                       {Uso de los recursos}
+                       monitor.liberar_recurso(1);
+                       monitor.liberar_recurso(2);
+                    end
+
+                    process P2;
+                    begin
+                       monitor.pedir_recurso(2);
+                       monitor.pedir_recurso(1);
+                       {Uso de los recursos}
+                       monitor.liberar_recurso(2);
+                       monitor.liberar_recurso(1);
+                    end
+
+                    begin
+                       cobegin P1 #||# P2 coend
+                    end
+                \end{minted}
+                Si ahora se ejecutan los códigos y se sucede un entrelazamiento en las instrucciones del programa concurrente obteniendo la traza:
+                \begin{table}[H]
+                \centering
+                \begin{tabular}{|cc|}
+                    \hline 
+                    P1: & \verb|pedir_recurso(1)| \\
+                    \hline
+                    P2: & \verb|pedir_recurso(2)| \\
+                    \hline
+                    P1: & \verb|pedir_recurso(2)| \\
+                    \hline
+                    P2: & \verb|pedir_recurso(1)| \\
+                    \hline
+                \end{tabular}
+                \end{table}
+                Después de las dos primeras instrucciones, no quedarán recursos de ningún tipo libres, pero P1 no podrá ejecutarse ya que está esperando a un recurso de tipo 2 y P2 tampoco podrá hacerlo, al estar esperando a un recurso de tipo 1.
+
+                Notemos que con monitores podemos demostrar la corrección parcial de los programas, pero no que estos terminen (esto es, que estén libres de interbloqueos o situaciones similares). Es responsabilidad del programador evitar este tipo de situaciones.
+
+        \item Aunque no podemos crear un monitor que evite el interbloqueo en un mal uso del monitor, sí que podemos ofrecer una solución de compromiso que ayude al programador a evitar este tipo de situaciones, tal y como se describe en el enunciado y mostramos con el siguiente código:
+            \begin{minted}{pascal}
+                monitor Recursos (N1, N2 : integer);
+                var libres : array[1..2] of integer;
+                    colas : array[0..2] of condition;
+
+                begin
+                   libres[1] := N1;
+                   libres[2] := N2;
+                end
+
+                procedure pedir_recurso(tipo : 0..2);
+                begin
+                   if tipo = 0 then
+                      if(libres[1] = 0 or libres[2] = 0) then
+                         colas[0].wait();
+                      end
+                      libres[1]--;
+                      libres[2]--;
+                   else begin
+                      if(libres[tipo] = 0) then
+                         colas[tipo].wait();
+                      end
+                      libres[tipo]--;
+                   end
+                end
+
+                procedure liberar_recurso(tipo : 1..2);
+                var otro_tipo = tipo mod 2 + 1;
+                begin
+                   libres[tipo]++;
+
+                   {Si hay otro tipo}
+                   if(libres[otro_tipo] > 0 and cola[0].queue()) then
+                      cola[0].signal();
+                   else
+                      cola[tipo].signal();
+                   end
+                end
+            end
+            \end{minted}
+    \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -488,6 +603,52 @@
         \item Con prioridad a los lectores: quiere decir que, si en un momento puede acceder al recurso, tanto un lector como un escritor, se da paso preferentemente al lector.
         \item Con prioridad a los escritores: quiere decir que, si en un momento puede acceder tanto un lector como un escritor, se da paso preferentemente al escritor.
         \item Con prioridades iguales: en este caso, los procesos acceden al recurso estrictamente en orden de llegada, lo cual implica, en particular, que si hay lectores leyendo y un escritor esperando, los lectores que intenten acceder después del escritor no podrán hacerlo hasta que no lo haga dicho escritor.
+    \end{enumerate}
+    Para resolver los tres problemas, consideramos que se quiere leer y escribir en un array de enteros de longitud \verb|n| con planificación FIFO.
+    \begin{enumerate}
+        \item 
+        \item 
+        \item En esta ocasión, con paridad entre lectores y escritores, solo tenemos que controlar que no se escriba en un buffer lleno ni se lea de un buffer vacío:
+            \begin{minted}{pascal}
+                monitor LecEsc (n : integer);
+                var buffer : array[0..n-1] of integer;
+                    pos_esc, pos_lec, tam : integer;
+                    pendientes : integer;
+                    cola_esc, cola_lec : condition;
+
+                   begin
+                      pos_esc := pos_lec := 0;
+                      pendientes := 0;
+                      tam := n;
+                   end
+
+                   procedure escribir(k : integer);
+                   begin
+                      if(pendientes = tam) then
+                         cola_esc.wait();
+                      end
+                      
+                      buffer[pos_esc] := k;
+                      pos_esc := (pos_esc + 1) mod tam;
+                      pendientes++;
+
+                      cola_lec.signal();
+                   end
+
+                   procedure leer() : integer;
+                   begin
+                      if(pendientes = 0) then
+                         cola_lec.wait();
+                      end
+
+                      result := buffer[pos_lec];
+                      pos_lec := (pos_lec + 1) mod tam;
+                      pendientes--;
+
+                      cola_esc.signal();
+                   end
+                end
+            \end{minted}
     \end{enumerate}
 \end{ejercicio}
 
@@ -571,6 +732,127 @@
 
         \item Mejorar el monitor anterior, de forma que la dirección del tráfico a través del puente cambie cada vez que lo hayan cruzado 10 coches en una dirección, mientras 1 ó más coches estuviesen esperando cruzar el puente en dirección opuesta.
     \end{enumerate}    
+
+    \begin{enumerate}
+        \item Para este problema, proponemos el siguiente monitor, donde \verb|coches_dentro| es una variable entera que indica el número de coches cruzando el puente en un momento determinado, de forma que:
+            \begin{itemize}
+                \item Si \verb|coches_dentro|$\ <0$, entonces hay \verb|coches_dentro| coches dentro del puente desplazándose del Norte al Sur.
+                \item Si \verb|coches_dentro|$\ >0$, entonces hay \verb|coches_dentro| coches dentro del puente desplazándose del Sur al Norte.
+            \end{itemize}
+            \begin{minted}{pascal}
+                Monitor Puente;
+                   var coches_dentro : integer;
+                       cola_N, cola_S : condition;
+
+                   begin
+                      coches_dentro = 0;
+                   end
+
+                   procedure EntrarCocheDelNorte();
+                   begin
+                      if coches_dentro > 0 then  {Hay coches del Sur al Norte}
+                         cola_N.wait();
+                         cola_N.signal();
+                      end
+
+                      coches_dentro--;
+                   end
+
+                   procedure SalirCocheDelNorte();
+                   begin
+                      coches_dentro++;
+                      if coches_dentro = 0 then
+                         cola_S.signal();
+                      end
+                   end
+
+                   procedure EntrarCocheDelSur();
+                   begin
+                      if coches_dentro < 0 then  {Hay coches del Norte al Sur}
+                         cola_S.wait();
+                         cola_S.signal();
+                      end
+
+                      coches_dentro++;
+                   end
+
+                   procedure SalirCocheDelSur();
+                   begin
+                      coches_dentro--;
+                      if coches_dentro = 0 then
+                         cola_N.signal();
+                      end
+                   end
+                end
+            \end{minted}
+            Además, hemos hecho que cuando un coche quede desbloqueado, desbloquee al siguiente en la cola de bloqueados para que pasen el puente a la vez.
+        \item Para ello, tenemos que tener además una variable que cuente el número de coches que han pasado el puente en un sentido, \verb|n_coches|.
+            % \begin{minted}{pascal}
+            %     Monitor Puente;
+            %        var coches_dentro, n_coches : integer;
+            %            cola_N, cola_S : condition;
+
+            %        begin
+            %           coches_dentro = n_coches = 0;
+            %        end
+
+            %        procedure EntrarCocheDelNorte();
+            %        begin
+            %           {Hay coches del Sur al Norte pasando o esperando}
+            %           if coches_dentro > 0 or (n_coches >= 10 and cola_S.queue()) then  
+            %              cola_N.wait();
+            %           end
+
+            %           coches_dentro--;
+            %           n_coches++;
+ 
+            %           if n_coches < 10 then
+            %              cola_N.signal();
+            %           end
+            %        end
+
+            %        procedure SalirCocheDelNorte();
+            %        begin
+            %           coches_dentro++;
+            %           if coches_dentro = 0 then
+            %              {Si había coches esperando en el Sur}
+            %              if cola_S.queue() and n_coches >= 10 then  
+            %                 n_coches = 0;
+            %              end
+            %              cola_S.signal();
+            %           end
+            %        end
+
+            %        procedure EntrarCocheDelSur();
+            %        begin
+            %           {Hay coches del Norte al Sur pasando o esperando}
+            %           if coches_dentro < 0 or (n_coches >= 10 and cola_N.queue()) then  
+            %              cola_S.wait();
+            %           end
+
+            %           coches_dentro++;
+            %           n_coches++;
+
+            %           if n_coches < 10 then
+            %              cola_S.signal();
+            %           end
+            %        end
+
+            %        procedure SalirCocheDelSur();
+            %        begin
+            %           coches_dentro--;
+            %           if coches_dentro = 0 then
+            %             {Si había coches esperando en el Norte}
+            %              if cola_N.queue() and n_coches >= 10 then  
+            %                 n_coches = 0;
+            %              end
+            %              cola_N.signal();
+            %           end
+            %        end
+            %     end
+            % \end{minted}
+            
+    \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
