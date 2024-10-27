@@ -234,16 +234,17 @@
 
             Para ello, la traza del programa que nos interesa obtener es: \newline \verb|E, L, E, E, L, E, E, L,| \ldots
 
-            Para ello, podemos añadir otra instrucción \verb|wait| en el consumidor, pero inicializando ahora el semáforo \verb|sem_cons| a 1, para que se consuma el primer dato:
+            Para ello, podemos añadir otro par de instrucciones \verb|wait|, \verb|signal| en el consumidor:
     \begin{multicols}{2}
         P1:
         \begin{minted}{pascal}
           while true do begin
             sem_wait(sem_cons);  
-            sem_wait(sem_cons);  
             m:= 2*x - n;
             sem_signal(sem_prod);  
             print(m);
+            sem_wait(sem_cons);  
+            sem_signal(sem_prod);  
           end
         \end{minted}
         
@@ -257,7 +258,7 @@
           end
         \end{minted}
     \end{multicols}
-    De esta forma, el productor tiene que avisar dos veces al consumidor antes de que este pueda leer, luego los valores segundo, cuarto, \ldots\ no los tendrá en cuenta el consumidor.
+    De esta forma, el consumidor desperdicia los valores producidos en posición par por el productor.
     \end{enumerate}
 \end{ejercicio}
 
@@ -292,8 +293,174 @@
             \item Los hilos llamarán a la función \verb|int sem_wait(sem_t* semaforo)|, pasándole un identificador de semáforo inicializado con el valor ‘0’, para sincronizarse con una condición. Si el valor del semáforo fuera distinto de ‘0’, entonces el valor de s se decrementa en una unidad y no bloquea.
             \item La operación \verb|int sem_post(sem_t* semaforo)| sirve para señalar a los hilos bloqueadas en un semáforo y hacer que uno pase a estar preparado para ejecutarse. Si no hay hilos bloqueados en este semáforo, entonces la ejecución de esta operación simplemente incrementa el valor de la variable protegida (s) del semáforo. Hay que tener en cuenta que no existe ningún orden de desbloqueo definido si hay varios hilos esperando en la cola asociada a un semáforo, ya que la implementación a nivel de sistema de la operación anterior supone que el planificador puede escoger para desbloquear a cualquiera de los hilos que esperan. En particular, podría darse el siguiente escenario, otro hilo ejecutándose puede decrementar el valor del semáforo antes que cualquier hilo que vaya a ser desbloqueado como resultado de \verb|sem_post(...)| lo pueda hacer y, posteriormente, se volvería a bloquear el hilo despertado.
         \end{enumerate}
+    \end{observacion}~\\
 
-    \end{observacion}
+    \begin{description}
+        \item [Versión machista.]~\\
+            Para plantear la solución en código, hemos creado 4 funciones: \verb|entra_chico|, \verb|entra_chica|, \verb|sale_chico| y \verb|sale_chica|, con el fin de simular el problema planteado.
+
+            En estas funciones, debemos usar unas variables compartidas que nos vayan indicando cuántos chicas y chicos hay esperando, así como si el baño está ocupado por chicos o por una chica.
+
+            Mostramos ahora las variables compartidas a declarar, junto con su código de inicialización y el código que debemos usar tras el cierre de los servicios para destruir los semáforos:
+            \begin{minted}{c++}
+            const int MAX = 5;
+            int chicos_esperando, chicas_esperando, chicos_dentro;
+            bool chica_dentro;
+            sem_t* mutex, max, cola_chicos, cola_chicas;
+
+            void inicializacion(){
+               chicos_esperando = chicas_esperando = chicos_dentro = 0;
+               chica_dentro = false;
+               sem_init(mutex, 1, 1);
+               sem_init(max, 1, MAX);
+               sem_init(cola_chicos, 1, 0);
+               sem_init(cola_chicas, 1, 0);
+            }
+
+            void destruccion(){
+               sem_destroy(mutex);
+               sem_destroy(max);
+               sem_destroy(cola_chicos);
+               sem_destroy(cola_chicas);
+            }
+            \end{minted}
+            A continuación, las funciones de entrada y salida del baño para los chicos:
+            \begin{minted}{c++}
+                void entra_chico(){
+                   sem_wait(max);   // Espera a que salga uno
+                   sem_wait(mutex); // Adquiere ex. mutua (em)
+
+                   if(chica_dentro){    // Baño ocupado
+                      chicos_esperando++;
+                      sem_post(mutex);    // Libera em
+                      sem_wait(cola_chicos);
+                      chicos_esperando--;
+                   }
+
+                   chicos_dentro++;
+                   // Si puede entrar otro
+                   if(chicos_dentro < MAX && chicos_esperando > 0){
+                      sem_post(cola_chicos);
+                   }else{
+                      sem_post(mutex);
+                   }
+                }
+
+                void sale_chico(){
+                   sem_wait(mutex);     // Adquiere em
+                   chicos_dentro--;
+
+                   // Si se queda el baño libre, hay chica esperando pero no chicos
+                   if(chicos_esperando == 0 && chicas_esperando > 0 && chicos_dentro == 0){
+                      sem_post(cola_chicas);
+                   }else{
+                      sem_post(mutex);
+                   }
+                   sem_post(max);
+                }
+            \end{minted}
+            Ahora, las funciones de entrada y salida de las chicas serían:
+            \begin{minted}{c++}
+                void entra_chica(){
+                   sem_wait(mutex);     // Adquiere em
+
+                   // Si el baño está ocupado o hay un chico esperando
+                   if(chicos_dentro > 0 || chica_dentro || chicos_esperando > 0){
+                      chicas_esperando++;
+                      sem_post(mutex);
+                      sem_wait(cola_chicas);
+                      chicas_esperando--;
+                   }
+
+                   chica_dentro = true;
+                   sem_post(mutex);
+                }
+
+                void sale_chica(){
+                   sem_wait(mutex);     // Adquiere em
+                   chica_dentro = false;
+
+                   if(chicos_esperando > 0){    // Prioridad a chicos
+                      sem_post(cola_chicos);
+                   }else if(chicas_esperando > 0){
+                      sem_post(cola_chicas);
+                   }else{
+                      sem_post(mutex);
+                   }
+                }
+            \end{minted}    
+        \item [Versión feminista.]~\\
+            Para esta versión, usaremos las mismas variables compartidas con las mismas funciones \verb|inicializacion| y \verb|destruccion| de la versión anterior.
+            
+            A continuación, las funciones de entrada y salida del baño para los chicos:
+            \begin{minted}{c++}
+                void entra_chico(){
+                   sem_wait(max);   // Espera a que salga un chico del baño
+                   sem_wait(mutex); // Para ex. mutua (em)
+                   
+                   if(chicas_esperando > 0 || chica_dentro){    // Prioridad a chicas
+                      chicos_esperando++;   // Un nuevo chico esperando
+                      sem_post(mutex);    // Libera em antes de bloquearse
+                      sem_wait(cola_chicos);
+
+                      chicos_esperando--;
+                   }
+
+                   // Ya no hay chicas en cola o dentro del baño
+
+                   chicos_dentro++;
+                   if(chicos_cola > 0 && chicos_dentro < MAX){  // Si puede entrar otro
+                      sem_post(cola_chicos);
+                   }else{
+                      sem_post(mutex);
+                   }
+                }
+
+                void sale_chico(){
+                   sem_wait(mutex);     // Espera para em
+                   chicos_dentro--;
+
+                   // Si hay una chica y puede entrar
+                   if(chicos_dentro == 0 && chicas_esperando > 0){
+                      sem_post(cola_chicas);
+                   }else{
+                      sem_post(mutex);  // Libera em
+                   }
+
+                   sem_post(max);       // Un chico menos
+                }
+            \end{minted}
+            Ahora, mostramos el código de entrada y salida para las chicas:
+            \begin{minted}{c++}
+                void entra_chica(){
+                   sem_wait(mutex);     // Adquiere em
+
+                   if(chicos_dentro > 0 || chica_dentro){   // Si baño ocupado
+                      chicas_esperando++;
+                      sem_post(mutex);
+                      sem_wait(cola_chicas);
+
+                      chicas_esperando--;
+                   }
+
+                   chica_dentro = true;
+                   sem_post(mutex);
+                }
+
+                void sale_chica(){
+                   sem_wait(mutex);     // Adquiere em
+                   chica_dentro = false;
+
+                   if(chicas_esperando > 0){    // Desbloquea a chica
+                      sem_post(cola_chicas);
+                   }else if(chicos_esperando > 0){  // Desbloquea a chico
+                      sem_post(cola_chicos);
+                   }else{
+                      sem_signal(mutex);
+                   }
+                }
+            \end{minted}
+    \end{description}
 \end{ejercicio}
 
 \begin{ejercicio}
