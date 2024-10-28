@@ -2281,6 +2281,7 @@ Ahora, los triples son libres de interferencia por tener variables disjuntas. Po
     \begin{equation*}
         \{I\} \equiv \left\{\bigwedge_{k=1}^{i-1}(a[k] = s) \land s = \sum_{k=1}^{i-1} A[k]\right\}
     \end{equation*}
+    Donde el array $A$ representa los valores iniciales del array $a$ antes de ejecutar el programa.
     \begin{minted}{pascal}
         i = 0;
         s = 0;
@@ -2290,7 +2291,33 @@ Ahora, los triples son libres de interferencia por tener variables disjuntas. Po
           i = i + 1;
         end
     \end{minted}
-    % // TODO: Por hacer. Arturo o JJ
+
+    Para ello, primero hemos de ver que el invariante es cierto al inicio del programa:
+    \begin{equation*}
+        \{V\}\ i=0;\ s=0;\ \{I\}
+    \end{equation*}
+    Lo cual es cierto. A continuación:
+    \begin{gather*}
+        \{I\} \equiv \left\{\bigwedge_{k=1}^{i-1}(a[k]=s) \land s = \sum_{k=1}^{i-1}A[k]\right\} \\
+        \texttt{while\ } i\leq n \texttt{\ do\ begin} \\
+        \left\{\bigwedge_{k=1}^{i-1}(a[k]=s) \land s = \sum_{k=1}^{i-1}A[k] \land i \leq n\right\} \\
+        s = s + a[i]; \\
+        \left\{\bigwedge_{k=1}^{i-1}(a[k]=s) \land s = \sum_{k=1}^{i-1}A[k] + A[i] \land i \leq n\right\} \equiv \\ \equiv  \left\{\bigwedge_{k=1}^{i-1}(a[k]=s) \land s = \sum_{k=1}^{i}A[k] \land i \leq n\right\} \\
+        a[i] = s; \\
+        \left\{\bigwedge_{k=1}^{i}(a[k]=s) \land s = \sum_{k=1}^{i}A[k] \land i \leq n\right\} \\
+        i = i + 1; \\
+        \left\{\bigwedge_{k=1}^{i-1}(a[k]=s) \land s = \sum_{k=1}^{i-1}A[k] \land i-1 \leq n\right\} \rightarrow \left\{\bigwedge_{k=1}^{i-1}(a[k]=s) \land s = \sum_{k=1}^{i-1}A[k] \right\} \equiv \{I\} \\
+        \texttt{end} \\
+\left\{\bigwedge_{k=1}^{i-1}(a[k]=s) \land s = \sum_{k=1}^{i-1}A[k] \land i > n \right\} 
+    \end{gather*}
+    Donde en el último paso hemos aplicado la regla de la iteración: como $\{I\land B\}\ C\ \{I\}$ siendo $B = i\leq n$ y $C$ el cuerpo del bucle, entonces se tiene que:
+    \begin{equation*}
+        \{I\}\ \texttt{while\ } B\texttt{\ do\ } C \texttt{\ end}\ \{I \land \lnot B\}
+    \end{equation*}
+    Finalmente, tendremos que:
+    \begin{equation*}
+        \left\{\bigwedge_{k=1}^{n}(a[k]=s) \land s = \sum_{k=1}^{n}A[k]\right\}
+    \end{equation*}
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -2309,6 +2336,10 @@ Ahora, los triples son libres de interferencia por tener variables disjuntas. Po
         bcof = fact/(afact*bfact);
     \end{minted}
 
+    % // TODO: Hacer con su invariante
+    % \begin{description}
+    %     \item [Versión 1.]~\\
+
     Para demostrar que el código evalúa $\dfrac{n!}{i!(n-i)!}$, hemos de buscar un invariante global que nos permita llegar a la poscondición. Observando el código, vemos que lo que hace es calcular el factorial de \verb|n| y almacenar en \verb|afact| el factorial de \verb|i| y en \verb|bfact| el factorial de \verb|n-i|. Por tanto, un invariante que nos puede servir es:
     \begin{equation*}
         \{I\} \equiv \left\{fact = k! \land afact = (\min\{i,k\})! \land bfact = (\min\{n-i,k\})!\right\}
@@ -2316,7 +2347,7 @@ Ahora, los triples son libres de interferencia por tener variables disjuntas. Po
 
     En primer lugar, hemos de ver que el invariante es cierto al inicio del programa:
     \begin{equation*}
-        \{V\}\ k=0;\ fact=1;\ \{I\}
+        \{0\leq i\leq n\}\ k=0;\ fact=1;\ \{I\}
     \end{equation*}
     Lo cual es directamente cierto\footnote{Notemos que, para demostrar esto, hemos de suponer valores iniciales de \texttt{afact} y \texttt{bfact}, algo que no supone problema alguno.}. Posteriormente, hemos de demostrar el triple dado por $\{I \land B\}\ S\ \{I\}$ con $\{B\} \equiv \{k \neq n\}$ y $S$ el cuerpo del bucle para poder aplicar la regla de iteración:
     \begin{gather*}
@@ -2407,7 +2438,31 @@ Ahora, los triples son libres de interferencia por tener variables disjuntas. Po
     \end{gather*}
     donde para demostrar el último triple hemos empleado la segunda regla de la consecuencia, la sustitución textual y el axioma de asignación.
 
-    % // TODO: JJ, Házlo con el invariante que él propone
+        % \item [Versión 2.]~\\
+    % A continuación, repetimos el ejercicio, probando ahora con el invariante:
+    % \begin{equation*}
+        % \{I\} \equiv \{(i>k \lor afact = i!) \land (n-i>k \lor bfact = (n-i)!)\}
+    % \end{equation*}
+    % En primer lugar, hemos de ver que el invariante es cierto al inicio del programa:
+    % \begin{equation*}
+        % \{0\leq i\leq n\}\ k=0;\ fact=1;\ \{I\}
+    % \end{equation*}
+    % Lo cual es cierto si suponemos al inicio del programa que $afact = i!$ y que $bfact = (n-i)!$. Pasamos a probar el cuerpo del bucle:
+    % \begin{gather*}
+        % \{(i>k \lor afact=i!) \land (n-i>k \lor bfact = (n-i)!)\} \\
+        % \texttt{while\ } (k\neq n) \texttt{\ do\ begin} \\
+        % \{(i>k \lor afact=i!) \land (n-i>k \lor bfact = (n-i)!) \land k \neq n\} \\
+        % k = k + 1; \\
+        % \{(i>k-1 \lor afact=i!) \land (n-i>k-1 \lor bfact = (n-i)!) \land k-1 \neq n\} \\
+        % fact = fact \ast k; \\
+        % \texttt{if\ } (k\leq i) \texttt{\ then} \\
+        % afact = fact; \\
+        % \texttt{if\ } (k\leq n-i) \texttt{\ then} \\
+        % bfact = fact; \\
+        % \texttt{end} \\
+        % bcof = fact/(afact\ast bfact);
+    % \end{gather*}
+    % \end{description}
 \end{ejercicio}
 
 \begin{ejercicio}

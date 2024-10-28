@@ -787,71 +787,95 @@
             \end{minted}
             Además, hemos hecho que cuando un coche quede desbloqueado, desbloquee al siguiente en la cola de bloqueados para que pasen el puente a la vez.
         \item Para ello, tenemos que tener además una variable que cuente el número de coches que han pasado el puente en un sentido, \verb|n_coches|.
-            % \begin{minted}{pascal}
-            %     Monitor Puente;
-            %        var coches_dentro, n_coches : integer;
-            %            cola_N, cola_S : condition;
+            \begin{itemize}
+                \item Si \verb|n_coches| $\ <0$, entonces han pasado seguidos \verb|n_coches| del Norte al Sur.
+                \item Si \verb|n_coches| $\ >0$, entonces han pasado seguidos \verb|n_coches| del Sur al Norte.
+            \end{itemize}
+            \begin{minted}{pascal}
+                Monitor Puente (max : integer);
+                var coches_dentro, n_coches, MAX : integer;
+                    cola_N, cola_S : condition;
 
-            %        begin
-            %           coches_dentro = n_coches = 0;
-            %        end
+                   begin
+                      coches_dentro = n_coches = 0;
+                      MAX = max;
+                   end
 
-            %        procedure EntrarCocheDelNorte();
-            %        begin
-            %           {Hay coches del Sur al Norte pasando o esperando}
-            %           if coches_dentro > 0 or (n_coches >= 10 and cola_S.queue()) then  
-            %              cola_N.wait();
-            %           end
+                   procedure EntrarCocheDelNorte();
+                   begin
+                      {Hay coches en sentido opuesto}
+                      if coches_dentro > 0 then
+                         cola_N.wait();
+                      else  {Hay coches en mi sentido o está el puente vacío}
+                         {Hay coches contrarios esperando y ya han pasado el maximo}
+                         if cola_S.queue() and n_coches <= MAX then
+                            cola_N.wait();
+                         end
+                      end
 
-            %           coches_dentro--;
-            %           n_coches++;
- 
-            %           if n_coches < 10 then
-            %              cola_N.signal();
-            %           end
-            %        end
+                      {Pasaron en sentido opuesto y soy el primero}
+                      if n_coches > 0 then
+                         n_coches = 0;
+                      end
 
-            %        procedure SalirCocheDelNorte();
-            %        begin
-            %           coches_dentro++;
-            %           if coches_dentro = 0 then
-            %              {Si había coches esperando en el Sur}
-            %              if cola_S.queue() and n_coches >= 10 then  
-            %                 n_coches = 0;
-            %              end
-            %              cola_S.signal();
-            %           end
-            %        end
+                      coches_dentro--;
+                      n_coches--;
 
-            %        procedure EntrarCocheDelSur();
-            %        begin
-            %           {Hay coches del Norte al Sur pasando o esperando}
-            %           if coches_dentro < 0 or (n_coches >= 10 and cola_N.queue()) then  
-            %              cola_S.wait();
-            %           end
+                      if n_coches > MAX then
+                         cola_N.signal();
+                      end
+                   end
 
-            %           coches_dentro++;
-            %           n_coches++;
+                   procedure SalirCocheDelNorte();
+                   begin
+                      coches_dentro++;
 
-            %           if n_coches < 10 then
-            %              cola_S.signal();
-            %           end
-            %        end
+                      if coches_dentro = 0 then
+                         {Hay del Sur y han pasado los maximos o no hay en el Norte}
+                         if cola_S.queue() and (n_coches <= MAX or not cola_N.queue()) then
+                            cola_S.signal();
+                         end
+                      end
+                   end
 
-            %        procedure SalirCocheDelSur();
-            %        begin
-            %           coches_dentro--;
-            %           if coches_dentro = 0 then
-            %             {Si había coches esperando en el Norte}
-            %              if cola_N.queue() and n_coches >= 10 then  
-            %                 n_coches = 0;
-            %              end
-            %              cola_N.signal();
-            %           end
-            %        end
-            %     end
-            % \end{minted}
-            
+                   procedure EntrarCocheDelSur();
+                   begin
+                      {Hay coches en sentido opuesto}
+                      if coches_dentro < 0 then
+                         cola_S.wait();
+                      else  {Hay coches en mi sentido o está el puente vacío}
+                         {Hay coches contrarios esperando y ya han pasado el máximo}
+                         if cola_N.queue() and n_coches >= MAX then
+                            cola_S.wait();
+                         end
+                      end
+
+                      {Pasaron en sentido opuesto y soy el primero}
+                      if n_coches < 0 then
+                         n_coches = 0;
+                      end
+
+                      coches_dentro++;
+                      n_coches++;
+
+                      if n_coches < MAX then
+                         cola_S.signal();
+                      end
+                   end
+
+                   procedure SalirCocheDelSur();
+                   begin
+                      coches_dentro--;
+
+                      if coches_dentro = 0 then
+                         {Si hay en el Norte y ya pasaron los máximos o no hay en el Sur}
+                         if cola_N.queue() and (n_coches >= MAX or not cola_S.queue()) then
+                            cola_N.signal();
+                         end
+                      end
+                   end
+                end
+            \end{minted}
     \end{enumerate}
 \end{ejercicio}
 
@@ -904,10 +928,149 @@
         \end{enumerate}
     \end{enumerate}
 
+    \begin{enumerate}
+        \item Para la primera versión:
+            \begin{enumerate}[label=\alph*)]
+                \item Con colas normales FIFO sin prioridad en las variables condición:
+                    \begin{minted}{pascal}
+                        Monitor Cuenta;
+                        var saldo : integer;
+                            cola : condition;
+
+                           procedure depositar(c : integer);
+                           begin
+                              saldo = saldo + c;
+                              cola.signal();
+                           end
+
+                           procedure retirar(c : integer);
+                           begin
+                              while c > saldo do begin
+                                 cola.wait();
+                                 cola.signal();
+                              end do
+                              saldo = saldo - c;
+                           end
+
+                           begin
+                              saldo = 0;
+                           end
+                        end
+                    \end{minted}
+                \item Con colas de prioridad en las variables condición, el código del monitor queda más simple:
+                    \begin{minted}{pascal}
+                        Monitor Cuenta;
+                        var saldo : integer;
+                            cola : condition;
+
+                           procedure depositar(c : integer);
+                           begin
+                              saldo = saldo + c;
+                              cola.signal();
+                           end
+
+                           procedure retirar(c : integer);
+                           begin
+                              while c > saldo do begin
+                                 cola.wait(c);
+                              end do
+                              saldo = saldo - c;
+                              cola.signal();
+                           end
+
+                           begin
+                              saldo = 0;
+                           end
+                        end
+                    \end{minted}
+            \end{enumerate}
+        \item Ahora, con orden en las retiradas:
+            \begin{enumerate}[label=\alph*)]
+                \item Con colas normales FIFO en las variables condición:
+                    \begin{minted}{pascal}
+                        Monitor Cuenta;
+                        var saldo : integer;
+                            cola : condition;
+
+                           procedure depositar(c : integer);
+                           begin
+                              saldo = saldo + c;
+                              cola.signal();
+                           end
+
+                           procedure retirar(c : integer);
+                           begin
+                              while c > saldo do begin
+                                 cola.wait();
+                              end do
+                              saldo = saldo - c;
+                              cola.signal();
+                           end
+
+                           begin
+                              saldo = 0;
+                           end
+                        end
+                    \end{minted}
+                \item Con colas con prioridad en las variables condición:
+                    \begin{minted}{pascal}
+                        Monitor Cuenta;
+                        var saldo : integer;
+                            cola : condition;
+
+                           procedure depositar(c : integer);
+                           begin
+                              saldo = saldo + c;
+                              cola.signal();
+                           end
+
+                           procedure retirar(c : integer);
+                           begin
+                              while c > saldo do begin
+                                 cola.wait(1);  {Asignamos la misma prioridad a todos}
+                              end do
+                              saldo = saldo - c;
+                              cola.signal();
+                           end
+
+                           begin
+                              saldo = 0;
+                           end
+                        end
+                    \end{minted}
+            \end{enumerate}
+    \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
     Los procesos P1, P2, \ldots, Pn comparten un único recurso R, pero sólo un proceso puede utilizarlo cada vez. Un proceso Pi puede comenzar a utilizar R si está libre; en caso contrario, el proceso debe esperar a que el recurso sea liberado por otro proceso. Si hay varios procesos esperando a que quede libre R, se concederá al proceso que tenga mayor prioridad. La regla de prioridad de los procesos es la siguiente: el proceso Pi tiene prioridad i, (con $1 \leq i \leq n$), donde los números menores implican mayor prioridad (es decir, si $i < j$, entonces Pi pasa por delante de Pj). Implementar un monitor que implemente los procedimientos \verb|Pedir(...)| y \verb|Liberar()| con un monitor que garantice la exclusión mutua y el acceso prioritario del procesos al recurso R.
+
+    Suponiendo que podemos usar variables condición con colas prioritarias, la solución al ejercicio es:
+    \begin{minted}{pascal}
+        Monitor Recurso;
+        var libre : boolean;
+            cola : condition;
+
+           begin
+              libre = true;
+           end
+
+           procedure Liberar();
+           begin
+              libre = true;
+              cola.signal();
+           end
+
+           procedure Pedir(id : integer); {Nº de proceso}
+           begin
+              if not libre then
+                 cola.wait(id);
+              end
+
+              libre = false;
+           end
+        end
+    \end{minted}
 \end{ejercicio}
 
 \begin{ejercicio}
