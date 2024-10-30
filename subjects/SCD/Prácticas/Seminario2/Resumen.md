@@ -101,4 +101,78 @@ Las variables de tipo `CondVar` tienen definidas varias operaciones que se invoc
 - `signal()`: Si la cola de la variable condición está vacía, no hace nada. Si no está vacía, la hebra que lo invoca se bloqueará en la cola de urgentes del monitor y la primera hebra de la cola de la variable condición se desbloqueará y seguirá ejecutando su procediemiento.
 - `get_nwt()`: Devuelve el número de hebras que esperan en la cola de la variable condición.
 - `empty()`: Devuelve `true` si no hay hebras esperando en la cola, `false` si no.
+ 
+# 4. Problema de productor/consumidor con monitores
+Volvemos sobre el problema del productor consumidor, con un proceso que produce varios datos (supondremos que son números enteros), y un proceso que actúa como consumidor (necesita los números enteros que el productor genera).  
+  
+El recurso compartido que será encapsulado por el monitor en este caso será el buffer intermedio que usan para comunicarse, con dos procedimientos `leer` y `escribir`.  
+Suponiendo que el tamaño del buffer es $k$ y que queremos tratar $m$ datos (preferiblamente $k<m$), el esquema de uso del monitor será:
+```pascal
+Process Productor;
+   var dato : integer;
+begin
+   for i := 1 to m do begin
+      dat := ProducirDato();
+      ProdCons.insertar(dato);
+   end
+end
 
+Process Consumidor;
+   var dato : integer;
+begin
+   for i := 1 to m do begin
+      dat := ProdCons.extraer();
+      ConsumidrDato(dato);
+   end
+end
+```
+A continuación, procedemos a implementar dicho monitor, por ejemplo con disciplina LIFO, usando el pseudocódigo en pascal que venimos usando en la teoría.  
+Para el monitor, como debemos bloquear los procesos por dos razones, contamos con dos variables de tipo condición:
+- `buffer_lleno`, que bloquearía a un proceso productor si `primera_libre = k` y lo desbloquearía en el momento en el que `primera_libre < k`.
+- `buffer_vacio`, que bloquearía a un proceso consumidor si `primera_libre = 0` y lo desbloquearía en el momento en el que `primera_libre > 0`.
+```pascal
+Monitor ProdCons;
+   var buffer : array[0..k-1] of integer;
+       primera_libre : integer;
+       buffer_lleno, buffer_vacio : condition;
+       
+    begin
+       primera_libre := 0;
+    end
+    
+    procedure insertar(dato : integer);
+    begin
+       if primera_libre = k then
+          buffer_lleno.wait();
+       end
+       
+       {En este punto, primera_libre < k}
+       
+       buffer[primera_libre] := dato;
+       primera_libre++;
+       
+       {En este punto, primera_libre > 0}
+       
+       buffer_vacio.signal();
+    end
+    
+    procedure leer() : integer;
+    begin
+       if primera_libre = 0 then
+          buffer_vacio.wait();
+       end
+       
+       {En este punto, primera_libre > 0}
+       
+       return := buffer[primera_libre];
+       primera_libre--;
+       
+       {En este punto, primera_libre < k}
+       
+       buffer_lleno.signal();
+    end
+end
+``` 
+La ventaja en monitores es que una vez que tenemos un monitor para un proceso productor y otro consumidor, tenemos un monitor que nos sirve para este problema para cualquier número de productores y de consumidores.  
+  
+Es un buen ejercicio implementar ahora un monitor para productores y consumidores con semántica FIFo.
