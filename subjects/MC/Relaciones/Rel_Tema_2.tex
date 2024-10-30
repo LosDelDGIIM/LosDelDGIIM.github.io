@@ -454,31 +454,46 @@
 \begin{ejercicio} \label{ej:1.2.9}
     Sea $L$ el lenguaje de todas las palabras sobre el alfabeto $\{0, 1\}$ que no contienen dos $1$s que estén separados por un número impar de símbolos. Describir un AFD que acepte este lenguaje.
 
-    % // TODO: No se ha hecho
+    Sea $u\in L$. Veamos que, a lo sumo, puede tener dos $1$'s. Supongamos por reducción al absurdo que tiene tres $1$'s. Entonces, entre la primera y la segunda hay un número impar de símbolos, y entre la segunda y la tercera hay un número impar de símbolos. Por lo tanto, entre el primer y el tercer $1$ hay:
+    \begin{itemize}
+        \item Un número par de símbolos antes del segundo $1$.
+        \item El segundo $1$.
+        \item Un número par de símbolos entre el segundo y el tercer $1$.
+    \end{itemize}
+    Por tanto, como el número de símbolos entre el primer y el tercer $1$ es impar, entonces $u\notin L$. Por lo tanto, $u$ tiene a lo sumo dos $1$'s.\\
 
-    \begin{comment}
-    Veamos qué estados hay:
+    Por tanto, los estados son:
     \begin{itemize}
         \item $q_0$: No se ha introducido ningún $1$.
-        \item $q_1$: Se ha introducido un $1$. El número de símbolos después del $1$ es par, por lo que dejo meter otro $0$ o un $1$.
-        \item $q_2$: El número de símbolos después del $1$ es impar, por lo que solo puedo meter un $0$.
+        \item $q_{p}$: Se ha introducido un $1$, después de él y antes del siguiente $1$ hay un número par de símbolos.
+        \item $q_{i}$: Se ha introducido un $1$, después de él y antes del siguiente $1$ hay un número impar de símbolos.
+        \item $q_{2}$: Se han introducido dos $1$'s, y no se ha introducido ningún otro.
+        \item $E$: Estado de error.
     \end{itemize}
 
     El autómata obtenido es el de la Figura \ref{fig:ej:1.2.9}.
     \begin{figure}
         \centering
         \begin{tikzpicture}
-            \node[state, initial] (q0) {$q_0$};
-            \node[state, above right of=q0] (q1) {$q_1$};
-            \node[state, below right of=q0] (q2) {$q_2$};
+            \node[state, initial, accepting] (q0) {$q_0$};
+            \node[state, right of=q0, accepting] (qp) {$q_p$};
+            \node[state, right of=qp, accepting] (qi) {$q_i$};
+            \node[state, below of=qp, accepting] (q2) {$q_2$};
+            \node[state, below of=qi, error] (E) {$E$};
 
-            \draw   (q0) edge[above] node{0} (q1)
-                    (q0) edge[below] node{1} (q2);
+            \draw   (q0) edge[loop below] node{0} (q0)
+                    (q0) edge[above] node{1} (qp)
+                    (qp) edge[below, bend right] node{0} (qi)
+                    (qp) edge[right] node{1} (q2)
+                    (qi) edge[above, bend right] node{0} (qp)
+                    (qi) edge[right] node{1} (E)
+                    (q2) edge[loop left] node{0} (q2)
+                    (q2) edge[above] node{1} (E)
+                    (E) edge[loop right] node{0, 1} (E);
         \end{tikzpicture}
-        \caption{Autómata Finito Determinista del Ejercicio \ref{ej:1.2.9}}
+        \caption{Autómata Finito Determinista del Ejercicio \ref{ej:1.2.9}.}
         \label{fig:ej:1.2.9}
     \end{figure}
-    \end{comment}
 \end{ejercicio}
 
 \begin{ejercicio} \label{ej:1.2.10}
@@ -549,7 +564,7 @@
     \begin{observacion}
         Construir un AFD asociado.
     \end{observacion}
-    % // TODO: Hecho en clase, no copiado por mí. Estaba comiendo
+    % // TODO: Hecho en clase. Comparar JJ
 
     Esta gramática es lineal por la derecha. Algorítmicamente, obtenemos el autómata de la Figura \ref{fig:ej:1.2.11_L} para el lenguaje generado por $S$, $\cc{L}(S)$.
     \begin{figure}
@@ -587,7 +602,118 @@
         \label{fig:ej:1.2.11_L}
     \end{figure}
 
-    % // TODO: Continuar
+    Ahora, tendríamos que eliminar las transiciones nulas para poder así aplicar el algoritmo para hallar la expresión regular. Esto no es sencillo, por lo que vamos a intentar obtener de forma directa el AFD. Para ello, la gramática dada genera el mismo lenguaje que las siguientes reglas de producción, donde hemos eliminado la variable $B$:
+    \begin{align*}
+        S &\to abA \mid aS \mid baaS \mid \varepsilon, & A &\to bS \mid b
+    \end{align*}
+
+    Eliminamos ahora la variable $A$:
+    \begin{align*}
+        S &\to abbS \mid abb \mid aS \mid baaS \mid \varepsilon
+    \end{align*}
+
+    Veamos ahora que la regla $S \to abb$ no es relevante, ya que podemos obtenerla a partir de $S \to abbS$ y $S \to \varepsilon$. Por tanto, la gramática dada inicialmente genera el mismo lenguaje que si estas fuesen las reglas de producción:
+    \begin{align*}
+        S &\to abbS \mid aS \mid baaS \mid \varepsilon
+    \end{align*}
+
+    Por tanto, vemos que:
+    \begin{equation*}
+        \cc{L}(G)=\{abb, a, baa\}^*.
+    \end{equation*}
+
+    En consecuencia, la expresión regular asociada a $\cc{L}(G)$ es:
+    \begin{equation*}
+        (abb + a + baa)^*
+    \end{equation*}
+
+    El AFD asociado a esta expresión regular es el de la Figura \ref{fig:ej:1.2.11_L_exp}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial, accepting] (q0) {$q_0$};
+            \node[state, below right of=q0] (q2) {$q_{2}$};
+            \node[state, above right of=q2] (q1) {$q_1$};
+            \node[state, left of=q2, error] (E) {$E$};
+
+            \draw   (q0) edge[loop above] node{$a$} (q0)
+                    (q0) edge[above] node{$b$} (q1)
+                    (q1) edge[above, bend right] node{$b$} (q0)
+                    (q1) edge[below] node{$a$} (q2)
+                    (q2) edge[below] node{$a$} (q0)
+                    (q2) edge[above] node{$b$} (E)
+                    (E) edge[loop left] node{$a,b$} (E);
+
+        \end{tikzpicture}
+        \caption{Autómata Finito Determinista del lenguaje $\cc{L}(G)$ del Ejercicio \ref{ej:1.2.11}.}
+        \label{fig:ej:1.2.11_L_exp}
+    \end{figure}
+
+    Por tanto, el autómata finito determinista asociado al lenguaje complementario de $\cc{L}(G)$ es el de la Figura \ref{fig:ej:1.2.11_L_comp}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial] (q0) {$q_0$};
+            \node[state, below right of=q0, accepting] (q2) {$q_{2}$};
+            \node[state, above right of=q2, accepting] (q1) {$q_1$};
+            \node[state, left of=q2, error, accepting] (E) {$E$};
+
+            \draw   (q0) edge[loop above] node{$a$} (q0)
+                    (q0) edge[above] node{$b$} (q1)
+                    (q1) edge[above, bend right] node{$b$} (q0)
+                    (q1) edge[below] node{$a$} (q2)
+                    (q2) edge[below] node{$a$} (q0)
+                    (q2) edge[above] node{$b$} (E)
+                    (E) edge[loop left] node{$a,b$} (E);
+
+        \end{tikzpicture}
+        \caption{Autómata Finito Determinista del lenguaje $\ol{\cc{L}(G)}$ del Ejercicio \ref{ej:1.2.11}.}
+        \label{fig:ej:1.2.11_L_comp}
+    \end{figure}
+
+    Buscamos ahora una expresión para $\ol{\cc{L}(G)}$. Resolvemos el siguiente sistema:
+    \begin{equation*}
+        \begin{cases}
+            q_0 &= aq_0 + bq_1\\
+            q_1 &= bq_0 + aq_2 + \varepsilon\\
+            q_2 &= aq_0 + bq_E + \varepsilon\\
+            q_E &= aq_E + bq_E + \varepsilon
+        \end{cases}
+    \end{equation*}
+
+    De la última ecuación, obtenemos que $q_E = (a+b)^*$. El sistema queda:
+    \begin{equation*}
+        \begin{cases}
+            q_0 &= aq_0 + bq_1\\
+            q_1 &= bq_0 + aq_2 + \varepsilon\\
+            q_2 &= aq_0 + b(a+b)^* + \varepsilon\\
+        \end{cases}
+    \end{equation*}
+
+    Sustituyendo $q_2$, obtenemos:
+    \begin{equation*}
+        \begin{cases}
+            q_0 &= aq_0 + bq_1\\
+            q_1 &= bq_0 + a(aq_0 + b(a+b)^* + \varepsilon) + \varepsilon\\
+        \end{cases}
+    \end{equation*}
+
+    Tenemos que:
+    \begin{equation*}
+        q_1 = (b+aa)q_0 +ab(a+b)^* + a + \varepsilon
+    \end{equation*}
+
+    Sustituyendo, tenemos que:
+    \begin{align*}
+        q_0 &= aq_0 + b\left[(b+aa)q_0 +ab(a+b)^* + a + \varepsilon\right]
+        =\\&= (a+b(b+aa))q_0 + bab(a+b)^* + ba + b
+        \AstIg\\&\AstIg (a+b(b+aa))^*(bab(a+b)^* + ba + b)
+    \end{align*}
+    donde en $(\ast)$ hemos aplicado el Lema de Arden.
+    Por tanto, la expresión regular asociada a $\ol{\cc{L}(G)}$ es:
+    \begin{equation*}
+        (a+b(b+aa))^*(bab(a+b)^* + ba + b)
+    \end{equation*}
 \end{ejercicio}
 
 \begin{ejercicio} \label{ej:1.2.12}
@@ -601,9 +727,68 @@
         \begin{equation*}
             b^*a^*
         \end{equation*}
-        \item Palabras que no contienen la subcadena $aba$.
+        \item \label{ej:1.2.12_3} % // TODO: Comprobar JJ
+        Palabras que no contienen la subcadena $aba$.
         
-        % // TODO: No se ha hecho
+        Este lenguaje viene descrito por el autómata de la Figura \ref{fig:ej:1.2.12_3}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial, accepting] (q0) {$q_0$};
+                \node[state, right of=q0, accepting] (q1) {$q_1$};
+                \node[state, right of=q1, accepting] (q2) {$q_2$};
+                \node[state, right of=q2, error] (q3) {$E$};
+
+                \draw   (q0) edge[above] node{$a$} (q1)
+                        (q1) edge[above] node{$b$} (q2)
+                        (q2) edge[above] node{$a$} (q3)
+                        (q0) edge[loop above] node{$b$} (q0)
+                        (q1) edge[loop above] node{$a$} (q1)
+                        (q2) edge[below, bend left] node{$b$} (q0)
+                        (q3) edge[loop above] node{$a,b$} (q3);
+            \end{tikzpicture}
+            \caption{AFD del lenguaje del Ejercicio \ref{ej:1.2.12} apartado \ref{ej:1.2.12_3}.}
+            \label{fig:ej:1.2.12_3}
+        \end{figure}
+
+        Obtenemos la expresión regular asociada al lenguaje del autómata de la Figura \ref{fig:ej:1.2.12_3}.
+        \begin{equation*}
+            \begin{cases}
+                q_0 &= bq_0 + aq_1 + \varepsilon\\
+                q_1 &= aq_1 + bq_2 + \varepsilon\\
+                q_2 &= bq_0 + aE + \varepsilon\\
+                E &= aE + bE
+            \end{cases}
+        \end{equation*}
+
+        Usando el Lema de Arden, obtenemos que $E=(a+b)^*$. Sustituyendo, obtenemos:
+        \begin{equation*}
+            \begin{cases}
+                q_0 &= bq_0 + aq_1 + \varepsilon\\
+                q_1 &= aq_1 + bq_2 + \varepsilon\\
+                q_2 &= bq_0 + a(a+b)^* + \varepsilon\\
+            \end{cases}
+        \end{equation*}
+
+        Sustituyendo $q_2$, obtenemos:
+        \begin{equation*}
+            \begin{cases}
+                q_0 &= bq_0 + aq_1 + \varepsilon\\
+                q_1 &= aq_1 + b(bq_0 + a(a+b)^* + \varepsilon) + \varepsilon\\
+            \end{cases}
+        \end{equation*}
+
+        Usando el Lema de Arden, obtenemos que:
+        \begin{equation*}
+            q_1 = a^*[b(bq_0 + a(a+b)^* + \varepsilon) + \varepsilon]
+        \end{equation*}
+
+        Sustituyendo en la primera ecuación, tenemos que:
+        \begin{align*}
+            q_0 &= bq_0 +aa^*[b(bq_0 + a(a+b)^* + \varepsilon) + \varepsilon] + \veps=\\
+            &= bq_0 + aa^*
+        \end{align*}
+        % // TODO: Cont Arturo
     \end{enumerate}
 \end{ejercicio}
 
@@ -915,6 +1100,7 @@
             \end{array}
         \right.
     \end{equation*}
+    Notemos que lo que hacemos es invertir el autómata, obtener la gramática lineal por la derecha, y después invertir las reglas de producción de esta última.
 \end{ejercicio}
 
 \begin{ejercicio} \label{ej:1.2.21}

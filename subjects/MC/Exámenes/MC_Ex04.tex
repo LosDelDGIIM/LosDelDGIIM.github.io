@@ -2,6 +2,21 @@
 
 \input{../../_assets/preambulo.tex}
 
+% Para poder incluir árboles
+\usepackage{forest}
+\usepackage{booktabs}
+
+% Para poder añadir autómatas
+% https://www3.nd.edu/~kogge/courses/cse30151-fa17/Public/other/tikz_tutorial.pdf
+\usetikzlibrary{automata} %, positioning, arrows}
+\tikzset{
+    -Stealth,
+    node distance=3cm, % specifies the minimum distance between two nodes. Change if necessary.
+    every state/.style={thick, fill=gray!10, shape=ellipse}, % sets the properties for each ’state’ node
+    initial text=$ $, % sets the text that appears on the start arrow
+    % Un tipo de nodo, que es error, que lo pone rojo
+    error/.style={thick, fill=red!20},
+}
 
 \begin{document}
 
@@ -29,11 +44,104 @@
     \end{description}
     \newpage
     
-    \begin{ejercicio}
+    \begin{ejercicio} \label{ej:1}
         Encuentra un AFD que acepte el lenguaje descrito por la expresión regular:
         \begin{equation*}
             a+ac(a+b)^* + c(a+b+c)^*.
         \end{equation*}
+
+        El AFND con transiciones nulas que optenemos usando el algoritmo viene descrito en la Figura~\ref{fig:ej1_AFND}.
+        \begin{figure}[h]
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial] (q0) {$q_0$};
+                \node[state, above right of=q0] (q01) {$q_{01}$};
+                \node[state, right of=q0, xshift=-2em] (q02) {$q_{02}$};
+                \node[state, below right of=q0] (q03) {$q_{03}$};
+                \node[state, right of=q01, accepting] (q11) {$q_{11}$};
+                \node[state, right of=q02] (q12) {$q_{12}$};
+                \node[state, right of=q12, accepting] (q22) {$q_{22}$};
+                \node[state, right of=q22] (q32) {$q_{32}$};
+                \node[state, above right of=q32, accepting] (q032) {$q_{032}$};
+                \node[state, below right of=q32, accepting] (q132) {$q_{132}$};
+                \node[state, right of=q03, accepting] (q13) {$q_{13}$};
+                \node[state, below of=q13] (q23) {$q_{23}$};
+                \node[state, below left of=q23, accepting] (q023) {$q_{023}$};
+                \node[state, below of=q23, accepting, yshift=1em] (q123) {$q_{123}$};
+                \node[state, below right of=q23, accepting] (q223) {$q_{223}$};
+
+                \draw   (q0) edge[above] node{$\varepsilon$} (q01)
+                        (q0) edge[above] node{$\varepsilon$} (q02)
+                        (q0) edge[above] node{$\varepsilon$} (q03)
+                        (q01) edge[above] node{$a$} (q11)
+                        (q02) edge[above] node{$a$} (q12)
+                        (q12) edge[above] node{$c$} (q22)
+                        (q22) edge[above] node{$\veps$} (q32)
+                        (q32) edge[above] node{$a$} (q032)
+                        (q32) edge[above] node{$b$} (q132)
+                        (q032) edge[above, bend right=60] node{$\veps$} (q32)
+                        (q132) edge[below, bend left=60] node{$\veps$} (q32)
+                        (q03) edge[above] node{$c$} (q13)
+                        (q13) edge[right] node{$\veps$} (q23)
+                        (q23) edge[above] node{$a$} (q023)
+                        (q23) edge[right] node{$b$} (q123)
+                        (q23) edge[above] node{$c$} (q223)
+                        (q023) edge[above, bend left=60] node{$\veps$} (q23)
+                        (q123) edge[left, bend left] node[pos=0.1]{$\veps$} (q23)
+                        (q223) edge[above, bend right=60] node{$\veps$} (q23);
+            \end{tikzpicture}
+            \caption{AFND con transiciones nulas que acepta el lenguaje del Ejercicio~\ref{ej:1}.}
+            \label{fig:ej1_AFND}
+        \end{figure}
+
+        No obstante, este AFND es demasiado complejo y tiene demasiados estados, por lo que lo minimizamos antes de convertirlo en un AFD. El AFND minimizado se muestra en la Figura~\ref{fig:ej1_AFND_min}.
+        \begin{figure}[h]
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial] (q0) {$q_0$};
+                \node[state, right of=q0, xshift=-2em, accepting] (q12) {$q_{12}$};
+                \node[state, right of=q12, accepting] (q22) {$q_{22}$};
+                \node[state, below right of=q0, accepting] (q13) {$q_{13}$};
+
+                \draw   (q0) edge[above] node{$a$} (q12)
+                        (q12) edge[above] node{$c$} (q22)
+                        (q22) edge[loop above] node{$a,b$} (q22)
+                        (q0) edge[above] node{$c$} (q13)
+                        (q13) edge[loop right] node{$a,b,c$} (q13);
+            \end{tikzpicture}
+            \caption{AFND minimizado que acepta el lenguaje del Ejercicio~\ref{ej:1}.}
+            \label{fig:ej1_AFND_min}
+        \end{figure}
+
+        Finalmente, convertimos el AFND minimizado en un AFD, que se muestra en la Figura~\ref{fig:ej1_AFD}.
+        \begin{figure}[h]
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial] (q0) {$q_0$};
+                \node[state, right of=q0, xshift=-2.1em, accepting] (q12) {$q_{12}$};
+                \node[state, right of=q12, accepting] (q22) {$q_{22}$};
+                \node[state, below right of=q0, accepting] (q13) {$q_{13}$};
+                \node[state, above right of=q0, error] (E) {$E$};
+
+                \draw   (q0) edge[above] node{$a$} (q12)
+                        (q12) edge[above] node{$c$} (q22)
+                        (q22) edge[loop above] node{$a,b$} (q22)
+                        (q0) edge[above] node{$c$} (q13)
+                        (q13) edge[loop right] node{$a,b,c$} (q13);
+
+                % Conexiones para el estado de error
+                \draw[opacity=0.6]   (q0) edge[above] node{$b$} (E)
+                        (q12) edge[right] node{$a,b$} (E)
+                        (q22) edge[above] node{$c$} (E)
+                        (E) edge[loop right] node{$a,b,c$} (E);
+            \end{tikzpicture}
+            \caption{AFD que acepta el lenguaje del Ejercicio~\ref{ej:1}.}
+            \label{fig:ej1_AFD}
+        \end{figure}
+
+        
+
+        
     \end{ejercicio}
 
     \begin{ejercicio}
