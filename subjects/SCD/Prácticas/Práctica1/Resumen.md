@@ -110,16 +110,6 @@ int array[tam_vec];
 Semaphore s_productor = tam_vec, s_consumidor = 0;
 int tope_pila = 0;
 
-int incindice(int indice){
-    if (indice == tam_vec - 1) return 0;
-    else return i + 1;
-}
-
-int decindice(int indice){
-    if (indice == 0) return tam_vec - 1;
-    else return i - 1;
-}
-
 void productor(){
    int var;
    for(int i = 0; i < num_items; i++){   // Debe producir n valores
@@ -128,7 +118,7 @@ void productor(){
       // Escribe el valor en el array
       sem_wait(s_productor);
       array[tope_pila] = var;
-      tope_pila = incindice(tope_pila);
+      tope_pila++;
       sem_signal(s_consumidor);
    }
 }
@@ -138,7 +128,7 @@ void consumidor(){
    for(int i = 0; i < num_items; i++){  // Debe consumir n valores
       // Lee del array
       sem_wait(s_consumidor);
-      tope_pila = decindice(tope_pila);
+      tope_pila--;
       var = array[tope_pila];
       sem_signal(s_productor);
       
@@ -146,8 +136,6 @@ void consumidor(){
    }
 }
 ```
-Donde hemos usado las funciones `incindice` y `decindice` para tener en cuenta el caso de que `tope_pila` no sea 0 al inicio del programa.  
-  
 Sin embargo, no hemos tenido en cuenta que el productor puede escribir a la vez que el consumidor lea, lo que produciría un fallo. Por tanto, tenemos que hacer las lecturas y las escrituras en exclusión mutua. De esta forma, ya no nos hace falta el tipo de dato atómico para el tope de la pila.
 ```c++
 int num_items = n;
@@ -170,7 +158,7 @@ void productor(){
       cerrojo.lock();
       
       array[tope_pila] = var;
-      tope_pila = incindice(tope_pila);
+      tope_pila++;
       
       cerrojo.unlock();
       sem_signal(s_consumidor);
@@ -184,7 +172,7 @@ void consumidor(){
       sem_wait(s_consumidor);
       cerrojo.lock();
       
-      tope_pila = decindice(tope_pila);
+      tope_pila--;
       var = array[tope_pila];
       
       cerrojo.unlock();

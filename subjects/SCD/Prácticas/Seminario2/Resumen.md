@@ -164,7 +164,7 @@ Monitor ProdCons;
        
        {En este punto, primera_libre > 0}
        
-       return := buffer[primera_libre];
+       result := buffer[primera_libre];
        primera_libre--;
        
        {En este punto, primera_libre < k}
@@ -175,4 +175,54 @@ end
 ``` 
 La ventaja en monitores es que una vez que tenemos un monitor para un proceso productor y otro consumidor, tenemos un monitor que nos sirve para este problema para cualquier número de productores y de consumidores.  
   
-Es un buen ejercicio implementar ahora un monitor para productores y consumidores con semántica FIFo.
+Es un buen ejercicio implementar ahora un monitor para productores y consumidores con semántica FIFO.
+La solución es la siguiente:
+```pascal
+Monitor ProdCons;
+   var buffer : array[0..k-1] of integer;
+       ind_esctitura : integer;
+       ind_lectura : integer;
+       ocupados : integer;
+       buffer_lleno, buffer_vacio : condition;
+       
+    begin
+       ind_esctitura := 0;
+       ind_lectura := 0;
+       ocupados := 0;
+    end
+    
+    procedure insertar(dato : integer);
+    begin
+       if ocupados = k then
+          buffer_lleno.wait();
+       end
+       
+       {En este punto, ocupados < k}
+       
+       buffer[ind_esctitura] := dato;
+       ind_esctitura := (ind_esctitura + 1) mod k;
+       ocupados++;
+       
+       {En este punto, ocupados > 0}
+       
+       buffer_vacio.signal();
+    end
+    
+    procedure leer() : integer;
+    begin
+       if ocupados = 0 then
+          buffer_vacio.wait();
+       end
+       
+       {En este punto, ocupados > 0}
+       
+       return := buffer[ind_lectura];
+       ind_lectura = (ind_lectura + 1) mod k;
+       ocupados--;
+       
+       {En este punto, ocupados < k}
+       
+       buffer_lleno.signal();
+    end
+end
+``` 
