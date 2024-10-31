@@ -135,7 +135,7 @@ end
 ```
 Donde el método del estanquero lo hemos dividido en dos más sencillos, uno para colocar el ingrediente en el mostrador y otro que esperará a que un fumador coja un ingrediente, con vistas a introducir más código entre los dos métodos.  
 La implementación del monitor sería la siguiente:
-```c++
+```pascal
 Monitor Estanco;
    var mostrador : integer;  {-1 indica vacio}
        mostrador_lleno, ingrediente_invalido[0..n-1] : condition; 
