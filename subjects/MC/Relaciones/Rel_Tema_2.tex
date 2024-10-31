@@ -1163,22 +1163,59 @@
 
     Fijado $n\in \bb{N}$, la expresión regular correspondiente es:
     \begin{align*}
-        (a\overbrace{\cdots }^{n \text{ veces}}a)^*.
+        (a\overbrace{\cdots }^{n \text{ veces}}a)^* = (a^n)^*
     \end{align*}
 
     Equivalentemente, usando la notación de las expresiones regulares de UNIX, la expresión regular sería:
     \begin{equation*}
         (a\{n\})^*
     \end{equation*}
-
-    % // TODO: No corregido
 \end{ejercicio}
 
 \begin{ejercicio}
     Sea $A$ un alfabeto. Decimos que $u\in A^*$ es un prefijo de $v\in A^*$ si existe $w\in A^*$ tal que $uw = v$. Decimos que $u$ es un prefijo propio de $v$ si además $u \neq v$ y $u \neq \varepsilon$. Demostrar que si $L$ es regular, también lo son los lenguajes siguientes:
     \begin{enumerate}
-        \item $NOPREFIJO(L) = \{u \in L \mid \text{ningún prefijo propio de } u \text{ pertenece a } L\}$,
-        \item $NOEXTENSION(L) = \{u \in L \mid u \text{ no es un prefijo propio de ninguna palabra de } L\}$.
+        \item $\text{NOPREFIJO}(L) = \{u \in L \mid \text{ningún prefijo propio de } u \text{ pertenece a } L\}$,
+        
+        Como $L$ es regular, existe un AFD $M=(Q, A, \delta, q_0, F)$ tal que $L=\cc{L}(M)$. Construimos un AFD $M'=(Q\cup \{E\}, A, \delta', q_0, F)$,
+        donde $E$ es un estado de error ($E\notin Q$) y $\delta'$ es:
+        \begin{equation*}
+            \begin{cases}
+                \delta'(q, a) = \delta(q, a)&\qquad \forall q\in Q\setminus F, a\in A\\
+                \delta'(q, a) = E&\qquad \forall q\in F, a\in A\\
+                \delta'(E, a) = E&\qquad \forall a\in A
+            \end{cases}
+        \end{equation*}
+
+        Demostramos mediante doble inclusión que $\text{NOPREFIJO}(L)=\cc{L}(M')$.
+        \begin{description}
+            \item[$\subseteq)$] Sea $u\in \text{NOPREFIJO}(L)$. Entonces, por definición de $\text{NOPREFIJO}(L)$, $u\in L$. Por tanto, $\exists q\in F$ tal que $\delta^{\ast}(q_0, u)=q$. Para ver que $u\in \cc{L}(M')$, basta ver que $(\delta')^{\ast}(q_0, u)\in F$.
+
+            Como $u$ no tiene prefijos propios en $L$, entonces $\delta^{\ast}(q_0, u')\notin F$ para todo prefijo propio $u'$ de $u$; es decir, en los pasos de cálculo desde $q_0$ hasta $\delta^{\ast}(q_0, u)$ no se pasa por ningún estado final. Por tanto, como en esos casos $\delta'=\delta$, entonces $\delta^{\ast}(q_0, u)=q\in F$, por lo que $u\in \cc{L}(M')$.
+
+            \item[$\supseteq)$] Sea $u\in \cc{L}(M')$. En primer lugar, tenemos que $(\delta')^{\ast}(q_0, u)\in F$. Veamos ahora que los pasos de cálculo desde $q_0$ hasta $(\delta')^{\ast}(q_0, u)$ leyendo $u$ no son ninguno finales.
+            
+            Si alguno de ellos fuese final (si $u$ tuviese algún prefijo propio $v\in L$), entonces desde él pasaríamos a $E$, y de este estado no final no saldríamos, llegando a contradicción. Por tanto, $u$ no tiene prefijos propios pertenecientes a $L$. Además, como en estos casos $\delta'=\delta$, tenemos que $\delta^{\ast}(q_0, u)\in F$, luego $u\in L$. De esta forma, $u\in \text{NOPREFIJO}(L)$.
+        \end{description}
+        
+        \item $\text{NOEXTENSION}(L) = \{u \in L \mid u \text{ no es un prefijo propio de ninguna palabra de } L\}$.
+        
+        Como $L$ es regular, existe un AFD $M=(Q, A, \delta, q_0, F)$ tal que $L=\cc{L}(M)$. Construimos un AFD $M'=(Q, A, \delta, q_0, F')$, donde:
+        \begin{equation*}
+            F'=\{q\in F\mid \delta^{\ast}(q,u)\notin F,\forall u\in A^*\}
+        \end{equation*}
+
+        Demostramos mediante doble inclusión que $\text{NOEXTENSION}(L)=\cc{L}(M')$.
+        \begin{description}
+            \item[$\subseteq)$] Sea $u\in \text{NOEXTENSION}(L)$. Entonces, por definición de $\text{NOEXTENSION}(L)$, $u\in L$. Por tanto, $\exists q\in F$ tal que $\delta^{\ast}(q_0, u)=q$. Para ver que $u\in \cc{L}(M')$, basta ver que $q\in F'$. 
+            
+            Supongamos por reducción al absurdo $q\notin F'$. Entonces, $\exists v\in A^*$ tal que $\delta^{\ast}(q, v)\in F$. Pero entonces, $\delta^{\ast}(q_0, uv)=\delta^{\ast}(\delta^{\ast}(q_0, u), v)=\delta^{\ast}(q, v)\in F$, por lo que $uv\in L$ y, por tanto, $u$ es prefijo propio de $uv$, lo cual es una contradicción. Por tanto, $q\in F'$ y, por tanto, $u\in \cc{L}(M')$.
+
+            \item[$\supseteq)$] Sea $u\in \cc{L}(M')$. En primer lugar, tenemos que $\delta^{\ast}(q_0, u)=q\in F'\subset F$, luego $u\in L$. Veamos ahora que $u$ no es prefijo propio de ninguna palabra de $L$.
+            
+            Supongamos por reducción al absurdo que $u$ es prefijo propio de alguna palabra de $L$. Entonces, $\exists v\in A^*\setminus \{\veps\}$ tal que $uv\in L$. Por tanto, $\delta^{\ast}(q_0, uv)\in F$. Pero entonces, $\delta^{\ast}(q_0, uv)=\delta^{\ast}(\delta^{\ast}(q_0, u), v)=\delta^{\ast}(q, v)\in F$.
+            No obstante, hemos demostrado entonces que $q\notin F'$, lo cual es una contradicción. Por tanto, $u$ no es prefijo propio de ninguna palabra de $L$ y, por tanto, $u\in \text{NOEXTENSION}(L)$.
+        \end{description}
     \end{enumerate}
 \end{ejercicio}
 
@@ -1186,22 +1223,150 @@
     Si $L \subseteq A^*$, define la relación $\equiv$ en $A^*$ como sigue: si $u, v \in A^*$, entonces $u \equiv v$ si y solo si para toda $z \in A^*$, tenemos que $(uz \in L \Leftrightarrow vz \in L)$.
     \begin{enumerate}
         \item Demostrar que $\equiv$ es una relación de equivalencia.
+        
+        Veamos las tres propiedades de las relaciones de equivalencia:
+        \begin{itemize}
+            \item \ul{Reflexiva}: Sea $u\in A^*$. Entonces, para todo $z\in A^*$, tenemos trivialmente que $(uz\in L\Leftrightarrow uz\in L)$. Por tanto, $u\equiv u$.
+            \item \ul{Simétrica}: Sean $u,v\in A^*$ tales que $u\equiv v$. Entonces, para todo $z\in A^*$, tenemos que $(uz\in L\Leftrightarrow vz\in L)$. Por tanto, para todo $z\in A^*$, tenemos que $(vz\in L\Leftrightarrow uz\in L)$, lo cual implica que $v\equiv u$.
+            \item \ul{Transitiva}: Sean $u,v,w\in A^*$ tales que $u\equiv v$ y $v\equiv w$. Entonces, para todo $z\in A^*$, tenemos que $(uz\in L\Leftrightarrow vz\in L)$ y $(vz\in L\Leftrightarrow wz\in L)$. Por tanto, para todo $z\in A^*$, tenemos que $(uz\in L\Leftrightarrow wz\in L)$, lo cual implica que $u\equiv w$.
+        \end{itemize}
+        Tenemos por tanto que $\equiv$ es una relación de equivalencia.
+
         \item Calcular las clases de equivalencia de $L = \{a^ib^i \mid i \geq 0\}$.
+        
+        \begin{comment}
+        En este caso, $A=\{a,b\}$.
+        La primera clase de equivalencia que encontramos es las palabras que, le añadamos lo que le añadamos, no pertenecen al lenguaje. Es decir:
+        \begin{equation*}
+            [u\in A^* \mid \text{en $u$ hay una $a$ después de una $b$} \lor u=a^ib^j,\quad j>i]
+        \end{equation*}
+
+        Además, para cada $k\in \bb{N}\cup \{0\}$, tenemos:
+        \begin{equation*}
+            [a_k] = \{a^{k+i}b^i\mid i\in \bb{N}\cup \{0\}\}
+        \end{equation*}
+        \end{comment}
+        % // TODO: Revisar
+
         \item Calcular las clases de equivalencia de $L = \{a^ib^j \mid i, j \geq 0\}$.
-        \item Demostrar que $L$ es aceptado por un autómata finito determinístico si y solo si el número de clases de equivalencia es finito.
+        
+        \begin{comment}
+        En este caso, $A=\{a,b\}$.
+        La primera clase de equivalencia que encontramos es las palabras que, le añadamos lo que le añadamos, no pertenecen al lenguaje. Es decir:
+        \begin{equation*}
+            [u\in A^* \mid \text{en $u$ hay una $a$ después de una $b$}]
+        \end{equation*}
+
+        \begin{align*}
+            [a] &= \{a^i\mid i\in \bb{N}\cup \{0\}\}\\
+            [ab] &= \{a^ib^j\mid i\in \bb{N}\cup \{0\},j\in \bb{N}\}
+        \end{align*}
+        notemos que j\in N pq si no, estamos en la de arriba.
+        \end{comment}
+
+        % // TODO: Revisar
+        \item Demostrar que $L$ es aceptado por un autómata finito determinista si y solo si el número de clases de equivalencia es finito.
+        
+        Demostramos mediante doble inclusión.
+        \begin{description}
+            \item[$\Longrightarrow)$] Supongamos que $L$ es aceptado por un autómata finito determinista. Sea $M=(Q, A, \delta, q_0, F)$ su AFD minimal que acepta $L$.
+            Supongamos $u,v\in A^*$ tales que $u\equiv v$. Sean:
+            \begin{align*}
+                q_u &:= \delta^{\ast}(q_0, u),\\
+                q_v &:= \delta^{\ast}(q_0, v).
+            \end{align*}
+
+            Veamos ahora que $q_u,q_v$ son indistingibles, es decir, $q_u=q_v$.
+            \begin{itemize}
+                \item Para todo $z\in A^*$, como $u\equiv v$, se tiene que:
+                \begin{equation*}
+                    uz\in L\Leftrightarrow vz\in L.
+                \end{equation*}
+    
+                Equivalentemente, tenemos que:
+                \begin{equation*}
+                    \delta^{\ast}(\delta^{\ast}(q_0, u), z)\in F\Longleftrightarrow \delta^{\ast}(\delta^{\ast}(q_0, v), z)\in F
+                \end{equation*}
+
+                Es decir:
+                \begin{equation*}
+                    \delta^{\ast}(q_u, z)\in F\Longleftrightarrow \delta^{\ast}(q_v, z)\in F
+                \end{equation*}
+
+                Por tanto, $q_u$ y $q_v$ son indistinguibles; y como el autómata es minimal, $q_u=q_v$.
+            \end{itemize}
+            
+            Por tanto, hay una clase de equivalencia por cada estado de $Q$. Como $Q$ es finito, el número de clases de equivalencia es finito.
+
+            \item[$\Longleftarrow)$] Supongamos que el número de clases de equivalencia es finito. Sea el autómata $M=(Q, A, \delta, q_0, F)$, donde:
+            \begin{itemize}
+                \item $Q$ es el conjunto de clases de equivalencia de $L$,
+                \item $q_0=[\varepsilon]$,
+                \item $\delta([u], a)=[ua]$. Veamos que está bien definida.
+                
+                Sea $u,v\in A^*$ tales que $u\equiv v$, y veamos que, para todo $a\in A$, $ua\equiv va$.
+                Como $u\equiv v$, para todo $z\in A^*$, tenemos que:
+                \begin{equation*}
+                    uz\in L\Leftrightarrow vz\in L.
+                \end{equation*}
+
+                Por tanto, tomando $z=az'$, con $z'\in L$, tenemos que:
+                \begin{equation*}
+                    uaz'\in L\Leftrightarrow vaz'\in L.
+                \end{equation*}
+
+                Es decir, $ua\equiv va$. Por tanto, $\delta$ está bien definida.
+                \item $F=\{[u]\in Q\mid u\in L\}$.
+                
+                Para ver que $F$ está bien definida, veamos que, si $u\equiv v$, entonces $u\in L\Longleftrightarrow v\in L$.
+                Esto es directo tomando $z=\veps$.
+            \end{itemize}
+
+            Veamos ahora que $L=\cc{L}(M)$.
+            \begin{equation*}
+                u\in \cc{L}(M)\Longleftrightarrow \delta^{\ast}(q_0, u)\in F\Longleftrightarrow \delta^{\ast}([\varepsilon], u)\in F\Longleftrightarrow \delta^{\ast}([u], \varepsilon)=[v],\text{con }v\in L
+            \end{equation*}
+            Como $\delta^{\ast}([u], \varepsilon)=[u]$, tenemos que:
+            \begin{equation*}
+                u\in \cc{L}(M)\Longleftrightarrow u\in L
+            \end{equation*}
+        \end{description}
         \item ¿Qué relación existe entre el número de clases de equivalencia y el autómata finito minimal que acepta $L$?
+        
+        % // TODO: Hacer
     \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
-    Dada una palabra $u = a_1 \cdots a_n \in A^*$, se llama $Per(u)$ al conjunto
+    Dada una palabra $u = a_1 \cdots a_n \in A^*$, se llama $\operatorname{Per}(u)$ al conjunto
     \begin{align*}
         \{a_{\sigma(1)}, \ldots, a_{\sigma(n)} \mid \sigma \text{ es una permutación de } \{1, \ldots, n\}\}.
     \end{align*}
-    Dado un lenguaje $L$, se llama $Per(L) = \bigcup\limits_{u \in L} Per(u)$.
-    Dar expresiones regulares y autómatas minimales para $Per(L)$ en los siguientes casos:
-    \begin{enumerate}
+    Dado un lenguaje $L$, se llama $\operatorname{Per}(L) = \bigcup\limits_{u \in L} \operatorname{Per}(u)$.
+    Dar expresiones regulares y autómatas minimales para $\operatorname{Per}(L)$ en los siguientes casos:
+    \begin{enumerate}% // TODO: Comprobar entero
         \item $L = (00 + 1)^*$,
+        
+        Tenemos que:
+        \begin{align*}
+            \operatorname{Per}(L) &= \{u\in A^*\mid \text{ $n_0(u)$ es par}\}
+        \end{align*}
+
+        Su autómata finito minimal es:
+        \begin{figure}[H]
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial, accepting] (q0) {$q_0$};
+                \node[state, right of=q0] (q1) {$q_1$};
+
+                \draw   (q0) edge[loop above] node{1} (q0)
+                        (q0) edge[above, bend right] node{0} (q1)
+                        (q1) edge[loop above] node{1} (q1)
+                        (q1) edge[above, bend right] node{0} (q0);
+            \end{tikzpicture}
+        \end{figure}
+
+        % Expr: 1^*(01^*01^*)^*
         \item $L = (0 + 1)^*0$,
         \item $L = (01)^*$.
     \end{enumerate}
