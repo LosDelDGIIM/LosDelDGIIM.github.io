@@ -977,8 +977,189 @@
         \end{align*}
         
         \item Palabras que son múltiplos de 7 en binario.
-        
-        % // TODO: Hacer JJ
+            \begin{description}
+                \item [Opción 1.] 
+                    Hacer un autómata que acepte el lenguaje.
+                \item [Opción 2.] 
+                    Un tanto más complicada, introduce cálculos con números binarios. La idea principal es que si $x$ es un número natural, entonces:
+                    \begin{equation*}
+                        7x = (8-1)x = 8x - x
+                    \end{equation*}
+                    \begin{itemize}
+                        \item Multiplicar un número en binario por 8 es añadirle tres 0s al final.
+                        \item Restar un número binario menos otro es realizarle el complemento a dos al segundo, sumar los números y descartar el primer 1.
+                    \end{itemize}
+                    Realizar estas dos operaciones es más sencillo que multiplicar un número cualquiera en binario por 7. Procedemos por tanto, a:
+                    \begin{enumerate}
+                        \item Generar un número cualquiera en binario.
+                        \item Multiplicarlo por 8.
+                        \item Generar su complemento a 2 en binario.
+                        \item Sumar ambos números.
+                        \item Descarar el bit de acarreo (el más significativo).
+                    \end{enumerate}
+                    Para esta opción, construiremos la gramática $G=(V,T,P,S)$ dada por:
+                    \begin{align*}
+                        V &= \{S, N, \alpha, \beta, \delta,\gamma, Z, Z', A, D, E, E_0, E_1, E_2, E_0', E_1', \overline{E_0}, \overline{E_1}, \overline{E_2}, L_0, L_1, X\} \\
+                        T &= \{0,1\} \\
+                        S &= S
+                    \end{align*}
+                    Y $P$ es un conjunto que contiene todas las reglas de producción que se mostrarán a continuación.
+
+                    La idea es:
+                    \begin{itemize}
+                        \item Generar entre $\alpha$ y $\beta$ cualquier número en binario, mientras generamos entre $\beta$ y $\gamma$ su complemento a 1 en espejo (es decir, el número invertido). Finalmente, multiplicaremos el de la izquierda por 8 y se verá reflejado en la izquierda con 1s.
+                        \item Posteriormente, usaremos la variable $Z$ para sumarle 1 al complemento a 1 del número generado. 
+                        \item Como no podemos modificar símbolos terminales una vez ya generados, trabajaremos todo el rato hasta el final con variables, de forma que $A$ será un 0 y $B$ un 1.
+                        \item Una vez generado el número $8x$ y $x$ en complemento a dos en espejo, pasaremos a sumar ambos números usando para ello las variables $E$ y $L$. Los símbolos del número en complemento a 2 los iremos eliminando y en la izquierda controlaremos los bits del número que ya hemos usado con la variable $\delta$.
+                        \item Cuando las variables $\beta$ y $\gamma$ ``se toquen'', habremos terminado de sumar y ya sólo quedará eliminar las variables delimitadoras (las letras griegas) y sustituir $A$ y $B$ por 0 y 1, respectivamente.
+                    \end{itemize}
+                    Comenzamos ya describiendo las reglas de producción:
+                    \begin{itemize}
+                        \item En primer lugar, creamos el entorno en el que trabajaremos, aceptando ``0'' como número en binario múltiplo de 7:
+                            \begin{equation*}
+                                S \rightarrow \alpha BNABBB\gamma\ |\ 0
+                            \end{equation*}
+                            Iremos usando $N$ para generar nuestro número a su izquierda y el complemento a 1 en espejo a la derecha. 
+                            \begin{itemize}
+                                \item Las tres $B$s ya introducidas a la derecha son para luego compensar la multiplicación por 8.
+                                \item Así mismo, hemos generado ya $B$ a la izquierda y $A$ a la derecha para aceptar sólo números binarios que comiencen por 1.
+                            \end{itemize}
+                            Usamos ahora la variable $N$ para generar cualquier número en binario a la izquierda, con su complemento a 1 en espejo a la derecha:
+                            \begin{equation*}
+                                N \rightarrow ANB\ |\ BNA\ |\ AAA\gamma\beta Z
+                            \end{equation*}
+                            Una vez generado el número, terminaremos añadiendo 3 $A$s a la izquierda (multiplicar por 8), incluyendo los separadores $\gamma$ y $\beta$ y la variable $Z$, que se encargará de sumar 1 al número en complemento a 1 para pasarlo a complemento a 2.
+                        \item Usamos ahora $Z$ para pasar el número de la derecha a complemento a 2:
+                            \begin{equation*}
+                                ZB \rightarrow BZ
+                            \end{equation*}
+                            Buscamos el primer 0, por lo que saltamos los 1s.
+                            \begin{equation*}
+                                ZA \rightarrow Z'B
+                            \end{equation*}
+                            Hemos encontrado el primer 0, lo cambiamos por 1 y volvemos con la variable $Z'$.
+                            \begin{equation*}
+                                BZ' \rightarrow Z'A
+                            \end{equation*}
+                            Volvemos a la izquierda, cambiando todos los 1s que saltamos anteriormente por 0s.
+                            \begin{equation*}
+                                \beta Z'\rightarrow\beta L_0
+                            \end{equation*}
+                            Una vez llegamos a $\beta$, tenemos el número en complemento a 1 y comenzamos con la aritmética ($L_0$ representa que no hemos cogido ningún número y que no nos llevamos nada de la suma anterior).
+                        \item Comenzamos ahora con la aritmética, la parte más complicada de la gramática. Distinguimos dos casos:
+                            \begin{enumerate}
+                                \item No nos llevamos nada de la operación anterior ($L_0$):
+                                    \begin{equation*}
+                                        L_0A \rightarrow E_0
+                                    \end{equation*}
+                                    Cogemos un 0 de la derecha y la variable $E_0$ lo transportará a la izquierda.
+                                    \begin{align*}
+                                        A E_0 &\rightarrow E_0 A \\
+                                        B E_0 &\rightarrow E_0 B \\
+                                        \beta E_0 &\rightarrow E_0 \beta
+                                    \end{align*}
+                                    Nos movemos hacia la izquierda, buscando $\delta$ (que indica por dónde nos quedamos sumando).
+                                    \begin{equation*}
+                                        \delta E_0 \rightarrow \overline{E_0}
+                                    \end{equation*}
+                                    Donde la barra indica que hemos ``cogido'' $\delta$, la cual tendremos que soltar en el siguiente dígito.
+                                    \begin{align*}
+                                        A\overline{E_0} &\rightarrow \delta A E_0' \\
+                                        B\overline{E_0} &\rightarrow \delta B E_0' 
+                                    \end{align*}
+                                    Como estamos sumando 0, dejamos el dígito invariante, sólo movemos $\delta$ hacia la izquierda. Usamos la variable $E_0'$ para volver, que indica que no nos llevamos nada de la suma:
+                                    \begin{align*}
+                                        E_0' A &\rightarrow AE_0' \\
+                                        E_0' B &\rightarrow BE_0' \\
+                                        E_0' \beta &\rightarrow \beta L_0
+                                    \end{align*}
+                                    Nos desplazamos hacia la derecha, hasta encontrar $\beta$, ya que después encontraremos el siguiente dígito con el que operar. Como no nos llevábamos nada, volvemos a $L_0$.
+
+                                    Si ahora no nos llevamos nada y en vez de un 0 (una $A$) hay un 1 (una $B$), repetimos el proceso pero usando para ello $E_1$:
+                                    \begin{align*}
+                                        L_0 B &\rightarrow E_1 \\
+                                        AE_1 &\rightarrow E_1 A \\
+                                        BE_1 &\rightarrow E_1 B \\
+                                        \beta E_1 &\rightarrow E_1 \beta \\
+                                        \delta E_1 &\rightarrow \overline{E_1}
+                                    \end{align*}
+                                    A continuación, $\overline{E_1}$ se encontrará con el dígito con el que operar:
+                                    \begin{align*}
+                                        A\overline{E_1} &\rightarrow \delta B E_0' \\
+                                        B\overline{E_1} &\rightarrow \delta A E_1'
+                                    \end{align*}
+                                    \begin{itemize}
+                                        \item Si era un 0 (una $A$), lo cambiamos por un 1.
+                                        \item Si era un 1 (una $B$), lo cambiamos por un 0 y nos llevamos 1 (que es lo que indica $E_1'$).
+                                    \end{itemize}
+                                    El comportamiento de $E_1'$ es similar a $E_0'$ pero ahora pasando a $L_1$:
+                                    \begin{align*}
+                                        E_1' A &\rightarrow A E_1' \\
+                                        E_1' B &\rightarrow B E_1' \\
+                                        E_1' \beta &\rightarrow \beta L_1 
+                                    \end{align*}
+                                \item Ahora, estamos en el caso en el que nos llevamos un 1 de la operación anterior ($L_1$), que hemos visto que puede suceder:
+                                    \begin{equation*}
+                                        L_1A \rightarrow E_1
+                                    \end{equation*}
+                                    Si nos encontramos un 0 llevando 1, es como si nos hubiéramos encontrado un 1 llevando 0, por lo que no hay nada nuevo que hacer. Sin embargo, si nos encontramos un 1:
+                                    \begin{equation*}
+                                        L_1B \rightarrow E_2
+                                    \end{equation*}
+                                    Tenemos que tener en mente que el siguiente dígito con el que realizar la suma lo sumaremos con 2 ($E_2$ es análogo a $E_0$ y $E_1$ pero ahora ``transportando'' un 2):
+                                    \begin{align*}
+                                        A E_2 &\rightarrow E_2 A \\
+                                        B E_2 &\rightarrow E_2 B \\
+                                        \beta E_2 &\rightarrow E_2 \beta \\
+                                        \delta E_2 &\rightarrow \overline{E_2}
+                                    \end{align*}
+                                    A continuación, $\overline{E_2}$ se encontrará con el dígito con el que operar:
+                                    \begin{align*}
+                                        A\overline{E_2} &\rightarrow \delta A E_1' \\
+                                        B\overline{E_2} &\rightarrow \delta B E_1'
+                                    \end{align*}
+                                    Similar al caso de $\overline{E_0}$, dejamos el dígito invariante pero ahora tenemos que llevarnos 1 para la siguiente opereación.
+                            \end{enumerate}
+                        \item A poco que se piense, como $8x$ y su complemento a 2 tienen la misma cantidad de bits, terminaremos de realizar la operación cuando nos llevemos 1 y no queden bits del número en complemento a 2, dando lugar a:
+                            \begin{equation*}
+                                \beta L_1 \gamma \rightarrow X
+                            \end{equation*}
+                            donde $X$ es una variable finalizadora, que usamos para cambiar las $A$s por 0s, las $B$s por 1s y eliminar las variables auxiliares que nos quedan (ya hemos eliminado $\beta$ y $\gamma$ directamente al crear $X$, por lo que nos quedan $\delta$ y $\alpha$):
+                            \begin{align*}
+                                AX &\rightarrow X0 \\
+                                BX &\rightarrow X1 \\
+                                \delta X &\rightarrow X \\
+                                \alpha X &\rightarrow \veps
+                            \end{align*}
+                            Cuando lleguemos a $\alpha X$, habremos ``limpiado'' la palaba, por lo que ya podemos quitar todas las variables, generando una palabra de la gramática, que forzosamente tiene que ser un múltiplo de 7 en binario (acabamos de multiplicar cualquier número por 7). Además, como con esta gramática podemos multiplicar cualquier número por 7, esta genera todos los números que son múltiplos de 7 en binario.
+                    \end{itemize}
+                Mostramos finalmente un ejemplo de producción de una palabra mediante esta gramática. Trataremos de generar ``14'' en binario (la 3ª palabra que usa menos reglas de producción para ser creada, tras 0 y 7):
+                \begin{align*}
+                    S &\rightarrow \alpha BNABBB \gamma \rightarrow \alpha BANBABBB\gamma \rightarrow \alpha BAAAA \delta \beta Z BABBB\gamma \rightarrow \\
+                      &\rightarrow \alpha BAAAA\delta \beta BZABBB\gamma \rightarrow \alpha BAAAA \delta \beta BZ' BBBB \gamma \rightarrow \\
+                      &\rightarrow \alpha BAAAA \delta \beta Z' ABBBB \gamma \rightarrow \alpha BAAAA\delta \beta L_0 ABBBB\gamma \rightarrow \\
+                      &\rightarrow \alpha BAAAA\delta \beta E_0 BBBB \gamma \rightarrow \alpha BAAAA\delta E_0 \beta BBBB\gamma \rightarrow \\
+                      &\rightarrow \alpha BAAAA \overline{E_0}\beta BBBB\gamma \rightarrow \alpha BAAA \delta A E_0' \beta BBBB \gamma \rightarrow \\
+                      &\rightarrow \alpha BAAA \delta A\beta L_0 BBBB \gamma \rightarrow \alpha BAAA \delta A\beta E_1 BBB \gamma \rightarrow \\
+                      &\rightarrow \alpha BAAA \delta A E_1\beta BBB \gamma \rightarrow \alpha BAAA\delta E_1 A \beta BBB \gamma \rightarrow \\
+                      &\rightarrow \alpha B AAA \overline{E_1} A \beta BBB \gamma \rightarrow \alpha BAA \delta B E_0' A \beta BBB \gamma \rightarrow \\ 
+                      &\rightarrow \alpha BAA \delta BA E_0' \beta BBB \gamma \rightarrow \alpha BAA \delta BA \beta L_0 BBB \gamma \rightarrow \\
+                      &\rightarrow \alpha BAA \delta BA \beta E_1 BB \gamma \rightarrow \alpha BAA \delta BA E_1 \beta BB \gamma \rightarrow \\
+                      &\rightarrow \alpha BAA \delta BE_1 A \beta BB \gamma \rightarrow \alpha BAA \delta E_1 BA \beta BB \gamma \rightarrow \\
+                      &\rightarrow \alpha BAA \overline{E_1} BA \beta BB \gamma \rightarrow \alpha BA \delta B E_0' BA \beta BB \gamma \rightarrow \\
+                      &\rightarrow \alpha BA \delta BBE_0' A \beta BB \gamma \rightarrow \alpha BA \delta BBA E_0' \beta BB \gamma \rightarrow \\
+                      &\rightarrow \alpha BA \delta BBA \beta L_0 BB \gamma \rightarrow \alpha BA \delta BBA \beta E_1 B \gamma \rightarrow \alpha BA \delta BBA E_1 \beta B\gamma \rightarrow \\
+                      &\rightarrow \alpha BA \delta BBE_1 A \beta B \gamma \rightarrow \alpha BA \delta B E_1 BA \beta B \gamma \rightarrow \alpha BA \delta E_1 BBA \beta B \gamma \rightarrow \\
+                      &\rightarrow \alpha BA \overline{E_1} BBA \beta B \gamma \rightarrow \alpha B \delta B E_0' BBA \beta B \gamma \rightarrow \alpha B\delta BB E_0' BA \beta B \gamma \rightarrow \\
+                      &\rightarrow \alpha B\delta BBB E_0' A \beta B \gamma \rightarrow \alpha B\delta BBBA E_0' \beta B \gamma \rightarrow \alpha B \delta BBBA \beta L_0 B \gamma \rightarrow \\
+                      &\rightarrow \alpha B \delta BBBA \beta E_1 \gamma \rightarrow \alpha B \delta BBBA E_1 \beta \gamma \rightarrow \alpha B \delta BBB E_1 A \beta \gamma \rightarrow \\
+                      &\rightarrow \alpha B \delta BB E_1 BA \beta \gamma \rightarrow \alpha B \delta B E_1 BBA \beta \gamma \rightarrow \alpha B \delta E_1 BBBA \delta \gamma \rightarrow \\
+                      &\rightarrow \alpha B \overline{E_1} BBBA \beta \gamma \rightarrow \alpha \delta A E_1' BBBA \beta \gamma \rightarrow \alpha \delta AB E_1' BBA \beta \gamma \rightarrow \\
+                      &\rightarrow \alpha \delta ABB E_1' BA \beta \gamma \rightarrow \alpha \delta ABBB E_1' A \beta \gamma \rightarrow \alpha \delta ABBBA E_1' \beta \gamma \rightarrow \\
+                      &\rightarrow \alpha \delta ABBBA \beta L_1 \gamma \rightarrow \alpha \delta ABBBA X \rightarrow \alpha \delta ABBBX0 \rightarrow \alpha \delta ABBX10 \rightarrow \\
+                      &\rightarrow \alpha \delta ABX110 \rightarrow \alpha \delta AX1110 \rightarrow \alpha \delta X01110 \rightarrow \alpha X 01110 \rightarrow 01110
+                \end{align*}
+            \end{description}
     \end{enumerate}
 \end{ejercicio}
 
@@ -1057,7 +1238,122 @@
                   &\rightarrow B1011\beta1011 \rightarrow 1B011\beta1011 \rightarrow10B11\beta1011 \rightarrow 101B1\beta1011\rightarrow \\
                   &\rightarrow 1011B\beta1011 \rightarrow10111011
             \end{align*}
-        \item $\{a^{n^2} \in \{a\}^{\ast} \mid n\geq 0\}$
+        \item $\{a^{n^2} \in \{a\}^{\ast} \mid n\geq 0\}$\\
+            La idea que hemos tenido para hacer una gramática que acepte el lenguaje es la siguiente. Si representamos las 5 primeras palabras del lenguaje (ordenándolas por su longitud):
+            \begin{gather*}
+                \veps \\
+                a \\
+                aaaa \\
+                aaaaaaaaa \\
+                aaaaaaaaaaaaaaaa
+            \end{gather*}
+            Notemos que podemos ordenar las letras de la siguiente forma (olvidándonos de $\veps$, que no será relevante):
+            \begin{gather*}
+                a \\
+                aa\ aa \\
+                aaa\ aaa\ aaa\\
+                aaaa\ aaaa\ aaaa\ aaaa 
+            \end{gather*}
+            De forma que tenemos 1 grupo de 1 ``a'', dos grupos de 2 ``a'', 3 grupos de 3 ``a'', \ldots Notemos que dados $n$ grupos de $n$ ``a'', será sencillo construir $n+1$ grupos de $n+1$ ``a'', ya que nos bastará con añadir una ``a'' a cada grupo y con duplicar el último grupo de ``a''.
+
+            Hemos construido una gramática $G = (V, T, S, P)$ que simula este comportamiento inductivo del lenguaje, con lo que el lenguaje generado por la misma es el solicitado. Tenemos:
+            \begin{align*}
+                V &= \{\alpha, \beta, \delta, \gamma, \sigma, X, A, E, E_{\sigma}, \overline{E}, E', I, R, L, Z \} \\
+                T &= \{0,1\} \\
+                S &= S
+            \end{align*}
+            Donde $P$ es el conjunto de reglas de producción que contiene todas las reglas que explicaremos a continuación.
+
+            La idea es que si queremos generar la palabra $a^{n^2}$, que generemos $n-1$ $A$s entre $\alpha$ y $\beta$. Tendremos ya creada una letra $a$ y lo que haremos será que por cada $A$ que hayamos generado, repitamos el proceso inductivo descrito anteriormente. Además, separaremos los ``grupos'' de ``a'' con variables $I$.
+            Finalmente, para duplicar un grupo de ``a'', usaremos las variables $\delta$ y $\sigma$.\\
+
+                Empezamos generando nuestro entorno en el que trabajaremos (o la palabra vacía):
+                \begin{equation*}
+                    S \rightarrow \alpha X \beta Ia\delta \gamma \ |\ \veps
+                \end{equation*}
+                A continuación, usamos $X$ para generar las $A$s:
+                \begin{equation*}
+                    X \rightarrow AX\ |\ E
+                \end{equation*}
+                Una vez terminadas de leer las $A$s, generaremos $E$, que se encargará de ir eliminando una $A$, de realizar el proceso inductivo y de volver al estado inicial, hasta terminar con todas las $A$s generadas.
+
+             Ahora, hacemos que $E$ coja una $A$, con lo que le dejamos salir de la región comprendida por $\alpha$ y $\beta$:
+                \begin{equation*}
+                    AE\beta \rightarrow \beta E
+                \end{equation*}
+                Ahora desplazamos la variable $E$ a la derecha, haciendo que cada vez que entre en un grupo de ``a'' (cuando pase una variable $I$) añada una nueva:
+                \begin{align*}
+                    Ea &\rightarrow aE \\
+                    EI &\rightarrow IaE
+                \end{align*}
+                Cuando la variable $E$ se encuentre con $\delta$, habremos terminado de incrementar las ``a'', con lo que tendremos que duplicar ahora el último grupo de ``a''. Para ello, prepararemos un entorno, de forma que entre $I$ y $\sigma$ vayamos generando el nuevo grupo de ``a'', entre $\sigma$ y $\delta$ se encuentre las ``a'' por copiar; y que entre $\delta$ y $\gamma$ se encuentren las ``a'' que ya hayan sido duplicadas.
+
+                De esta forma, cuando $E$ se encuentre con $\delta$, pasaremos a una variable que busque $I$ para colocar delante suya $\sigma$:
+                \begin{align*}
+                    E\delta &\rightarrow E_{\sigma} \delta \\
+                    aE_{\sigma} &\rightarrow E_{\sigma} a \\
+                    IE_{\sigma} &\rightarrow I\sigma R
+                \end{align*}
+                Ahora, usaremos $R$ para movernos a la derecha tras copiar una letra y $L$ para movernos a la izquierda con el fin de pegar una letra.
+                \begin{equation*}
+                    Ra \rightarrow aR 
+                \end{equation*}
+                Nos movemos a la derecha
+                \begin{equation*}
+                    aR\delta \rightarrow L\delta a
+                \end{equation*}
+                Cuando lleguemos a $\delta$, guardamos una ``a'' más como copiada.
+                \begin{equation*}
+                    aL \rightarrow La
+                \end{equation*}
+                Nos moveremos hacia la izquierda buscando $\sigma$ para crear una $a$:
+                \begin{equation*}
+                    \sigma L \rightarrow a \sigma R
+                \end{equation*}
+                Pegaremos una $a$ tras $\sigma$ y repetiremos el proceso.
+
+                El proceso terminará cuando no haya más ``a'' entre $\sigma$ y $\delta$:
+                \begin{equation*}
+                    \sigma R\delta \rightarrow I\overline{E}
+                \end{equation*}
+                Cuando hayamos terminado, colocamos una $I$ para hacer efectivo el nuevo grupo. Finalmente, debemos colocar nuevamente $\delta$ a la izquierda de $\gamma$ para la siguiente vez que copiemos. Usamos para ello $\overline{E}$:
+                \begin{equation*}
+                    \overline{E}a \rightarrow a\overline{E}
+                \end{equation*}
+                Nos movemos a la izquierda buscando $\gamma$ y cuando la encontremos, colocamos $\delta$:
+                \begin{equation*}
+                    \overline{E}\gamma \rightarrow E' \delta \gamma
+                \end{equation*}
+                Usaremos finalmente $E'$ para desplazarnos a la izquierda, tras $\beta$, donde volveremos a la variable $E$, que reiniciará el proceso descrito para realizarlo nuevamente:
+                \begin{align*}
+                    aE' &\rightarrow E' a \\
+                    IE' &\rightarrow E' I \\
+                    \beta E' &\rightarrow E\beta
+                \end{align*}
+                Este proceso terminará cuando no queden $A$s por copiar. En dicho caso, pasaremos a una variable $Z$ que eliminará todas las variables auxiliares:
+                \begin{equation*}
+                    \alpha E \rightarrow Z
+                \end{equation*}
+                De esta forma, $Z$ se mueve a la derecha, eliminando todas las variables y pasando a través de las letras:
+                \begin{align*}
+                    Z\beta &\rightarrow Z \\
+                    ZI &\rightarrow Z \\
+                    Za &\rightarrow aZ \\
+                    Z\delta &\rightarrow Z \\
+                    Z\gamma &\rightarrow \veps
+                \end{align*}
+            Como ejemplo y para comprobar que el lenguaje generado por dicha gramática funciona es el deseado mostramos el siguiente ejemplo, en el que generamos $a^9$:
+            \begin{align*}
+                S &\rightarrow \alpha X \beta I a \delta\gamma \rightarrow \alpha AX\beta Ia\delta\gamma \rightarrow \alpha AAX\beta Ia\delta\gamma \rightarrow \alpha AAE \beta Ia \delta\gamma \rightarrow \alpha A \beta E Ia\delta\gamma \rightarrow \\
+                  &\rightarrow \alpha A\beta IaEa\delta\gamma \rightarrow \alpha A\beta IaaE\delta\gamma \rightarrow \alpha A\beta IaaE_{\sigma}\delta\gamma \rightarrow \alpha A\beta IaE_{\sigma}a\delta\gamma \rightarrow \\ 
+                  &\rightarrow\alpha A\beta IE_{\sigma}aa\delta\gamma \rightarrow \alpha A\beta I\sigma Raa\delta\gamma \rightarrow \alpha A\beta I \sigma aRa \delta\gamma \rightarrow \alpha A \beta I \sigma aaR \delta\gamma\rightarrow \\
+                  &\rightarrow \alpha A\beta I\sigma aL\delta a\gamma \rightarrow \alpha A \beta I\sigma L a\delta a\gamma \rightarrow \alpha A \beta I a\sigma R a \delta a\gamma  \rightarrow \alpha A \beta Ia\sigma aR\delta a\gamma \rightarrow \\
+                  &\rightarrow \alpha A \beta I a\sigma L\delta aa \gamma \rightarrow \alpha A \beta Iaa \sigma R \delta aa \gamma \rightarrow \alpha A\beta IaaI\overline{E}aa\gamma \rightarrow \alpha A \beta IaaIa\overline{E}a\gamma \rightarrow \\
+                  &\rightarrow \alpha A\beta IaaIaa\overline{E} \gamma \rightarrow \alpha A \beta IaaIaaE'\delta \gamma \rightarrow \alpha A\beta IaaIaE'a\delta\gamma \rightarrow \alpha A\beta IaaIE'aa\delta\gamma \rightarrow \\
+                  &\rightarrow \alpha A\beta IaaE'Iaa\delta\gamma \rightarrow \alpha A \beta IaE'aIaa\delta\gamma \rightarrow \alpha A\beta IE'aaIaa\delta\gamma \rightarrow \\
+                  &\rightarrow \alpha A \beta E'IaaIaa\delta\gamma \rightarrow \alpha AE\beta IaaIaa\delta\gamma \rightarrow \ldots
+            \end{align*}
+            % // TODO: Seguir
         \item $\{a^p \in \{a\}^{\ast} \mid p \text{ es primo}\}$
         \item $\{a^nb^m \in \{a,b\}^{\ast} \mid n\leq m^2\}$
     \end{enumerate}
