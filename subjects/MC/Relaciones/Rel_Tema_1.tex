@@ -549,7 +549,7 @@
 
     Sea la siguiente gramática regular $G'=\left(V',T',P',S'\right)$ dada por:
     \begin{align*}
-        V' &= \{S, X\} \\
+        V' &= \{S, X,Y,Z\} \\
         T' &= \{a,b\} \\
         S' &= S \\
         P' &= \left\{
@@ -557,10 +557,7 @@
                 S &\rightarrow & aS \mid bX \\
                 X &\rightarrow & aX \mid bY \\
                 Y &\rightarrow & aY \mid bZ \\
-                Z &\rightarrow & aZ \mid bW \mid \veps \\
-                W &\rightarrow & aW \mid bU \\
-                U &\rightarrow & aU \mid bV \\
-                V &\rightarrow & aV \mid \veps
+                Z &\rightarrow & aZ \mid bX \mid \veps
             \end{array}
         \right\}
     \end{align*}
@@ -950,7 +947,7 @@
                     Xb & \rightarrow & bX\\
                     Xa & \rightarrow & Ybaa\\
                     bY & \rightarrow & Yb\\
-                    aY & \rightarrow aa\mid aaX
+                    aY & \rightarrow & aa\mid aaX
                 \end{array}
             \right\}
         \end{align*}
@@ -958,7 +955,7 @@
 \end{ejercicio}
 
 
-\begin{ejercicio}[Complejidad: Difícil]
+\begin{ejercicio}[Complejidad: Difícil] 
     Calcula, de forma razonada, gramáticas que generen cada uno de los siguientes lenguajes:
     \begin{enumerate}
         \item $\{a^nb^mc^k \in \{a,b,c\}^\ast \mid k = m + n\}$
@@ -979,7 +976,65 @@
         \item Palabras que son múltiplos de 7 en binario.
             \begin{description}
                 \item [Opción 1.] 
-                    Hacer un autómata que acepte el lenguaje.
+                    Hacer un autómata que acepte el lenguaje. Aunque un concepto del Tema 2, lo añadimos por ser más simple que la segunda opción.
+                    Cada estado, donde $N$ es el número que llevamos leído, viene notado por:
+                    \begin{equation*}
+                        q_i: N \text{ mod } 7 = i \quad \forall i\in \{0,\ldots,6\}
+                    \end{equation*}
+                    Usamos que:
+                    \begin{itemize}
+                        \item Añadirle un $0$ al final a un número en binario es multiplicarlo por $2$.
+                        \item Añadirle un $1$ al final a un número en binario es multiplicarlo por $2$ y sumarle $1$.
+                    \end{itemize}
+
+                    Por tanto, el AFD sería:
+                    \begin{figure}[H]
+                        \centering
+                        \begin{tikzpicture}
+                            \node[state,initial,accepting] (q0) {$q_0$};
+                            \node[state] (q1) [right of=q0] {$q_1$};
+                            \node[state] (q2) [above right of=q1] {$q_2$};
+                            \node[state] (q3) [below right of=q1] {$q_3$};
+                            \node[state] (q4) [right of=q2] {$q_4$};
+                            \node[state] (q5) [right of=q3] {$q_5$};
+                            \node[state] (q6) [right of=q5] {$q_6$};
+
+                            \draw   (q0) edge[loop above] node {0} (q0)
+                                    (q0) edge[above] node {1} (q1)
+                                    (q1) edge[above] node {0} (q2)
+                                    (q1) edge[above] node {1} (q3)
+                                    (q2) edge[above] node {0} (q4)
+                                    (q2) edge[left, bend left] node[pos=0.8] {1} (q5)
+                                    (q3) edge[below, bend right] node {0} (q6)
+                                    (q3) edge[above] node {1} (q0)
+                                    (q4) edge[above, bend left] node {0} (q1)
+                                    (q4) edge[above, bend right] node {1} (q2)
+                                    (q5) edge[above] node {0} (q3)
+                                    (q5) edge[right] node {1} (q4)
+                                    (q6) edge[above] node {0} (q5)
+                                    (q6) edge[loop above] node {1} (q6);
+                        \end{tikzpicture}
+                        \caption{AFD que acepta los múltiplos de 7 en binario.}
+                    \end{figure}
+
+                    La gramática, por tanto, que genera este lenguaje es $G=\left(V,T,P,S\right)$ dada por:
+                    \begin{align*}
+                        V &= Q=\{q_0,\dots,q_6\} \\
+                        T &= A=\{0,1\} \\
+                        S &= q_0 \\
+                        P &= \left\{
+                            \begin{array}{rcl}
+                                q_0 &\rightarrow & 0q_0 \mid 1q_1 \mid \veps \\
+                                q_1 &\rightarrow & 0q_2 \mid 1q_3 \\
+                                q_2 &\rightarrow & 0q_4 \mid 1q_5 \\
+                                q_3 &\rightarrow & 0q_6 \mid 1q_0 \\
+                                q_4 &\rightarrow & 0q_1 \mid 1q_2 \\
+                                q_5 &\rightarrow & 0q_3 \mid 1q_4 \\
+                                q_6 &\rightarrow & 0q_5 \mid 1q_6
+                            \end{array}
+                        \right.
+                    \end{align*}
+
                 \item [Opción 2.] 
                     Un tanto más complicada, introduce cálculos con números binarios. La idea principal es que si $x$ es un número natural, entonces:
                     \begin{equation*}
