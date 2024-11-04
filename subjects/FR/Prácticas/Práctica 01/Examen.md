@@ -6,7 +6,7 @@
 ***
 
 - **Asignatura:** Fundamentos de Redes
-<!--- **Curso Académico:** Actualizado al curso 2023-24-->
+- **Curso Académico:** Actualizado al curso 2024-25
 - **Grado:** Preguntas comunes para el Grado en Ingeniería Informática y los Dobles Grados
 <!--- **Grupo:** A.-->
 <!--- **Profesor:** Ignacio Rojas Ruiz.-->
