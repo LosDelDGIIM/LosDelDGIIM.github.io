@@ -604,51 +604,75 @@
         \item Con prioridad a los escritores: quiere decir que, si en un momento puede acceder tanto un lector como un escritor, se da paso preferentemente al escritor.
         \item Con prioridades iguales: en este caso, los procesos acceden al recurso estrictamente en orden de llegada, lo cual implica, en particular, que si hay lectores leyendo y un escritor esperando, los lectores que intenten acceder después del escritor no podrán hacerlo hasta que no lo haga dicho escritor.
     \end{enumerate}
-    Para resolver los tres problemas, consideramos que se quiere leer y escribir en un array de enteros de longitud \verb|n| con planificación FIFO.
+    En este problema, contamos con procesos de dos tipos, lectores y escritores. Si un escritor hace uso del recurso compartido, este debe hacerlo en exclusión mutua. Sin embargo, si un lector hace uso del recurso, puede haber más lectores que también lo estén usando al mismo tiempo.
+    Planteamos ahora la solución a cada uno de los puntos, usando para ello 2 procedimientos por cada tipo de proceso que interviene en el problema (un procedimiento de entrada al recurso y otro de fin de uso):
     \begin{enumerate}
-        \item 
-        \item 
-        \item En esta ocasión, con paridad entre lectores y escritores, solo tenemos que controlar que no se escriba en un buffer lleno ni se lea de un buffer vacío:
+        \item Solución para dar prioridad a los lectores:
             \begin{minted}{pascal}
-                monitor LecEsc (n : integer);
-                var buffer : array[0..n-1] of integer;
-                    pos_esc, pos_lec, tam : integer;
-                    pendientes : integer;
-                    cola_esc, cola_lec : condition;
+                Monitor LecEsc;
+                   var lec_dentro : integer;
+                       esc_dentro : boolean;
+                       cola_lec, cola_esc : condition;
 
                    begin
-                      pos_esc := pos_lec := 0;
-                      pendientes := 0;
-                      tam := n;
+                      lec_dentro = 0;
+                      esc_dentro = false;
                    end
 
-                   procedure escribir(k : integer);
+                   procedure entra_lector();
                    begin
-                      if(pendientes = tam) then
-                         cola_esc.wait();
-                      end
-                      
-                      buffer[pos_esc] := k;
-                      pos_esc := (pos_esc + 1) mod tam;
-                      pendientes++;
-
-                      cola_lec.signal();
-                   end
-
-                   procedure leer() : integer;
-                   begin
-                      if(pendientes = 0) then
+                      if esc_dentro then
                          cola_lec.wait();
                       end
 
-                      result := buffer[pos_lec];
-                      pos_lec := (pos_lec + 1) mod tam;
-                      pendientes--;
+                      lec_dentro++;
+                      cola_lec.signal();
+                   end
 
-                      cola_esc.signal();
+                   procedure sale_lector();
+                   begin
+                      lec_dentro--;
+
+                      if lec_dentro = 0 then
+                         cola_esc.signal();
+                      end
+                   end
+
+                   procedure entra_escritor();
+                   begin
+                      if lec_dentro > o OR esc_dentro then
+                         cola_esc.wait();
+                      end
+
+                      esc_dentro = true;
+                   end
+
+                   procedure sale_escritor();
+                   begin
+                      esc_dentro = false;
+
+                      if cola_lec.queue() then
+                         cola_lec.signal();
+                      else
+                         cola_esc.signal();
+                      end
                    end
                 end
             \end{minted}
+        \item Solución para dar prioridad a los esctirores. En este caso, el código es idéntico, salvo en el procedimiento \verb|sale_escritor|, que quedaría de la siguiente forma:
+            \begin{minted}{pascal}
+                procedure sale_escritor();
+                begin
+                   esc_dentro = false;
+
+                   if cola_esc.queue() then
+                      cola_esc.signal();
+                   else
+                      cola_lec.signal();
+                   end
+                end
+            \end{minted}
+        \item Finalmente, para dar una solución en la que lectores y escritores tienen prioridades iguales. % // TODO:
     \end{enumerate}
 \end{ejercicio}
 
