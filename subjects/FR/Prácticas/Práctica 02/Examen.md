@@ -37,7 +37,7 @@ ______
     - ( ) IP->NAT.
 
 4. Dada la topología de la red de datos del laboratorio y la siguiente configuración para `DST-NAT` en `RX_3`, ¿cuál de las siguientes afirmaciones es correcta?<br><table border="1"><thead><tr><th>**Parameter**</th><th>**Value**</th></tr></thead><tbody><tr><td>*chain*</td><td>dstnat</td></tr><tr><td>*Dst-address*</td><td>`172.16.X.3`</td></tr><tr><td>*Action*</td><td>dst-nat</td></tr><tr><td>*To-address*</td><td>`33.X.3.3`</td></tr><tr><td>*Protocol*</td><td>tcp</td></tr><tr><td>*Dst-port*</td><td>`80` (HTTP)</td></tr><tr><td>*To-port*</td><td>`8080`</td></tr></tbody></table>
-    - ( ) Se asume que el puerto TCP de escucha del servidor HTTP en `PCX_6` es el `80`.
+    - ( ) Se asume que el puerto TCP de escucha del servidor HTTP en `PCX_6` es el `8080`.
     - ( ) Los mensajes originados por `PCX_1` y destinados a `PCX_6` tendrán como dirección IP destino la `172.16.X.3` y como puerto TCP destino el `80` en la subred `172.16.X.0/24`.
     - ( ) Los mensajes originados por `PCX_1` y destinados a `PCX_6` tendrán como dirección IP destino la `33.X.3.3` y como puerto TCP destino el `8080` en la subred `33.X.3.0/24`.
     - (x) Todas las afirmaciones son correctas.
@@ -132,3 +132,39 @@ ______
     - ( ) Largo, para mantener direcciones IP el máximo tiempo posible.
     - (x) Corto, para liberar rápidamente direcciones IP que no se están utilizando.
     - ( ) Dividiría el tiempo que tarda en responder el servidor ante un `DHCPDISCOVER` y lo dividiría entre el número de dispositivos de mi red siendo este mi *tiempo de lease*.
+
+20. ¿Qué fichero hay que configurar en los equipos del aula para usar el servicio DCHP?
+    - ( ) El fichero `interfaces`, que está en `/network`.
+    - (x) El fichero `01-network-manager-all.yaml`, que está en `/etc/netplan`.
+    - ( ) El fichero `netplan`, que está en `/etc`.
+    - ( ) El fichero `dchp-client`, que está en `/users`.
+
+21. En la configuración de un servidor DHCP, el tiempo de asignación de IP (*lease time*) de las direcciones IP...
+    - (x) ... puede ser distinto para cada red que se sirva.
+    - ( ) ... no es configurable.
+    - ( ) ... es igual para todas las redes que se sirvan.
+    - ( ) ... es distinto para cada una de las IPs del *adress pool*.
+
+22. Considerando la topología de la red de datos del laboratorio y la configuración recogida en la siguiente tabla, ¿cuál de las siguientes afirmaciones es correcta?<br><table border="1"><thead><tr><th>**Parameter**</th><th>**Value**</th></tr></thead><tbody><tr><td colspan="2"><strong>*DHCP Server Configuration*</strong></td></tr><tr><td>*Address-Pool*</td><td>`33.X.1.10 – 33.X.1.20`</td></tr><tr><td>*Relay*</td><td>`33.X.1.1`</td></tr><tr><td>*Lease-time*</td><td>0d01:00:00</td></tr><tr><td>*Interface*</td><td>Ether1</td></tr><tr><td colspan="2"><strong>*DHCP Relay Configuration*</strong></td></tr><tr><td>*Interface*</td><td>Ether1</td></tr><tr><td>*DHCP-Server*</td><td>`172.17.X.6`</td></tr><tr><td>*Local-Address*</td><td>`33.X.1.1`</td></tr></table>
+    - ( ) El servidor DHCP podrá asignar hasta 11 direcciones IP de forma simultánea.
+    - ( ) El router `RX_1` actúa como proxy de los mensajes DHCP entre `PCX_1` y `RX_6`.
+    - (x) Todas las respuestas son correctas.
+    - ( ) Se podrán asignar a `PCX_2` la dirección `33.X.1.3` de forma estática configurando el fichero `/etc/netplan/01-network-manager-all.yaml`.
+
+23. Supongamos que queremos configurar en `RX_2` el acceso a un servidor HTTP ejecutándose en `PCX_3` y escuchando en el puerto TCP 8080. Se asume que los equipos externos a la subred `33.X.2.0/24` no conocen el direccionamiento IP interno de dicha subred y las peticiones dirigidas al servidor HTTP tendrán originalmente como puerto TCP origen el 80. ¿Cómo configuraría la entrada NAT correspondiente en `RX_2`?<br><table border="1"><thead><tr><th>**Parameter**</th><th>**Value**</th></tr></thead><tbody><tr><td>*Chain*</td><td>`A`</td></tr><tr><td>*Dst-adress*</td><td>`B`</td></tr><tr><td>*Action*</td><td>`C`</td></tr><tr><td>*To-adress*</td><td>`D`</td><tr><td>*Protocol*</td><td>tcp</td></tr><tr><td>*Dst-port*</td><td>`E`</td></tr><tr><td>*To-port*</td><td>`F`</td></tr></table>
+    - (x) `A=dstnat`, `B=172.16.X.2`, `C=dst-nat`, `D=33.X.2.2`, `E=80`, `F=8080`.
+    - ( ) `A=srcnat`, `B=172.16.X.2`, `C=masquerade`, `D=33.X.2.2`, `E=80`, `F=8080`.
+    - ( ) `A=dstnat`, `B=172.16.X.2`, `C=dst-nat`, `D=33.X.2.2`, `E=8080`, `F=80`.
+    - ( ) `A=srcnat`, `B=172.16.X.2`, `C=masquerade`, `D=33.X.2.2`, `E=8080`, `F=80`.
+
+24. Considerando el siguiente escenario donde se ha configurado correctamente `SRC-NAT`, ¿cuál de las siguientes afirmaciones es correcta?<img src="Img_Examenes/P24.png" alt="Escenario de red"><br>
+    - ( ) Los mensajes originados por `PC1_1` y destinados a `PC1_3` tendrán como dirección IP origen la `172.16.1.1` y como IP destino `33.1.2.2` en la subred `33.1.2.0./24`.
+    - ( ) `PC1_1` recibirá los mensajes de respuesta de `PC1_3` aunque `R1_2` no tenga una entrada para alcanzar la subred `33.1.1.0/24` en su tabla de rutas.
+    - (x) Todas las respuestas son correctas.
+    - ( ) Los mensajes originados por `PC1_1` y destinados a `PC1_3` tendrán como dirección IP origen la `33.1.1.2` y dirección IP destino la `33.1.2.2` en la subred `33.1.1.0/24`.
+
+25. En la configuración de los DHCP server en un router MikroTik del laboratorio,
+    - (x) El DNS server puede ser cualquiera.
+    - ( ) El DNS server debe ser la IP de PC de la isla.
+    - ( ) El DNS servder debe ser la IP de gestión del router.
+    - ( ) El DNS server debe ser la IP de de datos del router.
