@@ -11,7 +11,7 @@
 
 # Primera parte
 Esta primera parte de la práctica trata sobre la configuración de routers como servidores DHCP, usando para ello el laboratorio 3.7.  
-Es reconmendable mirar primero en la teoría el funcionamiento de DHCP.
+Es recomendable mirar primero en la teoría el funcionamiento de DHCP.
 
 ## Ejercicio 1
 Este primer ejercicio trata sobre la previa configuración en el PC del uso de DHCP (quitarle a la tarjeta de datos su IP e indicarle que use DHCP). Estaremos usando clientes ubuntu, luego será necesario trabajar con `netplan`.  
@@ -58,6 +58,6 @@ Una vez configurados los dos relays, procedemos a configurar `RX_4` de forma an�
     - La pasarela por defecto para dicha red.
     - El DNS asociado (por ejemplo, la IP del router).  
   
-Una vez configurado todo, nos dirigiremos al cliente y ejecutaremos *wireshark*. Seguidamente, `dhclient -v datos` para solicitar una IP a DHCP. Podemos comprobar que todo ha ufuncionado correctamente con los mismos pasos que hicimos en el ejercicio1.  
+Una vez configurado todo, nos dirigiremos al cliente y ejecutaremos *wireshark*. Seguidamente, `dhclient -v datos` para solicitar una IP a DHCP. Podemos comprobar que todo ha ufuncionado correctamente con los mismos pasos que hicimos en el ejercicio 1.  
   
 Además, desde winbox en los routers podemos consultar el número de peticiones DHCP completadas.

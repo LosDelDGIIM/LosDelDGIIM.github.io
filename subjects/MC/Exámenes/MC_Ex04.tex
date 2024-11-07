@@ -144,11 +144,51 @@
         
     \end{ejercicio}
 
-    \begin{ejercicio}
-        Considera el lenguaje de todas las palabras en las que toda subcadena de $1$'s de longitud mayor o igual a $2$ está precedida de una subcadena de $0$'s de cualquier longitud mayor o igual a $3$. Encuentra un autómata finito, de cualquier tipo, que acepte este lenguaje.
+    \begin{ejercicio} \label{ej:2}
+        Considera el lenguaje de todas las palabras en las que toda subcadena de $1$'s de longitud mayor o igual a $2$ está precedida de una subcadena de $0$'s de cualquier longitud mayor o igual a $3$. Encuentra un autómata finito, de cualquier tipo, que acepte este lenguaje.\\
+
+        Consideramos los siguientes estados:
+        \begin{itemize}
+            \item $q_0$: Estado inicial.
+            \item $q_1$: Hemos leído un $1$ que no está precedido por $3$ o más $0$'s.
+            \item $q_2$: Hemos leído solo un $0$ consecutivo.
+            \item $q_3$: Hemos leído dos $0$'s consecutivos.
+            \item $q_4$: Hemos leído tres $0$'s consecutivos.
+            \item $q_5$: He leído un $1$ que está precedido por $3$ o más $0$'s, por lo que puedo introducir más $1$'s.
+        \end{itemize}
+
+        El AFD que acepta el lenguaje descrito se muestra en la Figura~\ref{fig:ej2_AFD}.
+        \begin{figure}[h]
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial, accepting] (q0) {$q_0$};
+                \node[state, right of=q0, accepting] (q1) {$q_1$};
+                \node[state, right of=q1, accepting] (q2) {$q_2$};
+                \node[state, right of=q2, accepting] (q3) {$q_3$};
+                \node[state, right of=q3, accepting] (q4) {$q_4$};
+                \node[state, right of=q4, accepting] (q5) {$q_5$};
+                \node[state, above of=q1, error] (E) {$E$};
+
+                \draw   (q0) edge[above] node{$1$} (q1)
+                        (q0) edge[bend right, below] node{$0$} (q2)
+                        (q1) edge[below] node{$0$} (q2)
+                        (q1) edge[left] node{$1$} (E)
+                        (q2) edge[below] node{$0$} (q3)
+                        (q2) edge[bend right, above] node[pos=0.1]{$1$} (q1)
+                        (q3) edge[above] node{$0$} (q4)
+                        (q3) edge[bend right, above] node{$1$} (q1)
+                        (q4) edge[loop above] node{$0$} (q4)
+                        (q4) edge[above] node{$1$} (q5)
+                        (q5) edge[loop above] node{$1$} (q5)
+                        (q5) edge[bend left, above] node{$0$} (q2)
+                        (E) edge[loop right] node{$0,1$} (E);
+            \end{tikzpicture}
+            \caption{AFD que acepta el lenguaje del Ejercicio~\ref{ej:2}.}
+            \label{fig:ej2_AFD}
+        \end{figure}
     \end{ejercicio}
 
-    \begin{ejercicio}
+    \begin{ejercicio} \label{ej:3}
         Considera el lenguaje $L\subset \{a,b\}^*$ formada por las palabras en las que las $a$'s y las $b$'s están siempre alternadas. Ejemplos de palabras del lenguaje son:
         \begin{equation*}
             \veps,a,b,ab,ba,aba,bab,abab,baba \in L.
@@ -157,6 +197,65 @@
         \begin{equation*}
             bb,aa,abba \notin L.
         \end{equation*}
-        Encontrar una expresión regular que genere el lenguaje $L$.
+        Encontrar una expresión regular que genere el lenguaje $L$.\\
+
+        Obtenemos en primer lugar un AFD que acepte el lenguaje $L$. Este tiene los siguientes estados:
+        \begin{itemize}
+            \item $q_0$: Estado inicial.
+            \item $q_A$: Estado en el que la última letra leída es una $a$.
+            \item $q_B$: Estado en el que la última letra leída es una $b$.
+        \end{itemize}
+
+        Este AFD se muestra en la Figura~\ref{fig:ej3_AFD}.
+        \begin{figure}[h]
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial, accepting] (q0) {$q_0$};
+                \node[state, right of=q0, accepting, yshift=3em] (qA) {$q_A$};
+                \node[state, right of=q0, accepting, yshift=-3em] (qB) {$q_B$};
+                \node[state, right of=qB, error, yshift=3em] (E) {$E$};
+
+                \draw   (q0) edge[above] node{$a$} (qA)
+                        (q0) edge[below] node{$b$} (qB)
+                        (qA) edge[left, bend right] node{$b$} (qB)
+                        (qB) edge[right, bend right] node{$a$} (qA)
+                        (qA) edge[above] node{$a$} (E)
+                        (qB) edge[below] node{$b$} (E)
+                        (E) edge[loop right] node{$a,b$} (E);
+            \end{tikzpicture}
+            \caption{AFD que acepta el lenguaje del Ejercicio~\ref{ej:3}.}
+            \label{fig:ej3_AFD}
+        \end{figure}
+
+        Para obtener la expresión regular que genera el lenguaje $L$, planteamos el sistema de ecuaciones que se muestra a continuación:
+        \begin{align*}
+            q_0 &= aq_A + bq_B + \veps,\\
+            q_A &= aE + bq_B + \veps,\\
+            q_B &= aq_A + bE + \veps,\\
+            E &= aE + bE = (a+b)E + \emptyset
+        \end{align*}
+        Por el lema de Arden, tenemos que $E=(a+b)^*\emptyset = \emptyset$. Sustituyendo en las ecuaciones anteriores, obtenemos:
+        \begin{align*}
+            q_0 &= aq_A + bq_B + \veps,\\
+            q_A &= bq_B + \veps,\\
+            q_B &= aq_A + \veps.
+        \end{align*}
+
+        Sustituyendo en valor de $q_B$, obtenemos:
+        \begin{align*}
+            q_0 &= aq_A + b(aq_A + \veps) + \veps,\\
+            q_A &= b(aq_A + \veps) + \veps = baq_A + b + \veps
+        \end{align*}
+
+        Usando de nuevo el lema de Arden, tenemos que $q_A = (ba)^*(b+\veps)$. Sustituyendo en la ecuación de $q_0$, obtenemos:
+        \begin{align*}
+            q_0 &= a(ba)^*(b+\veps) + b(a(ba)^*(b+\veps) + \veps) + \veps
+            =\\&= a(ba)^*(b+\veps) + (ba)^+(b+\veps) + b + \veps
+        \end{align*}
+
+        Por lo tanto, la expresión regular que genera el lenguaje $L$ es:
+        \begin{equation*}
+            a(ba)^*(b+\veps) + (ba)^+(b+\veps) + b + \veps.
+        \end{equation*}
     \end{ejercicio}
 \end{document}
