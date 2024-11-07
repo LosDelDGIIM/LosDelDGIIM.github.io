@@ -156,9 +156,8 @@ Tenemos un número de secuencia, un número de acuse y un flag de sincronismo.
 Hemos sincronizado los núemros de secuencia: A conoce los numeros de B y B los de A.
 Esto se suele simplificar y representar con:
 1. Syn X
-2. ACK X+1, Syn Y
+2. ACK X+1, Syn Y       (Por ser piggybacking)
 3. ACK Y+1
-
 
 La conexión es iniciada siempre por el cliente.
 A esto se le llama apertura activa.
@@ -230,6 +229,8 @@ Si usamos una VPN manteniendo el MSS, metemos una cabecera nueva de VPN, que pue
 Dependiendo de la VPN, estará implementada en un nivel u otro, pero la cabecera la tendríamos igualmente.
 
 ### Diagrama de estados de conexiones TCP
+(VER EN LA SIGUIENTE CLASE, esto es una breve idea poco desarrollada)
+
 Un estado significa que se pueden hacer una serie de acciones.
 La nomenclatura usada es: recibo algo / transmito algo.
 
@@ -243,6 +244,7 @@ Campos involucrados:
 - Bit de ACK.
 - Campo de checksum (por si hubiera un problema y hay un dato mal. Pilla cabecera + datos TCP y pseudocabecera IP).
 
+
 ##### Ejemplo diapositiva 25 (de concepto, pero no se generan así los ACKs).
 En la izqda: perdemos un ACK y tenemos que reenviar. Da igual que se pierda el dato o el ACK, tienen el mismo efecto.
 
@@ -252,7 +254,215 @@ timeout muy grande: tardamos mucho en reaccionar que hemos perdido el dato (en c
 En la dhca: El temporizador es muy chico. se trata de ACK acumulativo.
 
 
-
 Si mandamos un dato y mandamos un ACK, el tiempo entre envío y recibo es RTT (Tiempo de ida y vuelta, Round Trip Time).
 Es un valor dinámico que depende de la carga de red (si un router está muy solicita, incrementa)
 Habrá que buscar un temporizador (timeout) que se adapte al RTT.
+
+
+OTRA CLASE (séase, los títulos empienzan nuevamente, que alguien le de estructura a esto x dios)
+
+
+### Control de errores
+Relacionado con el control de flujo y de congestión.
+
+Tendremos dos partes importantes:
+- Generación de ACKs, que van a ser acumulativos y positivos (se verá).
+- Timeouts, que van a ser adaptables.
+
+Socket TCP (como idea, se verá en T5): Objeto obtenido a partir del SO que nos permite usar a alto nivel los paquetes de una conexión TCP.
+
+En el receptor va a tener un buffer a nivel TCP (que se implementa en la pila TCP/IP del SO), con lo que se implementa en el SO.
+El buffer del receptor (que está en el kernel del SO), se irá rellenando con los datos que irán llegando y podemos colocar dónde va el paquete gracias a su número de secuencia.
+Hay un buffer por cada conexión TCP (primero hay que establecerla, ..., como ya se mencionó).
+
+Es el SO quien gestiona el buffer.
+Cuando la aplicación pide un dato a un socket, el SO saca de dicho buffer un paquete y se lo pasa a la aplicación.
+Por tanto, la aplicación va consumiendo los paquetes más a la izquierda del buffer, con lo que los paquetes se van deslizando en el buffer (se dice que es ventana deslizante), de forma que se trata de una cola FIFO circular.
+
+Campos involucrados:
+- Nº de secuencia. Normalmente, nº acuse del ACK anterior (si no, un nº aleatorio).
+- Campo de acuse (qué byte espero recibir). Normalmente, nº secuencia + datos del ultimo paquete.
+- Bit de ACK.
+- Campo de checksum (por si hubiera un problema y hay un dato mal. Pilla cabecera + datos TCP y pseudocabecera IP).
+
+#### Generación de ACKs
+Antes de verlos, damos una idea en la diapositiva 25 (que no es lo que pasa en la realidad, NO ES LO QUE HACE TCP: NO envia paquete y contesta con ACK cada vez).
+Importante diapositiva 26. Pasamos a explicarl las 4 lineas:
+
+Positivas: Decimos lo que ha llegado bien.
+Acumulativo: Cuando digamos que ha llegado bien hasta algo, todo lo anterior ha llegado bien (ordenado).
+
+
+2 casos en los que va bien:
+1. Suponemos que tenemos el buffer del receptor bien (tenemos todos los paquetes ordenados y confirmados) hasta un cierto punto.
+Llega ahora un paquete que sabemos que es el siguiente (por el nº de secuencia).
+- Cuando llega, llega un segmento de forma ordenada y sin discontinuidad de forma que lo anterior ya está confirmado.
+- *Acción:* Retrasamos el ACK, esperando un segundo paquete en 500mseg (según el flavor TCP Tahoe). Si tras 500mseg no viene ninguno, entonces enviamos el ACK.
+
+2. Si tenemos todo en orden y el último paquete no confirmado (el resto sí):
+- Si ahora llega un segundo paquete sin problemas (es el siguiente sin discontinuidad pero hay un ACK retrasado). 
+- *Acción:* Manda inmediatamente un ACK acumulativo, con el nº de acuse el siguiente bit al último.
+De esta forma, **mandamos un ACK cada 2 paquetes**. Si se queda uno suelto, esperar los 500 mseg.
+
+2 casos en los que hay algo mal:
+3. Llegada desordenada de segmento con nº de secuencia mayor al bytes esperado $n$.
+Resulta que llega un paqeute con un nº de secuencia mayor al esperado $n$ (falta un cacho).
+*Acción:* Mandamos inmediatamente un ACK con nº de secuencia del siguiente byte esperado, $n$.
+
+4. Llegada de un segmento que completa una discontinuidad entera (paquete que completa el hueco) o parcialmente (paquete que reduce un poco el hueco):
+*Acción:* Se manda ACK inmediatamente hasta todo lo k estaba bien.
+
+
+En resumen: si todo va bien, se envía un ACK cada dos paquetes.
+Si llegan paquetes desordenados, se mandan ACKs inmediatamente.
+Se retransmite en el emisor por timeouts. Si no se ha recibido un ACK, se reenvía.
+
+Otro caso de envío de ACKs:
+(Ver tras control de flujo)
+Si la ventana pasa de llena (Win = 0) a tener algo de espacio libre, se envía un ACK indicando el espacio libre. Notemos que este ACK es importante (si se pierde, el emisor se queda bloqueado). Ver en control de flujo
+
+#### Estimación de timeouts
+Motivamos un poco el uso de la estimación.
+Anteriormente dijimos que el tiempo de timeout debe adaptarse al RTT (Round Trip Time).
+
+El RTT no es un valor fijo:
+- Tiempo de transmisión: tiempo que tarda en enviarse un paquete, 1/velocidad de transmisión. Depende de la tarjeta.
+- Tiempo de propagación: tiempo desde que se comienza a enviar un paquete hasta que se empieza a recibir. Depende de la distancia y las condiciones de la red.
+- Tiempo de procesado (en un router): variable, depende de la carga de la red (los paquetes que haya), la longitud de la tabla de encaminamiento, ... . No es fijo.
+- Tiempo de transmisión (del router).
+- Tiempo de propagación, ...
+- Todo esto es tiempo de ida.
+- El tiempo de vuelta es similar.
+
+RTT = tiempo de ida + tiempo de vuelta.
+Como tenemos uno (o varios) tiempos de procesado en el RTT, tenemos un RTT variable.
+
+Como enviamos un paquete y recibimos un ACK, el emisor puede medir el RTT.
+
+
+Lo que se hace es buscar un RTT filtrado (en promedio), no el RTT como tal.
+Lo que se hace es:
+RTT_nuevo = alpha * RTT_viejo + (1-alpha) * RTT_medio, con alpha en [0,1]
+Ver diap. 28.
+Tambien vamos calculando la desviacion:
+Desviacion_nueva = (1-x) * Desvicion_vieja + x * |RTT_medio - RTT_nuevo|
+
+Finalmente, el Timeout = RTT_nuevo + 4 * Desviacion_nueva
+
+
+Tenemos un problema con los ACKs repetidos, pero para eso está el algoritmo de Karn, que sólo cambia el timeout en los no ambiguos.
+SI hay alguna expiración del timeout: timeout = 2 * timeout.
+
+### Control de flujo
+Es un mecanismo de atrás hacia adelante: el receptor le dice al emisor que envíe más o menos datos.
+Antes hemos visto que el receptor tiene un buffer (que será pequeño en dispositivos livianos).
+Los paquetes que lleguen cuando el buffer esté lleno se descartan (flujo inútil).
+Es un sistema crediticio: se envía crédito de lo que se puede o no mandar.
+
+Esto se controla con el campo de ventana en la cabecera TCP (AWND, Advertised Window ..., de 16 bits). Se indican los bytes libres.
+
+Cuando la ventana esté llena (recibe un ACK con Win = 0), el emisor se bloquea hasta recibir un nuevo ACK que confirme que se acaba de sacar una paquete de la ventana.
+Este ACK es importante. Para ello, se usa un Timer de persistencia (determina el tiempo máximo a bloquear un emisor). Entonces, se envía 1 byte al receptor para que se fuerce el posible reenvío de confirmación del ACK.
+
+
+Por otra parte,
+En control de congestión tenemos una ventana que no envía a ningún sitio.
+El emisor se dice a sí mismo de enviar más o menos datos (lo decide el emisor).
+Como no se manda nunca, no hay un campo en la cabecera TCP, con lo que puede tener el tamaño deseado.
+
+
+
+Ventana útil:
+Es la ventana ofertada - bytes en tránsito.
+(Ya que la información de la ventana ofertada la obtenemos mucho más tarde de los datos que enviamos)
+
+Ventana optimista:
+No cogemos la ventana útil ni la ofertada, sino una cosa intermedia.
+
+
+Hay dos flags que nos permiten saltarnos el orden:
+- Datos urgentes con puntero de urgentes.
+- Solicitar entregas inmediataas.
+
+Síndrome de la ventana tonta:
+Situación liosa en la que la aplicación lee cada vez menos datos.
+
+### Control de congestión
+De las partes más importantes de TCP (junto con ACK + timeouts).
+La velocidad de TCP depende de esto.
+
+En Tahoe se manifiesta por las pérdidas de ACKs.
+Intenta reducir la velocidad de emisión ante congestiones e incrementarla si todo va bien.
+
+##### Explicado a la vez que se hace un prblema
+En general, RTT = 2 Tiempo de propagacion + 2 Tiempo de transmisión
+El establecimiento de la conexión TCP tarda 1.5 RTT o 3 Tiempos de propagación
+Tiempo de programación = T_p, Tiempo de transmisión = T_t
+
+En realidad el ACK final de establecimiento puede ser útil para enviar los primeros datos.
+
+
+Tenemos en el emisor una ventana de congestión (CW) con un valor inicial de paquetes a enviar, parámetro dependiente del SO.
+Esta controla el total de paquetes a enviar de una vez.
+
+Si el valor inicial de la CW es 1, habrá que esperar en el receptor los 500mseg.
+Si es 2, se recibe el ACK al llegar el 2º.
+
+Estamos al inicio en una fase llamada **inicio lento**.
+En esta fase, se mandan los paquetes permitidos por la ventana
+Si estamos en inicio lento el tamaño de la ventana de congestión (CW) se incrementa tras un ACK:
+CW = CW + nº de datos confirmados en el ACK.
+La velocidad es CW/RTT
+La velocidad incrementa exponencialmente.
+
+Los paquetes a enviar permancen en la ventana hasta ser confirmados.
+
+
+Notemos que cada RTT duplicamos el valor de CW en inicio lento.
+Cuando llegamos a un umbral de CW, llegamos a una fase llamada **prevención de congestión**.
+Por cada confirmación: CW = CW + 1/CW
+Cuando confirmamos todos los paquetes de un RTT, aumentamos en 1 el CW.
+La velocidad incrementa linealmente.
+
+La velocidad es CW/RTT
+El throughput (rendimiento) = CWND / RTT
+
+
+(Ver diapositiva 36)
+Si perdemos un ACK (se sucede un timeout):
+1. Volvemos al valor inicial de CW
+2. El umbral ahora vale la mitad del CW cuando sucedió dicho error.
+
+
+Cada vez que empezamos en inicio lento hay una posible velocidad que no conseguimos.
+Por esto surgen los distintos flavours.
+
+**Nota:** Estamos suponiendo que todos los errores son por congestión.
+
+#### TCP Reno
+Siguiente versión a TCP Tahoe.
+
+Distingue ACKs duplicados y timeout:
+- Timeout (no ha llegado nada): Igual que Tahoe.
+- ACKs duplicados (sin timeout, siguen llegando cosasa): paso a la mitad de CW y sigo en prevención de congestión.
+
+##### TCP NewReno
+Distingue otras situaciones.
+
+##### TCP Vegas
+Si el RTT aumenta, disminuye la ventana.
+Si el RTT disminuye, aumenta la ventana.
+
+##### TCP Cubic
+Se usaba en todos los equipos con Windows y Linux hasta hace poco
+Tiene dos ventanas:
+- CW --> Depende de ACKs.
+- CW --> Depende de RTT.
+Hace una mezcla de esas dos.
+
+##### Redes inalámbricas
+No podemos suponer que los errores son debidos a congestión.
+TCP Westwood es especial para esto.
+
+
+
