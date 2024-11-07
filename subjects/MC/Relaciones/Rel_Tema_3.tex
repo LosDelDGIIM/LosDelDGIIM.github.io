@@ -147,9 +147,38 @@
 \begin{ejercicio}\label{ej:1.3.3}
     Determinar qué lenguajes son regulares y qué lenguajes son libres de contexto entre los siguientes:
     \begin{enumerate}
-        \item Conjunto de palabras sobre el alfabeto $\{0,1\}$ en las que cada 1 va precedido por un número par de ceros.
+        \item \label{ej:1.3.3.1}
+        Conjunto de palabras sobre el alfabeto $\{0,1\}$ en las que cada 1 va precedido por un número par de ceros.
         
-        % Lo ha hecho Manu. Da una gramática
+        Un reconocedor del lenguaje es el autómata de la figura \ref{fig:1.3.3-1},
+        que tiene los siguientes estados:
+        \begin{itemize}
+            \item $q_0$: Llevo un número par de ceros consecutivos, puedo leer un $1$.
+            \item $q_1$: Llevo un número impar de ceros consecutivos, no puedo leer un $1$.
+            \item $q_2$: Acabo de leer un $1$.
+        \end{itemize}
+        \begin{figure}[H]
+            \centering
+            \begin{tikzpicture}
+                \node[state, accepting, initial] (q0) {$q_0$};
+                \node[state, accepting, right of=q0] (q1) {$q_1$};
+                \node[state, accepting, below of=q0] (q2) {$q_2$};
+                \node[state, below of=q1, error] (E) {$E$};
+
+                \draw   (q0) edge[above] node{0} (q1)
+                        (q0) edge[left] node{1} (q2)
+                        (q1) edge[above, bend right] node{0} (q0)
+                        (q1) edge[right] node{1} (E)
+                        (q2) edge[above] node{0} (q1)
+                        (q2) edge[above] node{1} (E)
+                        (E) edge[loop right] node{0,1} (E);
+            \end{tikzpicture}
+            \caption{Autómata que reconoce el lenguaje del ejercicio~\ref{ej:1.3.3}.\ref{ej:1.3.3.1}.}
+            \label{fig:1.3.3-1}
+        \end{figure}
+
+        Por tanto, como hemos dado un autómata que reconoce el lenguaje, es regular.
+        
         \item Conjunto $\{0^i 1^{2j}0^{i+j} \mid i,j\geq 0\}$
         
         Usaremos el Lema de Bombeo para demostrar que no es regular. Para todo $n\in \mathbb{N}$, consideramos la palabra $z=0^n1^{2n}0^{2n}$ con $|z|=5n\geq n$. Toda descomposición $z=uvw$, con $u,v,w\in \{0,1\}^\ast$, $|uv|\leq n$ y $|v|\geq 1$ debe cumplir que:
@@ -163,36 +192,133 @@
         \end{equation*}
 
         Por tanto, por el recíproco del Lema de Bombeo, no es regular.
-        % // Dar una gramática que lo genere. No hecho en clase
+        Veamos ahora que es libre de contexto. Consideramos la gramática $G=(\{S,X\},\{0,1\},P,S)$, con $P$ definido por:
+        \begin{align*}
+            S &\rightarrow 11S0 \mid X,\\
+            X &\rightarrow 0X0 \mid \veps.
+        \end{align*}
+
+        Tenemos que $G$ es una gramática libre de contexto tal que $\cc{L}(G)=L$, por lo que $L$ es libre de contexto.
+
         \item Conjunto $\{0^i 1^{j} 0^{i\ast j}\mid i,j\geq 0\}$
         
-        % // No es independiente del contexto. No podemos demostrarlo por ahora
+        Usaremos el Lema de Bombeo para demostrar que no es regular. Para todo $n\in \mathbb{N}$, consideramos la palabra $z=0^n1^{n}0^{n^2}$ con $|z|=n+n+n^2\geq n$. Toda descomposición $z=uvw$, con $u,v,w\in \{0,1\}^\ast$, $|uv|\leq n$ y $|v|\geq 1$ debe cumplir que:
+        \begin{equation*}
+            u=0^k \quad v=0^l \quad w=0^{n-k-l}1^{n}0^{n^2} \qquad \text{con } l,k\in \bb{N}\cup \{0\},~l\geq 1,~k+l\leq n
+        \end{equation*}
+
+        Para $i=2$, tenemos que $uv^iw=0^{k+2l+n-k-l}1^{n}0^{n^2}=0^{n+l}1^{n}0^{n^2}\notin L$, ya que, como $l\geq 1$:
+        \begin{equation*}
+            (n+l)\cdot n = n^2+nl \neq n^2
+        \end{equation*}
+
+        Por tanto, por el recíproco del Lema de Bombeo, no es regular.
+        Además, este lenguaje no es libre de contexto (algo que aún no podemos demostrar).
     \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.4}
+    % // TODO: 7-11-24 Nos hemos quedado x ahí
     Determina si los siguientes lenguajes son regulares. Encuentra una gramática que los genere o un reconocedor que los acepte.
     \begin{enumerate}
         \item $L_1 = \{0^i 1^j \mid j < i\}$.
+        
+        Usaremos el Lema de Bombeo para demostrar que no es regular. Para todo $n\in \mathbb{N}$, consideramos la palabra $z=0^{n+1}1^{n}\in L_1$ con $|z|=2n+1\geq n$. Toda descomposición $z=uvw$, con $u,v,w\in \{0,1\}^\ast$, $|uv|\leq n$ y $|v|\geq 1$ debe cumplir que:
+        \begin{equation*}
+            u=0^k \quad v=0^l \quad w=0^{n+1-k-l}1^{n} \qquad \text{con } l,k\in \bb{N}\cup \{0\},~l\geq 1,~k+l\leq n
+        \end{equation*}
+
+        Para $i=0$, tenemos que $uv^iw=0^{k+n+1-k-l}1^{n}=0^{n+1-l}1^{n}\notin L_1$, ya que:
+        \begin{equation*}
+            n < n+1-l \Longleftarrow l<1
+        \end{equation*}
+        Pero esto es una contradicción, ya que $l\geq 1$. Por tanto, por el recíproco del Lema de Bombeo, no es regular.
+        Veamos ahora que es libre de contexto. Consideramos la gramática $G=(\{S\},\{0,1\},P,S)$, con $P$ definido por:
+        \begin{align*}
+            S &\rightarrow 0S \mid 0S'\\
+            S' &\rightarrow 0S'1 \mid \veps
+        \end{align*}
+
+        Tenemos que $G$ es una gramática libre de contexto tal que $\cc{L}(G)=L_1$, por lo que $L_1$ es libre de contexto. Notemos que
+        la producción $S\rightarrow 0S'$ fuerza a que haya al menos un $0$ más que $1$, y la producción $S\rightarrow 0S$ permite que la diferencia no sea de una sola unidad, sino que pueda ser mayor.
+
         \item $L_2 = \{001^i 0^j \mid i,j \geq 1\}$.
+        
+        Tenemos que un reconocedor de $L_2$ es:
+        \begin{equation*}
+            001^+0^+
+        \end{equation*}
+
+        Por tanto, tenemos que $L_2$ es regular.
         \item $L_3 = \{010u \mid u \in {\{0,1\}}^{\ast}, u \text{ no contiene la subcadena } 010\}$.
+        
+        Sea $L'=\{u\in \{0,1\}^\ast \mid u \text{ contiene la subcadena } 010\}$. Entonces sabemos que $L'$ es regular con reconocedor:
+        \begin{equation*}
+            (0+1)^*\red{010}(0+1)^*
+        \end{equation*}
+
+        Por tanto, $\ol{L'}$ es regular, por lo que está asociado a una expresión regular, sea esta $\wt{r}$. Entonces, $L_3$ es regular y está asociado a la expresión regular:
+        \begin{equation*}
+            010\wt{r}
+        \end{equation*}
     \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.5}
     Sea el alfabeto $A=\{0,1,+,=\}$, demostrar que el lenguaje
     \begin{equation*}
-        ADD = \{x=y+z \mid x,y,z \text{ son números en binario, y } x \text{ es la suma de  } y \text{ y } z\}
+        \text{ADD} = \{x=y+z \mid x,y,z \text{ son números en binario, y } x \text{ es la suma de  } y \text{ y } z\}
     \end{equation*}
-    no es regular.
+    no es regular.\\
+
+    Usaremos el Lema de Bombeo para demostrar que no es regular. Para todo $n\in \mathbb{N}$, consideramos la palabra $w=[1^n = 0+1^n]$, donde hemos empleado los corchetes para facilitar la notación (ya que el $=$ lo estamos usando para igualdades entre cadenas y entre números en binario). Tenemos que $|w|=n+3+n\geq n$. Toda descomposición $w=uvw$, con $u,v,w\in \{0,1,+,=\}^\ast$, $|uv|\leq n$ y $|v|\geq 1$ debe cumplir que:
+    \begin{equation*}
+        u=1^k \quad v=1^l \quad w=[1^{n-k-l} = 0+1^n] \qquad \text{con } l,k\in \bb{N}\cup \{0\},~l\geq 1,~k+l\leq n
+    \end{equation*}
+
+    Para $i=2$, tenemos que $uv^iw=[1^{k+2l+n-k-l} = 0+1^n]=[1^{n+l} = 0+1^n]\notin \text{ADD}$, ya que, como $l\geq 1$, en números binarios:
+    \begin{equation*}
+        1^{n+l} \neq 0+1^n=1^n
+    \end{equation*}
+
+    Por tanto, por el recíproco del Lema de Bombeo, no es regular.
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.6}
     Determinar si los siguientes lenguajes son regulares o no:
     \begin{enumerate}
-        \item $L=\{uvu^{-1} \mid u,v \in {\{0,1\}}^{\ast}\}$.
+        \item $L=\{uvu^{-1} \mid u,v \in {\{0,1\}}^{\ast}\}$.\\
+        
+        Veamos en primer lugar que $L=\{0,1\}^*$ por doble inclusión:
+        \begin{description}
+            \item[$\subset$)] Se tiene trivialmente que $L\subset \{0,1\}^*$.
+            \item[$\supset$)] Sea $w\in \{0,1\}^*$. Entonces, podemos tomar $u=\varepsilon$ y $v=w$ para obtener $w\in L$.
+        \end{description}
+
+        Por tanto, tenemos que $L$ es regular, con reconocedor:
+        \begin{equation*}
+            (0+1)^*
+        \end{equation*}
+
         \item $L$ es el lenguaje sobre el alfabeto $\{0,1\}$ formado de las palabras de la forma $u0v$ donde $u^{-1}$ es un prefijo de $v$.
+        
+        Usaremos el Lema de Bombeo para demostrar que no es regular. Para todo $n\in \mathbb{N}$, consideramos la palabra $z=1^n01^n\in L$ con $|z|=2n+1\geq n$. Toda descomposición $z=uvw$, con $u,v,w\in \{0,1\}^\ast$, $|uv|\leq n$ y $|v|\geq 1$ debe cumplir que:
+        \begin{equation*}
+            u=1^k \quad v=1^l \quad w=1^{n-k-l}01^n \qquad \text{con } l,k\in \bb{N}\cup \{0\},~l\geq 1,~k+l\leq n
+        \end{equation*}
+
+        Para $i=2$, tenemos que $uv^iw=1^{k+2l+n-k-l}01^n=1^{n+l}01^n\notin L$, ya que, como $l\geq 1$:
+        \begin{equation*}
+            n+l\neq n\Longrightarrow (1^{n+l})^{-1}=1^{n+l}\neq 1^n
+        \end{equation*}
+
+        Por tanto, por el recíproco del Lema de Bombeo, no es regular.
         \item $L$ es el lenguaje sobre el alfebeto $\{0,1\}$ formado por las palabres en las que el tercer símbolo empezando por el final es un 1.
+        
+        Este lenguaje es regular, con reconocedor:
+        \begin{equation*}
+            (0+1)^*\red{1}(0+1)(0+1)
+        \end{equation*}
     \end{enumerate}
 \end{ejercicio}
 
