@@ -1,6 +1,21 @@
 \documentclass[12pt]{article}
 
 \input{../../_assets/preambulo.tex}
+% Para poder incluir árboles
+\usepackage{forest}
+\usepackage{booktabs}
+
+% Para poder añadir autómatas
+% https://www3.nd.edu/~kogge/courses/cse30151-fa17/Public/other/tikz_tutorial.pdf
+\usetikzlibrary{automata} %, positioning, arrows}
+\tikzset{
+    -Stealth,
+    node distance=3cm, % specifies the minimum distance between two nodes. Change if necessary.
+    every state/.style={thick, fill=gray!10, shape=ellipse}, % sets the properties for each ’state’ node
+    initial text=$ $, % sets the text that appears on the start arrow
+    % Un tipo de nodo, que es error, que lo pone rojo
+    error/.style={thick, fill=red!20},
+}
 
 
 \begin{document}
@@ -59,7 +74,7 @@
     \end{enumerate}
 \end{ejercicio}
 
-\begin{ejercicio}
+\begin{ejercicio} \label{ej:2}
     Sea un lenguaje $L$ que debe cumplir las condiciones:
     \begin{itemize}
         \item Contener exactamente dos $a$'s
@@ -67,9 +82,84 @@
     \end{itemize}
     Obtener:
     \begin{enumerate}
-        \item La expresión regular
-        \item El AFND con transiciones nulas
-        \item El AFD
+        \item La expresión regular.
+        \begin{equation*}
+            b^*\red{a}b^+\red{a}b^*
+        \end{equation*}
+
+        \item El AFND con transiciones nulas.
+        
+        El AFND con transiciones nulas que se obtiene algorítimicamente a partir de la expresión regular viene representado en la figura~\ref{fig:2-AFND}.
+        \begin{figure}[h]
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial] (q0) {$q_0$};
+                \node[state, above of=q0] (q01) {$q_{01}$};
+                \node[state, right of=q0] (q1) {$q_1$};
+                \node[state, right of=q1] (q2) {$q_2$};
+                \node[state, above of=q2] (q21) {$q_{21}$};
+                \node[state, right of=q2, accepting] (q3) {$q_3$};
+                \node[state, above of=q3] (q31) {$q_{31}$};
+
+                \draw   (q0) edge[right] node{$b$} (q01)
+                        (q01) edge[left, bend right] node{$\varepsilon$} (q0)
+                        (q0) edge[above] node{$a$} (q1)
+                        (q1) edge[above] node{$b$} (q2)
+                        (q2) edge[right] node{$b$} (q21)
+                        (q21) edge[left, bend right] node{$\varepsilon$} (q2)
+                        (q2) edge[above] node{$a$} (q3)
+                        (q3) edge[right] node{$b$} (q31)
+                        (q31) edge[left, bend right] node{$\varepsilon$} (q3);
+            \end{tikzpicture}
+            \caption{AFND con transiciones nulas que acepta el lenguaje del Ejercicio~\ref{ej:2}.}
+            \label{fig:2-AFND}
+        \end{figure}
+
+        Este AFND se puede simplificar aún más eliminando las transiciones nulas, como se muestra en la figura~\ref{fig:2-AFND-simplificado}.
+        \begin{figure}[h]
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial] (q0) {$q_0$};
+                \node[state, right of=q0] (q1) {$q_1$};
+                \node[state, right of=q1] (q2) {$q_2$};
+                \node[state, right of=q2, accepting] (q3) {$q_3$};
+
+                \draw   (q0) edge[loop above] node{$b$} (q0)
+                        (q0) edge[above] node{$a$} (q1)
+                        (q1) edge[above] node{$b$} (q2)
+                        (q2) edge[loop above] node{$b$} (q2)
+                        (q2) edge[above] node{$a$} (q3)
+                        (q3) edge[loop above] node{$b$} (q3);
+            \end{tikzpicture}
+            \caption{AFND simplificado que acepta el lenguaje del Ejercicio~\ref{ej:2}.}
+            \label{fig:2-AFND-simplificado}
+        \end{figure}
+        \item El AFD.
+        
+        El AFND de la Figura~\ref{fig:2-AFND-simplificado} sigue sin ser determinista, puesto que hay transiciones que no están definidas para todos los símbolos del alfabeto. Aplicamos el algoritmo para obtener el AFD, que se muestra en la Figura~\ref{fig:2-AFD}.
+        \begin{figure}[h]
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial] (q0) {$q_0$};
+                \node[state, right of=q0] (q1) {$q_1$};
+                \node[state, right of=q1] (q2) {$q_2$};
+                \node[state, right of=q2, accepting] (q3) {$q_3$};
+                \node[state, below of=q2, error] (E) {$E$};
+
+                \draw   (q0) edge[loop above] node{$b$} (q0)
+                        (q0) edge[above] node{$a$} (q1)
+                        (q1) edge[above] node{$b$} (q2)
+                        (q2) edge[loop above] node{$b$} (q2)
+                        (q2) edge[above] node{$a$} (q3)
+                        (q3) edge[loop above] node{$b$} (q3);
+
+                \draw   (q1) edge[below] node{$a$} (E)
+                        (q3) edge[below] node{$a$} (E)
+                        (E) edge[loop below] node{$a,b$} (E);
+            \end{tikzpicture}
+            \caption{AFD que acepta el lenguaje del Ejercicio~\ref{ej:2}.}
+            \label{fig:2-AFD}
+        \end{figure}
     \end{enumerate}
 \end{ejercicio}
 
