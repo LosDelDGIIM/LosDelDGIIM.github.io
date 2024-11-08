@@ -1426,10 +1426,165 @@
                 \item Donde en $(\ast)$ hemos aplicado reiteradas veces que $aE'\rightarrow E'a$ y que $IE'\rightarrow E'I$.
                 \item Donde en $(\ast\ast)$ hemos aplicado varias veces que $ZI\rightarrow Z$ y que $Za\rightarrow aZ$.
             \end{itemize}
-        \item $\{a^p \in \{a\}^{\ast} \mid p \text{ es primo}\}$
-        \item $\{a^nb^m \in \{a,b\}^{\ast} \mid n\leq m^2\}$
-    \end{enumerate}
+        \item $\{a^p \in \{a\}^{\ast} \mid p \text{ es primo}\}$\\
 
+            Se subirá próximamente una gramática.
+            % // TODO: primos
+        \item $\{a^nb^m \in \{a,b\}^{\ast} \mid n\leq m^2\}$\\
+
+            Una vez conocida una gramática para el lenguaje $\{a^n^2 \mid n \in \mathbb{N}\}$, dar una gramática para este lenguaje es sencillo. Lo que haremos será generar primero un número arbitrarios de $A$s (variables) y de $b$s. Seguidamente, generaremos tantas $B$s como número de $b$ al cuadrado haya (usando para ello la gramática del lenguaje de los cuadrados perfectos), y finalmente, por cada $B$ que tengamos sustituiremos una $A$ por una $a$, de forma que si se nos gastan las $B$s y no hemos sustituido todas las $A$s, entonces era porque teníamos más $a$s de las permitidas en este lenguaje ($n>m$), con lo que no podremos generar ninguna palabra. Si por el contrario sustituimos todas las $A$s y nos siguen quedando $B$s, eliminaremos todas las $B$s para poder dar una palabra formada solo por símbolos terminales.
+
+            Antes de consultar la gramática, recomendamos encarecidamente entender primero la gramática de los cuadrados perfectos, ya que es más sencilla y la usaremos con soltura para dar esta gramática.
+
+            Los pasos que hace esta gramática son:
+            \begin{enumerate}
+                \item Primero, genera un número indeterminado de $A$s, tras la variable $\lm$. 
+                \item Posteriormente, plantea el ``entorno'' de variables usado en la gramática de los cuadrados perfectos, que parte del caso base de tener una $b$.
+                \item Entre $\alpha$ y $\beta$ se generan todas las $b$ que tendrá la posibel palabra a generar (menos una, que se generó en el caso base).
+                \item Entre $\beta$ y $\gamma$, iremos colocando tantas $B$s como número de $b$s al cuadrado haya.
+                \item Para controlar que una $b$ ya le hemos usado para generar el cuadrado, en vez de borrarla como hacíamos en la gramática de cuadrados perfectos, la metemos entre el espacio comprendido entre $\varphi$ y $\beta$. De esta forma, el entorno de trabajo será similar a:
+                    \begin{equation*}
+                        \lm A\ldots A b\alpha b\ldots b E\varphi b\ldots b \beta I B\ldots B I B \ldots BI \ldots I B \ldots B \delta\gamma
+                    \end{equation*}
+                \item Una vez generadas todas las $B$s, usamos la variable $Z$ para borrar todas las variables auxiliares para generar las $B$s, dejando la palabra de la forma
+                    \begin{equation*}
+                        \lm A \ldots A b\ldots b \beta B\ldots BH\gamma
+                    \end{equation*}
+                    de forma que el número de $B$s coincide con el cuadrado del número de $b$s.
+                \item Posteriormente, usaremos la variable $H$ para borrar una $B$ y posteriormente sustituir una $A$ por una $a$, hasta que se nos acaben las $A$s (en cuyo caso la palabra es válida y eliminamos todas las variables dejando sólo los símbolos terminales) o las $B$s (en cuyo caso, había más $A$s, con lo que no generamos la palabra).
+            \end{enumerate}
+
+            De esta forma, damos la gramática $G=(V,T,P,S)$ dada por:
+            \begin{align*}
+                V &= \{S, \lm, \alpha,\beta,\varphi, \delta,\gamma, \sigma, \psi, G, A, B, X, I, E, E_{\sigma}, E', \overline{E}, L, R, Z, H, H', \overline{H}\} \\
+                T &= \{a,b\}
+            \end{align*}
+            Y $P$ el conjunto de todas las producciones explicadas a continuación.
+
+            En primer lugar, aceptamos que $\veps$ es una palabra del lenguaje. Habiendo considerado dicho caso, comenzamos pues generando todas las $A$s que queramos al inicio de la palabra:
+            \begin{align*}
+                S &\rightarrow \lm G\ |\ \veps \\
+                G &\rightarrow AG
+            \end{align*}
+            Cuando hayamos generado todas las $A$s deseadas, situaremos nuestro entorno de trabajo para generar $b$s y posteriormente crear tantas $B$s como el cuadrado del número de $b$s:
+            \begin{equation*}
+                G \rightarrow b\alpha X\varphi\beta IB\delta\gamma
+            \end{equation*}
+            Y generaremos tantas $b$s como queramos con la variable $X$ (notemos que ya hemos generado una $b$ y una $B$, el caso base cuando $n = 1$).
+            \begin{equation*}
+                X \rightarrow bX\ |\ E
+            \end{equation*}
+            Cuando hayamos ya generado todas las $b$s, pasamos a generar las $B$s, usando para ello la variable $E$, que realizará un comportamiento iterativo, de forma que coja una $b$ (la sitúe detrás de $\varphi$), añada una $B$ en cada subgrupo de $B$s (separados por $I$), que duplique este último subgrupo (utilizando para ello $\sigma$, $L$ y $R$), y que vuelva con $E'$ a donde empezó, delante de $\varphi$:
+
+            \begin{enumerate}
+                \item En primer lugar, la variable $E$ coge una $b$ (la sitúa tras $\varphi$):
+                    \begin{equation*}
+                        bE\varphi \rightarrow \varphi bE
+                    \end{equation*}
+                    Y se desplaza a la derecha de $\varphi$.
+                \item Posteriormente, se desplaza a la derecha, añadiendo una $B$ en cada subgrupo de $B$s, proceso que terminará cuando se encuentre con $\delta$:
+                    \begin{align*}
+                        Eb &\rightarrow bE \\
+                        E\beta &\rightarrow \beta E \\
+                        EI &\rightarrow IBE \qquad \text{(Añade una\ } B \text{)} \\
+                        EB &\rightarrow BE \\
+                        E\delta &\rightarrow E_{\sigma}\delta
+                    \end{align*}
+                \item Una vez topada con $\delta$, pasaremos a realizar la copia del último grupo de $B$s, con lo que tendremos que fijar el $\sigma$ que usábamos en la gramática de los cuadrados perfectos. Para ello:
+                    \begin{align*}
+                        BE_{\sigma} &\rightarrow E_{\sigma}B \\
+                        IE_{\sigma} &\rightarrow I\sigma R
+                    \end{align*}
+                \item Una vez colocado el $\sigma$, comienza la copia de las $B$s, usando para ello las variables $L$, $R$ y el delimitador $\delta$, que marca las $B$s que ya han sido copiadas:
+                    \begin{align*}
+                        RB &\rightarrow BR \\
+                        BR\delta &\rightarrow L\delta B \qquad \text{(Coge una $B$)} \\
+                        BL &\rightarrow LB \\
+                        \sigma L &\rightarrow B\sigma R \qquad \text{(Deja la $B$)}
+                    \end{align*}
+                \item El proceso terinará cuando no haya más $B$s entre $\sigma$ y $\delta$ una vez copiada la última $B$ (con lo que tendremos la variable $R$). En dicho caso, colocamos la nueva $I$ que delimita la separación con el grupo de $B$s recién creado y usamos $\overline{E}$ para devolver $\delta$ al final del último grupo de $B$s:
+                    \begin{align*}
+                        \sigma R\delta &\rightarrow I\overline{E} \\
+                        \overline{E}B &\rightarrow B\overline{E} \\
+                        \overline{E}\gamma &\rightarrow E'\delta\gamma
+                    \end{align*}
+                \item Una vez colocada $\delta$, volveremos con $E'$ hacia la izquierda hasta la situación inicial de $E$, que es tras $\varphi$:
+                    \begin{align*}
+                        BE' &\rightarrow E'B \\
+                        IE' &\rightarrow E'I \\
+                        \beta E' &\rightarrow E'\beta \\
+                        bE' &\rightarrow E'b \\
+                        \varphi E' &\rightarrow E\varphi \\
+                    \end{align*}
+            \end{enumerate}
+            Como hemos mencionado anteriormente, la variable $E$ repetirá este proceso, hasta quedarse sin $b$s por realizar su cuadrado. Hasta este punto, la palabra generada será similar a:
+            \begin{equation*}
+                \lm A\ldots Ab \alpha E\varphi b\ldots b\beta IB\ldots BIB\ldots BI \ldots I B \ldots B \delta\gamma
+            \end{equation*}
+            donde tenemos tantas $B$s como número de $b$s al cuadrado (gracias al funcionamiento de la gramáica de los cuadrados perfectos). A continuación, usaremos la variable $Z$ para borrar las variables que ya no nos hacen falta, como $\alpha$, $\varphi$, $\beta$, $I$ y $\delta$:
+            \begin{align*}
+                \alpha E\varphi &\rightarrow Z \qquad \text{(No quedan $b$s por copiar)} \\
+                Zb &\rightarrow bZ \\
+                Z\beta &\rightarrow \beta Z \\
+                ZI &\rightarrow Z \\
+                ZB &\rightarrow BZ \\
+                Z\delta &\rightarrow H
+            \end{align*}
+            Ahora, usaremos $H$ para cambiar una $A$ por una $a$ por cada $B$ que borremos:
+            \begin{enumerate}
+                \item En primer lugar, borramos una $B$:
+                    \begin{equation*}
+                        BBH \rightarrow H'B \qquad \text{(No es la última)}
+                    \end{equation*}
+                \item A continuación, nos desplazamos hacia la izquierda, buscando la primera $A$:
+                    \begin{align*}
+                        BH' &\rightarrow H'B \\
+                        \beta H' &\rightarrow H'\beta \\
+                        bH' &\rightarrow H'b \\
+                        aH' &\rightarrow H'a \qquad \text{(Puede que ya hayamos sustituido alguna)} \\
+                    \end{align*}
+                \item Cuando encontremos la primera $A$, la cambiamos por una $a$ y volvemos hacia atrás buscando $\gamma$. Para ello, reutilizaremos $Z$, añadiendo una nueva regla a $Z$:
+                    \begin{align*}
+                        AH' &\rightarrow aZ \\
+                        Z\gamma &\rightarrow H\gamma
+                    \end{align*}
+            \end{enumerate}
+            $H$ realizará este procedimiento de forma iterativa, hasta llegar a la última $B$, operación sensible, por lo que para realizarla usaremos una nueva variable $\overline{H}$:
+            \begin{align*}
+                \beta BH &\rightarrow \overline{H}\beta \qquad \text{(Cojo la última)} \\
+                b\overline{H} &\rightarrow \overline{H}b \\
+                a\overline{H} &\rightarrow \overline{H}a \\
+            \end{align*}
+            Como se trata de la última $B$, sólo vamos a sustituir una $A$ en caso de que sea la última, con lo que:
+            \begin{equation*}
+                \lm A\overline{H} \rightarrow a\psi
+            \end{equation*}
+            Donde $\psi$ es la última variable, la cual se encarga de limpiar toda la palabra limpiando las variables.
+
+            Hemos tenido en cuenta el caso en el que $n=m^2$, pero faltan dos casos por considerar:
+            \begin{itemize}
+                \item $n<m^2$, es decir, hay más $B$s que $A$s. En dicho caso, la última $A$ a sustituir no será consecuencia de quitar la última $B$, sino una anterior, con lo que quedará una $B$ por eliminar (que podrá ser o no la última) que no tenga una $A$ para sustituir. Como $n<m^2$, la palabra es válida. Añadimos por tanto las reglas:
+                    \begin{align*}
+                        \lm H' &\rightarrow \psi \\
+                        \lm \overline{H} &\rightarrow \psi \\
+                    \end{align*}
+                    Y la variable $\psi$ deberá ser la encargada de eliminar las $B$s sobrantes.
+                \item $n>m^2$, es decir, hay más $A$s que $B$s. En dicho caso, cuando borremos la última $B$, no podremos sustituir su $A$ asociada, ya que la regla para realizar esto es $\lm A\overline{H}\rightarrow a\psi$, con lo que es necesario que sólo quede una $A$, cosa que no sucede. En dicho caso, nos quedaremos con una palabra de la forma:
+                    \begin{equation*}
+                        \lm A\ldots A\overline{H} b\ldots b\beta\gamma
+                    \end{equation*}
+                    que será imposible sustituir por un símbolo terminal (no tenemos ninguan regla que lo permita). De esta forma, la gramática impide generar palabras que no se encuentren en el lenguaje.
+            \end{itemize}
+            Finalmente, mostramos el funcionamiento de la variable $\psi$, cuya única funcionalidad es eliminar las variables $\beta$ y $\gamma$ una vez sustituidas todas las $A$s por $a$s (en caso de que la palabra sea válida), y eliminando también las posibles $B$s sobrantes:
+            \begin{align*}
+                \psi a &\rightarrow a \psi \\
+                \psi b &\rightarrow b \psi \\
+                \psi \beta &\rightarrow  \psi \\
+                \psi B &\rightarrow  \psi \\
+                \psi \gamma &\rightarrow  \veps \qquad \text{(Hemos terminado)}
+            \end{align*}
+    Para esta gramática no mostraremos un ejemplo de su funcionamiento. Si algún lector está dispuesto a realizar un ejemplo de generación de una palabra perteneciente al lenguaje o el intento de una palabra que no pertenezca al lenguaje (con la finalidad de ver que dicha palabra no podrá ser generada), será de nuestro agrado subir el ejemplo a este documento.
+    \end{enumerate}
 \end{ejercicio}
 
 \subsection{Preguntas Tipo Test}
@@ -1625,10 +1780,10 @@ Se pide discutir la veracidad o falsedad de las siguientes afirmaciones:
         Por tanto, el enunciado es cierto.
     \item Si $A$ es un afabeto, la aplicación que transforma cada palabra $u\in A^\ast$ en su inversa es un homomorfismo de $A^\ast$ en $A^\ast$.\\
 
-        Falso, la pregunta es idéntica a la pregunta \ref{item:preg7}.
+        Falso, la pregunta es idéntica a la pregunta~\ref{item:preg7}.
     \item Si $\veps \in L$, entonces $L^+ = L^\ast$.\\
 
-        Verdadero, la pregunta es idéntica a la pregunta \ref{item:preg8}.
+        Verdadero, la pregunta es idéntica a la pregunta~\ref{item:preg8}.
     \item Si $f$ es un homomorfismo, entonces necesariamente se verifica $f(\veps) = \veps$.\\
         
         Verdadero, sea $f:A^\ast\rightarrow A^\ast$ un homomorfismo y consideramos $u\in A^\ast$. Por ser $f$ un homomorfismo, tenemos que:
