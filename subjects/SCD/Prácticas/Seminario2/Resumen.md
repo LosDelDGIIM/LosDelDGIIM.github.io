@@ -7,7 +7,7 @@
 - **Curso Académico:** 2024-25.
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
 - **Profesor:** José Miguel Mantas Ruíz.
-- **Descripción:** Resúmen del Seminario 1 de Prácticas.
+- **Descripción:** Resumen del Seminario 1 de Prácticas.
 
 Para la relación de este seminario, es importante haber leído primero la parte de semántica de señales del Tema 2, y entender especialmente la semántica **Señalar y Espera Urgente**.  
   
@@ -20,7 +20,7 @@ La forma más natural de crear un monitor en C++ es usando clases, de forma que:
 - El procedimiento de inicialización sea un método constructor de la clase.  
   
 Sin embargo, para obtener un monitor nos falta:  
-- Asegurar la exclusión mutua en las llamadas a los procedimientos (además de implemnetar la cola de entrada al monitor).
+- Asegurar la exclusión mutua en las llamadas a los procedimientos (además de implementar la cola de entrada al monitor).
 - La existencia de las variables de tipo *condición*.  
   
 - C++11 no incluye la posibilidad de definir monitores directamente.
@@ -28,6 +28,8 @@ Sin embargo, para obtener un monitor nos falta:
 - También, se puede implementar de forma no tan directa usando más mecanismos nativos de C++, que ya sí tendrá una semántica deseada, la de *Señalar y Espera Urgente*.
   
 Dentro de los archivos `scd.h` y `scd.cpp`, tenemos implementada una clase que nos ayudará a crear monitores, además de un tipo de dato similar al tipo *condición* de teoría, los cuales aprenderemos a usar en el siguiente punto.
+
+En el programa [monitor_em.cpp](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Pr%C3%A1cticas/Seminario2/C%C3%B3digos/monitor_em.cpp) se puede observar este hecho, dejando claro que es necesario usar la clase `HoareMonitor` para crear monitores, que a continuación se explicará.
 
 # 2. Clase HoareMonitor
 Dentro de los ficheros anteriormente comentados, tenemos implementada la clase `HoareMonitor`, usando características nativas de C++11.  
@@ -173,9 +175,9 @@ Monitor ProdCons;
     end
 end
 ``` 
-La ventaja en monitores es que una vez que tenemos un monitor para un proceso productor y otro consumidor, tenemos un monitor que nos sirve para este problema para cualquier número de productores y de consumidores.  
+La ventaja en monitores es que una vez que tenemos un monitor para un proceso productor y otro consumidor, tenemos un monitor que nos sirve para este problema para cualquier número de productores y de consumidores. La implementación en C++11 se encuentra en el archivo [prodcons1_su.cpp](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Pr%C3%A1cticas/Seminario2/C%C3%B3digos/prodcons1_su.cpp).
   
-Es un buen ejercicio implementar ahora un monitor para productores y consumidores con semántica FIFO.
+Es un buen ejercicio implementar ahora un monitor para productores y consumidores con semántica FIFO. Notemos que ha sido necesario emplear una variable `ocupados` para llevar la cuenta de los elementos que hay en el buffer, ya que en el caso de `ind_lectura == ind_escritura` no podemos saber si el buffer está lleno o vacío.
 La solución es la siguiente:
 ```pascal
 Monitor ProdCons;

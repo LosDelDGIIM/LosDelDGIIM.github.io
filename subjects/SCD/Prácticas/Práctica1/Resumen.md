@@ -7,7 +7,7 @@
 - **Curso Académico:** 2024-25.
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
 - **Profesor:** José Miguel Mantas Ruíz.
-- **Descripción:** Resúmen de la práctica 1.
+- **Descripción:** Resumen de la práctica 1.
 
 Veremos problema del productor/consumidor con relaciones 1-1 y muchos-muchos y el problema de los fumadores.  
   

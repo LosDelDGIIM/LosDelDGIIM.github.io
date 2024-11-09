@@ -7,7 +7,7 @@
 - **Curso Académico:** 2024-25.
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
 - **Profesor:** José Miguel Mantas Ruíz.
-- **Descripción:** Resúmen del Seminario 1 de Prácticas.
+- **Descripción:** Resumen del Seminario 1 de Prácticas.
 
 En este seminario aprenderemos a manejar hebras nativas de C++11, así como ver las principales clases para manejarlas y sincronizarlas.  
 Este seminario nos servirá para las prácticas P1 y P2.

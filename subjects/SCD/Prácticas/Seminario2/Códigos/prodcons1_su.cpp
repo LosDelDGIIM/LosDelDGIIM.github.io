@@ -97,7 +97,7 @@ void test_contadores()
 }
 
 // *****************************************************************************
-// clase para monitor buffer, version FIFO, semántica SC, multiples prod/cons
+// clase para monitor buffer, version LIFO, semántica SC, multiples prod/cons
 
 class ProdConsSU1 : public HoareMonitor
 {
