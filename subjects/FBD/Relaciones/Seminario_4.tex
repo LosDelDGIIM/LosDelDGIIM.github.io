@@ -39,12 +39,44 @@
     Indiqué qué consulta debe realizar en álgebra relacional para obtener la información solicitada en cada uno de los siguientes puntos:
     \begin{enumerate}
         \item Reparaciones de más de 20 horas.
+        \begin{equation*}
+            \sigma_{\text{numero\_horas} > 20}(\text{Repara})
+        \end{equation*}
         \item Códigos de mecánicos que han reparado el vehículo de matrícula 1234ABC.
+        \begin{equation*}
+            \pi_{\text{id\_mecánico}}(\sigma_{\text{matrícula} = 1234ABC}(\text{Repara}))
+        \end{equation*}
         \item Parejas de mecánicos que se pueden hacer en la empresa.
+        \begin{align*}
+            &\rho(\text{Mecánico})=\text{Mecánico\_1} \\
+            &\rho(\text{Mecánico})=\text{Mecánico\_2} \\
+            &\sigma_{\text{Mecánico\_1.id\_mecánico}< \text{Mecánico\_2.id\_mecánico}}(\text{Mecánico\_1}\times \text{Mecánico\_2})
+        \end{align*}
+
+        Notemos que, si tenemos dos mecánicos, $A$ y $B$, debemos:
+        \begin{itemize}
+            \item Evitar las parejas de un mismo mecánico repetido, como $A,A$ o $B,B$. Esto se consige obligando a que los \emph{id} sean distintos.
+            \item Evitar parejas duplicadas, ya que $A,B$ y $B,A$ en realidad son distintas. Debido a que el orden en $\bb{N}$ es un orden total\footnote{Suponemos que el dominio del código es $\bb{N}$. Si fuese alfanumérico, el orden alfabético también es total.}, esto se consigue obligando a que el código de uno de ellos (sea este el mecánico 1) sea menor que el del otro.
+        \end{itemize}
         \item Marca de los vehículos matriculados después del $1/1/20$.
+        \begin{equation*}
+            \pi_{\text{marca}}(\sigma_{\text{fecha\_matriculación} > 1/1/20}(\text{Vehículo}) \bowtie \text{Modelo})
+        \end{equation*}
         \item Parejas $\langle \text{cargo}, \text{marca} \rangle$ entre las que se ha dado alguna reparación.
+        \begin{align*}
+            \pi_{\text{cargo},\text{marca}}[&\pi_{\text{id\_mecánico},\text{cargo}}(\text{Mecánico})
+            \bowtie \pi_{\text{id\_mecánico},\text{matrícula}}(\text{Repara})
+            \bowtie\\&\qquad \bowtie \pi_{\text{matrícula},\text{id\_modelo}}(\text{Vehículo})
+            \bowtie \pi_{\text{id\_modelo},\text{marca}}(\text{Modelo})]
+        \end{align*}
         \item Vehículos que o tienen una fecha de matriculación posterior al $1/1/22$ o han sido reparados con posterioridad a esa misma fecha.
+        \begin{multline*}
+            \sigma_{\text{fecha\_matriculación} > 1/1/22}(\text{Vehículo}) \cup\\ \cup \pi_{\text{matrícula},\text{id\_modelo}, \text{fecha\_matriculación}}(\text{Vehículo}\bowtie \sigma_{\text{fecha}>1/1/22}(\text{Repara}))
+        \end{multline*}
         \item Vehículos con fecha de matriculación posterior al $1/1/22$ que han sido reparados alguna vez.
+        \begin{multline*}
+            \sigma_{\text{fecha\_matriculación} > 1/1/22}(\text{Vehículo}) \cap\\ \cap \pi_{\text{matrícula},\text{id\_modelo}, \text{fecha\_matriculación}}(\text{Vehículo}\bowtie \text{Repara})
+        \end{multline*}
         \item Marca de los vehículos que no han tenido ninguna reparación en el año $2022$.
         \item Código de los mecánicos que han reparado vehículos de, al menos, dos marcas distintas.
         \item Vehículos que tienen una sola reparación.
