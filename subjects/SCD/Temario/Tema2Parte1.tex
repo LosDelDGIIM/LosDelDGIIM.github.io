@@ -1,0 +1,276 @@
+\chapter{Sincronización en memoria compartida}
+
+Sin embargo, en este capítulo tratamos de resolver el problema de la exclusión mutua mediante soluciones software, de forma que la solución no dependa del repertorio de instrucciones de una máquina, sino que sea una solución portable a cualquier dispositivo, de forma que podamos asegurar sobre los procesos de nuestros programas concurrentes todas las propiedades deseadas.\\
+
+Consideraremos solo soluciones al problema en el que el acceso a la sección crítica se resuelva mediante instrucciones básicas de lectura y escritura sobre una o varias variables compartidas en memoria.\\
+
+Como mecanismo para realizar la espera de los procesos en el acceso a la sección crítica usaremos la \textit{espera ocupada}, es decir, meteremos a los procesos que no deben entrar a la sección crítica todavía en un bucle que realice iteraciones ``vacías'' (sin ninguna utilidad) con la finalidad a que esperen a que el proceso que se encuentre en la sección crítica abandone la misma y deje pasar al siguiente.
+
+Hemos de comentar que la espera ocupada no es la mejor solución de espera para los procesos, ya que introduce un uso innecesario de los procesadores con el fin de que ciertos procesos esperen. Puede considerarse una solución aceptable cuando el sistema no disponga de muchos procesos, pero en otro caso podríamos considerar otro tipo de esperas, como que el propio Sistema Operativo suspenda a los procesos.
+
+\subsubsection{Condiciones de Dijkstra}
+Dijkstra enunció que para obtener una solución parcialmente correcta al problema de la exclusión mutua, debían cumplirse 4 condiciones:
+\begin{enumerate}
+    \item \textit{No hacer ninguna suposición acerca de las instrucciones o número de procesos soportados por el multiprocesador.} Esto es, solo podremos hacer uso de operaciones que entendemos como básicas, tales como leer o escribir en una variable compartida para resolver el problema.
+
+        Dichas instrucciones se ejecutarán de forma atómica, de forma que si dos procesos distintos intentan acceder a la vez a una misma posición de memoria, será el controlador de memoria quien determine de forma arbitraria qué proceso accederá antes y qué proceso después, de forma que el acceso a memoria se lleve a cabo secuencialmente, pero no de una forma predecible.
+    \item \textit{No hacer ninguna suposición acerca de la velocidad de ejecución de los procesos}, salvo que esta no es cero, para que se cumpla la hipótesis de Progreso Finito.
+    \item \textit{Cuando un proceso se encuentra ejecutando código fuera de la sección crítica, no puede impedir que otros entren a la misma.}
+    \item \textit{La sección crítica será alcanzada finalmente por alguno de los procesos que quieran entrar.} Esta condición asegura la propiedad de \textit{alcanzabilidad}, que excluye la posibilidad de que los procesos lleguen a una situación de interbloqueo.
+
+        Esta propiedad no asegura que todos los procesos entren alguna vez a la sección crítica, y mucho menos que lo hagan de forma equitativa.
+\end{enumerate}
+
+\section{Método de refinamiento sucesivo}
+Dijkstra propuso a su vez una forma de obtener una solución al problema de la exclusión mutua, basada en 4 pasos, modificaciones o etapas a partir de un esquema inicial para obtener la solución de forma razonada, que terminará en una quinta etapa, denominada \textit{algoritmo de Dekker}.
+
+\subsection{Primera etapa}
+Inicialmente, se presupone que los procesos alternarán su entrada en la sección crítica según indique el valor de una variable compartida llamada \verb|turno|. Dicha variable contendrá el identificador del proceso que en cada momento puede entrar a la sección crítica.\\
+
+En un escenario con dos procesos que se disponen a ejecutar una sección crítica, la primera etapa consta del siguiente código para el proceso 1 y de uno análogo para el segundo proceso:
+
+\begin{minted}{pascal}
+var turno : integer;
+
+Process P1();
+begin
+   while true do
+   begin
+      { Acceso a la sección crítica }
+      while turno <> 1 do
+      begin
+         null;
+      end do
+      { Sección crítica }
+      turno := 2;
+   end do
+end
+\end{minted}
+Esta solución garantiza el acceso en exclusión mutua de los procesos a la sección crítica, por lo que la solución es segura.\\
+
+Sin embargo, no cumple la tercera condición de Dijkstra, ya que la solución obliga a la alternancia entre los procesos en la entrada a la sección crítica. 
+
+\subsection{Segunda etapa}
+La alternancia que obtuvimos en la etapa anterior y que nos impedía cumplir con todas las condiciones de Dijkstra se debía a que para decidir qué proceso entraba en la sección crítica era necesario almacenar información global del estado del programa.
+
+Para evitar esto, la idea ahora es asociar a cada proceso una variable que contenga su información de estado, variable que llamaremos \verb|clave|, la cual indicará de forma binaria si el proceso se encuentra o no en la sección crítica en dicho instante de ejecución del algoritmo, mediante dos estados:
+\begin{itemize}
+    \item Estado pasivo, el proceso no intenta acceder a la sección crítica, representado con un 1.
+    \item El proceso intenta acceder a la sección crítica, representado con un 0.
+\end{itemize}
+En un escenario con dos procesos, presentamos el código del primero de ellos, $P1$, siendo el código de $P2$ simétrico:
+\begin{minted}{pascal}
+    var c1, c2 : integer;
+
+    Process P1();
+    begin
+       c1 := 1;
+
+       while true do
+       begin
+          { Acceso a la sección crítica }
+          while c2 = 0 do   { Si P2 entró }
+          begin
+             null;
+          end do
+
+          { Entra a la sección crítica }
+          c1 := 0;
+          { Sección crítica }
+          c1 := 1;
+       end do
+    end
+\end{minted}
+Como podemos ver, el protocolo de entrada consiste en leer el valor de la clave del otro proceso con la finalidad de consultar si dicho proceso ha entrado o no en la sección crítica, y esperar mientras el otro proceso se encuentre dentro de la sección crítica.\\
+
+Sin embargo, en este caso la solución no es segura, ya que si $P1$ y $P2$ se ejecutan a la misma velocidad, entonces ambos entrarían a la vez a la sección crítica, ya que los dos verían que el estado del otro es pasivo, con lo que ninguno entraría en el bucle de espera ocupada.
+
+Notemos que esto sucede porque cambiamos el estado de un proceso a 0 justo antes de entrar a la sección crítica, por lo que es ya tarde para impedir la entrada a otro proceso.
+
+Como la bondad de la solución depende de la velocidad de ejecución relativa entre los procesos, se dice que es inaceptable por incumplir la segunda condición de Dijkstra.
+
+\subsection{Tercera etapa}
+Para esta etapa planteamos una sencilla modificación sobre la etapa anterior, que consiste en cambiar el valor de la variable clave a 0 antes de consultar el valor de la variable clave del otro proceso:
+
+De esta forma, para que un proceso pueda entrar a la sección crítica, debe primero cambiar su estado a 0, con el fin de recuperar la condición de seguridad de que solo un proceso pueda entrar a la vez a la sección crítica.\\
+\begin{minted}{pascal}
+    var c1, c2 : integer;
+
+    Process P1();
+    begin
+       c1 := 1;
+
+       while true do
+       begin
+          { Acceso a la sección crítica }
+          c1 := 0;
+          while c2 = 0 do   { Si P2 entró }
+          begin
+             null;
+          end do
+          { Sección crítica }
+          c1 := 1;
+       end do
+    end
+\end{minted}
+Sin embargo, si ambos procesos tienen la misma velocidad, puede suceder que ambos cambien el valor de su clave a 0 al mismo tiempo, con lo que se de una situación de interbloqueo, que incumpliría la cuarta condición de Dijkstra.
+
+\subsection{Cuarta etapa}
+Lo que causó el problema en la tercera etapa fue que puede suceder que un proceso cambie el valor de su clave a la vez que el otro de forma concurrente, sin que este se de cuenta de que el otro lo ha hecho a la vez.
+
+La solución que se propone en esta etapa es permitir a un proceso volver a cambiar el valor de su clave a 1 si después de asignar su clave a 0, comprueba que el otro proceso también cambió su clave al mismo valor:
+\begin{minted}{pascal}
+    var c1, c2 : integer;
+
+    Process P1();
+    begin
+       c1 := 1;
+
+       while true do
+       begin
+          { Acceso a la sección crítica }
+          c1 := 0;
+          while c2 = 0 do   { Si P2 entró }
+          begin
+             c1 := 1;
+             while c2 = 0 do
+             begin
+                null;
+             end do
+             c1 := 0;
+          end do
+          { Sección crítica }
+          c1 := 1;
+       end do
+    end
+\end{minted}
+Sin embargo, si ambos procesos se ejecutasen a la misma velocidad, se podría seguir produciendo un interbloqueo entre ambos procesos, aunque esta situación ahora sea más improbable. La solución no sería válida por incumplir tanto la segunda como la cuarta condición de Dijkstra.\\
+
+La conclusión a la que llegamos tras todas estas etapas es que las variables \verb|c1| y \verb|c2| nos son útiles para coordinar la entrada a la sección crítica, pero no son suficientes para dar una solución correcta al problema que tratamos de resolver.\\
+
+\section{Algoritmo de Dekker}
+Se podría considerar como una quinta etapa del método de refinamiento sucesivo, pero esta vez obteniendo una solución válida del problema.
+
+El algoritmo de Dekker junta las ideas presentes en la primera y cuarta etapa de refinamiento de Dijkstra:
+\begin{itemize}
+    \item La primera etapa producía una solución segura, pero obligaba a la alternancia en el acceso de los procesos a la sección crítica.
+    \item Por otra parte, la cuarta etapa no cuenta con dicha alternancia en el acceso, pero puede llevar a un interbloqueo de los procesos del programa concurrente.
+\end{itemize}
+Para resolver el problema, se considera el código de la cuarta etapa de Dijkstra y se le añade un orden establecido en la entrada mediante una variable \verb|turno|, para desempatar la situación en la que los dos procesos quieran entrar exactamente al mismo tiempo en la sección crítica.\\
+
+De esta forma, un proceso que quiera entrar en la sección crítica asignará primero su clave a 0, y si el otro proceso también tiene su clave a 0, lo primero que hará es comprobar de quién es el turno y si no dispone del mismo, cambiará su clave a 1 pasando a esperar y dejando al otro proceso continuar con la ejecución de la sección crítica.
+
+\begin{minted}{pascal}
+    var c1, c2, turno : integer;
+
+    Process P1();
+    begin
+       while true do
+       begin
+          { Acceso a la región crítica }
+          c1 := 0;
+
+          while c2 = 0 do
+          begin
+             if turno = 2 then
+             begin
+
+                c1 := 1;
+                while turno = 2 do
+                begin
+                   null;
+                end do
+                c1 := 0;
+
+             end
+          end do
+
+          { Sección crítica }
+          turno := 2;
+          c1 := 1;
+       end do
+    end
+\end{minted}
+
+\subsection{Propiedades de corrección}
+En esta sección demostraremos que se cumple siempre el acceso en exclusión mutua a la sección crítica por parte de los procesos que intervienen en los programas concurrentes, sí como de la propiedad de alcanzabilidad de la sección crítica:
+
+\subsubsection{Exclusión mutua}
+El proceso $P_i$ (con $i = 1$ ó $i=2$) entrará en la sección crítica solo si el otro proceso, $P_j$ mantiene su clave $cj$ a 1. Dado que la clave de un proceso solo la puede modificar el propio proceso y qeu el proceso $P_i$ comprueba la clave $cj$ solo después de asignar su propia clave $ci$ a 0, si el proceso $P_i$ entra en sección crítica, se ha de cumplir la condición $ci = 0 \land cj = 1$. Notemos que esta situación es incompatible con la condición de que el proceso $P_j$ entre en la sección crítica: $cj = 0 \land ci = 1$.
+
+\subsubsection{Alcanzabilidad de la sección crítica}
+Para demostrar la alcanzabilidad de la sección crítica, distinguimos casos:
+\begin{itemize}
+    \item Si suponemos que el proceso $P_i$ intenta entrar solo en la sección crítica, entonces el otro proceso $P_j$ se mantendrá en estado pasivo, con lo que el valor de su clave $cj$ será 1. De esta forma, el proceso $P_i$ puede entrar a la sección crítica.
+    \item Sin embargo, si tanto $P_i$ como $P_j$ intentan entrar a la vez a la sección crítica y suponemos que $turno = i$, entonces:
+        \begin{itemize}
+            \item Si $P_j$ encuentra la clave $ci$ a 1, entonces $P_j$ entrará en la sección crítica.
+            \item Si $P_j$ encuentra la clave $ci$ a 0, como $turno = i$, entonces $P_j$ entrará en el segundo bucle interno para realizar la espera ocupada, poniendo antes su clave $cj$ a 1, que permitirá pasar al proceso $P_i$.
+            \item Si $P_i$ encuetran la clave $cj$ a 0, se mantendrá realizando iteraciones en el bucle de espera ocupada más externo con $ci$ a 0, hasta que lea el valor de $cj$ a 1, que sucederá por el punto superior, con lo que $P_i$ entrará en la sección crítica.
+        \end{itemize}
+\end{itemize}
+
+\subsubsection{Vivacidad}
+Dependiendo del hardware de control de acceso a memoria, el algoritmo de Dekker puede llegar a provocar la inanición de uno de los dos procesos:
+
+\setlength{\columnsep}{2cm} % Ajusta el espacio entre columnas
+\begin{multicols}{2}
+    Proceso 1.
+    \begin{minted}{pascal}
+        c1 := 0;
+
+        while c2 = 0 do
+        begin
+           if turno = 2 then
+           begin
+              c1 := 1;
+              while turno = 2 do
+              begin
+                 null;
+              end do
+              c1 := 0;
+           end
+        end do
+
+        { Sección crítica }
+        turno := 2;
+        c1 := 1;
+    \end{minted}
+    Proceso 2.
+    \begin{minted}{pascal}
+        c2 := 0;
+
+        while c1 = 0 do
+        begin
+           if turno = 1 then
+           begin
+              c2 := 1;
+              while turno = 1 do
+              begin
+                 null;
+              end do
+              c2 := 0;
+           end
+        end do
+
+        { Sección crítica }
+        turno := 1;
+        c2 := 1;
+    \end{minted}
+\end{multicols}
+Supongamos que tenemos a los procesos $P1$ y $P2$ ejecutando su código, queriendo acceder continuamente a la sección crítica. Supongamos además que el proceso $P2$ se ejecuta a una velocidad bastante lenta en comparación al proceso $P1$.\\ 
+
+Nos encontramos en el caso en el que ambos procesos cambiaron sus claves al mismo tiempo y el turno inicial era 1, con lo que $P1$ pasó a ejecutar el código de la sección crítica y $P2$ se quedó esperando en el bucle más interno, con el valor de su clave \verb|c2| a 1.\\
+
+Debemos recordar que anteriormente mencionamos que el acceso al módulo de memoria no se hace de forma paralela, sino que se hace de forma secuencial, de forma que si dos procesos intentan acceder a la vez a una misma posición de memoria es el controlador de memoria quien determina el acceso a un proceso de forma arbitraria.\\
+
+Supongamos pues que $P1$ termina de ejecutar el código de la sección crítica, con lo que cambia el valor de la variable \verb|turno| a 2, \verb|c1| a 1 y cambia también \verb|c1| a 0. Posteriormente, como $P1$ cambió \verb|turno| a 2, el proceso $P2$ sale del bucle más interno, con lo que se dispone a cambiar el valor de su clave a 0.
+
+Sin embargo, en este momento sucede que tanto $P1$ como $P2$ intentan acceder a la vez al valor de \verb|c2|, $P1$ para leer (en la condición del \verb|while| exterior) y $P2$ para escribir. Si en dicho momento el controlador de memoria da prioridad a las lecturas, $P1$ volvería a introducirse en la sección crítica.
+
+Inmediatamente, $P2$ se dispondría a cambiar el vlor de su clave a 1, pero como mencionamos anteriormente, $P2$ es muy lento, con lo que resulta que le da tiempo a $P1$ a ejecutar la sección crítica y volver a la lectura de \verb|c2| en el bucle más externo a la vez que $P2$, con lo que el controlador de memoria puede volver a darle prioridad.\\
+
+Si este escenario sucede de forma indefinida, tenemos una falta de vivacidad en el proceso $P2$, ya que mientras $P1$ esté en funcionamiento, no podrá avanzar en su ejecución.
+
+\subsubsection{Equidad del protocolo}
+Como hemos comentado en el apartado de vivacidad, la equidad del algoritmo de Dekker dependerá de la equidad del hardware de la máquina en el que ejecutemos el programa concurrente. Si existen peticiones de acceso simultáneo a una misma dirección de memoria compartida por dos procesos, uno para lectura y otro para escritura de forma que el hardware da prioridad a las lecturas, no se puede demostrar que el algoritmo de Dekker sea equitativo, pudiendo llegar al escenario de inanición de uno de los procesos como ya se ha descrito anteriormente.
