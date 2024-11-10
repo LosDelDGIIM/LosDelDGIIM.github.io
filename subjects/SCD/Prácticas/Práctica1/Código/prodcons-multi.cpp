@@ -1,3 +1,8 @@
+/**
+ * @file prodcons-multi.cpp
+ * @brief Problema de los productores-consumidores con múltiples procesos (solución FIFO o LIFO).
+ * @author Arturo Olivares Martos
+ */
 #include <iostream>
 #include <cassert>
 #include <thread>

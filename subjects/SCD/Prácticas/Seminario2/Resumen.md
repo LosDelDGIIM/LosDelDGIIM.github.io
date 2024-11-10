@@ -175,7 +175,7 @@ Monitor ProdCons;
     end
 end
 ``` 
-La ventaja en monitores es que una vez que tenemos un monitor para un proceso productor y otro consumidor, tenemos un monitor que nos sirve para este problema para cualquier número de productores y de consumidores. La implementación en C++11 se encuentra en el archivo [prodcons1_su.cpp](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Pr%C3%A1cticas/Seminario2/C%C3%B3digos/prodcons1_su.cpp).
+La ventaja en monitores es que una vez que tenemos un monitor para un proceso productor y otro consumidor, tenemos un monitor que nos sirve para este problema para cualquier número de productores y de consumidores. La implementación en C++11 se encuentra en el archivo [prodcons_su.cpp](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Pr%C3%A1cticas/Seminario2/C%C3%B3digos/prodcons_su.cpp), eligiendo la opción para la disciplina LIFO, ya que este programa también se puede ejecutar con disciplina FIFO.
   
 Es un buen ejercicio implementar ahora un monitor para productores y consumidores con semántica FIFO. Notemos que ha sido necesario emplear una variable `ocupados` para llevar la cuenta de los elementos que hay en el buffer, ya que en el caso de `ind_lectura == ind_escritura` no podemos saber si el buffer está lleno o vacío.
 La solución es la siguiente:
