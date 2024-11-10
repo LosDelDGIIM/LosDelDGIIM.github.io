@@ -12,10 +12,10 @@
 Veremos el problema de los productores/consumidores, el problema de los fumadores y el problema de los lectores/escritores.  
   
 # 1. Problema de los Productores/Consumidores
-Para ello, implementaremos el monitor que ya vimos en pseudocódigo en el Seminario 2 en C++11 usando la superclase `HoareMonitor`.  
-Podemos además recuperar el código de la Práctica 1 para disponer de múltiples productores y consumidores.  
-De esta forma, el monitor sobre código quedaría de las dos siguientes formas:
+Para ello, implementaremos el monitor que ya vimos en pseudocódigo en el Seminario 2 en C++11 usando la superclase `HoareMonitor`.
+Podemos además recuperar el código de la Práctica 1 para disponer de múltiples productores y consumidores, aunque veremos que el uso de monitores hace que la sincronización no tenga diferencias ningunas.
 
+De esta forma, el monitor sobre código quedaría de las dos siguientes formas:
 ### Versión LIFO
 ```c++
 class ProdConsLIFO : public HoareMonitor
@@ -110,6 +110,8 @@ int ProdConsFIFO::leer(){
 }
 ```
 
+La implementación en C++11 se encuentra en el archivo [prodcons_su.cpp](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Pr%C3%A1cticas/Seminario2/C%C3%B3digos/prodcons_su.cpp), en el que se puede elegir entre FIFO y LIFO. Además, también se pueden especificar el número de productores y consumidores, así como el número de elementos a producir.
+
 # 2. Problema de los Fumadores
 En este caso, disponemos nuevamente de un proceso estanquero que introduce datos en un mostrador (que tiene capacidad para un único dato). Según el tipo del dato, este debe ser consumidor por uno u otro fumador.  
   
@@ -167,6 +169,8 @@ Monitor Estanco;
    end
 end
 ```
+
+La implementación se encuentra en el archivo [fumadores.cpp](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Prácticas/Práctica2/Códigos/fumadores.cpp)
 
 # 3. Problema de los Lectores/Escritores
 Tenemos dos tipos de procesos que acceden de forma concurrente a un recurso compartido similar a una estructura de datos. Contamos con dos tipos de procesos:
@@ -301,7 +305,6 @@ end
 ```
 Donde la variable `cuanto_leo` la hemos reseteado tras la instrucción `esc_dentro = true;`. Sin embargo, también podríamos hacerlo en el procedimiento `termina_lectura`, tras la instrucción `cola_esc.signal();`.  
   
-Puede encontrar los códigos de este último problema (el de los lectores/escritores) en la carpeta [códigos](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/tree/main/subjects/SCD/Prácticas/Práctica2/Códigos). Para ejecutar los códigos, será necesario disponer de los ficheros `scd.cpp` y `scd.h`.  
-  
+Puede encontrar los códigos de este último problema en el fichero [lectores_escritores.cpp](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/tree/main/subjects/SCD/Prácticas/Práctica2/Códigos/lectores_escritores.cpp), donde pueden definir o no la variable `NO_INANICION` para ver la diferencia entre ambos códigos. Para ejecutar los códigos, será necesario disponer de los ficheros `scd.cpp` y `scd.h`.
   
 Para practicar, se recomienda resolver el problema del [Examen 1 de prácticas](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Pr%C3%A1cticas/Pr%C3%A1ctica1/Ex%C3%A1menes/contrabandista.md), usando ahora para ello monitores en vez de semáforos.
