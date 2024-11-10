@@ -33,8 +33,12 @@ Dijkstra propuso a su vez una forma de obtener una solución al problema de la e
 \subsubsection{Primera etapa}
 Inicialmente, se presupone que los procesos alternarán su entrada en la sección crítica según indique el valor de una variable compartida llamada \verb|turno|. Dicha variable contendrá el identificador del proceso que en cada momento puede entrar a la sección crítica.\\
 
-En un escenario con dos procesos que se disponen a ejecutar una sección crítica, la primera etapa consta del siguiente código para el proceso 1 y de uno análogo para el segundo proceso:
+En un escenario con dos procesos que se disponen a ejecutar una sección crítica, la primera etapa consta del siguiente código:
 
+\begin{figure}[H]
+    \centering
+    \setlength{\columnsep}{1cm}
+    \begin{multicols}{2}
 \begin{minted}{pascal}
 var turno : integer;
 
@@ -42,7 +46,7 @@ Process P1();
 begin
    while true do
    begin
-      { Acceso a la sección crítica }
+      { Acceso a la SC }
       while turno <> 1 do
       begin
          null;
@@ -52,6 +56,28 @@ begin
    end do
 end
 \end{minted}
+\begin{minted}{pascal}
+
+
+Process P2();
+begin
+   while true do
+   begin
+      { Acceso a la SC }
+      while turno <> 2 do
+      begin
+         null;
+      end do
+      { Sección crítica }
+      turno := 1;
+   end do
+end
+\end{minted}
+\end{multicols}
+\caption{Algoritmo para la primera etapa de refinamiento sucesivo.}
+\end{figure}
+
+
 Esta solución garantiza el acceso en exclusión mutua de los procesos a la sección crítica, por lo que la solución es segura.\\
 
 Sin embargo, no cumple la tercera condición de Dijkstra, ya que la solución obliga a la alternancia entre los procesos en la entrada a la sección crítica. 
@@ -64,29 +90,60 @@ Para evitar esto, la idea ahora es asociar a cada proceso una variable que conte
     \item Estado pasivo, el proceso no intenta acceder a la sección crítica, representado con un 1.
     \item El proceso intenta acceder a la sección crítica, representado con un 0.
 \end{itemize}
-En un escenario con dos procesos, presentamos el código del primero de ellos, $P1$, siendo el código de $P2$ simétrico:
-\begin{minted}{pascal}
-    var c1, c2 : integer;
+En un escenario con dos procesos:
+\begin{figure}[H]
+    \centering
+\setlength{\columnsep}{1cm}
+\begin{multicols}{2}
+    \begin{minted}{pascal}
+        var c1, c2 : integer;
+    
+        Process P1();
+        begin
+           c1 := 1;
+    
+           while true do
+           begin
+              { Acceso a la SC }
+              { Si P2 entró }
+              while c2 = 0 do   
+              begin
+                 null;
+              end do
+    
+              { Entra a la sección crítica }
+              c1 := 0;
+              { Sección crítica }
+              c1 := 1;
+           end do
+        end
+    \end{minted}
+    \begin{minted}{pascal}
 
-    Process P1();
-    begin
-       c1 := 1;
-
-       while true do
-       begin
-          { Acceso a la sección crítica }
-          while c2 = 0 do   { Si P2 entró }
-          begin
-             null;
-          end do
-
-          { Entra a la sección crítica }
-          c1 := 0;
-          { Sección crítica }
-          c1 := 1;
-       end do
-    end
-\end{minted}
+    
+        Process P2();
+        begin
+           c2 := 1;
+    
+           while true do
+           begin
+              { Acceso a la SC }
+              { Si P1 entró }
+              while c1 = 0 do
+              begin
+                 null;
+              end do
+    
+              { Entra a la sección crítica }
+              c2 := 0;
+              { Sección crítica }
+              c2 := 1;
+           end do
+        end
+    \end{minted}
+\end{multicols}
+\caption{Algoritmo para la segunda etapa de refinamiento sucesivo.}
+\end{figure}
 Como podemos ver, el protocolo de entrada consiste en leer el valor de la clave del otro proceso con la finalidad de consultar si dicho proceso ha entrado o no en la sección crítica, y esperar mientras el otro proceso se encuentre dentro de la sección crítica.\\
 
 Sin embargo, en este caso la solución no es segura, ya que si $P1$ y $P2$ se ejecutan a la misma velocidad, entonces ambos entrarían a la vez a la sección crítica, ya que los dos verían que el estado del otro es pasivo, con lo que ninguno entraría en el bucle de espera ocupada.
@@ -98,34 +155,65 @@ Como la bondad de la solución depende de la velocidad de ejecución relativa en
 \subsubsection{Tercera etapa}
 Para esta etapa planteamos una sencilla modificación sobre la etapa anterior, que consiste en cambiar el valor de la variable clave a 0 antes de consultar el valor de la variable clave del otro proceso:
 
-De esta forma, para que un proceso pueda entrar a la sección crítica, debe primero cambiar su estado a 0, con el fin de recuperar la condición de seguridad de que solo un proceso pueda entrar a la vez a la sección crítica.\\
-\begin{minted}{pascal}
-    var c1, c2 : integer;
+De esta forma, para que un proceso pueda entrar a la sección crítica, debe primero cambiar su estado a 0, con el fin de recuperar la condición de seguridad de que solo un proceso pueda entrar a la vez a la sección crítica.
+\begin{figure}[H]
+\setlength{\columnsep}{1cm}
+\begin{multicols}{2}
+    \begin{minted}{pascal}
+        var c1, c2 : integer;
+    
+        Process P1();
+        begin
+           c1 := 1;
+    
+           while true do
+           begin
+              { Acceso a la SC }
+              c1 := 0;
+              { Si P2 entró }
+              while c2 = 0 do
+              begin
+                 null;
+              end do
+              { Sección crítica }
+              c1 := 1;
+           end do
+        end
+    \end{minted}
+    \begin{minted}{pascal}
 
-    Process P1();
-    begin
-       c1 := 1;
-
-       while true do
-       begin
-          { Acceso a la sección crítica }
-          c1 := 0;
-          while c2 = 0 do   { Si P2 entró }
-          begin
-             null;
-          end do
-          { Sección crítica }
-          c1 := 1;
-       end do
-    end
-\end{minted}
+    
+        Process P2();
+        begin
+           c2 := 1;
+    
+           while true do
+           begin
+              { Acceso a la SC }
+              c2 := 0;
+              { Si P1 entró }
+              while c1 = 0 do
+              begin
+                 null;
+              end do
+              { Sección crítica }
+              c2 := 1;
+           end do
+        end
+    \end{minted}
+\end{multicols}
+\caption{Algoritmo para la tercera etapa de refinamiento sucesivo.}
+\end{figure}
 Sin embargo, si ambos procesos tienen la misma velocidad, puede suceder que ambos cambien el valor de su clave a 0 al mismo tiempo, con lo que se de una situación de interbloqueo, que incumpliría la cuarta condición de Dijkstra.
 
 \subsubsection{Cuarta etapa}
 Lo que causó el problema en la tercera etapa fue que puede suceder que un proceso cambie el valor de su clave a la vez que el otro de forma concurrente, sin que este se de cuenta de que el otro lo ha hecho a la vez.
 
 La solución que se propone en esta etapa es permitir a un proceso volver a cambiar el valor de su clave a 1 si después de asignar su clave a 0, comprueba que el otro proceso también cambió su clave al mismo valor:
-\begin{minted}{pascal}
+\begin{figure}[H]
+\setlength{\columnsep}{1cm}
+\begin{multicols}{2}
+    \begin{minted}{pascal}
     var c1, c2 : integer;
 
     Process P1();
@@ -134,9 +222,10 @@ La solución que se propone en esta etapa es permitir a un proceso volver a camb
 
        while true do
        begin
-          { Acceso a la sección crítica }
+          { Acceso a la SC }
           c1 := 0;
-          while c2 = 0 do   { Si P2 entró }
+          { Si P2 entró }
+          while c2 = 0 do
           begin
              c1 := 1;
              while c2 = 0 do
@@ -150,6 +239,35 @@ La solución que se propone en esta etapa es permitir a un proceso volver a camb
        end do
     end
 \end{minted}
+\begin{minted}{pascal}
+
+
+    Process P2();
+    begin
+       c2 := 1;
+
+       while true do
+       begin
+          { Acceso a la SC }
+          c2 := 0;
+          { Si P1 entró }
+          while c1 = 0 do
+          begin
+             c2 := 1;
+             while c1 = 0 do
+             begin
+                null;
+             end do
+             c2 := 0;
+          end do
+          { Sección crítica }
+          c2 := 1;
+       end do
+    end
+\end{minted}
+\end{multicols}
+\caption{Algoritmo para la cuarta etapa de refinamiento sucesivo.}
+\end{figure}
 Sin embargo, si ambos procesos se ejecutasen a la misma velocidad, se podría seguir produciendo un interbloqueo entre ambos procesos, aunque esta situación ahora sea más improbable. La solución no sería válida por incumplir tanto la segunda como la cuarta condición de Dijkstra.\\
 
 La conclusión a la que llegamos tras todas estas etapas es que las variables \verb|c1| y \verb|c2| nos son útiles para coordinar la entrada a la sección crítica, pero no son suficientes para dar una solución correcta al problema que tratamos de resolver.\\
@@ -166,14 +284,17 @@ Para resolver el problema, se considera el código de la cuarta etapa de Dijkstr
 
 De esta forma, un proceso que quiera entrar en la sección crítica asignará primero su clave a 0, y si el otro proceso también tiene su clave a 0, lo primero que hará es comprobar de quién es el turno y si no dispone del mismo, cambiará su clave a 1 pasando a esperar y dejando al otro proceso continuar con la ejecución de la sección crítica.
 
-\begin{minted}{pascal}
+\begin{figure}[H]
+\setlength{\columnsep}{1cm}
+\begin{multicols}{2}
+    \begin{minted}{pascal}
     var c1, c2, turno : integer;
 
     Process P1();
     begin
        while true do
        begin
-          { Acceso a la región crítica }
+          { Acceso a la SC }
           c1 := 0;
 
           while c2 = 0 do
@@ -197,6 +318,40 @@ De esta forma, un proceso que quiera entrar en la sección crítica asignará pr
        end do
     end
 \end{minted}
+\begin{minted}{pascal}
+
+
+    Process P2();
+    begin
+       while true do
+       begin
+          { Acceso a la SC }
+          c2 := 0;
+
+          while c1 = 0 do
+          begin
+             if turno = 1 then
+             begin
+
+                c2 := 1;
+                while turno = 1 do
+                begin
+                   null;
+                end do
+                c2 := 0;
+
+             end
+          end do
+
+          { Sección crítica }
+          turno := 1;
+          c2 := 1;
+       end do
+    end
+\end{minted}
+\end{multicols}
+\caption{Algorimo de Dekker.}
+\end{figure}
 
 \subsubsection{Propiedades de corrección}
 En esta sección demostraremos que se cumple siempre el acceso en exclusión mutua a la sección crítica por parte de los procesos que intervienen en los programas concurrentes, sí como de la propiedad de alcanzabilidad de la sección crítica:
@@ -295,6 +450,7 @@ Una vez visto el algoritmo de Dekker, primera solución aceptable al problema de
     \item Solicitando, el proceso intenta acceder al protocolo de entrada.
     \item En SC, el protocolo está dentro de la sección crítica.
 \end{itemize}
+\begin{figure}[H]
 \begin{minted}{pascal}
     var c : array[0..n-1] of (pasivo, solicitando, en_SC);
         turno : 0..n-1;
@@ -328,6 +484,9 @@ Una vez visto el algoritmo de Dekker, primera solución aceptable al problema de
        end do
     end
 \end{minted}
+\caption{Algoritmo de Dijkstra, código para el $i$-ésimo proceso.}
+\end{figure}
+
 De esta forma, lo primero que hace un proceso $P_i$ al llegar al protocolo de entrada a la sección crítica es cambiar su estado a \verb|solicitando|. Posteriormente:
 \begin{itemize}
     \item Si es su turno, no pasará en el bucle \verb|A|.
@@ -378,8 +537,9 @@ Con la finalidad de no caer en los errores de los algoritmos de Dekker y Dijkstr
         Con el fin de garantizar que ningún proceso sufrirá de inanición, ya que en algún momento conseguirá entrar a la sección crítica.
 \end{enumerate}
 
-Donald Knuth se dió cuenta de que la propiedad de vivacidad no podía ser demostrada debido a que la variable compartida \verb|turno| utilizada en los algoritmos de Dekker y Dijkstra sufría condiciones de carrera. El algoritmo propuesto por Knuth hace uso de una variable local \verb|turno| que copia el valor de la variable compartida homónima, con el fin de evitar dichas condiciones de carrera. Por lo demás, el algoritmo es similar al de Dijkstra:
+Donald Knuth se dió cuenta de que la propiedad de vivacidad no podía ser demostrada debido a que la variable compartida \verb|turno| utilizada en los algoritmos de Dekker y Dijkstra sufría condiciones de carrera. El algoritmo propuesto por Knuth hace uso de una variable local \verb|j| que copia el valor de la variable compartida \verb|turno|, con el fin de evitar dichas condiciones de carrera. Por lo demás, el algoritmo es similar al de Dijkstra:
 
+\begin{figure}[H]
 \begin{minted}{pascal}
     var c : array[0..n-1] of (pasivo, solicitando, en_SC);
         turno : 0..n-1;
@@ -417,6 +577,8 @@ Donald Knuth se dió cuenta de que la propiedad de vivacidad no podía ser demos
        end do
     end
 \end{minted}
+\caption{Algoritmo de Knuth.}
+\end{figure}
 De esta forma, si es el turno de un proceso, entonces este se salta el bucle \verb|A|. Si no, entonces el proceso que tiene el turno está en estado pasivo, el proceso decrementa el valor de \verb|j| hasta que:
 \begin{itemize}
     \item Encuentra un proceso que no está en estado pasivo, con lo que el proceso pasa a realizar una espera activa.
@@ -431,18 +593,87 @@ Por el resto, es idéntico al funcionamiento del algoritmo de Dijkstra, salvo qu
     \item [Exclusión mutua.]~\\
         Está garantizada gracias al bucle \verb|B|, tal y como razonamos en el algoritmo de Dijkstra.
     \item [Ausencia de inanición.]~\\
-% // TODO Completar
         Evita la inanición porque el valor de \verb|turno| se asigna tras la ejecución de la sección crítica, pasando el turno en orden circular.
 
         La instrucción \verb|(j-1) mod n| en el bucle \verb|A| permite recorrer los procesos para dar oportunidad a todos los procesos solicitantes.
+
+        De hecho, el retraso máximo que puede sufrir un proceso en un escenario con $n$ procesos es de $2^{n-1}-1$.
     \item [Equidad.]~\\
         Está garantizada gracias a la asignación circular del turno.
-    \item [Vivacidad.]~\\
 \end{description}
 
-ejemplo
+% // TODO: Entender bien y poner un ejemplo
 
-% // TODO Seguir 
+\subsection{Algoritmo de Peterson para 2 procesos}
+Peterson propuso una forma simple de resolver el problema de la exclusión mutua para dos procesos, de forma que a partir de entonces se consideró la solución canónica a dicho problema. Esta es generalizable a $n$ procesos.
+
+El algoritmo cuenta con las variables compartidas:
+\begin{minted}{pascal}
+    var c : array[1..2] of boolean;
+        turno : 1..2;
+\end{minted}
+Donde el array \verb|c| se inicializa con todos sus valores a \verb|false|, de forma que \verb|c[i]| indica si el $i$-ésimo proceso está o no solicitando acceder a la sección crítica. La variable \verb|turno| sirve para resolver conflictos en el caso de que ambos procesos intenten acceder a la vez a la sección crítica.\\
+
+Cuando un algoritmo quiere acceder a la sección crítica, lo que hace primero es cambiar su clave a ``solicitando sección crítica''. Posteriormente, se asigna el turno a dicho proceso. En el caso en el que ambos intenten acceder a la vez a la sección crítica, uno de ellos habrá sido necesariamente el último en asignarse el turno, y será el proceso que espere a que el otro ejecute la sección crítica.
+
+\begin{figure}[H]
+    \centering
+    \setlength{\columnsep}{1cm}
+    \begin{multicols}{2}
+        \begin{minted}{pascal}
+            Process P1();
+            begin
+               while true do
+               begin
+                  { Acceso a la SC }
+                  c[1] := true;
+                  turno := 1;
+
+                  while (c[2] and turno = 1) do
+                  begin
+                     null;
+                  end do
+
+                  { Sección crítica }
+                  c[1] := false;
+               end do
+            end
+        \end{minted}
+        \begin{minted}{pascal}
+            Process P2();
+            begin
+               while true do
+               begin
+                  { Acceso a la SC }
+                  c[2] := true;
+                  turno := 2;
+
+                  while (c[1] and turno = 2) do
+                  begin
+                     null;
+                  end do
+
+                  { Sección crítica }
+                  c[2] := false;
+               end do
+            end
+        \end{minted}
+    \end{multicols}
+    \caption{Algoritmo de Peterson para 2 procesos.}
+\end{figure}
+
+\subsubsection{Propiedades de corrección}
+A continuación, mostramos que la solución de Peterson no solo es una solución para el problema de la exclusión mutua, sino que además garantiza la equidad en el acceso a la misma para los procesos que intervienen en un programa concurrente que usa dicho algoritmo.
+\begin{description}
+    \item [Exclusión mutua.]~\
+        Suponiendo que nos encontramos en el proceso $P_i$ (con $i=1$ ó $i=2$), sea $j$ el otro proceso ($j =1$ si $i=2$ ó $j=2$ si $i=1$), supongamos que el proceso $P_i$ consigue entrar a la sección crítica. Esto sucede solo si $c[j]$ es falso o si \verb|turno| es $j$. Es decir, si $P_j$ no está intentando acceder a la sección crítica o si $P_j$ fue el último proceso en asignarse el turno. De esta forma, si el proceso $P_j$ intenta acceder a la vez a la sección crítica, quedará bloqueado, con lo que solo un proceso conseguirá al final entrar a la sección crítica.
+    \item [Alcanzabilidad de la sección crítica.]~\\
+        Supusto que dos procesos intenta acceder a la sección crítica, ambos cambiarán su valor de \verb|c| a \verb|true|, y cambiarán el valor de \verb|turno| a su identificador, quedando uno de ellos bloqueado (el último que modificó dicha variable) y el otro proceso consigue pasar el bucle, con lo que alcanza la sección crítica.
+    \item [Equidad.]~\\
+        El algoritmo de Peterson no solo garantiza la condición de vivacidad para los procesos del programa concurrente sino que garantiza la equidad en su acceso a la sección crítica:
+
+        Supongamos que un proceso $P_i$ está bloqueado esperando a entrar a la sección crítica y un proceso $P_j$ está continuamente entrando y saliendo de la misma monopolizando us uso. Sin embargo, cuando $P_j$ salga de la sección crítica por primera vez, cambiará el valor de \verb|turno| a $j$, con lo que $P_j$ quedará bloqueado en el acceso a la sección crítica y $P_i$ conseguirá entrar a la misma, contradicción con que un proceso pueda quedar bloqueado.
+\end{description}
 
 \section{Definición de un monitor}
 El concepto de semáforo se desarrolló previamente en el Seminario 1 de prácticas\footnote{Por lo que el lector debería estar familiarizado con ellos.}. Los semáforos presentan dos grandes limitaciones:
@@ -1636,13 +1867,13 @@ En general, tenemos que tener cuidado con la semántica de señales que estemos 
             end
         \end{minted}
     \end{multicols}
-    En primer lugar, notamos que el monitor de la izquierda realiza una instrucción \verb|if| antes de llamar a la operación \verb|wait|, luego sólo isrve para semánticas desplazantes.
+    En primer lugar, notamos que el monitor de la izquierda realiza una instrucción \verb|if| antes de llamar a la operación \verb|wait|, luego solo sirve para semánticas desplazantes.
 
     Posteriormente, observamo que el monitor de la derecha realiza la operación \verb|wait| dentro de un bucle, por lo que este sirve para semánticas SC\@. Sin embargo, no sirve para semánticas desplazantes, ya que la operación \verb|signal| se realiza antes de incrementar la variable \verb|s|, por lo que nunca se realizaría dicho incremento, al bloquear al proceso señalador.
 \end{ejercicio*}
 
 \subsection{Axiomas para operaciones de sincronización no desplazantes}
-Como comentamos ya en la Sección~\ref{sec:ax_desplazantes}, los axiomas que sabemos para demostrar las operaciones de sincronización en monitores sólo aplican cuando trabajamos con señales con semánticas desplazantes. Por tanto, si nos encontramos trabajando con semánticas de señales no desplazantes como SC, necesitamos unas nuevas reglas a aplicar.
+Como comentamos ya en la Sección~\ref{sec:ax_desplazantes}, los axiomas que sabemos para demostrar las operaciones de sincronización en monitores solo aplican cuando trabajamos con señales con semánticas desplazantes. Por tanto, si nos encontramos trabajando con semánticas de señales no desplazantes como SC, necesitamos unas nuevas reglas a aplicar.
 
 \begin{description}
     \item [Axioma de la operación \texttt{wait}.]~\\
@@ -1650,7 +1881,7 @@ Como comentamos ya en la Sección~\ref{sec:ax_desplazantes}, los axiomas que sab
         \begin{equation*}
             \{IM \land L\}\ c.wait();\ \{IM \land L\}
         \end{equation*}
-        Es decir, antes y después de la operación \verb|wait| sólo podemos asegurar que se cumple el IM (ya que podrían producirse robos de señal), por lo que para asegurarnos de que estamos lejos de un estado inseguro del programa, debemos hacer uso de un bucle \verb|while|, tal y como expusimos anteriormente:
+        Es decir, antes y después de la operación \verb|wait| solo podemos asegurar que se cumple el IM (ya que podrían producirse robos de señal), por lo que para asegurarnos de que estamos lejos de un estado inseguro del programa, debemos hacer uso de un bucle \verb|while|, tal y como expusimos anteriormente:
         \begin{minted}[escapeinside=\#\#]{pascal}
             while (cerca de estado inseguro) do begin
                c.wait();

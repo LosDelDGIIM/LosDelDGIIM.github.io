@@ -761,148 +761,131 @@
     \end{enumerate}    
 
     \begin{enumerate}
-        \item Para este problema, proponemos el siguiente monitor, donde \verb|coches_dentro| es una variable entera que indica el número de coches cruzando el puente en un momento determinado, de forma que:
-            \begin{itemize}
-                \item Si \verb|coches_dentro|$\ <0$, entonces hay \verb|coches_dentro| coches dentro del puente desplazándose del Norte al Sur.
-                \item Si \verb|coches_dentro|$\ >0$, entonces hay \verb|coches_dentro| coches dentro del puente desplazándose del Sur al Norte.
-            \end{itemize}
-            \begin{minted}{pascal}
-                Monitor Puente;
-                   var coches_dentro : integer;
-                       cola_N, cola_S : condition;
+        \item Este problema es una simplificación del problema de los lectores/escritores. Para el mismo, proponemos el siguiente monitor como solución al problema:
+            \begin{figure}[H]
+                \centering
+                \setlength{\columnsep}{1cm}
+                \begin{multicols}{2}
+                    \begin{minted}{pascal}
+                        Monitor Puente;
+                           var coches_N, coches_S : integer;
+                               cola_N, cola_S : condition;
 
-                   begin
-                      coches_dentro = 0;
-                   end
+                           procedure EntrarCocheDelNorte();
+                           begin
+                              { Hay coches en otro sentido }
+                              if coches_S > 0 then 
+                                 cola_N.wait();
 
-                   procedure EntrarCocheDelNorte();
-                   begin
-                      if coches_dentro > 0 then  {Hay coches del Sur al Norte}
-                         cola_N.wait();
-                         cola_N.signal();
-                      end
+                              coches_N := coches_N + 1;
 
-                      coches_dentro--;
-                   end
+                              { Por temas de eficiencia }
+                              if coches_N.queue() then
+                                 coches_N.signal();
+                           end
 
-                   procedure SalirCocheDelNorte();
-                   begin
-                      coches_dentro++;
-                      if coches_dentro = 0 then
-                         cola_S.signal();
-                      end
-                   end
+                           procedure SalirCocheDelNorte();
+                           begin
+                              coches_N := coches_N - 1;
 
-                   procedure EntrarCocheDelSur();
-                   begin
-                      if coches_dentro < 0 then  {Hay coches del Norte al Sur}
-                         cola_S.wait();
-                         cola_S.signal();
-                      end
+                              { El puente se queda vacío }
+                              if coches_N = 0 then
+                                 coches_S.signal();
+                           end
+                    \end{minted}
+                    \begin{minted}{pascal}
+                           procedure EntrarCocheDelSur();
+                           begin
+                              { Hay coches en otro sentido }
+                              if coches_N > 0 then 
+                                 cola_S.wait();
 
-                      coches_dentro++;
-                   end
+                              coches_S := coches_S + 1;
 
-                   procedure SalirCocheDelSur();
-                   begin
-                      coches_dentro--;
-                      if coches_dentro = 0 then
-                         cola_N.signal();
-                      end
-                   end
-                end
-            \end{minted}
-            Además, hemos hecho que cuando un coche quede desbloqueado, desbloquee al siguiente en la cola de bloqueados para que pasen el puente a la vez.
-        \item Para ello, tenemos que tener además una variable que cuente el número de coches que han pasado el puente en un sentido, \verb|n_coches|.
-            \begin{itemize}
-                \item Si \verb|n_coches| $\ <0$, entonces han pasado seguidos \verb|n_coches| del Norte al Sur.
-                \item Si \verb|n_coches| $\ >0$, entonces han pasado seguidos \verb|n_coches| del Sur al Norte.
-            \end{itemize}
-            \begin{minted}{pascal}
-                Monitor Puente (max : integer);
-                var coches_dentro, n_coches, MAX : integer;
-                    cola_N, cola_S : condition;
+                              { Por temas de eficiencia }
+                              if coches_S.queue() then
+                                 coches_S.signal();
+                           end
 
-                   begin
-                      coches_dentro = n_coches = 0;
-                      MAX = max;
-                   end
+                           procedure SalirCocheDelSur();
+                           begin
+                              coches_S := coches_S - 1;
 
-                   procedure EntrarCocheDelNorte();
-                   begin
-                      {Hay coches en sentido opuesto}
-                      if coches_dentro > 0 then
-                         cola_N.wait();
-                      else  {Hay coches en mi sentido o está el puente vacío}
-                         {Hay coches contrarios esperando y ya han pasado el maximo}
-                         if cola_S.queue() and n_coches <= MAX then
-                            cola_N.wait();
-                         end
-                      end
+                              { El puente se queda vacío }
+                              if coches_S = 0 then
+                                 coches_N.signal();
+                           end
 
-                      {Pasaron en sentido opuesto y soy el primero}
-                      if n_coches > 0 then
-                         n_coches = 0;
-                      end
+                           begin
+                              coches_N := 0; coches_S := 0;
+                           end
+                        end
+                    \end{minted}
+                \end{multicols}
+            \end{figure}
+        \item Ahora, una vez que haya algún coche en sentido opuesto, contabilizaremos el número de coches que pasan en nuestro sentido mientras que hay esperando en sentido opuesto, con la finalidad de invertir el sentido una vez hayan pasado \verb|umbral| coches:
+            \begin{figure}[H]
+                \begin{minted}{pascal}
+                    Monitor Puente;
+                       var coches_N, coches_S, N_pueden, S_pueden : integer;
+                           cola_N, cola_S : condition;
 
-                      coches_dentro--;
-                      n_coches--;
+                       procedure EntrarCocheDelNorte();
+                       begin
+                          { Hay coches en otro sentido }
+                          if (coches_S > 0 or N_pueden = 0) then cola_N.wait();
 
-                      if n_coches > MAX then
-                         cola_N.signal();
-                      end
-                   end
+                          coches_N := coches_N + 1;
 
-                   procedure SalirCocheDelNorte();
-                   begin
-                      coches_dentro++;
+                          { Si hay esperando en el sur }
+                          if cola_S.queue() then N_pueden := N_pueden - 1;
 
-                      if coches_dentro = 0 then
-                         {Hay del Sur y han pasado los maximos o no hay en el Norte}
-                         if cola_S.queue() and (n_coches <= MAX or not cola_N.queue()) then
-                            cola_S.signal();
-                         end
-                      end
-                   end
+                          if (coches_N.queue() and N_pueden > 0) then coches_N.signal();
+                       end
 
-                   procedure EntrarCocheDelSur();
-                   begin
-                      {Hay coches en sentido opuesto}
-                      if coches_dentro < 0 then
-                         cola_S.wait();
-                      else  {Hay coches en mi sentido o está el puente vacío}
-                         {Hay coches contrarios esperando y ya han pasado el máximo}
-                         if cola_N.queue() and n_coches >= MAX then
-                            cola_S.wait();
-                         end
-                      end
+                       procedure SalirCocheDelNorte();
+                       begin
+                          coches_N := coches_N - 1;
 
-                      {Pasaron en sentido opuesto y soy el primero}
-                      if n_coches < 0 then
-                         n_coches = 0;
-                      end
+                          { El puente se queda vacío }
+                          if coches_N = 0 then
+                          begin
+                             S_pueden := UMBRAL;
+                             coches_S.signal();
+                          end
+                       end
 
-                      coches_dentro++;
-                      n_coches++;
+                       procedure EntrarCocheDelSur();
+                       begin
+                          { Hay coches en otro sentido }
+                          if (coches_N > 0 or S_pueden = 0) then cola_S.wait();
 
-                      if n_coches < MAX then
-                         cola_S.signal();
-                      end
-                   end
+                          coches_S := coches_S + 1;
 
-                   procedure SalirCocheDelSur();
-                   begin
-                      coches_dentro--;
+                          { Si hay esperando en el norte }
+                          if cola_N.queue() then S_pueden := S_pueden - 1;
 
-                      if coches_dentro = 0 then
-                         {Si hay en el Norte y ya pasaron los máximos o no hay en el Sur}
-                         if cola_N.queue() and (n_coches >= MAX or not cola_S.queue()) then
-                            cola_N.signal();
-                         end
-                      end
-                   end
-                end
-            \end{minted}
+                          if (coches_S.queue() and S_pueden > 0) then coches_S.signal();
+                       end
+
+                       procedure SalirCocheDelSur();
+                       begin
+                          coches_S := coches_S - 1;
+
+                          { El puente se queda vacío }
+                          if coches_S = 0 then
+                          begin
+                             N_pueden = UMBRAL;
+                             coches_N.signal();
+                          end
+                       end
+
+                       begin
+                          coches_N := 0; coches_S := 0; N_pueden := UMBRAL; S_pueden := UMBRAL;
+                       end
+                    end
+                \end{minted}
+            \end{figure}
     \end{enumerate}
 \end{ejercicio}
 
@@ -936,6 +919,50 @@
         \item Los salvajes podrán comer siempre que haya comida en la olla.
         \item Sólo se ha de despertar al proceso cocinero cuando la olla esté vacía.
     \end{itemize}
+
+    La solución al problema viene dada gracias al monitor (donde \verb|M| es una constante que fija el número de misioneros a rellenar cada vez):
+    \begin{figure}[H]
+        \centering
+        \begin{minted}{pascal}
+            Monitor Olla;
+               var num_misioneros : integer;
+                   comer, dormir : condition;
+
+               procedure Servirse_1_misionero();
+               begin
+                  { Si no quedan misioneros }
+                  if num_misioneros = 0 then
+                  begin
+                     dormir.signal();  { Despierta al cocinero }
+                     comer.wait();
+                  end
+
+                  num_misioneros := num_misioneros - 1;
+
+                  if num_misioneros > 0 then
+                     comer.signal();
+               end
+
+               procedure Dormir();
+               begin
+                  if num_misioneros > 0 then
+                     dormir.wait();
+               end
+
+               procedure Rellenar_Olla();
+               begin
+                  num_misioneros := M;
+
+                  { Avisa a un salvaje }
+                  comer.signal();
+               end
+
+               begin
+                  num_misioneros := M;
+               end
+            end
+        \end{minted}
+    \end{figure}
 \end{ejercicio}
 
 \begin{ejercicio}
