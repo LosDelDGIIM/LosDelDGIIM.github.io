@@ -18,7 +18,9 @@ using namespace std;
 using namespace scd;
 
 constexpr int
-   num_items = 15;   // número de items a producir/consumir
+   num_items = 40,   // número de items a producir/consumir
+   num_productores = 4, // número de productores
+   num_consumidores = 8; // número de consumidores
 int
    siguiente_dato = 0; // siguiente valor a devolver en 'producir_dato'
    
@@ -45,7 +47,7 @@ unsigned
  */
 unsigned producir_dato(int id_productor, int n){
    this_thread::sleep_for( chrono::milliseconds( aleatorio<20,100>() ));
-   const unsigned dato_producido = n; //+ id_productor * num_items/num_productores + 
+   const unsigned dato_producido = id_productor * num_items/num_productores + n ;
    cont_prod[dato_producido] ++ ;
    mtx_cout.lock();
       cout << "Productor " << id_productor << " produce: " << dato_producido << endl << flush ;
@@ -217,10 +219,10 @@ void ProdConsSU::escribir( int valor ){
  * @param id_hebra Identificador de la hebra.
  * @param monitor Monitor.
  */
-void funcion_hebra_productora( int id_hebra, MRef<ProdConsSU> monitor )
-{
-   for( unsigned i = 0 ; i < num_items ; i++ )
-   {
+void funcion_hebra_productora( int id_hebra, MRef<ProdConsSU> monitor ){
+   
+   int items_por_productor = num_items/num_productores;
+   for( unsigned i = 0 ; i < items_por_productor ; i++ ){
       int valor = producir_dato( id_hebra, i );
       monitor->escribir( valor );
    }
@@ -231,10 +233,9 @@ void funcion_hebra_productora( int id_hebra, MRef<ProdConsSU> monitor )
  * @param id_hebra Identificador de la hebra.
  * @param monitor Monitor.
  */
-void funcion_hebra_consumidora( int id_hebra, MRef<ProdConsSU>  monitor )
-{
-   for( unsigned i = 0 ; i < num_items ; i++ )
-   {
+void funcion_hebra_consumidora( int id_hebra, MRef<ProdConsSU>  monitor ){
+   int items_por_consumidor = num_items/num_consumidores;
+   for( unsigned i = 0 ; i < items_por_consumidor ; i++ ){
       int valor = monitor->leer();
       consumir_dato( id_hebra, valor );
    }
@@ -250,13 +251,18 @@ int main()
    // crear monitor  ('monitor' es una referencia al mismo, de tipo MRef<...>)
    MRef<ProdConsSU> monitor = Create<ProdConsSU>() ;
 
-   // crear y lanzar las hebras
-   thread hebra_prod( funcion_hebra_productora, 0, monitor ),
-          hebra_cons( funcion_hebra_consumidora, 0, monitor );
+   // crear y lanzar los productores y consumidores
+   thread hebra_prod[num_productores], hebra_cons[num_consumidores];
+   for( unsigned i = 0 ; i < num_productores ; i++ )
+      hebra_prod[i] = thread( funcion_hebra_productora, i, monitor );
+   for( unsigned i = 0 ; i < num_consumidores ; i++ )
+      hebra_cons[i] = thread( funcion_hebra_consumidora, i, monitor );
 
    // esperar a que terminen las hebras
-   hebra_prod.join();
-   hebra_cons.join();
+   for( unsigned i = 0 ; i < num_productores ; i++ )
+      hebra_prod[i].join();
+   for( unsigned i = 0 ; i < num_consumidores ; i++ )
+      hebra_cons[i].join();
 
    test_contadores() ;
 }
