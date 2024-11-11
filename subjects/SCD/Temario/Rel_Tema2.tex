@@ -1139,15 +1139,39 @@
                 n := n+1 ; { ha llegado un proceso mas }
                 if n < 2 then { si es el primero: }
                     s.wait() { esperar al segundo }
-                    else begin { si es el segundo: }
-                        n := 0; { inicializa el contador }
-                        s.signal() { despertar al primero }
-                    end
+                else begin { si es el segundo: }
+                    n := 0; { inicializa el contador }
+                    s.signal() { despertar al primero }
+                end
             end
 
-        { Inicializacion }
+            { Inicializacion }
+            begin
+                n := 0 ;
+            end
+        end
+    \end{minted}
+    Para realizar esta implementación, haremos uso de las siguientes variables compartidas:
+    \begin{minted}{pascal}
+        var n : integer;
+            mutex, sem : semaphore;
+    \end{minted}
+    donde inicializaremos los semáforos \verb|mutex| y \verb|sem| a 0.
+    Usaremos la siguiente función, que hará las veces del procedimiento \verb|entrada| del monitor:
+    \begin{minted}{pascal}
+        procedure entrada();
         begin
-            n := 0 ;
+           sem_wait(mutex);  {Adquiere em}
+           n := n + 1;
+
+           if n < 2 then begin {Si era el primero}
+              sem_signal(mutex);  {Libera em antes de bloquearse}
+              sem_wait(sem);
+           else then begin {Si era el segundo}
+              n := 0;
+              sem_signal(sem);
+              sem_signal(mutex);
+           end
         end
     \end{minted}
 \end{ejercicio}
@@ -1184,6 +1208,63 @@
         \item Diseña una nueva solución, en la cual se evite el interbloqueo descrito, para ello, esta solución no debe permitir que haya más de cuatro filósofos simultáneamente intentado coger su primer tenedor.
     \end{enumerate}
 
+    \begin{enumerate}
+        \item Hemos diseñado el siguiente monitor, donde \verb|tenedores[i]| indica si el tenedor $i$-ésimo ha sido (\verb|true|) cogido o si no (\verb|false|).
+            \begin{minted}{pascal}
+                monitor MonFilo;
+                   var tenedores : array[0..4] of boolean;
+                       filosofo : array[0..4] of condition;
+
+                   procedure coge_tenedor(num_tenedor, num_proceso : integer);
+                   begin
+                      { Si ya han cogido el tenedor }
+                      if tenedores[num_tenedor] then
+                         filosofo[num_proceso].wait();
+
+                      tenedores[num_tenedor] := true;
+                   end
+
+                   procedure libera_tenedor(num_tenedor);
+                   begin
+                      tenedores[num_tenedor] := false;
+
+                      {Si el filósofo de la izqda estaba esperando se despierta}
+                      if filosofo[num_tenedor].queue() then
+                         filosofo[num_tenedor].signal();
+                      else then  {Si no, despertamos al filósofo de la dcha}
+                         filosofo[(num_tenedor - 1) mod 5].signal();
+                   end
+
+                   begin
+                      for i = 0 to 4 do 
+                         tenedores[i] := false;
+                      end
+                   end
+                end
+            \end{minted}
+        \item Ante el código proporcionado para los filósofos anteriormente, puede producirse una situación de interbloqueo si se sucede la siguiente traza de ejecución:
+            \begin{table}[H]
+            \centering
+            \begin{tabular}{|c|c|l|}
+                \hline
+                 & Nº Proceso & Llamada a procedimiento \\
+                \hline
+                1 & 0 & \verb|MonFilo.coge_tenedor(0,0);| \\
+                \hline
+                2 & 1 & \verb|MonFilo.coge_tenedor(1,1);| \\
+                \hline
+                3 & 2 & \verb|MonFilo.coge_tenedor(2,2);| \\
+                \hline
+                4 & 3 & \verb|MonFilo.coge_tenedor(3,3);| \\
+                \hline
+                5 & 4 & \verb|MonFilo.coge_tenedor(4,4);| \\
+                \hline
+            \end{tabular}
+            \caption{Traza de ejecución que lleva a una situación de interbloqueo.}
+            \label{etiqueta}
+            \end{table}
+            En este instante, todos los filósofos han cogido el tenedor de su derecha, el cual no soltarán hasta comer, para lo que necesitan el tenedor de su izquierda. Sin embargo, como son 5 filósofos y solo hay disponibles 5 tenedores, ningún filósofo conseguirá nunca su tenedor de la izquierda para poder comer. De esta forma, todos los filósofos quedarán bloqueados por siempre.
+    \end{enumerate}
 \end{ejercicio}
 
 
