@@ -1,0 +1,149 @@
+\documentclass[12pt]{article}
+
+\input{../../_assets/preambulo.tex}
+\usetikzlibrary{er, fit}
+
+\newcommand{\key}[1]{\ul{#1}}
+
+% Definición de estilos
+\tikzset{atributo/.style={attribute}}
+\tikzset{entidad/.style={entity}}
+\tikzset{relacion/.style={relationship}}
+\tikzset{atributo derivado/.style={attribute, dashed}}
+\tikzset{union discriminante/.style={dashed}}
+\tikzset{entidad debil/.style={entidad, double distance=1.5 pt}}
+\tikzset{participacion obligatoria/.style={double distance=1.5 pt}}
+\tikzset{herencia/.style={draw, isosceles triangle, isosceles triangle apex angle=60, shape border rotate=230, minimum height=1cm, minimum width=1cm, fill=blue!20}}
+\tikzset{agregacion/.style={draw, fit=#1, inner sep=0.5em}}
+
+
+% Estilos estéticos
+\tikzset{every entity/.style={draw=orange, fill=orange!20}}
+\tikzset{every attribute/.style={draw=purple, fill=purple!20, font=\footnotesize}}
+\tikzset{every relationship/.style={draw=green, fill=green!20, minimum height=2cm, minimum width=2cm}}
+
+\begin{comment}
+    \begin{tikzpicture}[node distance=6 em]
+        \node [entidad](person){Person};
+        \node [atributo derivado](pid) at (0.8,-2){\key{ID}} edge (person);
+        \node [atributo](name) at (-0.8, -2) {Name} edge (person);
+        \node [atributo](phone)[left of=person]{Phone} edge[union discriminante] (person);
+        \node [atributo](address)[above left of=person]{Address} edge[-stealth] (person);
+        \node [atributo](street)[above left of=address]{Street} edge (address);
+        \node [atributo](city)[left of=address]{City} edge (address);
+        \node [atributo](age)[above of=person]{Age} edge (person);
+        \node [relacion](uses)[right of=person]{Uses} edge[participacion obligatoria] (person);
+        \node [entidad debil](tool)[right of=uses]{Tool} edge (uses);
+        \node [atributo](tid)[right of=tool]{\key{ID}} edge[Stealth-Stealth] (tool);
+        \node [atributo](tname)[below of=tool]{Name} edge (tool);
+    
+        % Línea desde encima de Name hasta encima de ID
+        \draw ([yshift=1em]name.north) -- ([yshift=1em]pid.north) node[circle, fill, inner sep=1.5pt] {};
+    
+        \node[agregacion=(A) (B) (R)] (box) {};
+    
+        \node [herencia, below of= B](H){} edge (B);
+    \end{tikzpicture}
+\end{comment}
+
+% ---------------------------------------------------
+\tikzset{
+    CP/.style={
+        overlay, text opacity=0, fill opacity=0,
+        append after command={
+            \pgfextra{
+                \draw[thick] (\tikzlastnode.south west) -- (\tikzlastnode.south east);
+                \node[below=0ex of \tikzlastnode] {CP};
+            }
+        }
+    },
+    CC/.style={
+        overlay, text opacity=0, fill opacity=0,
+        append after command={
+            \pgfextra{
+                \draw[thick] (\tikzlastnode.south west) -- (\tikzlastnode.south east);
+                \node[below=0ex of \tikzlastnode] {CC};
+            }
+        }
+    },
+    CE/.style={
+        overlay, text opacity=0, fill opacity=0,
+        append after command={
+            \pgfextra{
+                \draw[thick, purple] (\tikzlastnode.north west) -- (\tikzlastnode.north east);
+                \node[above=0ex of \tikzlastnode, text=purple] {CE};
+            }
+        }
+    }
+}
+
+\begin{comment}
+\begin{tikzpicture}
+    \node (alumno) {Alumno(DNI, kjbbhjbj, Código, jhjghjh)};
+    \node (asignatura) [below of=alumno, yshift=-5em] {Asignatura(hjbjhblj, jjgjhb, kgjhh, Código)};
+
+    \node[CP, xshift=17.3ex] (codigoCP) at(asignatura) {Código};
+    \node[CP, xshift=-9ex] (dniCP) at(alumno) {DNI};
+
+
+    \node[CE, xshift=17.3ex] (codigoCE) at(asignatura) {Código};
+    \draw[-Stealth, purple] (codigoCE.north west) -- (dniCP.south east);
+    
+\end{tikzpicture}
+\end{comment}
+
+
+\begin{document}
+
+    % 1. Foto de fondo
+    % 2. Título
+    % 3. Encabezado Izquierdo
+    % 4. Color de fondo
+    % 5. Coord x del titulo
+    % 6. Coord y del titulo
+    % 7. Fecha
+
+    
+    \input{../../_assets/portada}
+    \portadaExamen{ffccA4.jpg}{FBD\\Examen II}{FBD. Examen II}{MidnightBlue}{-8}{28}{2024-2025}{Arturo Olivares Martos}
+
+    \begin{description}
+        \item[Asignatura] Fundamentos de Bases de Datos.
+        %\item[Curso Académico] 2017-18.
+        %\item[Grado] Doble Grado en Ingeniería Informática y Matemáticas.
+        %\item[Grupo] Único.
+        %\item[Profesor] Nicolás Marín Ruiz.
+        \item[Descripción] Práctico Parcial 1 (Seminarios 1-2).
+        %\item[Fecha] 8 de noviembre de 2021.
+        % \item[Duración] 60 minutos.
+    
+    \end{description}
+    \newpage
+
+Se quiere recoger información sobre la atención a los pacientes en un hospital. Hay que registrar la siguiente información:
+\begin{itemize}
+    \item Personal sanitario: Número de registro sanitario único, DNI, Nombre, Categoría, Título.
+    \item Servicios o especialidades: Código de servicio, Nombre, Ubicación.
+    \item Pacientes: NSS, DNI, Nombre, Dirección y Teléfono.
+\end{itemize}
+
+Deben cumplirse las siguientes restricciones:
+\begin{itemize}
+    \item Entre el personal sanitario hay que destacar a los enfermeros y a los médicos; de estos últimos hay que conocer su especialidad y año de finalización del MIR.
+    \item Todo el personal sanitario está adscrito obligatoriamente a un servicio.
+    \item Todos los servicios tienen un director que tiene que ser médico.
+    \item El trabajo se realiza por turnos (mañana, tarde, noche) y, durante un turno, cada enfermero depende de un médico y un médico es responsable de un grupo de enfermeros.
+    \item Los pacientes son atendidos por una pareja de enfermero y médico, y hay que registrar el día y la hora.
+\end{itemize}
+
+\begin{ejercicio}
+    Realizar el diagrama E/R que mejor represente dicha información.
+\end{ejercicio}
+\begin{ejercicio}
+    Obtener el esquema relacional con el menor número de tablas posible, señalando claves candidatas, primarias y externas.
+\end{ejercicio}
+\begin{ejercicio}
+    Contestar de forma justificada a la siguiente cuestión: ¿Se permite que un paciente sea atendido varias veces el mismo día?
+\end{ejercicio}
+
+\end{document}

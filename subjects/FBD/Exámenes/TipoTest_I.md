@@ -1,5 +1,5 @@
 <br>
-# Fundamentos de Bases de Datos. Parcial I
+# Fundamentos de Bases de Datos. Tipo Test Parcial I
 
 **Autor:** Arturo Olivares Martos
 ***
@@ -10,7 +10,8 @@
 <!--- **Grupo:** A.-->
 <!--- **Profesor:** Ignacio Rojas Ruiz.-->
 <!--- **Fecha:** 19-10-2023.-->
-- **Descripción:** Recopilación de preguntas Tipo Test del Parcial I (Temas 1-3 y Seminarios 1-2)
+- **Descripción:** Recopilación de preguntas Tipo Test del Parcial I (Temas 1-3 y Seminarios 1-2).
+Si encuentran algún error o pregunta repetida, rogamos nos lo comuniquen.
 ______
 
 1. Un modelo de datos es ...
