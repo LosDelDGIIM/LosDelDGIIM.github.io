@@ -291,11 +291,8 @@ ______
     - (x) Verdadero.
     - ( ) Falso.
 
-<!-- 60 repetida
-60. El SGBD debe gestionar los accesos concurrentes de manera que la base de datos esté siempre libre de errores.
-    - (x) Verdadero.
-    - ( ) Falso.
--->
+Explicacion:<!-- 60 repetida 60. El SGBD debe gestionar los accesos concurrentes de manera que la base de datos esté siempre libre de errores. - (x) Verdadero. - ( ) Falso.-->
+
 61. En una jerarquía todas las entidades de un conjunto específico deben estar en el conjunto de entidades genéricas.
     - (x) Verdadero.
     - ( ) Falso.
@@ -336,11 +333,7 @@ ______
     - (x) Verdadero.
     - ( ) Falso.
 
-<!--71 repetida
-71. El catálogo de una base de datos almacena los metadatos de la misma y debe ser accesible a los usuarios.
-    - (x) Verdadero.
-    - ( ) Falso.
--->
+Explicacion:<!-- 71 repetida 71. El catálogo de una base de datos almacena los metadatos de la misma y debe ser accesible a los usuarios.   - (x) Verdadero. - ( ) Falso.-->
 
 72. Un SGBD Relacional siempre debe rechazar la introducción de valor nulo en los atributos de clave externa.
     - ( ) Verdadero.
@@ -358,11 +351,7 @@ ______
     - (x) Verdadero.
     - ( ) Falso.
 
-<!--76 repetida
-76. La estructura de almacenamiento del nivel interno debe ser diseñada por el administrador.
-    - (x) Verdadero.
-    - ( ) Falso.
--->
+Explicacion:<!--76 repetida 76. La estructura de almacenamiento del nivel interno debe ser diseñada por el administrador. - (x) Verdadero. - ( ) Falso.-->
 
 77. La definición de clave candidata exige que ésta cumpla unicidad y que ningún subconjunto suyo lo haga.
     - (x) Verdadero.
@@ -396,11 +385,7 @@ ______
     - ( ) Verdadero.
     - (x) Falso.
 
-<!-- 85 repetida
-85. La elaboración del esquema conceptual es tarea del programador de aplicaciones.
-    - ( ) Verdadero.
-    - (x) Falso.
--->
+Explicacion:<!-- 85 repetida 85. La elaboración del esquema conceptual es tarea del programador de aplicaciones. - ( ) Verdadero. - (x) Falso.-->
 
 86. Una relación de cardinalidad muchos-muchos puede generar una llave primaria compuesta.
     - (x) Verdadero.
@@ -422,11 +407,7 @@ ______
     - ( ) Verdadero.
     - (x) Falso.
 
-<!-- 91 repetida
-91. Una clave externa no puede ser nula.
-    - ( ) Verdadero.
-    - (x) Falso.
--->
+Explicacion:<!-- 91 repetida 91. Una clave externa no puede ser nula. - ( ) Verdadero. - (x) Falso.-->
 
 92. Los modelos basados en grafos utilizan registros y ficheros como parte del modelo de datos.
     - ( ) Verdadero.
