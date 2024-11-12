@@ -408,7 +408,9 @@ Explicacion:<!-- 85 repetida 85. La elaboración del esquema conceptual es tarea
     - ( ) Verdadero.
     - (x) Falso.
 
-Explicacion:<!-- 91 repetida 91. Una clave externa no puede ser nula. - ( ) Verdadero. - (x) Falso.-->
+91. Una clave externa no puede ser nula.
+    - ( ) Verdadero.
+    - (x) Falso.
 
 92. Los modelos basados en grafos utilizan registros y ficheros como parte del modelo de datos.
     - ( ) Verdadero.
@@ -421,3 +423,258 @@ Explicacion:<!-- 91 repetida 91. Una clave externa no puede ser nula. - ( ) Verd
 94. La independencia física permite modificar el método de acceso a los datos sin que se vea afectado el nivel conceptual.
     - (x) Verdadero.
     - ( ) Falso.
+
+95. Lo mejor para que las aplicaciones sean independientes es que cada una posea sus propios datos.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+96. El SGBD debe proporcionar herramientas de definición, consulta y actualización.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+97. El grado de una relación forma parte del esquema de la base de datos y es invariable frente a las actualizaciones de los datos.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+98. Cuando se diseña una BD es fundamental conocer las características técnicas del servidor sobre el que se va a implantar.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+99. El término integridad hace referencia a la veracidad de los datos que se almacenan, esto es, a su correspondencia con la realidad.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+100. Cuando se pasa un diagrama E/R a tablas, las claves candidatas no se tienen en cuenta.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+101. Una entidad que no tiene clave primaria es siempre una entidad débil.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+102. La forma de implantar la cardinalidad de una relación en un diagrama E/R en una tabla es mediante la correcta elección de las claves candidatas y primarias.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+103. Una relación de cardinalidad muchos-uno puede generar una tabla con clave primaria compuesta.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+104. `CREATE TABLE` es un comando DDL.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+Explicacion: <!-- Repetida. 105. Todas las tablas procedentes de entidades débiles tienen claves externas.    - (x) Verdadero.    - ( ) Falso.-->
+
+106. La clave primaria puede tomar el valor nulo parcialmente.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+Explicacion: <!--107 repetida 107. La dependencia existencial solo se da entre entidades débiles y fuertes. - (x) Verdadero. - ( ) Falso.-->
+
+108. Todas las restricciones de integridad se pueden mantener eligiendo convenientemente claves candidatas, primarias y externas.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+109. El modelo jerárquico es más eficaz para plasmar las relaciones uno a muchos que el modelo relacional.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+110. Un atributo no puede ser clave primaria y externa a la vez.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+111. El SGBD debe permitir consultar directamente a las bases de datos. No es necesario que permita crearlas.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+112. Los modelos de datos implementables permiten codificar los esquemas conceptuales.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+113. En los modelos de datos basados en grafos la manipulación debe hacerse mediante lenguajes procedimentales.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+114. Las reglas de integridad de una base de datos deben siempre incluirse en los programas que manejan dicha clase.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+115. En el modelo relacional se identifica cada fila por el número que tiene.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+116. Los modelos de datos semánticos son más cercanos al diseñador.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+117. Los modelos de datos semánticos no tiene por qué incluir formalismos de manipulación.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+118. La información correspondiente a los esquemas y correspondencias se guarda fuera de la base de datos para no alterar dichos datos.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+119. Para trabajar con una base de datos nos basta con utilizar ficheros y registros.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+120. El administrador de la base de datos no puede acceder a los datos que introducen los usuarios.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+121. La arquitectura cliente servidor ejecuta los programas de aplicación de cada cliente.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+122. El concepto de seguridad se refiere a la protección de una base de datos contra fallos catastróficos.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+123. Los modelos de datos implementables están basados en el concepto de registro.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+124. Toda relación se corresponde con una única tabla.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+125. En el modelo relacional cada atributo tiene un dominio distinto.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+126. El conjunto de tuplas se llama:
+    - (x) Instancia.
+    - ( ) Relación.
+    - ( ) Esquema.
+    - ( ) Grado.
+
+127. La clave primaria de una tabla de una entidad débil es la misma que la clave primaria del conjunto de entidades del que depende.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+128. Una ejemplo de clave externa son los atributos de una entidad débil que provienen de la entidad fuerte.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+129. Solo puede haber dos atributos llamados de la misma forma cuando provienen de una entidad que interviene varias veces en la tabla.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+130. Las claves candidatas solo aparecen en las relaciones uno a uno.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+131. El atributo discriminador solo se pone como clave primaria en las relaciones muchos a muchos.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+132. El paso a tablas es una representación que permite mantener todas las restricciones que los diagramas de ER, como disjunto, obligatoriedad, etc.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+133. Puede haber una clave externa que no sea clave primaria o candidata.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+134. En las tablas, las entidades que heredan de otra deben contener todos los atributos de la entidad de la que heredan.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+135. Una clave primaria puede ser clave externa en dos sitios a la vez.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+136. Las relaciones se dan entre solo dos atributos.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+137. Las fusiones son optativas y se usan para reducir el espacio de las tablas.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+138. No se puede hacer fusión de tablas de jerarquías o se desharían las jerarquías.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+139. Las tablas con relaciones muchos a muchos no se pueden fusionar porque no coinciden las claves primarias.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+140. En las relaciones con atributos discriminadores, se puede fusionar siempre que las cardinalidades sean muchos a muchos.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+141. En las relaciones con obligatoriedad, el fusionado es obligatorio.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+142. Cuando las relaciones tienen atributos, no se puede hacer fusión.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+143. En relación con las restricciones de integridad...
+    - ( ) Toda superclave es una clave.
+    - ( ) Ninguna superclave es una clave.
+    - (x) Toda clave es superclave.
+
+Explicacion:<!-- 144 repetida 144. Al actualizar una clave externa:    - (x) Se debe aceptar el cambio si el valor nuevo pertenece al dominio activo de la clave referenciada    - ( ) Se debe aceptar el cambio si el valor nuevo no pertenece al dominio activo    - ( ) Se debe aceptar el cambio si el valor nuevo es nulo.-->
+
+145. El SGBD...
+    - ( ) Implementa todas las restricciones de integridad.
+    - (x) Controla todas las restricciones de integridad definidas sobre la BD.
+    - ( ) Controla parte de las restricciones de integridad definidas sobre la BD.
+
+146. El esquema centralizado de SGBD:
+    - ( ) La carga de gestión y procesamiento se comparte por igual entre el servidor y los terminales.
+    - (x) Los terminales no tienen instalado el SGBD.
+    - ( ) Toda carga de gestión y procesamiento recae sobre los terminales.
+
+147. El conjunto de elementos software con capacidad para definir, mantener y utilizar una base de datos se conoce como...
+    - (x) SGBD.
+    - ( ) Base de datos.
+    - ( ) Ninguna de las anteriores.
+
+Explicacion:<!-- 148 repetida 148. El lenguaje anfitrión o de aplicación...    - ( ) Complementa al DSL solo para facilitar el desarrollo de la interfaz de usuario    - ( ) Complementa al DSL solo para el procesamiento avanzado de datos    - (x) Complementa al DSL para hacer procesamiento avanzado de datos o facilitar el desarrollo de la interfaz de usuario.-->
+
+Explicacion:<!-- 149 repetida 149. El modelo de datos jerárquico tiene problemas con las…    - ( ) Relaciones uno a uno    - ( ) Relaciones muchos a uno    - (x) Relaciones muchos a muchos.-->
+
+Explicacion:<!-- 150 repetida 150. El rango de valores que puede tomar un atributo se denomina:    - ( ) Dominio activo    - ( ) Tipo de dato    - (x) Dominio    - ( ) Integridad referencial.-->
+
+151. En el modelo de datos relacional la identidad es...
+    - (x) Por valor.
+    - ( ) Por posición.
+    - ( ) Por clave externa.
+
+Expliacion:<!-- 152 repetida 152. La regla de integridad de entidad...    - ( ) Nunca permite nulos en la clave primaria.    - ( ) A veces permite nulos en la clave primaria, en función de la semántica del problema    - (x) Supone una abstracción del nivel lógico.-->
+
+153. El administrador de la base de datos...
+    - ( ) Es el que desarrolla los programas de aplicación.
+    - ( ) Es el responsable de introducir los datos en el sistema.
+    - (x) Es responsable de configurar el SGBD.
+
+154. El modelo de datos en red es un modelo de datos basado en...
+    - (x) Items.
+    - ( ) Realizar consultas.
+    - ( ) Insertar tuplas.
+
+155. Cuando el acoplamiento es débil...
+    - (x) El programador puede distinguir el DSL del lenguaje anfitrión.
+    - ( ) No se puede utilizar una API de acceso a la BD.
+    - ( ) El programador no distingue el DSL del lenguaje anfitrión.
+
+156. El DSL está compuesto por...
+    - ( ) DDL, DML, DHL.
+    - ( ) DCL, DHL, DDL.
+    - (x) DDL, DCL, DML.
+
+157. El grado de una relación...
+    - (x) No varía con las inserciones en la instancia.
+    - ( ) Varía al hacer actualizaciones de la instancia.
+    - ( ) Varía al hacer inserciones en la instancias.
+
+158. El coste de mantenimiento de los PCs es un problema...
+    - ( ) Del esquema centralizado de SBD.
+    - ( ) Solo del esquema centralizado si está implementado de forma distribuida.
+    - (x) De la aproximación cliente/servidor.
