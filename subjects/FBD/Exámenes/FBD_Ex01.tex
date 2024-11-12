@@ -133,14 +133,156 @@
     \end{itemize}
 
 \begin{ejercicio}[$6$ puntos] Dibujar el esquema Entidad/Relación que represente adecuadamente dicha información.
+
+    El esquema Entidad/Relación se encuentra en la Figura~\ref{fig:esquemaER}.
+    Notemos que hemos hecho las siguientes consideraciones:
+    \begin{itemize}
+        \item Las alertas no se envían al móvil sincronizado, sino directamente a un usuario mediante la dirección de correo electrónico.
+        \item La alerta de una actividad puede enviarse a muchos usuarios distintos, y un usuario puede recibir alertas de muchas actividades.
+        \item Hemos modelado la entidad débil \emph{Actividad}, para poder así especificar que cada actividad depende de una pulsera.
+    \end{itemize}
+    \begin{figure}
+        \centering
+        \scalebox{0.9}{
+        \begin{tikzpicture}[node distance=6.3 em]
+            \node[entidad] (usuario) {Usuario};
+            \node[atributo](email) [above left of=usuario] {\key{Email}} edge (usuario);
+            \node[atributo](password) [above right of=usuario] {Password} edge (usuario);
+            \node[atributo](nombre) [below left of=usuario] {Nombre} edge (usuario);
+            \node[atributo](apellidos) [left of=usuario, yshift=-2em] {Apellidos} edge (usuario);
+            \node[atributo](fecha_nac) [above of=usuario] {Fecha Nacimiento} edge (usuario);
+            \node[atributo derivado](edad) [left of=usuario, yshift=2em] {Edad} edge (usuario);
+
+            \node[relacion] (tiene) [right of=usuario] {Tiene} edge[-Stealth] (usuario);
+            \node[entidad] (dispositivo) [right of=tiene] {Dispositivo} edge (tiene);
+            \node[atributo](codigo) [above of=dispositivo] {\key{Código}} edge (dispositivo);
+
+            \node[herencia] (tipo_dispositivo) [below of=dispositivo, yshift=-1em] {Tipo} edgenode[midway, right] {Disjunta} (dispositivo);
+            \node[entidad] (movil) [below right of=tipo_dispositivo, yshift=-4em, xshift=2em] {Móvil} edge (tipo_dispositivo);
+            \node[atributo](telefono) [above of=movil] {\key{Teléfono}} edge[union discriminante] (movil);
+            \node[atributo](marca) [below of=movil] {Marca} edge (movil);
+            \node[atributo](modelo) [below right of=movil] {Modelo} edge (movil);
+
+            \node[entidad] (pulsera) [below left of=tipo_dispositivo, yshift=-4em, xshift=-2em] {Pulsera} edge (tipo_dispositivo);
+            \node[atributo](marca_p) [above of=pulsera, yshift=-1em] {Marca} edge (pulsera);
+            \node[atributo](modelo_p) [below of=pulsera, yshift=1em] {Modelo} edge (pulsera);
+            
+            \node[entidad debil] (actividad) [left of=pulsera, xshift=0.4ex] {Actividad} edge (pulsera);
+            \node[atributo](fecha) [above left of=actividad, yshift=-1em] {\key{Fecha}} edge[union discriminante] (actividad);
+            \node[atributo](nombre_a) [left of=actividad] {\key{Nombre}} edge[union discriminante] (actividad);
+
+            \node[herencia] (tipo_actividad) [below of=actividad] {Tipo} edge[participacion obligatoria]node[midway, right] {Disjunta} (actividad);
+            \node[entidad] (pasos) [below left of=tipo_actividad] {Pasos} edge (tipo_actividad);
+            \node[atributo](cantidad) [below of=pasos, yshift=3em] {Cantidad} edge (pasos);
+
+            \node[entidad] (ritmo) [right of=pasos, xshift=2em] {Ritmo Cardíaco} edge (tipo_actividad);
+            \node[atributo](pulsaciones) [below of=ritmo, yshift=3em] {Pulsaciones} edge (ritmo);
+
+            \node[relacion] (alerta) [below of=usuario] {Alerta} edge (actividad) edge (usuario);
+            \node[atributo](mensaje) [right of=alerta] {Mensaje} edge (alerta);
+
+            \node[relacion] (sincroniza) [below of=tipo_dispositivo, yshift=-2em] {Sincroniza} edge[-Stealth] (pulsera) edge (movil);
+            \node[atributo](fecha_s) [below of=sincroniza] {Fecha} edge (sincroniza);
+        \end{tikzpicture}
+        }
+        \caption{Esquema Entidad/Relación.}
+        \label{fig:esquemaER}
+    \end{figure}
 \end{ejercicio}
 
 \begin{ejercicio}[$2.5$ puntos] Elaborar el esquema relacional al que da lugar indicando las claves primarias, candidatas y externas correspondientes.
+    
+    El esquema relacional se encuentra en la Figura~\ref{fig:esquemaRelacional}.
+    \begin{figure}
+        \centering
+        \resizebox{1.1\textwidth}{!}{
+            \begin{tikzpicture}[node distance=15em]
+                \node(usuario) {Usuario(Email, Password, Nombre, Apellidos, Fecha\_Nac)};
+                \node(alerta) [right of=usuario, xshift=9em] {Alerta(Email, Cód\_Pulsera, Nombre, Mensaje)};
+
+                \node(tiene) [below of=usuario, yshift=9em, xshift=-7em] {Tiene(Email, Código)};
+                \node(movil) [right of=tiene] {Móvil(Código, Teléfono, Marca, Modelo)};
+                \node(pulsera) [right of=movil, xshift=4em] {Pulsera(Código, Marca, Modelo)};
+
+                \node(sincroniza) [below of=tiene, yshift=9em, xshift=4em] {Sincroniza(Cód\_Pulsera, Cód\_Móvil, Fecha)};
+                \node(actividad) [right of=sincroniza, xshift=5em] {Actividad(Fecha, Cód\_Pulsera, Nombre)};
+                \node(dispositivo) [right of=actividad] {Dispositivo(Código)};
+
+                \node(pasos) [below of=sincroniza, yshift=9em, xshift=0em] {Pasos(Cód\_Pulsera, Nombre, Cantidad)};
+                \node(ritmo) [right of=pasos, xshift=7em] {Ritmo\_Cardíaco(Cód\_Pulsera, Nombre, Pulsaciones)};
+                
+
+                \node[CP, xshift=-17ex] (CP_Usuario) at(usuario) {Email};
+                \node[CP, xshift=6ex] (CP_Dispositivo) at(dispositivo) {Código};
+                \node[CP, xshift=7ex] (CP_Tiene) at(tiene) {Código};
+                \node[CP, xshift=-10ex] (CP_Movil) at(movil) {Código};
+                \node[CC, xshift=10ex] (CC_Movil) at(CP_Movil) {Teléfono};
+                \node[yshift=-1.4em, xshift=1.4em] at(CC_Movil) {($*$)};
+                \node[CP, xshift=-5ex] (CP_Pulsera) at(pulsera) {Código};
+                \node[CP, xshift=9ex] (CP_Sincroniza) at(sincroniza) {Cód\_Móvil};
+                \node[CP, xshift=9ex] (CP_Actividad) at(actividad) {Cód\_Pulsera, Nombre};
+                \node[CC, xshift=-8ex, yshift=-1.4em] (CC_Actividad) at(CP_Actividad) {Fecha, Cód\_Pulsera};
+                \node[CP, xshift=-2ex] (CP_Pasos) at(pasos) {Cód\_Pulsera, Nombre};
+                \node[CP, xshift=2ex] (CP_Ritmo) at(ritmo) {Cód\_Pulsera, Nombre};
+                \node[CP, xshift=-1ex] (CP_Alerta) at(alerta) {Email, Cód\_Pulsera, Nombre};
+
+                \node[CE, xshift=-8.5ex] (CE_Tiene_Email) at(CP_Tiene) {Email};
+                \node[CE] (CE_Tiene_Codigo) at(CP_Tiene) {Código};
+                \node[CE] (CE_Movil) at(CP_Movil) {Código};
+                \node[CE] (CE_Pulsera) at(CP_Pulsera) {Código};
+                \node[CE, xshift=-14ex] (CE_Sincroniza_Pulsera) at(CP_Sincroniza) {Cód\_Pulsera};
+                \node[CE] (CE_Sincroniza_Movil) at(CP_Sincroniza) {Cód\_Móvil};
+                \node[CE, xshift=-4ex] (CE_Actividad) at(CP_Actividad) {Cód\_Pulsera};
+                \node[CE] (CE_Pasos) at(CP_Pasos) {Cód\_Pulsera, Nombre};
+                \node[CE] (CE_Ritmo) at(CP_Ritmo) {Cód\_Pulsera, Nombre};
+                \node[CE, xshift=-13ex] (CE_Alerta_Email) at(CP_Alerta) {Email};
+                \node[CE, xshift=4ex] (CE_Alerta_Actividad) at(CP_Alerta) {Cód\_Pulsera, Nombre};
+
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Alerta_Email) {($1$)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Alerta_Actividad) {($2$)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Tiene_Email) {($3$)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Tiene_Codigo) {($4$)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Movil) {($5$)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Pulsera) {($6$)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Sincroniza_Pulsera) {($7$)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Sincroniza_Movil) {($8$)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Actividad) {($9$)};
+                \node[yshift=1.4em, xshift=1.7em, purple] at(CE_Pasos) {($10$)};
+                \node[yshift=1.4em, xshift=1.7em, purple] at(CE_Ritmo) {($11$)};
+                
+                \node[yshift=-1.5em, xshift=1.8em, purple] at(CP_Usuario) {$(1,3)$};
+                \node[yshift=-1.5em, xshift=2.8em, purple] at(CP_Actividad) {$(2,10,11)$};
+                \node[yshift=-1.5em, xshift=2.4em, purple] at(CP_Dispositivo) {$(4,5,6)$};
+                \node[yshift=-1.5em, xshift=1.8em, purple] at(CP_Pulsera) {$(7,9)$};
+                \node[yshift=-1.5em, xshift=1.4em, purple] at(CP_Movil) {$(8)$};
+            \end{tikzpicture}
+        }
+        \caption{Esquema Relacional.}
+        \label{fig:esquemaRelacional}
+    \end{figure}
 \end{ejercicio}
 
 \begin{ejercicio}[$1$ punto] Fusionar aquellas tablas que semánticamente lo permitan.
+
+    Tan solo se pueden fusionar las tablas \emph{Tiene} y \emph{Dispositivo}, resultado en la tabla que se puesta en la Figura~\ref{fig:fusion}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node(fusion) {Dispositivo-Tiene(Código, Email)};
+            \node[CP, xshift=5ex] (CP_Fusion) at(fusion) {Código};
+            \node[CE, xshift=5ex] (CE_Fusion) at(CP_Fusion) {Email};
+
+            \node[yshift=-1.5em, xshift=1.8em, purple] at(CP_Fusion) {$(5,6)$};
+            \node[yshift=1.5em, xshift=1.4em, purple] at(CE_Fusion) {$(3)$};
+        \end{tikzpicture}
+        \caption{Fusión de las tablas \emph{Tiene} y \emph{Dispositivo}.}
+        \label{fig:fusion}
+    \end{figure}
 \end{ejercicio}
 
-\begin{ejercicio}[$0.5$ puntos] ¿El esquema obtenido permite que un pariente pueda recibir las alertas de la pulsera de su hijo/a? Justifique la respuesta.
+\begin{ejercicio}[$0.5$ puntos] ¿El esquema obtenido permite que un pariente pueda recibir las alertas de la pulsera de su hijo/a? Justifique la respuesta.\\
+
+    Sí, ya que la alerta no se envía al móvil sincronizado, sino a los usuarios que se quieran.
+    La única complicación es que esta base de datos no tenemos modelado la relación de parentesco, por lo que no podemos saber si un usuario es pariente de otro.
 \end{ejercicio}
 \end{document}
