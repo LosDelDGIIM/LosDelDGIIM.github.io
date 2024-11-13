@@ -5,12 +5,12 @@
 ***
 
 - **Asignatura:** Fundamentos de Bases de Datos
-<!--- **Curso Académico:** Actualizado al curso 2024-25
-- **Grado:** Preguntas comunes para el Grado en Ingeniería Informática y los Dobles Grados
+<!--- **Curso Académico:** Actualizado al curso 2024-25-->
+<!--- **Grado:** Preguntas comunes para el Grado en Ingeniería Informática y los Dobles Grados-->
 <!--- **Grupo:** A.-->
 <!--- **Profesor:** Ignacio Rojas Ruiz.-->
 <!--- **Fecha:** 19-10-2023.-->
-- **Descripción:** Recopilación de preguntas Tipo Test del Parcial I (Temas 1-3 y Seminarios 1-2).
+- **Descripción:** Recopilación de preguntas Tipo Test del Parcial I (Temas 1-3 y Seminarios 1-2).<br>
 Si encuentran algún error o pregunta repetida, rogamos nos lo comuniquen.
 ______
 
@@ -204,7 +204,7 @@ ______
     - (x) Verdadero.
     - ( ) Falso.
 
-38. La diferencia entre una clave candidata y una primera es que la candidata puede tomar valores nulos.
+38. La diferencia entre una clave candidata y una primaria es que la candidata puede tomar valores nulos.
     - ( ) Verdadero.
     - (x) Falso.
 
@@ -221,8 +221,8 @@ ______
     - (x) Falso.
 
 42. Una clave externa y la primaria a la que está asociada pueden tener diferentes nombres.
-    - ( ) Verdadero.
-    - (x) Falso.
+    - (x) Verdadero.
+    - ( ) Falso.
 
 43. En el modelo relacional, el acceso a los datos de una tupla se hace por valor.
     - (x) Verdadero.
@@ -237,8 +237,8 @@ ______
     - ( ) Falso.
 
 46. Una tabla puede tener varias claves candidatas y con distinto número de atributos.
-    - ( ) Verdadero.
-    - (x) Falso.
+    - (x) Verdadero.
+    - ( ) Falso.
 
 47. No se puede actualizar un valor de una clave primaria que es referenciada por llaves externas.
     - ( ) Verdadero.
@@ -473,8 +473,8 @@ Explicacion: <!-- Repetida. 105. Todas las tablas procedentes de entidades débi
 Explicacion: <!--107 repetida 107. La dependencia existencial solo se da entre entidades débiles y fuertes. - (x) Verdadero. - ( ) Falso.-->
 
 108. Todas las restricciones de integridad se pueden mantener eligiendo convenientemente claves candidatas, primarias y externas.
-    - (x) Verdadero.
-    - ( ) Falso.
+    - ( ) Verdadero.
+    - (x) Falso.
 
 109. El modelo jerárquico es más eficaz para plasmar las relaciones uno a muchos que el modelo relacional.
     - (x) Verdadero.
@@ -607,8 +607,8 @@ Explicacion: <!--107 repetida 107. La dependencia existencial solo se da entre e
     - (x) Falso.
 
 141. En las relaciones con obligatoriedad, el fusionado es obligatorio.
-    - (x) Verdadero.
-    - ( ) Falso.
+    - ( ) Verdadero.
+    - (x) Falso.
 
 142. Cuando las relaciones tienen atributos, no se puede hacer fusión.
     - ( ) Verdadero.
@@ -647,7 +647,7 @@ Explicacion:<!-- 150 repetida 150. El rango de valores que puede tomar un atribu
     - ( ) Por posición.
     - ( ) Por clave externa.
 
-Expliacion:<!-- 152 repetida 152. La regla de integridad de entidad...    - ( ) Nunca permite nulos en la clave primaria.    - ( ) A veces permite nulos en la clave primaria, en función de la semántica del problema    - (x) Supone una abstracción del nivel lógico.-->
+Explicacion:<!-- 152 repetida 152. La regla de integridad de entidad...    - ( ) Nunca permite nulos en la clave primaria.    - ( ) A veces permite nulos en la clave primaria, en función de la semántica del problema    - (x) Supone una abstracción del nivel lógico.-->
 
 153. El administrador de la base de datos...
     - ( ) Es el que desarrolla los programas de aplicación.
