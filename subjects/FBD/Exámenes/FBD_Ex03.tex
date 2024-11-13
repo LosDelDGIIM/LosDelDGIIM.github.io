@@ -120,7 +120,7 @@
     \end{description}
     \newpage
 
-Se trata de organizar la información que gestiona una empresa dedicada a la organización de espectáculos de música en verano. Con las siguientes condiciones:
+Se trata de organizar la información que gestiona una empresa dedicada a la organización de espectáculos de música en verano con las siguientes condiciones:
 \begin{enumerate}
     \item Los espectáculos están caracterizados por un código, un nombre (rock bajo estrellas, Jazz en la costa, etc.) y una descripción y pueden celebrarse varias veces en fechas distintas, en sedes distintas. Para cada celebración de un espectáculo se debe anotar la fecha de inicio, la fecha final y la hora de comienzo. Para cada sede se debe anotar un código, el nombre, tipo de sede (campo de deportes, plaza de toros, sala, etc.) y aforo.
     \item Para acudir a un espectáculo los clientes (identificados por DNI, Apellidos y Nombre, y teléfono), compran de forma telemática las entradas. Pueden comprarse varias entradas conjuntamente y se generaran mediante un código de compra al acudir al espectáculo, las entradas no están numeradas. En la compra se debe anotar, el número de entradas compradas, el código de compra, el importe total y el número de la tarjeta de crédito con la que se paga.
@@ -130,8 +130,159 @@ Se trata de organizar la información que gestiona una empresa dedicada a la org
 
 \begin{ejercicio}
     Realizar un diagrama E/R que refleje los datos descritos de la manera más detallada posible.
+
+    El esquema Entidad/Relación se encuentra en la Figura~\ref{fig:esquemaER}.
+    Notemos que:
+    \begin{itemize}
+        \item El atributo \emph{Fecha Inicio} de la relación \emph{Celebración} tiene también precisión de hora, ya que se menciona que se debe anotar la hora de comienzo.
+    \end{itemize}
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}[node distance=6.3 em]
+            \node[entidad](espectaculo){Espectáculo};
+            \node[atributo](codigo)[above left of=espectaculo, yshift=-2em]{\key{Código}} edge (espectaculo);
+            \node[atributo](nombre)[left of=espectaculo, xshift=0.5em]{Nombre} edge (espectaculo);
+            \node[atributo](descripcion)[below left of=espectaculo, yshift=2em]{Descripción} edge (espectaculo);
+
+            \node[relacion](celebracion)[right of=espectaculo, xshift=3em]{Celebración} edge[-Stealth] (espectaculo);
+            \node[atributo](fechaInicio)[above of=celebracion, yshift=-1.5em]{\key{Fecha Inicio}} edge[union discriminante] (celebracion);
+            \node[atributo](fechaFinal)[below of=celebracion, yshift=1.5em]{\key{Fecha Final}} edge[union discriminante] (celebracion);
+
+            \node[entidad](sede)[right of=celebracion, xshift=2em]{Sede} edge[Stealth-] (celebracion);
+            \node[atributo](codigoSede)[below right of=sede, yshift=2em, xshift=2em]{\key{Código}} edge (sede);
+            \node[atributo](nombreSede)[below of=sede, yshift=3em]{Nombre} edge (sede);
+            \node[atributo](tipo)[above of=sede, yshift=-3em]{Tipo} edge (sede);
+            \node[atributo](aforo)[above right of=sede, yshift=-2em, xshift=2em]{Aforo} edge (sede);
+
+            \node[agregacion=(espectaculo) (codigo) (nombre) (descripcion) (celebracion) (fechaInicio) (fechaFinal) (sede) (codigoSede) (nombreSede) (tipo) (aforo)](agregacion){};
+
+            \node[relacion](compra)[above of=agregacion, yshift=5em]{Compra} edge[-Stealth] (agregacion);
+            \node[atributo](numeroEntradas)[above of=compra]{Nº Entradas} edge (compra);
+            \node[atributo](codigoCompra)[left of=compra]{\key{Código}} edge[union discriminante] (compra);
+            \node[atributo](importe)[above left of=compra]{Importe} edge (compra);
+            \node[atributo](tarjeta)[above right of=compra]{Tarjeta} edge (compra);
+
+            \node[entidad](cliente)[right of=compra]{Cliente} edge[Stealth-] (compra);
+            \node[atributo](DNI)[above right of=cliente, yshift=-0.75em]{\key{DNI}} edge (cliente);
+            \node[atributo](apellidos)[right of=cliente, yshift=-1.25em]{Apellidos} edge (cliente);
+            \node[atributo](nombreCliente)[right of=cliente, yshift=1.25em]{Nombre} edge (cliente);
+            \node[atributo](telefono)[below right of=cliente, yshift=0.75em]{Teléfono} edge (cliente);
+
+            \node[entidad debil](actuacion)[below of=espectaculo, yshift=-3em]{Actuación} edge(espectaculo);
+            \node[atributo](Orden)[below left of=actuacion]{\key{Orden}} edge[union discriminante] (actuacion);
+            \node[atributo](duracion)[below of=actuacion]{Duración} edge (actuacion);
+
+            \node[relacion](realiza)[right of=actuacion]{Realiza} edge (actuacion);
+            \node[entidad](interprete)[right of=realiza]{Intérprete} edge[Stealth-] (realiza);
+            \node[atributo](codigoInterprete)[right of=interprete]{\key{Código}} edge (interprete);
+            \node[atributo](nombreInterprete)[right of=interprete, yshift=-3em]{Nombre} edge (interprete);
+
+            \node[herencia] (tipo_interprete) [below of=interprete] {Tipo} edge[participacion obligatoria] node[pos=0.2, right]{Disjunta} (interprete);
+            \node[entidad](solista)[below of=tipo_interprete, xshift=-7em]{Solista} edge (tipo_interprete);
+            \node[entidad](grupo)[below of=tipo_interprete, xshift=7em]{Grupo} edge (tipo_interprete);
+            \node[relacion](pertenece)[below of=tipo_interprete]{Pertenece} edge (solista) edge[-Stealth] (grupo);
+            \node[atributo](fechaInclusion)[below left of=pertenece, xshift=-1em]{\key{Fecha Inclusión}} edge[union discriminante] (pertenece);
+            \node[atributo](fechaSeparacion)[below right of=pertenece, xshift=1em]{Fecha Separación} edge (pertenece);
+
+
+        \end{tikzpicture}
+        \caption{Esquema Entidad/Relación.}
+        \label{fig:esquemaER}
+    \end{figure}
 \end{ejercicio}
 \begin{ejercicio}
     Pasar el diagrama a un esquema de base de datos relacional especificando llaves primarias, candidatas y externas y realizando las fusiones de tablas que sean necesarias.
+
+    El esquema relacional se encuentra en la Figura~\ref{fig:esquemaRelacional}.
+    Las posibles fusiones se han realizado por debajo de la línea discontinua divisoria.
+    \begin{figure}
+        \centering
+        \resizebox{1.1\textwidth}{!}{
+            \begin{tikzpicture}[node distance=15em]
+                \node(espectaculo) {Espectáculo(Código, Nombre, Descripción)};
+                \node(grupo)[right of=espectaculo, xshift=1em]{Grupo(Cód\_Intérprete)};
+                \node(celebracion)[right of=grupo, xshift=7em]{Celebración(Fecha\_Inicio, Cód\_Espectáculo, Fecha\_Final, Cód\_Sede)};
+
+                \node(cliente)[below of=espectaculo, yshift=8em]{Cliente(DNI, Apellidos, Nombre, Teléfono)};
+                \node(compra)[right of=cliente, xshift=17em]{Compra(DNI, Cód\_Compra, Cód\_Espectáculo, Fecha\_Inicio, NºEntradas, Importe, Tarjeta, DNI)};
+
+                \node(actuacion)[below of=cliente, yshift=9em]{Actuación(Cód\_Espectáculo, Orden, Duración)};
+                \node(interprete)[right of=actuacion, xshift=5em]{Intérprete(Código, Nombre)};
+                \node(realiza)[right of=interprete, xshift=5em]{Realiza(Cód\_Intérprete, Cód\_Espectáculo, Orden)};
+
+                \node(solista)[below of=actuacion, yshift=9em, xshift=-5em]{Solista(Cód\_Intérprete)};
+                \node(sede)[right of=solista, xshift=1em]{Sede(Código, Nombre, Tipo, Aforo)};
+                \node(pertenece)[right of=sede, xshift=10em]{Pertenece(Cód\_Solista, Fecha\_Inclusión, Fecha\_Separación, Cód\_Grupo)};
+
+                % Claves primarias y Candidatas
+                \node[CP, xshift=-5ex] (CP_Espectaculo) at(espectaculo) {Código};
+                \node[CP, xshift=3ex] (CP_Grupo) at(grupo) {Cód\_Intérprete};
+                \node[CP, xshift=-7ex] (CP_Celebracion) at(celebracion) {Fecha\_Inicio, Cód\_Espectáculo};
+                \node[CC, xshift=29ex] (CC_Celebracion_1) at(CP_Celebracion) {Fecha\_Final, Cód\_Sede};
+                \node[CC, xshift=15ex, yshift=-1.4em] (CC_Celebracion_2) at(CP_Celebracion) {Cód\_Espectáculo, Fecha\_Final};
+                \node[CC, xshift=-8ex, yshift=-3em] (CC_Celebracion_3_1) at(CP_Celebracion) {Fecha\_Inicio};
+                \node[CC, xshift=44ex] (CC_Celebracion_3_2) at(CC_Celebracion_3_1) {Cód\_Sede};
+
+                \node[CP, xshift=-11ex] (CP_Cliente) at(cliente) {DNI};
+                \node[CP, xshift=-30ex] (CP_Compra) at(compra) {DNI, Cód\_Compra};
+                \node[CC, xshift=19ex, yshift=-1.4em] (CC_Compra) at(CP_Compra) {Cód\_Compra, Cód\_Espectáculo, Fecha\_Inicio};
+                \node[CP, xshift=0ex] (CP_Actuacion) at(actuacion) {Cód\_Espectáculo, Orden};
+                \node[CP, xshift=0ex] (CP_Interprete) at(interprete) {Código};
+                \node[CP, xshift=12ex] (CP_Realiza) at(realiza) {Cód\_Espectáculo, Orden};
+                \node[CP, xshift=3ex] (CP_Solista) at(solista) {Cód\_Intérprete};
+                \node[CP, xshift=-8ex] (CP_Sede) at(sede) {Código};
+                \node[CP, xshift=-10ex] (CP_Pertenece) at(pertenece) {Cód\_Solista, Fecha\_Inclusión};
+
+                % Claves Externas
+                \node[CE] (CE_Grupo) at(CP_Grupo) {Cód\_Intérprete};
+                \node[CE, xshift=7ex] (CE_Celebracion_Espectaculo) at(CP_Celebracion) {Cód\_Espectáculo};
+                \node[CE, xshift=35ex] (CE_Celebracion_Sede) at(CP_Celebracion) {Cód\_Sede};
+                \node[CE, xshift=-7.5ex] (CE_Compra_Cliente) at(CP_Compra) {DNI};
+                \node[CE, xshift=25ex] (CE_Compra_Espectaculo) at(CP_Compra) {Cód\_Espectáculo, Fecha\_Inicio};
+                \node[CE, xshift=-4ex] (CE_Actuacion) at(CP_Actuacion) {Cód\_Espectáculo};
+                \node[CE, xshift=-22ex] (CE_Realiza_Interprete) at(CP_Realiza) {Cód\_Intérprete};
+                \node[CE] (CE_Realiza_Actuacion) at(CP_Realiza) {Cód\_Espectáculo, Orden};
+                \node[CE] (CE_Solista) at(CP_Solista) {Cód\_Intérprete};
+                \node[CE, xshift=-9ex] (CE_Pertenece_Solista) at(CP_Pertenece) {Cód\_Solista};
+                \node[CE, xshift=39ex] (CE_Pertenece_Grupo) at(CP_Pertenece) {Cód\_Grupo};
+
+                % Referencias
+                \node[yshift=1.4em, xshift=1.4em, purple] at (CE_Grupo) {(1)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at (CE_Celebracion_Espectaculo) {(2)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at (CE_Celebracion_Sede) {(3)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at (CE_Compra_Cliente) {(4)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at (CE_Compra_Espectaculo) {(5)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at (CE_Actuacion) {(6)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at (CE_Realiza_Interprete) {(7)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at (CE_Realiza_Actuacion) {(8)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at (CE_Solista) {(9)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at (CE_Pertenece_Solista) {(10)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at (CE_Pertenece_Grupo) {(11)};
+
+                \node[yshift=-1.5em, xshift=2.3em, purple] at (CP_Interprete) {(1,7,9)};
+                \node[yshift=-1.5em, xshift=1.8em, purple] at (CP_Espectaculo) {(2,6)};
+                \node[yshift=-1.5em, xshift=1.4em, purple] at (CP_Sede) {(3)};
+                \node[yshift=-1.5em, xshift=1.4em, purple] at (CP_Cliente) {(4)};
+                \node[yshift=-1.5em, xshift=1.4em, purple] at (CP_Celebracion) {(5)};
+                \node[yshift=-1.5em, xshift=1.4em, purple] at (CP_Actuacion) {(8)};
+                \node[yshift=-1.5em, xshift=1.6em, purple] at (CP_Solista) {(10)};
+                \node[yshift=-1.5em, xshift=1.6em, purple] at (CP_Grupo) {(11)};
+
+
+                % Línea divisoria debajo de todo
+                \draw[dashed] (current bounding box.south west) ++(-0.5em, -1em) -- ++(1.75\linewidth, 0);
+
+                \node(actuacion-realiza) [below of=solista, yshift=9em, xshift=16em]{Actuación-Realiza(Cód\_Espectáculo, Orden, Duración, Cód\_Intérprete)};
+                \node[CP, xshift=-4ex] (CP_Actuacion_Realiza) at(actuacion-realiza) {Cód\_Espectáculo, Orden};
+                \node[CE, xshift=-4ex] (CE_Actuacion_Realiza_Espectaculo) at(CP_Actuacion_Realiza) {Cód\_Espectáculo};
+                \node[CE, xshift=32ex] (CE_Actuacion_Realiza_Interprete) at(CP_Actuacion_Realiza) {Cód\_Intérprete};
+                \node[yshift=1.4em, xshift=1.4em, purple] at (CE_Actuacion_Realiza_Espectaculo) {(6)};
+                \node[yshift=1.4em, xshift=1.4em, purple] at (CE_Actuacion_Realiza_Interprete) {(7)};
+
+            \end{tikzpicture}
+        }
+        \caption{Esquema Relacional.}
+        \label{fig:esquemaRelacional}
+    \end{figure}
 \end{ejercicio}
 \end{document}
