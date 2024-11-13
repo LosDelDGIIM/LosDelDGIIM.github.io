@@ -143,6 +143,7 @@ Deben cumplirse las siguientes restricciones:
     Notemos que:
     \begin{itemize}
         \item Se podría haber incluido la participación obligatoria de la entidad \emph{Servicio} en la relación \emph{Dirigir}.
+        \item El atributo \emph{Fecha} de la relación \emph{Atiende} tiene precisión de hora.
     \end{itemize}
     \begin{figure}
         \centering
@@ -169,7 +170,7 @@ Deben cumplirse las siguientes restricciones:
             \node [relacion] (dirigir) [below of=servicio, yshift=-4.5em]{Dirigir} edge[-Stealth](servicio) edge[-Stealth] (medico);
 
             \node [relacion] (responsable) [below of=tipo_personal, yshift=-4em]{Responsable} edge (enfermero) edge[-Stealth] (medico);
-            \node [atributo](turno) [left of=responsable]{Turno} edge[union discriminante] (responsable);
+            \node [atributo](turno) [left of=responsable]{\key{Turno}} edge[union discriminante] (responsable);
 
             \node [agregacion=(enfermero) (medico) (responsable) (turno) (especialidad) (MIR)] (agregacion) {};
             \node [relacion](atiende) [right of=agregacion, xshift=8em]{Atiende} edge[-Stealth] (agregacion);
@@ -180,10 +181,6 @@ Deben cumplirse las siguientes restricciones:
             \node [atributo](direccion) [below right of=paciente]{Dirección} edge (paciente);
             \node [atributo](telefono) [right of=paciente]{Teléfono} edge (paciente);
             \node [atributo](nombreP) [above right of=paciente]{Nombre} edge (paciente);
-
-
-
-
         \end{tikzpicture}
         }
         \caption{Esquema Entidad/Relación.}
@@ -192,9 +189,96 @@ Deben cumplirse las siguientes restricciones:
 \end{ejercicio}
 \begin{ejercicio}
     Obtener el esquema relacional con el menor número de tablas posible, señalando claves candidatas, primarias y externas.
+
+    El esquema relacional se encuentra en la Figura~\ref{fig:esquemaRelacional}.
+    Las posibles fusiones se han realizado por debajo de la línea discontinua divisoria. 
+    \begin{figure}
+        \centering
+        \resizebox{1.1\textwidth}{!}{
+            \begin{tikzpicture}[node distance=15em]
+                \node(personal) {Personal sanitario(DNI, NRS, Nombre, Categoría, Título)};
+                \node(enfermero) [right of=personal, xshift=3em] {Enfermero(NRS)};
+                \node(adscrito) [right of=enfermero] {Adscrito(NRS, Código)};
+
+                \node(servicio) [below of=personal, yshift=9em, xshift=-4em] {Servicio(Código, Nombre, Ubicación)};
+                \node(medico) [right of=servicio, xshift=2em] {Médico(NRS, Especialidad, MIR)};
+                \node(paciente) [right of=medico, xshift=4em] {Paciente(NSS, DNI, Nombre, Dirección, Teléfono)};
+                
+
+                \node(responsable) [below of=servicio, yshift=9em, xshift=3em] {Responsable(NRS\_Enfermero, Turno, NRS\_Médico)};
+                \node(dirigir) [right of=responsable, xshift=5em] {Dirigir(Código, NRS)};
+                \node(atiende) [right of=dirigir, xshift=1em] {Atiende(NRS\_Enfermero, Turno, Fecha, NSS)};
+
+                \node[CP, xshift=-1ex] (CP_Personal) at(personal) {NRS};
+                \node[CC, xshift=-7ex] (CC_Personal) at(CP_Personal) {DNI};
+                \node[CP, xshift=5ex] (CP_Enfermero) at(enfermero) {NRS};
+                \node[CP, xshift=0ex] (CP_Adscrito) at(adscrito) {NRS};
+                \node[CP, xshift=-6ex] (CP_Servicio) at(servicio) {Código};
+                \node[CP, xshift=-6ex] (CP_Medico) at(medico) {NRS};
+                \node[CP, xshift=-14ex] (CP_Paciente) at(paciente) {NSS};
+                \node[CC, xshift=7ex] (CC_Paciente) at(CP_Paciente) {DNI};
+                \node[CP, xshift=0ex] (CP_Responsable) at(responsable) {NRS\_Enfermero, Turno};
+                \node[CP, xshift=0ex] (CP_Dirigir) at(dirigir) {Código};
+                \node[CC, xshift=8ex] (CC_Dirigir) at(CP_Dirigir) {NRS};
+                \node[CP, xshift=16ex] (CP_Atiende) at(atiende) {Fecha, NSS};
+                \node[CC, xshift=-15ex,yshift=-1.4em] (CC_Atiende) at(CP_Atiende) {NRS\_Enfermero, Turno, Fecha};
+
+                \node[CE] (CE_Enfermero) at(CP_Enfermero) {NRS};
+                \node[CE] (CE_Adscrito_Personal) at(CP_Adscrito) {NRS};
+                \node[CE, xshift=8ex] (CE_Adscrito_Servicio) at(CP_Adscrito) {Código};
+                \node[CE] (CE_Medico) at(CP_Medico) {NRS};
+                \node[CE, xshift=-4ex] (CE_Responsable_Enfermero) at(CP_Responsable) {NRS\_Enfermero};
+                \node[CE, xshift=19ex] (CE_Responsable_Medico) at(CP_Responsable) {NRS\_Médico};
+                \node[CE] (CE_Dirigir_Servicio) at(CP_Dirigir) {Código};
+                \node[CE] (CE_Dirigir_Medico) at(CC_Dirigir) {NRS};
+                \node[CE, xshift=-4ex, yshift=1.4em] (CE_Atiende_Enfermero) at(CC_Atiende) {NRS\_Enfermero, Turno};
+                \node[CE, xshift=4ex] (CE_Atiende_Paciente) at(CP_Atiende) {NSS};
+
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Enfermero) {$(1)$};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Adscrito_Personal) {$(2)$};
+                \node[yshift=1.4em, xshift=1.6em, purple] at(CE_Adscrito_Servicio) {$(10)$};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Medico) {$(3)$};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Responsable_Enfermero) {$(4)$};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Responsable_Medico) {$(5)$};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Dirigir_Servicio) {$(6)$};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Dirigir_Medico) {$(7)$};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Atiende_Enfermero) {$(8)$};
+                \node[yshift=1.4em, xshift=1.4em, purple] at(CE_Atiende_Paciente) {$(9)$};
+
+                \node[yshift=-1.4em, xshift=2.6em, purple] at(CP_Personal) {$(1,2,3)$};
+                \node[yshift=-1.4em, xshift=1.4em, purple] at(CP_Enfermero) {$(4)$};
+                \node[yshift=-1.4em, xshift=1.8em, purple] at(CP_Medico) {$(5,7)$};
+                \node[yshift=-1.5em, xshift=2em, purple] at(CP_Servicio) {$(6, 10)$};
+                \node[yshift=-1.5em, xshift=1.4em, purple] at(CP_Responsable) {$(8)$};
+                \node[yshift=-1.4em, xshift=1.4em, purple] at(CP_Paciente) {$(9)$};
+
+                % Línea divisoria debajo de todo
+                \draw[dashed] (current bounding box.south west) ++(-0.5em, -1em) -- ++(1.65\linewidth, 0);
+
+                \node(Personal-Adscrito) [below of=responsable, yshift=8em, xshift=4em] {Personal-Adscrito(DNI, NRS, Nombre, Categoría, Título, Código)};
+                \node[CP, xshift=-5.5ex] (CP_Personal-Adscrito) at(Personal-Adscrito) {NRS};
+                \node[CC, xshift=-7ex] (CC_Personal-Adscrito) at(CP_Personal-Adscrito) {DNI};
+                \node[CE, xshift=34ex] (CE_Personal-Adscrito) at(CP_Personal-Adscrito) {Código};
+                \node[yshift=-1.4em, xshift=1.8em, purple] at(CP_Personal-Adscrito) {$(1,3)$};
+                \node[yshift=1.4em, xshift=1.6em, purple] at(CE_Personal-Adscrito) {$(10)$};
+
+                \node(Servicio-Dirigir) [right of=Personal-Adscrito, xshift=14em] {Servicio-Dirigir(Código, Nombre, Ubicación, NRS)};
+                \node[CP, xshift=-5.5ex] (CP_Servicio-Dirigir) at(Servicio-Dirigir) {Código};
+                \node[CC, xshift=28ex] (CC_Servicio-Dirigir) at(CP_Servicio-Dirigir) {NRS};
+                \node[yshift=-1.4em, xshift=1.6em] at(CC_Servicio-Dirigir) {$(*)$};
+                \node[CE](CE_Servicio-Dirigir) at(CC_Servicio-Dirigir) {NRS};
+                \node[yshift=1.4em, xshift=1.6em, purple] at(CE_Servicio-Dirigir) {$(7)$};
+                \node[yshift=-1.4em, xshift=1.6em, purple] at(CP_Servicio-Dirigir) {$(10)$};
+            \end{tikzpicture}
+        }
+        \caption{Esquema Relacional.}
+        \label{fig:esquemaRelacional}
+    \end{figure}
 \end{ejercicio}
 \begin{ejercicio}
     Contestar de forma justificada a la siguiente cuestión: ¿Se permite que un paciente sea atendido varias veces el mismo día?
+
+    Sí, porque la precisión de la fecha en la relación \emph{Atiende} es de hora (e incluso minuto si es necesario), por lo que se permite que un paciente sea atendido varias veces el mismo día.
 \end{ejercicio}
 
 \end{document}
