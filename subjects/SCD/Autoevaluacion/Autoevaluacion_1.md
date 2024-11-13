@@ -1,6 +1,6 @@
 <br>
 
-# SCD. Preguntas para la autoevaluación del Tema 1.
+# SCD. Autoevaluación del Tema 1.
 
 ***
 

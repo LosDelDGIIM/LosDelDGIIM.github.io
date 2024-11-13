@@ -1,6 +1,6 @@
 <br>
 
-# SCD. Preguntas para la autoevaluación del Tema 2.
+# SCD. Autoevaluación del Tema 2.
 
 ***
 
@@ -108,7 +108,7 @@
     - ( ) `libre + num_sc == 2`.
     - ( ) `ocupada == false`.
     - ( ) `num_sc > 1`.
-    - (x) `ocupada == true` cuando hay un proceso en SC..
+    - (x) `ocupada == true` cuando hay un proceso en SC.
 
 15. ¿Qué define la operación `escribir` en un monitor Productor-Consumidor?
     - ( ) Borra el valor compartido.
@@ -148,9 +148,9 @@
 20. ¿Cuál de las siguientes NO es una operación de sincronización en monitores?
     - ( ) `signal_all()`.
     - ( ) `wait()`.
-    - ( )` signal()`.
-    - ( )` queue()`.
-    - (x)` init()`.
+    - ( ) `signal()`.
+    - ( ) `queue()`.
+    - (x) `init()`.
 
 21. ¿Qué sucede en la semántica de Señalar y Salir (SS)?
     - (x) El proceso señalador sale del monitor después de `signal`.
@@ -159,7 +159,7 @@
     - ( ) Todos los procesos son liberado.
     - ( ) Se detiene la ejecución del monitor.
 
-22. ¿Cuál es el propósito de c.signal_all() en un monitor?
+22. ¿Cuál es el propósito de `c.signal_all()` en un monitor?
     - (x) Liberar todos los procesos en la cola de condición.
     - ( ) Reiniciar el monitor.
     - ( ) Bloquear todos los procesos.
