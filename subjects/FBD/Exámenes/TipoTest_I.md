@@ -213,8 +213,8 @@ ______
     - (x) Falso.
 
 40. La actualización de un valor de una llave primaria, que es referenciada por una clave externa CE implica que los valores de las llaves externas también deben cambiarse.
-    - (x) Verdadero.
-    - ( ) Falso.
+    - ( ) Verdadero.
+    - (x) Falso.
 
 41. La regla de integridad de entidad exige que no existan tuplas duplicadas en la relación.
     - ( ) Verdadero.
