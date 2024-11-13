@@ -20,6 +20,8 @@ using namespace scd ;
 
 #ifdef No_INANICION
     const int MAX_LEC = 5;    // Número máximo de lectores consecutivos
+    const int num_lectores = 10;
+    const int num_escritores = 3;
 #endif
 
 /**
@@ -140,7 +142,7 @@ void MonLecEsc::termina_escritura(){
  */
 void duerme(bool escritor){
     if(escritor){
-       this_thread::sleep_for(chrono::milliseconds(aleatorio<2000,2000>()));
+       this_thread::sleep_for(chrono::milliseconds(aleatorio<2000,20000>()));
     }else{
        this_thread::sleep_for(chrono::milliseconds(aleatorio<100,1000>()));
     }
@@ -195,8 +197,6 @@ void escritor(MRef<MonLecEsc> monitor, int id){
 // --------------------------------------------------
 
 int main(int argc, char** argv){
-    int num_lectores = 10;
-    int num_escritores = 3;
 
     thread lectores[num_lectores], escritores[num_escritores];
     MRef<MonLecEsc> monitor = Create<MonLecEsc>();
