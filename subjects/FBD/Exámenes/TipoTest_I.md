@@ -464,7 +464,7 @@ Explicacion:<!-- 85 repetida 85. La elaboración del esquema conceptual es tarea
     - (x) Verdadero.
     - ( ) Falso.
 
-Explicacion: <!-- Repetida. 105. Todas las tablas procedentes de entidades débiles tienen claves externas.    - (x) Verdadero.    - ( ) Falso.-->
+Explicacion: <!-- Repetida en 88. 105. Todas las tablas procedentes de entidades débiles tienen claves externas.    - (x) Verdadero.    - ( ) Falso.-->
 
 106. La clave primaria puede tomar el valor nulo parcialmente.
     - ( ) Verdadero.
@@ -678,3 +678,11 @@ Explicacion:<!-- 152 repetida 152. La regla de integridad de entidad...    - ( )
     - ( ) Del esquema centralizado de SBD.
     - ( ) Solo del esquema centralizado si está implementado de forma distribuida.
     - (x) De la aproximación cliente/servidor.
+
+159. En una jerarquía todas las entidades del conjunto de entidades genérico deben estar en un conjunto de entidades específico.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+160. El principal objetivo de evitar la redundancia en una BD es ahorrar espacio en disco.
+    - ( ) Verdadero.
+    - (x) Falso.
