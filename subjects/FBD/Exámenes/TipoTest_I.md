@@ -143,8 +143,8 @@ ______
     - (x) Falso.
 
 23. El nivel interno debe ser diseñado por el administrador.
-    - (x) Verdadero.
-    - ( ) Falso.
+    - ( ) Verdadero.
+    - (x) Falso.
 
 24. El SGBD debe gestionar los accesos concurrentes de manera que la BD esté siempre libre de errores.
     - (x) Verdadero.
@@ -205,8 +205,8 @@ ______
     - ( ) Falso.
 
 38. La diferencia entre una clave candidata y una primaria es que la candidata puede tomar valores nulos.
-    - ( ) Verdadero.
-    - (x) Falso.
+    - (x) Verdadero.
+    - ( ) Falso.
 
 39. La diferencia entre una clave candidata y una clave primaria es que la candidata no tiene por qué ser minimal.
     - ( ) Verdadero.
@@ -366,9 +366,7 @@ Explicacion:<!--76 repetida 76. La estructura de almacenamiento del nivel intern
     - ( ) Verdadero.
     - (x) Falso.
 
-80. En el modelo relacional el acceso a los datos de una tupla se hace por valor.
-    - (x) Verdadero.
-    - ( ) Falso.
+Explicacion:<!-- 80 repetida 80. En el modelo relacional el acceso a los datos de una tupla se hace por valor. - (x) Verdadero. - ( ) Falso.-->
 
 81. Los SGBD deben proporcionar herramientas específicas de administración.
     - (x) Verdadero.
@@ -409,8 +407,8 @@ Explicacion:<!-- 85 repetida 85. La elaboración del esquema conceptual es tarea
     - (x) Falso.
 
 91. Una clave externa no puede ser nula.
-    - ( ) Verdadero.
-    - (x) Falso.
+    - (x) Verdadero.
+    - ( ) Falso.
 
 92. Los modelos basados en grafos utilizan registros y ficheros como parte del modelo de datos.
     - ( ) Verdadero.
@@ -432,9 +430,7 @@ Explicacion:<!-- 85 repetida 85. La elaboración del esquema conceptual es tarea
     - (x) Verdadero.
     - ( ) Falso.
 
-97. El grado de una relación forma parte del esquema de la base de datos y es invariable frente a las actualizaciones de los datos.
-    - (x) Verdadero.
-    - ( ) Falso.
+Explicacion:<!--97. El grado de una relación forma parte del esquema de la base de datos y es invariable frente a las actualizaciones de los datos.- (x) Verdadero. - ( ) Falso.-->
 
 98. Cuando se diseña una BD es fundamental conocer las características técnicas del servidor sobre el que se va a implantar.
     - ( ) Verdadero.
@@ -449,8 +445,8 @@ Explicacion:<!-- 85 repetida 85. La elaboración del esquema conceptual es tarea
     - (x) Falso.
 
 101. Una entidad que no tiene clave primaria es siempre una entidad débil.
-    - ( ) Verdadero.
-    - (x) Falso.
+    - (x) Verdadero.
+    - ( ) Falso.
 
 102. La forma de implantar la cardinalidad de una relación en un diagrama E/R en una tabla es mediante la correcta elección de las claves candidatas y primarias.
     - (x) Verdadero.
