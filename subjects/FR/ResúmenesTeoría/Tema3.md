@@ -439,12 +439,16 @@ Por esto surgen los distintos flavours.
 
 **Nota:** Estamos suponiendo que todos los errores son por congestión.
 
+### Tipos de flavours de TCP
+#### TCP Tahoe
+El básico, el que hemos visto.
+
 #### TCP Reno
 Siguiente versión a TCP Tahoe.
 
 Distingue ACKs duplicados y timeout:
 - Timeout (no ha llegado nada): Igual que Tahoe.
-- ACKs duplicados (sin timeout, siguen llegando cosasa): paso a la mitad de CW y sigo en prevención de congestión.
+- ACKs duplicados (sin timeout, siguen llegando): paso a la mitad de CW y sigo en prevención de congestión.
 
 ##### TCP NewReno
 Distingue otras situaciones.
@@ -455,14 +459,97 @@ Si el RTT disminuye, aumenta la ventana.
 
 ##### TCP Cubic
 Se usaba en todos los equipos con Windows y Linux hasta hace poco
-Tiene dos ventanas:
+Tiene dos ventanas de congestión:
 - CW --> Depende de ACKs.
 - CW --> Depende de RTT.
 Hace una mezcla de esas dos.
 
 ##### Redes inalámbricas
-No podemos suponer que los errores son debidos a congestión.
+No podemos suponer que los errores son debidos a congestión, ya que se pierden muchos paquetes.
+Surgen versiones especiales para tener en cuenta a la redes inalámbricas.
 TCP Westwood es especial para esto.
 
+### Parte opcional de cabecera TCP
+- Sello de tiempo: Añadir la IP de los routers por los que ha ido pasando.
+- Estimación del RTT.
+
+- Ventana escalada:
+El control de congestión no manda la ventana nunca (ya que es lo que tiene el emisor para sí mismo, con lo que no se manda en el paquete).
+Sin embargo, hay un campo para la ventana de control de flujo: AWDD (o Win), campo de 16 bits que indica el nº de bytes de dicha ventana (16 bits --> máximo 65535 bytes).
+
+throughput = 65535 bytes x 8 bits_por_byte / RTT (suponemos RTT = 10ms = 0.01 s) = 52 Mbps
+Con lo que como tenemos control de flujo (campo limitado a 16 bits), no podemos transmitir con TCP a más de 52 Mbps si tenemos dicho RTT (y la cosa empeora subiendo el RTT).
+
+Para solucionar esto, podemos escalar la ventana: podemos escalar el 2^16 = 65535 bytes por un nº. Este va hasta 14 y multiplica hasta por 2^14.
+De esta forma, de 2^16 pasamos a 2^30. Tenemos 16000 veces dicha velocidad.
+
+# Ejercicios
+## Pregunta 3. (1.5 puntos sobre 10)
+Explique qué condición se debe cumplir entre el tiempo de transmisión, el tiempo de propagación y el tamaño de la ventana de congestión en un emisor TCP para que no haya interrupcción (paradas) en la transmisión.
+
+Nota: Los tiempos de transmisión de los ACKs los despreciamos, así como los tiempos de procesamiento.
+
+En la emisión de dos paquetes:
+Teenemos 2 T_t (tiempo de transmisión), un T_p (tiempo de propagación) y otro T_p de vuelta al emisor, con lo que:
+RTT = 2T_p + 2T_t
+
+Si vamos a transmitir CW paquetes, tardamos en emitiros CW x T_t, con lo que queremos que CW x T_t >= RTT, para no tener interrupcciones.
+Con lo que: CW x T_t >= RTT = 2T_t + 2T_p => CW >= 2 + 2 T_p / T_t
+
+
+Por tanto, obtenemos transmisión continua cuando suceda qu:
+CW >= 2 + 2 T_p / T_t
+
+Si tuviesemos 95% de eficiencia, entonces:
+CW x T_t = 0.95 RTT
+
+## Problema 2. (3 puntos sobre 10) - (Enero 2024)
+Suponga dos entidades TCP A y B con la siguiente configuración: MSS = 1.250 bytes; la ventana de congestión inicial es de 2.500 bytes; el umbral de congesteión está fijado inicialmente a 10.000 bytes. Ambas entidades utilizan TCP Tahoe.
+a) Muestre el diagrama de intercambio de segmentos de TCP que se produciría para que A envíe un fichero de tamaño 60.000 bytes a B. Calcule el tiempo requerido total, considerando que el tiempo de propagación es de 5 ms y la velocidad de transmisión es de 10 Mbps. En el diagrama incluya en cada momento el valor de la ventana de congestión y en qué fase del control de congestión se cuentra el transmisor. SUponga que la ventana del control de flujo es arbitrariamente grande. Explique detalladamente su respuesta.
+b) ¿Cuánto sería el tiempo requerido total si usara UDP? Explique detalladamente su respuesta.
+
+
+El tiempo de establecimiento de llamada podemos suponerlo como 3T_p o 1.5RTT.
+
+Para transmisión continua:
+CW >= 2 + 2T_p/T_t = 12
+
+Como CW = 2 MSS, la ventana la inicio envia 2 paquetes.
+
+Dividimos ráfagas cuando recibe primer ACK.
+Inicio lento:
+- Mando 2 paquetes (lo que permite la ventana)
+- Recibo ACK 1,2. (Ha pasado un RTT). CW = 2 + 2 = 4
+- Mando 4 paquetes (o segmentos).
+- Recibo ACK 3, 4. (Ha pasado un RTT). CW = 4 + 2 = 6      (podríamos mandar 4 = 6-2, pero inmediatamente llega el siguiente)
+- Recibo ACK 5, 6. CW = 6 + 2 = 8. Hemos llegado al umbral, con lo que pasamos a PREVENCIÓN DE CONGESTIÓN.
+- Mando 8 paquetes.
+- Recibo ACK 7, 8.  CW = 8 + 1/8 = 8.  (Ha pasado un RTT)
+- Recibo ACK 9, 10. CW = (8+1/8) + 1/8 = 8.
+- Recibo ACK 11, 12. CW = ... = 8.
+- Recibo ACK 13, 14. CW = ... = 9.
+- Envio 9 paquetes.
+- Recibo primeros 4 ACKs, pero el ACK del 9º espera por ser impar.
+- Puedo transmitir solo 8 paquetes. Se transmiten.
+- El primer paquete cuando llegue manda ACK inmediato (habia uno retrasado). En dicho momento: CW = 9 + 1 = 10. (Ha pasado T_5 = RTT).
+- Recibo 3 más ACKs y se queda uno pendiente.
+- Podemos transmitir (10-1) 9 paquetes, se había quedado uno pendiente.
+- El primer paquete confirma el anterior, con lo que CW = 10 + 1 = 11.
+- Se recibirán 4 ACKs más. En este punto, tenemos todo confirmado. (Ha pasado T_6 = RTT).
+- Podemos transmitir 11, pero sólo faltan 8 para llegar a 48.
+- Confirmamos los 8 con 4 ACKS. (Ha pasado T_7 = RTT + 3x2xT_t (3x2T_t es el tiempo en recibir los 3 ACKs. Un ACK tarda 2T_t en enviarse (por recibir 2 paquetes)))
+
+Por tanto, el tiempo total es: ... = 113ms. 
+
+UDP: 48 T_t + T_p = 53ms
+
+## Ejercicio 2.  (2 puntos sobre 10) - (Enero 2022)
+Suponga dos entidades TCP A y B con la siguiente configuración: MSS = 2KB; tamaño del buffer en recepción 10 KB; la aplicación receptora consume 4KB cada vez que acumula 6KB o más en el buffer; la ventana de congestión empiza siendo 1 MSS; el umbral de congestión está fijado inicialmente en 8 KB.
+Muestre el diagrama de intercambio de segmentos TCP que se produciría para que A envíe un fichero de tamaño 24 KB a B. Calcule el tiempo requerido, considerando que el tiempode propagación es 20 ms. El tiempo de transmisión es despreciable.
+
+
+Comprobación de transmisión continua (HACE FALTA COMPROBARLO SIEMPRE), esto es, que se comporta "similar" a UDP:
+CW >= 2 + 2T_p/T_t. Como T_t = 0, entonces eso --> infinito. 
+Por tanto, nunca vamos a tener transmisión continua.
 
 
