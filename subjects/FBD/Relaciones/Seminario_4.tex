@@ -60,7 +60,7 @@
         \end{itemize}
         \item Marca de los vehículos matriculados después del $1/1/20$.
         \begin{equation*}
-            \pi_{\text{marca}}(\sigma_{\text{fecha\_matriculación} > 1/1/20}(\text{Vehículo}) \bowtie \text{Modelo})
+            \pi_{\text{marca}}(\sigma_{\text{fecha\_matriculación} > \text{fecha}(1/1/20)}(\text{Vehículo}) \bowtie \text{Modelo})
         \end{equation*}
         \item Parejas $\langle \text{cargo}, \text{marca} \rangle$ entre las que se ha dado alguna reparación.
         \begin{align*}
@@ -71,17 +71,32 @@
         \end{align*}
         \item Vehículos que o tienen una fecha de matriculación posterior al $1/1/22$ o han sido reparados con posterioridad a esa misma fecha.
         \begin{multline*}
-            \sigma_{\text{fecha\_matriculación} > 1/1/22}(\text{Vehículo}) \cup\\ \cup \pi_{\text{matrícula},\text{id\_modelo}, \text{fecha\_matriculación}}(\text{Vehículo}\bowtie \sigma_{\text{fecha}>1/1/22}(\text{Repara}))
+            \sigma_{\text{fecha\_matriculación} > \text{fecha}(1/1/22)}(\text{Vehículo}) \cup\\ \cup \pi_{\text{matrícula},\text{id\_modelo}, \text{fecha\_matriculación}}(\text{Vehículo}\bowtie \sigma_{\text{fecha}>\text{fecha}(1/1/22)}(\text{Repara}))
         \end{multline*}
         \item Vehículos con fecha de matriculación posterior al $1/1/22$ que han sido reparados alguna vez.
         \begin{multline*}
-            \sigma_{\text{fecha\_matriculación} > 1/1/22}(\text{Vehículo}) \cap\\ \cap \pi_{\text{matrícula},\text{id\_modelo}, \text{fecha\_matriculación}}(\text{Vehículo}\bowtie \text{Repara})
+            \pi_{\text{matrícula},\text{id\_modelo}, \text{fecha\_matriculación}}(\sigma_{\text{fecha\_matriculación} > \text{fecha}(1/1/22)}(\text{Vehículo})\bowtie \text{Repara})
         \end{multline*}
         \item Marca de los vehículos que no han tenido ninguna reparación en el año $2022$.
         \begin{multline*}
-            \pi_{\text{marca}}[(\text{Vehículo} - \pi_{\text{matrícula},\text{id\_modelo}, \text{fecha\_matriculación}}(\text{Vehículo} \bowtie \sigma_{\text{fecha}=2022}(\text{Repara})))\bowtie\\\bowtie \text{Modelo}]
+            \pi_{\text{marca}}[(\text{Vehículo} - \pi_{\text{matrícula},\text{id\_modelo}, \text{fecha\_matriculación}}(\text{Vehículo} \bowtie\\\bowtie \sigma_{\text{fecha}(01/01/22) \leq \text{fecha}\leq \text{fecha}(31/12/22)}(\text{Repara})))\bowtie \text{Modelo}]
         \end{multline*}
         \item Código de los mecánicos que han reparado vehículos de, al menos, dos marcas distintas.
+        
+        Obtenemos en primer lugar todas las parejas de mecánicos con las marcas de los vehículos que han reparado; es decir:
+        \begin{equation*}
+            \rho\left(\pi_{\text{id\_mecánico},\text{marca}}(\text{Repara}\bowtie \text{Vehículo}\bowtie \text{Modelo})\right) = A
+        \end{equation*}
+
+        Usando además $\rho(A)=B$ para reducir la notación, la consulta sería:
+        \begin{equation*}
+            \pi_{\text{id\_mecánico}}\left(\sigma_{A.\text{marca} \neq B.\text{marca}}(A \bowtie B)\right)
+        \end{equation*}
+
+        Notamos que, usando el operador de reunión normal, la consulta también se puede poner como:
+        \begin{equation*}
+            \pi_{\text{id\_mecánico}}\left(A \bowtie_{A.\text{id\_mecánico} = B.\text{id\_mecánico} \land A.\text{marca} \neq B.\text{marca}} B\right)
+        \end{equation*}
         \item Vehículos que tienen una sola reparación.
         \item Vehículos que han sufrido las reparaciones con la duración más alta.
         \item Mecánicos que tienen el salario más bajo.
