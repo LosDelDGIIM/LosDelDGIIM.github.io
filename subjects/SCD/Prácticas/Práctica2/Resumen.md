@@ -52,8 +52,8 @@ int ProdConsLIFO::leer(){
    if(indice == 0)
       buffer_vacio.wait();
       
-   int dato = buffer[indice];
    indice--;
+   int dato = buffer[indice];
    
    buffer_lleno.signal();
    
