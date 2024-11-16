@@ -166,8 +166,8 @@ Monitor ProdCons;
        
        {En este punto, primera_libre > 0}
        
-       result := buffer[primera_libre];
        primera_libre--;
+       result := buffer[primera_libre];
        
        {En este punto, primera_libre < k}
        
