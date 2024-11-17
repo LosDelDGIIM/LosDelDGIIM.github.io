@@ -97,7 +97,6 @@
             \pi_{\text{id\_mecánico}}\left(\sigma_{A.\text{marca} \neq B.\text{marca}}(A \bowtie B)\right)
         \end{equation*}
 
-        % // TODO: Me he quedado aquí
         \item Vehículos que tienen una sola reparación.
         
         Buscamos en primer lugar los vehículos con más de una reparación.
@@ -111,40 +110,44 @@
         \end{align*}
         Notemos que tras proyectar habríamos llegado a la misma tabla estableciendo solo $\neq$ en vez de $>$, pero usamos $>$ ya que así obtenemos la mitad de las tuplas antes de proyectar.
 
-        Por tanto, la consulta sería:
+        Por tanto, en $C$ tenemos las matrículas de los coches que tienen más de una reparación.
+        Por tanto, las matrículas de los vehículos que tienen una sola reparación serían:
         \begin{equation*}
-            \pi_{\text{matrícula},\text{id\_modelo},\text{fecha\_matriculación}}(\text{Vehículo}\bowtie C)
+            \pi_{\text{matrícula}}(\text{Repara})-C
         \end{equation*}
 
 
         \item Vehículos que han sufrido las reparaciones con la duración más alta.
         
         Este caso es obtener un máximo, algo que es muy común en álgebra relacional. Obtener el máximo no es fácil,
-        pero podemos obtener los que \emph{no} cumplen la condición de el máximo.
+        pero podemos obtener los que \emph{no} cumplen la condición de ser el máximo.
         \begin{align*}
             & \rho(\text{Repara}) = A,B \\
-            & \rho\left[\sigma_{A.\text{número\_horas} < B.\text{número\_horas}}(A \times B)\right] = C
-            & \rho(\pi_{\text{A.\text{número\_horas}}}(C)) = D
+            & \rho\left[\sigma_{A.\text{número\_horas} < B.\text{número\_horas}}(A \times B)\right] = C \\
+            & \rho(\pi_{A.\text{\text{número\_horas}}}(C)) = D
         \end{align*}
 
-        Por tanto, tenemos que en $D$ obtenemos los que no son el máximo, y por tanto, la duración más alta:
+        Por tanto, en $D$ obtenemos los valores de $\emph{número\_horas}$ para los que hay otro valor que es mayor; es decir,
+        los que no son el máximo. Por tanto, los que son el máximo son:
         \begin{equation*}
             \pi_{\text{número\_horas}}(\text{Repara})-D
         \end{equation*}
 
-        Por tanto, los vehículos que han sufrido las reparaciones con la duración más alta serían:
+        Con esa consulta tan solo hemos obtenido el máximo del atributo \emph{número\_horas}, pero ahora necesitamos obtener los vehículos
+        que corresponden con esas reparaciones. Estos son:
         \begin{equation*}
-            \pi_{\text{matrícula}}(\text{Repara}\bowtie D)
+            \pi_{\text{matrícula}}(\text{Repara}\bowtie (\pi_{\text{número\_horas}}(\text{Repara})-D))
         \end{equation*}
         \item Mecánicos que tienen el salario más bajo.
         
         En primer lugar, obtenemos los que no son candidatos a mínimo:
         \begin{align*}
             & \rho(\text{Mecánico}) = A,B\\
-            & \rho\left[\sigma_{A.\text{salario} > B.\text{salario}}(A \times B)\right] = C
+            & \rho\left[\sigma_{A.\text{salario} > B.\text{salario}}(A \times B)\right] = C\\
             & \rho(\pi_{\text{B.\text{salario}}}(C)) = D
         \end{align*}
 
+        En $D$, obtenemos los salarios que no son el mínimo, ya que hay otro salario menor.
         Por tanto, el salario mínimo es:
         \begin{equation*}
             \pi_{\text{salario}}(\text{Mecánico})-D
@@ -152,18 +155,164 @@
 
         Por tanto, los mecánicos que tienen el salario más bajo son:
         \begin{equation*}
-            \pi_{\text{id\_mecánico}}(\text{Mecánico}\bowtie D)
+            \pi_{\text{id\_mecánico}}(\text{Mecánico}\bowtie (\pi_{\text{salario}}(\text{Mecánico})-D))
         \end{equation*}
         \item Mecánicos cuyo salario es uno de los dos salarios más bajos.
         
-        % Lo ha hecho Daniel amigo Marta Palomar
+        Este apartado es similar al anterior, solo que hemos de repetir el procedimiento dos veces.
+        Sea $A$ la relación que contiene el resultado de la consulta anterior, es decir, los mecánicos con el salario más bajo.
+        Consideramos ahora el resto de mecánicos:
+        \begin{align*}
+             rho(\text{Mecánico}-(\text{Mecánico}\bowtie A)) = C,D
+        \end{align*}
+
+        Por tanto, a esta nueva lista de mecánicos que no tienen el salario mínimo, le aplicamos el mismo procedimiento que en el apartado anterior para obtener 
+        los mecánicos con el segundo salario más bajo.
+        \begin{align*}
+            & \rho\left[\sigma_{C.\text{salario} > D.\text{salario}}(C \times D)\right] = E\\
+            & \rho(\pi_{\text{C.\text{salario}}}(E)) = F
+        \end{align*}
+
+        Por tanto, el segundo salario más bajo es:
+        \begin{equation*}
+            \pi_{\text{salario}}(C)-F
+        \end{equation*}
+
+        Por tanto, los mecánicos cuyo salario es el segundo más bajo son:
+        \begin{equation*}
+            \pi_{\text{id\_mecánico}}(C\bowtie (\pi_{\text{salario}}(C)-F))
+        \end{equation*}
+
+        Por tanto, los mecánicos cuyo salario es uno de los dos salarios más bajos son:
+        \begin{equation*}
+            A\cup \pi_{\text{id\_mecánico}}(C\bowtie (\pi_{\text{salario}}(C)-F))
+        \end{equation*}
+
         \item Vehículos que han sido reparados alguna vez por cada uno de los mecánicos.
+        
+        Vemos que se trata de una consulta de división.
+        Sean los siguientes alias:
+        \begin{align*}
+            & \rho\left(\pi_{\substack{\text{matrícula}\\\text{id\_mecánico}}}(\text{Repara})\right) = R\\
+            & \rho(\pi_{\text{id\_mecánico}}(\text{Mecánico})) = S
+        \end{align*}
+
+        La consulta sería:
+        \begin{equation*}
+            R \div S
+        \end{equation*}
+
+        Esta consulta devuelve una instancia $w$ de la relación $W[\text{matrícula}]$ que cumple que,
+        para cada $u\in w$, $v\in s$ instancia de $S$, si $r$ es una instancia de $R$ se tiene:
+        \begin{equation*}
+            \exists t\in r\mid t[\text{matrícula}] = u \land t[\text{id\_mecánico}] = v
+        \end{equation*}
+        Es decir, contiene las matrículas de los coches que han sido reparados por todos los mecánicos.
+        
+
         \item Mecánicos que han reparado vehículos de todas las marcas.
+        
+        Obtenemos en primer lugar el par $\langle \text{id\_mecánico}, \text{marca} \rangle$ de los vehículos que ha reparado cada mecánico.
+        \begin{equation*}
+            \rho\left(\pi_{\text{id\_mecánico},\text{marca}}(\text{Repara}\bowtie \text{Vehículo}\bowtie \text{Modelo})\right) = R
+        \end{equation*}
+
+        El divisor sería la relación que contiene todas las marcas posibles.
+        \begin{equation*}
+            \rho(\pi_{\text{marca}}(\text{Modelo})) = S
+        \end{equation*}
+
+        Por tanto, la consulta sería:
+        \begin{equation*}
+            R \div S
+        \end{equation*}
+
         \item Vehículos a los que el mecánico de id $123$ les ha hecho todas las reparaciones.
+        
+        De todas las reparaciones, no consideramos aquellas que han sido realizadas otro mecánico:
+        \begin{equation*}
+            \pi_{\text{matrícula}}(\text{Repara}) - \pi_{\text{matrícula}}(\sigma_{\text{id\_mecánico} \neq 123}(\text{Repara}))
+        \end{equation*}
         \item Marcas para las que todos sus vehículos han sido reparados alguna vez por un empleado con un salario superior a $30000$.
+        
+        De todas las marcas, no consideramos aquellas para las cuales hay un vehículo de
+        esa marca que, o bien no ha sido reparado, o ha sido reparado por un mecánico con salario inferior a $30000$.
+        Obtenemos por tanto en primer lugar los
+        vehículos que no han sido reparados y los que han sido reparados por mecánicos con salario inferior a $30000$.
+        \begin{align*}
+            &\rho(\pi_{\text{matrícula}}(\text{Vehículo}) - \pi_{\text{matrícula}}(\text{Repara})) = A\\
+            &\rho(\pi_{\text{matrícula}}(\text{Repara} \bowtie \sigma_{\text{salario} \leq 30000}(\text{Mecánico}))) = B
+        \end{align*}
+        En $A$ están los vehículos que no han sido reparados, y en $B$ los que han sido reparados por mecánicos con salario inferior a $30000$.
+        Por tanto, las marcas que cumplen la condición son:
+        \begin{equation*}
+            \pi_{\text{marca}}(\text{Modelo}) - \pi_{\text{marca}}(\text{Modelo}\bowtie \text{Vehículo}\bowtie (A \cup B))
+        \end{equation*}
+
+        \begin{observacion}
+            En este caso, el enunciado puede llevar a pensar que se trata de una consulta de división, pero no es así porque no se trata de todos los vehículos, sino de todos los vehículos de una marca.
+        \end{observacion}
+
         \item Vehículos que, para todos los cargos que hay en la empresa, han tenido al menos una reparación de más de $2$ horas de duración con un empleado de ese cargo.
+        
+        El dividendo $R$ ha de ser los vehículos que han tenido al menos una reparación de más de $2$ horas, con el cargo del mecánico que ha realizado la reparación.
+        \begin{equation*}
+            \rho\left(\pi_{\text{matrícula},\text{cargo}}(\sigma_{\text{número\_horas} > 2}(\text{Repara}\bowtie \text{Mecánico}))\right) = R
+        \end{equation*}
+
+        El divisor $S$ sería la relación que contiene todos los cargos posibles.
+        \begin{equation*}
+            \rho(\pi_{\text{cargo}}(\text{Mecánico})) = S
+        \end{equation*}
+
+        Por tanto, la consulta sería:
+        \begin{equation*}
+            R \div S
+        \end{equation*}
+
         \item Marcas para las que todos sus vehículos han sido reparados alguna vez por el mismo mecánico.
+        
+        De nuevo, como no se trata de \emph{todos los vehículos} sino de \emph{todos los vehículos de una marca}, no se trata de una consulta de división.
+        % // TODO: Completar
         \item Mecánico más joven que ha reparado vehículos de todas las marcas.
+        
+        \begin{observacion}
+            Para esto, supondremos que la tabla \emph{Mecánico} tiene un atributo \emph{fecha\_nacimiento}.
+        \end{observacion}
+        
+        Obtengamos los mecánicos que han reparado vehículos de todas las marcas.
+        \begin{equation*}
+            \rho\left(\pi_{\text{id\_mecánico},\text{marca}}(\text{Repara}\bowtie \text{Vehículo}\bowtie \text{Modelo})\right) = R
+        \end{equation*}
+
+        El divisor sería la relación que contiene todas las marcas posibles.
+        \begin{equation*}
+            \rho(\pi_{\text{marca}}(\text{Modelo})) = S
+        \end{equation*}
+
+        Por tanto, los mecánicos que han reparado vehículos de todas las marcas son:
+        \begin{equation*}
+            \rho(\pi_{\text{id\_mecánico}}(R \div S))=C
+        \end{equation*}
+
+        Obtenemos ahora el mecánico más joven de entre estos. Para ello,
+        obtenemos en primer lugar los mecánicos que no son candidatos a ser el más joven.
+        \begin{align*}
+            & \rho(\text{Mecánico}\bowtie C) = A,B\\
+            & \rho\left[\sigma_{A.\text{fecha\_nacimiento} < B.\text{fecha\_nacimiento}}(A \times B)\right] = D\\
+            & \rho(\pi_{\text{A.\text{fecha\_nacimiento}}}(D)) = E
+        \end{align*}
+        Por tanto, en $E$ tenemos las fechas de nacimiento de los mecánicos de $C$ que no son el más joven.
+        Por tanto, la fecha de nacimiento del mecánico más joven es:
+        \begin{equation*}
+            \pi_{\text{fecha\_nacimiento}}(C)-E
+        \end{equation*}
+
+        Por tanto, los mecánicos más jóvenes que han reparado vehículos de todas las marcas son:
+        \begin{equation*}
+            \pi_{\text{id\_mecánico}}(C\bowtie (\pi_{\text{fecha\_nacimiento}}(C)-E))
+        \end{equation*}
+
     \end{enumerate}
 
 \end{ejercicio}
