@@ -1,0 +1,254 @@
+\chapter{Sistemas basados en paso de mensajes}
+
+A continuación, dejaremos de estudiar los sistemas en los que disponemos de diversos procesadores que disponen de una memoria compartida común para centrarnos en aquellos sistemas que no disponen de esta facilidad (a los que llamaremos \textit{sistemas distribuidos}), algo que complicará el desarrollo de programas para estos sistemas, ya que solo podremos sincronizar a los distintos procesadores que intervengan en un programa mediante paso de mensajes, los cuales podrán estar implementados bajo distintas semánticas, que serán estudiadas a lo largo de este Capítulo.
+
+\section{Introducción a la programación distribuida}
+Como motivación para justificar la existencia de la programación distribuida, veamos el problema del \textit{cuello de botella de Von Neumann}.\\
+
+Para Von Neumann, un computador clásico asume que las instrucciones de un programa son enviadas desde una unidad de memoria central hasta la Unidad de Central de Procesamiento (o CPU), a través de un bus de interconexión entre estos dos elementos. Nos encontramos con el problema de que las instrucciones que realizan operaciones sobre datos en memoria utilizan este mismo bus para modificar o consultar datos de la misma, con lo que usamos el mismo bus para dos fines distintos: leer instrucciones a ejecutar y ejecutar instrucciones relativas a operaciones en memoria.\\
+
+Resulta que si queremos una mayor velocidad en la ejecución de las instrucciones por parte de una CPU, este sobre uso del bus limita el rendimiento de la computación, con lo que resulta en un cuello de botella en la aceleración de los sistemas secuenciales.\\
+
+Si consideramos ahora la programación paralela, ya no tendremos un solo flujo de ``trozos de programa''  que se envían desde la memoria a la CPU para su ejecución, sino múltiples flujos de los mismos de forma que cada flujo acabe en un procesador distinto para su ejecución al mismo tiempo.
+
+La programación paralela no soluciona el cuello de botella de Von Neumann, pero sí proporciona una aceleración a los programas con respecto a su implementación secuencial análoga, consiguiendo una aceleración ideal de tiempo $n$ si la versión paralela la ejecutamos en $n$ procesadores.\\
+
+Además, la programación paralela presenta varias ventajas frente a la programación secuencial:
+\begin{itemize}
+    \item Los programas paralelos necesitan menos tiempo de ejecución.
+    \item Es más barato el hardware necesario para un programa paralelo en el caso que queramos que tanto un programa paralelo como uno secuencial se ejecuten a la misma velocidad.
+    \item La programación parelala hace menos grave la limitación de velocidad debida al bus entre la memoria y la CPU\@.
+\end{itemize}
+
+Sin embargo, no todo en programación paralela son ventajas, sino que también debemos aprender a programar según un nuevo paradigma, el cual introduce grandes dificultades a la hora de realizar la depuración de los programas.
+
+\subsection{Multiprocesamiento}
+Antes de seguir con la lectura de esta sección, recomendamos la lectura (si no se ha hecho ya) del capítulo de ``Arquitecturas Paralelas'' de los apuntes de Arquitectura de Computadores.\\
+
+El \textit{multiprocesamiento} consiste en la utilización de un sistema con dos o más unidades de procesamiento (a las que llamaremos \textit{procesadores}) para ejecutar los programas de una misma aplicación. Desde el punto de vista del sistema, debemos tener la capacidad de gestionar más de un procesador al mismo tiempo, de forma que reasignemos las tareas entre los procesadores durante la ejecución de los programas; así como poder sincronizar los procesadores para realizar determinadas tareas.\\
+
+Desde el punto de vista del modelo de ejecución de instrucciones de un programa, los procesadores pueden utilizarse para ejecutar una o varias secuencias de instrucciones sobre uno o varios flujos de datos, con lo que es natural clasificar a los sistemas de multiprocesamiento según estas capacidades:
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|}
+    \hline
+    & Instrucción única & Múltiples instrucciones \\
+    \hline
+    Datos únicos & SISD & MISD \\
+    \hline
+    Múltiples datos & SIMD & MIMD \\
+    \hline
+\end{tabular}
+\caption{Taxonomía de Flynn.}
+\end{table}
+De esta forma:
+\begin{itemize}
+    \item El modelo SISD es el modelo de computador que sigue la programación secuencial.
+    \item El modelo SIMD permite que los procesadores se sincronicen para realizar la misma instrucción en contextos distintos de memoria, lo que nos permite, por ejemplo, el procesamiento paralelo de vectores de datos\footnote{Algo ya visto en Arquitectura de Computadores.}.
+    \item El modelo MISD permite realizar múltiples instrucciones sobre un mismo conjunto de datos. Posee pocas ventajas y resulta caro de implementar.
+    \item Finalmente, en MIMD podemos dividir un mismo programa en múltiples hilos de ejecución, cada uno de los cuales con su propio estado de procesador y memoria a usar.
+\end{itemize}
+Este último tipo de sistema multiprocesador presenta dos grandes familias de computadores cuyas diferencias pasaremos a comentar:
+
+\subsubsection{Multiprocesadores}
+Un multiprocesador es un computador con muchos procesadores individuales, con la ventaja de que hay una parte de la memoria principal que es común a todos los procesadores.
+
+Este tipo de computadores cuenta con un problema principal, que es la falta de escalabilidad, ya que si en algún momento queremos añadir más procesadores al sistema con el objetivo de solucionar problemas de mayor tamaño, no podremos introducir más memoria principal compartida.\\
+
+Además, el hardware necesario para que los diferentes procesadores accedean a una zona de memoria común es muy caro, ya que hace falta una interconexión muy rápida entre esta y todos los multiprocadores, si no queremos perder la ganancia que hemos ganado al pasar de un sistema uniprocesador a este.
+
+\subsubsection{Multicomputadores}
+Un multicomputador es un sistema con múltiples procesadores de forma que cada uno de ellos tiene una memoria principal independiente, con lo que no existirá una memoria común a todos ellos, sino un sistema de interconexión entre todos los procesadores, que nos permita el paso de mensajes entre estos.\\
+
+Soluciona el problema de escalabilidad de los multiprocesadores, ya que si queremos introducir más procesadores al sistema, será necesario con introducir el procesador junto con su memoria principal y conectarlo al sistema de interconexión.\\
+
+Sin embargo, ya no disponemos de herramientas para la sincronización entre los distintos procesadores (que es de lo que trataba el Capítulo anterior), sino que tendremos que idear nuevas estrategias de sincronización basadas en paso de mensajes, lo que hace a la programación de multicomputadores más difícil que la de multiprocesadores, cuya sincronización se resuelve con el uso de monitores.\\
+
+\noindent
+De esta forma, como principales inconvenientes a la programación paralela y distribuida, tenemos que:
+\begin{itemize}
+    \item Necesitamos aprender un nuevo paradigma de programación que no esté basado en memoria compartida, sino en paso de mensajes.
+    \item La depuración de estos programas se vuelve en una tarea casi imposible, al no disponer de una herramienta que nos pueda mostrar en cada instante la memoria de cada procesador, el estado del procesador y las operaciones que se suceden en el sistema de interconexión.
+\end{itemize}
+
+\subsection{Multiprogramación SPMD}
+El modelo que usaremos\footnote{También podemos encontrar el modelo MPMD, donde por cada procesador que intervenga en el problema a resolver deberemos crear un programa distinto que se ejecutará sobre dicho procesador. Podemos encontrar además modelos mixtos entre SPMD y MPMD\@.} para programar multicomputadores es el conocido SPMD (\textit{Single Program Multiple Data}), que se encuentra como una solución intermedia entre SIMD y MIMD, de forma que el código que ejecutan los procesos en cada uno de los procesadores es el mismo (es el mismo programa), pero este se ejecuta sobre conjuntos distintos de datos, es decir, cada programa será ejecutado sobre la memoria de cada procesador.\\
+
+Como características a destacar de SPMD:
+\begin{itemize}
+    \item Es una variante del modelo general de MIMD de Flynn.
+    \item No se necesita una arquitectura especial del computador (como sí sucede en SIMD, con la necesidad de disponer de instrucciones vectoriales).
+    \item Los procesadores ejecutan el mismo programa pero de forma independiente.
+\end{itemize}
+
+Tras la compilación y antes de la ejecución de los programas SPMD, dispondremos de un índice que asociaremos a cada uno de los procesadores, con el fin de identificarlos unívocamente. De esta forma, no todos ejecutarán las mismas instrucciones, pero sí el mismo programa, ya que podremos tener instrucciones condicionadas a dicho índice, lo que nos permitirá especializar trozos de código para un procesador en concreto.
+
+\begin{ejemplo}
+    Como un primer ejemplo muy primitivo de programación en SPMD, podemos pensar que trabajamos con 3 procesadores, de forma que a cada uno asignemos una de las siguientes identidades: cliente, trabajador 1 o trabajador 2.
+    \begin{itemize}
+        \item El valor de las variables \verb|a|, \verb|b| y \verb|c| definidas en el cliente puede ser leído por un trabajador, pero no modificado.
+        \item Las variables \verb|d|, \verb|e| y \verb|f| de los trabajadores pueden ser leídas y cambiadas por el cliente.
+    \end{itemize}
+    El cliente puede acceder a las variables de los trabajadores, distinguiendo entre el trabajador 1 y el 2 con un índice entre llaves. La función \verb|rank| devuelve para cada procesador su índice asociado. Todos los procesos se sincronizan en la marca \verb|spmd|, de forma que el código que se encuentra dentro de este tipo de bloque es ejecutado en todos los nodos (procesadores).
+
+    \begin{table}
+    \centering
+    \begin{tabular}{|l|ccc|ccc|ccc|}
+        \hline
+        Código & \multicolumn{3}{c|}{Cliente} & \multicolumn{3}{c|}{Trab. 1} & \multicolumn{3}{c|}{Trab. 2} \\
+               & \verb|a| & \verb|b| & \verb|c| & \verb|d| & \verb|e| & \verb|f| & \verb|d| & \verb|e| & \verb|f| \\
+        \hline
+        \verb|a = 3;| & 3 & - & - & - & - & - & - & - & - \\
+        \verb|b = 4;| & 3 & 4 & - & - & - & - & - & - & - \\
+        \verb|spmd| &   &   &   &   &   &   &   &   &   \\
+        \verb|d = rank();| & 3 & 4 & - & 1 & - & - & 2 & - & - \\
+        \verb|e = d + a;| & 3 & 4 & - & 1 & 4 & - & 2 & 5 & - \\
+        \verb|end| &   &   &   &   &   &   &   &   &   \\
+        \verb|c = a + e{1};| & 3 & 4 & 7 & 1 & 4 & - & 2 & 5 & - \\
+        \verb|d{2} = 5;| & 3 & 4 & 7 & 1 & 4 & - & 5 & 5 & - \\
+        \verb|spmd| &   &   &   &   &   &   &   &   &   \\
+        \verb|f = d * b;| & 3 & 4 & 7 & 1 & 4 & 4 & 5 & 5 & 20 \\
+        \verb|end| &   &   &   &   &   &   &   &   &    \\
+        \hline
+    \end{tabular}
+    \caption{Ejemplo de programa SPMD.}
+    \end{table}
+\end{ejemplo}
+
+\section{Semántica de las operaciones de paso de mensajes}
+Como hemos comentado anteriormente, en los multicomputadores no dispondremos de una memoria común a todos los procesadores, pero sí de un sistema de interconexión de todos los procesadores que nos permita comunicarlos mediante mensajes con el fin de sincronizarlos.\\
+
+Tendremos, por tanto, dos operaciones de comunicación principales para trabajar con los mensajes: las funciones \verb|send| y \verb|receive|.\\
+
+El significado (o semántica) de dichas operaciones puede ser diferentes, es decir, el resultado de su ejecución puede variar dependiendo de su implementación. Sin embargo, podemos clasificar el tipo de operaciones \verb|send| y \verb|receive| que nos podemos encontrar en relación a si estas cumplen o no la propiedad de seguridad y según el modo de comunicación de las mismas:
+
+\begin{description}
+    \item [Propiedad de seguridad.]~\\
+        Decimos que la propiedad de seguridad en el paso de mensajes se cumple en un programa con la operación \verb|send| cuando la ejecución de esta garantiza que el valor recibido por el destinatario sea el valor que tenían los datos antes de la llamada.
+
+        Sin embargo, una operación \verb|send| que no cumpla la propiedad de seguridad (sea insegura) podría ocasionar que el valor recibido por el otro proceso no coincida con el valor de los datos antes de la llamada. Por ejemplo, como resultado de modificar los datos tras realizar dicha llamada pero antes de que el sistema comience a transmitir el valor de dichos datos.
+    \item [Modo de comunicación de las operaciones con paso de mensajes.]~\\
+        Podemos encontrarnos con:
+        \begin{itemize}
+            \item Operaciones bloqueantes (o síncronas).
+            \item Operaciones no bloqueantes (o asíncronas).
+        \end{itemize}
+\end{description}
+
+\subsection{Operaciones bloqueantes}
+La semántica de este tipo de operaciones de paso de mensajes quiere decir que la operación \verb|send| solo volverá cuando se garantice la propiedad de seguridad anteriormente vista. Es decir, la operación \verb|send| terminará cuando se haya transmitido en mensaje, con lo que la alteración de alguno de los valores que intervienen en el mensaje no modificará a su vez su valor dentro del mensaje. Cuando la operación \verb|send| termine, no podemos asegurar que el receptor haya recibido el mensaje, sino solo que este se ha mandado de forma segura.\\
+
+Encontramos diferentes tipos de operaciones bloqueantes, en relación a su modo de comunicación (si hay un buffer intermedio o si no) y a si hay un hardware especializado o si no:
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|c|}
+    \hline
+    Modo de comunicación & Hardware especializado & Sincronización & Seguridad \\
+    \hline
+    Sin buffer & - & Sí (con ``citas'') & Sí \\
+    \hline
+    \multirow{2}{*}{Con buffer} & Sí & Relajada & Sí \\
+    \cline{2-4}
+    & No & Sí & Sí \\
+    \hline
+\end{tabular}
+\caption{Tipos de operaciones bloqueantes.}
+\end{table}
+
+\subsubsection{Paso de mensajes sin buffer}
+Si no disponemos de un buffer intermedio para la comunicación, esta se lleva a cabo mediante un enlace directo entre los dos procesos que participan. Antes de que los datos se transmitan de forma física, ambos procesos han de estar preparados para realizar el intercambio, lo cual exige una \textit{cita} entre el emisor y el receptor. Es decir:
+\begin{itemize}
+    \item Si el emisor ejecuta la función \verb|send| antes de de que el receptor haya ejecutado \verb|receive|, el emisor ha de bloquearse hasta que termine la transmisión de los datos (es decir, hasta que el receptor complete la ejecución de \verb|receive|).
+    \item Si el receptor ejecuta la función \verb|receive| antes de que el emisor haya ejecutado \verb|send|, el receptor ha de bloquearse hasta que el emisor haya ejecutado \verb|send| y disponga de los datos.
+\end{itemize}
+Por tanto, el mecanismo de \textit{citas} implica:
+\begin{itemize}
+    \item Sincronización entre el emisor y el receptor para que se produzca el intercambio.
+    \item La posibilidad de que el emisor realice asertos acerca del estado del receptor en el punto de sincronización, lo que permitiría extender el sistema de verificación la \textit{Lógica de Programas} a los sistemas distribuidos con este modo de comunicación.
+\end{itemize}
+Aunque este sistema proporciona a los programas un tipo de comunicación que respeta la semántica de seguridad, suele ser una implementación ineficiente, ya que cada vez que se ejecute un \verb|send| o \verb|receive|, probablemente se tendrá que esperar una cantidad de tiempo no despreciable.\\
+
+Además, este modelo puede llevar a una situación de interbloqueo entre dos o más procesos:
+\begin{figure}[H]
+    \centering
+\setlength{\columnsep}{1cm}
+\begin{multicols}{2}
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        Process P0;
+        var x0;
+        begin
+           send(#&#dato1, P1);
+           receive(#&#x0, P1);
+        end
+    \end{minted}
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        Process P1;
+        var x1;
+        begin
+           send(#&#dato2, P0);
+           receive(#&#x1, P0);
+        end
+    \end{minted}
+\end{multicols}
+\caption{Situación de interbloqueo en el mecanismo de citas.}    
+\end{figure}
+Donde \verb|P0| debe esperar a que \verb|P1| realice el \verb|receive| asociado a \verb|dato1|, mientras que \verb|P1| debe esperar a que \verb|P0| realice el \verb|receive| asociado a \verb|dato2|.
+
+\subsubsection{Paso de mensajes con buffer}
+En este tipo de paso de mensajes, la operación \verb|receive| posee la misma semántica que en el caso anterior, ya que no es lógico que esta termine cuando todavía el otro proceso no ha ejecutado el \verb|send| correspondiente, con lo que hay que esperar a que ejecute dicha función y que además se reciba el mensaje completamente.\\
+
+Lo que cambia, por tanto, en este tipo de mensajes es la operación \verb|send|. Como el medio de comunicación entre los procesos no es ahora un enlace directo si no una cola de mensajes gracias al buffer intermedio, esta operación \verb|send| no debe ya esperar a la ejecución de la instrucción \verb|receive| en el receptor, sino solo de la copia del mensaje enviado en el buffer intermedio.
+
+En el caso en el que dicho buffer se encuentre lleno, se deberá esperar a que se libere un mensaje, con lo que en dicho caso, la situación es totalmente análoga al mecanismo de citas.\\
+
+De esta forma, al ejecutar la operación \verb|receive| lo que se hace es consultar el buffer intermedio y:
+\begin{itemize}
+    \item Si hay un mensaje en dicho buffer, se obtiene el mensaje, con lo que obtenemos los datos transmitidos.
+    \item Si no hay un mensaje en dicho buffer, se deberá esperar a la correspondiente operación \verb|send| que introduzca el mensaje en el buffer.
+\end{itemize}
+Contamos con dos variantes a mencionar en el modo de comunicación con buffer intermedio:
+\begin{description}
+    \item [Sin hardware especializado.]~\\
+        La situación es la descrita superiormente, aunque contamos con una operación \verb|vacio| que nos dice si el buffer intermedio se encuentra vacío o no, con lo que en lugar de hacer en el receptor una espera ociosa hasta que haya algún mensaje, podemos realizar trabajo útil mientras no se necesite la información de dicho buffer.
+    \item [Con hardware especializado.]~\\
+        Hay una variante de lo descrito anteriormente y es el caso de disponer de un buffer interno de longitud fija en el receptor. En este tipo de sistemas, la operación \verb|send| bloquea solo cuando se intenta añadir un mensaje a un buffer intermedio que ya está lleno. 
+
+        Por otra parte, disponemos de hardware específico en el receptor que copia el contenido del buffer intermedio al buffer interno, de forma que cuando este ejecute la operación \verb|receive|, solo se tendrá que copiar la información del buffer interno a la zona de memoria asignada a la recepción de mensajes.
+
+        Puede contarse además con hardware especializado que tras la copia de los mensajes en el buffer intermedio, copie inmediatamente dichos mensajes a la zona de memoria asignada al proceso, con lo que diremos que la sincronización entre los procesos emisor y receptor se verá \textit{relajada}.
+
+        Si no se cuenta con dicho hardware especializado, el proceso receptor deberá interrumpirse al llamar a \verb|receive|, para intervenir en la transferencia interna de datos a su memoria.
+\end{description}
+En cualquier caso, el uso de un buffer intermedio entre los dos procesos resulta en una comunicación más rápida que con el mecanismo de citas.
+
+Sin embargo, la situación de interbloqueo anteriormente comentada también se puede llegar a dar.
+
+\subsection{Operaciones no bloqueantes}
+Las operaciones bloqueantes garantizan comunicaciones con semántica segura respecto a los datos que transmiten, pero dicha seguridad la pagamos con la ineficiencia a la hora de su implementación en las plataformas que no poseen de un hardware de comunicaciones especializado, ya que:
+\begin{itemize}
+    \item El mecanismo de citas requiere de la espera ociosa por parte de un proceso en la comunicación.
+    \item El mecanismo de buffer intermedio introduce una sobrecarga debida a la gestión del propio buffer y de una posible sincronización interna.
+\end{itemize}
+Como solución para evitar la ineficiencia introducida por las operaciones bloqueantes, consideramos dejar como responsabilidad para el programador asegurar que los datos no sean alterados mientras que estos están siendo transmitidos, con el objetivo de ganar velocidad de ejecución en los programas a realizar.\\
+
+De esta forma, las operaciones \verb|send| y \verb|receive| terminarán casi inmediatamente, antes de que sea seguro modificar (en el emisor) o usar (en el receptor) los datos, de modo que el programador sea el responsable de asegurar que no sean modificados mientras estos están siendo transmitidos entre los procesos.\\
+
+Para poder llevar esto a cabo, es necesaria la existencia de sentencias de comprobación del estado del envío de los mensajes, que indiquen si en un momento dado se pueden alterar los datos sin provocar que la operación de paso de mensajes deje de ser segura.
+
+De esta forma, una vez iniciada la comunicación entre los procesos, el programa podría realizar cualquier otro cálculo que no necesite del uso de los datos que intervengan en el mensaje en cuestión, comprobando la terminación de la operación de comunicación cuando sea necesario.
+
+\subsubsection{Paso de mensajes sin buffer}
+En resumen, la operación \verb|send| volverá inmediatamente, de forma que solo indique al sistema en cuestión que ha de realizar una transmisión de un determinado mensaje a otro procesador. Tras la ejecución de \verb|send| y mientras que el mensaje no sea transmitido, habrá un periodo de ``inseguridad'' durante el cual los datos del mensaje no deben ser modificados, si queremos que se cumpla la propiedad de seguridad de los mismos.\\
+
+Por otra parte, la vuelta inmediata de la operación \verb|receive| dependerá de si contamos o no con hardware especializado:
+\begin{description}
+    \item [Si existe hardware especializado.]~\\
+        El proceso receptor no se bloqueará al llamar a la operación \verb|receive|, aunque no se hayan terminado de transmitir los datos al receptor, con lo que tendremos un periodo de tiempo en el que acceder a ciertos datos serán unas instrucciones inseguras, con lo que debemos contar con operaciones de comprobación que nos indiquen cuándo es seguro acceder a los datos que están siendo transmitidos.
+    \item [Si no existe hardware especializado.]~\\
+        El proceso receptor se ha de suspender al llamar a la operación \verb|receive|, desde que el sisetma esté preparado para recibir los datos hasta el final de la transmisión de los mismos, para que se pueda garantizar la semántica segura de las operaciones de paso de mensajes.
+\end{description}
+
+\subsubsection{Paso de mensajes con buffer}
+Ahora, cuando se llame a la operación \verb|receive|, no habrá interrupcción del proceso, pero se comenzará con la transferencia de los datos del mensaje a quien aplica esta operación desde un buffer de recepción interno del sistema al área de memoria donde se espera recibirlos.
+
+Como consecuecnia, se reduce el tiempo de espera en el proceso receptor, aunque el acceso a los datos durante la copia de los mismos es insegura.
