@@ -18,13 +18,13 @@ using namespace std ;
 using namespace scd ;
 
 // numero de fumadores 
-const int num_fumadores = 3 ;
+const int num_fumadores = 2 ;
 
 // Número de iteraciones del estanquero
-const int num_items = 10;
+const int num_items = 4;
 
 // Compartida. Indica que ya se ha terminado de generar
-bool fin=false;
+//bool fin=false;
 
 // Mutex cout
 mutex mtx_cout;
@@ -65,11 +65,15 @@ class Estanco : public HoareMonitor{
       CondVar ingr_no_disponible[num_fumadores];
       CondVar mostrador_lleno;
 
+      bool abierto;
+
    public:
       Estanco();
       void ponerIngrediente(int i);
       void obtenerIngrediente(int i);
       void esperarRecogidaIngrediente();
+      void cierreEstanco();
+      bool estancoAbierto();
 };
 
 /**
@@ -82,6 +86,7 @@ Estanco::Estanco(){
    for (int i=0; i<num_fumadores; ++i)
       ingr_no_disponible[i] = newCondVar();
    mostrador_lleno = newCondVar();
+   abierto = true;
 }
 
 /**
@@ -102,7 +107,12 @@ void Estanco::ponerIngrediente(int i){
 void Estanco::obtenerIngrediente(int i){
    if (mostrador != i)
       ingr_no_disponible[i].wait();
+
+   // Lo cogemos, y avisamos al estanquero
    mostrador = -1;
+   mtx_cout.lock();
+      cout << "Fumador " << i << "  : Ingrediente retirado." << endl << flush;
+   mtx_cout.unlock();
    mostrador_lleno.signal();
 }
 
@@ -110,8 +120,29 @@ void Estanco::obtenerIngrediente(int i){
  * @brief Función que espera a que se recoja un ingrediente
  */
 void Estanco::esperarRecogidaIngrediente(){
-   while (mostrador != -1)
+   if (mostrador != -1)
       mostrador_lleno.wait();
+}
+
+/**
+ * @brief Función que cierra el estanco
+ */
+void Estanco::cierreEstanco(){
+   abierto = false;
+
+   // Desbloqueamos a los fumadores que estén esperando
+   for (int i=0; i<num_fumadores; ++i)
+      ingr_no_disponible[i].signal();
+}
+
+/**
+ * @brief Función que indica si el estanco está abierto
+ * 
+ * @return true Si el estanco está abierto
+ * @return false Si el estanco está cerrado
+ */
+bool Estanco::estancoAbierto(){
+   return abierto;
 }
 
 
@@ -126,24 +157,19 @@ void funcion_hebra_estanquero(MRef<Estanco> monitor){
 
    for (int i=0; i<num_items; ++i){
       num_ingr_producido = producir_ingrediente();
+      monitor->esperarRecogidaIngrediente();
 
       mtx_cout.lock();
          cout << i<< " Estanquero : Ingrediente " << num_ingr_producido << " puesto." << endl << flush;
       mtx_cout.unlock();
       monitor->ponerIngrediente(num_ingr_producido);
-
-      monitor->esperarRecogidaIngrediente();
    }
+   monitor->esperarRecogidaIngrediente();
 
-   // Ya hemos terminado.
-   fin = true;
-   for (int i=0; i<num_fumadores; ++i){
-      // Para desbloquear en el caso de que estuvieran esperando. No fumarán porque fin=true
-      monitor->ponerIngrediente(i);
-      mtx_cout.lock();
-         cout << "Fin Estanquero : Desbloqueamos al fumador " << i << "." << endl << flush;
-      mtx_cout.unlock();
-   }
+   mtx_cout.lock();
+      cout << "Fin Estanquero : Cerramos." << endl << flush;
+   mtx_cout.unlock();
+   monitor->cierreEstanco();
 }
 
 /**
@@ -180,14 +206,10 @@ void fumar( int num_fumador ){
  */
 void  funcion_hebra_fumador( int num_fumador, MRef<Estanco> monitor ){
    
-   while (!fin){
+   while (monitor->estancoAbierto()){
       monitor->obtenerIngrediente(num_fumador);
-      if (!fin){ // Necesario comprobarlo. Por si se ha puesto fin=true mientras estaba bloqueado
-         mtx_cout.lock();
-            cout << "Fumador " << num_fumador << "  : Ingrediente retirado." << endl << flush;
-         mtx_cout.unlock();
+      if (monitor->estancoAbierto())
          fumar(num_fumador);
-      }
    }
 }
 
