@@ -19,14 +19,13 @@
 using namespace std ;
 using namespace scd ;
 
-// numero de fumadores 
-const int num_fumadores = 2 ;
+
+const int NUM_FUM = 4;
+const int NUM_INGS = NUM_FUM -1; // ID 1, NUM_FUM-1 compiten
+const int INGR_CODICIADO = 1; // Compiten por el ingrediente 1
 
 // Número de iteraciones del estanquero
-const int num_items = 4;
-
-// Compartida. Indica que ya se ha terminado de generar
-//bool fin=false;
+const int NUM_ITMS = 10;
 
 // Mutex cout
 mutex mtx_cout;
@@ -50,7 +49,8 @@ int producir_ingrediente(){
    // espera bloqueada un tiempo igual a 'duracion_produ' milisegundos
    this_thread::sleep_for( duracion_produ );
 
-   const int num_ingrediente = aleatorio<0,num_fumadores-1>() ;
+   //const int num_ingrediente = aleatorio<0,NUM_INGS-1>() ;
+   const int num_ingrediente = 1;
 
    // informa de que ha terminado de producir
    mtx_cout.lock();
@@ -64,7 +64,7 @@ int producir_ingrediente(){
 class Estanco : public HoareMonitor{
    private:
       int mostrador;    // Indica el ingrediente que hay en el mostrador. -1=No hay ingrediente
-      CondVar ingr_no_disponible[num_fumadores];
+      CondVar ingr_no_disponible[NUM_FUM];
       CondVar mostrador_lleno;
 
       bool abierto;
@@ -72,7 +72,7 @@ class Estanco : public HoareMonitor{
    public:
       Estanco();
       void ponerIngrediente(int i);
-      void obtenerIngrediente(int i);
+      void obtenerIngredientePara(int i);
       void esperarRecogidaIngrediente();
       void cierreEstanco();
       bool estancoAbierto();
@@ -85,7 +85,7 @@ class Estanco : public HoareMonitor{
  */
 Estanco::Estanco(){
    mostrador = -1;
-   for (int i=0; i<num_fumadores; ++i)
+   for (int i=0; i<NUM_FUM; ++i)
       ingr_no_disponible[i] = newCondVar();
    mostrador_lleno = newCondVar();
    abierto = true;
@@ -98,22 +98,42 @@ Estanco::Estanco(){
  */
 void Estanco::ponerIngrediente(int i){
    mostrador = i;
-   ingr_no_disponible[i].signal();
+
+   // Si es el ingrediente INGR_CODICIADO, elegimos de forma aleatoria a quién se lo damos
+   int elegido = i;
+   if (i == INGR_CODICIADO){
+      int aux = aleatorio<0,1>();
+      elegido = (aux == 0) ? INGR_CODICIADO : NUM_FUM-1;
+      mtx_cout.lock();
+         cout << "Estanquero : He decidido dar el ingrediente " << i << " al fumador " << elegido << endl << flush;
+      mtx_cout.unlock();
+   }
+
+   // Despertamos al fumador que necesita el ingrediente
+   ingr_no_disponible[elegido].signal();
 }
 
 /**
  * @brief Función que obtiene un ingrediente del mostrador
  * 
- * @param i Ingrediente a obtener
+ * @param id Fumador que quiere el ingrediente
  */
-void Estanco::obtenerIngrediente(int i){
-   if (mostrador != i)
-      ingr_no_disponible[i].wait();
+void Estanco::obtenerIngredientePara(int id){
+
+   int ingr = id; // Por defecto, el fumador coge el ingrediente asociado a su ID
+   if (id == NUM_FUM-1)    // Si es el fumador que compite por el ingrediente codiciado
+      ingr = INGR_CODICIADO;
+
+   mtx_cout.lock();
+      cout << "Fumador " << id << "  : Esperando ingrediente " << ingr << endl << flush;
+   mtx_cout.unlock();
+   if (mostrador != ingr)
+      ingr_no_disponible[id].wait();
 
    // Lo cogemos, y avisamos al estanquero
    mostrador = -1;
    mtx_cout.lock();
-      cout << "Fumador " << i << "  : Ingrediente retirado." << endl << flush;
+      cout << "Fumador " << id << "  : Ingrediente " << ingr << " retirado." << endl << flush;
    mtx_cout.unlock();
    mostrador_lleno.signal();
 }
@@ -133,8 +153,12 @@ void Estanco::cierreEstanco(){
    abierto = false;
 
    // Desbloqueamos a los fumadores que estén esperando
-   for (int i=0; i<num_fumadores; ++i)
+   for (int i=0; i<NUM_FUM; ++i){
       ingr_no_disponible[i].signal();
+      mtx_cout.lock();
+         cout << "Fumador " << i << "  : Desbloqueado." << endl << flush;
+      mtx_cout.unlock();
+   }
 }
 
 /**
@@ -157,7 +181,7 @@ bool Estanco::estancoAbierto(){
 void funcion_hebra_estanquero(MRef<Estanco> monitor){
    int num_ingr_producido;
 
-   for (int i=0; i<num_items; ++i){
+   for (int i=0; i<NUM_ITMS; ++i){
       num_ingr_producido = producir_ingrediente();
       monitor->esperarRecogidaIngrediente();
 
@@ -209,7 +233,7 @@ void fumar( int num_fumador ){
 void  funcion_hebra_fumador( int num_fumador, MRef<Estanco> monitor ){
    
    while (monitor->estancoAbierto()){
-      monitor->obtenerIngrediente(num_fumador);
+      monitor->obtenerIngredientePara(num_fumador);
       if (monitor->estancoAbierto())
          fumar(num_fumador);
    }
@@ -221,14 +245,14 @@ int main(){
    MRef<Estanco> monitor = Create<Estanco>();
    
    thread hebra_estanquero(funcion_hebra_estanquero, monitor);
-   thread hebra_fumador[num_fumadores];
+   thread hebra_fumador[NUM_FUM];
 
-   for (int i=0; i<num_fumadores; ++i)
+   for (int i=0; i<NUM_FUM; ++i)
       hebra_fumador[i]=thread(funcion_hebra_fumador, i, monitor);
 
    // Es necesario poner un join para que el main no termine antes que las hebras
    hebra_estanquero.join();
-   for (int i=0; i<num_fumadores; ++i)
+   for (int i=0; i<NUM_FUM; ++i)
       hebra_fumador[i].join();
 
    return 0;

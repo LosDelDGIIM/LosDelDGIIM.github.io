@@ -19,10 +19,6 @@ Modifique su solución del problema de los fumadores realizada mediante **semáf
     - Cuando el estanquero ha avisado a los fumadores, espera la confirmación de ambos para volver a poner otros ingredientes distintos. Por lo tanto, el estanquero debe asegurares que cada uno de los fumadores ha cogido su ingrediente, haciendo una espera, si fuera necesario, para cada fumador.
 3. El comportamiento de los fumadores no cambia con respecto a la versión original, ya que cada fumador espera que le indiquen si su ingrediente está en el mostrador, y avisa al estanquero de ello, antes de fumar. Se debe usar un array de hebras para definir las hebras fumadoras y esas hebras fumadoras se deben generar a partir de una misma función.
 
-***
-
-Puede encontrar la solución al problema en el siguiente [enlace](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Prácticas/Práctica2/Exámenes/Examen1_Ej1.cpp).
-
 # Ejercicio 2.
 Modifque la solución del problema de los fumadores realizada con **monitores** teniendo en cuenta que:
   

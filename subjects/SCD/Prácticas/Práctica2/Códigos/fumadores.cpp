@@ -23,8 +23,8 @@ const int num_fumadores = 2 ;
 // Número de iteraciones del estanquero
 const int num_items = 4;
 
-// Compartida. Indica que ya se ha terminado de generar
-//bool fin=false;
+// Valor para Mosntrador vacío
+const int VACIO = -1;
 
 // Mutex cout
 mutex mtx_cout;
@@ -82,7 +82,7 @@ class Estanco : public HoareMonitor{
  * Inicializa el mostrador a -1, ya que no hay ningún ingrediente en el mostrador
  */
 Estanco::Estanco(){
-   mostrador = -1;
+   mostrador = VACIO;
    for (int i=0; i<num_fumadores; ++i)
       ingr_no_disponible[i] = newCondVar();
    mostrador_lleno = newCondVar();
@@ -109,7 +109,7 @@ void Estanco::obtenerIngrediente(int i){
       ingr_no_disponible[i].wait();
 
    // Lo cogemos, y avisamos al estanquero
-   mostrador = -1;
+   mostrador = VACIO;
    mtx_cout.lock();
       cout << "Fumador " << i << "  : Ingrediente retirado." << endl << flush;
    mtx_cout.unlock();
@@ -120,7 +120,7 @@ void Estanco::obtenerIngrediente(int i){
  * @brief Función que espera a que se recoja un ingrediente
  */
 void Estanco::esperarRecogidaIngrediente(){
-   if (mostrador != -1)
+   if (mostrador != VACIO)
       mostrador_lleno.wait();
 }
 

@@ -60,6 +60,7 @@ mutex mtx_cout;
 int n_producidos = 0; // Número de datos producidos
 const int LIM_PROD_CONSEC = 5;    // Límite de producciones consecutivas
 Semaphore espera_impresora = 0;   // Semáforo para controlar la impresora
+Semaphore continua_produciendo = 1; // Semáforo para controlar la producción de datos
 
 
 /**
@@ -140,19 +141,18 @@ void  funcion_hebra_productora(int productor_id){
       #endif
 
       n_producidos++;
-      if ((i+1)%LIM_PROD_CONSEC == 0){
+      if ((i+1)%LIM_PROD_CONSEC == 0){    // En este caso particular, solo se llamará para el 5
          mtx_cout.lock();
             cout << "Productor " << productor_id << " ha producido " << LIM_PROD_CONSEC << " datos" << endl << flush;
          mtx_cout.unlock();
          sem_signal(espera_impresora);
+         sem_wait(continua_produciendo);
       }
       
       sem_signal(espera_consumidor);
    }
 
-   // Si no se han producido LIM_PROD_CONSEC datos, se avisa a la impresora
-   if (items_por_productor%LIM_PROD_CONSEC != 0)
-      sem_signal(espera_impresora);
+   // Correción finalización de impresora en el main
 }
 
 /**
@@ -166,6 +166,7 @@ void funcion_hebra_impresora(){
             cout << "-- IMPRESORA imprime: " << n_producidos << endl;
          mtx_cout.unlock();
       }
+      sem_signal(continua_produciendo);
    }
 }
 
@@ -221,6 +222,9 @@ int main()
       hebra_productora[i].join();
    for (int i = 0; i < num_consumidores; i++)
       hebra_consumidora[i].join();
+
+   // Finalización de la impresora
+   sem_signal(espera_impresora);
    hebra_impresora.join();
 
    test_contadores();
