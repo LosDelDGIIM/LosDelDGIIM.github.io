@@ -23,6 +23,11 @@ A partir de su solución de múltiples productores y consumidores con planificac
 - Crear una hebra impresora, que esperará a que la despierten, imprima en pantalla el valor de `n_producidos` y se duerma.
 - En la quinta iteración de cada productor se debe despertar a la hebra impresora.
 
+
+***
+
+Puede encontrar la solución al problema en el siguiente [enlace](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Prácticas/Práctica2/Exámenes/Examen1_Ej1.cpp).
+
 # Ejercicio 2.
 A partir de su solución del problema de los fumadores realizada mediante **monitores**, se pide:
 - Crear un cuarto fumador, el cual necesitará el mismo ingrediente que el primer fumador para fumar.
