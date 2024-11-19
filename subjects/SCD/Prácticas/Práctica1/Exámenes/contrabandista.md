@@ -35,3 +35,6 @@ Se proporciona un archivo denominado `contrabandista_plantilla.cpp` que incluye 
 La plantilla se encuentra en el siguiente [enlace](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Prácticas/Práctica1/Exámenes/contrabandista_plantilla.cpp).
   
 Puede encontrar la solución al problema en el siguiente [enlace](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Prácticas/Práctica1/Exámenes/contrabandista.cpp).
+
+
+Respecto a la solución mediante monitores (que se verán en la práctica siguiente), puede encontrar la solución en el siguiente [enlace](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Prácticas/Práctica1/Exámenes/contrabandistaMonitores.cpp).
