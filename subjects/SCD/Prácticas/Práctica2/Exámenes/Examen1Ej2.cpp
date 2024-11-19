@@ -30,6 +30,9 @@ const int NUM_ITMS = 10;
 // Mutex cout
 mutex mtx_cout;
 
+// Número de cigarros fumados por cada fumador
+int num_cigarros[NUM_FUM] = {0};
+
 
 //-------------------------------------------------------------------------
 /**
@@ -69,6 +72,8 @@ class Estanco : public HoareMonitor{
 
       bool abierto;
 
+      bool ini_verif;
+      CondVar verif;
    public:
       Estanco();
       void ponerIngrediente(int i);
@@ -76,6 +81,9 @@ class Estanco : public HoareMonitor{
       void esperarRecogidaIngrediente();
       void cierreEstanco();
       bool estancoAbierto();
+
+      void verificacion();
+      void inicia_verificacion();
 };
 
 /**
@@ -89,6 +97,9 @@ Estanco::Estanco(){
       ingr_no_disponible[i] = newCondVar();
    mostrador_lleno = newCondVar();
    abierto = true;
+
+   ini_verif = false;
+   verif = newCondVar();
 }
 
 /**
@@ -159,6 +170,9 @@ void Estanco::cierreEstanco(){
          cout << "Fumador " << i << "  : Desbloqueado." << endl << flush;
       mtx_cout.unlock();
    }
+
+   // Desbloqueamos a la hebra verificadora
+   verif.signal();
 }
 
 /**
@@ -171,6 +185,35 @@ bool Estanco::estancoAbierto(){
    return abierto;
 }
 
+/**
+ * @brief Función que realiza la verificación de los ingredientes
+ */
+void Estanco::verificacion(){
+   if (!ini_verif)
+      verif.wait();
+   
+   if (estancoAbierto()){
+
+      // Mostramos el número de cigarros fumados por los que compiten por el ingrediente codiciado
+      mtx_cout.lock();
+         cout << "VERIFICACIÓN" << endl << flush;
+         cout << "\t- Fumador " << INGR_CODICIADO << "  : Ha fumado " << num_cigarros[INGR_CODICIADO] << " cigarros." << endl << flush;
+         cout << "\t- Fumador " << NUM_FUM-1 << "  : Ha fumado " << num_cigarros[NUM_FUM-1] << " cigarros." << endl << flush;
+      mtx_cout.unlock();
+
+      ini_verif = false;
+   }
+}
+
+
+/**
+ * @brief Función que inicia la verificación
+ */
+void Estanco::inicia_verificacion(){
+   ini_verif = true;
+   verif.signal();
+}
+
 
 //----------------------------------------------------------------------
 /**
@@ -181,8 +224,15 @@ bool Estanco::estancoAbierto(){
 void funcion_hebra_estanquero(MRef<Estanco> monitor){
    int num_ingr_producido;
 
+   int num_veces_ingr[NUM_INGS] = {0};
+   const int NUM_LIM = 12;
+
    for (int i=0; i<NUM_ITMS; ++i){
       num_ingr_producido = producir_ingrediente();
+      num_veces_ingr[num_ingr_producido]++;
+      if (num_ingr_producido == INGR_CODICIADO && num_veces_ingr[num_ingr_producido] == NUM_LIM){
+         monitor->inicia_verificacion();
+      }
       monitor->esperarRecogidaIngrediente();
 
       mtx_cout.lock();
@@ -230,12 +280,21 @@ void fumar( int num_fumador ){
  * @param num_fumador Número del fumador
  * @param monitor Monitor del estanco
  */
-void  funcion_hebra_fumador( int num_fumador, MRef<Estanco> monitor ){
+void funcion_hebra_fumador( int num_fumador, MRef<Estanco> monitor ){
    
    while (monitor->estancoAbierto()){
       monitor->obtenerIngredientePara(num_fumador);
-      if (monitor->estancoAbierto())
+      if (monitor->estancoAbierto()){
          fumar(num_fumador);
+         num_cigarros[num_fumador]++;
+      }
+   }
+}
+
+
+void funcion_hebra_verificadora(MRef<Estanco> monitor){
+   while (monitor->estancoAbierto()){
+      monitor->verificacion();
    }
 }
 
@@ -245,6 +304,7 @@ int main(){
    MRef<Estanco> monitor = Create<Estanco>();
    
    thread hebra_estanquero(funcion_hebra_estanquero, monitor);
+   thread hebra_verificadora(funcion_hebra_verificadora, monitor);
    thread hebra_fumador[NUM_FUM];
 
    for (int i=0; i<NUM_FUM; ++i)
@@ -252,6 +312,7 @@ int main(){
 
    // Es necesario poner un join para que el main no termine antes que las hebras
    hebra_estanquero.join();
+   hebra_verificadora.join();
    for (int i=0; i<NUM_FUM; ++i)
       hebra_fumador[i].join();
 
