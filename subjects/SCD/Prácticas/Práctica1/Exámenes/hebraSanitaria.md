@@ -21,4 +21,6 @@ Partiendo del programa `fumadores.cpp` de cada estudiante, se debe crear una nue
 - La hebra sanitaria, cuando es desbloqueada, imprime por pantalla el siguiente mensaje: `FUMAR MATA: ya lo sabes, fumador X`, luego desbloquea a dicho fumador y vuelve al inicio de su ciclo quedando bloqueada hasta que otro fumador la despierte.
 - El fumador desbloqueado por la hebra sanitaria informa del aviso recibido por dicha hebra con el siguiente mensaje: `Soy el fumador X y me han llamado vicioso`, y continúa con su ciclo normal retirando el ingrediente, desbloqueando al estanquero y fumando, empezando de nuevo la cuenta de 5 cigarrillos por fumar.
 
-<!--Puede encontrar la solución al problema en el siguiente [enlace](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Prácticas/Práctica1/Exámenes/contrabandista.cpp).-->
+***
+
+Puede encontrar la solución al problema en el siguiente [enlace](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Prácticas/Práctica1/Exámenes/hebraSanitaria.cpp).

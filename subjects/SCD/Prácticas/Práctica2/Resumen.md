@@ -122,8 +122,8 @@ var ingrediente : integer;
 begin
    while true do begin
       ingrediente = Producir();
-      Estanco.ponerIngrediente(ingrediente);
       Estanco.esperarRecogida();
+      Estanco.ponerIngrediente(ingrediente);
    end
 end
 

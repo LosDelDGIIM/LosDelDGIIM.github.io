@@ -106,7 +106,7 @@ void test_contadores(){
  * 
  * @note Funciona para versión LIFO o FIFO, depende del define LIFO o FIFO.
  */
-class ProdConsSU : public HoareMonitor
+class Buffer : public HoareMonitor
 {
  private:
  static const int           // constantes ('static' ya que no dependen de la instancia)
@@ -126,15 +126,15 @@ class ProdConsSU : public HoareMonitor
    buffer_lleno ;           //  cola donde espera el productor  (n<num_celdas_total)
 
  public:                    // constructor y métodos públicos
-   ProdConsSU() ;             // constructor
+   Buffer() ;             // constructor
    int  leer();                // extraer un valor (sentencia L) (consumidor)
    void escribir( int valor ); // insertar un valor (sentencia E) (productor)
 } ;
 
 /**
- * @brief Constructor de la clase ProdConsSU.
+ * @brief Constructor de la clase Buffer.
  */
-ProdConsSU::ProdConsSU(){
+Buffer::Buffer(){
    #ifdef LIFO
       primera_libre = 0 ;
    #elif defined FIFO
@@ -150,7 +150,7 @@ ProdConsSU::ProdConsSU(){
 /**
  * @brief Función que extrae un valor del buffer.
  */
-int ProdConsSU::leer(){
+int Buffer::leer(){
 
    // Esperamos a que haya algún valor en el buffer
    #ifdef LIFO
@@ -186,7 +186,7 @@ int ProdConsSU::leer(){
  * 
  * @param valor Valor a escribir.
  */
-void ProdConsSU::escribir( int valor ){
+void Buffer::escribir( int valor ){
 
    // esperar bloqueado hasta que haya hueco para escribir un valor
    #ifdef LIFO
@@ -219,7 +219,7 @@ void ProdConsSU::escribir( int valor ){
  * @param id_hebra Identificador de la hebra.
  * @param monitor Monitor.
  */
-void funcion_hebra_productora( int id_hebra, MRef<ProdConsSU> monitor ){
+void funcion_hebra_productora( int id_hebra, MRef<Buffer> monitor ){
    
    int items_por_productor = num_items/num_productores;
    for( unsigned i = 0 ; i < items_por_productor ; i++ ){
@@ -233,7 +233,7 @@ void funcion_hebra_productora( int id_hebra, MRef<ProdConsSU> monitor ){
  * @param id_hebra Identificador de la hebra.
  * @param monitor Monitor.
  */
-void funcion_hebra_consumidora( int id_hebra, MRef<ProdConsSU>  monitor ){
+void funcion_hebra_consumidora( int id_hebra, MRef<Buffer>  monitor ){
    int items_por_consumidor = num_items/num_consumidores;
    for( unsigned i = 0 ; i < items_por_consumidor ; i++ ){
       int valor = monitor->leer();
@@ -249,7 +249,7 @@ int main()
         << flush ;
 
    // crear monitor  ('monitor' es una referencia al mismo, de tipo MRef<...>)
-   MRef<ProdConsSU> monitor = Create<ProdConsSU>() ;
+   MRef<Buffer> monitor = Create<Buffer>() ;
 
    // crear y lanzar los productores y consumidores
    thread hebra_prod[num_productores], hebra_cons[num_consumidores];
