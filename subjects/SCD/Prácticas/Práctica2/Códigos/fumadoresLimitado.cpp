@@ -1,6 +1,6 @@
 /**
  * @file fumadores.cpp
- * @brief Problema de los fumadores con monitores
+ * @brief Problema de los fumadores limitado con monitores
  * 
  * @author Arturo Olivares Martos
  */
@@ -18,10 +18,10 @@ using namespace std ;
 using namespace scd ;
 
 // numero de fumadores 
-const int num_fumadores = 2 ;
+const int num_fumadores = 3 ;
 
 // Número de iteraciones del estanquero
-const int num_items = 4;
+const int num_items = 5;
 
 // Valor para Mosntrador vacío
 const int VACIO = -1;
@@ -70,10 +70,10 @@ class Estanco : public HoareMonitor{
    public:
       Estanco();
       void ponerIngrediente(int i);
-      void obtenerIngrediente(int i);
+      bool obtenerIngrediente(int i);
       void esperarRecogidaIngrediente();
       void cierreEstanco();
-      bool estancoAbierto();
+      bool estaAbierto();
 };
 
 /**
@@ -103,17 +103,28 @@ void Estanco::ponerIngrediente(int i){
  * @brief Función que obtiene un ingrediente del mostrador
  * 
  * @param i Ingrediente a obtener
+ * @return true Si el estanco está abierto, false si está cerrado
  */
-void Estanco::obtenerIngrediente(int i){
-   if (mostrador != i)
-      ingr_no_disponible[i].wait();
+bool Estanco::obtenerIngrediente(int i){
 
-   // Lo cogemos, y avisamos al estanquero
-   mostrador = VACIO;
-   mtx_cout.lock();
-      cout << "Fumador " << i << "  : Ingrediente retirado." << endl << flush;
-   mtx_cout.unlock();
-   mostrador_lleno.signal();
+   // Si el estanco está abierto
+   if (abierto){
+
+      // Si el ingrediente no es el que está en el mostrador, esperamos
+      if (mostrador != i)
+         ingr_no_disponible[i].wait();
+
+      // Por si se ha cerrado mientras estábamos bloqueados
+      if (abierto){
+         // Lo cogemos, y avisamos al estanquero
+         mostrador = VACIO;
+         mtx_cout.lock();
+            cout << "Fumador " << i << "  : Ingrediente retirado." << endl << flush;
+         mtx_cout.unlock();
+         mostrador_lleno.signal();
+      }
+   }
+   return abierto;
 }
 
 /**
@@ -141,9 +152,10 @@ void Estanco::cierreEstanco(){
  * @return true Si el estanco está abierto
  * @return false Si el estanco está cerrado
  */
-bool Estanco::estancoAbierto(){
+bool Estanco::estaAbierto(){
    return abierto;
 }
+
 
 
 //----------------------------------------------------------------------
@@ -206,11 +218,14 @@ void fumar( int num_fumador ){
  */
 void  funcion_hebra_fumador( int num_fumador, MRef<Estanco> monitor ){
    
-   while (monitor->estancoAbierto()){
-      monitor->obtenerIngrediente(num_fumador);
-      if (monitor->estancoAbierto())
-         fumar(num_fumador);
-   }
+   /*
+      ObtenerIngrediente es necesario que nos informe sobre si el estanco está abierto o cerrado
+      Si esta funcion tan solo se encargase de esperar a que el ingrediente estuviese disponible,
+         como tras obtener el último ingrediente se hace un signal y se libera al estanquero,
+         este podría cerrar el estanco antes de que el fumador sepa que ese ingrediente es válido.
+   */
+   while (monitor->obtenerIngrediente(num_fumador))
+      fumar(num_fumador);
 }
 
 //----------------------------------------------------------------------
