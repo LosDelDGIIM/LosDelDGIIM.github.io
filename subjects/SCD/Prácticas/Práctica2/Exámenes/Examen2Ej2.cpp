@@ -1,8 +1,10 @@
 /**
- * @file fumadores.cpp
- * @brief Problema de los fumadores limitado con monitores
- * 
+ * @file Examen2_Ej2.cpp
  * @author Arturo Olivares Martos
+ * 
+ * @details La descripción, junto con el enunciado, se encuentran en   ./Examen2.md
+ * 
+ * https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Prácticas/Práctica2/Exámenes/Examen2.md)
  */
 
 #include <iostream>
@@ -20,8 +22,11 @@ using namespace scd ;
 // numero de fumadores 
 const int num_fumadores = 3 ;
 
+// Capacidad del mostrador. @PRE <= NUM_FUMADORES
+const int CAPACIDAD = 2;
+
 // Número de iteraciones del estanquero
-const int num_items = 5;
+const int NUM_ITEMS = 4;
 
 // Mutex cout
 mutex mtx_cout;
@@ -88,7 +93,7 @@ class Estanco : public HoareMonitor{
    private:
       static const int VACIO = -1;
 
-      int mostrador;    // Indica el ingrediente que hay en el mostrador. -1=No hay ingrediente
+      int mostrador[CAPACIDAD];     // Ingredientes en el mostrador
       CondVar ingr_no_disponible[num_fumadores];
       CondVar mostrador_lleno;
 
@@ -96,7 +101,7 @@ class Estanco : public HoareMonitor{
 
    public:
       Estanco();
-      void ponerIngrediente(int i);
+      void ponerIngrediente(int vec[], int num);
       bool obtenerIngrediente(int i);
       void esperarRecogidaIngrediente();
       void cierreEstanco();
@@ -109,7 +114,8 @@ class Estanco : public HoareMonitor{
  * Inicializa el mostrador a -1, ya que no hay ningún ingrediente en el mostrador
  */
 Estanco::Estanco(){
-   mostrador = VACIO;
+   for (int i=0; i<CAPACIDAD; ++i)
+      mostrador[i] = VACIO;
    for (int i=0; i<num_fumadores; ++i)
       ingr_no_disponible[i] = newCondVar();
    mostrador_lleno = newCondVar();
@@ -117,13 +123,17 @@ Estanco::Estanco(){
 }
 
 /**
- * @brief Función que pone un ingrediente en el mostrador
+ * @brief Función que pone una serie de ingredientes en el mostrador
  * 
- * @param i Ingrediente a poner
+ * @param vec Vector de ingredientes a poner
+ * @param num número de ingredientes a poner
  */
-void Estanco::ponerIngrediente(int i){
-   mostrador = i;
-   ingr_no_disponible[i].signal();
+void Estanco::ponerIngrediente(int vec[], int num){
+   for (int i=0; i<num; ++i)
+      mostrador[i] = vec[i];
+   
+   for (int i=0; i<num; ++i)
+      ingr_no_disponible[vec[i]].signal();
 }
 
 /**
@@ -137,14 +147,23 @@ bool Estanco::obtenerIngrediente(int i){
    // Si el estanco está abierto
    if (abierto){
 
-      // Si el ingrediente no es el que está en el mostrador, esperamos
-      if (mostrador != i)
+      // Si el ingrediente no está en el mostrador, esperamos
+      int pos = -1;
+      for (int j=0; j<CAPACIDAD && pos==-1; ++j)
+         if (mostrador[j] == i)
+            pos = j;
+      if (pos == -1)
          ingr_no_disponible[i].wait();
 
       // Por si se ha cerrado mientras estábamos bloqueados
       if (abierto){
-         // Lo cogemos, y avisamos al estanquero
-         mostrador = VACIO;
+         // Buscamos en qué posición está el ingrediente, y lo cogemos
+         int pos = -1;
+         for (int j=0; j<CAPACIDAD && pos==-1; ++j)
+            if (mostrador[j] == i)
+               pos = j;
+               
+         mostrador[pos] = VACIO;
          mtx_cout.lock();
             cout << "Fumador " << i << "  : Ingrediente retirado." << endl << flush;
          mtx_cout.unlock();
@@ -158,8 +177,17 @@ bool Estanco::obtenerIngrediente(int i){
  * @brief Función que espera a que se recoja un ingrediente
  */
 void Estanco::esperarRecogidaIngrediente(){
-   if (mostrador != VACIO)
-      mostrador_lleno.wait();
+
+   // Si alguna casilla de mostrador no es vacía, esperamos y volveremos a comprobar
+   int pos=0;
+   while (pos<CAPACIDAD){
+      if (mostrador[pos] != VACIO){
+         mostrador_lleno.wait();
+         pos = 0;
+      }
+      else pos ++;
+   }
+   
 }
 
 /**
@@ -192,16 +220,42 @@ bool Estanco::estaAbierto(){
  * @param monitor Monitor del estanco
  */
 void funcion_hebra_estanquero(MRef<Estanco> monitor){
-   int num_ingr_producido;
+   int num_ingr_producido[CAPACIDAD];
 
-   for (int i=0; i<num_items; ++i){
-      num_ingr_producido = producir_ingrediente();
+   for (int i=0; i<NUM_ITEMS; ++i){
+
+      // Producimos los ingredientes
+      for (int j=0; j<CAPACIDAD; ++j){
+         
+         bool encontrado = false;
+         while (!encontrado){
+            // Producimos hasta que sea distintos a todos los anteriores (j-1, j-2, ... , 0)
+            num_ingr_producido[j] = producir_ingrediente();
+
+            // Compruebo si es distinto a todos los anteriores
+            bool repetido = false;
+            for (int k=0; k<j && !repetido; ++k)
+               repetido = (num_ingr_producido[j] == num_ingr_producido[k]);
+
+            encontrado = !repetido;
+         }
+      }
+
+      mtx_cout.lock();
+         cout << "Estanquero : Todos los ingredientes producidos (";
+         for (int k=0; k<CAPACIDAD; ++k)
+            cout << num_ingr_producido[k] << " ";
+         cout << ")" << endl << flush;
+      mtx_cout.unlock();
+
+
+
       monitor->esperarRecogidaIngrediente();
 
       mtx_cout.lock();
-         cout << i<< " Estanquero : Ingrediente " << num_ingr_producido << " puesto." << endl << flush;
+         cout << i<< " Estanquero : Ingredientes puestos." << endl << flush;
       mtx_cout.unlock();
-      monitor->ponerIngrediente(num_ingr_producido);
+      monitor->ponerIngrediente(num_ingr_producido, CAPACIDAD);
    }
    monitor->esperarRecogidaIngrediente();
 

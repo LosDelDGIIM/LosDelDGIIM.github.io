@@ -20,9 +20,6 @@ using namespace scd ;
 // numero de fumadores 
 const int num_fumadores = 3 ;
 
-// Valor para Mosntrador vacío
-const int VACIO = -1;
-
 // Mutex cout
 mutex mtx_cout;
 
@@ -56,8 +53,37 @@ int producir_ingrediente(){
 }
 
 
+/**
+ * @brief Función que simula la acción de fumar.
+ * Tiene un retardo aleatorio de la hebra.
+ * 
+ * @param num_fumador Número del fumador
+ */
+void fumar( int num_fumador ){
+
+   // calcular milisegundos aleatorios de duración de la acción de fumar)
+   chrono::milliseconds duracion_fumar( aleatorio<20,200>() );
+
+   // informa de que comienza a fumar
+   mtx_cout.lock();
+      cout << "Fumador " << num_fumador << "  :"
+         << " empieza a fumar (" << duracion_fumar.count() << " milisegundos)" << endl;
+   mtx_cout.unlock();
+
+   // espera bloqueada un tiempo igual a 'duracion_fumar' milisegundos
+   this_thread::sleep_for( duracion_fumar );
+
+   // informa de que ha terminado de fumar
+   mtx_cout.lock();
+      cout << "Fumador " << num_fumador << "  : termina de fumar, comienza espera de ingrediente." << endl;
+   mtx_cout.unlock();
+}
+
+
 class Estanco : public HoareMonitor{
    private:
+      static const int VACIO = -1;
+
       int mostrador;    // Indica el ingrediente que hay en el mostrador. -1=No hay ingrediente
       CondVar ingr_no_disponible[num_fumadores];
       CondVar mostrador_lleno;
@@ -136,32 +162,6 @@ void funcion_hebra_estanquero(MRef<Estanco> monitor){
       mtx_cout.unlock();
       monitor->ponerIngrediente(num_ingr_producido);
    }
-}
-
-/**
- * @brief Función que simula la acción de fumar.
- * Tiene un retardo aleatorio de la hebra.
- * 
- * @param num_fumador Número del fumador
- */
-void fumar( int num_fumador ){
-
-   // calcular milisegundos aleatorios de duración de la acción de fumar)
-   chrono::milliseconds duracion_fumar( aleatorio<20,200>() );
-
-   // informa de que comienza a fumar
-   mtx_cout.lock();
-      cout << "Fumador " << num_fumador << "  :"
-         << " empieza a fumar (" << duracion_fumar.count() << " milisegundos)" << endl;
-   mtx_cout.unlock();
-
-   // espera bloqueada un tiempo igual a 'duracion_fumar' milisegundos
-   this_thread::sleep_for( duracion_fumar );
-
-   // informa de que ha terminado de fumar
-   mtx_cout.lock();
-      cout << "Fumador " << num_fumador << "  : termina de fumar, comienza espera de ingrediente." << endl;
-   mtx_cout.unlock();
 }
 
 /**
