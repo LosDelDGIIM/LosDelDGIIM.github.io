@@ -15,7 +15,6 @@
 
 ***
 Para ver la plantilla o la solución, dirígase al final del documento.
-
 ***
 Se proporciona un archivo denominado `contrabandista_plantilla.cpp` que incluye una implementación del problema de los fumadores de la práctica 1, pero con solo dos fumadores y dos ingredientes diferentes (en lugar de tres fumadores y tres ingredientes). Modifique dicho código tal y como se muestra a continuación, guardando el resultado en un archivo `contrabandista.cpp`.
 - La **relación entre el estanquero y los 2 fumadores es idéntica** al problema original.

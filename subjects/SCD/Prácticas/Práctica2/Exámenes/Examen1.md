@@ -9,6 +9,7 @@
 - **Grupo:** 1.
 - **Descripción:** Examen de las prácticas 1 y 2 de SCD.
 - **Fecha:** 15 de noviembre de 2024.
+- **Profesor:** Ana María Sánchez López.
 
 ***
 
