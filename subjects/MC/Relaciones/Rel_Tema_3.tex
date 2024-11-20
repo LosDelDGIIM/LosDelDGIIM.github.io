@@ -330,18 +330,96 @@
 
 \begin{ejercicio}\label{ej:1.3.7}
     Obtener autómatas finitos determinísticos para los siguientes lenguajes sobre el alfabeto $\{0,1\}$.
-    \begin{itemize}
-        \item Palabras en las que el número de 1 es múltiplo de 3 y el número de 0 es par.
-        \item $\{{(01)}^{2i} \mid i \geq 0\}$
-        \item $\{(0^{2i}1^{2i}) \mid i \geq 0\}$
-    \end{itemize}
+    \begin{enumerate}
+        \item \label{ej:1.3.7.1}
+        Palabras en las que el número de 1 es múltiplo de 3 y el número de 0 es par.
+        
+        El estado $q_{ij}$ para $i=0,1,2$ y $j=0,1$ indica que:
+        \begin{itemize}
+            \item $n_1(u) \text{mod} 3=i$,
+            \item $n_0(u) \text{mod} 2=j$.
+        \end{itemize}
+
+        Entonces, el autómata es el de la Figura~\ref{fig:1.3.7.1}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial, accepting] (q00) {$q_{00}$};
+                \node[state, right of=q00] (q01) {$q_{01}$};
+                \node[state, right of=q01] (q02) {$q_{02}$};
+                \node[state, below of=q00] (q10) {$q_{10}$};
+                \node[state, right of=q10] (q11) {$q_{11}$};
+                \node[state, right of=q11] (q12) {$q_{12}$};
+    
+                \draw   (q00) edge[above] node{1} (q01)
+                        (q01) edge[above] node{1} (q02)
+                        (q02) edge[above, bend right] node{1} (q00)
+                        (q10) edge[above] node{1} (q11)
+                        (q11) edge[above] node{1} (q12)
+                        (q12) edge[below, bend left] node{1} (q10)
+                        (q00) edge[left] node{0} (q10)
+                        (q10) edge[right, bend right] node{0} (q00)
+                        (q01) edge[left] node{0} (q11)
+                        (q11) edge[right, bend right] node{0} (q01)
+                        (q02) edge[left] node{0} (q12)
+                        (q12) edge[right, bend right] node{0} (q02);
+            \end{tikzpicture}
+            \caption{Autómata que reconoce el lenguaje del ejercicio~\ref{ej:1.3.7}.\ref{ej:1.3.7.1}.}
+            \label{fig:1.3.7.1}
+        \end{figure}
+
+
+        \item \label{ej:1.3.7.2}
+        $\{{(01)}^{2i} \mid i \geq 0\}$
+        
+        El autómata es el de la Figura~\ref{fig:1.3.7.2}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial, accepting] (q0) {$q_0$};
+                \node[state, right of=q0] (q1) {$q_1$};
+                \node[state, right of=q1] (q2) {$q_2$};
+                \node[state, right of=q2] (q3) {$q_3$};
+                \node[state, below of=q1, xshift=4em, error] (E) {$E$};
+
+                \draw   (q0) edge[above] node{0} (q1)
+                        (q1) edge[above] node{1} (q2)
+                        (q2) edge[above] node{0} (q3)
+                        (q3) edge[above, bend right] node{1} (q0);
+
+                \draw[opacity=0.6]
+                        (q0) edge[right] node{1} (E)
+                        (q1) edge[right] node{0} (E)
+                        (q2) edge[right] node{1} (E)
+                        (q3) edge[right] node{0} (E)
+                        (E) edge[loop right] node{0,1} (E);
+
+
+            \end{tikzpicture}
+            \caption{Autómata que reconoce el lenguaje del ejercicio~\ref{ej:1.3.7}.\ref{ej:1.3.7.2}.}
+            \label{fig:1.3.7.2}
+        \end{figure}
+        \item $L_3=\{(0^{2i}1^{2i}) \mid i \geq 0\}$
+        
+        Veamos que este lenguaje no es regular con el Lema de Bombeo. Para todo $n\in \mathbb{N}$, consideramos la palabra $z=0^{2n}1^{2n}\in L_3$ con $|z|=4n\geq n$. Toda descomposición $z=uvw$, con $u,v,w\in \{0,1\}^\ast$, $|uv|\leq n$ y $|v|\geq 1$ debe cumplir que:
+        \begin{equation*}
+            u=0^k \quad v=0^l \quad w=0^{2n-k-l}1^{2n} \qquad \text{con } l,k\in \bb{N}\cup \{0\},~l\geq 1,~k+l\leq n
+        \end{equation*}
+
+        Para $i=2$, tenemos que $uv^iw=0^{k+2l+2n-k-l}1^{2n}=0^{2n+l}1^{2n}\notin L_3$, ya que, como $l\geq 1$:
+        \begin{equation*}
+            2n+l\neq 2n
+        \end{equation*}
+
+        Por tanto, por el recíproco del Lema de Bombeo, no es regular. Por tanto, no es posible construir un autómata finito determinístico que reconozca $L_3$.
+    \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.8}
     Dar una expresión regular para la intersección de los lenguajes asociados a las expresiones regulares ${(01+1)}^{\ast}0$ y ${(10+0)}^{\ast}$. Se valorará que se construya el autómata que acepta la intersección de estos lenguajes, se minimice y, a partir del resultado, se construya la expresión regular.\\
 
     Sea $r_1=(01+1)^{\ast}0$ y $r_2=(10+0)^{\ast}$. Construimos los AFND asociados a $r_1$ y $r_2$, mostrados en las figuras \ref{fig:1.3.8-AFND1} y \ref{fig:1.3.8-AFND2}, respectivamente.
-    \begin{figure}[H]
+    \begin{figure}
         \centering
         \begin{subfigure}[c]{0.45\textwidth}
             \centering
@@ -517,11 +595,12 @@
 
 \begin{ejercicio}\label{ej:1.3.9}
     Construir un Autómata Finito Determinista Minimal que acepte el lenguaje sobre el alfabeto $\{a,b,c\}$ de todas aquellas palabras que verifiquen simultáneamente las siguientes condiciones.
-    \begin{enumerate}[label=\alph*)]
+    \begin{enumerate}
         \item La palabra contiene un número par de a's.
         \item La longitud de la palabra es un múltiplo de 3.
         \item La palabra no contiene la subcadena $abc$.
     \end{enumerate}
+    % // TODO: Hacer. Muy largo
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.10}
@@ -746,15 +825,46 @@
 \begin{ejercicio}\label{ej:1.3.12}
     Considera la gramática cuyas producciones se presentan a continuación y donde el símbolo inicial es $S$:
     \begin{align*}
-        S &\rightarrow xN\ |\ x \\
-        N &\rightarrow yM\ |\ y \\
-        M &\rightarrow zN\ |\ z
+        S &\rightarrow xN\mid  x \\
+        N &\rightarrow yM\mid  y \\
+        M &\rightarrow zN\mid  z
     \end{align*}
-    \begin{itemize}
-        \item Escribe el diagrama de transiciones para el AFD que acepte el lenguaje $L(G)$ generado por $G$.
-        \item Encuentra una gramática regular por la izquierda que genere ese mismo lenguaje $L(G)$.
-        \item Encuentra el AFD que acepte el complementario del lenguaje $L(G)$.
-    \end{itemize}
+    \begin{enumerate}
+        \item Escribe el diagrama de transiciones para el AFD que acepte el lenguaje $\cc{L}(G)$ generado por $G$.
+        
+        Las siguientes producciones generan el mismo lenguaje:
+        \begin{align*}
+            S &\rightarrow xN\\
+            N &\rightarrow yM\mid \veps \\
+            M &\rightarrow zN\mid \veps
+        \end{align*}
+
+        Por tanto, el AFD asociado al lenguaje $\cc{L}(G)$ es el de la figura \ref{fig:1.3.12-AFD}.
+        \begin{figure}[H]
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial] (S) {$S$};
+                \node[state, right of=S, accepting] (N) {$N$};
+                \node[state, right of=N, accepting] (M) {$M$};
+                \node[state, error, right of=M] (E) {$E$};
+
+                \draw   (S) edge[above] node{$x$} (N)
+                        (N) edge[above] node{$y$} (M)
+                        (M) edge[bend left, below] node{$z$} (N)
+                        (S) edge[below, bend right] node{$y,z$} (E)
+                        (N) edge[above, bend left] node{$x,z$} (E)
+                        (M) edge[above] node{$x,y$} (E)
+                        (E) edge[loop right] node{$x,y,z$} (E);
+            \end{tikzpicture}
+            \caption{AFD asociado al lenguaje $\cc{L}(G)$ del ejercicio \ref{ej:1.3.12}.}
+            \label{fig:1.3.12-AFD}
+        \end{figure}
+        \item Encuentra una gramática regular por la izquierda que genere ese mismo lenguaje $\cc{L}(G)$.
+        
+        % // TODO: Por aqui
+        \item Encuentra el AFD que acepte el complementario del lenguaje $\cc{L}(G)$.
+    \end{enumerate}
+    % // TODO: Hacer
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.13}
@@ -1052,7 +1162,7 @@
 
 \begin{ejercicio}\label{ej:1.3.21}
     Construir un autómata finito minimal para los siguientes lenguajes sobre el alfabeto $\{0,1\}$:
-    \begin{enumerate}[label=\alph*)]
+    \begin{enumerate}
         \item Palabras que contienen como subcadena una palabra del conjunto ${\{00,11\}}^{2}$.
         \item Palabras que contienen como subcadena una palabra del conjunto $\{0011,1100\}$.
     \end{enumerate}
@@ -1100,7 +1210,7 @@
 
 \begin{ejercicio}\label{ej:1.3.25}
     Dado el alfabeto $A=\{a,b,c\}$, encuentra:
-    \begin{enumerate}[label=\alph*)]
+    \begin{enumerate}
         \item Un AFD que reconozca las palabras en las que cada 'c' va precedida de una 'a' o una 'b'.
         \item Una expresión regular que represente el lenguaje compuesto por las palabras de longitud impar en las que el símbolo central es una 'c'.
         \item Una gramática regular que genere las palabras de longitud impar.
