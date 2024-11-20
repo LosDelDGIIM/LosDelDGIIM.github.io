@@ -60,7 +60,8 @@ mutex mtx_cout;
 int n_producidos = 0; // Número de datos producidos
 const int LIM_PROD_CONSEC = 5;    // Límite de producciones consecutivas
 Semaphore espera_impresora = 0;   // Semáforo para controlar la impresora
-Semaphore continua_produciendo = 1; // Semáforo para controlar la producción de datos
+Semaphore continua_produciendo = 0; // Semáforo para controlar la producción de datos. 1=continuar, 0=parar
+                                    // Inicialmente en 0 para que se bloquee la primera vez
 
 
 /**
@@ -132,15 +133,24 @@ void  funcion_hebra_productora(int productor_id){
       #ifdef LIFO
          mtx_lifo.lock();
             vec[primera_libre++] = dato;
+
+            // Es necesario proteger la variable compartida
+            n_producidos++;
          mtx_lifo.unlock();
       #elif defined FIFO
          mtx_fifo_esc.lock();
             vec[primera_libre++] = dato;
             primera_libre %= tam_vec;
+
+            // Es necesario proteger la variable compartida
+            n_producidos++;
          mtx_fifo_esc.unlock();
       #endif
 
-      n_producidos++;
+      // Ya he escrito, por lo que el lector ya puede leer
+      sem_signal(espera_consumidor);
+
+      // Si se ha producido el límite de datos consecutivos, se espera a que se impriman
       if ((i+1)%LIM_PROD_CONSEC == 0){    // En este caso particular, solo se llamará para el 5
          mtx_cout.lock();
             cout << "Productor " << productor_id << " ha producido " << LIM_PROD_CONSEC << " datos" << endl << flush;
@@ -149,7 +159,6 @@ void  funcion_hebra_productora(int productor_id){
          sem_wait(continua_produciendo);
       }
       
-      sem_signal(espera_consumidor);
    }
 
    // Correción finalización de impresora en el main

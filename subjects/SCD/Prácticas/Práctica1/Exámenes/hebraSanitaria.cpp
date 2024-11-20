@@ -36,7 +36,8 @@ Semaphore mostrador_vacio = 1;
 
 
 Semaphore sanitaria_libre = 0;   // Semáforo para controlar la hebra sanitaria. 1=Activada, 0=Desactivada
-Semaphore poder_fumar = 1;       // Semáforo para controlar si un fumador vicioso puede fumar. 1=Si, 0=No
+Semaphore poder_fumar = 0;       // Semáforo para controlar si un fumador vicioso puede fumar. 1=Si, 0=No.
+                                 // Inicialmente a 0 para que no fume antes de que la sanitaria le libere
 int cigarrillos[num_fumadores] = {0}; // Número de cigarrillos consecutivos fumados por cada fumador
 int fumador_vicioso = -1; // Número del fumador vicioso
 const int LIM_CIGARRILLOS = 5; // Número de cigarrillos consecutivos para ser considerado vicioso
@@ -128,10 +129,6 @@ void  funcion_hebra_fumador( int num_fumador ){
 
       if (!fin){ // Necesario comprobarlo. Por si se ha puesto fin=true mientras estaba bloqueado
 
-         cout << "Fumador " << num_fumador << "  : Ingrediente retirado." << endl << flush;
-         mostrador_vacio.sem_signal();
-
-
          if (cigarrillos[num_fumador] == LIM_CIGARRILLOS){
             cout << "Fumador " << num_fumador << "  : Llamando a la hebra sanitaria." << endl << flush;
             fumador_vicioso = num_fumador;
@@ -140,6 +137,9 @@ void  funcion_hebra_fumador( int num_fumador ){
             cout << "Soy el fumador " << num_fumador << " y me han llamado vicioso." << endl << flush;
             cigarrillos[num_fumador] = 0;
          }
+
+         cout << "Fumador " << num_fumador << "  : Ingrediente retirado." << endl << flush;
+         mostrador_vacio.sem_signal();
 
          fumar(num_fumador);
          cigarrillos[num_fumador]++;
