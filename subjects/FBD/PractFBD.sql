@@ -246,7 +246,6 @@ INSERT INTO proveedor (codpro, nompro, status, ciudad)
     VALUES ('S6', 'Jose Perez', 6, 'Bruselas');
 INSERT INTO proveedor (codpro, nompro, status, ciudad)
     VALUES ('S7', 'Luisa Martin', 7, 'Atenas');
--- TODO: // No puedo hacer todo de golpe?
 
 
 DESCRIBE pieza;
@@ -270,3 +269,51 @@ INSERT INTO proyecto (codpj, nompj, ciudad)
     VALUES ('J3', 'Proyecto 3', 'Paris');
 INSERT INTO proyecto (codpj, nompj, ciudad)
     VALUES ('J4', 'Proyecto 4', 'Roma');
+
+DESCRIBE ventas;
+DESCRIBE medina.ventas;
+INSERT INTO ventas (codpro, codpie, codpj, cantidad, fecha)
+    SELECT codpro, rtrim(codpie), rtrim(codpj), cantidad, fecha  FROM medina.ventas;
+DELETE FROM ventas;
+/*
+    Notemos que, si vemos el esquema de medina.ventas, este usa tipos de datos distintos (char(3)).
+    Estos tipos de datos completan con espacios, por lo que no nos deja incluirlos (pruébese).
+    Para evitar este problema, usamos la función rtrim, que recorta por la derecha.
+*/
+--
+
+
+-- Ejercicio 2.4
+INSERT INTO ventas VALUES ('S3', 'P1', 'J1', 150, '24/12/05');
+        DELETE FROM ventas WHERE (codpro='S3' and codpj='J1' and codpie='P1');  -- Para que no tenga efectos.
+--INSERT INTO ventas (codpro, codpj) VALUES ('S4', 'J2');             -- No se puede porque codpie no puede ser NULL (es parte de la CP)
+--INSERT INTO ventas VALUES('S5','P3','J6',400,TO_DATE('25/12/00'));  -- No se puede porque J6 no existe en proyecto
+--
+
+-- Ejercicio 2.5. Comento para que no haga efectos
+--UPDATE ventas
+--    SET fecha = TO_DATE(2005,'YYYY')
+--    WHERE codpro='S5';
+--
+
+-- Ejercicio 2.6
+SELECT codpro,codpie, TO_CHAR(fecha,'"Dia" day,dd/mm/yy')
+    FROM ventas;
+--
+
+
+-- Ejercicio 2.7
+-- Rellenar Tablas Baloncesto.
+--
+
+
+-- Finalización Capítulo 2
+DROP TABLE prueba1;
+DROP TABLE serjefe;
+DROP TABLE plantilla;
+
+DROP TABLE faltas;
+DROP TABLE encuentros;
+DROP TABLE jugadores;
+DROP TABLE equipos;
+COMMIT;
