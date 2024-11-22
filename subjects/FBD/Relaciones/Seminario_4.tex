@@ -357,25 +357,170 @@
     Indique qué consulta debe realizar en álgebra relacional para obtener la información solicitada en cada uno de los siguientes puntos:
     \begin{enumerate}
         \item Encontrar todas las parejas de ciudades tales que la primera sea la de un proveedor y la segunda la de un proyecto entre los cuales haya algún suministro.
+        \begin{align*}
+            \pi_{\substack{\text{Proveedor.ciudad}\\\text{Proyecto.ciudad}}}\left[\left(\pi_{\substack{\text{codpro}\\\text{codpj}}}(\text{Ventas})\bowtie \text{Proveedor}\right)\bowtie_{\text{Ventas.codpj}=\text{Proyecto.codpj}} \text{Proyecto}\right]
+        \end{align*}
+        Notemos que la segunda reunión realiza no puede ser natural, ya que ambas relaciones comparten el mismo nombre para un atributo \emph{Ciudad}.
         \item Encontrar los códigos de las piezas suministradas a algún proyecto por un proveedor que se encuentre en la misma ciudad que el proyecto.
+        \begin{align*}
+            \pi_{\text{codpie}}\left[\left(\text{Ventas}\bowtie \text{Proveedor}\right)\bowtie \text{Proyecto}\right]
+        \end{align*}
+        Notemos que la segunda impone que la ciudad sea la misma, ya que se realiza una reunión natural y ambos atributos comparten nombre.
         \item Encontrar los códigos de los proyectos que tienen al menos un proveedor que no se encuentre en su misma ciudad.
+        \begin{align*}
+            \pi_{\text{codpj}}\left[\left(\text{Ventas}\bowtie \text{Proveedor}\right)\bowtie_{\substack{\text{Ventas.codpj}=\text{Proyecto.codpj}\\\text{Proveedor.ciudad}\neq \text{Proyecto.ciudad}}} \text{Proyecto}\right]
+        \end{align*}
         \item Mostrar todas las ciudades de donde proceden piezas y las ciudades donde hay proyectos.
+        \begin{equation*}
+            \pi_{\text{ciudad}}(\text{Pieza}) \cup \pi_{\text{ciudad}}(\text{Proyecto})
+        \end{equation*}
         \item Mostrar todas las ciudades de los proveedores en las que no se fabriquen piezas.
+        \begin{equation*}
+            \pi_{\text{ciudad}}(\text{Proveedor}) - \pi_{\text{ciudad}}(\text{Pieza})
+        \end{equation*}
         \item Mostrar todas las ciudades de los proveedores en las que además se fabriquen piezas.
+        \begin{equation*}
+            \pi_{\text{ciudad}}(\text{Proveedor}) \cap \pi_{\text{ciudad}}(\text{Pieza})
+        \end{equation*}
         \item Encontrar los códigos de los proyectos que usan una pieza que vende S1.
+        \begin{equation*}
+            \pi_{\text{codpj}}\left(\sigma_{\text{codpro} = \text{S1}}(\text{Ventas})\right)
+        \end{equation*}
+        % // TODO: Revisar, Johssocas distinto
         \item Encontrar la cantidad más pequeña enviada en algún suministro.
+        
+        Se trata de encontrar el mínimo del atributo \emph{cantidad} de la relación \emph{Ventas}.
+        \begin{align*}
+            & \rho(\text{Ventas}) = A,B\\
+            & \rho\left[\sigma_{A.\text{cantidad} < B.\text{cantidad}}(A \times B)\right] = C\\
+            & \rho(\pi_{B.\text{cantidad}}(C)) = D
+        \end{align*}
+
+        Por tanto, la cantidad más pequeña enviada en algún suministro es:
+        \begin{equation*}
+            \pi_{\text{cantidad}}(\text{Ventas})-D
+        \end{equation*}
         \item Encontrar los códigos de los proyectos que no utilizan una pieza roja suministrada por un proveedor de Londres.
+        \begin{align*}
+            &\rho\left[\pi_{\text{codpj}}\left(\left(\text{Ventas}\bowtie \sigma_{\text{ciudad}=\text{Londres}}(\text{Proveedor})\right)\right.\right.\\&\hspace{2cm}\left.\left.\bowtie_{\text{Ventas.codpie}=\text{Pieza.codpie}} \sigma_{\text{Pieza.color}=\text{rojo}}(\text{Pieza})\right)\right]=A\\
+            & \pi_{\text{codpj}}(\text{Proyecto}) - A
+        \end{align*}
         \item Encontrar los códigos de los proyectos que tienen como único proveedor a S1.
+        \begin{equation*}
+            \pi_{\text{codpj}}(\text{Ventas}) - \pi_{\text{codpj}}(\sigma_{\text{codpro}\neq \text{S1}}(\text{Ventas}))
+        \end{equation*}
         \item Encontrar los códigos de las piezas que se suministran a todos los proyectos de París.
+        
+        Se trata de una división. El dividendo es:
+        \begin{equation*}
+            \rho\left[\pi_{\substack{\text{codpie}\\\text{codpj}}}\left(\text{Ventas}\right)\right]=A
+        \end{equation*}
+
+        El divisor es:
+        \begin{equation*}
+            \rho\left[\pi_{\text{codpj}}\left(\sigma_{\text{ciudad}=\text{París}}(\text{Proyecto})\right)\right]=B
+        \end{equation*}
+
+        Por tanto, la consulta sería:
+        \begin{equation*}
+            A \div B
+        \end{equation*}
+
         \item Encontrar los códigos de los proveedores que venden la misma pieza a todos los proyectos.
+        
+        El dividendo es:
+        \begin{equation*}
+            \rho\left[\pi_{\substack{\text{codpro}\\\text{codpie}\\\text{codpj}}}(\text{Ventas})\right]=A
+        \end{equation*}
+
+        El divisor es:
+        \begin{equation*}
+            \rho\left[\pi_{\text{codpj}}(\text{Proyecto})\right]=B
+        \end{equation*}
+
+        La consulta es:
+        \begin{equation*}
+            \pi_{\text{codpro}}(A\div B)
+        \end{equation*}
         \item Encontrar los códigos de los proyectos a los que el proveedor S1 suministra todas las piezas existentes.
+        
+        EL dividendo es:
+        \begin{equation*}
+            \rho\left[\pi_{\substack{\text{codpj}\\\text{codpie}}}\left(\sigma_{\text{codpro}=\text{S1}}(\text{Ventas})\right)\right]=A
+        \end{equation*}
+
+        El divisor es:
+        \begin{equation*}
+            \rho\left[\pi_{\text{codpie}}(\text{Pieza})\right]=B
+        \end{equation*}
+
+        La consulta es:
+        \begin{equation*}
+            \pi_{\text{codpj}}(A\div B)
+        \end{equation*}
         \item Mostrar los códigos de los proveedores que suministran todas las piezas a todos los proyectos.
+        
+        Podríamos pensar en hacer dos divisiones. Veamos este proceso:
+        \begin{align*}
+            &\rho\left[\pi_{\substack{\text{codpro}\\\text{codpie}\\\text{codpj}}}\left(\text{Ventas}\right)\right]=A\\
+            &\rho\left[\pi_{\text{codpie}}(\text{Pieza})\right]=B\\
+            &\rho\left[\pi_{\text{codpj}}(\text{Proyecto})\right]=C
+        \end{align*}
+
+        Podríamos pensar entonces que la consulta sería:
+        \begin{equation*}
+            \pi_{\text{codpro}}((A\div B)\div C)
+        \end{equation*}
+        No obstante, aquí obtenemos los códigos que proporcionan todas las piezas y que proporcionan a todos los proyectos, pero no necesariamente todas las piezas a todos los proyectos.
+        Para esto último, hemos de considerar todas las parejas posibles de piezas y proyectos, y obtener los códigos de los proveedores que suministran todas las parejas posibles.
+        \begin{align*}
+            &\rho\left[\pi_{\substack{\text{codpro}\\\text{codpie}\\\text{codpj}}}\left(\text{Ventas}\right)\right]=A\\
+            &\rho\left[\pi_{\text{codpie}}(\text{Pieza})\times \pi_{\text{codpj}}(\text{Proyecto})\right]=B
+        \end{align*}
+
+        La consulta por tanto queda:
+        \begin{equation*}
+            A\div B
+        \end{equation*}
         \item Pieza con más peso entre las que pesan menos de 100.
+        
+        Partimos de las piezas que pesan menos de $100$:
+        \begin{equation*}
+            \rho\left[\sigma_{\text{peso}<100}(\text{Pieza})\right]=A,B
+        \end{equation*}
+
+        Ahora, obtenemos los que no son candidatos a máximo de entre estas piezas:
+        \begin{align*}
+            &\rho\left[\sigma_{A.\text{peso}<B.\text{peso}}(A\times B)\right]=C\\
+            &\rho\left[\pi_{A.\text{peso}}(C)\right]=D
+        \end{align*}
+
+        Por tanto, el mayor peso menor de $100$ es:
+        \begin{equation*}
+            \rho\left[\pi_{\text{peso}}(A)-D\right]=E
+        \end{equation*}
+
+        Por tanto, la pieza con más peso entre las que pesan menos de $100$ es:
+        \begin{equation*}
+            \pi_{\text{codpie}}\left[A\bowtie E\right]
+        \end{equation*}
         \item Entre los proyectos de Jaén, mostrar el que ha suministrado la pieza de mayor peso (puede haber más de uno).
+        
+        % TODO: Proyectos no suministran
+
         \item Proyectos para los que la lista de piezas que han suministrado tiene al menos dos piezas distintas.
+        
+        % TODO: Proyectos no suministran
         \item Proyectos para los que la lista de piezas que han suministrado tiene exactamente dos piezas distintas.
+        
+        % TODO: Proyectos no suministran
         \item Proveedores que han hecho una o dos ventas (y no más).
+        
+        % // TODO: No hecho. Fácil con AxBxC. A=B pero neq C
         \item Proveedores en los que todos sus suministros son de una pieza roja o de una pieza de Granada.
+        \begin{equation*}
+            \pi_{\text{codpro}}(\text{Ventas}) - \pi_{\text{codpro}}(\text{Ventas} \bowtie \sigma_{\text{color}\neq \text{rojo} ~\land~ \text{ciudad}\neq \text{Granada}}(\text{Piezas}))
+        \end{equation*}
     \end{enumerate}
     
 \end{ejercicio}
