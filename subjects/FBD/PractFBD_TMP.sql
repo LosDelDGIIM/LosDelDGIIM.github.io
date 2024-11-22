@@ -270,3 +270,46 @@ INSERT INTO proyecto (codpj, nompj, ciudad)
     VALUES ('J3', 'Proyecto 3', 'Paris');
 INSERT INTO proyecto (codpj, nompj, ciudad)
     VALUES ('J4', 'Proyecto 4', 'Roma');
+
+/*  // TODO: No me funciona
+SELECT * 
+    FROM medina.ventas WHERE codpro='S1' AND codpie='P1' AND codpj='J1';
+SELECT codpj FROM PROYECTO;
+SELECT * FROM VENTAS;
+SELECT codpj 
+    FROM medina.ventas
+    ORDER BY codpj;
+DESCRIBE ventas;
+INSERT INTO ventas (codpro, codpie, codpj, cantidad, fecha)
+    VALUES ('S1', 'P1', 'J1', 150, TO_DATE('18/09/97','dd/mm/yy'));
+INSERT INTO ventas SELECT * 
+    FROM medina.ventas WHERE codpro='S1' AND codpie='P1' AND codpj='J1';
+DELETE FROM ventas;
+*/
+
+
+-- Ejercicio 2.4
+--
+
+-- Ejercicio 2.5
+--
+
+-- Ejercicio 2.6
+--
+
+
+-- Ejercicio 2.7
+-- Rellenar Tablas Baloncesto.
+--
+
+
+-- Finalización Capítulo 2
+DROP TABLE prueba1;
+DROP TABLE serjefe;
+DROP TABLE plantilla;
+
+DROP TABLE faltas;
+DROP TABLE encuentros;
+DROP TABLE jugadores;
+DROP TABLE equipos;
+COMMIT;
