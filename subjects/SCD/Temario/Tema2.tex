@@ -28,14 +28,14 @@ Dijkstra enunció que para obtener una solución parcialmente correcta al proble
 \end{enumerate}
 
 \subsection{Método de refinamiento sucesivo}
-Dijkstra propuso a su vez una forma de obtener una solución al problema de la exclusión mutua, basada en 4 pasos, modificaciones o etapas a partir de un esquema inicial para obtener la solución de forma razonada, que terminará en una quinta etapa, denominada \textit{algoritmo de Dekker}.
+Dijkstra propuso a su vez una forma de obtener una solución al problema de la exclusión mutua para dos procesos, basada en 4 pasos, modificaciones o etapas a partir de un esquema inicial para obtener la solución de forma razonada, que terminará en una quinta etapa, denominada \textit{algoritmo de Dekker}.
 
 \subsubsection{Primera etapa}
 Inicialmente, se presupone que los procesos alternarán su entrada en la sección crítica según indique el valor de una variable compartida llamada \verb|turno|. Dicha variable contendrá el identificador del proceso que en cada momento puede entrar a la sección crítica.\\
 
-En un escenario con dos procesos que se disponen a ejecutar una sección crítica, la primera etapa consta del siguiente código:
+En un escenario con dos procesos que se disponen a ejecutar una sección crítica, la primera etapa consta del código de la Figura~\ref{fig:cod_primera_etapa}.
 
-\begin{figure}[H]
+\begin{figure}
     \centering
     \setlength{\columnsep}{1cm}
     \begin{multicols}{2}
@@ -75,12 +75,13 @@ end
 \end{minted}
 \end{multicols}
 \caption{Algoritmo para la primera etapa de refinamiento sucesivo.}
+\label{fig:cod_primera_etapa}
 \end{figure}
 
 
-Esta solución garantiza el acceso en exclusión mutua de los procesos a la sección crítica, por lo que la solución es segura.\\
+Esta solución garantiza el acceso en exclusión mutua de los procesos a la sección crítica de forma independiente a la velocidad de ejecución de los mismos, por lo que la solución es segura. Sin embargo, no cumple la tercera condición de Dijkstra, ya que la solución obliga a la alternancia entre los procesos en la entrada a la sección crítica. 
 
-Sin embargo, no cumple la tercera condición de Dijkstra, ya que la solución obliga a la alternancia entre los procesos en la entrada a la sección crítica. 
+De esta forma, si el proceso $P1$ entra a la sección crítica mientras que $P2$ se encuentra haciendo otras operaciones independientes, el proceso $P1$ no podrá volver a entrar a la sección crítica hasta que no lo haga $P2$.
 
 \subsubsection{Segunda etapa}
 La alternancia que obtuvimos en la etapa anterior y que nos impedía cumplir con todas las condiciones de Dijkstra se debía a que para decidir qué proceso entraba en la sección crítica era necesario almacenar información global del estado del programa.
@@ -90,8 +91,8 @@ Para evitar esto, la idea ahora es asociar a cada proceso una variable que conte
     \item Estado pasivo, el proceso no intenta acceder a la sección crítica, representado con un 1.
     \item El proceso intenta acceder a la sección crítica, representado con un 0.
 \end{itemize}
-En un escenario con dos procesos:
-\begin{figure}[H]
+El código quedaría como el de la Figura~\ref{fig:cod_segunda_etapa}.\\
+\begin{figure}
     \centering
 \setlength{\columnsep}{1cm}
 \begin{multicols}{2}
@@ -143,20 +144,17 @@ En un escenario con dos procesos:
     \end{minted}
 \end{multicols}
 \caption{Algoritmo para la segunda etapa de refinamiento sucesivo.}
+\label{fig:cod_segunda_etapa}
 \end{figure}
-Como podemos ver, el protocolo de entrada consiste en leer el valor de la clave del otro proceso con la finalidad de consultar si dicho proceso ha entrado o no en la sección crítica, y esperar mientras el otro proceso se encuentre dentro de la sección crítica.\\
+Como podemos ver, el protocolo de entrada consiste en leer el valor de la clave del otro proceso con la finalidad de consultar si dicho proceso ha entrado o no en la sección crítica, y esperar mientras este se encuentre dentro de la sección crítica.\\
 
-Sin embargo, en este caso la solución no es segura, ya que si $P1$ y $P2$ se ejecutan a la misma velocidad, entonces ambos entrarían a la vez a la sección crítica, ya que los dos verían que el estado del otro es pasivo, con lo que ninguno entraría en el bucle de espera ocupada.
-
-Notemos que esto sucede porque cambiamos el estado de un proceso a 0 justo antes de entrar a la sección crítica, por lo que es ya tarde para impedir la entrada a otro proceso.
+Sin embargo, en este caso la solución no es segura, ya que si $P1$ y $P2$ se ejecutan a la misma velocidad, entonces ambos entrarían a la vez a la sección crítica, debido a que los dos verían que el estado del otro es pasivo, con lo que ninguno entraría en el bucle de espera ocupada. Notemos que esto sucede porque cambiamos el estado de un proceso a 0 justo antes de entrar a la sección crítica, por lo que es ya tarde para impedir la entrada a otro proceso.
 
 Como la bondad de la solución depende de la velocidad de ejecución relativa entre los procesos, se dice que es inaceptable por incumplir la segunda condición de Dijkstra.
 
 \subsubsection{Tercera etapa}
-Para esta etapa planteamos una sencilla modificación sobre la etapa anterior, que consiste en cambiar el valor de la variable clave a 0 antes de consultar el valor de la variable clave del otro proceso:
-
-De esta forma, para que un proceso pueda entrar a la sección crítica, debe primero cambiar su estado a 0, con el fin de recuperar la condición de seguridad de que solo un proceso pueda entrar a la vez a la sección crítica.
-\begin{figure}[H]
+Para esta etapa planteamos una sencilla modificación sobre la etapa anterior, que consiste en cambiar el valor de la variable clave a 0 antes de consultar el valor de la variable clave del otro proceso. De esta forma, para que un proceso pueda entrar a la sección crítica, debe primero cambiar su estado a 0, con el fin de recuperar la condición de seguridad de que solo un proceso pueda entrar a la vez a la sección crítica. El código resultante es el de la Figura~\ref{fig:cod_tercera_etapa}.\\
+\begin{figure}
 \setlength{\columnsep}{1cm}
 \begin{multicols}{2}
     \begin{minted}{pascal}
@@ -203,14 +201,13 @@ De esta forma, para que un proceso pueda entrar a la sección crítica, debe pri
     \end{minted}
 \end{multicols}
 \caption{Algoritmo para la tercera etapa de refinamiento sucesivo.}
+\label{fig:cod_tercera_etapa}
 \end{figure}
-Sin embargo, si ambos procesos tienen la misma velocidad, puede suceder que ambos cambien el valor de su clave a 0 al mismo tiempo, con lo que se de una situación de interbloqueo, que incumpliría la cuarta condición de Dijkstra.
+Sin embargo, si ambos procesos tienen la misma velocidad, puede suceder que ambos cambien el valor de su clave a 0 al mismo tiempo, con lo que se de una situación de interbloqueo, que incumpliría la cuarta condición de Dijkstra, al no poder alcanzar nunca la sección crítica.
 
 \subsubsection{Cuarta etapa}
-Lo que causó el problema en la tercera etapa fue que puede suceder que un proceso cambie el valor de su clave a la vez que el otro de forma concurrente, sin que este se de cuenta de que el otro lo ha hecho a la vez.
-
-La solución que se propone en esta etapa es permitir a un proceso volver a cambiar el valor de su clave a 1 si después de asignar su clave a 0, comprueba que el otro proceso también cambió su clave al mismo valor:
-\begin{figure}[H]
+Lo que causó el problema en la tercera etapa fue que puede suceder que un proceso cambie el valor de su clave a la vez que el otro de forma concurrente, sin que este se de cuenta de que el otro lo ha hecho a la vez. La solución que se propone en esta etapa es permitir a un proceso volver a cambiar el valor de su clave a 1 si después de asignar su clave a 0, comprueba que el otro proceso también cambió su clave al mismo valor. De esta forma, planteamos el código de la Figura~\ref{fig:cod_cuarta_etapa}.\\
+\begin{figure}
 \setlength{\columnsep}{1cm}
 \begin{multicols}{2}
     \begin{minted}{pascal}
@@ -267,22 +264,21 @@ La solución que se propone en esta etapa es permitir a un proceso volver a camb
 \end{minted}
 \end{multicols}
 \caption{Algoritmo para la cuarta etapa de refinamiento sucesivo.}
+\label{fig:cod_cuarta_etapa}
 \end{figure}
 Sin embargo, si ambos procesos se ejecutasen a la misma velocidad, se podría seguir produciendo un interbloqueo entre ambos procesos, aunque esta situación ahora sea más improbable. La solución no sería válida por incumplir tanto la segunda como la cuarta condición de Dijkstra.\\
 
 La conclusión a la que llegamos tras todas estas etapas es que las variables \verb|c1| y \verb|c2| nos son útiles para coordinar la entrada a la sección crítica, pero no son suficientes para dar una solución correcta al problema que tratamos de resolver.\\
 
 \subsection{Algoritmo de Dekker}
-Se podría considerar como una quinta etapa del método de refinamiento sucesivo, pero esta vez obteniendo una solución válida del problema.
-
-El algoritmo de Dekker junta las ideas presentes en la primera y cuarta etapa de refinamiento de Dijkstra:
+Se podría considerar como una quinta etapa del método de refinamiento sucesivo, pero esta vez obteniendo una solución válida del problema. El algoritmo de Dekker junta las ideas presentes en la primera y cuarta etapa de refinamiento de Dijkstra:
 \begin{itemize}
     \item La primera etapa producía una solución segura, pero obligaba a la alternancia en el acceso de los procesos a la sección crítica.
     \item Por otra parte, la cuarta etapa no cuenta con dicha alternancia en el acceso, pero puede llevar a un interbloqueo de los procesos del programa concurrente.
 \end{itemize}
 Para resolver el problema, se considera el código de la cuarta etapa de Dijkstra y se le añade un orden establecido en la entrada mediante una variable \verb|turno|, para desempatar la situación en la que los dos procesos quieran entrar exactamente al mismo tiempo en la sección crítica.\\
 
-De esta forma, un proceso que quiera entrar en la sección crítica asignará primero su clave a 0, y si el otro proceso también tiene su clave a 0, lo primero que hará es comprobar de quién es el turno y si no dispone del mismo, cambiará su clave a 1 pasando a esperar y dejando al otro proceso continuar con la ejecución de la sección crítica.
+De esta forma, un proceso que quiera entrar en la sección crítica asignará primero su clave a 0, y si el otro proceso también tiene su clave a 0, lo primero que hará es comprobar de quién es el turno y si no dispone del mismo, cambiará su clave a 1 pasando a esperar y dejando al otro proceso continuar con la ejecución de la sección crítica. Vemos el código en la Figura~\ref{fig:cod_dekker}.
 
 \begin{figure}[H]
 \setlength{\columnsep}{1cm}
@@ -351,14 +347,15 @@ De esta forma, un proceso que quiera entrar en la sección crítica asignará pr
 \end{minted}
 \end{multicols}
 \caption{Algorimo de Dekker.}
+\label{fig:cod_dekker}
 \end{figure}
 
 \subsubsection{Propiedades de corrección}
-En esta sección demostraremos que se cumple siempre el acceso en exclusión mutua a la sección crítica por parte de los procesos que intervienen en los programas concurrentes, sí como de la propiedad de alcanzabilidad de la sección crítica:
+En esta sección, demostraremos que se cumple siempre el acceso en exclusión mutua a la sección crítica por parte de los procesos que intervienen en los programas concurrentes, así como la propiedad de alcanzabilidad de la sección crítica y vivacidad de los procesos que tratan de hacer uso de la misma:
 
 \begin{description}
     \item [Exclusión mutua.]~\\
-    El proceso $P_i$ (con $i = 1$ ó $i=2$) entrará en la sección crítica solo si el otro proceso, $P_j$ mantiene su clave $cj$ a 1. Dado que la clave de un proceso solo la puede modificar el propio proceso y qeu el proceso $P_i$ comprueba la clave $cj$ solo después de asignar su propia clave $ci$ a 0, si el proceso $P_i$ entra en sección crítica, se ha de cumplir la condición $ci = 0 \land cj = 1$. Notemos que esta situación es incompatible con la condición de que el proceso $P_j$ entre en la sección crítica: $cj = 0 \land ci = 1$.
+    El proceso $P_i$ (con $i = 1$ ó $i=2$) entrará en la sección crítica solo si el otro proceso, $P_j$ mantiene su clave $cj$ a 1. Dado que la clave de un proceso solo la puede modificar el propio proceso y que el proceso $P_i$ comprueba la clave $cj$ solo después de asignar su propia clave $ci$ a 0, si el proceso $P_i$ entra en sección crítica, se ha de cumplir la condición $ci = 0 \land cj = 1$. Notemos que esta situación es incompatible con la condición de que el proceso $P_j$ entre en la sección crítica: $cj = 0 \land ci = 1$.
     \item [Alcanzabilidad de la sección crítica.]~\\
     Para demostrar la alcanzabilidad de la sección crítica, distinguimos casos:
     \begin{itemize}
@@ -367,6 +364,7 @@ En esta sección demostraremos que se cumple siempre el acceso en exclusión mut
             \begin{itemize}
                 \item Si $P_j$ encuentra la clave $ci$ a 1, entonces $P_j$ entrará en la sección crítica.
                 \item Si $P_j$ encuentra la clave $ci$ a 0, como $turno = i$, entonces $P_j$ entrará en el segundo bucle interno para realizar la espera ocupada, poniendo antes su clave $cj$ a 1, que permitirá pasar al proceso $P_i$.
+                \item Si $P_i$ encuentra la clave $cj$ a 1, entonces $P_i$ entrará en la sección crítica.
                 \item Si $P_i$ encuetran la clave $cj$ a 0, se mantendrá realizando iteraciones en el bucle de espera ocupada más externo con $ci$ a 0, hasta que lea el valor de $cj$ a 1, que sucederá por el punto superior, con lo que $P_i$ entrará en la sección crítica.
             \end{itemize}
     \end{itemize}
@@ -375,59 +373,7 @@ En esta sección demostraremos que se cumple siempre el acceso en exclusión mut
     \item [Vivacidad.]~\\
     Dependiendo del hardware de control de acceso a memoria, el algoritmo de Dekker puede llegar a provocar la inanición de uno de los dos procesos:
 
-    \begin{figure}[H]
-    \centering
-    \setlength{\columnsep}{1cm} % Ajusta el espacio entre columnas
-    \begin{multicols}{2}
-        Proceso 1.
-        \begin{minted}{pascal}
-            c1 := 0;
-
-            while c2 = 0 do
-            begin
-               if turno = 2 then
-               begin
-                  c1 := 1;
-                  while turno = 2 do
-                  begin
-                     null;
-                  end do
-                  c1 := 0;
-               end
-            end do
-
-            { Sección crítica }
-            turno := 2;
-            c1 := 1;
-        \end{minted}
-        Proceso 2.
-        \begin{minted}{pascal}
-            c2 := 0;
-
-            while c1 = 0 do
-            begin
-               if turno = 1 then
-               begin
-                  c2 := 1;
-                  while turno = 1 do
-                  begin
-                     null;
-                  end do
-                  c2 := 0;
-               end
-            end do
-
-            { Sección crítica }
-            turno := 1;
-            c2 := 1;
-        \end{minted}
-    \end{multicols}
-        
-    \end{figure}
-    
-    Supongamos que tenemos a los procesos $P1$ y $P2$ ejecutando su código, queriendo acceder continuamente a la sección crítica. Supongamos además que el proceso $P2$ se ejecuta a una velocidad bastante lenta en comparación al proceso $P1$.\\ 
-
-    Nos encontramos en el caso en el que ambos procesos cambiaron sus claves al mismo tiempo y el turno inicial era 1, con lo que $P1$ pasó a ejecutar el código de la sección crítica y $P2$ se quedó esperando en el bucle más interno, con el valor de su clave \verb|c2| a 1.\\
+    Supongamos que tenemos a los procesos $P1$ y $P2$ ejecutando su código, queriendo acceder continuamente a la sección crítica. Supongamos además que el proceso $P2$ se ejecuta a una velocidad bastante lenta en comparación al proceso $P1$. Nos encontramos en el caso en el que ambos procesos cambiaron sus claves al mismo tiempo y el turno inicial era 1, con lo que $P1$ pasó a ejecutar el código de la sección crítica y $P2$ se quedó esperando en el bucle más interno, con el valor de su clave \verb|c2| a 1.\\
 
     Debemos recordar que anteriormente mencionamos que el acceso al módulo de memoria no se hace de forma paralela, sino que se hace de forma secuencial, de forma que si dos procesos intentan acceder a la vez a una misma posición de memoria es el controlador de memoria quien determina el acceso a un proceso de forma arbitraria.\\
 
@@ -435,7 +381,7 @@ En esta sección demostraremos que se cumple siempre el acceso en exclusión mut
 
     Sin embargo, en este momento sucede que tanto $P1$ como $P2$ intentan acceder a la vez al valor de \verb|c2|, $P1$ para leer (en la condición del \verb|while| exterior) y $P2$ para escribir. Si en dicho momento el controlador de memoria da prioridad a las lecturas, $P1$ volvería a introducirse en la sección crítica.
 
-    Inmediatamente, $P2$ se dispondría a cambiar el vlor de su clave a 1, pero como mencionamos anteriormente, $P2$ es muy lento, con lo que resulta que le da tiempo a $P1$ a ejecutar la sección crítica y volver a la lectura de \verb|c2| en el bucle más externo a la vez que $P2$, con lo que el controlador de memoria puede volver a darle prioridad.\\
+    Inmediatamente, $P2$ se dispondría a cambiar el valor de su clave a 1, pero como mencionamos anteriormente, $P2$ es muy lento, con lo que resulta que le da tiempo a $P1$ a ejecutar la sección crítica y volver a la lectura de \verb|c2| en el bucle más externo a la vez que $P2$, con lo que el controlador de memoria puede volver a darle prioridad.\\
 
     Si este escenario sucede de forma indefinida, tenemos una falta de vivacidad en el proceso $P2$, ya que mientras $P1$ esté en funcionamiento, no podrá avanzar en su ejecución.
 
@@ -444,12 +390,13 @@ En esta sección demostraremos que se cumple siempre el acceso en exclusión mut
 \end{description}
 
 \subsection{Algoritmo de Dijkstra}
-Una vez visto el algoritmo de Dekker, primera solución aceptable al problema de la exclusión mutua, nos encontramos con que no es generalizable para $n$ procesos, con lo que mostramos a continuación el algoritmo de Dijkstra, que resuelve el problema de la exclusión mutua para $n$ procesos utilizando un array de $n$ posiciones en las que cada proceso almacena su estado, destacando tres posibles estados:
+Una vez visto el algoritmo de Dekker, primera solución aceptable al problema de la exclusión mutua (aunque no cumpla con las propiedades deseables de vivacidad y equidad), nos encontramos con que no es generalizable para $n$ procesos, con lo que mostramos a continuación el algoritmo de Dijkstra, que resuelve el problema de la exclusión mutua para $n$ procesos utilizando un array de $n$ posiciones en las que cada proceso almacena su estado, destacando tres posibles estados:
 \begin{itemize}
-    \item Proceso pasivo, con lo que el proceso no itenta acceder al protocolo de entrada.
+    \item Proceso pasivo, el proceso no intenta acceder al protocolo de entrada.
     \item Solicitando, el proceso intenta acceder al protocolo de entrada.
-    \item En SC, el protocolo está dentro de la sección crítica.
+    \item En SC, el proceso está dentro de la sección crítica.
 \end{itemize}
+El algoritmo de Dijkstra podemos verlo en la Figura~\ref{fig:cod_dijkstra}.
 \begin{figure}[H]
 \begin{minted}{pascal}
     var c : array[0..n-1] of (pasivo, solicitando, en_SC);
@@ -485,35 +432,38 @@ Una vez visto el algoritmo de Dekker, primera solución aceptable al problema de
     end
 \end{minted}
 \caption{Algoritmo de Dijkstra, código para el $i$-ésimo proceso.}
+\label{fig:cod_dijkstra}
 \end{figure}
 
 De esta forma, lo primero que hace un proceso $P_i$ al llegar al protocolo de entrada a la sección crítica es cambiar su estado a \verb|solicitando|. Posteriormente:
 \begin{itemize}
-    \item Si es su turno, no pasará en el bucle \verb|A|.
+    \item Si es su turno, no realizará ninguna iteración del bucle \verb|A|, con lo que pasará inmediatamente a la ejecución del bucle \verb|B|, tras cambiar su clave a \verb|en_SC|.
     \item Si no es su turno:
         \begin{itemize}
-            \item Si el proceso que tiene el turno está en estado pasivo, entonces el proceso $P_i$ pone el turno a $i$, siendo ahora su turno con lo que pase del bucle \verb|A|.
+            \item Si el proceso que tiene el turno está en estado pasivo, entonces el proceso $P_i$ pone el turno a $i$, siendo ahora su turno, con lo que pasa del bucle \verb|A|.
             \item Si el proceso que tiene el turno no está en estado pasivo, entonces el proceso $P_i$ esperará hasta que este lo esté, es decir, hasta que el proceso $P_{\text{turno}}$ abandone la sección crítica.
         \end{itemize}
 \end{itemize}
 Una vez superado el bucle \verb|A|, entonces el estado del proceso $P_i$ pasará a \verb|en_SC|, y solo tendrá que superar el bucle \verb|B| para poder entrar a la sección crítica.\\
 
-Puede suceder que dos procesos, $P_i$ y $P_j$ lleguen al bucle \verb|A| de forma que primero el proceso $P_i$ cambie el turno a $i$ (suponiendo que el proceso con el turno está pasivo) y que el proceso $P_j$ cambie el turno a $j$ y pasando el bucle \verb|A|, antes de que el proceso $P_i$ cambie su estado a \verb|en_SC|. En dicho caso, contamos con el bucle \verb|B| para cumplir con la condición de seguridad de tener un único proceso ejecutando la sección crítica a la vez.\\
+Puede sueceder que dos (o más, en cuyo caso es una explicación análoga) procesos, $P_i$ y $P_j$ lleguen al bucle \verb|A| de forma que (suponiendo que \verb|c[turno] = pasivo|) ambos lo ejecuten a la misma velocidad, con lo que ambos pasen dicho bucle quedando la variable \verb|turno| asignada al identificador de cualquiera de los dos procesos (a $i$ o a $j$). Posteriormente, ambos cambiarán su estado a \verb|en_SC|. En dicho caso, contamos con el bucle \verb|B| para cumplir con la condición de seguridad de tener un único proceso ejecutando la sección crítica a la vez.\\
 
 Lo que hace el bucle \verb|B| es comprobar todos los estados de los procesos antes de dejar pasar al proceso $P_i$ entrar a la sección crítica, de forma que si todos los demás procesos tienen un estado distinto de \verb|en_SC|, entonces el contador \verb|j| llegará hasta \verb|n|, con lo que $P_i$ saldrá del bucle \verb|B| así como del \verb|repeat| de entrada a la sección crítica.\\
 
-En el caso en el que dos procesos estén con estado \verb|en_SC|, entonces la variable \verb|j| no llegará a aumentar hasta \verb|n|, con lo que los procesos no podrán salir del \verb|repeat|, teniendo que volver a pasar por el bucle \verb|A|, donde el turno estará ya fijado en un proceso con un estado distinto de pasivo.
+En el caso en el que dos (o más) procesos estén con estado \verb|en_SC|, entonces la variable \verb|j| de cada proceso no llegará a aumentar hasta \verb|n| (lo que le permitiría salir del bucle \verb|repeat| y entrar en sección crítica), con lo que los procesos no podrán salir del \verb|repeat|, teniendo que volver a pasar por el bucle \verb|A|, donde el turno estará ya fijado en un proceso con un estado distinto de pasivo (el último que actualizó el valor de dicha variable).
 
 \subsubsection{Propiedades de corrección}
-Pasamos ahora a demostrar las propiedades de corrección del algoritmo de Dijsktra.
+\noindent
+Pasamos ahora a demostrar las propiedades de corrección del algoritmo de Dijsktra:
 
 \begin{description}
     \item [Exclusión mutua.]~\\
-        El proceso $P_i$ (con $i \in \{0,\ldots,n-1\}$) entrará en la sección crítica solo si el resto de procesos $P_j$ con $j\neq i$ tienen su estado distinto de \verb|en_SC|. En dicho caso, $P_i$ pasará a ejecutar la sección crítica, poniendo su estado a \verb|en_SC|. 
+        La propiedad de exclusión mutua está garantizada gracias al bucle \verb|B|:\\
+        El proceso $P_i$ (con $i \in \{0,\ldots,n-1\}$) entrará en la sección crítica solo si el resto de procesos $P_j$ con $j\neq i$ tienen su estado distinto de \verb|en_SC|. En dicho caso, $P_i$ (y solo él) pasará a ejecutar la sección crítica, poniendo su estado a \verb|en_SC|. 
 
         Supuesto que ahora otro proceso $P_j$ intenta acceder a la sección crítica, solo podrá hacerlo si el resto de procesos tienen su estado distinto de \verb|en_SC|, algo que no puede suceder hasta que el proceso $P_i$ salga de la sección crítica.
     \item [Alcanzabilidad de la sección crítica.]~\\
-        Supuesto que disponemos que $m$ procesos $P_1, P_2, \ldots, P_m$ de forma que tratan de acceder a la sección crítica al mismo tiempo, entonces el valor de la variable compartida \verb|turno| será un cierto $k \in \{1,\ldots,m\}$, correspondiente al identificador del último proceso que cambió su valor. 
+        Supuesto que disponemos de $m$ procesos $P_1, P_2, \ldots, P_m$ de forma que tratan de acceder a la sección crítica al mismo tiempo, entonces el valor de la variable compartida \verb|turno| será un cierto $k \in \{1,\ldots,m\}$, correspondiente al identificador del último proceso que cambió su valor. 
 
         Los procesos que superen el bucle \verb|A| junto con $P_k$ no podrán superar el bucle \verb|B| con un valor de \verb|j| igual o superior a \verb|n|, por lo que todos los procesos (junto con $P_k$) volverán al bucle \verb|A|.
 
@@ -522,22 +472,24 @@ Pasamos ahora a demostrar las propiedades de corrección del algoritmo de Dijskt
     \item [Vivacidad.]~\\
         El algoritmo de Dijkstra también puede llevar a la inanición de uno de los procesos del programa concurrente, al igual que el algoritmo de Dekker.
 
-        Para ver dicha situación, supongamos que tenemos dos procesos, $P_0$ y $P_1$, ambos intentando acceder a la sección crítica. Supongamos que ambos consiguen pasar por el bucle \verb|A|, primero $P_0$ y luego $P_1$, con lo que el turno quedará concedido a $P_1$ en la siguiente iteración del \verb|repeat|, que pasará a la sección crítica y el proceso $P_0$ quedará bloqueado en el bucle \verb|A| en espera ocupada.
+        Para ver dicha situación, supongamos que tenemos dos procesos, $P_0$ y $P_1$, ambos intentando acceder a la sección crítica. Supongamos que ambos consiguen pasar por el bucle \verb|A| a la vez, de forma que el turno quede finalmente establecido a 1. De esta forma, ambos procesos cambiarán su estado a \verb|en_SC|, con lo que tras superar el bucle \verb|B| ninguno conseguirá tener \verb|j = n|, con lo que ambos realizarán otra iteración del \verb|repeta|. En este caso, como \verb|turno = 1| y \verb|c[turno] = solicitando|, será $P_1$ quien consiga superar el bucle \verb|A|, quedando $P_0$ bloqueado en el mismo realizando una espera ocupada.
 
-        Cuando $P_1$ salva de la sección crítica y cambie su estado a pasivo, puede suceder que $P_0$ cambie el turno a 0, consiguiendo superar el bucle \verb|A| y que inmediatamente después $P_1$ consiga también superar el bucle \verb|A|, volviendo a dejar el turno en 1, con lo que se sucederá la situación anterior nuevamente.
+        Cuando $P_1$ salga de la sección crítica y cambie su estado a \verb|pasivo|, desbloqueará a $P_0$ de su espera ocupada. Sin embargo, puede suceder que tanto $P_0$ como $P_1$ vuelvan a ejecutar el bucle \verb|A| a la vez, quedando \verb|turno = 1|, al igual que en la situación anterior, por lo que $P_1$ volverá a ejecutar el código de la sección crítica, quedándose $P_0$ realizando la espera ocupada.
 
-        De esta forma, el proceso $P_1$ puede dejar al proceso $P_0$ en la zona de acceso a la sección crítica de forma indefinida.
+        De esta forma, el proceso $P_1$ puede dejar al proceso $P_0$ en la zona de acceso a la sección crítica de forma indefinida, por lo que no se puede demostrar la vivacidad de los procesos en el acceso a la sección crítica con el algoritmo de Dijkstra, al igual que sucedía con el algoritmo de Dekker.
+    \item [Equidad.]~\\
+        Como no podemos garantizar la vivacidad de la solución, mucho menos podremos garantizar la equidad de los procesos en el acceso a la sección crítica.
 \end{description}
 
 \subsection{Algoritmo de Knuth}
-Con la finalidad de no caer en los errores de los algoritmos de Dekker y Dijkstra (los cuales pueden llegar a un estado en el que un proceso sufra inanición), Donald Knuth añadió una quinta condición a las condiciones de Dijkstra para la corrección parcial de una solución al problema de la exclusión mutua:
+Con la finalidad de no caer en los errores de los algoritmos de Dekker y Dijkstra (los cuales pueden llevar a un estado en el que un proceso sufra inanición), Donald Knuth añadió una quinta condición a las condiciones de Dijkstra para la corrección parcial de una solución al problema de la exclusión mutua:
 \begin{enumerate}[label=5.]
     \item \textit{Se tiene que poder demostrar que todos los procesos pueden sufrir un retraso máximo en el acceso a la sección crítica que sea calculable.}
 
-        Con el fin de garantizar que ningún proceso sufrirá de inanición, ya que en algún momento conseguirá entrar a la sección crítica.
+        Con el fin de garantizar que ningún proceso sufrirá de inanición, ya que en algún momento conseguirá entrar a la sección crítica, lo que nos dé la propiedad de vivacidad de su solución.
 \end{enumerate}
 
-Donald Knuth se dió cuenta de que la propiedad de vivacidad no podía ser demostrada debido a que la variable compartida \verb|turno| utilizada en los algoritmos de Dekker y Dijkstra sufría condiciones de carrera. El algoritmo propuesto por Knuth hace uso de una variable local \verb|j| que copia el valor de la variable compartida \verb|turno|, con el fin de evitar dichas condiciones de carrera. Por lo demás, el algoritmo es similar al de Dijkstra:
+Donald Knuth se dió cuenta de que la propiedad de vivacidad no podía ser demostrada debido a que la variable compartida \verb|turno| utilizada en los algoritmos de Dekker y Dijkstra sufría condiciones de carrera. El algoritmo propuesto por Knuth hace uso de una variable local \verb|j| que copia el valor de la variable compartida \verb|turno|, con el fin de evitar dichas condiciones de carrera. Por lo demás, el algoritmo es similar al de Dijkstra, tal y como podemos ver en la Figura~\ref{fig:cod_knuth}.
 
 \begin{figure}[H]
 \begin{minted}{pascal}
@@ -578,20 +530,43 @@ Donald Knuth se dió cuenta de que la propiedad de vivacidad no podía ser demos
     end
 \end{minted}
 \caption{Algoritmo de Knuth.}
+\label{fig:cod_knuth}
 \end{figure}
-De esta forma, si es el turno de un proceso, entonces este se salta el bucle \verb|A|. Si no, entonces el proceso que tiene el turno está en estado pasivo, el proceso decrementa el valor de \verb|j| hasta que:
+De esta forma, suponiendo que somos el proceso $P_i$ y que nos disponemos a ejecutar la sección crítica:\\
+Si tenemos que \verb|turno = i|, entonces $P_i$ se salta el bucle \verb|A|. Si no (\verb|turno != i|), entonces:
 \begin{itemize}
-    \item Encuentra un proceso que no está en estado pasivo, con lo que el proceso pasa a realizar una espera activa.
-    \item El valor de \verb|j| coincida con \verb|i|, o que permita al proceso salir del bucle \verb|A|.
+    \item Si el proceso que tiene el turno no está en estado pasivo, entonces el proceso se bloqueará realizando una espera activa, copiando el valor de \verb|turno| en \verb|j|. De esta forma, cuando el proceso que tenía el turno salga de la sección crítica, cambiará el valor de \verb|turno| y el proceso cambiará su copia en \verb|j|, con lo que saldrá de la espera ocupada e intentará volver a realizar el protocolo de entrada para la sección crítica.
+    \item Si el proceso que tiene el turno está en estado pasivo, entonces la copia local del valor de \verb|turno|, es decir, la variable \verb|j| ciclará su valor, de forma que volvamos a ejecutar el protocolo de entrada, destacando tres posibilidades:
+        \begin{itemize}
+            \item Si al ciclar el valor de \verb|j| ahora tenemos que \verb|j = i|, entonces $P_i$ pasa el bucle \verb|A|.
+            \item Si al ciclar el valor de \verb|j| se detecta que $P_j$ no está en estado pasivo, entonces $P_i$ realizará una espera activa, de forma que actualice \verb|j| a \verb|turno|, luego ciclará el valor de \verb|j| y detectará que $P_j$ no estará en estado pasivo.
+            \item Si al ciclar el valor de \verb|j| se detecta que $P_j$ está en estado pasivo, se cicla el valor de \verb|j| otra vez, volviendo a destacar tres posibilidades.
+        \end{itemize}
 \end{itemize}
 De esta forma, Knuth controla el número de veces que los procesos pueden adelantarse los unos a los otros dentro del bucle \verb|A|.\\
 
 Por el resto, es idéntico al funcionamiento del algoritmo de Dijkstra, salvo que solo modifica el valor de la variable \verb|turno| una vez el proceso se encuentra dentro de la sección crítica, evitando condiciones de carrera.
 
 \subsubsection{Propiedades de corrección}
+\noindent
+Veamos las propiedades de corrección del algoritmo de Knuth:
 \begin{description}
     \item [Exclusión mutua.]~\\
         Está garantizada gracias al bucle \verb|B|, tal y como razonamos en el algoritmo de Dijkstra.
+    \item [Alcanzabilidad de la sección crítica.]~\\
+        Supuesto que tenemos $m$ procesos, $P_1$, $P_2$, \ldots, $P_m$ que tratan de acceder a la sección crítica a la vez, y suponiendo que \verb|turno = k|:
+        \begin{itemize}
+            \item Si $k \in \{1,\ldots,m\}$, entonces, $P_k$ superará el bucle \verb|A| y tratará de entrar a la sección crítica, distinguiendo dos posibilidades:
+                \begin{itemize}
+                    \item Si el resto de procesos vieron que \verb|c[k]| era distinto de pasivo, los $m-1$ procesos restantes quedaron bloqueados en el bucle \verb|A|, con lo que solo el proceso $P_k$ tendrá su clave a \verb|en_SC|, con lo que conseguirá superar el bucle \verb|B|, entrando a la sección crítica.
+                    \item Si hay algún proceso (o varios) que vieron \verb|c[k]| a pasivo (esto es, antes de que el proceso $k$ cambiase el valor de su clave), estos irán ciclando el valor de \verb|j|, de forma que puede haber algún conjunto de procesos que supere el bucle \verb|A| junto con $P_k$. En dicho caso, tras superar el bucle \verb|B|, ninguno de esos obtendrá \verb|k = n|, con lo que han de volver a iterar en el bucle de \verb|repeat|, realizando otra vez el bucle \verb|A|. En este caso, estamos en las condiciones del punto superior, con lo que $P_k$ accede a la sección crítica.
+                \end{itemize}
+            \item Si $k\notin \{1,\ldots,m\}$, entonces tenemos que \verb|c[k] = pasivo|. En dicho caso, todos los procesos irán ciclando su valor de \verb|j| decrementándolo, de forma que si algún proceso $P_i$ consigue tener $i = j$, entonces superará el bucle \verb|A| y destacamos dos posibilidades:
+                \begin{itemize}
+                    \item Si solo un proceso $P_i$ consigue tener $i = j$, entonces conseguirá superar el bucle \verb|B| con $k = n$, con lo que entrará a ejecutar la sección crítica.
+                    \item Si hay dos o más procesos que consiguieron tener $i = j$ (puede suceder, si los procesos con $i$ más lejana a \verb|turno| ejecutaron el bucle \verb|A| de forma más rápida), al superar el bucle \verb|B|, ninguno conseguirá tener $k = n$, con lo que todos volverán a ejecutar el bucle \verb|A|. En este momento, todos estos procesos que tenían otro proceso más cercano a \verb|turno| quedarán bloqueados en el bucle \verb|A|, ya que observarán que \verb|c[j] != pasivo| en el proceso con el índice $j$ más cercano a \verb|turno|, por lo que solo el proceso $P_i$ con índice más cercano a \verb|turno| conseguirá superar el bucle \verb|A|, quien superará el bucle \verb|B| con un valor $k = n$, lo que le permitirá ejecutar la sección crítica.
+                \end{itemize}
+        \end{itemize}
     \item [Ausencia de inanición.]~\\
         Evita la inanición porque el valor de \verb|turno| se asigna tras la ejecución de la sección crítica, pasando el turno en orden circular.
 
@@ -607,7 +582,7 @@ Por el resto, es idéntico al funcionamiento del algoritmo de Dijkstra, salvo qu
 \subsection{Algoritmo de Peterson para 2 procesos}
 Peterson propuso una forma simple de resolver el problema de la exclusión mutua para dos procesos, de forma que a partir de entonces se consideró la solución canónica a dicho problema. Esta es generalizable a $n$ procesos.\\
 
-La idea es la que se aplica en una pescadería: los clientes que quieren comprar pescado (en nuestro caso, los dos procesos que quieren entrar a la sección crítica), van asignandose de sus turnos en orden de llegada, de forma que el último que se asigna el turno es quien debe esperar a que el otro pase primero (a la sección crítica). Una vez que este primero haya terminado, avisa al siguiente de que ya puede avanzar.
+La idea es la que se aplica en una pescadería: los clientes que quieren comprar pescado (en nuestro caso, los dos procesos que quieren entrar a la sección crítica), van asignándose sus turnos en orden de llegada, de forma que el último que se asigna el turno es quien debe esperar a que el otro pase primero (a la sección crítica). Una vez que este primero haya terminado, avisa al siguiente de que ya puede avanzar.
 
 De esta forma, el algoritmo cuenta con las variables compartidas:
 \begin{minted}{pascal}
@@ -616,7 +591,7 @@ De esta forma, el algoritmo cuenta con las variables compartidas:
 \end{minted}
 Donde el array de claves \verb|c| se inicializa con todos sus valores a \verb|false|, de forma que \verb|c[i]| indica si el $i$-ésimo proceso está o no solicitando acceder a la sección crítica. La variable \verb|turno| sirve para resolver conflictos en el caso de que ambos procesos intenten acceder a la vez a la sección crítica.\\
 
-Cuando un algoritmo quiere acceder a la sección crítica, lo que hace primero es cambiar su clave a ``solicitando sección crítica'' (representado con \verb|true|). Posteriormente, se asigna el turno a dicho proceso. En el caso en el que ambos intenten acceder a la vez a la sección crítica, uno de ellos habrá sido necesariamente el último en asignarse el turno, y será el proceso que espere a que el otro ejecute la sección crítica.
+Cuando un proceso quiere acceder a la sección crítica, lo que hace primero es cambiar su clave a ``solicitando sección crítica'' (representado con \verb|true|). Posteriormente, se asigna el turno a dicho proceso. En el caso en el que ambos intenten acceder a la vez a la sección crítica, uno de ellos habrá sido necesariamente el último en asignarse el turno, y será el proceso que espere a que el otro ejecute la sección crítica.
 
 \begin{figure}[H]
     \centering
@@ -668,13 +643,17 @@ Cuando un algoritmo quiere acceder a la sección crítica, lo que hace primero e
 A continuación, mostramos que la solución de Peterson no solo es una solución para el problema de la exclusión mutua, sino que además garantiza la equidad en el acceso a la misma para los procesos que intervienen en un programa concurrente que usa dicho algoritmo.
 \begin{description}
     \item [Exclusión mutua.]~\\
-        Suponiendo que nos encontramos en el proceso $P_i$ (con $i=1$ ó $i=2$), sea $j$ el otro proceso ($j =1$ si $i=2$ ó $j=2$ si $i=1$), supongamos que el proceso $P_i$ consigue entrar a la sección crítica. Esto sucede solo si $c[j]$ es falso o si \verb|turno| es $j$. Es decir, si $P_j$ no está intentando acceder a la sección crítica o si $P_j$ fue el último proceso en asignarse el turno. De esta forma, si el proceso $P_j$ intenta acceder a la vez a la sección crítica, quedará bloqueado, con lo que solo un proceso conseguirá al final entrar a la sección crítica.
+        Suponiendo que nos encontramos en el proceso $P_i$ (con $i=1$ ó $i=2$), sea $j$ el otro proceso ($j =1$ si $i=2$ ó $j=2$ si $i=1$), supongamos que el proceso $P_i$ consigue entrar a la sección crítica. Esto sucede solo si $c[j]$ es falso o si \verb|turno| es $j$. Es decir, si $P_j$ no está intentando acceder a la sección crítica o si $P_j$ fue el último proceso en asignarse el turno. 
+
+        De esta forma, si el proceso $P_j$ intenta acceder a la vez a la sección crítica (entonces, \verb|c[j] = true|, con lo que \verb|turno = j|), quedará bloqueado, por ser \verb|turno = j| y \verb|c[i] = 1|, con lo que solo un proceso conseguirá al final entrar a la sección crítica.
     \item [Alcanzabilidad de la sección crítica.]~\\
         Supusto que dos procesos intenta acceder a la sección crítica, ambos cambiarán su valor de \verb|c| a \verb|true|, y cambiarán el valor de \verb|turno| a su identificador, quedando uno de ellos bloqueado (el último que modificó dicha variable) y el otro proceso consigue pasar el bucle, con lo que alcanza la sección crítica.
+
+        Si solo un proceso $P_i$ intenta acceder a la sección crítica, si notamos por $j$ al identificador del otro proceso, entonces $P_i$ observará \verb|c[j] = false|, con lo que $P_i$ entrará a la sección crítica.
     \item [Equidad.]~\\
         El algoritmo de Peterson no solo garantiza la condición de vivacidad para los procesos del programa concurrente sino que garantiza la equidad en su acceso a la sección crítica:
 
-        Supongamos que un proceso $P_i$ está bloqueado esperando a entrar a la sección crítica y un proceso $P_j$ está continuamente entrando y saliendo de la misma monopolizando us uso. Sin embargo, cuando $P_j$ salga de la sección crítica por primera vez, cambiará el valor de \verb|turno| a $j$, con lo que $P_j$ quedará bloqueado en el acceso a la sección crítica y $P_i$ conseguirá entrar a la misma, contradicción con que un proceso pueda quedar bloqueado.
+        Supongamos que un proceso $P_i$ está bloqueado esperando a entrar a la sección crítica y un proceso $P_j$ está continuamente entrando y saliendo de la misma monopolizando su uso. Sin embargo, cuando $P_j$ salga de la sección crítica por primera vez, cambiará el valor de \verb|turno| a $j$, con lo que $P_j$ quedará bloqueado en el acceso a la sección crítica y $P_i$ conseguirá entrar a la misma, contradicción con que un proceso pueda quedar bloqueado.
 \end{description}
 
 \subsection{Algoritmo de Peterson para $n$ procesos}
@@ -685,7 +664,7 @@ La idea para pasar de 2 procesos a $n$ es repetir $n-1$ veces el proceso de deci
 
 Es decir, primero llegarán $n$ procesos al protocolo de acceso a la sección crítica y cada uno de estos irá asignando la variable compartida \verb|turno| a su identificador de proceso, de forma que habrá un proceso de todos esos $n$ que será el último en haber cambiado el valor de la variable compartida \verb|turno|. Este proceso será el que se quedará esperando en un bucle y dejaremos a los $n-1$ procesos restantes pasar a realizar este procedimiento otra vez, obteniendo $n-2$ procesos. Repetiremos este procedimiento un total de $n-1$ veces, para obtener un único proceso de todos los que intentaron acceder a la vez a la sección crítica.\\
 
-A este procedimiento que repetimos para eliminar un proceso del total de procesos le llemaremos \textit{etapa}, de forma que dispondremos de $n-1$ etapas para, en el caso de que llegan a la vez los $n$ procesos al protocolo de acceso a al sección crítica, dejar pasar solo a un proceso, como resultado de pasar los $n$ procesos por las $n-1$ etapas distintas. Una vez que un proceso haya completado las $n-1$ etapas, se encontrará en la ``etapa $n$'', que es la propia sección crítica.
+A este procedimiento que repetimos para eliminar un proceso del total de procesos le llemaremos \textit{etapa}, de forma que dispondremos de $n-1$ etapas para, en el caso de que lleguen a la vez los $n$ procesos al protocolo de acceso a la sección crítica, dejar pasar solo a uno de ellos a la sección crítica, como resultado de pasar los $n$ procesos por las $n-1$ etapas distintas. Una vez que un proceso haya completado las $n-1$ etapas, se encontrará en la ``etapa $n$'', que es la propia sección crítica.
 
 \subsubsection{Implementación}
 Para implementar un número de etapas que coincida con el número de procesos que en un futuro ejecutarán nuestro programa concurrente, nos vemos obligados a crear un bucle que itere $n-1$ veces, de forma que cada iteración del bucle será una nueva etapa. Así mismo, contaremos con una variable $j$, que será la que nos indique en qué etapa nos encontramos.
@@ -700,7 +679,7 @@ donde:
     \item \verb|c| es un array que contiene las claves de los $n$ procesos que ejecutarán nuestro programa concurrente, de forma que \verb|c[i]| será la clave del proceso $i$-ésimo, la cual podrá tomar los valores:
         \begin{itemize}
             \item $-1$, que indica que el proceso está en estado pasivo (no está intentando acceder a la sección crítica).
-            \item $k$ con $k \in \{0,\ldots,n-2\}$, que indica en qué etapa se encuentra el proceso $i$-ésimo, entendiendo que la primera etapa es la $0$ y la última la $n-2$.
+            \item $k$ con $k \in \{0,\ldots,n-2\}$, que indica en qué etapa se encuentra el proceso $i$-ésimo, entendiendo que la primera etapa es la $0$ y la última la $n-2$; siendo la etapa $n$ la correspondiente a la sección crítica.
         \end{itemize}
     \item \verb|turno| es un array de forma que \verb|turno[j]| indica el valor del turno para la etapa $j$-ésima, cuyo valor es cualquiera de los identificadores de los procesos que ejecutan nuestro programa (como tendremos $n$ procesos, estos están identificados desde el $0$ hasta el $n-1$).
 \end{itemize}
@@ -743,11 +722,11 @@ Posteriormente, ejecuta el \verb|for| indicado en el código, el cual es equival
 Es decir, si \verb|turno[j] = i| (lo que significa que el proceso $i$ fue el último en cambiar el valor de la variable \verb|turno|) y si hay otro proceso $k$ de forma que \verb|c[k] >= j|, es decir, que existe un proceso en una etapa superior, entonces el proceso $i$ se quedará esperando en la etapa $j$, hasta que:
 \begin{itemize}
     \item Llegue un nuevo proceso a la etapa $j$, con lo que el proceso $i$ ya no habrá sido el último en asignar el turno (\verb|turno[j] != i|).
-    \item No haya ningún proceso en la siguiente etapa (es decir, que el proceso que antes había ha avanzado de etapa, con lo que no existe un $k$ de forma que \verb|c[k] >= j|).
+    \item No haya ningún proceso en ninguna etapa siguiente (es decir, que el proceso que antes había ha terminado ya la ejecución de la sección crítica (ya que es la única forma de avanzar), con lo que no existe un $k$ de forma que \verb|c[k] >= j|).
 \end{itemize}
 
 \begin{ejemplo}
-    Para motivar el buen funcionamiento del monitor, el cual demostraremos después, mostramos ya un ejemplo de ejecución del mismo, donde suponemos que tenemos $n=4$ procesos: $P_0$, $P_1$, $P_2$ y $P_3$ que quieren acceder a la sección crítica.
+    Para motivar el buen funcionamiento del algoritmo, el cual demostraremos después, mostramos ya un ejemplo de ejecución del mismo, donde suponemos que tenemos $n=4$ procesos: $P_0$, $P_1$, $P_2$ y $P_3$ que quieren acceder a la sección crítica.
 
     Suponiendo que observamos la traza de ejecución:
     \begin{minted}{pascal}
@@ -787,18 +766,18 @@ Es decir, si \verb|turno[j] = i| (lo que significa que el proceso $i$ fue el úl
         \item Todos los procesos acceden a la vez al protocolo de entrada, a la etapa 0, de forma que $P_2$ es el primero en asignar el valor de \verb|turno[0]|.
         \item Como no hay ningún proceso en la etapa 1 (no existe $k$ de forma que \verb|c[k] >= j|), entonces el proceso $P_2$ pasa a la siguiente etapa, la 1. En este mismo instante, $P_0$ cambia el valor de \verb|turno[0]|.
         \item Ahora, $P_3$ cambia el valor de \verb|turno[0]|, lo que provoca que $P_2$ no haya sido el último proceso en cambiar el turno en la etapa 0, con lo que avanza a la etapa 1, cambiando su valor, lo que hace que $P_2$ ya no haya sido el último, avanza a la etapa 2.
-        \item $P_2$ ve que no hay ningún proceso en la etapa 3 (la sección crítica), con lo que avanza a dicha etapa. Esto hace que no haya ningún proceso en la etapa 2, con lo que $P_0$ avanza a dicha etapa, dejando la etapa 1 libre, lo que provoca que $P_3$ avance a esta. En este momento, $P_1$ cambia el valor de \verb|turno[0]|.
-        \item $P_2$ avandona la sección crítica, pasando ahora a estar pasivo, lo que hace que $P_0$ pueda entrar en la sección crítica, y que cada proceso pueda avanzar de etapa.
+        \item $P_2$ ve que no hay ningún proceso en la etapa 3 (la sección crítica), con lo que avanza a dicha etapa. En este momento, $P_1$ cambia el valor de \verb|turno[0]|, con lo que $P_3$ avanza a la siguiente etapa, lo que provoca que $P_0$ también avance de etapa.
+        \item $P_2$ abandona la sección crítica, pasando ahora a estar pasivo, lo que hace que $P_0$ pueda entrar en la sección crítica.
     \end{enumerate}
     Notemos que lo que hemos hecho ha sido elegir una traza muy concreta para mostrar este ejemplo de ejecución, en el que hemos intentado dar ejemplos de las dos razones por las que un proceso puede avanzar a la siguiente etapa:
     \begin{itemize}
-        \item Por no haber ningún proceso en la siguiente etapa.
+        \item Por no haber ningún proceso en ninguna etapa siguiente.
         \item Por no ser el último proceso en haber cambiado la variable \verb|turno| en la etapa actual.
     \end{itemize}
 \end{ejemplo}
 
 \subsubsection{Propiedades de corrección}
-A continuación, mostraremos las propiedades de corrección del algoritmo de Peterson para $n$ procesos. Para ello, será necesario antes tenemos que introducir una definición y varios lemas:
+A continuación, mostraremos las propiedades de corrección del algoritmo de Peterson para $n$ procesos. Para ello, será necesario antes introducir una definición y varios lemas:
 
 \begin{definicion}[Precedencia]
     Dados dos procesos, $P_i$ y $P_k$, decimos que $P_i$ precede a $P_k$ si $c[i] > c[k]$. Es decir, si $P_i$ se encuentra en un estado posterior al estado de $P_k$.
@@ -857,7 +836,7 @@ Además, será común nombrar ``condición de espera de la etapa $j$'', con lo q
 
 Estamos ya listos para probar todas las propiedades de corrección del algoritmo de Peterson:
 \begin{description}
-    \item [Exclusión mutua.]~\\
+    \item [Exclusión mutua.]\ 
         \begin{itemize}
             \item Supuesto que tenemos un proceso en la etapa $n-2$ y uno en la $n-1$ (en la sección crítica), entonces el proceso de la etapa $n-2$ no puede avanzar, ya que este proceso no precede a todos los demás y está solo en dicha etapa, con lo que de avanzar, no se cumpliría el Lema~\ref{lema:2}.
 
@@ -878,11 +857,16 @@ Estamos ya listos para probar todas las propiedades de corrección del algoritmo
     \item [Equidad]~\\
         No solo demostraremos la vivacidad del algoritmo de Peterson, sino también la equidad de los procesos en el acceso a la sección crítica. Para ello, supongamos el caso más desfavorable en la entrada a la sección crítica:
 
-        Es decir, que los $n$ procesos intentan a la vez entrar a la sección crítica, de forma que el proceso $P_i$ es el último de los $n$ procesos en modificar el valor de la variable \verb|turno[0]|, con lo que se bloqueará en dicha etapa y dejará pasar al resto de los $n-1$ procesos. Cuando en la etapa $1$ no queden procesos o llegue un nuevo proceso a la etapa 0 (esto solo puede suceder cuando el primer proceso en ejecutar la sección crítica salga de la misma), $P_i$ podrá avanzar de etapa, volviéndose a bloquear en la etapa 1. Dicho procedimiento se repetirá, hasta la etapa $n-2$, donde el proceso $P_i$ conseguirá al fin entrar en la sección crítica.
+        Es decir, que los $n$ procesos intentan a la vez entrar a la sección crítica, de forma que el proceso $P_i$ es el último de los $n$ procesos en modificar el valor de la variable \verb|turno[0]|, con lo que se bloqueará en dicha etapa y dejará pasar al resto de los $n-1$ procesos. $P_i$ permanecerá bloqueado en esta etapa hasta que:
+        \begin{itemize}
+            \item Preceda a todos los demás procesos, con lo que todos los $n-1$ procesos anteriores hayan ejecutado ya la sección crítica.
+            \item Venga un nuevo proceso a la etapa 0, es decir, haya un proceso $P_k$ que ya haya ejecutado la sección crítica y entre de nuevo en el protocolo de entrada, lo que permitirá a $P_i$ avanzar, al menos en una etapa.
+        \end{itemize}
+        Dicho procedimiento se repetirá, hasta la etapa $n-2$, donde el proceso $P_i$ conseguirá al fin entrar en la sección crítica.
 
         De esta forma, si $r(n)$ es el número de turnos de espera para $n$ procesos, entonces tenemos que en el peor caso, el proceso $P_i$ deberá dejar pasar a $n-1$ procesos (con lo que pasarán $n-1$ turnos), así como esperar los turnos correspondientes a la misma situación pero para $n-1$ procesos. Es decir:
         \begin{equation*}
-            r(n) = n-1-r(n-1)
+            r(n) = n-1+r(n-1)
         \end{equation*}
         Por tanto, el número de turnos máximos de espera para entrar en la sección crítica según el algoritmo de Peterson está limitado por el valor
         \begin{equation*}
