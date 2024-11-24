@@ -127,6 +127,8 @@ El significado (o semántica) de dichas operaciones puede ser diferentes, es dec
         Decimos que la propiedad de seguridad en el paso de mensajes se cumple en un programa con la operación \verb|send| cuando la ejecución de esta garantiza que el valor recibido por el destinatario sea el valor que tenían los datos antes de la llamada.
 
         Sin embargo, una operación \verb|send| que no cumpla la propiedad de seguridad (sea insegura) podría ocasionar que el valor recibido por el otro proceso no coincida con el valor de los datos antes de la llamada. Por ejemplo, como resultado de modificar los datos tras realizar dicha llamada pero antes de que el sistema comience a transmitir el valor de dichos datos.
+
+        Además, decimos que la propiedad de seguridad en el paso de mensajes se cumple en un programa con la operación \verb|receive| si tras la ejecución de esta disponemos instantáneamente de los datos a recibir en el mensaje asociado. Puede suceder que haya implementaciones de la operación \verb|receive| que no bloqueen al proceso hasta recibir los datos, con lo que hasta que el mensaje no sea recibido, no podremos usar los datos que esperamos recibir. Esta se trata de una operación \verb|receive| insegura.
     \item [Modo de comunicación de las operaciones con paso de mensajes.]~\\
         Podemos encontrarnos con:
         \begin{itemize}
@@ -136,7 +138,7 @@ El significado (o semántica) de dichas operaciones puede ser diferentes, es dec
 \end{description}
 
 \subsection{Operaciones bloqueantes}
-La semántica de este tipo de operaciones de paso de mensajes quiere decir que la operación \verb|send| solo volverá cuando se garantice la propiedad de seguridad anteriormente vista. Es decir, la operación \verb|send| terminará cuando se haya transmitido en mensaje, con lo que la alteración de alguno de los valores que intervienen en el mensaje no modificará a su vez su valor dentro del mensaje. Cuando la operación \verb|send| termine, no podemos asegurar que el receptor haya recibido el mensaje, sino solo que este se ha mandado de forma segura.\\
+La semántica de este tipo de operaciones de paso de mensajes quiere decir que la operación \verb|send| solo volverá (terminará su ejecución) cuando se garantice la propiedad de seguridad anteriormente vista. Es decir, la operación \verb|send| terminará cuando se haya transmitido en mensaje, con lo que la alteración de alguno de los valores que intervienen en el mensaje no modificará a su vez su valor dentro del mensaje. Cuando la operación \verb|send| termine, no podemos asegurar que el receptor haya recibido el mensaje, sino solo que este se ha mandado de forma segura.\\
 
 Encontramos diferentes tipos de operaciones bloqueantes, en relación a su modo de comunicación (si hay un buffer intermedio o si no) y a si hay un hardware especializado o si no:
 \begin{table}[H]
@@ -155,7 +157,7 @@ Encontramos diferentes tipos de operaciones bloqueantes, en relación a su modo 
 \caption{Tipos de operaciones bloqueantes.}
 \end{table}
 
-\subsubsection{Paso de mensajes sin buffer}
+\subsubsection{Paso de mensajes síncrono (sin buffer)}
 Si no disponemos de un buffer intermedio para la comunicación, esta se lleva a cabo mediante un enlace directo entre los dos procesos que participan. Antes de que los datos se transmitan de forma física, ambos procesos han de estar preparados para realizar el intercambio, lo cual exige una \textit{cita} entre el emisor y el receptor. Es decir:
 \begin{itemize}
     \item Si el emisor ejecuta la función \verb|send| antes de de que el receptor haya ejecutado \verb|receive|, el emisor ha de bloquearse hasta que termine la transmisión de los datos (es decir, hasta que el receptor complete la ejecución de \verb|receive|).
@@ -245,10 +247,342 @@ Por otra parte, la vuelta inmediata de la operación \verb|receive| dependerá d
     \item [Si existe hardware especializado.]~\\
         El proceso receptor no se bloqueará al llamar a la operación \verb|receive|, aunque no se hayan terminado de transmitir los datos al receptor, con lo que tendremos un periodo de tiempo en el que acceder a ciertos datos serán unas instrucciones inseguras, con lo que debemos contar con operaciones de comprobación que nos indiquen cuándo es seguro acceder a los datos que están siendo transmitidos.
     \item [Si no existe hardware especializado.]~\\
-        El proceso receptor se ha de suspender al llamar a la operación \verb|receive|, desde que el sisetma esté preparado para recibir los datos hasta el final de la transmisión de los mismos, para que se pueda garantizar la semántica segura de las operaciones de paso de mensajes.
+        El proceso receptor se ha de suspender al llamar a la operación \verb|receive|, desde que el sistema esté preparado para recibir los datos hasta el final de la transmisión de los mismos, para que se pueda garantizar la semántica segura de las operaciones de paso de mensajes.
 \end{description}
 
 \subsubsection{Paso de mensajes con buffer}
 Ahora, cuando se llame a la operación \verb|receive|, no habrá interrupcción del proceso, pero se comenzará con la transferencia de los datos del mensaje a quien aplica esta operación desde un buffer de recepción interno del sistema al área de memoria donde se espera recibirlos.
 
 Como consecuecnia, se reduce el tiempo de espera en el proceso receptor, aunque el acceso a los datos durante la copia de los mismos es insegura.
+
+\section{Diseño de programas distribuidos}
+A continuación, veremos los roles predominantes que tienen los procesos en los sistemas distribuidos, así como una nueva sentencia de programación necesaria para estos sistemas.
+
+\subsection{Tipos de procesos}
+En un sistema distribuido, es normal asociar ``roles'' a los procesos que intervienen en la ejecución del sistema, con la finalidad de explicar su existencia o compartamiento. Distinguimos 4 roles principales:
+\begin{description}
+    \item [Filtros.] Son procesos transformadores de datos: Operan sobre un flujo de datos entrante de forma que para cada dato de entrada (o conjunto de datos de entrada) es capaz de emitir un dato en el flujo de datos de salida.
+
+        En programas destinados a la realización de cálculos, es normal contar con varios procesos filtros, de forma que un proceso filtro alimente a otro filtro con su salida.
+    \item [Clientes.] Son procesos desencadenantes de algo: Hacen peticiones a otros procesos, desencadenando en estos un comportamiento esperado. Muchas veces esperan a ser respondidos.
+    \item [Servidores.] Son procesos reactivos: esperan a que se les hagan peticiones y reaccionan a estas, desencadenando las acciones adecuadas o respondiendo al proceso que realizó la petición. Suele ser un proceso que nunca termina y que da servicio a muchos procesos.
+
+        Es común observar en programación la arquitectura cliente/servidor, de forma que dispongamos de varios procesos clientes que tengan que hacer uso de un servidor para completar su funcionalidad.
+    \item [Pares.] Decimos que dos o varios procesos son pares si son idénticos y colaboran entre sí para resolver un problema. Son comunes en las arquitecturas \textit{peer-to-peer}, donde solo tenemos procesos pares con el fin de resolver el problema en cuestión.
+\end{description}
+
+\subsection{Órdenes con guarda}\label{sec:ordenes_guarda}
+Como motivación a las instrucciones de órdenes con guarda, planteamos el \textit{problema del museo} en el siguiente ejemplo:
+\begin{ejemplo}
+    En un museo, contamos con dos puertas giratorias, ambas controladas por sensores infrarrojos que tienen la finalidad de avisar a un controlador cuando detectan el paso de personas, para controlar la entrada al museo. De esta forma, el código de los procesos que son responsables de las puertas puede ser similar al de la Figura~\ref{fig:cod_museo}.\\
+    \begin{figure}
+        \centering
+        \setlength{\columnsep}{1cm}
+        \begin{multicols}{2}
+            \begin{minted}{pascal}
+                Process P1;
+                begin
+                while true do begin
+                   while(no_pasa_persona()) do begin
+                      null;
+                   end
+                   send(aviso, P3);
+                end
+                end
+            \end{minted}
+            \begin{minted}{pascal}
+                Process P2;
+                begin
+                while true do begin
+                   while(no_pasa_persona()) do begin
+                      null;
+                   end
+                   send(aviso, P3);
+                end
+                end
+            \end{minted}
+        \end{multicols}
+        \caption{Código para las puertas del museo.}
+        \label{fig:cod_museo}
+    \end{figure}
+
+    Tendremos otro proceso $P_3$ que hará las veces de controlador: debe controlar el aforo del museo, así como no contar aquellas personas que pasen tras la hora de cierre. Para ello, debe ser capaz de recibir los mensajes de las dos puertas (de los procesos $P_1$ y $P_2$). Un primer código que se nos podría ocurrir para el controlador es el de la Figura~\ref{fig:cod_museo_controlador}
+    \begin{figure}
+        \centering
+        \begin{minted}{pascal}
+            P3;
+            var aforo : integer;
+            begin
+            while true do begin
+               receive(aviso, P1);
+               aforo := aforo + 1;
+               receive(aviso, P2);
+               aforo := aforo + 1;
+
+               { Resto de sentencias }
+            end
+            end
+        \end{minted}
+        \caption{Primer código para el controlador.}
+        \label{fig:cod_museo_controlador}
+    \end{figure}
+    Sin embargo, este código no permite detectar a personas por la segunda puerta antes de detectar alguna persona por la primera. Además, no permite que dos personas pasen juntas por la misma puerta, sino que obliga a la alternancia obligatoria entre las puertas, teniendo que pasar primero por la primera puerta, un comportamiento que no queremos obligar a los visitantes del museo.
+\end{ejemplo}
+
+\begin{ejemplo}
+    De forma similar al ejemplo anterior, podemos tener un proceso servidor que dé servicio a 100 clientes (o 1000, o cualquier número de clientes). Nos preguntamos por un código que nos permita recibir un mensaje de cualquier cliente y luego actuar en base al mensaje recibido.\\
+
+    Sin embargo, al igual que pasaba con el museo, no obtenemos respuesta alguna sobre cómo podemos programar esta funcionalidad, ya que debemos exigir un orden en cómo el proceso receptor de mensajes debe recibirlos.
+\end{ejemplo}
+
+\subsubsection{Definición}
+\noindent
+Estos dos ejemplos sirven de motivación para la existencia de las órdenes con guarda. Estas son un tipo de órdenes delimitadas por las palabras reservadas \verb|if| (al inicio) y \verb|fi| (al final), y separadas por un delimitador (en nuestro caso, \verb|[]|). 
+
+Una orden con guarda consta de una orden (cualquier sentencia del lenguaje de programación) y de una guarda\footnote{Quién lo habría dicho.}, es decir, una condición booleana.\\
+
+De esta forma, cuando el proceso que está ejecutando el programa se encuentra con una orden con guarda, lo que hará será evaluar todas las guardas de la misma, quedándose con las que se evalúan como verdaderas, y escogerá de forma no determinista una de ellas para ejecutar su orden asociada.
+
+\begin{ejemplo}
+    Recuperando el ejemplo del problema del museo, podemos hacer uso de una órden con guarda para resolver el problema de que no sabíamos cómo programar el proceso $P_3$ que actúa de controlador del museo. Haciendo uso de las órdenes con guarda, el código del mismo queda como el de la Figura~\ref{fig:cod_museo_guarda}.
+    \begin{figure}[H]
+        \centering
+        \begin{minted}{pascal}
+            P3;
+            var aforo : integer;
+            begin
+            while true do begin
+               if
+                  (receive(aviso, P1))
+               []
+                  (receive(aviso, P2))
+               fi
+
+               aforo := aforo + 1;
+               { Resto de sentencias }
+            end
+            end
+        \end{minted}
+        \caption{Código para el controlador usando órdenes con guarda.}
+        \label{fig:cod_museo_guarda}
+    \end{figure}
+    De esta forma, en el caso de que las operaciones \verb|receive| devolvieran \verb|true| si tienen el mensaje disponible y \verb|false| en caso contrario, tenemos un código para el controlador del museo.
+\end{ejemplo}
+
+\section{Espera selectiva}
+Tras ver en la Sección~\ref{sec:ordenes_guarda} las órdenes con guarda, procedemos ahora a definir y explicar el comportamiento de la espera selectiva, un tipo de orden con guarda que poseen ciertos lenguajes de programación de sistemas distribuidos con señales síncronas, con el fin de solucionar el problema de la recepción de múltiples mensajes.
+
+\subsection{Definición de sentencia de espera selectiva o \texttt{select}}
+Una sentencia de espera activa comienza con la palabra reservada \verb|select| y termina con la palabra reservada \verb|end|, de forma que entre estas dos palabras cuenta con varias alternativas u órdenes con guarda.
+
+Una orden con guarda comienza con la palabra reservada \verb|when|, y en ella podemos encontrar dos partes bien diferenciadas:
+\begin{itemize}
+    \item La guarda, conformada por una condición booleana y una instrucción \verb|receive|. Se sitúan inmediatamente después del \verb|when|.
+    \item Un bloque de código, que se sitúa tras la palabra reservada \verb|do|, situada esta tras la guarda.
+\end{itemize}
+En el caso de la espera selectiva, encontramos tres alternativas para la guarda:
+\begin{itemize}
+    \item Que sea una condición booleana.
+    \item Que sea una condición booleana y una instrucción \verb|receive|. 
+
+        De esta forma, si la condición booleana es evaluada como \verb|false|, la instrucción \verb|receive| no llegará a ejecutarse.
+        Este tipo de guardas son frecuentemente llamadas ``guardas sin sentencias de entrada''.
+    \item Que sea una instrucción \verb|receive|. 
+
+    El comportamiento de este tipo de guarda es idéntico al que obtendríamos con una guarda con la misma operación \verb|receive| y la condición \verb|true|.
+\end{itemize}
+Es decir, la sintaxis de una espera selectiva es:
+\begin{minted}{pascal}
+    select
+       when condicion1 receive(variable1, proceso1) do
+          sentencias;
+       when condicion2 receive(variable2, proceso2) do
+          sentencias;
+       ...
+       when condicionn receive(variablen, proceson) do
+          sentencias;
+    end
+\end{minted}
+Puediendo omitir en cada guarda la condición booleana o la instrucción \verb|receive|, pero no ambas.\\
+
+La razón por la que solo permitimos instrucciones \verb|receive| en las guardas y no instrucciones \verb|send| es debido a que no queremos que la evaluación de las alternativas de la instrucción \verb|select| cambie el estado del proceso, así como evitar situaciones de bloqueos, las cuales son más frecuentes con el uso de instrucciones \verb|send|.
+
+\subsection{Comportamiento de la espera selectiva}
+Cuando un proceso se encuentra ejecutando su código y se encuentra con una espera selectiva o sentencia \verb|select|, lo que hace es evaluar primero todas las guardas, con el fin de clasificar a los guardas de las órdenes con guarda en tres tipos (estos tipos son dinámicos, de forma que una orden con guarda puede tener un tipo en una ejecución de la sentencia \verb|select| y que tenga un tipo distinto en la siguiente ejecución de la misma sentencia):
+\begin{description}
+    \item [Guardas ejecutables.] Una guarda es ejecutable si su condición es evaluada como cierta y además el proceso cuyo nombre se indica en la instrucción \verb|receive| ya terminó de enviar el mensaje (es decir, el mensaje está ``listo'' para ser recibido).
+
+        Si la guarda no tiene instrucción \verb|receive|, bastará con que su condición booleana sea evaluada como cierta\footnote{Podemos pensar que el razonamiento anterior es cierto por vacuidad.}. En caso de no disponer de condición booleana, entendemos que tiene la condición \verb|true|.
+    \item [Guardas potencialmente ejecutables.] Decimos que una guarda es potencialmente ejecutable cuando su condición booleana es evaluada como cierta pero todavía el mensaje no ha sido enviado (es decir, si la ejecución de la instrucción \verb|receive| provoque que el proceso receptor se bloquee esperando la correspondiente instrucción \verb|send|).
+
+        Si una guarda no tiene instrucción \verb|receive| no puede ser potencialmente ejecutable. En caso de no tener condición booleana, se entiende que su condición es \verb|true|.
+    \item [Guardas no ejecutables.] Una guarda se dice que es no ejecutable si su condición booleana es evaluada como falsa.
+
+        De esta forma, las guardas sin condiciones booleanas nunca son no ejecutables.
+\end{description}
+Una vez clasificadas en tiempo de ejecución todas las guardas, es necesario seleccionar una orden con guarda para su ejecución. El criterio de selección del bloque de código de dicha orden es el siguiente:
+\begin{enumerate}
+    \item Si hay una o varias guardas ejecutables con instrucción \verb|receive|, se selecciona la orden con guarda correspondiente a la instrucción \verb|receive| cuyo proceso emisor realizó primero la instrucción \verb|send|.
+    \item Si hay una o varias guardas ejecutables pero ninguna tiene sentencia de entrada, se selecciona de forma no determinista una de ellas para su ejecución.
+    \item Si no hay guardas ejecutables pero hay una o varias guardas potencialmente ejecutables, entonces el proceso se \textbf{bloqueará} hasta que alguna de las guardas pase a ser ejecutable, en cuyo caso ejecutará dicha orden con guarda.
+    \item Si todas las guardas son no ejecutables, la instrucción terminará con un error.
+\end{enumerate}
+Destacamos ciertas consecuencias de este comportamiento de la instrucción:
+\begin{itemize}
+    \item Debido a que es deseable que no todas las guardas sean no ejecutables, debemos establecer las condiciones de las guardas de forma que la disyunción de todas ellas sea un aserto. Es decir, debemos intentar tener en las condiciones de las guardas todas las alternativas que puedan plantearse en el problema.
+    \item La ejecución de una instrucción \verb|select| puede conllevar esperas, en el caso de que todas las guardas sean potencialmente ejecutables.
+    \item Los bloques de código de cada orden con guarda se ejecutan de principio a fin.
+    \item Hay versiones de esperas selectivas con prioridad, de forma que podamos establecer una prioridad en la selección de la guarda a ejecutar.
+\end{itemize}
+
+\begin{ejemplo}
+    Para ilustrar el uso de la sentencia \verb|select|, resolveremos ahora el problema de los productores/consumidores en un sistema distribuido. Para ello, dispondremos de un proceso productor, que generará datos, y de un proeceso consumidor, que procesará dichos datos. Además, como no contamos con una memoria compartida, será necesaria la creación de un nuevo proceso, que sirva como intermediario entre el productor y el consumidor.\\
+
+    De esta forma, el código del productor y del consumidor puede ser el observado en la Figura~\ref{fig:prod_cons}.
+    \begin{figure}[H]
+        \centering
+        \setlength{\columnsep}{1cm}
+        \begin{multicols}{2}
+            \begin{minted}{pascal}
+                {Identificador: P}
+                Process Productor;
+                var v : integer;
+                begin
+                while true do begin
+                   v := Producir();
+                   send(v, B);
+                end
+                end
+            \end{minted}
+            \begin{minted}{pascal}
+                {Identificador: C}
+                Process Consumidor;
+                var v : integer;
+                begin
+                while true do begin
+                   send(s, B);
+                   receive(v, B);
+                   Consumir(v);
+                end
+                end
+            \end{minted}
+        \end{multicols}
+        \caption{Código para el problema de los productores/consumidores.}
+        \label{fig:prod_cons}
+    \end{figure}
+    Así, el productir enviará los valores producidos al proceso intermedio (identificado por \verb|B|), y el consumidor deberá solicitar datos al proceso intermedio, quien responderá con dichos datos.\\
+
+    Es fácil adivinar que en el código de dicho proceso intermedio debe aparecer una instrucción \verb|select|, así como un buffer de dicho proceso para almacenar los datos producidos mientras que no están siendo consumidos. El código del proceso intermedio es el que se observa en la Figura~\ref{fig:prod_cons_intermedio}.
+    \begin{figure}[H]
+        \centering
+        \begin{minted}{pascal}
+            {Identificador: B}
+            Process Intermedio;
+            var esc, lec, ocupados : integer := 0;
+                buf : array[0..tam-1] of integer;
+            begin
+            while true do begin
+               select
+                  when cont < tam receive(v, P) do
+                     buf[esc] := v;
+                     esc := (esc + 1) mod tam;
+                     ocupados := ocupados + 1;
+                  when cont > tam receive(s, C) do
+                     send(buf[lec], C);
+                     lec := (lec + 1) mod tam;
+                     ocupados := ocupados - 1;
+               end
+            end
+            end
+        \end{minted}
+        \caption{Proceso intermedio en el problema de los productores/consumidores.}
+        \label{fig:prod_cons_intermedio}
+    \end{figure}
+\end{ejemplo}
+
+\subsection{\texttt{select} con guardas indexadas}
+Puede suceder que tengamos un proceso servidor que dé servicio a miles de clientes de forma que la acción a realizar por parte del servidor sea idéntica en muchos de esos clientes (como por ejemplo en el caso del problema de productores/consumidores con múltiples productores y múltiples consumidores).\\
+
+En dicho caso, no será necesario programar miles de órdenes con guarda, sino sólamente una, que dependerá de un índice, cuyo rango de variación estará acotado. De esta forma, introducimos la sintaxis:
+\begin{minted}{pascal}
+       for indice := inicial to final
+          when condicion(indice) receive(variable(indice), fuente(indice)) do
+             sentencias(indice)
+\end{minted}
+como una orden con guarda válida, de forma que esta se sustituirá por $final-inicial$ órdenes con guarda, de la forma:
+\begin{minted}{pascal}
+    when condicion(inicial) receive(variable(inicial), fuente(inicial)) do
+       sentencias(inicial)
+    when condicion(inicial+1) receive(variable(inicial+1), fuente(inicial+1)) do
+       sentencias(inicial+1)
+    ...
+    when condicion(final) receive(variable(final), fuente(final)) do
+       sentencias(final)
+\end{minted}
+
+\begin{ejemplo}
+    Si queremos programar un proceso servidor que vaya acumulando la suma que le ordenen $n$ procesos hasta que la suma de cada proceso iguale o supere el valor 100, podemos programar una sentencia \verb|select| que haga uso de las guardas indexadas, tal y como vemos en la Figura~\ref{fig:cod_guardas_indexadas}.
+    \begin{figure}[H]
+        \centering
+        \begin{minted}{pascal}
+            select
+               for i := 0 to n-1
+                  when suma[i] < 100 receive(numero, fuente[i]) do
+                     suma[i] := suma[i] + numero;
+            end
+        \end{minted}
+        \caption{Código con guardas indexadas.}
+        \label{fig:cod_guardas_indexadas}
+    \end{figure}
+    Este código será equivalente al de la Figura~\ref{fig:cod_guardas_indexadas_equiv}
+    \begin{figure}[H]
+        \centering
+        \begin{minted}{pascal}
+            select
+               when suma[0] < 100 receive(numero, fuente[0]) do
+                  suma[0] := suma[0] + numero;
+               when suma[1] < 100 receive(numero, fuente[1]) do
+                  suma[1] := suma[1] + numero;
+               ...
+               when suma[n-1] < 100 receive(numero, fuente[n-1]) do
+                  suma[n-1] := suma[n-1] + numero;
+            end
+        \end{minted}
+        \caption{Código equivalente.}
+        \label{fig:cod_guardas_indexadas_equiv}
+    \end{figure}
+\end{ejemplo}
+
+\subsection{\texttt{select} con sentencia \texttt{else}}
+Al igual que en la operación \verb|switch| (de \verb|C++| o Java) contamos con la palabra reservada \verb|default| para no dejarnos ningún caso, en las sentencias \verb|select| podemos hacer uso de la palabra reservada \verb|else| para que, en el caso de que todas las guardas sean no ejecutables una vez que el proeso alcanza la sentencia \verb|select|, que esta no termine con error, sino que ejecute el bloque de código asociado a la palabra \verb|else|, de forma que introducimos la sintaxis:
+\begin{minted}{pascal}
+    else
+       sentencias;
+\end{minted}
+como una operación con guarda válida más, la cual será ejecutada si el resto de órdenes con guarda son no ejecutables cuando el proceso se disponga a ejecutar la sentencia \verb|select|.
+
+\begin{ejemplo}
+    Recuperando el ejemplo anterior del proceso servidor que reúne la suma de $n$ procesos, mostramos ahora el código completo del proceso servidor, en la Figura~\ref{fig:cod_ejm_select}, al disponer ya de la sentencia \verb|else|.
+    \begin{figure}
+        \centering
+        \begin{minted}{pascal}
+            Process Servidor;
+            var suma : array[0..n-1] of integer := (0,0,...,0);
+                continuar : boolean := true;
+                numero : integer;
+            begin
+               while continuar do begin
+                  select 
+                     for i := 0 to n-1
+                        when suma[i] < 100 receive(numero, fuente[i]) do
+                           suma[i] := suma[i] + numero;
+                     else 
+                        continuar := false;
+                  end
+               end
+            end
+        \end{minted}
+        \caption{Código del proceso servidor.}
+        \label{fig:cod_ejm_select}
+    \end{figure}
+\end{ejemplo}

@@ -1422,10 +1422,11 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
                            procedure retirar(c : integer);
                            begin
                               while c > saldo do begin
-                                 cola.wait();
                                  cola.signal();
+                                 cola.wait();
                               end do
                               saldo = saldo - c;
+                              cola.signal();
                            end
 
                            begin
@@ -1433,18 +1434,8 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
                            end
                         end
                     \end{minted}
-                \item Con colas de prioridad en las variables condición, el código del monitor queda más simple:
+                \item Con colas de prioridad en las variables condición, el código del monitor queda más simple, teniendo solo que modificar el procedimiento \verb|retirar|:
                     \begin{minted}{pascal}
-                        Monitor Cuenta;
-                        var saldo : integer;
-                            cola : condition;
-
-                           procedure depositar(c : integer);
-                           begin
-                              saldo = saldo + c;
-                              cola.signal();
-                           end
-
                            procedure retirar(c : integer);
                            begin
                               while c > saldo do begin
@@ -1453,20 +1444,15 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
                               saldo = saldo - c;
                               cola.signal();
                            end
-
-                           begin
-                              saldo = 0;
-                           end
-                        end
                     \end{minted}
             \end{enumerate}
-        \item Ahora, con orden en las retiradas:
+        \item Ahora, con orden en las retiradas, es necesrio disponer de una variable condición más, que controle si hay alguien esperando a retirar dinero.
             \begin{enumerate}[label=\alph*)]
                 \item Con colas normales FIFO en las variables condición:
                     \begin{minted}{pascal}
                         Monitor Cuenta;
                         var saldo : integer;
-                            cola : condition;
+                            cola, ventanilla : condition;
 
                            procedure depositar(c : integer);
                            begin
@@ -1476,9 +1462,13 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
 
                            procedure retirar(c : integer);
                            begin
-                              while c > saldo do begin
+                              if ventanilla.queue() then
                                  cola.wait();
+
+                              while c > saldo do begin
+                                 ventanilla.wait();
                               end do
+
                               saldo = saldo - c;
                               cola.signal();
                            end
@@ -1488,10 +1478,11 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
                            end
                         end
                     \end{minted}
-                \item Con colas con prioridad en las variables condición:
+                \item Con colas con prioridad en las variables condición, lo que hacemos es introducir una nueva variable \verb|contador|, con la finalidad de bloquear a los procesos según su orden de llegada.
                     \begin{minted}{pascal}
                         Monitor Cuenta;
                         var saldo : integer;
+                            contador : integer := 0;
                             cola : condition;
 
                            procedure depositar(c : integer);
@@ -1501,10 +1492,18 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
                            end
 
                            procedure retirar(c : integer);
+                           var ticket : integer;
                            begin
-                              while c > saldo do begin
-                                 cola.wait(1);  {Asignamos la misma prioridad a todos}
-                              end do
+                              ticket = contador;
+                              contador = contador + 1;
+
+                              if cola.queue() then 
+                                 cola.wait(ticket);
+
+                              while c > saldo do
+                                 cola.wait(ticket);
+                              end
+
                               saldo = saldo - c;
                               cola.signal();
                            end
