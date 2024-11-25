@@ -1851,6 +1851,23 @@
         \begin{equation*}
             (0+1)(0+1) \ \red{0}\  {(0+1)}^{\ast} \ \red{1}\ (0+1)(0+1)
         \end{equation*}
+        \begin{observacion}
+            Notemos que esta expresión regular no contempla las palabras de longitud menor o igual a $5$. Estudiemos estas:
+            \begin{itemize}
+                \item Si $|z|=5$, es necesario que el tercer símbolo sea un $0$ y el antepenúltimo ($5-2=3$) un $1$. Por tanto, como el tercer símbolo no puede tomar ambos valores a la vez, no hay palabras de longitud $5$.
+                \item Si $|z|=4$, es necesario que el tercer símbolo sea un $0$ y el antepenúltimo ($4-2=2$) un $1$. Por tanto, estas palabras son de la forma $(0+1) \ \red{10} \ (0+1)$.
+                \item Si $|z|=3$, es necesario que el tercer símbolo sea un $0$ y el antepenúltimo ($3-2=1$) un $1$. Por tanto, estas palabras son de la forma $\red{1} \ (0+1) \ \red{0}$.
+                \item Si $|z|<3$, no podemos considerar el tercer símbolo, por lo que no hay palabras de longitud menor que $3$.
+            \end{itemize}
+
+            Por tanto, la expresión regular correcta sería:
+            \begin{equation*}
+                (0+1)(0+1) \ \red{0}\  {(0+1)}^{\ast} \ \red{1}\ (0+1)(0+1)
+                + (0+1) \ \red{10} \ (0+1)
+                + \red{1} \ (0+1) \ \red{0}
+            \end{equation*}
+            No obstante, obtener el autómata finito minimal asociado a esta expresión regular sería muy complejo, por lo que no consideramos dichas palabras.
+        \end{observacion}
 
         El AFND que acepta el lenguaje intersección se muestra en la Figura~\ref{fig:ej:1.3.20:AFND-Interseccion}.
         \begin{figure}
@@ -1920,17 +1937,163 @@
             \caption{AFD que acepta la intersección de los lenguajes del ejercicio~\ref{ej:1.3.20}.}
             \label{fig:ej:1.3.20:AFD-Interseccion}
         \end{figure}
-        % // Faltan las palabras 1_0 y _10_, pero es lo q hay
     \end{description}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.21}
     Construir un autómata finito minimal para los siguientes lenguajes sobre el alfabeto $\{0,1\}$:
     \begin{enumerate}
-        \item Palabras que contienen como subcadena una palabra del conjunto ${\{00,11\}}^{2}$.
-        \item Palabras que contienen como subcadena una palabra del conjunto $\{0011,1100\}$.
+        \item \label{ej:1.3.21-1}
+        Palabras que contienen como subcadena una palabra del conjunto ${\{00,11\}}^{2}$.
+        
+        Han de contener una subcadena del conjunto $\{0000,0011,1100,1111\}$. Para ello, construimos el autómata de la Figura~\ref{fig:ej:1.3.21-1:AFD}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial] (q0) {$q_0$};
+                \node[state, above right of=q0] (q1) {$q_{1}$};
+                \node[state, below right of=q0] (q2) {$q_{2}$};
+                \node[state, right of=q1] (q3) {$q_{3}$};
+                \node[state, right of=q2] (q4) {$q_{4}$};
+                \node[state, above right of=q3, yshift=-2em] (q5) {$q_{5}$};
+                \node[state, below right of=q3, yshift=2em] (q6) {$q_{6}$};
+                \node[state, above right of=q4, yshift=-2em] (q7) {$q_{7}$};
+                \node[state, below right of=q4, yshift=2em] (q8) {$q_{8}$};
+                \node[state, accepting, right of=q5] (q9) {$q_{9}$};
+                \node[state, accepting, right of=q6] (q10) {$q_{10}$};
+                \node[state, accepting, right of=q7] (q11) {$q_{11}$};
+                \node[state, accepting, right of=q8] (q12) {$q_{12}$};
+
+                \draw   (q0) edge[above] node{0} (q1)
+                        (q1) edge[above] node{0} (q3)
+                        (q3) edge[above] node{0} (q5)
+                        (q5) edge[above] node{0} (q9)
+                        (q3) edge[above] node{1} (q6)
+                        (q6) edge[above] node{1} (q10)
+                        (q0) edge[above] node{1} (q2)
+                        (q2) edge[above] node{1} (q4)
+                        (q4) edge[above] node{1} (q8)
+                        (q8) edge[above] node{1} (q12)
+                        (q4) edge[above] node{0} (q7)
+                        (q7) edge[above] node{0} (q11);
+                    
+                \draw   (q1) edge[left, bend left] node{1} (q2)
+                        (q2) edge[right, bend left] node{0} (q1)
+                        (q5) edge[right] node{1} (q6)
+                        (q6) edge[above, bend left] node{0} (q1)
+                        (q8) edge[right] node{0} (q7)
+                        (q7) edge[below, bend right] node{1} (q2);
+
+                \draw   (q9) edge[loop right] node{0,1} (q9)
+                        (q10) edge[loop right] node{0,1} (q10)
+                        (q11) edge[loop right] node{0,1} (q11)
+                        (q12) edge[loop right] node{0,1} (q12);
+            \end{tikzpicture}
+            \caption{AFD que acepta el lenguaje del ejercicio~\ref{ej:1.3.21}.\ref{ej:1.3.21-1}.}
+            \label{fig:ej:1.3.21-1:AFD}
+        \end{figure}
+
+        La minimización del autómata de la Figura~\ref{fig:ej:1.3.21-1:AFD} se muestra en la Tabla~\ref{tab:ej:1.3.21-1:AFD-Minimal}.
+        \begin{table}
+            \centering
+            \begin{tabular}{r cccccccccccccc}
+                \hhline{~*{1}{-}}
+                $q_1$ & \cell{\times} \\ \hhline{~*{2}{-}}
+                $q_2$ & \cell{\times} & \cell{\times} \\ \hhline{~*{3}{-}}
+                $q_3$ & \cell{\times} & \cell{\times} & \cell{\times} \\ \hhline{~*{4}{-}}
+                $q_4$ & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} \\ \hhline{~*{5}{-}}
+                $q_5$ & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} \\ \hhline{~*{6}{-}}
+                $q_6$ & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} \\ \hhline{~*{7}{-}}
+                $q_7$ & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} \\ \hhline{~*{8}{-}}
+                $q_8$ & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} \\ \hhline{~*{9}{-}}
+                $q_9$ & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times}& \cell{\times} \\ \hhline{~*{10}{-}}
+                $q_{10}$ & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times}& \cell{\times} & \cell{} \\ \hhline{~*{11}{-}}
+                $q_{11}$ & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times}& \cell{\times} & \cell{} & \cell{} \\ \hhline{~*{12}{-}}
+                $q_{12}$ & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times}& \cell{\times} & \cell{} & \cell{} & \cell{} \\ \hhline{~*{12}{-}}
+                & $q_0$ & $q_1$ & $q_2$ & $q_3$ & $q_4$ & $q_5$ & $q_6$ & $q_7$ & $q_8$ & $q_9$ & $q_{10}$ & $q_{11}$
+            \end{tabular}
+            \caption{Tabla de minimización del autómata de la Figura~\ref{fig:ej:1.3.21-1:AFD}.}
+            \label{tab:ej:1.3.21-1:AFD-Minimal}
+        \end{table}
+
+        Por tanto, tenemos que todos los estados finales eran indistinguibles. Notándolos por $q_F$, el autómata minimal es el de la Figura~\ref{fig:ej:1.3.21-1:AFD-Minimal}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial] (q0) {$q_0$};
+                \node[state, above right of=q0] (q1) {$q_{1}$};
+                \node[state, below right of=q0] (q2) {$q_{2}$};
+                \node[state, right of=q1] (q3) {$q_{3}$};
+                \node[state, right of=q2] (q4) {$q_{4}$};
+                \node[state, above right of=q3, yshift=-2em] (q5) {$q_{5}$};
+                \node[state, below right of=q3, yshift=2em] (q6) {$q_{6}$};
+                \node[state, above right of=q4, yshift=-2em] (q7) {$q_{7}$};
+                \node[state, below right of=q4, yshift=2em] (q8) {$q_{8}$};
+                \node[state, accepting, right of=q7, yshift=2em] (qF) {$q_{F}$};
+
+                \draw   (q0) edge[above] node{0} (q1)
+                        (q1) edge[above] node{0} (q3)
+                        (q3) edge[above] node{0} (q5)
+                        (q5) edge[above, bend left] node{0} (qF)
+                        (q3) edge[above] node{1} (q6)
+                        (q6) edge[above] node{1} (qF)
+                        (q0) edge[above] node{1} (q2)
+                        (q2) edge[above] node{1} (q4)
+                        (q4) edge[above] node{1} (q8)
+                        (q8) edge[above, bend right] node{1} (qF)
+                        (q4) edge[above] node{0} (q7)
+                        (q7) edge[above] node{0} (qF);
+                    
+                \draw   (q1) edge[left, bend left] node{1} (q2)
+                        (q2) edge[right, bend left] node{0} (q1)
+                        (q5) edge[right] node{1} (q6)
+                        (q6) edge[above, bend left] node{0} (q1)
+                        (q8) edge[right] node{0} (q7)
+                        (q7) edge[below, bend right] node{1} (q2);
+
+                \draw   (qF) edge[loop right] node{0,1} (qF);
+            \end{tikzpicture}
+            \caption{AFD minimal que acepta el lenguaje del ejercicio~\ref{ej:1.3.21}.\ref{ej:1.3.21-1}.}
+            \label{fig:ej:1.3.21-1:AFD-Minimal}
+        \end{figure}
+        \item \label{ej:1.3.21-2}
+        Palabras que contienen como subcadena una palabra del conjunto $\{0011,1100\}$.
+
+        El AFD minimal que acepta este lenguaje es el de la Figura~\ref{fig:ej:1.3.21-2:AFD}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial] (q0) {$q_0$};
+                \node[state, above right of=q0] (q1) {$q_{1}$};
+                \node[state, below right of=q0] (q2) {$q_{2}$};
+                \node[state, right of=q1] (q3) {$q_{3}$};
+                \node[state, right of=q2] (q4) {$q_{4}$};
+                \node[state, right of=q3] (q6) {$q_{6}$};
+                \node[state, right of=q4] (q7) {$q_{7}$};
+                \node[state, accepting, above right of=q7] (qF) {$q_{F}$};
+
+                \draw   (q0) edge[above] node{0} (q1)
+                        (q1) edge[above] node{0} (q3)
+                        (q3) edge[loop above] node{0} (q3)
+                        (q3) edge[above] node{1} (q6)
+                        (q6) edge[above] node{1} (qF)
+                        (q0) edge[above] node{1} (q2)
+                        (q2) edge[above] node{1} (q4)
+                        (q4) edge[loop below] node{1} (q4)
+                        (q4) edge[above] node{0} (q7)
+                        (q7) edge[above] node{0} (qF);
+                    
+                \draw   (q1) edge[left, bend left] node{1} (q2)
+                        (q2) edge[right, bend left] node{0} (q1)
+                        (q6) edge[below, bend left] node{0} (q1)
+                        (q7) edge[above, bend right] node{1} (q2);
+
+                \draw   (qF) edge[loop right] node{0,1} (qF);
+            \end{tikzpicture}
+            \caption{AFD minimal que acepta el lenguaje del ejercicio~\ref{ej:1.3.21}.\ref{ej:1.3.21-2}.}
+            \label{fig:ej:1.3.21-2:AFD}
+        \end{figure}
     \end{enumerate}
-    % // TODO: Continuar por aquí
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.22}
@@ -2025,7 +2188,7 @@
 
 
         \item Diseña el AFD mínimo que reconoce el lenguaje $(L_1 \cup L_2)$.
-        % // TODO: Hacer
+        % // TODO: Union de L1 y L2
     \end{enumerate}
 \end{ejercicio}
 
@@ -2038,11 +2201,49 @@
                 \item Si $|u|\geq 5$ entonces el número de 1's es par.
                 \item $u$ tiene al menos un símbolo 1.
             \end{itemize}
-        \item Construye un autómata que reconozca el lenguaje $L_2$ dado por:
+            % // TODO: Gramática regular para L1
+        \item \label{ej:1.3.23-2}
+        Construye un autómata que reconozca el lenguaje $L_2$ dado por:
             \begin{equation*}
                 L_2 = \{0^n 1^m \mid n\geq 0, m\geq 1, m \text{\ es múltiplo de\ } 6\}
             \end{equation*}
+
+            El autómata finito determinista asociado a $L_2$ es el de la Figura~\ref{fig:1.3.23-L2}.
+            \begin{figure}
+                \centering
+                \begin{tikzpicture}[node distance=2.5cm]
+                    \node[state, initial] (q0) {$q_0$};
+                    \node[state, right of=q0] (q1) {$q_1$};
+                    \node[state, right of=q1] (q2) {$q_2$};
+                    \node[state, right of=q2] (q3) {$q_3$};
+                    \node[state, right of=q3] (q4) {$q_4$};
+                    \node[state, right of=q4] (q5) {$q_5$};
+                    \node[state, accepting, right of=q5] (q6) {$q_6$};
+                    \node[state, below of=q3, error] (E) {$E$};
+
+                    \draw   (q0) edge[above] node{1} (q1)
+                            (q1) edge[above] node{1} (q2)
+                            (q2) edge[above] node{1} (q3)
+                            (q3) edge[above] node{1} (q4)
+                            (q4) edge[above] node{1} (q5)
+                            (q5) edge[above] node{1} (q6)
+                            (q6) edge[above, bend right] node{1} (q1)
+                            (q0) edge[loop above] node{0} (q0)
+                            (q1) edge[above] node{0} (E)
+                            (q2) edge[above] node{0} (E)
+                            (q3) edge[above right] node{0} (E)
+                            (q4) edge[above] node{0} (E)
+                            (q5) edge[above] node{0} (E)
+                            (q6) edge[above] node{0} (E)
+                            (E) edge[loop below] node{0,1} (E);
+                \end{tikzpicture}
+                \caption{AFD minimal asociado a $L_2$ del Ejercicio~\ref{ej:1.3.23}.\ref{ej:1.3.23-2}.}
+                \label{fig:1.3.23-L2}
+            \end{figure}
+
         \item Diseña el AFD mínimo que reconozca el lenguaje $(L_1 \cup L_2)$.
+        
+        % // TODO: Interseccion de L1 y L2
     \end{enumerate}
 \end{ejercicio}
 
@@ -2052,14 +2253,73 @@
         \item $L_1 = \{u\in {\{0,1\}}^{\ast} \mid u \text{\ no contiene la subcadena } \text{``}0101\text{''}\}$.
         \item $L_2 = \{0^i 1^j 0^k \mid i \geq 1, k\geq 0, i \text{\ impar\ }, k \text{\ múltiplo de\ } 3 \text{\ y\ } j\geq 2\}$ .
     \end{itemize}
-    Diseña el AFD mínimo que reconoce el lenguaje $(L_1\cap L_2)$.
+    Diseña el AFD mínimo que reconoce el lenguaje $(L_1\cap L_2)$.\\
+
+    El AFD minimal asociado a $L_1$ es el de la Figura~\ref{fig:1.3.24-L1}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial, accepting] (q0) {$q_0$};
+            \node[state, right of=q0, accepting] (q1) {$q_1$};
+            \node[state, right of=q1, accepting] (q2) {$q_2$};
+            \node[state, right of=q2, accepting] (q3) {$q_3$};
+            \node[state, right of=q3] (q4) {$q_4$};
+
+            \draw   (q0) edge[above] node{0} (q1)
+                    (q0) edge[loop above] node{1} (q0)
+                    (q1) edge[above] node{1} (q2)
+                    (q1) edge[loop above] node{0} (q1)
+                    (q2) edge[above] node{0} (q3)
+                    (q2) edge[below, bend left] node{1} (q0)
+                    (q3) edge[above] node{1} (q4)
+                    (q3) edge[above, bend right] node{0} (q1)
+                    (q4) edge[loop above] node{0,1} (q4);
+        \end{tikzpicture}
+        \caption{AFD minimal asociado a $L_1$ del Ejercicio~\ref{ej:1.3.24}.}
+        \label{fig:1.3.24-L1}
+    \end{figure}
+
+    El AFD minimal asociado a $L_2$ es el de la Figura~\ref{fig:1.3.24-L2}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial] (p0) {$p_0$};
+            \node[state, right of=p0] (p1) {$p_1$};
+            \node[state, right of=p1] (p2) {$p_2$};
+            \node[state, right of=p2, accepting] (p3) {$p_3$};
+            \node[state, right of=p3] (p4) {$p_4$};
+            \node[state, right of=p4] (p5) {$p_5$};
+            \node[state, error, below of=p2] (E) {$E$};
+
+            \draw   (p0) edge[above] node{0} (p1)
+                    (p1) edge[above, bend right] node{0} (p0)
+                    (p1) edge[above] node{1} (p2)
+                    (p2) edge[above] node{1} (p3)
+                    (p3) edge[loop above] node{1} (p3)
+                    (p3) edge[above] node{0} (p4)
+                    (p4) edge[above] node{0} (p5)
+                    (p5) edge[above, bend right] node{0} (p3)
+                    (p0) edge[above] node{1} (E)
+                    (p2) edge[above right] node{0} (E)
+                    (p4) edge[above] node{1} (E)
+                    (p5) edge[above] node{1} (E)
+                    (E) edge[loop below] node{0,1} (E);
+
+
+        \end{tikzpicture}
+        \caption{AFD minimal asociado a $L_2$ del Ejercicio~\ref{ej:1.3.24}.}
+        \label{fig:1.3.24-L2}
+    \end{figure}
+
+    % // TODO: Intersección. Continuar por aquí
+
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.25}
     Dado el alfabeto $A=\{a,b,c\}$, encuentra:
     \begin{enumerate}
-        \item Un AFD que reconozca las palabras en las que cada 'c' va precedida de una 'a' o una 'b'.
-        \item Una expresión regular que represente el lenguaje compuesto por las palabras de longitud impar en las que el símbolo central es una 'c'.
+        \item Un AFD que reconozca las palabras en las que cada ``c'' va precedida de una ``a'' o una ``b''.
+        \item Una expresión regular que represente el lenguaje compuesto por las palabras de longitud impar en las que el símbolo central es una ``c''.
         \item Una gramática regular que genere las palabras de longitud impar.
     \end{enumerate}
 \end{ejercicio}
