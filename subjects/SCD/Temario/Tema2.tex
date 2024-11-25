@@ -203,7 +203,7 @@ Para esta etapa planteamos una sencilla modificación sobre la etapa anterior, q
 \caption{Algoritmo para la tercera etapa de refinamiento sucesivo.}
 \label{fig:cod_tercera_etapa}
 \end{figure}
-Sin embargo, si ambos procesos tienen la misma velocidad, puede suceder que ambos cambien el valor de su clave a 0 al mismo tiempo, con lo que se de una situación de interbloqueo, que incumpliría la cuarta condición de Dijkstra, al no poder alcanzar nunca la sección crítica.
+Sin embargo, si ambos procesos tienen la misma velocidad, puede suceder que ambos cambien el valor de su clave a 0 al mismo tiempo, con lo que se de una situación de interbloqueo, que incumpliría la cuarta condición de Dijkstra, al no poder alcanzar nunca la sección crítica (además de la segunda, ya que la bondad de la solución depende de la velocidad de ejecución de los procesos).
 
 \subsubsection{Cuarta etapa}
 Lo que causó el problema en la tercera etapa fue que puede suceder que un proceso cambie el valor de su clave a la vez que el otro de forma concurrente, sin que este se de cuenta de que el otro lo ha hecho a la vez. La solución que se propone en esta etapa es permitir a un proceso volver a cambiar el valor de su clave a 1 si después de asignar su clave a 0, comprueba que el otro proceso también cambió su clave al mismo valor. De esta forma, planteamos el código de la Figura~\ref{fig:cod_cuarta_etapa}.\\
@@ -278,7 +278,7 @@ Se podría considerar como una quinta etapa del método de refinamiento sucesivo
 \end{itemize}
 Para resolver el problema, se considera el código de la cuarta etapa de Dijkstra y se le añade un orden establecido en la entrada mediante una variable \verb|turno|, para desempatar la situación en la que los dos procesos quieran entrar exactamente al mismo tiempo en la sección crítica.\\
 
-De esta forma, un proceso que quiera entrar en la sección crítica asignará primero su clave a 0, y si el otro proceso también tiene su clave a 0, lo primero que hará es comprobar de quién es el turno y si no dispone del mismo, cambiará su clave a 1 pasando a esperar y dejando al otro proceso continuar con la ejecución de la sección crítica. Vemos el código en la Figura~\ref{fig:cod_dekker}.
+De esta forma, un proceso que quiera entrar en la sección crítica asignará primero su clave a 0, y si el otro proceso también tiene su clave a 0, lo primero que hará es comprobar de quién es el turno y si no dispone del mismo, cambiará su clave a 1, pasando a esperar y dejando al otro proceso continuar con la ejecución de la sección crítica. Vemos el código en la Figura~\ref{fig:cod_dekker}.
 
 \begin{figure}[H]
 \setlength{\columnsep}{1cm}
@@ -446,7 +446,7 @@ De esta forma, lo primero que hace un proceso $P_i$ al llegar al protocolo de en
 \end{itemize}
 Una vez superado el bucle \verb|A|, entonces el estado del proceso $P_i$ pasará a \verb|en_SC|, y solo tendrá que superar el bucle \verb|B| para poder entrar a la sección crítica.\\
 
-Puede sueceder que dos (o más, en cuyo caso es una explicación análoga) procesos, $P_i$ y $P_j$ lleguen al bucle \verb|A| de forma que (suponiendo que \verb|c[turno] = pasivo|) ambos lo ejecuten a la misma velocidad, con lo que ambos pasen dicho bucle quedando la variable \verb|turno| asignada al identificador de cualquiera de los dos procesos (a $i$ o a $j$). Posteriormente, ambos cambiarán su estado a \verb|en_SC|. En dicho caso, contamos con el bucle \verb|B| para cumplir con la condición de seguridad de tener un único proceso ejecutando la sección crítica a la vez.\\
+Puede sueceder que dos (o más, en cuyo caso es una explicación análoga) procesos, $P_i$ y $P_j$ (con $i,j\notin \{turno\}$) lleguen al bucle \verb|A| de forma que (suponiendo que \verb|c[turno] = pasivo|) ambos lo ejecuten a la misma velocidad, con lo que ambos pasen dicho bucle quedando la variable \verb|turno| asignada al identificador de cualquiera de los dos procesos (a $i$ o a $j$). Posteriormente, ambos cambiarán su estado a \verb|en_SC|. En dicho caso, contamos con el bucle \verb|B| para cumplir con la condición de seguridad de tener un único proceso ejecutando la sección crítica a la vez.\\
 
 Lo que hace el bucle \verb|B| es comprobar todos los estados de los procesos antes de dejar pasar al proceso $P_i$ entrar a la sección crítica, de forma que si todos los demás procesos tienen un estado distinto de \verb|en_SC|, entonces el contador \verb|j| llegará hasta \verb|n|, con lo que $P_i$ saldrá del bucle \verb|B| así como del \verb|repeat| de entrada a la sección crítica.\\
 
@@ -488,10 +488,10 @@ Con la finalidad de no caer en los errores de los algoritmos de Dekker y Dijkstr
 \begin{enumerate}[label=5.]
     \item \textit{Se tiene que poder demostrar que todos los procesos pueden sufrir un retraso máximo en el acceso a la sección crítica que sea calculable.}
 
-        Con el fin de garantizar que ningún proceso sufrirá de inanición, ya que en algún momento conseguirá entrar a la sección crítica, lo que nos dé la propiedad de vivacidad de su solución.
+        Con el fin de garantizar que ningún proceso sufrirá de inanición, ya que en algún momento conseguirá entrar a la sección crítica, lo que nos da la propiedad de equidad de la solución.
 \end{enumerate}
 
-Donald Knuth se dió cuenta de que la propiedad de vivacidad no podía ser demostrada debido a que la variable compartida \verb|turno| utilizada en los algoritmos de Dekker y Dijkstra sufría condiciones de carrera. El algoritmo propuesto por Knuth hace uso de una variable local \verb|j| que copia el valor de la variable compartida \verb|turno|, con el fin de evitar dichas condiciones de carrera. Por lo demás, el algoritmo es similar al de Dijkstra, tal y como podemos ver en la Figura~\ref{fig:cod_knuth}.
+Donald Knuth se dio cuenta de que la propiedad de vivacidad no podía ser demostrada debido a que la variable compartida \verb|turno| utilizada en los algoritmos de Dekker y Dijkstra sufría condiciones de carrera. El algoritmo propuesto por Knuth hace uso de una variable local \verb|j| que copia el valor de la variable compartida \verb|turno|, con el fin de evitar dichas condiciones de carrera. Por lo demás, el algoritmo es similar al de Dijkstra, tal y como podemos ver en la Figura~\ref{fig:cod_knuth}.
 
 \begin{figure}[H]
 \begin{minted}{pascal}
@@ -515,9 +515,9 @@ Donald Knuth se dió cuenta de que la propiedad de vivacidad no podía ser demos
              end do
 
              c[i] := en_SC;
-             k := 0;
 
              { B }
+             k := 0;
              while (k<n) and (k=i or c[k] <> en_SC) do
              begin
                 k := k+1;
@@ -621,7 +621,7 @@ Veamos las propiedades de corrección del algoritmo de Knuth:
         \end{itemize}
         Por tanto, concluimos que el número máximo de adelantamientos en el caso $n$ es:
         \begin{equation*}
-            f(n) = f(n-1) + 1 + f(n-1) = 2f(n-1) + 1 \qquad \forall n\geq 1
+            f(n) = f(n-1) + 1 + f(n-1) = 2f(n-1) + 1 \qquad \forall n\geq 2
         \end{equation*}
         Recurrencia que podemos resolver\footnote{Tal y como aprendimos en asignaturas anteriores}, obteniendo que:
         \begin{equation*}
@@ -1957,11 +1957,9 @@ inicialización \\
 \label{esq:monitor_4}
 \end{table}
 
-Podemos representar la vida de un proceso que forma parte de un programa concurrente que sua monitores con semántica de señalar y espera urgente con el diagrama de la Figura~\ref{fig:su}.\\
+Podemos representar la vida de un proceso que forma parte de un programa concurrente que usa monitores con semántica de señalar y espera urgente con el diagrama de la Figura~\ref{fig:su}.\\
 
-Finalmente, cabe destacar que con semántica SU, la señal \verb|signal| \textbf{siempre} bloquea al proceso señalador en la cola de urgentes, incluso si la cola de dicha variable condición está vacía.
-
-Esto nos permite desbloquear a los procesos de una variable condición de forma que el primer proceso desbloqueado desbloquee al segundo, el segundo al tercero, \ldots, y así hasta el último, de forma que el último pasará también como el resto a la cola de urgentes, con planificación FIFO, donde el primero volverá a entrar al monitor y así con los siguientes. Notemos que si \verb|signal| no bloquease a los procesos siempre (es decir, si la cola de la variable condición está vacía, no bloqueamos), entonces en el caso anterior la prioridad FIFO de entrada al monitor se invertiría, de forma que el último proceso bloqueado sea el primero que accede al monitor.
+Finalmente, recordemos que con semántica SU, si la cola de una variable condición está vacía y realizamos un \verb|signal| sobre la misma, será equivalente a una operación nula, con lo que en este caso el proceso señalador no se irá a la cola de bloqueados.
 
 \begin{figure}%[H]
 \centering
