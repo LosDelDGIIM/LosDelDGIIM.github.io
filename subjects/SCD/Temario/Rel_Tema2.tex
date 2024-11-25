@@ -557,7 +557,6 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
             i;
         \end{minted}
     \end{multicols}
-    También podríamos haber usado un sólo semáforo y que el proceso P1 realizara dos \verb|signal| después de la instrucción \verb|b|.
         \item Sincroniza los procesos de forma que las sentencias \verb|b| en P1, \verb|f| en P2, y \verb|h| en P3, sean ejecutadas como mucho por 2 procesos simultáneamente.\\
             Se trata de una generalización de la exclusión mutua, donde en vez de ejecutar a la vez las instrucciones \verb|b|, \verb|f| y \verb|h| por un solo proceso, deben ejecutarse por como mucho dos procesos a la vez. Usaremos por tanto un solo semáforo inicializado con el valor 2. Las modificaciones a realizar son:
     \begin{multicols}{3}
@@ -1097,7 +1096,64 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
                    end
                 end
             \end{minted}
-        \item Finalmente, para dar una solución en la que lectores y escritores tienen prioridades iguales. % // TODO:
+        \item Para esta solución, como queremos mantener el orden FIFO, tenemos que bloquear a todos los procesos en una misma cola. Sin embargo, como al desbloquear un proceso de dicha cola no sabremos si estaremos desbloqueando a un lector o a un escritor, debemos introducir una nueva variable de tipo condición, que contendrá al primer proceso de la cola anterior.
+
+            De esta forma, las instrucciones \verb|wait| sobre esta segunda cola se realizarán dentro de un bucle, para comprobar si se trataba de un lector o de un escritor. La condición de espera para la cola original es que esta nueva cola no esté vacía.
+
+            De esta forma:
+            \begin{minted}{pascal}
+                Monitor LecEsc;
+                   var lec_dentro : integer;
+                       esc_dentro : boolean;
+                       cola, primero : condition;
+
+                   begin
+                      lec_dentro := 0;
+                      esc_dentro := false;
+                   end
+
+                   procedure entra_lector();
+                   begin
+                      {si no es el primero, hay que respetar FIFO}
+                      if primero.queue() then 
+                         cola.wait();
+
+                      while esc_dentro do begin
+                         primero.wait();
+                      end
+
+                      lec_dentro := lec_dentro + 1;
+                      cola.signal();
+                   end
+
+                   procedure sale_lector();
+                   begin
+                      lec_dentro := lec_dentro - 1;
+
+                      if lec_dentro = 0 then
+                         primero.signal();
+                   end
+
+                   procedure entra_escritor();
+                   begin
+                      if primero.queue() then
+                         cola.wait();
+
+                      while esc_dentro or lec_dentro > 0 do begin
+                         primero.wait();
+                      end
+
+                      esc_dentro := true;
+                      cola.signal();
+                   end
+
+                   procedure sale_escritor();
+                   begin
+                      esc_dentro := false;
+                      primero.signal();
+                   end
+                end
+            \end{minted}
     \end{enumerate}
 \end{ejercicio}
 
@@ -1448,7 +1504,7 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
             \end{enumerate}
         \item Ahora, con orden en las retiradas, es necesrio disponer de una variable condición más, que controle si hay alguien esperando a retirar dinero.
             \begin{enumerate}[label=\alph*)]
-                \item Con colas normales FIFO en las variables condición:
+                \item Con colas normales FIFO en las variables condición, es necesario introducir una nueva variable condición, \verb|ventanilla|, que almacene el primer proceso que quiere retirar saldo, con la finalidad de que no se adelanten entre sí.
                     \begin{minted}{pascal}
                         Monitor Cuenta;
                         var saldo : integer;
@@ -1518,31 +1574,114 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
 \end{ejercicio}
 
 \begin{ejercicio}
-    Los procesos P1, P2, \ldots, Pn comparten un único recurso R, pero sólo un proceso puede utilizarlo cada vez. Un proceso Pi puede comenzar a utilizar R si está libre; en caso contrario, el proceso debe esperar a que el recurso sea liberado por otro proceso. Si hay varios procesos esperando a que quede libre R, se concederá al proceso que tenga mayor prioridad. La regla de prioridad de los procesos es la siguiente: el proceso Pi tiene prioridad i, (con $1 \leq i \leq n$), donde los números menores implican mayor prioridad (es decir, si $i < j$, entonces Pi pasa por delante de Pj). Implementar un monitor que implemente los procedimientos \verb|Pedir(...)| y \verb|Liberar()| con un monitor que garantice la exclusión mutua y el acceso prioritario del procesos al recurso R.
+    Los procesos P1, P2, \ldots, Pn comparten un único recurso R, pero sólo un proceso puede utilizarlo cada vez. Un proceso Pi puede comenzar a utilizar R si está libre; en caso contrario, el proceso debe esperar a que el recurso sea liberado por otro proceso. Si hay varios procesos esperando a que quede libre R, se concederá al proceso que tenga mayor prioridad. La regla de prioridad de los procesos es la siguiente: el proceso Pi tiene prioridad i, (con $1 \leq i \leq n$), donde los números menores implican mayor prioridad (es decir, si $i < j$, entonces Pi pasa por delante de Pj). Implementar un monitor que implemente los procedimientos \verb|Pedir(...)| y \verb|Liberar()| con un monitor que garantice la exclusión mutua y el acceso prioritario del procesos al recurso R.\\
 
-    Suponiendo que podemos usar variables condición con colas prioritarias, la solución al ejercicio es:
+    Para ello, dispondremos de un array de booleanos, \verb|peticion|, de forma que si \verb|peticion[i] = true|, entonces el proceso $P_i$ estará bloqueado solicitando un recurso:
     \begin{minted}{pascal}
         Monitor Recurso;
-        var libre : boolean;
-            cola : condition;
+           var libre : boolean;
+               peticion : array[1..n] of boolean;
+               cola : condition;
 
+           procedure liberar();
+           var j : integer := 0;
            begin
-              libre = true;
+              {Buscamos peticiones por orden de prioridad}
+              repeat
+                 j := j + 1;
+              until(j = n or peticion[j]);
+
+              if peticion[j] then
+              begin
+                 peticion[j] := false;
+                 cola.signal();
+              else
+                 libre := true;
+              end
            end
 
-           procedure Liberar();
-           begin
-              libre = true;
-              cola.signal();
-           end
-
-           procedure Pedir(id : integer); {Nº de proceso}
+           procedure pedir(id_proceso : 1..n);
            begin
               if not libre then
-                 cola.wait(id);
+              begin
+                 {Bloqueamos al proceso}
+                 peticion[id_proceso] := true;
+                 while peticion[id_proceso] do begin
+                    cola.signal();
+                    cola.wait();
+                 end
               end
 
-              libre = false;
+              libre := false;
+           end
+
+           begin
+              libre := false;
+              peticion := (false, false, ..., false);
+           end
+        end
+    \end{minted}
+    Si ahora suponemos que no hay un solo recurso R, sino que tratamos de resolver el problema para $m$ recursos, disponemos del siguiente monitor, que cuenta con dos arrays de booleanos:
+    \begin{itemize}
+        \item \verb|libre|, de forma que si \verb|libre[i] = true|, entonces el proceso $i$-ésimo estará libre.
+        \item \verb|peticion|, con el mismo comportamiento.
+    \end{itemize}
+
+    \begin{minted}{pascal}
+        Monitor Recurso;
+           var libre : array[1..m] of boolean;
+               peticion : array[1..n] of boolean;
+               I : integer;
+               cola : condition;
+
+           procedure liberar(id_recurso : 1..m);
+           var j : integer := 0;
+           begin
+              {Buscamos peticiones por orden de prioridad}
+              repeat
+                 j := j + 1;
+              until(j = n or peticion[j]);
+
+              {Si había alguna petición}
+              if peticion[j] then
+              begin
+                 {Le cedemos el recurso}
+                 I := id_recurso;
+                 peticion[j] := false;
+                 cola.signal();
+              else {El recurso queda libre}
+                 libre[id_recurso] := true;
+              end
+           end
+
+           {devuelve el recurso asignado}
+           procedure pedir(id_proceso : 1..n) : integer;
+           var k : integer := 0;
+           begin
+              {Buscamos recursos libres}
+              repeat
+                 k := k + 1;
+              until(k = m or libre[k]);
+
+              {Si no había recursos libres}
+              if not libre[k] then
+              begin
+                 peticion[id_proceso] := true;
+                 while peticion[id_proceso] do begin
+                    cola.signal();
+                    cola.wait();
+                 end
+              else
+                 I := k;
+              end
+
+              libre[I] := false;
+              return I;
+           end
+
+           begin
+              libre := (true, true, ..., true);
+              peticion := (false, false, ..., false);
            end
         end
     \end{minted}
@@ -1574,10 +1713,9 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
     \end{minted}
     Para realizar esta implementación, haremos uso de las siguientes variables compartidas:
     \begin{minted}{pascal}
-        var n : integer;
-            mutex, sem : semaphore;
+        var n : integer := 0;
+            mutex, sem : semaphore := 0;
     \end{minted}
-    donde inicializaremos los semáforos \verb|mutex| y \verb|sem| a 0.
     Usaremos la siguiente función, que hará las veces del procedimiento \verb|entrada| del monitor:
     \begin{minted}{pascal}
         procedure entrada();
@@ -1645,7 +1783,7 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
                       tenedores[num_tenedor] := true;
                    end
 
-                   procedure libera_tenedor(num_tenedor);
+                   procedure libera_tenedor(num_tenedor : integer);
                    begin
                       tenedores[num_tenedor] := false;
 
@@ -1685,6 +1823,58 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
             \label{etiqueta}
             \end{table}
             En este instante, todos los filósofos han cogido el tenedor de su derecha, el cual no soltarán hasta comer, para lo que necesitan el tenedor de su izquierda. Sin embargo, como son 5 filósofos y solo hay disponibles 5 tenedores, ningún filósofo conseguirá nunca su tenedor de la izquierda para poder comer. De esta forma, todos los filósofos quedarán bloqueados por siempre.
+        \item Para que el monitor no de lugar a un interbloqueo de los procesos, es necesario introducir un nuevo array, que controle qué filósofos disponen de un único tenedor, \verb|un_tenedor|; así como un entero que controle el número de filósofos que tienen un único tenedor, \verb|fil_1t|; y una variable condición \verb|cola|, que nos permita bloquear a los filósofos que traten de coger el 5º tenedor y bloquear al resto:
+            \begin{minted}{pascal}
+                monitor MonFilo;
+                   var tenedores : array[0..4] of boolean;
+                       un_tenedor : array[0..4] of boolean;
+                       fil_1t : integer;
+
+                       filosofo : array[0..4] of condition;
+                       cola : condition;
+
+                   procedure libera_tenedor(num_tenedor : integer);
+                   begin
+                      tenedores[num_tenedor] := false;
+
+                      if filosofo[num_tenedor].queue() then
+                         filosofo[num_tenedor].signal();
+                      else then
+                         filosofo[(num_tenedor - 1) mod 5].signal();
+                   end
+
+                   procedure coge_tenedor(num_tenedor, num_proceso : integer);
+                   begin
+                      {Si estamos a punto de bloquear todos los procesos}
+                      if not un_tenedor[num_proceso] and fil_1t = 4 then
+                         cola.wait();
+
+                      {Si ya han cogido el tenedor}
+                      if tenedores[num_tenedor] then
+                         filosofo[num_proceso].wait();
+
+                      tenedores[num_tenedor] := true;
+
+                      {Si antes no tenía tenedor}
+                      if not un_tenedor[num_proceso] then
+                         un_tenedor[num_proceso] := true;
+                         fil_1t := fil_1t + 1;
+                      else then  {Si ahora tengo dos tenedores}
+                         un_tenedor[num_proceso] := false;
+                         fil_1t := fil_1t - 1;
+
+                         if fil_1t < 4 then
+                            cola.signal();
+                      end
+                   end
+
+                   begin
+                      tenedores := (false, false, false, false, false);
+                      un_tenedor := (false, false, false, false, false);
+                      fil_1t := 0;
+                   end
+                end
+            \end{minted}
     \end{enumerate}
 \end{ejercicio}
 

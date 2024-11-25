@@ -621,7 +621,7 @@ Veamos las propiedades de corrección del algoritmo de Knuth:
         \end{itemize}
         Por tanto, concluimos que el número máximo de adelantamientos en el caso $n$ es:
         \begin{equation*}
-            f(n) = f(n-1) + 1 + f(n-1) = 2f(n-1) + 1
+            f(n) = f(n-1) + 1 + f(n-1) = 2f(n-1) + 1 \qquad \forall n\geq 1
         \end{equation*}
         Recurrencia que podemos resolver\footnote{Tal y como aprendimos en asignaturas anteriores}, obteniendo que:
         \begin{equation*}
@@ -920,16 +920,20 @@ Estamos ya listos para probar todas las propiedades de corrección del algoritmo
         \end{itemize}
         En cualquier caso, habrá algún proceso que consiga avanzar en cualquier etapa, con lo que dicha situación es imposible.
     \item [Equidad]~\\
-        No solo demostraremos la vivacidad del algoritmo de Peterson, sino también la equidad de los procesos en el acceso a la sección crítica. Para ello, supongamos el caso más desfavorable en la entrada a la sección crítica:
+        No solo demostraremos la vivacidad del algoritmo de Peterson, sino también la equidad de los procesos en el acceso a la sección crítica. Para ello, supongamos el caso más desfavorable en la entrada a la sección crítica y calculamos el número máximo de turnos que el proceso ha de esperar para poder entrar en la sección crítica:
 
-        Es decir, que los $n$ procesos intentan a la vez entrar a la sección crítica, de forma que el proceso $P_i$ es el último de los $n$ procesos en modificar el valor de la variable \verb|turno[0]|, con lo que se bloqueará en dicha etapa y dejará pasar al resto de los $n-1$ procesos. $P_i$ permanecerá bloqueado en esta etapa hasta que:
+        El caso más desfavorable posible se da cuando los $n$ procesos intentan acceder a la vez a la sección crítica, de forma que el proceso $P_i$ es el último de los $n$ procesos en modificar el valor de la variable \verb|turno[0]|, con lo que se bloqueará en dicha etapa y dejará pasar al resto de los $n-1$ procesos. Estos tardarán 1 un turno en propagarse por cada etapa y como tenemos $n-2$ etapas restantes (más el turno de la etapa 0), llevamos ya $n-1$ turnos de espera para $P_i$. Este permanecerá bloqueado en esta etapa hasta que:
         \begin{itemize}
             \item Preceda a todos los demás procesos, con lo que todos los $n-1$ procesos anteriores hayan ejecutado ya la sección crítica.
-            \item Venga un nuevo proceso a la etapa 0, es decir, haya un proceso $P_k$ que ya haya ejecutado la sección crítica y entre de nuevo en el protocolo de entrada, lo que permitirá a $P_i$ avanzar, al menos en una etapa.
-        \end{itemize}
-        Dicho procedimiento se repetirá, hasta la etapa $n-2$, donde el proceso $P_i$ conseguirá al fin entrar en la sección crítica.
 
-        De esta forma, si $r(n)$ es el número de turnos de espera para $n$ procesos, entonces tenemos que en el peor caso, el proceso $P_i$ deberá dejar pasar a $n-1$ procesos (con lo que pasarán $n-1$ turnos), así como esperar los turnos correspondientes a la misma situación pero para $n-1$ procesos. Es decir:
+                En este caso, $P_i$ podrá entrar a la sección crítica, sin esperar un turno más.
+            \item Venga un nuevo proceso a la etapa 0, es decir, haya un proceso $P_k$ que ya haya ejecutado la sección crítica y entre de nuevo en el protocolo de entrada, lo que permitirá a $P_i$ avanzar, al menos en una etapa.
+
+                En este caso, $P_i$ tendrá que esperar tantos turnos como antes para llegar a la sección crítica menos uno, ya que ha avanzado de etapa.
+        \end{itemize}
+        En cualquier caso, para llegar a la sección crítica, $P_i$ debe esperar a que el proceso que se bloqueó en la etapa 1 llegue a la sección crítica.
+
+        De esta forma, si $r(n)$ es el número de turnos de espera para $n$ procesos, entonces tenemos que en el peor caso, el proceso $P_i$ deberá dejar pasar a $n-1$ procesos (con lo que pasarán $n-1$ turnos), así como esperar los turnos correspondientes a que el proceso que se bloquea en la etapa 1 entre a la sección crítica, que resulta en un problema similar pero en este caso de $r(n-1)$ turnos de espera. De esta forma:
         \begin{equation*}
             r(n) = n-1+r(n-1)
         \end{equation*}
@@ -2017,7 +2021,7 @@ En primer lugar, hemos de destacar que cualquiera de las primeras 4 semánticas 
             \item Las semánticas SE y SU resultan ineficientes cuando las instrucciones \verb|signal| se encuentran al final de los procedimientos (ya que habrá procesos que ejecutan un \verb|signal|, se bloquearán, esperarán en la cola correspondiente de entrada al monitor, y cuando por fin tengan acceso a él no realizarán nada, sino que simplemente terminarán la ejecución del procedimiento), por lo que se saturará la cola de entrada al monitor y se realizarán cambios de contexto de formas innecesarias.
             \item La semántica SC es poco eficiente, al tener que obligarnos a usar un bucle de comprobación para comprobar si estamos cerca de una situación insegura cada vez que entramos al monitor, como consecuencia de no tener semántica desplazante, pudiendo producirse robos de señal.
         \end{itemize}
-        Por tanto, si no nos resulta incómodo tener que colocar todas las instrucciones \verb|signal| como última instrucción de los procedimientos en los que aparecen, SS será probablemente la semántica se señales más eficientes.
+        Por tanto, si no nos resulta incómodo tener que colocar todas las instrucciones \verb|signal| como última instrucción de los procedimientos en los que aparecen, SS será probablemente la semántica de señales más eficientes.
 \end{itemize}
 
 Para concluir la comparativa de las semánticas de señales, veremos el siguiente ejemplo, que muestra que a veces la semántica elegida condiciona la forma en la que programamos los monitores.
@@ -2222,7 +2226,7 @@ Mostramos a continuación un ejemplo para motivar por qué algunos lenguajes imp
     \end{minted}
     De esta forma, lo que estamos haciendo es ordenar la cola de bloqueados de la variable condición \verb|despertar| poniendo al inicio de la misma el primer proceso a desbloquear.
 
-    Por ejemplo, ante el uso del monitor por los procesos que observamos en la Tabla~\ref{tab:ejm_uso_monitor}.
+    Por ejemplo, ante el uso del monitor por los procesos que observamos en la Tabla~\ref{tab:ejm_uso_monitor},
     \begin{table}
     \centering
     \begin{tabular}{|c|c|c|c|}
