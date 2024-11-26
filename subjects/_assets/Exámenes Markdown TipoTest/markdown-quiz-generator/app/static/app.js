@@ -47,10 +47,15 @@ $(function () {
             }
             if (qc == 0) {
                 self.removeClass('text-success'); // Eliminar la marca de respuesta correcta
+                self.removeClass('text-warning');
                 self.addClass('text-danger');
             } else if (qc > 0 && qc < 1) {
+                self.removeClass('text-success'); // Eliminar la marca de respuesta correcta
+                self.removeClass('text-danger'); // Eliminar la marca de respuesta incorrecta
                 self.addClass('text-warning');
             } else {
+                self.removeClass('text-warning'); // Eliminar la marca de respuesta parcialmente correcta
+                self.removeClass('text-danger'); // Eliminar la marca de respuesta incorrecta
                 self.addClass('text-success');
                 self.removeClass('text-danger'); // Eliminar la marca de respuesta incorrecta
                 self.find('input[type="checkbox"]').attr('disabled', true);
