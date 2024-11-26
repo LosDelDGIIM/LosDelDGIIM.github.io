@@ -1,0 +1,519 @@
+\section{Sincronización en Memoria Compartida}
+\subsection{Exclusión mutua}
+\begin{ejercicio}
+    Un algoritmo para el cual sólo pudiésemos demostrar que cumple las 4 condiciones de Dijkstra, ¿qué tipo de propiedades concurrentes satisfacería?: 
+    \begin{enumerate}[label=(\alph*)]
+        \item seguridad.
+        \item vivacidad.
+        \item equidad.
+    \end{enumerate}
+    Justificar las respuestas.\\
+
+    Un algoritmo para el cual solo pudiéramos demostrar las 4 condiciones de Dijkstra solo contaría con la propiedad de seguridad de alcanzabilidad (la 4ª condición), ya que:
+    \begin{itemize}
+        \item Para la propiedad de seguridad de la exclusión mutua, deberíamos comprobar que solo un proceso puede ejecutar a la vez la sección crítica.
+        \item Para la propiedad de vivacidad, deberíamos demostrar que el algoritmo se encuentra libre de interbloqueos.
+        \item Para la propiedad de equidad, deberíamos demostrar que cada proceso es capaz de llegar a la sección crítica en un tiempo máximo, con lo que el reparto de la sección crítica es justo para los procesos.
+    \end{itemize}
+\end{ejercicio}
+
+\begin{ejercicio}
+    En algunas aplicaciones es necesario tener exclusión mutua entre procesos con la particularidad de que puede haber como mucho $n$ procesos en una sección crítica, con $n$ arbitrario y fijo, pero no necesariamente igual a la unidad, sino posiblemente mayor. Diseña una solución para este problema basada en el uso de espera ocupada y cerrojos. Estructura dicha solución como un par de subrutinas (usando una misma estructura de datos en memoria compartida), una para el protocolo de entrada y otro el de salida, e incluye el pseudocódigo de las mismas.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.3}
+    ¿Podría pensarse que una posible solución al problema de la exclusión mutua, sería el siguiente algoritmo (de la Figura~\ref{fig:cod_3}) que no necesita compartir una variable \verb|turno| entre los 2 procesos? Demostrar (sí o no) se satisfacen las siguientes propiedades:
+    \begin{enumerate}[label=(\alph*)]
+        \item ¿la exclusión mutua? (propiedad de seguridad)
+        \item ¿la ausencia de interbloqueo? (propiedad de alcanzabilidad)
+    \end{enumerate}
+
+    \begin{figure}[H]
+        \centering
+        \begin{minted}{pascal}
+            {variables compartidas y valores iniciales}
+            var b0 : boolean := false; {true si P0 quiere acceder o esta en SC}
+                b1 : boolean := false; {true si P1 quiere acceder o esta en SC}
+        \end{minted}
+        \setlength{\columnsep}{1cm}
+        \begin{multicols}{2}
+            \begin{minted}{pascal}
+                Process P0;
+                begin
+                while true do begin
+                   {Protocolo de entrada}
+
+                   {indica que quiere entrar}
+                   b0 := true;
+                   {si el otro también}
+                   while b1 do begin
+                      {cede temporalmente}
+                      b0 := false;
+                      {espera}
+                      while b1 do begin end
+                      {vuelve a cerrar el paso}
+                      b0 := true;
+                   end
+
+                   {Sección crítica}
+                   {Protocolo de salida}
+                   b0 := false;
+                   {Resto de sentencias}
+                end {while}
+                end
+            \end{minted}
+            \begin{minted}{pascal}
+                Process P1;
+                begin
+                while true do begin
+                   {Protocolo de entrada}
+
+                   {indica que quiere entrar}
+                   b1 := true;
+                   {si el otro también}
+                   while b0 do begin
+                      {cede temporalmente}
+                      b1 := false;
+                      {espera}
+                      while b0 do begin end
+                      {vuelve a cerrar el paso}
+                      b1 := true;
+                   end
+
+                   {Sección crítica}
+                   {Protocolo de salida}
+                   b1 := false;
+                   {Resto de sentencias}
+                end {while}
+                end
+            \end{minted}
+        \end{multicols}
+        \caption{Código para el Ejercicio~\ref{ej:2.3}.}
+        \label{fig:cod_3}
+    \end{figure}
+    El código de la Figura~\ref{fig:cod_3} se corresponde con el algoritmo correspondiente a la cuarta etapa del método de refinamiento sucesivo de Dijkstra:
+    \begin{enumerate}[label=(\alph*)]
+        \item La exclusión mutua puede demostrarse:
+            Suponiendo que nos interesa ver las condiciones bajo las cuales el proceso P0 entra en la sección crítica (para el proceso P1 el razonamiento es análogo), este podrá entrar en la sección crítica solo si \verb|b1 = false|, que se dará siempre que:
+            \begin{itemize}
+                \item El proceso P1 no quiera entrar a la sección crítica (esto es, que este pasivo).
+                \item O bien que haya cambiado su clave a \verb|false| en la instrucción de la línea 11, con lo que quedará bloqueado en el bucle más interno (porque \verb|b0 = true|).
+            \end{itemize}
+            Como ninguna de estas situaciones es compatible con que el proceso P1 entre a la vez con P0 a la sección crítica, concluimos que es imposible que P0 y P1 entren a la vez en sección crítica.
+        \item La ausencia de interbloqueo no puede demostrarse:
+
+            Si suponemos que P0 y P1 tienen velocidades de ejecución idénticas y que comienzan con su ejecución en el mismo instante, podemos observar la traza de ejecución:
+            \begin{itemize}
+                \item Ambos cambian su clave a \verb|true|.
+                \item Ambos ven que la clave del otro está a \verb|true|.
+                \item Ambos cambian su clave a \verb|false| (no ejecutan el bucle más interno).
+                \item Ambos cambian su clave a \verb|true|.
+                \item Ambos ven que la clave del otro está a \verb|true|.
+                \item Ambos cambian su clave a \verb|false| (no ejecutan el bucle más interno).
+                \item Ambos cambian su clave a \verb|true|.
+                \item \ldots
+            \end{itemize}
+            Que lleva a un interbloqueo de ambos procesos, de forma que ninguno consiga al final entrar a al sección crítica.
+    \end{enumerate}
+    Ahora podemos contestar a la pregunta inicial: aunque el algoritmo garantiza la propiedad de seguridad de la exclusión mutua, como hay una situación de interbloqueo, la bondad del algoritmo depende de la velocidad de ejecución de los procesos que ejecuten el programa, por lo que decimos que no es una buena solución al problema de la exclusión mutua.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.4}
+    Al siguiente algoritmo (de la Figura~\ref{fig:cod_4}) se le conoce como solución de Hyman al problema de la exclusión mutua (fue publicado en una revista de impacto en 1966). ¿Es correcta dicha solución?
+    \begin{figure}[H]
+        \centering
+        \begin{minted}{pascal}
+        {variables compartidas y valores iniciales}
+        var c0 : integer := 1;
+            c1 : integer := 1;
+            turno : integer := 1;
+        \end{minted}
+        \setlength{\columnsep}{1cm}
+        \begin{multicols}{2}
+            \begin{minted}{pascal}
+                process P0;
+                begin
+                while true do begin
+                   c0 := 0;
+                   while turno <> 0 do begin
+                      while c1 = 0 do begin end
+                      turno := 0;
+                   end
+
+                   {Sección crítica}
+                   c0 := 1;
+                   {Resto de sentencias}
+                end
+                end
+            \end{minted}
+            \begin{minted}{pascal}
+                process P1;
+                begin
+                while true do begin
+                   c1 := 0;
+                   while turno <> 1 do begin
+                      while c0 = 0 do begin end
+                      turno := 1;
+                   end
+
+                   {Sección crítica}
+                   c1 := 1;
+                   {Resto de sentencias}
+                end
+                end
+            \end{minted}
+        \end{multicols}
+        \caption{Código para el Ejercicio~\ref{ej:2.4}.}
+        \label{fig:cod_4}
+    \end{figure}
+    \ \\
+
+    No es correcta, ya que no se da la propiedad de seguridad de la exclusiún mutua: supongamos que P0 y P1 ejecutan su código de forma que se da la traza de ejecución de la Tabla~\ref{tab:ejecucion_4} (donde indicamos la línea de la instrucción que ejecuta cada proceso en cada instante).
+    \begin{table}
+    \centering
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        Línea de P0 & Línea de P1 & \verb|c0| & \verb|c1| & \verb|turno| \\
+        \hline
+        3 & 3 & 1 & 1 & 1 \\
+        \hline
+        4 & 3 & 0 & 1 & 1 \\
+        \hline
+        5 & 3 & 0 & 1 & 1 \\
+        \hline
+        6 & 3 & 0 & 1 & 1 \\
+        \hline
+        6 & 4 & 0 & 0 & 1 \\
+        \hline
+        6 & 5 & 0 & 0 & 1 \\
+        \hline
+        6 & 10 & 0 & 0 & 1 \\
+        \hline
+        7 & 10 & 0 & 0 & 0 \\
+        \hline
+        \red{10} & \red{10} & 0 & 0 & 0 \\
+        \hline
+    \end{tabular}
+    \caption{Traza de ejecución que lleva a tener dos procesos en SC.}
+    \label{tab:ejecucion_4}
+    \end{table}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Supongamos el algoritmo de exclusión mutua que expresamos a continuación. Tenemos los procesos: 0, 1, \ldots, $n-1$. Cada proceso $i$ tiene una variable $s[i]$ inicializada a 0, que puede tomar los valores 0 o 1. El proceso $i$ puede entrar en la sección crítica si y solo si se cumplen las siguientes condiciones:
+    \begin{align*}
+        s[i] &\neq s[i-1] \text{\ para\ } i>0 \\
+        s[0] &= s[n-1] \text{\ para\ } i = 0
+    \end{align*}
+    Tras ejecutar su sección crítica, el proceso $i$ deberá hacer:
+    \begin{align*}
+        s[i] &= s[i-1] \text{\ para\ } i> 0 \\
+        s[0] &= (s[0] +1 ) \mod 2 \text{\ para\ } i = 0
+    \end{align*}
+    Se pide:
+    \begin{enumerate}
+        \item[(i)] Demostrar que el algoritmo anterior solo permite a un proceso acceder a la sección crítica en cualquier configuración (es decir, independientemente de los valores que pueden alcanzar las variables $s[i]$ durante la ejecución del protocolo).
+        \item[(ii)] Demostrar también que cada uno de los procesos $p[i]$ conseguirá entrar en la sección crítica ``infinitamente a menudo''.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.6}
+    Se tienen 2 procesos concurrentes que representan 2 máquinas expendedoras de tickets (en la Figura~\ref{fig:cod_6}) (señalan el turno en que ha de ser atendido el cliente), los números de los tickets se representan por dos variables \verb|n1| y \verb|n2| que valen inicialmente 0. El proceso con el número de ticket más bajo entra en su sección crítica. En caso de tener 2 números iguales se procesa primero el proceso número 1.
+    \begin{enumerate}[label=(\alph*)]
+        \item Demostrar que se verifica la ausencia de interbloqueo (propiedad de \textit{alcanzabilidad} de la sección crítica), la ausencia de inanición (propiedad de \textit{vivacidad}) y la exclusión mutua (una propiedad de \textit{seguridad}).
+        \item Demostrar que las asignaciones \verb|n1:=1| y \verb|n2:=1| son ambas necesarias.
+    \end{enumerate}
+
+    \begin{figure}[H]
+        \centering
+        \begin{minted}{pascal}
+            {variables compartidas y valores iniciales}
+            var n1 : integer := 0;
+                n2 : integer := 0;
+        \end{minted}
+        \setlength{\columnsep}{1cm}
+        \begin{multicols}{2}
+            \begin{minted}{pascal}
+                Process P1;
+                begin
+                while true do begin
+                   n1 := 1; {E1.1}
+                   n1 := n2 + 1; {L1.1; E2.1}
+                   while n2 <> 0 and {L2.1}
+                         n2 < n1 do begin end; {L3.1}
+
+                   {Sección crítica, SC.1}
+                   n1 := 0; {E3.1}
+                   {Resto de senetencias, RS.1}
+                end
+                end
+            \end{minted}
+            \begin{minted}{pascal}
+                Process P2;
+                begin
+                while true do begin
+                   n2 := 1; {E1.2}
+                   n2 := n1 + 1; {L1.2; E2.2}
+                   while n1 <> 0 and {L2.2}
+                         n1 < n2 do begin end; {L3.2}
+
+                   {Sección crítica, SC.2}
+                   n2 := 0; {E3.2}
+                   {Resto de senetencias, RS.2}
+                end
+                end
+            \end{minted}
+        \end{multicols}
+        \caption{Código para el Ejercicio~\ref{ej:2.6}.}
+        \label{fig:cod_6}
+    \end{figure}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.7}
+    El siguiente programa (en la Figura~\ref{fig:cod_7}) es una solución al problema de la exclusión mutua para 2 procesos.  Discutir la corrección de esta solución: si es correcta, entonces probarlo. Si no fuese correcta, escribir escenarios que demuestren que la solución es incorrecta.
+    \begin{figure}[H]
+        \centering
+        \begin{minted}{pascal}
+            {variables compartidas y valores iniciales}
+            var c0 : integer := 1;
+                c1 : integer := 1;
+        \end{minted}
+        \setlength{\columnsep}{1cm}
+        \begin{multicols}{2}
+            \begin{minted}{pascal}
+                Process P0;
+                begin
+                while true do begin
+                   repeat 
+                      c0 := 1 - c1;
+                   until c1 <> 0;
+
+                   {Sección crítica}
+                   c0 := 1;
+                   {Resto de sentencias}
+                end
+                end
+            \end{minted}
+            \begin{minted}{pascal}
+                Process P1;
+                begin
+                while true do begin
+                   repeat 
+                      c1 := 1 - c0;
+                   until c0 <> 0;
+
+                   {Sección crítica}
+                   c1 := 1;
+                   {Resto de sentencias}
+                end
+                end
+            \end{minted}
+        \end{multicols}
+        \caption{Código para el Ejercicio~\ref{ej:2.7}.}
+        \label{fig:cod_7}
+    \end{figure}
+
+    \ \\
+
+    El algoritmo de la Figura~\ref{fig:cod_7} no es una solución correcta al problema de la exclusión mutua, debido a que la instrucción \verb|x := 1 - y| no es atómica, con lo que se podría suceder la traza de ejecución de P0 y P1 de la Tabla~\ref{tab:ej_7} (donde indicamos en cada caso la línea de la instrucción que se ejecuta, siendo \verb|l(5)| la lectura de \verb|c1| en P0 y \verb|e(5)| la escritura en \verb|c0| de P0, de forma análoga con P1), que nos lleva a tener tanto a P0 como a P1 en la sección crítica a la vez, con lo que no cumple con la propiedad de seguridad exigida. 
+
+    \begin{table}
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        Línea de P0 & Línea de P1 & \verb|c0| & \verb|c1| \\
+        \hline
+        4 & 4 & 1 & 1 \\
+        \hline
+        \verb|l(5)| & 4 & 1 & \textbf{1} \\
+        \hline
+        \verb|l(5)| & \verb|l(5)| & \textbf{1} & 1 \\
+        \hline
+        \verb|e(5)| & \verb|l(5)| & 0 & 1 \\
+        \hline
+        \verb|e(5)| & \verb|e(5)| & 0 & 0 \\
+        \hline
+        6 & 6 & 0 & 0 \\
+        \hline
+        \red{8} & \red{8} & 0 & 0 \\
+        \hline
+    \end{tabular}
+    \caption{Traza de ejecución que lleva a tener dos procesos en SC.}
+    \label{tab:ej_7}
+    \end{table}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Con respecto al algoritmo de Peterson para $N$ procesos: ¿sería posible que llegaran 2 procesos a la etapa $N-2$, 0 procesos a la etapa $N-3$ y en todas las etapas anteriores existiera al menos 1 proceso? Justificar la respuesta.
+\end{ejercicio}
+
+\begin{ejercicio}
+    En el \textit{algoritmo de Peterson} para $N$ procesos y considerando cualquier escenario de ejecución de dicho algoritmo, el número máximo de turnos que tiene que esperar cualquier proceso para entrar en sección crítica es $N-1$ turnos.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.10}
+Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra para $N$ procesos), demostrar la falsedad de la siguiente proposición: \textit{si un conjunto de procesos está intentando pasar simultáneamente el primer bucle} (el de la línea 11), \textit{y el proceso que tiene el turno está pasivo, entonces siempre conseguirá entrar primero en sección crítica el proceso de dicho grupo que consiga asignar la variable turno en último lugar.}
+    \begin{figure}
+        \centering
+        \begin{minted}{pascal}
+            var turno : 0..N-1;
+                flag : array[0..N-1] of (pasivo, solicitando, enSC);
+            flag := pasivo:
+
+            Process P(i);
+            begin
+               {Resto de instrucciones}
+               repeat
+                  flag[i] := solicitando;
+                  j := turno;
+                  while turno <> i do begin
+                     if flag[turno] = pasivo then 
+                        turno := i;
+                  end
+
+                  flag[i] := enSC;
+                  j := 0;
+
+                  while j < N and ((j=i) or flag[j] != enSC) do begin
+                     j := j + 1;
+                  end
+               until (j >= N);
+
+               {Sección crítica}
+               flag[i] := pasivo;
+            end
+        \end{minted}
+        \caption{Código para el Ejercicio~\ref{ej:2.10}.}
+        \label{fig:cod_10}
+    \end{figure}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.11}
+    El algoritmo de la Figura~\ref{fig:cod_11} (algoritmo de Knuth para $N$ procesos) resuelve el problema de la exclusión mutua para $N$ procesos, pra lo cual utiliza $N$ variables booleanas \verb|flag|, una variable \verb|turn| y la variable local \verb|j|.
+    \begin{enumerate}[label=(\alph*)]
+        \item Demostrar que el algoritmo de Knuth verifica todas las propiedades exigibles a un programa concurrente, incluyendo la de equidad.
+        \item Escribir un escenario en el que 2 procesos consiguen pasar el bucle de la instrucción de la línea 13, suponiendo que el turno lo tiene inicialmente el proceso \verb|p(0)|.
+    \end{enumerate}
+
+    \begin{figure}
+        \centering
+        \begin{minted}{pascal}
+            var flag : array[0..N-1] of (pasivo, solicitando, enSC);
+                turn := 0..N-1;
+            flag := pasivo;
+            turn := 0;
+
+            Process P(i);
+            var j : integer;
+            begin
+               {Resto de instrucciones}
+               repeat
+                  flag[i] := solicitando;
+                  j := turn;
+                  while j <> i do begin
+                     if flag[j] <> pasivo then
+                        j := turn;
+                     else
+                        j := (j - 1) mod N;
+                     endif;
+                  end
+
+                  flag[i] := enSC;
+                  j := 0;
+
+                  while (j < N) and ((j=i) or flag[j] != enSC) do begin
+                     j := j + 1;
+                  end
+               until (j >= N);
+
+               turn := i;
+               {Seccion crítica}
+               j := (turn + 1) mod N;
+               turn := j;
+               flag[i] := pasivo;
+            end
+        \end{minted}
+        \caption{Código para el Ejercicio~\ref{ej:2.11}}
+        \label{fig:cod_11}
+    \end{figure}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Si en el algoritmo de Dijkstra de la Figura~\ref{fig:cod_10} se cambia la instrucción de la línea 12 por esta otra: \verb|if (flag[turno] <> enSC)|, entonces el algoritmos dejaría de ser correcto. Indicar qué propiedad(es) de corrección faltaría(n) y justificar por qué.
+\end{ejercicio}
+
+\begin{ejercicio}
+    Si en el algoritmo de Knuth de la Figura~\ref{fig:cod_11} se hacen las siguientes sustituciones:
+    \begin{itemize}
+        \item La condición de la instrucción \verb|until| de la línea 27 por la condición \newline \verb|(j >= N) and (turno = i or flag[turno] = pasivo)|.
+        \item Se inserta el siguiente bucle después de la instrucción de la línea 31:
+            \begin{minted}{pascal}
+                while (j <> turn) and (flag[j] = pasivo) do begin
+                   j := j + 1;
+                end
+            \end{minted}
+    \end{itemize}
+    \begin{enumerate}[label=(\alph*)]
+        \item Verificar las propiedades de exclusión mutua, alcanzabilidad de la sección crítica, vivacidad y equidad del algoritmo.
+        \item Calcular el número de turnos máximo que puede llegar a tener que esperar un proceso que quiera entrar en su sección crítica con el algoritmo anterior.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:2.14}
+    Demostrar que las instrucciones entre las líneas 18 y 28 del algoritmo de exclusión mutua distribuido de Ricart-Agrawala (de la Figura~\ref{fig:cod_14}) no necesitan ser protegidas dentro de la sección crítica definida por las operaciones \verb|wait()|, \verb|signal()| del semáforo \verb|s|.
+    \begin{figure}
+        \centering
+        \begin{minted}{pascal}
+            var token_presente : boolean := false;
+                enSC : boolean := false;
+                peticion : array[1..n] of boolean := false;
+        \end{minted}
+        \setlength{\columnsep}{1cm}
+        \begin{multicols}{2}
+            \begin{minted}{pascal}
+                Process P(i);
+                begin
+                   wait(s);
+                   if not token_presente then begin
+                      broadcast(pet, i);
+                      receive(acceso);
+                      token_presente := true;
+                   end
+
+                   enSC := true;
+                   signal(s);
+
+                   {Sección crítica}
+
+                   enSC := false;
+                   wait(s);
+
+                   for j := i+1 to n, 1 to i-1 do
+                      if peticion[j] and 
+                         token_presente then begin
+
+                         token_presente := false;
+                         send(j,acceso);
+                         peticion[j] := false;
+                      end
+                   end
+
+                   signal(s);
+                end
+            \end{minted}
+            \begin{minted}{pascal}
+                Process Pet(i);
+                begin
+                   receive(pet, j);
+                   wait(s);
+                   peticion[j] := true;
+                   if token_presente and not enSC then
+                      {Repetir líneas 18-28}
+                end
+            \end{minted}
+        \end{multicols}
+        \caption{Código para el Ejercicio~\ref{ej:2.14}}
+        \label{fig:cod_14}
+    \end{figure}
+\end{ejercicio}
+
