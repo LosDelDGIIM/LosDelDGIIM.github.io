@@ -199,7 +199,7 @@
     \end{table}
 \end{ejercicio}
 
-\begin{ejercicio}
+\begin{ejercicio} % // TODO:
     Supongamos el algoritmo de exclusión mutua que expresamos a continuación. Tenemos los procesos: 0, 1, \ldots, $n-1$. Cada proceso $i$ tiene una variable $s[i]$ inicializada a 0, que puede tomar los valores 0 o 1. El proceso $i$ puede entrar en la sección crítica si y solo si se cumplen las siguientes condiciones:
     \begin{align*}
         s[i] &\neq s[i-1] \text{\ para\ } i>0 \\
@@ -217,7 +217,7 @@
     \end{enumerate}
 \end{ejercicio}
 
-\begin{ejercicio}\label{ej:2.6}
+\begin{ejercicio}\label{ej:2.6} % // TODO:
     Se tienen 2 procesos concurrentes que representan 2 máquinas expendedoras de tickets (en la Figura~\ref{fig:cod_6}) (señalan el turno en que ha de ser atendido el cliente), los números de los tickets se representan por dos variables \verb|n1| y \verb|n2| que valen inicialmente 0. El proceso con el número de ticket más bajo entra en su sección crítica. En caso de tener 2 números iguales se procesa primero el proceso número 1.
     \begin{enumerate}[label=(\alph*)]
         \item Demostrar que se verifica la ausencia de interbloqueo (propiedad de \textit{alcanzabilidad} de la sección crítica), la ausencia de inanición (propiedad de \textit{vivacidad}) y la exclusión mutua (una propiedad de \textit{seguridad}).
@@ -255,7 +255,7 @@
                    n2 := 1; {E1.2}
                    n2 := n1 + 1; {L1.2; E2.2}
                    while n1 <> 0 and {L2.2}
-                         n1 < n2 do begin end; {L3.2}
+                         n1 <= n2 do begin end; {L3.2}
 
                    {Sección crítica, SC.2}
                    n2 := 0; {E3.2}
@@ -267,6 +267,39 @@
         \caption{Código para el Ejercicio~\ref{ej:2.6}.}
         \label{fig:cod_6}
     \end{figure}
+
+    \begin{enumerate}[label=(\alph*)]
+        \item Demostraremos cada uno de las propiedades requeridas:
+            \begin{description}
+                \item [Exclusión mutua.]~\\
+                    Supongamos que el proceso P1 ha conseguido entrar en su sección crítica, y veamos que mientras esto sucede, el proceso P2 no puede entrar también a la sección crítica. Para ello, supongamos pues que P1 ha entrado en la sección crítica. Entonces, tiene que haber sucedido anteriormente un momento en el que no se daba la condición de espera para P1: \verb|n2 <> 0 and n2 < n1|, con lo que habremos tenido alguno de los dos siguientes momentos:
+                    \begin{itemize}
+                        \item \verb|n2 = 0|, con lo que cuando P1 entró a la sección crítica, P2 había salido de la suya anteriormente. En este punto, sabemos que \verb|n1 <> 0|, ya que P1 está dentro de su sección crítica, por lo que tenemos que ver que \verb|n1 < n2|, para concluir que P2 no puede entrar a la sección crítica.
+
+                            Hemos razonado anteriormente que P2 salio de su sección crítica y que luego fue cuando P1 entró a la suya. Si P2 quiere volver a entrar a la sección crítica, debe volver a pasar el procolo de entrada a la misma, con lo que en algún momento ejecutará la instrucción \verb|n2 := n1 + 1;|, y como el valor de la variable \verb|n1| no es modificada por P1 mientras que este está en la sección crítica, tenemos que \verb|n1 < n1 + 1 = n2|, con lo que P2 no podrá entrar a la sección crítica.
+                        \item \verb|n2 >= n1|, hasta este momento se ha tenido que ejecutar la instrucción \verb|n1 := n2 + 1|, con lo que \verb|n1 > n2|. Sin embargo, como estamos bajo las hipótesis de \verb|n2 >= n1|, también se habrá tenido que ejecutar la instrucción \verb|n2 := n1 + 1|. En este momento, tendremos que tanto \verb|n1| como \verb|n2| valen 2, con lo que P1 entrará a la sección crítica y P2 no podrá hacerlo, por ser \verb|n1 = n2|.
+                    \end{itemize}
+                    Supongamos ahora que P2 va a entrar a la sección crítica y vemos si P1 puede entrar tras él. Si P2 ha entrado en la sección crítica es porque en algún momento no se ha cumplido \verb|n1 <> 0 and n1 <= n2|, por lo que han tenido que darse:
+                    \begin{itemize}
+                        \item \verb|n1 = 0|, por un razonamiento análogo al anterior en el caso \verb|n2 = 0| llegamos a la conclusión de que P1 no puede entrar a la sección crítica.
+                        \item \verb|n1 > n2|, en este caso, la instrucción \verb|n2 := n1 + 1;| ya se ha tenido que haber ejecutado, pero en dicho caso tendríamos \verb|n2 > n1|, con lo que sabemos que la instrucción \verb|n1 := n2 + 1;| se tuvo que ejecutar después. Para que P1 entre a la sección crítica con P2, tendría que suceder que \verb|n2 >= n1| (es fácil ver que \verb|n2 <> 0|), pero esto no puede suceder, porque P1 ya no puede modificar ya ninguna variable.
+
+                            Concluimos que P1 no puede entrar a la sección crítica.
+                    \end{itemize}
+                \item [Alcanzabilidad.]~\\
+                    \begin{itemize}
+                        \item Si el proceso P1 ejecuta el protocolo de entrada mientras que P2 está ocioso (\verb|n2 = 0|), entonces P1 conseguirá alcanzar la sección crítica. Algo similar sucede cuando P1 está ocioso y es P2 quien queire entrar a la sección crítica.
+                        \item Supongamos pues que ambos procesos quieren entrar a la sección crítica. Si ninguno consigue llegar a ella es porque se dan las dos condiciones de espera al mismo tiempo, con lo que tenemos:
+                            \begin{equation*}
+                                n2 \neq 0 \land n2 < n1 \land n1 \neq 0 \land n1 \leq n2
+                            \end{equation*}
+                            Es decir, $n1>n2$ y $n1\leq n2$ a la vez, lo cual es imposible, con lo que algún proceso conseguirá entrar a la sección crítica.
+                    \end{itemize}
+                \item[Ausencia de inanición.]~\\
+                    Supongamos que el proceso P1 sufre de inanición porque es continuamente adelantado por el proceso P2. En dicho caso, P1 se mantendrá esperando en su bucle de espera activa bajo la condición \verb|n2 <> 0 and n2 < n1|. Sin embargo, cuando P2 salga de su sección crítica, ejecutará \verb|n2 = 0|, con lo que esta situación (que P2 adelante continuamente a P1) es imposible. Un razonamiento análogo justifica la ausencia de inanición para P2.
+            \end{description}
+        \item 
+    \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:2.7}
@@ -343,15 +376,15 @@
     \end{table}
 \end{ejercicio}
 
-\begin{ejercicio}
+\begin{ejercicio} % // TODO:
     Con respecto al algoritmo de Peterson para $N$ procesos: ¿sería posible que llegaran 2 procesos a la etapa $N-2$, 0 procesos a la etapa $N-3$ y en todas las etapas anteriores existiera al menos 1 proceso? Justificar la respuesta.
 \end{ejercicio}
 
-\begin{ejercicio}
+\begin{ejercicio} % // TODO:
     En el \textit{algoritmo de Peterson} para $N$ procesos y considerando cualquier escenario de ejecución de dicho algoritmo, el número máximo de turnos que tiene que esperar cualquier proceso para entrar en sección crítica es $N-1$ turnos.
 \end{ejercicio}
 
-\begin{ejercicio}\label{ej:2.10}
+\begin{ejercicio}\label{ej:2.10} % // TODO:
 Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra para $N$ procesos), demostrar la falsedad de la siguiente proposición: \textit{si un conjunto de procesos está intentando pasar simultáneamente el primer bucle} (el de la línea 11), \textit{y el proceso que tiene el turno está pasivo, entonces siempre conseguirá entrar primero en sección crítica el proceso de dicho grupo que consiga asignar la variable turno en último lugar.}
     \begin{figure}
         \centering
@@ -388,7 +421,7 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
     \end{figure}
 \end{ejercicio}
 
-\begin{ejercicio}\label{ej:2.11}
+\begin{ejercicio}\label{ej:2.11} % // TODO:
     El algoritmo de la Figura~\ref{fig:cod_11} (algoritmo de Knuth para $N$ procesos) resuelve el problema de la exclusión mutua para $N$ procesos, pra lo cual utiliza $N$ variables booleanas \verb|flag|, una variable \verb|turn| y la variable local \verb|j|.
     \begin{enumerate}[label=(\alph*)]
         \item Demostrar que el algoritmo de Knuth verifica todas las propiedades exigibles a un programa concurrente, incluyendo la de equidad.
@@ -438,11 +471,11 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
     \end{figure}
 \end{ejercicio}
 
-\begin{ejercicio}
+\begin{ejercicio} % // TODO:
     Si en el algoritmo de Dijkstra de la Figura~\ref{fig:cod_10} se cambia la instrucción de la línea 12 por esta otra: \verb|if (flag[turno] <> enSC)|, entonces el algoritmos dejaría de ser correcto. Indicar qué propiedad(es) de corrección faltaría(n) y justificar por qué.
 \end{ejercicio}
 
-\begin{ejercicio}
+\begin{ejercicio} % // TODO:
     Si en el algoritmo de Knuth de la Figura~\ref{fig:cod_11} se hacen las siguientes sustituciones:
     \begin{itemize}
         \item La condición de la instrucción \verb|until| de la línea 27 por la condición \newline \verb|(j >= N) and (turno = i or flag[turno] = pasivo)|.
@@ -459,7 +492,7 @@ Con respecto al algoritmo de la Figura~\ref{fig:cod_10} (algoritmo de Dijkstra p
     \end{enumerate}
 \end{ejercicio}
 
-\begin{ejercicio}\label{ej:2.14}
+\begin{ejercicio}\label{ej:2.14} % // TODO:
     Demostrar que las instrucciones entre las líneas 18 y 28 del algoritmo de exclusión mutua distribuido de Ricart-Agrawala (de la Figura~\ref{fig:cod_14}) no necesitan ser protegidas dentro de la sección crítica definida por las operaciones \verb|wait()|, \verb|signal()| del semáforo \verb|s|.
     \begin{figure}
         \centering
