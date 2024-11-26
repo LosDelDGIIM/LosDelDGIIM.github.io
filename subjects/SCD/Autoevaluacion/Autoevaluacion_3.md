@@ -87,7 +87,7 @@
     - [ ] Permitiendo que todos los procesos avancen simultáneamente
     - [x] Garantizando que el tiempo de espera sea limitado para cada proceso
     - [ ] Bloqueando procesos con menor prioridad
-    - [ ] Usando turnos circulares para la asignación de recursos
+    - [x] Usando turnos circulares para la asignación de recursos
 
 12. ¿Qué hace un proceso después de usar la sección crítica en el algoritmo de Peterson?
     - ( ) Solicita nuevamente el turno
