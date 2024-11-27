@@ -37,8 +37,8 @@ ______
 
 4. Se ha implementado el acceso autorizado de un sitio web en Apache2 usando una metodología de autenticación básica con el siguiente fichero `.htaccess`, ¿qué comando usaría para crear el correspondiente fichero de contraseñas?<br><code>AuthType Basic<br>AuthName "Directorio con control de acceso"<br>AuthUserFile "/usr/local/apache/passwords"<br>Require user mew</code><br>
     - ( ) `sudo htuser -c /usr/local/apache/passwords mew`
-    - (x) `sudo htpasswd -c /usr/local/apache/passwords mew`
-    - ( ) `sudo htpasswd -c /usr/local/passwords.pd mew`
+    - ( ) `sudo htpasswd -c /usr/local/apache/passwords mew`
+    - (x) `sudo htpasswd -c /usr/local/passwords.pd mew`
     - ( ) `sudo htuser -c /usr/local/passwords.pd mew`
 
 5. Suponga que queremos crear la clave privada y el certificado electrónico autofirmado de un sitio web en el directorio `/home/administrador/Descargas` utilizando openssl. El certificado debe tener una validez de 30 días y la clave privada debe tener una longitud de 1024 bits. ¿Qué comando usaría?
