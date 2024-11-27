@@ -55,7 +55,7 @@
     - ( ) Código de inicialización.
 
 7. ¿Qué función cumple la operación `c.wait()` en un monitor?
-    - (x) Bloquear al proceso que llama al procedmiento que la ejecuta hasta que se cumpla una condición.
+    - (x) Bloquear al proceso que llama al procedimiento que la ejecuta hasta que se cumpla una condición.
     - ( ) Liberar todos los procesos en la cola.
     - ( ) Permitir la sincronización sin bloquear.
     - ( ) Bloquear el monitor hasta que se libere.
