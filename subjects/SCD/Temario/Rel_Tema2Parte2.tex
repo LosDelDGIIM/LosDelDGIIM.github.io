@@ -1193,9 +1193,9 @@
                  j := j + 1;
               until(j = n or peticion[j]);
 
-              if peticion[j] then
+              if peticion[j] then {j es el de mayor prioridad que pide el recurso}
               begin
-                 peticion[j] := false;
+                 peticion[j] := false; {Le cedemos el recurso directamente}
                  cola.signal();
               else
                  libre := true;
@@ -1226,8 +1226,8 @@
         \item [Complicando el problema.]~\\
     Si ahora suponemos que no hay un solo recurso R, sino que tratamos de resolver el problema para $m$ recursos, disponemos del siguiente monitor, que cuenta con dos arrays de booleanos:
     \begin{itemize}
-        \item \verb|libre|, de forma que si \verb|libre[i] = true|, entonces el proceso $i$-ésimo estará libre.
-        \item \verb|peticion|, con el mismo comportamiento.
+        \item \verb|libre|, de forma que si \verb|libre[i] = true|, entonces el recurso $i$-ésimo estará libre.
+        \item \verb|peticion|, con el mismo comportamiento que antes.
     \end{itemize}
 
     \begin{minted}{pascal}
@@ -1373,7 +1373,38 @@
     \end{enumerate}
 
     \begin{enumerate}
-        \item Hemos diseñado el siguiente monitor, donde \verb|tenedores[i]| indica si el tenedor $i$-ésimo ha sido (\verb|true|) cogido o si no (\verb|false|).
+        \item En primer lugar, vemos que una de las variables permanentes del monitor ha de ser el array \verb|tenedor_ocupado|, donde \verb|tenedor_ocupado[i]=true| indica que el tenedor $i$-ésimo ha sido cogido.
+        Por otro lado, necesitamos un array de variables condición, \verb|cola_tenedor|, en cuya cola esperen los procesos filósofos que necesitan del tenedor $i-$ésimo.
+         \begin{minted}{pascal}
+         monitor MonFilo;
+            var   tenedor_ocupado : array[0..4] of boolean;
+                  cola_tenedor : array[0..4] of condition;
+
+            procedure coge_tenedor(num_tenedor, num_proceso : integer);
+            begin
+               { Si ya han cogido el tenedor }
+               if tenedor_ocupado[num_tenedor] then
+                  cola_tenedor[num_tenedor].wait();
+
+               tenedor_ocupado[num_tenedor] := true;
+            end
+
+            procedure libera_tenedor(num_tenedor : integer);
+            begin
+               tenedor_ocupado[num_tenedor] := false;
+               cola_tenedor[num_tenedor].signal();
+            end
+
+            begin
+               for i = 0 to 4 do 
+                  tenedores[i] := false;
+               end
+            end
+         end
+         \end{minted}
+
+        \begin{comment}       
+        Hemos diseñado el siguiente monitor, donde \verb|tenedores[i]| indica si el tenedor $i$-ésimo ha sido (\verb|true|) cogido o si no (\verb|false|).
             \begin{minted}{pascal}
                 monitor MonFilo;
                    var tenedores : array[0..4] of boolean;
@@ -1406,6 +1437,7 @@
                    end
                 end
             \end{minted}
+        \end{comment}
         \item Ante el código proporcionado para los filósofos anteriormente, puede producirse una situación de interbloqueo si se sucede la siguiente traza de ejecución:
             \begin{table}[H]
             \centering
@@ -1430,55 +1462,57 @@
             En este instante, todos los filósofos han cogido el tenedor de su derecha, el cual no soltarán hasta comer, para lo que necesitan el tenedor de su izquierda. Sin embargo, como son 5 filósofos y solo hay disponibles 5 tenedores, ningún filósofo conseguirá nunca su tenedor de la izquierda para poder comer. De esta forma, todos los filósofos quedarán bloqueados por siempre.
         \item Para que el monitor no de lugar a un interbloqueo de los procesos, es necesario introducir un nuevo array, que controle qué filósofos disponen de un único tenedor, \verb|un_tenedor|; así como un entero que controle el número de filósofos que tienen un único tenedor, \verb|fil_1t|; y una variable condición \verb|cola|, que nos permita bloquear a los filósofos que traten de coger el 5º tenedor y bloquear al resto:
             \begin{minted}{pascal}
-                monitor MonFilo;
-                   var tenedores : array[0..4] of boolean;
-                       un_tenedor : array[0..4] of boolean;
-                       fil_1t : integer;
+            monitor MonFilo;
+               var   tenedor_ocupado : array[0..4] of boolean;
+                     un_tenedor : array[0..4] of boolean;
+                     fil_1t : integer;
 
-                       filosofo : array[0..4] of condition;
-                       cola : condition;
+                     cola_tenedor : array[0..4] of condition;
+                     cola : condition;
 
-                   procedure libera_tenedor(num_tenedor : integer);
-                   begin
-                      tenedores[num_tenedor] := false;
+               procedure libera_tenedor(num_tenedor : integer);
+               begin
+                  tenedor_ocupado[num_tenedor] := false;
+                  cola_tenedor[num_tenedor].signal();
+               end
 
-                      if filosofo[num_tenedor].queue() then
-                         filosofo[num_tenedor].signal();
-                      else then
-                         filosofo[(num_tenedor - 1) mod 5].signal();
-                   end
+               procedure coge_tenedor(num_tenedor, num_proceso : integer);
+               begin
+                  {Si estamos a punto de bloquear todos los procesos}
+                  if not un_tenedor[num_proceso] and fil_1t = 4 then
+                     cola.wait();
 
-                   procedure coge_tenedor(num_tenedor, num_proceso : integer);
-                   begin
-                      {Si estamos a punto de bloquear todos los procesos}
-                      if not un_tenedor[num_proceso] and fil_1t = 4 then
-                         cola.wait();
+                  {En este punto, no hay riesgo de interbloqueo. O bien porque no hay 4 filósofos con un solo tenedor, o bien porque el proceso actual ya tiene un tenedor}
+                  if tenedor_ocupado[num_tenedor] then
+                     cola_tenedor[num_tenedor].wait();
 
-                      {Si ya han cogido el tenedor}
-                      if tenedores[num_tenedor] then
-                         filosofo[num_proceso].wait();
+                  tenedores[num_tenedor] := true;
 
-                      tenedores[num_tenedor] := true;
+                  {Hay que actualizar las nuevas variables}
+                  if not un_tenedor[num_proceso] then {Si antes no tenía tenedor}
+                     un_tenedor[num_proceso] := true;
+                     fil_1t := fil_1t + 1;
+                  else then  {Si ahora tengo dos tenedores}
+                     un_tenedor[num_proceso] := false;
+                     fil_1t := fil_1t - 1;
 
-                      {Si antes no tenía tenedor}
-                      if not un_tenedor[num_proceso] then
-                         un_tenedor[num_proceso] := true;
-                         fil_1t := fil_1t + 1;
-                      else then  {Si ahora tengo dos tenedores}
-                         un_tenedor[num_proceso] := false;
-                         fil_1t := fil_1t - 1;
+                     { Ya no hay riesgo de interbloqueo, porque este filósofo liberará ambos tenedores }
+                     if fil_1t < 4 then
+                        cola.signal();
+                  end
+               end
 
-                         if fil_1t < 4 then
-                            cola.signal();
-                      end
-                   end
-
-                   begin
-                      tenedores := (false, false, false, false, false);
-                      un_tenedor := (false, false, false, false, false);
-                      fil_1t := 0;
-                   end
-                end
+               begin
+                  for i = 0 to 4 do 
+                     begin
+                        tenedor_ocupado[i] := false;
+                        un_tenedor[i] := false;
+                     end
+                  end
+                  
+                  fil_1t := 0;
+               end
+            end
             \end{minted}
     \end{enumerate}
 \end{ejercicio}
