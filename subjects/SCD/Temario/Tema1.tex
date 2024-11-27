@@ -31,7 +31,7 @@ El objetivo fundamental de la concurrencia es simplificar toda la parte de la si
 Como beneficios de este modelo abstracto (el de la concurrencia), podemos destacar:
 \begin{itemize}
     \item Da herramientas, instrucciones y sentencias útiles para problemas de sincronización entre procesos.
-    \item Las primitivas de programación en un lenguaje de alto nivel (como son los lenguajes concurrentes) son más fáciles de utilizar que con lenguajes de bajo nivel. Por ejemplo, los semáforos son más complejos que los monitores.
+    \item Las primitivas de programación en un lenguaje de alto nivel (como son los lenguajes concurrentes) son más fáciles de utilizar que con lenguajes de bajo nivel. Por ejemplo, resolver un problema de sincronización mediante semáforos es más compleja que la resolución mediante monitores.
     \item Evita la dependencia con instrucciones de bajo nivel, haciendo que el programa pueda ejecutarse en otra computadora.
 \end{itemize}
 
@@ -57,8 +57,9 @@ Estos axiomas son:
     \item [5. Hipótesis del progreso finito.]~\\
         \begin{itemize}
             \item Un proceso debe tratar de avanzar todo lo que pueda. Esto es, si un proceso se está ejecutando, debe tratar de ejecutar tantas instrucciones como sea posible.
-            \item Una vez que un proceso comienza a ejecutar una sección de código, debe terminar dicha sección.
             \item Todo proceso debe seguir progresando durante la ejecución de un programa.
+            \item Progreso local: Una vez que un proceso comienza a ejecutar una sección de código, debe terminar dicha sección.
+            \item Progreso global: Si un proceso está listo para entrar en ejecución, el computador debe permitir su ejecución.
         \end{itemize}
 \end{description}
 
@@ -108,7 +109,7 @@ En un DAG, se suceden dependencias secuenciales, esto es, un proceso no empieza 
 
         \draw[-stealth] (C) to[out=300, in=0] (G);
     \end{tikzpicture}
-    \caption{Ejemplo de DAG}
+    \caption{Ejemplo de DAG de sincronización.}
     \label{fig:primer_dag}
     \end{figure}
 \end{ejemplo}
@@ -119,13 +120,22 @@ En relación a cómo podemos crear los procesos, destacamos dos formas que podem
 \subsection{Definición estructurada de procesos}
 En programación estructurada, contaremos con dos palabras reservadas del lenguaje que nos permitirán recrear la siguiente funcionalidad a explicar. En pseudocódigo, nos referiremos a ellas como \verb|cobegin| y \verb|coend|.\\
 
-Dados dos procesos $P_1$ y $P_2$ que queremos que se ejecuten de forma concurrente, bastará especificar en pseudocódigo:
-\begin{minted}{pascal}
-    cobegin
-      P1; 
-      P2; 
-    coend
-\end{minted}
+Dados dos procesos $P_1$ y $P_2$ que queremos que se ejecuten de forma concurrente, bastará especificar en pseudocódigo cualquiera de los dos siguientes:
+\begin{figure}[H]
+    \setlength{\columnsep}{1cm}
+    \begin{multicols}{2}
+     \begin{minted}{pascal}
+        cobegin
+          P1; 
+          P2; 
+        coend
+    \end{minted}       
+    \begin{minted}[escapeinside=\#\#]{pascal}
+        cobegin P1 #||# P2 coend
+    \end{minted}       
+    \end{multicols}
+\end{figure}
+
 Hasta llegar a la palabra \verb|cobegin| no comenzará ningún proceso. Tras esta, se sucederá un entrelazado de las instrucciones de $P_1$ y $P_2$, y no se saldrá de dicha región hasta que terminen ambos procesos.
 
 \begin{ejemplo}
@@ -325,7 +335,7 @@ Para llevar a cabo la verificación de software, es decir, la demostración de q
         Es un método inviable para programas concurrentes. Por ejemplo, en un programa que use dos procesos, cada uno con 3 instrucciones atómicas, el número de posibles trazas de ejecución es de 20.
     \item [Razonamiento asertivo.] Realizar un análisis abstracto basado en Lógica Matemática que permita representar de forma abstracta los estados\footnote{Un estado del programa viene definido por los valores que tienen las variables del programa en determinado instante durante su ejecución.} concretos que un programa alcanza.
 \end{description}
-De esta forma, el único enfoque posible es el razonamiento asertivo.
+De esta forma, el único enfoque posible es el razonamiento asertivo, por ser el que mejor tolera los \textit{errores transitorios} (aquellos que aparacen en unas ejecuciones pero no en otras, lo que dificulta su detección).
 
 \subsection{Introducción a la Lógica de Hoare}
 \subsubsection{Axiomática del lenguaje}
@@ -423,10 +433,10 @@ De esta forma, $\{V\}$ es el conjunto de todos los estados de un programa, ya qu
     \end{itemize}
     De esta forma, notemos que siempre se verifica que:
     \begin{itemize}
-        \item $\{V \land P\} = \{P\}$.
-        \item $\{V \lor P\} = \{V\}$.
-        \item $\{F \land P\} = \{F\}$.
-        \item $\{F \lor P\} = \{P\}$.
+        \item $\{V \land P\} \equiv \{P\}$.
+        \item $\{V \lor P\} \equiv \{V\}$.
+        \item $\{F \land P\} \equiv \{F\}$.
+        \item $\{F \lor P\} \equiv \{P\}$.
         \item $\{F\}\rightarrow \{P\} \rightarrow \{V\}$.
         \item $\{P \land Q\}\rightarrow \{P\} \rightarrow\{P \lor Q\}$.
     \end{itemize}
@@ -503,7 +513,7 @@ Seguidamente, para cada una de las sentencias que afectan al flujo de control en
         \begin{equation*}
             \dfrac{\{I\land B\}S\{I\}}{\{I\}\ \texttt{while B do}\ S\ \texttt{end do}\ \{I\land \lnot B\}}
         \end{equation*}
-        Donde a la proposición $I$ la llameremos invariante.
+        Donde a la proposición $I$ la llameremos invariante de dicho bucle.
 \end{description}
 
 \subsection{Verificación de sentencias concurrentes}
@@ -590,7 +600,7 @@ Dado un triple $\{P\}S\{Q\}$, este puede contener varios asertos: $\{P\}$, $\{Q\
     contiene los asertos $\{V\}$ y $\{x=1\}$, ya que la ejecución de las dos instrucciones se hace de forma atómica y ningún otro proceso puede ver el estado intermedio ($x=0$) de la variable $x$, ya que como hemos mencionado en el primer punto, las regiones críticas realizan una transformación \textbf{indivisible} del estado del programa.
 \end{ejemplo}
 \begin{definicion}[Interferencia]
-    Dado un triple $\{P\}S\{Q\}$ y una sentencia atómica $a$\footnote{Esta puede contener tantas líneas de código como queramos, lo importante es que su ejecución se haga de forma atómica.} con precondición $pre(a)$, decimos que $a$ no interfiere con $\{P\}S\{Q\}$ si para todo aserto $A$ del triple se cumple el triple
+    Dado un triple $\{P\}S\{Q\}$ y una sentencia atómica\footnote{Esta puede contener tantas líneas de código como queramos, lo importante es que su ejecución se haga de forma atómica.} $a$ con precondición $pre(a)$, decimos que $a$ no interfiere con $\{P\}S\{Q\}$ si para todo aserto $A$ del triple se cumple el triple
     \begin{equation*}
         NI(A, a) :\equiv \{A \land pre(a)\} a \{A\}
     \end{equation*}
@@ -830,7 +840,7 @@ Para demostrar que un programa concurrente que no realiza llamadas bloqueantes t
     Dado un bucle en un lenguaje de programación:
     \begin{minted}[escapeinside=\#\#]{pascal}
         while B do begin
-           {Cuertpo del bucle}
+           {Cuerpo del bucle}
         end
     \end{minted}
     Donde la condición \verb|B| tiene $n$ variables que son modificadas dentro de dicho bucle: $a_1$, $a_2$, \ldots, $a_n$. Entonces, el vector variante para dicho bucle es un conjunto de $n$-uplas de la forma $(p_1, p_2, \ldots, p_n)$ de forma que $p_i$ es un posible valor que puede tomar la variable $a_i$ dentro del bucle, para $i \in \{1, \ldots, n\}$.
