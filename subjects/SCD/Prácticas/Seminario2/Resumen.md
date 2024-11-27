@@ -7,7 +7,7 @@
 - **Curso Académico:** 2024-25.
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
 - **Profesor:** José Miguel Mantas Ruíz.
-- **Descripción:** Resumen del Seminario 1 de Prácticas.
+- **Descripción:** Resumen del Seminario 2 de Prácticas.
 
 Para la relación de este seminario, es importante haber leído primero la parte de semántica de señales del Tema 2, y entender especialmente la semántica **Señalar y Espera Urgente**.  
   
