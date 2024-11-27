@@ -844,29 +844,51 @@ Siguiendo estos pasos, obtendríamos un código como el siguiente:
         end
     \end{minted}
 
-    En primer lugar, hemos de especificar, en función de $n$, a qué procesos ha de esperar cada uno, lo cual se hará mediante una matriz compartida. Tenemos que:
-    \begin{minted}{pascal}
-        var espera : array[1..9,1..2] of integer := (
-            (-1, -1),   { P1 }
-            (1, -1),    { P2 }
-            (2, -1),    { P3 }
-            (1, -1),    { P4 }
-            (2, 4),     { P5 }
-            (3, 5),     { P6 }
-            (4, -1),    { P7 }
-            (5, 7),     { P8 }
-            (6, 8)      { P9 }
-        ) ;
-        Process P[ n : 1..9 ]
-        begin
-            for i := 1 to 2 do
-                if espera[n,i] <> -1 then { != -1 }
-                    EsperarPor( espera[n,i] ) ;
-            
-            S_n ;
-            Acabar( n ) ;
-        end
-    \end{minted}
+    En este ejercicio contamos con dos alternativas: una que es más larga pero más general, y una más corta pero específica para este problema.
+    \begin{description}
+        \item[Matriz de esperas]
+        En primer lugar, hemos de especificar, en función de $n$, a qué procesos ha de esperar cada uno, lo cual se hará mediante una matriz compartida. Tenemos que:
+        \begin{minted}{pascal}
+            var espera : array[1..9,1..2] of integer := (
+                (-1, -1),   { P1 }
+                (1, -1),    { P2 }
+                (2, -1),    { P3 }
+                (1, -1),    { P4 }
+                (2, 4),     { P5 }
+                (3, 5),     { P6 }
+                (4, -1),    { P7 }
+                (5, 7),     { P8 }
+                (6, 8)      { P9 }
+            ) ;
+            Process P[ n : 1..9 ]
+            begin
+                for i := 1 to 2 do
+                    if espera[n,i] <> -1 then { != -1 }
+                        EsperarPor( espera[n,i] ) ;
+                
+                S_n ;
+                Acabar( n ) ;
+            end
+        \end{minted}
+
+        \item[Usando operaciones]
+        En esta alternativa, emplearemos operaciones para determinar a qué procesos esperar.
+        \begin{minted}{pascal}
+            Process P[ n : 1..9 ]
+            begin
+                {Esperamos al proceso de arriba}
+                if (n > 3) then
+                    EsperarPor( n-3 ) ;
+                
+                {Esperamos al proceso de la izquierda}
+                if (n mod 3) <> 1 then
+                    EsperarPor( n-1 ) ;                
+                
+                S_n ;
+                Acabar( n ) ;
+            end
+        \end{minted}
+    \end{description}
 \end{ejercicio}
 
 \begin{ejercicio}
