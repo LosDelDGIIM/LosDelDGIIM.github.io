@@ -691,14 +691,65 @@ De esta forma, podemos ver el código monitor en pseudo código:
           terminado = false; autorizado = false;
        end
 \end{minted}
-% // TODO: Capel incorpora un procedimiento terminar que hace lo mismo que el codigo de inicializacion, no se por qué.
 
 Para su demostración, usaremos el invariante
 \begin{equation*}
     \{IM\} \equiv \{terminado = false \Longrightarrow autorizado = false\}
 \end{equation*}
-La demostración se deja como ejercicio al lector.
-% // TODO: Hacer la demostración y quitar lo de que se deja como ejercicio
+\begin{proof}
+    Hemos pues de demostrar que se cumplen los triples:
+    \begin{gather*}
+        \{V\}\ codigo\ inicializacion\ \{IM\} \\
+        \{IM\}\ \texttt{esperar}\ \{IM\} \\
+        \{IM\}\ \texttt{notificar}\ \{IM\} 
+    \end{gather*}
+    Comenzamos por el primero:
+    \begin{equation*}
+        \{V\}\ terminado = false;\ autorizado=false;\ \{IM\}
+    \end{equation*}
+    Para ello, hemos de aplicar la regla de la composición sobre los triples:
+    \begin{equation*}
+        \{V\}\ terminado=false;\ \{terminado = false\} \\
+    \end{equation*}
+    \begin{multline*}
+        \{terminado = false\}\ autorizado=false;\ \\ \{terminado = false \land autorizado = false\} \rightarrow \{IM\}
+    \end{multline*}
+    Que son ambos ciertos, el primero por el axioma de asignación y el segundo por el axioma de asignación y la primera regla de la consecuencia.\\
+
+    A continuación, probaremos los triples de los procedimientos del monitor, recordando que para hallar la poscondición de \verb|c.wait()| hemos primero de localizar la precondición de \verb|c.signal()|, por lo que hemos de realizar las dos demostraciones ``al mismo tiempo'', aunque a continuación escribiremos primero la de \verb|notificar| y luego la de \verb|esperar|:
+    \begin{gather*}
+        \texttt{notificar(); begin} \\
+        \{IM\} \\
+        \texttt{terminado = true;} \\
+        \{terminado = true\} \equiv \{C\} \\
+        \texttt{c.signal();} \\
+        \{IM\} \\
+        \texttt{end}
+    \end{gather*}
+    Con lo que ya sabemos que la condición de sincronización de \verb|c| es: 
+    \begin{equation*}
+        \{C\}\equiv \{terminado = true\}
+    \end{equation*}
+    Demostramos ahora $\{IM\}\ \texttt{esperar}\ \{IM\}$:
+    \begin{gather*}
+        \texttt{esperar(); begin} \\
+        \{IM\} \\
+        \texttt{if not terminado then} \\
+        \{IM \land terminado = false\} \rightarrow \{terminado = false \land autorizado = false\} \\
+        \texttt{c.wait();} \\
+        \{terminado = true\} \\
+        \texttt{else} \\
+        \{IM \land terminado = true\} \rightarrow \{terminado = true\} \\
+        \texttt{null;} \\
+        \{terminado = true\} \\
+        \texttt{end} \\
+        \{terminado = true\} \\
+        \texttt{autorizado = true;} \\
+        \{terminado = true \land autorizado = true\} \rightarrow \\ 
+        \rightarrow \{autorizado = true \Longrightarrow terminado = true\} \equiv \{IM\}  \\
+        \texttt{end}
+    \end{gather*}
+\end{proof}
 
 \subsection{Exclusión mutua}
 Es muy habitual que en programas concurrentes tengamos una o varias regiones de código que queramos que se ejecuten en exclusión mutua, llamadas secciones críticas. Es decir, mientras que un proceso se encuentre ejecutando una sección crítica, ningún otro proceso podrá estar ejecutando a la vez la misma sección crítica\footnote{Podemos tener dos secciones críticas con distintos códigos pero que sean referidas al acceso para la misma variable compartida. En dicho caso, pensamos que las secciones críticas son iguales, ya que solo puede haber un proceso que ejecute una u otra a la vez.}.\\
