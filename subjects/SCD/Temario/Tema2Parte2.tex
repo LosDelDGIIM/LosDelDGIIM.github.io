@@ -762,7 +762,7 @@ El monitor que resuelve el problema de la exclusión mutua tendrá dos procedimi
 De esta forma, tenemos el monitor:
 \begin{minted}[escapeinside=\#\#]{pascal}
     monitor EM;
-    var ocupada : boolean;  {ocuapda = true si hay un proceso en seccion critica}
+    var ocupada : boolean;  {ocupada = true si hay un proceso en seccion critica}
         cola : cond;
 
        procedure entrar(); begin
@@ -784,8 +784,46 @@ Para demostrarlo, primero definiremos la variable $num_{sc}$ como el número de 
 \begin{equation*}
     \{IM\} \equiv \{(ocupada = false \Longleftrightarrow num_{sc} = 0) \land 0\leq num_{sc} \leq 1\}
 \end{equation*}
-La demostración se deja como ejercicio al lector.
-% // TODO: Hacer la demostración y quitar lo de que se deja como ejercicio
+\begin{proof}
+    Tenemos que demostrar:
+    \begin{gather*}
+        \{V\}\ codigo\ inicializacion\ \{IM\} \\
+        \{IM\}\ \texttt{entrar}\ \{IM\} \\
+        \{IM\}\ \texttt{salir}\ \{IM\}
+    \end{gather*}
+    Comenzamos por el código de inicialización:
+    \begin{equation*}
+        \{V\}\ \texttt{ocupada = false;}\ \{ocupada = false\} \rightarrow \{IM\}
+    \end{equation*}
+    Ahora, comprobamos el triple del procedimiento \verb|salir|:
+    \begin{gather*}
+        \texttt{salir(); begin} \\
+        \{IM\} \\
+        \texttt{ocupada = false;} \\
+        \{IM \land ocupada = false\} \\
+        \texttt{cola.signal();} \\
+        \{IM\} \\
+        \texttt{end}
+    \end{gather*}
+    Con lo que ya sabemos que la condición de sincronización de la variable condición $c$ es $\{IM \land ocupada = false\}$. Finalmente, el triple del procedimiento \verb|entrar|:
+    \begin{gather*}
+        \texttt{entrar(); begin} \\
+        \{IM\} \\
+        \texttt{if ocupada then} \\
+        \{IM \land ocupada = true\} \\
+        \texttt{cola.wait();} \\
+        \{IM \land ocupada = false\} \\
+        \texttt{else} \\
+        \{IM \land ocupada = false\} \\
+        \texttt{null;} \\
+        \{IM \land ocupada = false\} \\
+        \texttt{end} \\
+        \{IM \land ocupada = false\} \\
+        \texttt{ocupada = true;} \\
+        \{IM \land ocupada = true\} \rightarrow \{IM\} \\
+        \texttt{end}
+    \end{gather*}
+\end{proof}
 
 \subsection{Productores/Consumidores}
 Volvemos otra vez al paradigma del productor/consumidor, el cual hemos explicado varias veces ya en este documento. Ahora, admitiremos la existencia de varios procesos productores que querrán generar datos y escribirlos en una variable compartida, así como varios consumidores, que querrán leer dicha variable compartida y realizar los cálculos pertinentes.
@@ -834,8 +872,6 @@ De esta forma, podemos definir el invariante
     \end{array}\right\}\right\} \equiv  \\
     \equiv \{(pendiente = false \land E-L=0) \lor (pendiente = true \land E-L=1)\}
 \end{gather*}
-La demostración se deja como ejercicio para el lector.
-% // TODO: Hacer la demostración y quitar lo de que se deja como ejercicio
 
 Asímismo, notemos que la demostración es similar a la del monitor para exclusión mutua, teniendo en cuenta que:
 \begin{align*}
