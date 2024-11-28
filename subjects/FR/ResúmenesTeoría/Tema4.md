@@ -7,12 +7,12 @@ Los aspectos de seguridad que vamos a ver son:
 - Confidencialidad: Transmitimos algo a un receptor y solo queremos que dicho receptor sea capaz de ver el mensaje.
     Se consigue con el cifrado.
 - Autentificación: Queremos estar seguros de saber quién es exactamente el emisor.
-    - Reto-Respuesta.
+    - Reto-Respuesta (no tiene no repudio pero es fiable en relacion de qué tan secreta sea la clave secreta compartida).
     - Cifrar con K_privA() o doble cifrado.
 - Integridad de los datos: Estar seguro de que algunos datos no han sido manipulados.
     Se consigue con funciones hash o compendios (resúmenes del mensaje).
 - No repudio: No nos podemos echar atrás de haber participado en una transacción. Prueba legal.
-    Se consigue con la firma digital o con doble cifrado con certificado
+    Se consigue con la firma digital o con doble cifrado con certificado, pero necesitamos siempre una **entidad fiable**.
 - Disponibilidad (no se verá, requiere de cosas que no se ven. Requiere de líneas de respaldo, servidores duplicados, ...): 
     Tenemos un banco con todo pero puede ser suceptible de ser atacado y a lo mejor la mitad del día está y la otra mitad no.
     Analogía con WhatsApp.
@@ -130,7 +130,7 @@ Que B almacene en BBDD el par (Usuario, clave).
 Que A envíe a B su usuario (A) y su clave (K_A), que el servidor confirme si son correctas y que devuelva un mensaje de aceptación o rechazo.
 - Usado por PAP (Password Autentication Protocol)
 
-## Reto-Respuesta
+## Reto-Respuesta (no tiene no repudio pero es fiable en relacion de qué tan secreta sea la clave secreta compartida)
 Tenemos un usuario A, y un usuario B.
 B tiene una BBDD con la clave que comparten A y B para A (para cada usuario).
 
@@ -170,7 +170,7 @@ Dos usuarios, A y B que quieren tener una misma clave secreta compartida.
 La clave compartida será: g^xy mod n
 
 ### Problema
-Suceptible de ataque man-in-the-middle:
+Suceptible de ataque man-in-the-middle (MITM):
 - Tenemos A, que manda n, g g^x mod n a un atacante.
 - El atacante genera z y calcula g^xz mod n.
 - El atacante devuelve g^z mod n a A.
@@ -186,6 +186,7 @@ La palabra a introducir es de cualquier longitud, el resumen suele ser de longit
 Dado un mensaje P, se envia P junto con su hash.
 Para que no se pueda modificar el mensaje a P' e incluir el hash de P':
 Enviamos P junto con el hash(P + K_{AB}), es decir, el hash de P concatenada con la clave compartida de A y de B.
+Así como cifrar el propio hash con la clave compartida.
 
 Este hash(P + K_{AB}) se le suele llamar MAC (Message Autentification Code), o HMAC (Hash ...).
 
@@ -203,6 +204,9 @@ Cada salida anterior sirve como entrada para la siguiente caja SHA.
 Igual pero con 160 (respecto a la vista del usuario).
 
 # Firma digital (para conseguir no repudio)
+**Es necesario tener integridad y autenticación para poder garantizar no repudio**.
+**Siempre es necesaria una entidad fiable**.
+
 Dos formas:
 - Big brother.
 - Doble cifrado (con certificados).
@@ -278,7 +282,80 @@ Descifra con la clave privada                       K = K_privB(K_pubB(K))
 - Autentificación:  Sí, he cifrado con clave privada.
 - No repudio:       Se puede conseguir con un certificado digital para claves privadas y públicas. Si no, no.
 
-## TSL (Transport Secure Layer), SSL
-Hacen lo mismo.
+## TSL (Transport Secure Layer), SSL (Hacen lo mismo.)
+TSL se usa para muchos protocolos (HTTPS, IMAPS, SSL-POP).
+Hay dos versiones: el original (TSL) y uno que se ha popularizado, SSL.
+
+Usan Diffie-Hellman.
+- Para evitar Man-in-the-middle:
+Una vez B recibe n, g, g^x mod n, se autentifica a A mediante su certificado digital (por ejemplo, cifrando el mensaje con la clave privada de quien envía).
+
+
+Clave de sesión: Clave temporal para cifrar los datos.
+
+Es una familia de protocolos:
+- SSL Handshake Protocol: Protocolo de señalizacion, para negociar cosas (negociar algoritmo de cifrado, funcion hash, autentica al servidor con certificado)
+- SSL Record Protocol: 
+    Procolo de registro (los mensajes enviados sobre SSL son los registros), es el protocolo que permite enviar las cosas.
+    Da un canal seguro.
+- SSL: Assert protcol: Informa sobre errores.
+- Change Cipher Spec Protocol: notificar cambios en el cifrado.
+
+Tenemos integridad y cifrado.
 
 ## IPSec
+Su objetivo es autenticación, integridad y (opcionalmente) privacidad a nivel IP.
+Basado en datagramas.
+Crea túneles unidireccionales, con lo que para enviar en bidireccional hay que crear dos túneles.
+
+Un túnel es un sitio en la que metemos un paquete y a la salida tenemos el mismo paquete.
+Para ello, metemos el paquete dentro de otro paquete (encapsulamiento). Para hacer un túnel necesitamos encapsular.
+Si el túnel va cifrado (parte de datos cifrada) tenemos un túnel seguro.
+
+3 procedimientos principales:
+
+#### Negociar opciones: Asociación de seguridad
+Establecer una clave secreta con Diffie-Hellman (incluye autenticación para evitar MITM).
+No gusta a mucha gente porque establece una conexión, luego rompe el carácter no orientado a conexión de IP.
+
+### Ociones para enviar datos
+#### Cabeceras de autenticación, AH
+Dar autenticación e integridad (Autentication Header).
+
+#### Encapsulado de seguridad de la carga, EPS
+Dar autenticación, integridad y confidencialidad (EPS, Encapsulated Payload Security).
+
+Independientemente del utilizado, IPS tiene dos modos de funcionamiento:
+
+### Modo transporte
+Asociación extremo a extremo (un túnel).
+
+### Modo túnel
+Si estamos en una empresa y tenemos dos sucursales conectadas a internet, el tráfico entre estas dos pasa por internet.
+Tenemos un servidor en cada empresa, de forma que el túnel se establece entre dichos dos servidores (dentro de una sucursal no usamos el túnel, pero una vez que sale a internet sí).
+
+Si un cliente se quiere conectar a otro en particular habría que usar el modo de transporte.
+
+
+
+
+
+# Ejercicios
+## Ejercicio 12 Relación 4
+Por cada aspecto de seguridad: 
+- Confidencialidad: Decir en qué mensajes.
+- Autenticación: Decir qué entidad se autentica con quién.
+- Integridad: Decir qué mensajes llevan resumen.
+- No repudio: Buscar firmas digitales o certificados que garanticen cosas.
+
+**Integridad por ninguna parte**.
+NAS no se autentifica con AS
+No hay confidencialidad en la red interna
+
+No hay autentificación en general, salvo en 6.
+Y a partir de 6, por K_sesion.
+
+No repuedio solo en 6
+
+## Ejercicio 3 Relación 4
+
