@@ -61,14 +61,16 @@
         \label{fig:1.4.1}
     \end{figure}
 
-    % // TODO: Habría bastado la --> veps?
-
     Veamos ahora que no es inherentemente ambiguo. La producción de $A_1$ produce las palabras de la forma $a^i b^j$, con $i \geq j$. La producción de $A_2$ produce las palabras de la forma $a^i b^j$, con $i \leq j$. Por tanto, la gramática genera el lenguaje:
     \begin{align*}
         L &= \{ a^i b^j \mid i,j\in \bb{N}\cup \{0\},\ i \geq j\}\cup \{ a^i b^j \mid i,j\in \bb{N}\cup \{0\},\ i \leq j\} =\\&= \{ a^i b^j \mid i,j\in \bb{N}\cup \{0\} \}
     \end{align*}
 
-    % // TODO: Regular => AFD => No ambiguo??
+    Este lenguaje es regular con expresión regular asociada:
+    \begin{equation*}
+        a^*b^*
+    \end{equation*}
+    Por tanto, como es regular, tenemos que no es inherentemente ambiguo.
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.4.2}
@@ -77,7 +79,7 @@
         \left\{
             \begin{aligned}
                 S &\rightarrow aSA \mid \veps \\
-                A &\rightarrow bA \mid z \mid \veps
+                A &\rightarrow bA\mid \veps
             \end{aligned}
         \right.
     \end{equation*}
@@ -149,11 +151,33 @@
         
         En primer lugar, hemos de considerar que $\veps\in L$. Además, todas las palabras de longitud positiva empiezan por $a$. por tanto, la expresión regular para el lenguaje generado por la gramática es:
         \begin{equation*}
-            a^+b^*(z+\veps)+\veps
+            a^+b^*+\veps
         \end{equation*}
         \item Construir una gramática no ambigua que genere el mismo lenguaje.
         
-        % Regular => No ambiguo??
+        Una primera opción sería obtener el autómata y pasar este a gramática. No obstante, consideramos directamente la gramática $G=(V,\{a,b\},P,S)$, con:
+        \begin{equation*}
+            \begin{aligned}
+                V &= \{ S, A, B \} \\
+                P &= \left\{
+                    \begin{aligned}
+                        S &\rightarrow aA \mid \veps\\
+                        A &\rightarrow aA \mid B\\
+                        B &\rightarrow bB \mid \veps
+                    \end{aligned}
+                \right.
+            \end{aligned}
+        \end{equation*}
+
+        Veamos ahora que esta gramática no es ambigua. Sea $z\in L$.
+        \begin{itemize}
+            \item Si $z=\veps$, entonces la única derivación posible es $S\Rightarrow \veps$.
+            \item Si $z\neq \veps$, entonces $z=a^ib^j$, con $i,j\in \bb{N}\cup \{0\}$, $i\geq 1$.
+            Para obtener la primera $i$ (ya que $i\geq 1$) hemos de usar la producción $S\rightarrow aA$. A partir de aquí, hemos de usar la producción $A\rightarrow aA$ $i-1$ veces. Por último, hemos de usar la producción $A\rightarrow B$ para producir las $b$'s y la producción $B\rightarrow bB$ $j$ veces. Por último, hemos de usar la producción $B\rightarrow \veps$ para terminar. Por tanto, la única derivación posible es:
+            \begin{equation*}
+                S\Rightarrow aA\Rightarrow aaA\Rightarrow \ldots \Rightarrow a^{i}A\Rightarrow a^{i}B\Rightarrow a^{i}bB\Rightarrow \ldots \Rightarrow a^{i}b^jB\Rightarrow a^{i}b^j
+            \end{equation*}
+        \end{itemize}
     \end{enumerate}
 \end{ejercicio}
 
@@ -176,8 +200,85 @@
     \end{equation*}
     \begin{enumerate}
         \item Demuestra que esta gramática no puede ser empleada para describir un posible lenguaje de programación, teniendo en cuenta que la sustración no es una operación conmutativa, y que $(a - b) - d \neq a - (b - d)$.
+        
+        El lenguaje generado tiene como expresión regular:
+        \begin{equation*}
+            (a+b+c+d)\left(-(a+b+c+d)\right)^*
+        \end{equation*}
+
+        Por tanto, debido a que no tenemos paréntesis, en el lenguaje de programación no podríamos obtener el resultado de $a-(b-d)$.
+
         \item ¿Es ambigua la gramática $G$? ¿Es la ambigüedad inherente al lenguaje generado por $G$? Justifica adecuadamente la respuesta.
+        
+        Para ver si la gramática es ambigua, consideramos la palabra $a-b$. Esta palabra tiene dos árboles de derivación, como se muestra en la Figura~\ref{fig:1.4.3}.
+        \begin{figure}
+            \centering
+            \begin{forest}
+                for tree={
+                    edge={-}, % Hace que las líneas no terminen en punta
+                    fit=rectangle, % Ajusta el tamaño del rectángulo al texto
+                }
+                [$\langle \text{expresión} \rangle$
+                    [$\langle \text{identificador} \rangle$
+                        [$a$]
+                    ]
+                    [$-$]
+                    [$\langle \text{expresión} \rangle$
+                        [$\langle \text{identificador} \rangle$
+                            [$b$]
+                        ]
+                    ]
+                ]
+            \end{forest}
+            \hspace{0.2cm}
+            \begin{forest}
+                for tree={
+                    edge={-}, % Hace que las líneas no terminen en punta
+                    fit=rectangle, % Ajusta el tamaño del rectángulo al texto
+                }
+                [$\langle \text{expresión} \rangle$
+                    [$\langle \text{expresión} \rangle$
+                        [$\langle \text{identificador} \rangle$
+                            [$a$]
+                        ]
+                    ]
+                    [$-$]
+                    [$\langle \text{identificador} \rangle$
+                        [$b$]
+                    ]
+                ]
+            \end{forest}
+            \caption{Árboles de derivación para $a-b$ usando la Gramática del Ejercicio~\ref{ej:1.4.3}.}
+            \label{fig:1.4.3}
+        \end{figure}
+
+        La ambiguedad no es adherente al lenguaje generado por la gramática, ya que este lenguaje es regular. Por tanto, el lenguaje no es inherentemente ambiguo.
+        Una gramática que no sea ambigua y que genere el mismo lenguaje es $G=(V,\{a,b,c,d,-\},P,S)$, con:
+        \begin{equation*}
+            \begin{aligned}
+                V &= \{ S, I \} \\
+                P &= \left\{
+                    \begin{aligned}
+                        I\rightarrow &a \mid b \mid c \mid d \\
+                        S\rightarrow &I \mid I-S
+                    \end{aligned}
+                \right.
+            \end{aligned}
+        \end{equation*}
         \item ¿Es posible modificar $G$ de manera que la nueva gramática pueda ser usada para generar el lenguaje de las expresiones aritméticas correctas con el operador de resta?
+        
+        Sí, podemos añadir paréntesis a la gramática para que sea capaz de generar el lenguaje de las expresiones aritméticas correctas con el operador de resta. La gramática modificada sería $G=(V,\{a,b,c,d,-,(,)\},P,S)$, con:
+        \begin{equation*}
+            \begin{aligned}
+                V &= \{ S, I \} \\
+                P &= \left\{
+                    \begin{aligned}
+                        I\rightarrow &a \mid b \mid c \mid d \\
+                        S\rightarrow &I \mid (I-S)
+                    \end{aligned}
+                \right.
+            \end{aligned}
+        \end{equation*}
     \end{enumerate}
 \end{ejercicio}
 
@@ -317,7 +418,8 @@
             \end{aligned}
         \end{equation*}
         \item Demostrar que la gramática resultante no es ambigua.
-        % // TODO: Regular => No ambiguo??
+        
+        Como el autómata del que proviene es determinista, la gramática obtenida no es ambigua; ya que para cada estado y símbolo solo hay un posible estado al que ir.
     \end{enumerate}
 \end{ejercicio}
 
@@ -326,6 +428,7 @@
     \begin{equation*}
         L = \{ a^i b^j a^k b^l \mid (i = j) \lor (k = l) \}
     \end{equation*}
+    % // TODO: Hacer. Irina
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.4.6}
@@ -334,12 +437,12 @@
         \item \label{ej:1.4.6.1}
         $S \rightarrow aSb \mid Sb \mid aS \mid a$
         
-        La gramática dada es ambigua. Por ejemplo, la palabra $aaabb$ tiene dos árboles de derivación, como se muestra en la Figura~\ref{fig:1.4.6.1}.
+        La gramática dada es ambigua. Por ejemplo, la palabra $aab$ tiene dos árboles de derivación, como se muestra en la Figura~\ref{fig:1.4.6.1}.
         No obstante, este es un lenguaje regular con expresión regular asociada:
         \begin{equation*}
             aa^*b^*
         \end{equation*}
-        Por tanto, el lenguaje generado es regular.
+        Por tanto, el lenguaje generado no es inherentemente ambiguo.
         \begin{figure}
             \centering
             \begin{forest}
@@ -351,10 +454,6 @@
                     [$a$]
                     [$S$
                         [$a$]
-                        [$S$
-                            [$a$]
-                        ]
-                        [$b$]
                     ]
                     [$b$]
                 ]
@@ -368,18 +467,14 @@
                 [$S$
                     [$a$]
                     [$S$
-                        [$a$]
                         [$S$
-                            [$S$
-                                [$a$]
-                            ]
-                            [$b$]
+                            [$a$]
                         ]
                         [$b$]
                     ]
                 ]
             \end{forest}
-            \caption{Árboles de derivación para $aaabb$ usando la Gramática del Ejercicio~\ref{ej:1.4.6}.\ref{ej:1.4.6.1}.}
+            \caption{Árboles de derivación para $aab$ usando la Gramática del Ejercicio~\ref{ej:1.4.6}.\ref{ej:1.4.6.1}.}
             \label{fig:1.4.6.1}
         \end{figure}
         \item \label{ej:1.4.6.2}
@@ -390,7 +485,7 @@
         \begin{equation*}
             (aa + aaa)^*a
         \end{equation*}
-        Por tanto, el lenguaje generado es regular.
+        Por tanto, el lenguaje generado no es inherentemente ambiguo.
         \begin{figure}
             \centering
             \begin{forest}
@@ -475,6 +570,30 @@
             \caption{Árboles de derivación para $a^2$ usando la Gramática del Ejercicio~\ref{ej:1.4.6}.\ref{ej1.4.6.3}.}
             \label{fig:1.4.6.3}
         \end{figure}
+
+        El lenguaje generado por esta gramática es:
+        \begin{equation*}
+            L = \{ aa^{n+m}b^n \mid n,m\in \bb{N}\cup \{0\} \}
+        \end{equation*}
+
+        Consideramos ahora la gramática $G=(V,\{a,b\},P,S)$, con:
+        \begin{equation*}
+            \begin{aligned}
+                V &= \{ S, A, B \} \\
+                P &= \left\{
+                    \begin{aligned}
+                        S &\rightarrow aA \\
+                        A &\rightarrow aA \mid B\\
+                        B &\rightarrow aBb \mid \veps
+                    \end{aligned}
+                \right.
+            \end{aligned}
+        \end{equation*}
+
+        Esta gramática no es ambigua. Sea $z\in L$, por lo que será de la forma $z=aa^{n+m}b^n$. Para obtener la primera $a$ hemos de usar la producción $S\rightarrow aA$. A partir de aquí, hemos de usar la producción $A\rightarrow aA$ $m$ veces. Por último, hemos de usar la producción $A\rightarrow B$ para producir las $a$'s y $b$'s y la producción $B\rightarrow aBb$ $n$ veces. Por último, hemos de usar la producción $B\rightarrow \veps$ para terminar. Por tanto, la única derivación posible es:
+        \begin{equation*}
+            S\Rightarrow aA\Rightarrow aaA\Rightarrow \ldots \Rightarrow aa^{m}B\Rightarrow aa^{n+m}b^nB \Rightarrow aa^{n+m}b^n
+        \end{equation*}
     \end{enumerate}
 \end{ejercicio}
 
@@ -482,9 +601,47 @@
     Dar gramáticas libres de contexto no ambiguas (cuando sea posible) para los siguientes lenguajes sobre el alfabeto $A = \{ a, b, c \}$:
     \begin{enumerate}
         \item $L_1 = \{ a^i b^j c^k \mid i \neq j \lor j \neq k \}$
+
+        % // TODO: No hecho en clase.
         \item $L_2 = \{ (ab)^i (bc)^j \mid i, j \geq 0 \}$
+        
+        La gramática que genera el lenguaje $L_2$ es $G=(V,\{a,b,c\},P,S)$, con:
+        \begin{equation*}
+            \begin{aligned}
+                V &= \{ S, X \} \\
+                P &= \left\{
+                    \begin{aligned}
+                        S &\rightarrow abS \mid X \\
+                        X &\rightarrow bcX \mid \veps
+                    \end{aligned}
+                \right.
+            \end{aligned}
+        \end{equation*}
+
+        Esta no es ambigua. Sea $z\in L$, por lo que será de la forma $z=(ab)^i(bc)^j$. Para obtener la parte de $(ab)^i$ hemos de usar la producción $S\rightarrow abS$ $i$ veces. A partir de aquí, hemos de usar la producción $S\rightarrow X$ para producir las $b$'s y $c$'s y la producción $X\rightarrow bcX$ $j$ veces. Por último, hemos de usar la producción $X\rightarrow \veps$ para terminar. Por tanto, la única derivación posible es:
+        \begin{equation*}
+            S\Rightarrow abS\Rightarrow ababS\Rightarrow \ldots \Rightarrow (ab)^iX\Rightarrow (ab)^i(bc)X \Rightarrow (ab)^i(bc)^jX \Rightarrow (ab)^i(bc)^j
+        \end{equation*}
         \item $L_3 = \{ a^i b^{i+j} c^j \mid i, j \geq 0 \}$
+        
+        La gramática que genera el lenguaje $L_3$ es $G=(V,\{a,b,c\},P,S)$, con:
+        \begin{equation*}
+            \begin{aligned}
+                V &= \{ S, A, C \} \\
+                P &= \left\{
+                    \begin{aligned}
+                        S &\rightarrow AC \\
+                        A &\rightarrow aAb \mid \veps \\
+                        C &\rightarrow bCc \mid \veps
+                    \end{aligned}
+                \right.
+            \end{aligned}
+        \end{equation*}
+
+        Esta no es ambigua. Sea $z\in L$, por lo que será de la forma $z=a^ib^{i+j}c^j$. Para obtener la parte de $a^ib^i$ hemos de usar la producción $A\rightarrow aAb$ $i$ veces. A partir de aquí, hemos de usar la producción $A\rightarrow \veps$. Por otro lado, para obtener la parte de $b^jc^j$ hemos de usar la producción $C\rightarrow bCc$ $j$ veces. Por último, hemos de usar la producción $C\rightarrow \veps$ para terminar.
         \item $L_4$ definido como el conjunto de palabras que comienzan por $aab$ y terminan por $bbc$ y tales que estas dos subcadenas no aparecen nunca en el interior de la palabra (sólo están al principio y al final).
+        
+        % // TODO: Hecho en clase, Irina
     \end{enumerate}
 \end{ejercicio}
 
@@ -578,8 +735,12 @@
             \label{fig:1.4.8.AFND}
         \end{figure}
 
+        % // TODO: Obtener AFD
+
 
         \item Calcular la gramática lineal por la derecha que se obiene a partir del autómata. ¿Es ambigua la gramática resultante?
+        
+        % // TOOD: Hecho x mi
     \end{enumerate}
 \end{ejercicio}
 
@@ -596,7 +757,59 @@
     \end{equation*}
     \begin{enumerate}
         \item Demostrar que la gramática dada no es ambigua.
+        
+        La expresión regular asociada al lenguaje generado por la gramática es:
+        \begin{equation*}
+            0^*\red{1}(0+1)^*
+        \end{equation*}
+
+        La gramática dada no es ambigua. Sea $z\in L$, por lo que será de la forma $z=0^i1u$, con $i\geq 0$ y $u\in \{0,1\}^*$.
+        En primer lugar, para obtener el $1$ central, hemos de usar la producción $S\rightarrow A1B$. A partir de aquí, hemos de usar la producción $A\rightarrow 0A$ $i$ veces. Después, usamos las reglas de $B$ para obtener la palabra $u$.
+
         \item Encontrar una gramática para el mismo lenguaje que sea ambigua y demostrar su ambigüedad.
+        
+        Consideramos la gramática $G=(V,\{0,1\},P,S)$, con:
+        \begin{equation*}
+            \begin{aligned}
+                V &= \{ S, A \} \\
+                P &= \left\{
+                    \begin{aligned}
+                        S &\rightarrow 0S\mid 1A\mid 1\\
+                        A &\rightarrow 0A \mid 1A \mid \veps
+                    \end{aligned}
+                \right.
+            \end{aligned}
+        \end{equation*}
+
+        Notemos que esta es ambigua, puesto que si consideramos la palabra $1$, esta tiene dos árboles de derivación, como se muestra en la Figura~\ref{fig:1.4.9}.
+        \begin{figure}
+            \centering
+            \begin{forest}
+                for tree={
+                    edge={-}, % Hace que las líneas no terminen en punta
+                    fit=rectangle, % Ajusta el tamaño del rectángulo al texto
+                }
+                [$S$
+                    [$1$]
+                ]
+            \end{forest}
+            \hspace{2cm}
+            \begin{forest}
+                for tree={
+                    edge={-}, % Hace que las líneas no terminen en punta
+                    fit=rectangle, % Ajusta el tamaño del rectángulo al texto
+                }
+                [$S$
+                    [$1$]
+                    [$A$
+                        [$\veps$]
+                    ]
+                ]
+            \end{forest}
+            \caption{Árboles de derivación para $1$ usando la Gramática del Ejercicio~\ref{ej:1.4.9}.}
+            \label{fig:1.4.9}
+        \end{figure}
+        Notemos que si quitamos la regla $S\rightarrow 1$, la gramática no sería ambigua y generaría el mismo lenguaje que la gramática original.
     \end{enumerate}
 \end{ejercicio}
 

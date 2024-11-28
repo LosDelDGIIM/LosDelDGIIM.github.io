@@ -2180,7 +2180,8 @@
                             (q1) edge[above] node{1} (E)
                             (q2) edge[above] node{1} (E)
                             (q4) edge[above] node{0} (E)
-                            (q5) edge[above] node{0} (E);
+                            (q5) edge[above] node{0} (E)
+                            (E) edge[loop right] node{0,1} (E);
                 \end{tikzpicture}
                 \caption{AFD minimal asociado a $L_2$ del Ejercicio~\ref{ej:1.3.22}.}
                 \label{fig:1.3.22-L2}
@@ -2189,6 +2190,11 @@
 
         \item Diseña el AFD mínimo que reconoce el lenguaje $(L_1 \cup L_2)$.
         % // TODO: Union de L1 y L2
+
+        %Los estados finales son:
+        %\begin{equation*}
+        %    AB,\qquad \text{donde} A=S\quad \text{o} \quad B=q_3,q_5
+        %\end{equation*}
     \end{enumerate}
 \end{ejercicio}
 
@@ -2675,14 +2681,205 @@
     \begin{equation*}
         f(a)=01 \qquad f(b) = 1 \qquad f(c)=0 \qquad f(d)=00
     \end{equation*}
+
+    El AFND asociado a $L$ es el de la Figura~\ref{fig:1.3.29-L-ND}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial] (q0) {$q_0$};
+            \node[state, right of=q0] (q1) {$q_1$};
+            \node[state, right of=q1, accepting] (q2) {$q_2$};
+
+            \draw   (q0) edge[loop above] node{0,1} (q0)
+                    (q0) edge[above] node{0} (q1)
+                    (q1) edge[above] node{0,1} (q2);
+        \end{tikzpicture}
+        \caption{AFND asociado a $L$ del Ejercicio~\ref{ej:1.3.29}.}
+        \label{fig:1.3.29-L-ND}
+    \end{figure}
+
+    El AFD minimal asociado a $L$ es el de la Figura~\ref{fig:1.3.29-L}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial] (q0) {$q_0$};
+            \node[state, right of=q0] (q0q1) {$q_0q_1$};
+            \node[state, above right of=q0q1, accepting] (q0q1q2) {$q_0q_1q_2$};
+            \node[state, below right of=q0q1, accepting] (q0q2) {$q_0q_2$};
+
+            \draw   (q0) edge[loop above] node{1} (q0)
+                    (q0) edge[above] node{0} (q0q1)
+                    (q0q1) edge[above] node{0} (q0q1q2)
+                    (q0q1) edge[above] node{1} (q0q2)
+                    (q0q1q2) edge[loop above] node{0} (q0q1q2)
+                    (q0q1q2) edge[right, bend left] node{1} (q0q2)
+                    (q0q2) edge[left, bend left] node{0} (q0q1)
+                    (q0q2) edge[below, bend left] node{1} (q0);
+        \end{tikzpicture}
+        \caption{AFD minimal asociado a $L$ del Ejercicio~\ref{ej:1.3.29}.}
+        \label{fig:1.3.29-L}
+    \end{figure}
+
+    El AFD asociado a $f^{-1}(L)$ es el de la Figura~\ref{fig:1.3.29-f-1-L}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial] (q0) {$q_0$};
+            \node[state, right of=q0, xshift=2em] (q0q1) {$q_0q_1$};
+            \node[state, above right of=q0q1, accepting, xshift=2em, yshift=2em] (q0q1q2) {$q_0q_1q_2$};
+            \node[state, below right of=q0q1, accepting, xshift=2em, yshift=-2em] (q0q2) {$q_0q_2$};
+
+            \draw   (q0) edge[loop above] node{$b$} (q0)
+                    (q0) edge[above] node{$c$} (q0q1)
+                    (q0) edge[above] node{$a$} (q0q2)
+                    (q0) edge[above] node{$d$} (q0q1q2)
+                    (q0q1) edge[above] node{$c,d$} (q0q1q2)
+                    (q0q1) edge[above, bend left] node{$a,b$} (q0q2)
+                    (q0q1q2) edge[loop above] node{$c,d$} (q0q1q2)
+                    (q0q1q2) edge[right, bend left] node{$a,b$} (q0q2)
+                    (q0q2) edge[below] node{$c$} (q0q1)
+                    (q0q2) edge[below, bend left] node{$b$} (q0)
+                    (q0q2) edge[loop below] node{$a$} (q0q2)
+                    (q0q2) edge[left] node{$d$} (q0q1q2);
+        \end{tikzpicture}
+        \caption{AFD asociado a $f^{-1}(L)$ del Ejercicio~\ref{ej:1.3.29}.}
+        \label{fig:1.3.29-f-1-L}
+    \end{figure}
+
+    Para obtener la expresión regular asociada a $f^{-1}(L)$, planteamos el sistema de ecuaciones siguiente:
+    \begin{equation*}
+        \begin{cases}
+            q_0 = bq_0 + cq_0q_1 + aq_0q_2 + dq_0q_1q_2\\
+            q_0q_1 = (c+d)q_0q_1q_2 + (a+b)q_0q_2\\
+            q_0q_1q_2 = (c+d)q_0q_1q_2 + (a+b)q_0q_2 + \veps\\
+            q_0q_2 = cq_0q_1 + bq_0 + aq_0q_2 + dq_0q_1q_2 + \veps
+        \end{cases}
+    \end{equation*}
+    
+    Sería necesario resolver el sistema para obtener la expresión regular.
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.30}
-    Obtener un autómata finito determinista para el lenguaje asociado a la expresión regular: ${(01)}^{+}+{(010)}^{\ast}$. Minimizarlo.
+    Obtener un autómata finito determinista para el lenguaje asociado a la expresión regular: ${(01)}^{+}+{(010)}^{\ast}$. Minimizarlo.\\
+
+
+    El AFND asociado a la expresión regular es el de la Figura~\ref{fig:1.3.30-ND}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial, accepting] (q0) {$q_0$};
+            \node[state, above right of=q0] (q1) {$q_1$};
+            \node[state, right of=q1, accepting] (q2) {$q_2$};
+            \node[state, right of=q2] (q3) {$q_3$};
+            \node[state, below right of=q0] (q4) {$q_4$};
+            \node[state, right of=q4] (q5) {$q_5$};
+
+            \draw   (q0) edge[above] node{0} (q1)
+                    (q1) edge[above] node{1} (q2)
+                    (q2) edge[above] node{0} (q3)
+                    (q3) edge[above, bend right] node{1} (q2)
+                    (q0) edge[above] node{0} (q4)
+                    (q4) edge[above] node{1} (q5)
+                    (q5) edge[above, bend right] node{0} (q0);
+        \end{tikzpicture}
+        \caption{AFND asociado a la expresión regular del Ejercicio~\ref{ej:1.3.30}.}
+        \label{fig:1.3.30-ND}
+    \end{figure}
+
+    El AFD asociado a la expresión regular es el de la Figura~\ref{fig:1.3.30}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial, accepting] (q0) {$q_0$};
+            \node[state, right of=q0] (q1q4) {$q_1q_4$};
+            \node[state, right of=q1q4, accepting] (q2q5) {$q_2q_5$};
+            \node[state, right of=q2q5, accepting] (q0q3) {$q_0q_3$};
+            \node[state, right of=q0q3, accepting] (q2) {$q_2$};
+            \node[state, right of=q2] (q3) {$q_3$};
+            \node[state, below of=q2q5, error] (E) {$E$};
+
+            \draw   (q0) edge[above] node{0} (q1q4)
+                    (q0) edge[below] node{1} (E)
+                    (q1q4) edge[above] node{1} (q2q5)
+                    (q1q4) edge[below] node{0} (E)
+                    (q2q5) edge[above] node{0} (q0q3)
+                    (q2q5) edge[right] node{1} (E)
+                    (q0q3) edge[above] node{1} (q2)
+                    (q0q3) edge[above, bend right] node{0} (q1q4)
+                    (q2) edge[above] node{0} (q3)
+                    (q2) edge[above] node{1} (E)
+                    (q3) edge[below] node{0} (E)
+                    (q3) edge[above, bend right] node{1} (q2)
+                    (E) edge[loop right] node{0,1} (E);
+        \end{tikzpicture}
+        \caption{AFD asociado a la expresión regular del Ejercicio~\ref{ej:1.3.30}.}
+        \label{fig:1.3.30}
+    \end{figure}
+
+    La minimización del autómata se encuentra en la Tabla~\ref{tab:1.3.30-min}.
+    \begin{table}
+        \centering
+        \begin{tabular}{r cccccc}
+            \hhline{~*{1}{-}}
+            $q_1q_4$ & \cell{\times} \\ \hhline{~*{2}{-}}
+            $q_2q_5$ & \cell{\times} & \cell{\times} \\ \hhline{~*{3}{-}}
+            $q_0q_3$ & \cell{\times} & \cell{\times} & \cell{\times} \\ \hhline{~*{4}{-}}
+            $q_2$ & \cell{\times} & \cell{\times} & \cell{\xcancel{(q_3,q_1q_4)}} & \cell{\times} \\ \hhline{~*{5}{-}}
+            $q_3$ & \cell{\times} & \cell{\xcancel{(q_0,q_2)}} & \cell{\times} & \cell{\times} & \cell{\times} \\ \hhline{~*{6}{-}}
+            $E$ & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} \\ \hhline{~*{6}{-}}
+            & $q_0$ & $q_1q_4$ & $q_2q_5$ & $q_0q_3$ & $q_2$ & $q_3$ \\
+        \end{tabular}
+        \caption{Minimización del autómata del Ejercicio~\ref{ej:1.3.30}.}
+        \label{tab:1.3.30-min}
+    \end{table}
+
+    Por tanto, como todos los estados del AFD de la Figura~\ref{fig:1.3.30} son distinguibles, este es minimal.
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.31}
     Dado el lenguaje $L$ asociado a la expresión regular ${(01+011)}^{\ast}$ y el homomorfismo $f:{\{0,1\}}^{\ast}\rightarrow{\{0,1\}}^{\ast}$ dado por $f(0)=01$, $f(1)=1$, construir una expresión regular para el lenguaje $f^{-1}(L)$.
+
+    El AFND asociado a la expresión regular es el de la Figura~\ref{fig:1.3.31-ND}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial, accepting] (q0) {$q_0$};
+            \node[state, above right of=q0] (q1) {$q_1$};
+            \node[state, below right of=q0] (q2) {$q_2$};
+            \node[state, right of=q2] (q3) {$q_3$};
+
+            \draw   (q0) edge[above] node{0} (q1)
+                    (q0) edge[below] node{0} (q2)
+                    (q1) edge[above, bend right] node{1} (q0)
+                    (q2) edge[above] node{1} (q3)
+                    (q3) edge[above, bend right] node{1} (q0);
+        \end{tikzpicture}
+        \caption{AFND asociado al lenguaje $L$ del Ejercicio~\ref{ej:1.3.31}.}
+        \label{fig:1.3.31-ND}
+    \end{figure}
+
+    El AFD asociado a la expresión regular es el de la Figura~\ref{fig:1.3.31}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial, accepting] (q0) {$q_0$};
+            \node[state, right of=q0] (q1q2) {$q_1q_2$};
+            \node[state, right of=q1q2, accepting] (q0q3) {$q_0q_3$}
+            node[state, below of=q1q2, error] (E) {$E$};
+
+            \draw   (q0) edge[above] node{0} (q1q2)
+                    (q0) edge[below] node{1} (E)
+                    (q1q2) edge[above] node{1} (q0q3)
+                    (q1q2) edge[left] node{0} (E)
+                    (q0q3) edge[above, bend right] node{1} (q0)
+                    (q0q3) edge[below, bend left] node{0} (q1q2)
+                    (E) edge[loop right] node{0,1} (E);
+        \end{tikzpicture}
+        \caption{AFD asociado al lenguaje $L$ del Ejercicio~\ref{ej:1.3.31}.}
+        \label{fig:1.3.31}
+    \end{figure}
+
+    % // TODO: Continuar AQUI
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.32}
