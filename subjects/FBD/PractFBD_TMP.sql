@@ -274,7 +274,6 @@ DESCRIBE ventas;
 DESCRIBE medina.ventas;
 INSERT INTO ventas (codpro, codpie, codpj, cantidad, fecha)
     SELECT codpro, rtrim(codpie), rtrim(codpj), cantidad, fecha  FROM medina.ventas;
-DELETE FROM ventas;
 /*
     Notemos que, si vemos el esquema de medina.ventas, este usa tipos de datos distintos (char(3)).
     Estos tipos de datos completan con espacios, por lo que no nos deja incluirlos (pruébese).
@@ -317,3 +316,96 @@ DROP TABLE encuentros;
 DROP TABLE jugadores;
 DROP TABLE equipos;
 COMMIT;
+
+
+/*--------------------------------------------------------------
+    Capítulo 3: Realización de consultas a una base de datos
+*/--------------------------------------------------------------
+
+-- Ejemplo 3.1
+-- AR: \pi_{ciudad}(proyecto)
+--
+
+-- Ejercicio 3.1
+SELECT DISTINCT ciudad FROM proyecto;
+--
+
+-- Ejemplo 3.2
+SELECT * FROM proveedor;
+--
+
+-- Ejercicio 3.2
+SELECT codpro, codpj, codpie FROM ventas;
+-- No es necesario el DISTINCT porque la clave primaria de ventas es (codpro, codpj, codpie)
+--
+
+-- Ejemplo 3.3
+SELECT codpro FROM ventas WHERE codpj='J1';
+--
+
+-- Ejercicio 3.3
+SELECT * FROM pieza WHERE (ciudad='Madrid' and (color='Rojo' or color='Gris'));
+--
+
+-- Ejercicio 3.4
+SELECT * FROM ventas WHERE (200<=cantidad and cantidad<=300);
+-- SELECT * FROM ventas WHERE cantidad BETWEEN 200 AND 300;    -- Incluye los extremos
+--
+
+-- Ejemplo 3.4
+SELECT nompro, ciudad FROM proveedor WHERE ciudad LIKE 'L%';
+--
+
+-- Ejercicio 3.5
+SELECT * FROM pieza WHERE nompie LIKE '_ornillo';
+--
+
+-- Ejemplo 3.5
+SELECT cantidad/12, round(cantidad/12,3), trunc(cantidad/12, 3), floor(cantidad/12), ceil(cantidad/12)
+    FROM ventas WHERE (cantidad/12)>10;     -- Si además quiero todos, pongo *.ventas
+--
+
+-- Ejemplo 3.6
+SELECT * FROM proveedor WHERE status IS NOT NULL;
+--
+
+-- Ejemplo 3.7
+SELECT * FROM ALL_TABLES WHERE table_name LIKE upper('%ventas%');
+--
+
+-- Ejemplo 3.8
+SELECT ciudad FROM proveedor WHERE status>2
+    MINUS
+SELECT ciudad FROM pieza WHERE codpie='P1';
+--
+
+-- Ejercicio 3.7
+-- // TODO: Hacer el ejercicio 3.7
+--
+
+-- Ejercicio 3.8
+SELECT codpj FROM ventas    -- Seleccionamos de ventas, porque S1 ha de abastecerle
+    MINUS
+SELECT codpj FROM ventas WHERE codpro != 'S1';
+-- // TODO: Corregir
+
+-- Ejercicio 3.9
+SELECT ciudad FROM proveedor
+    UNION
+SELECT ciudad FROM proyecto
+    UNION
+SELECT ciudad FROM pieza;
+--
+
+-- Ejercicio 3.10
+SELECT ciudad FROM proveedor
+    UNION ALL
+SELECT ciudad FROM proyecto
+    UNION ALL
+SELECT ciudad FROM pieza;
+--
+
+-- Ejercicio 3.11
+SELECT * FROM proveedor;
+SELECT * FROM ventas;
+SELECT * FROM proveedor, ventas;
