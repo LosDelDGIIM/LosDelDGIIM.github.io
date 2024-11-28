@@ -2379,16 +2379,78 @@
         \label{tab:1.3.24-L1-L2}
     \end{table}
 
-    % // TODO: COntinuar
+    El AFD minimal asociado a $(L_1\cap L_2)$ es el de la Figura~\ref{fig:1.3.24-L1-L2-minimal}.
+    \begin{figure}
+        \centering
+        \resizebox{1.1\textwidth}{!}{
+        \begin{tikzpicture}
+            \node[state, initial] (p0) {$q_0p_0, q_1p_0$};
+            \node[state, right of=p0] (p1) {$q_1p_1$};
+            \node[state, right of=p1] (p2) {$q_2p_2$};
+            \node[state, right of=p2, accepting, xshift=1em] (p3) {$q_0p_3, q_1p_3, q_2p_3$};
+            \node[state, right of=p3, xshift=3em] (p4) {$q_1p_4, q_3p_4$};
+            \node[state, right of=p4] (p5) {$q_1p_5$};
+            \node[state, error, below of=p2] (E) {$E$};
 
+            \draw   (p0) edge[above] node{0} (p1)
+                    (p1) edge[above, bend right] node{0} (p0)
+                    (p1) edge[above] node{1} (p2)
+                    (p2) edge[above] node{1} (p3)
+                    (p3) edge[loop above] node{1} (p3)
+                    (p3) edge[above] node{0} (p4)
+                    (p4) edge[above] node{0} (p5)
+                    (p5) edge[above, bend right] node{0} (p3)
+                    (p0) edge[above] node{1} (E)
+                    (p2) edge[above right] node{0} (E)
+                    (p4) edge[above] node{1} (E)
+                    (p5) edge[above] node{1} (E)
+                    (E) edge[loop below] node{0,1} (E);
+        \end{tikzpicture}}
+        \caption{AFD minimal asociado a $(L_1\cap L_2)$ del Ejercicio~\ref{ej:1.3.24}.}
+        \label{fig:1.3.24-L1-L2-minimal}
+    \end{figure}
+    Como podemos ver en el AFD minimal de la Figura~\ref{fig:1.3.24-L1-L2-minimal}, este es isomorfo al de la Figura~\ref{fig:1.3.24-L2}, por lo que $L_1\cap L_2 = L_2$. Esto es algo que podríamos haber deducido al principio, ya que si $L_2\subset L_1$.
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.25}
     Dado el alfabeto $A=\{a,b,c\}$, encuentra:
     \begin{enumerate}
-        \item Un AFD que reconozca las palabras en las que cada ``c'' va precedida de una ``a'' o una ``b''.
+        \item \label{ej:1.3.25-1}
+        Un AFD que reconozca las palabras en las que cada ``c'' va precedida de una ``a'' o una ``b''.
+        \begin{figure}[H]
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial, accepting] (q0) {$q_0$};
+                \node[state, below right of=q0, error] (E) {$E$};
+                \node[state, above right of=E, accepting] (q1) {$q_1$};
+
+                \draw   (q0) edge[above] node{$a,b$} (q1)
+                        (q0) edge[above] node{$c$} (E)
+                        (q1) edge[loop right] node{$a,b$} (q1)
+                        (q1) edge[above, bend right] node{$c$} (q0)
+                        (E) edge[loop right] node{$a,b,c$} (E);
+            \end{tikzpicture}
+            \caption{AFD minimal asociado al lenguaje del Ejercicio~\ref{ej:1.3.25}.\ref{ej:1.3.25-1}.}
+            \label{fig:1.3.25-1}
+        \end{figure}
+
         \item Una expresión regular que represente el lenguaje compuesto por las palabras de longitud impar en las que el símbolo central es una ``c''.
+        
+        Veamos que este lenguaje no es regular usando el lema de bombeo. Para todo $n\in\bb{N}$, tomamos la palabra $z=a^nca^n\in L$, con $|z|=2n+1\geq n$. Toda descomposición de $z$ en $uvw$, con $u,v,w\in \{0,1\}^*$, $|uv|\leq n$ y $|v|\geq 1$ debe tener:
+        \begin{equation*}
+            u=a^k, \quad v=a^l, \quad w=a^{n-k-l}ca^n\qquad \text{con } l,k\in \bb{N}\cup \{0\}, l\geq 1, k+l\leq n
+        \end{equation*}
+        Para $i=2$, tenemos que $uv^2w=a^{k+2l+n-k-l}ca^n=a^{n+l}ca^n\notin L$ ya que, como $l\geq 1$, $n+l\neq n$, por lo que $c$ no es el símbolo central. Por lo tanto, por el contrarrecíproco del lema de bombeo, $L$ no es regular; y por tanto no podemos encontrar una expresión regular que lo represente.
+
         \item Una gramática regular que genere las palabras de longitud impar.
+        
+        Sea $G=(\{S,X\}, A, P, S)$, donde $P$ es:
+        \begin{align*}
+            S &\to aX \mid bX \mid cX, \\
+            X &\to aS \mid bS \mid cS \mid \veps.
+        \end{align*}
+
+        Tenemos que $\cc{L}(G)=\{w\in A^* \mid |w|\text{ es impar}\}$.
     \end{enumerate}
 \end{ejercicio}
 
@@ -2396,10 +2458,47 @@
     Construir autómatas finitos para los siguientes lenguajes sobre el alfabeto $\{a,b,c\}$:
     \begin{enumerate}
         \item $L_1$: palabras del lenguaje ${(a+b)}^{\ast}{(b+c)}^{\ast}$.
-        \item $L_2$: palabras en las que nunca hay una 'a' posterior a una 'c'.
+        
+        El AFND asociado a $L_1$ es el de la Figura~\ref{fig:1.3.26-L1-ND}.
+        \begin{figure}[H]
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial] (q0) {$q_0$};
+                \node[state, right of=q0, accepting] (q1) {$q_1$};
+
+                \draw   (q0) edge[loop above] node{$a,b$} (q0)
+                        (q0) edge[above] node{$\veps$} (q1)
+                        (q1) edge[loop above] node{$b,c$} (q1);
+            \end{tikzpicture}
+            \caption{AFND asociado a $L_1$ del Ejercicio~\ref{ej:1.3.26}.}
+            \label{fig:1.3.26-L1-ND}
+        \end{figure}
+
+        El AFD minimal asociado a $L_1$ es el de la Figura~\ref{fig:1.3.26-L1}.
+        \begin{figure}[H]
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial, accepting] (q0q1) {$q_0q_1$};
+                \node[state, right of=q0q1, accepting] (q1) {$q_1$};
+                \node[state, right of=q1, error] (E) {$E$};
+
+                \draw   (q0q1) edge[loop above] node{$a,b$} (q0q1)
+                        (q0q1) edge[below] node{$c$} (q1)
+                        (q1) edge[loop above] node{$b,c$} (q1)
+                        (q1) edge[above] node{$a$} (E)
+                        (E) edge[loop right] node{$a,b,c$} (E);
+            \end{tikzpicture}
+            \caption{AFD minimal asociado a $L_1$ del Ejercicio~\ref{ej:1.3.26}.}
+            \label{fig:1.3.26-L1}
+        \end{figure}
+        \item $L_2$: palabras en las que nunca hay una ``a'' posterior a una ``c''.
+        
+        Vemos que $L_2$ tiene el mismo AFD que el de la Figura~\ref{fig:1.3.26-L1}, por lo que $L_1=L_2$.
+
         \item $(L_1 \setminus L_2)\cup (L_2 \setminus L_1)$
+        
+        Como $L_1=L_2$, tenemos que $(L_1 \setminus L_2)\cup (L_2 \setminus L_1)=\emptyset$.
     \end{enumerate}
-    ¿Qué podemos concluir sobre $L_1$ y $L_2$?
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.27}
@@ -2471,11 +2570,108 @@
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.28}
-    Si $L_1$ es el lenguaje asociadoa a la expresión regular $01{(01+1)}^{\ast}$ y $L_2$ el lenguaje asociado a la expresión ${(1+10)}^{\ast}01$, encontrar un autómata minimal que acepte el lenguaje $L_1\setminus L_2$.
+    Si $L_1$ es el lenguaje asociado a la expresión regular $01{(01+1)}^{\ast}$ y $L_2$ el lenguaje asociado a la expresión ${(1+10)}^{\ast}01$, encontrar un autómata minimal que acepte el lenguaje $L_1\setminus L_2$.\\
+
+    El AFD minimal asociado a $L_1$ es el de la Figura~\ref{fig:1.3.28-L1}.
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial] (q0) {$q_0$};
+            \node[state, right of=q0] (q1) {$q_1$};
+            \node[state, right of=q1, accepting] (q2) {$q_2$};
+            \node[state, error, below of=q1] (E) {$E$};
+            
+            \draw   (q0) edge[above] node{0} (q1)
+                    (q0) edge[above] node{1} (E)
+                    (q1) edge[above] node{1} (q2)
+                    (q1) edge[right] node{0} (E)
+                    (q2) edge[loop above] node{1} (q2)
+                    (q2) edge[above, bend right] node{0} (q1)
+                    (E) edge[loop right] node{0,1} (E);
+        \end{tikzpicture}
+        \caption{AFD minimal asociado a $L_1$ del Ejercicio~\ref{ej:1.3.28}.}
+        \label{fig:1.3.28-L1}
+    \end{figure}
+
+    El AFND asociado a $L_2$ es el de la Figura~\ref{fig:1.3.28-L2-ND}.
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial] (q0) {$q_0$};
+            \node[state, above right of=q0] (q1) {$q_1$};
+            \node[state, right of=q0] (q2) {$q_2$};
+            \node[state, right of=q2, accepting] (q3) {$q_3$};
+
+            \draw   (q0) edge[above] node{1} (q1)
+                    (q0) edge[loop above] node{1} (q0)
+                    (q0) edge[below] node{0} (q2)
+                    (q1) edge[below, bend left] node{0} (q0)
+                    (q2) edge[above] node{1} (q3);
+        \end{tikzpicture}
+        \caption{AFND asociado a $L_2$ del Ejercicio~\ref{ej:1.3.28}.}
+        \label{fig:1.3.28-L2-ND}
+    \end{figure}
+
+    El AFD asociado a $L_2$ es el de la Figura~\ref{fig:1.3.28-L2}.
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial] (q0) {$q_0$};
+            \node[state, above right of=q0] (q0q1) {$q_0q_1$};
+            \node[state, right of=q0q1] (q0q2) {$q_0q_2$};
+            \node[state, right of=q0q2, accepting] (q0q1q3) {$q_0q_1q_3$};
+            \node[state, below right of=q0] (q2) {$q_2$};
+            \node[state, right of=q2, accepting] (q3) {$q_3$};
+            \node[state, error, above of=q3, yshift=-2em] (E) {$E$};
+
+            \draw   (q0) edge[above] node{1} (q0q1)
+                    (q0) edge[below] node{0} (q2)
+                    (q0q1) edge[above] node{0} (q0q2)
+                    (q0q1) edge[loop above] node{1} (q0q1)
+                    (q0q2) edge[below] node{1} (q0q1q3)
+                    (q0q2) edge[above, bend right] node{0} (q2)
+                    (q2) edge[above] node{1} (q3)
+                    (q2) edge[left] node{0} (E)
+                    (q3) edge[right] node{0,1} (E)
+                    (q0q1q3) edge[above, bend right] node[pos=0.9]{0} (q0q2)
+                    (q0q1q3) edge[above, bend right] node{1} (q0q1)
+                    (E) edge[loop right] node{0,1} (E);
+        \end{tikzpicture}
+        \caption{AFD minimal asociado a $L_2$ del Ejercicio~\ref{ej:1.3.28}.}
+        \label{fig:1.3.28-L2}
+    \end{figure}
+
+    El autómata asociado a $L_1\setminus L_2$ es el de la Figura~\ref{fig:1.3.28-L1-L2}, donde hemos agrupado los estados de la forma $E,q_i$ en $E$ (ya que todos esos son indistinguibles puesto que no son finales y no se puede llegar a ellos desde un estado final).
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}
+            \node[state, initial] (p0q0) {$p_0q_0$};
+            \node[state, right of=p0q0] (p1q2) {$p_1q_2$};
+            \node[state, right of=p1q2] (p2q3) {$p_2q_3$};
+            \node[state, above right of=p2q3, accepting] (p2E) {$p_2E$};
+            \node[state, below right of=p2q3] (p1E) {$p_1E$};
+            \node[state, below of=p1q2, error, yshift=2.2em] (E) {$E$};
+
+            \draw   (p0q0) edge[above] node{0} (p1q2)
+                    (p0q0) edge[below] node{1} (E)
+                    (p1q2) edge[above] node{1} (p2q3)
+                    (p1q2) edge[right] node{0} (E)
+                    (p2q3) edge[above] node{0} (p1E)
+                    (p2q3) edge[above] node{1} (p2E)
+                    (p1E) edge[above] node{0} (E)
+                    (p1E) edge[right, bend left] node{1} (p2E)
+                    (p2E) edge[left, bend left] node{0} (p1E)
+                    (p2E) edge[loop above] node{1} (p2E)
+                    (E) edge[loop below] node{0,1} (E);
+
+        \end{tikzpicture}
+        \caption{AFD minimal asociado a $L_1\setminus L_2$ del Ejercicio~\ref{ej:1.3.28}.}
+        \label{fig:1.3.28-L1-L2}
+    \end{figure}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.3.29}
-    Sean los alfabetos $A_1=\{a,b,c,d\}$ y $A_2=\{0,1\}$ y el lenguaje $L\subseteq A^\ast_2$ dado por la expresión regular ${(0+1)}^{\ast}0(0+1)$, calcular una expresión regular para el lenguaje $f^{-1}(L)$ donde $f$ es el homomorfismos entre $A^\ast_1$ y $A^\ast_2$ dado por
+    Sean los alfabetos $A_1=\{a,b,c,d\}$ y $A_2=\{0,1\}$ y el lenguaje $L\subseteq A^\ast_2$ dado por la expresión regular ${(0+1)}^{\ast}0(0+1)$, calcular una expresión regular para el lenguaje $f^{-1}(L)$ donde $f$ es el homomorfismo entre $A^\ast_1$ y $A^\ast_2$ dado por
     \begin{equation*}
         f(a)=01 \qquad f(b) = 1 \qquad f(c)=0 \qquad f(d)=00
     \end{equation*}
