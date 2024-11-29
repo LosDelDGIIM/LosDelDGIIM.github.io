@@ -1518,73 +1518,92 @@
     \end{enumerate}
 \end{ejercicio}
 
+\subsubsection{Ejercicios extras}
+\begin{ejercicio}
+En un pueblo existe una pequeña barbería con una puerta de entrada y otra de salida, dichas puertas son tan estrechas que solo permiten el paso de una persona cada vez que son utilizadas. En la barbería hay un número indeterminado de sillas (suponemos que siempre hay sillas libres porque los barberos no hacen esperar demasiado a los clientes) de 2 tipos:
+\begin{enumerate}[label=(\alph*)]
+    \item Sillas donde los clientes esperan a los barberos (sillas de espera).
+    \item Sillas de barbero donde se realiza el corte de pelo a los clientes por parte de los barberos.
+\end{enumerate}
+No hay espacio suficiente para que más de una persona (barbero o cliente) pueda moverse dentro de la barbería en cada momento, por ejemplo, si los clientes se dan cuenta de que ha entrado un barbero, entonces solo un cliente puede levantarse.y dirigirse a una silla de tipo (b); un barbero, por su parte, no podría moverse para ir a cortarle el pelo hasta que el cliente se hubiera sentado.\\
+    
+Cuando entra un cliente en la barbería, puede hacer una de estas 2 cosas:
+\begin{itemize}
+    \item Aguarda en una silla de tipo (a) y espera a que haya barberos disponibles para poder ser atendido, cuando sucede esto último, el cliente se levanta y vuelve a sentarse, esta vez en una silla de tipo (b), para esperar hasta que termine su corte de pelo.
+    \item Se sienta directamente en una silla de tipo (b), si hay barberos disponibles. Un cliente no se levanta de la silla del barbero hasta que este le avisa abriéndole la puerta de salida.
+\end{itemize}
+Cuando entra en la barbería, un barbero aguarda a que haya clientes sentados en una silla de tipo (b) esperando su corte de pelo. Después, revisa el estado de los clientes siguiendo un orden numérico establecido, hasta que encuentra un cliente que espera ser atendido; cuando lo encuentra comienza a cortarle el pelo y él mismo pasa a estar ocupado. Cuando termina con un cliente, le abre la puerta de salida y espera a que el cliente le pague, después sale a la calle para refrescarse. El barbero no podrá entrar de nuevo en la barbería hasta que haya cobrado al cliente que justamente acaba de atender. No se admite que un cliente pague a un barbero distinto del que cortó el pelo.
 
+\begin{minted}{pascal}
+    monitor Peluqueria;
+       var pelando : array[0..+INF] of (silla_vacia, silla_pelando, silla_esperando);
+           pagado : array[0..+INF] of boolean;
+           clientes_esperando, clientes_pelando, barberos_ociosos, puerta_salida : condition;
 
+       begin
+          pelando := (silla_vacia, silla_vacia, ...);
+          pagado := (false, false, ...);
+       end
 
+       {Procedimiento para pelar a los clientes}
+       procedure pelar(i : integer);
+       begin
+          {Esperar hasta que haya un barbero disponible}
+          if not barberos_ociosos.queue() then
+             clientes_esperando.wait();
+          
+          {Hay un barbero disponible}
+          pelando[i] := silla_esperando; {Se sienta en una silla}
+          barberos_ociosos.signal();
 
+          {Espera su corte de pelo (hasta que el barbero le levante)}
+          while pelando[i] <> silla_vacia do begin
+             clientes_pelando.signal();
+             clientes_pelando.wait();
+          end
 
+          {Espera a ser cobrado}
+          pagado[i] := false;
+          while not pagado[i] do begin
+             puerta_salida.signal();
+             puerta_salida.wait();
+          end
+       end
 
-\begin{comment}60. El siguiente monitor (Barrera2) proporciona un único procedimiento de nombre entrada(),
-    que provoca que el primer proceso que lo llama sea suspendido y el segundo que lo llama
-    Sistemas Concurrentes y Distribuidos 6
-    despierte al primero que lo llamó (a continuación ambos continúan), y así actúa cíclicamente.
-    Obtener una implementación de este monitor usando semáforos.
-    Monitor Barrera2 ;
-    var n : integer; { num. de proc. que han llegado desde el signal }
-    s : condicion ; { cola donde espera el segundo }
-    procedure entrada() ;
-    begin
-    n := n+1 ; { ha llegado un proceso mas }
-    if n < 2 then { si es el primero: }
-    s.wait() { esperar al segundo }
-    else begin { si es el segundo: }
-    n := 0; { inicializa el contador }
-    s.signal() { despertar al primero }
+       {Procedimiento para barbero para pasar al siguiente cliente}
+       procedure siguiente_cliente() : integer;
+       var k := 0;
+       begin
+          {Si hay clientes esperando, los despertamos}
+          if clientes_esperando.queue() then
+             clientes_esperando.signal();
+          else {Si no hay clientes esperando, esperamos clientes}
+             barberos_ociosos.wait();
+          end
+
+          {Hay un cliente esperando a ser pelado en la silla, lo buscamos}
+          while pelando[k] <> silla_esperando do begin
+             k := k + 1;
+          end
+          pelando[k] := silla_pelando;
+          return k;
+       end
+
+       {Procedimiento para terminar de pelar al cliente}
+       procedure terminar(i : integer);
+       begin
+          {Termina de pelar al cliente}
+          pelando[i] := silla_vacia;
+          clientes_pelando.signal();
+
+          {Cobra al cliente}
+          pagado[i] := true;
+          puerta_salida.signal();
+       end
     end
-    end
-    { Inicializacion }
-    begin
-    n := 0 ;
-    end
-    61. Este es un ejemplo clásico que ilustra el problema del interbloqueo, y aparece en la literatura
-    informática con el nombre de el problema de los filósofos-comensales. Se puede enunciar como
-    se indica a continuación: sentados a una mesa están cinco filósofos, la actividad de cada filósofo es un ciclo sin fin de las operaciones de pensar y comer; entre cada dos filósofos hay
-    un tenedor y para poder comer, un filósofo necesita obligatoriamente dos tenedores: el de su
-    derecha y el de su izquierda. Se han definido cinco procesos concurrentes, cada uno de ellos
-    describe la actividad de un filósofo. Los procesos usan un monitor, llamado MonFilo. Antes
-    de comer cada filósofo debe disponer de su tenedor de la derecha y el de la izquierda, y cuando
-    termina la actividad de comer, libera ambos tenedores. El filósofo i alude al tenedor de su
-    derecha como el número i, y al de su izquierda como el número i + 1 mod 5. El monitor
-    MonFilo exportará dos procedimentos: coge_tenedor(num_tenedor,num_proceso) y
-    libera_tenedor(num_tenedor) para indicar que un proceso filósofo desea coger un tenedor determinado. El código del programa (sin incluir la implementación del monitor) es el
-    siguiente:
-    monitor MonFilo ;
-    ....
-    procedure coge_tenedor( num_ten, num_proc : integer );
-    ....
-    procedure libera_tenedor( num_ten : integer );
-    ....
-    begin
-    ....
-    end
-    proceso Filosofo[ i: 0..4 ] ;
-    begin
-    while true do begin
-    MonFilo.coge_tenedor(i,i); { argumento 1=codigo tenedor }
-    MonFilo.coge_tenedor(i+1 mod 5,i); { argumento 2=numero de proceso }
-    comer();
-    MonFilo.libera_tenedor(i);
-    MonFilo.libera_tenedor(i+1 mod 5);
-    pensar();
-    Sistemas Concurrentes y Distribuidos 7
-    end
-    end
-    Con este interfaz para el monitor, responde a las siguientes cuestiones:
-    (a)Diseña una solución para el monitor MonFilo
-    (b)Describe la situación de interbloqueo que puede ocurrir con la solución que has escrito
-    antes.
-    (c)Diseña una nueva solución, en la cual se evite el interbloqueo descrito, para ello, esta
-    solución no debe permitir que haya más de cuatro filósofos simultáneamente intentado
-    coger su primer tenedor.
-\end{comment}
+\end{minted}
+\end{ejercicio}
 
+\begin{ejercicio}
+   Suponer un garaje de lavado de coches con dos zonas: una de espera y otra de lavado de coches con 100 plazas de lavado. Un coche entra en la zona de lavado de garaje solo si hay (al menos) 1 plaza libre, si no se queda en la cola de espera. Si un coche entra en la zona de lavado, busca una plaza libre y espera hasta que es atendido por un empleado del garaje. Los coches no pueden volver a entrar al garaje hasta que el empleado que les atendió les cobre el servicio. Suponemos que hay más de 100 empleados que lavan coches, cobran, salen y vuelven a entrar al garaje. Cuando un empleado entra en el garaje comprueba si hay coches esperando ser atendidos, es decir, ya ubicados en su plaza de lavado; si no, aguarda a que haya alguno en esa situación. Si hay al menos un coche esperando, recorre las plazas de la zona de lavado hasta que lo encuentra, entonces los lava, le avisa de que puede salir y, por último, espera a que le pague. Puede suceder que varios empleados hayan terminado de lavar sus coches y estén todos esperando el pago de sus servicios, pero no se admite que un empleado cobre a un coche distinto del que ha lavado. También hay que evitar que al entrar 2 o más empleados a la zona de lavado, habiendo comprobado que hay coches esperando, seleccionen a un mismo coche para lavarlo. Se pide: programar una simulación de la actuación de los coches y de los empleados del garaje, utilizando un monitor con señales urgentes (SU). Se valorará más aquella solución al problema que utilice un número menor de variables condición. 
+\end{ejercicio}
