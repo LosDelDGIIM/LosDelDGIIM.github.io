@@ -7,7 +7,7 @@ Como motivación para justificar la existencia de la programación distribuida, 
 
 Para Von Neumann, un computador clásico asume que las instrucciones de un programa son enviadas desde una unidad de memoria central hasta la Unidad de Central de Procesamiento (o CPU), a través de un bus de interconexión entre estos dos elementos. Nos encontramos con el problema de que las instrucciones que realizan operaciones sobre datos en memoria utilizan este mismo bus para modificar o consultar datos de la misma, con lo que usamos el mismo bus para dos fines distintos: leer instrucciones a ejecutar y ejecutar instrucciones relativas a operaciones en memoria.\\
 
-Resulta que si queremos una mayor velocidad en la ejecución de las instrucciones por parte de una CPU, este sobre uso del bus limita el rendimiento de la computación, con lo que resulta en un cuello de botella en la aceleración de los sistemas secuenciales.\\
+Resulta que si queremos una mayor velocidad en la ejecución de las instrucciones por parte de una CPU, este sobreúso del bus limita el rendimiento de la computación, con lo que resulta en un cuello de botella en la aceleración de los sistemas secuenciales.\\
 
 Si consideramos ahora la programación paralela, ya no tendremos un solo flujo de ``trozos de programa''  que se envían desde la memoria a la CPU para su ejecución, sino múltiples flujos de los mismos de forma que cada flujo acabe en un procesador distinto para su ejecución al mismo tiempo.
 
@@ -17,7 +17,7 @@ Además, la programación paralela presenta varias ventajas frente a la programa
 \begin{itemize}
     \item Los programas paralelos necesitan menos tiempo de ejecución.
     \item Es más barato el hardware necesario para un programa paralelo en el caso que queramos que tanto un programa paralelo como uno secuencial se ejecuten a la misma velocidad.
-    \item La programación parelala hace menos grave la limitación de velocidad debida al bus entre la memoria y la CPU\@.
+    \item La programación paralela hace menos grave la limitación de velocidad debida al bus entre la memoria y la CPU\@.
 \end{itemize}
 
 Sin embargo, no todo en programación paralela son ventajas, sino que también debemos aprender a programar según un nuevo paradigma, el cual introduce grandes dificultades a la hora de realizar la depuración de los programas.
@@ -55,7 +55,7 @@ Un multiprocesador es un computador con muchos procesadores individuales, con la
 
 Este tipo de computadores cuenta con un problema principal, que es la falta de escalabilidad, ya que si en algún momento queremos añadir más procesadores al sistema con el objetivo de solucionar problemas de mayor tamaño, no podremos introducir más memoria principal compartida.\\
 
-Además, el hardware necesario para que los diferentes procesadores accedean a una zona de memoria común es muy caro, ya que hace falta una interconexión muy rápida entre esta y todos los multiprocadores, si no queremos perder la ganancia que hemos ganado al pasar de un sistema uniprocesador a este.
+Además, el hardware necesario para que los diferentes procesadores accedan a una zona de memoria común es muy caro, ya que hace falta una interconexión muy rápida entre esta y todos los multiprocesadores, si no queremos perder la ganancia que hemos ganado al pasar de un sistema uniprocesador a este.
 
 \subsubsection{Multicomputadores}
 Un multicomputador es un sistema con múltiples procesadores de forma que cada uno de ellos tiene una memoria principal independiente, con lo que no existirá una memoria común a todos ellos, sino un sistema de interconexión entre todos los procesadores, que nos permita el paso de mensajes entre estos.\\
@@ -253,7 +253,7 @@ Por otra parte, la vuelta inmediata de la operación \verb|receive| dependerá d
 \subsubsection{Paso de mensajes con buffer}
 Ahora, cuando se llame a la operación \verb|receive|, no habrá interrupcción del proceso, pero se comenzará con la transferencia de los datos del mensaje a quien aplica esta operación desde un buffer de recepción interno del sistema al área de memoria donde se espera recibirlos.
 
-Como consecuecnia, se reduce el tiempo de espera en el proceso receptor, aunque el acceso a los datos durante la copia de los mismos es insegura.
+Como consecuencia, se reduce el tiempo de espera en el proceso receptor, aunque el acceso a los datos durante la copia de los mismos es insegura.
 
 \section{Diseño de programas distribuidos}
 A continuación, veremos los roles predominantes que tienen los procesos en los sistemas distribuidos, así como una nueva sentencia de programación necesaria para estos sistemas.
@@ -470,7 +470,7 @@ Destacamos ciertas consecuencias de este comportamiento de la instrucción:
         \caption{Código para el problema de los productores/consumidores.}
         \label{fig:prod_cons}
     \end{figure}
-    Así, el productir enviará los valores producidos al proceso intermedio (identificado por \verb|B|), y el consumidor deberá solicitar datos al proceso intermedio, quien responderá con dichos datos.\\
+    Así, el productor enviará los valores producidos al proceso intermedio (identificado por \verb|B|), y el consumidor deberá solicitar datos al proceso intermedio, quien responderá con dichos datos.\\
 
     Es fácil adivinar que en el código de dicho proceso intermedio debe aparecer una instrucción \verb|select|, así como un buffer de dicho proceso para almacenar los datos producidos mientras que no están siendo consumidos. El código del proceso intermedio es el que se observa en la Figura~\ref{fig:prod_cons_intermedio}.
     \begin{figure}[H]
@@ -483,11 +483,11 @@ Destacamos ciertas consecuencias de este comportamiento de la instrucción:
             begin
             while true do begin
                select
-                  when cont < tam receive(v, P) do
+                  when ocupados < tam receive(v, P) do
                      buf[esc] := v;
                      esc := (esc + 1) mod tam;
                      ocupados := ocupados + 1;
-                  when cont > tam receive(s, C) do
+                  when 0 < ocupados receive(s, C) do
                      send(buf[lec], C);
                      lec := (lec + 1) mod tam;
                      ocupados := ocupados - 1;
@@ -554,7 +554,7 @@ como una orden con guarda válida, de forma que esta se sustituirá por $final-i
 \end{ejemplo}
 
 \subsection{\texttt{select} con sentencia \texttt{else}}
-Al igual que en la operación \verb|switch| (de \verb|C++| o Java) contamos con la palabra reservada \verb|default| para no dejarnos ningún caso, en las sentencias \verb|select| podemos hacer uso de la palabra reservada \verb|else| para que, en el caso de que todas las guardas sean no ejecutables una vez que el proeso alcanza la sentencia \verb|select|, que esta no termine con error, sino que ejecute el bloque de código asociado a la palabra \verb|else|, de forma que introducimos la sintaxis:
+Al igual que en la operación \verb|switch| (de \verb|C++| o Java) contamos con la palabra reservada \verb|default| para no dejarnos ningún caso, en las sentencias \verb|select| podemos hacer uso de la palabra reservada \verb|else| para que, en el caso de que todas las guardas sean no ejecutables una vez que el proceso alcanza la sentencia \verb|select|, que esta no termine con error, sino que ejecute el bloque de código asociado a la palabra \verb|else|, de forma que introducimos la sintaxis:
 \begin{minted}{pascal}
     else
        sentencias;
