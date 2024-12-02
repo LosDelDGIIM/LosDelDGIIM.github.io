@@ -27,11 +27,11 @@
     - ( ) Seguridad en el acceso a recursos compartidos
 
 3. ¿Qué representa el turno en un algoritmo de exclusión mutua?
-    - [ ] La señal para finalizar el programa
-    - [x] La prioridad fija de un proceso
-    - [x] El permiso para acceder a la sección crítica
-    - [ ] La posición en la cola de espera
-    - [ ] La cantidad de procesos activos en el sistema
+    - ( ) La señal para finalizar el programa
+    - ( ) La prioridad fija de un proceso
+    - (x) El permiso para acceder a la sección crítica
+    - ( ) La posición en la cola de espera
+    - ( ) La cantidad de procesos activos en el sistema
 
 4. ¿Qué asegura el algoritmo de Peterson al pasar entre etapas?
     - ( ) La etapa más alta siempre está vacía
@@ -83,11 +83,11 @@
     - ( ) Elimina la inanición en sistemas distribuidos
 
 11. ¿Cómo soluciona el algoritmo de Knuth la inanición en exclusión mutua?
-    - [ ] Eliminando los procesos en espera
-    - [ ] Permitiendo que todos los procesos avancen simultáneamente
-    - [x] Garantizando que el tiempo de espera sea limitado para cada proceso
-    - [ ] Bloqueando procesos con menor prioridad
-    - [x] Usando turnos circulares para la asignación de recursos
+    - ( ) Eliminando los procesos en espera
+    - ( ) Permitiendo que todos los procesos avancen simultáneamente
+    - (x) Garantizando que el tiempo de espera sea limitado para cada proceso
+    - ( ) Bloqueando procesos con menor prioridad
+    - ( ) Usando turnos circulares para la asignación de recursos
 
 12. ¿Qué hace un proceso después de usar la sección crítica en el algoritmo de Peterson?
     - ( ) Solicita nuevamente el turno
@@ -118,23 +118,23 @@
     - ( ) Dividiendo el problema en múltiples secciones críticas
 
 16. ¿Qué es una "etapa" en el algoritmo de Peterson para N procesos?
-    - [ ] Un mecanismo de exclusión global
-    - [x] Un nivel de prioridad fijo para los procesos
-    - [ ] Un bucle infinito en la ejecución
-    - [x] Una fase de sincronización antes de la sección crítica
-    - [ ] Una señal de error en el sistema
+    - ( ) Un mecanismo de exclusión global
+    - ( ) Un nivel de prioridad fijo para los procesos
+    - ( ) Un bucle infinito en la ejecución
+    - (x) Una fase de sincronización antes de la sección crítica
+    - ( ) Una señal de error en el sistema
 
 17. ¿Qué condición debe cumplirse para que un proceso entre a la sección crítica en el algoritmo de Peterson?
-    - [x] Su turno no debe coincidir o la clave del otro proceso debe ser falsa
-    - [ ] Su contador debe superar al de los demás procesos
-    - [ ] Su clave de solicitud debe ser verdadera
-    - [x] Su prioridad debe ser la más alta
-    - [ ] Su solicitud debe ser la primera en la cola
+    - (x) Su turno no debe coincidir o la clave del otro proceso debe ser falsa
+    - ( ) Su contador debe superar al de los demás procesos
+    - ( ) Su clave de solicitud debe ser verdadera
+    - ( ) Su prioridad debe ser la más alta
+    - ( ) Su solicitud debe ser la primera en la cola
 
 18. ¿Qué problema puede surgir al verificar las claves en algoritmos de refinamiento sucesivo?
     - ( ) Los turnos se asignan de manera inconsistente
-    - ( ) No se realiza la salida de la espera activa de forma atómica
-    - (x) Se producen interrupciones aleatorias
+    - (x) No se realiza la salida de la espera activa de forma atómica
+    - ( ) Se producen interrupciones aleatorias
     - ( ) Bloqueo mutuo al intercambiar turnos
     - ( ) Los procesos entran en la sección crítica sin permiso
 
