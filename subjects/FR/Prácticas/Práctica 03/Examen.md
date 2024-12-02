@@ -136,3 +136,39 @@ ______
     - ( ) Confidencialidad, integridad y disponibilidad.
     - ( ) Confidencialidad e integridad, pero no es capaz de autenticar a las partes implicadas en la comunicación.
     - (x) Confidencialidad, integridad y autenticación.
+
+21. Considerando la siguiente traza capturada con Wireshark, ¿cuál de las siguientes afirmaciones es correcta?<br><img src="Img_Examenes/P21.png" alt="Traza de Wireshark"><br>
+    - ( ) El navegador puede aceptar contenido comprimido Brotli.
+    - ( ) El recurso www.ethereal.com tiene un tamaño de 478 bytes.
+    - (x) Se está usando el protocolo HTTP/1.1.
+    - ( ) El servidor web Apache está escuchando en el puerto 3372.
+
+22. Si quisiéramos configurar un host virtual llamado `nuevodominio.es`, ¿en qué fichero incluiríamos su configuración?
+    - ( ) `/var/apache2/sites-enable/nuevodominio.es.conf`
+    - ( ) `/etc/apache2/sites-available/virtualhost.conf`
+    - ( ) `/etc/apache2/sites-available/nuevodominio.es`
+    - (x) `/etc/apache2/sites-available/nuevodominio.es.conf`
+
+23. Considerando la siguiente traza capturada con Wireshark, ¿cuál de las siguientes afirmaciones es correcta?<br><img src="Img_Examenes/P23.png" alt="Traza de Wireshark"><br>
+    - ( ) Un cliente con IP pública `65.208.228.223` accede mediante el navegador Mozilla Firefox al recurso `www.ethereal.com`.
+    - ( ) El dominio del sitio web accedido por el cliente es `www.ethereal.com/download.html`.
+    - ( ) Un cliente con IP pública `145.254.160.237` accede al recurso `http://www.ethereal.com/download.html` servido por un servidor HTTP Apache escuchando en el puerto 3372.
+    - (x) El recurso `http://www.ethereal.com/download.html` tiene un tamaño de 18070 bytes y es servido por un servidor HTTP Apache escuchando en el puerto 80.
+
+24. ¿Cuál de las siguientes afirmaciones es cierta cuando creamos un certificado con `openssl` para un sitio web servido con Apache2?
+    - (x) Todas las afirmaciones son correctas.
+    - ( ) El certificado debe ubicarse en el mismo directorio que el indicado en la directiva `SSLCertificateFile` del fichero de configuración del sitio web.
+    - ( ) El valor del parámetro `Common Name` debe coincidir con el dominio del host virtual.
+    - ( ) A la hora de crear el certificado debemos usar la opción `-nodes` para que Apache2 pueda usarlo autónomamente (sin intervención humana).
+
+25. ¿Cuál es la carpeta en la que se almacena por defecto el contenido de un sitio web gestionado mediante Apache2?
+    - ( ) `/etc/www/html`
+    - (x) `/var/www/html`
+    - ( ) `/apache2/www/html`
+    - ( ) `/user/www/html`
+
+26. Considerando la siguiente traza capturada con Wireshark, ¿cuál de las siguientes afirmaciones es correcta?<br><img src="Img_Examenes/P26.png" alt="Traza de Wireshark"><br>
+    - (x) El navegador web puede manejar conjuntos de caracteres ISO-8859-1 (también conocido como Latin-1).
+    - ( ) El servidor puede aceptar contenido comprimido DEFLATE.
+    - ( ) Se está usando el protocolo HTTP/2.0.
+    - ( ) El dominio del sitio web accedido por el cliente es `/Websidan/index.html`.
