@@ -172,3 +172,21 @@ ______
     - ( ) El servidor puede aceptar contenido comprimido DEFLATE.
     - ( ) Se está usando el protocolo HTTP/2.0.
     - ( ) El dominio del sitio web accedido por el cliente es `/Websidan/index.html`.
+
+27. Considerando la siguiente traza capturada con Wireshark, ¿cómo se configuró el fichero `.htaccess` del sitio web?<br><img src="Img_Examenes/P27.png" alt="Traza de Wireshark"><br>
+    - ( ) <code>AuthType Basic<br>AuthName "Directorio con control de acceso"<br>AuthUserFile "/usr/local/passwords.pd"<br>Require user 1234</code>
+    - (x) <code>AuthType Basic<br>AuthName "Directorio con control de acceso"<br>AuthUserFile "/usr/local/apache/passwd/passwords"<br>Require user miusuario</code>
+    - ( ) <code>AuthType Digest<br>AuthName "Directorio con control de acceso"<br>AuthUserFile "/usr/local/passwords.pd"<br>Require user miusuario</code>
+    - ( ) <code>AuthType Digest<br>AuthName "Directorio con control de acceso"<br>AuthUserFile "/usr/local/passwords.pd"<br>Require user 1234</code>
+
+28. Suponga que se usa la utilidad `openssl` como sigue para generar el certificado electrónico de un sitio web, ¿cuál de las siguientes afirmaciones referentes al archivo de configuración, localizado en el directorio `/etc/apache2/sites-available/`, del correspondiente virtual host es correcta?<br><code>sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /usr/fr.key -out /usr/fr.crt</code>
+    - ( ) Debe contener una directiva `ServerName` o `ServerAlias` con argumento `/usr/fr.com`.
+    - ( ) Debe contener una directiva `SSLCertificateKeyFile` con argumento `/usr/fr.crt`
+    - (x) Debe contener una directiva `SSLCertificateFile` con argumento `/usr/fr.crt`
+    - ( ) Debe contener una directiva `SSLEngine` con argumento `off`.
+
+29. ¿Cuál es el archivo de principal en el que se configuran los puertos en los que atenderá solicitudes Apache2?
+    - ( ) `/user/apache2/ports.conf`
+    - ( ) `/var/apache2/ports.conf`
+    - ( ) `/user/apache2/ports.config`
+    - (x) `/etc/apache2/ports.conf`
