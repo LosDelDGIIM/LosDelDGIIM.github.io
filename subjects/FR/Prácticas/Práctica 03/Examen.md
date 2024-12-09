@@ -92,7 +92,7 @@ ______
 13. Un servidor Apache2 escucha peticiones HTTP en la IP `192.168.1.5` perteneciente a la red de gestión del laboratorio 3.7 y tiene alojado y configurado el sitio web `www.ejemplo.com` ¿es necesaria una configuración adicional para servir la página web por defecto de dicho sitio web? Si es así, ¿qué es lo que hay que configurar?
     - ( ) Sí, hay que introdudir la siguiente línea en el fichero `/etc/hosts` del cliente: `33.1.1.3 www.ejemplo.com`
     - (x) Sí, hay que introdudir la siguiente línea en el fichero `/etc/hosts` del cliente: `192.168.1.5 www.ejemplo.com`
-    - ( ) No hay que añadir configuración alguna.
+    - ( ) Sí, hay que introdudir la siguiente línea en el fichero `/etc/hosts` del servidor: `33.1.1.3 www.ejemplo.com`
     - ( ) Sí, hay que introdudir la siguiente línea en el fichero `/etc/hosts` del servidor: `192.168.1.5 www.ejemplo.com`
 
 14. ¿Cómo se autentica el servidor HTTPS ante el cliente para formar un canal seguro de comunicaciones?
@@ -190,3 +190,21 @@ ______
     - ( ) `/var/apache2/ports.conf`
     - ( ) `/user/apache2/ports.config`
     - (x) `/etc/apache2/ports.conf`
+
+30. ¿Cuál de los siguientes comandos usaría para crear un enlace simbólico del archivo de configuración `fr.com.conf` en el directorio `/etc/apache2/sites-enabled/`?
+    - ( ) `sudo a2enmod fr.com`
+    - ( ) `sudo a2dissite fr.com`
+    - ( ) `sudo a2dismod fr.com`
+    - (x) `sudo a2ensite fr.com`
+
+31. Considerando la siguiente traza capturada con Wireshark, ¿cuál de las siguientes afirmaciones es correcta?<br><img src="Img_Examenes/P23.png" alt="Traza de Wireshark"><br>
+    - ( ) Un cliente con IP pública `65.208.228.223` accede mediante el navegador Mozilla Firefox al recurso `www.ethereal.com`.
+    - ( ) El dominio del sitio web accedido por el cliente es `ethereal.com`.
+    - ( ) Un cliente con IP pública `145.254.160.237` accede al recurso `http://www.ethereal.com/download.html` servido por un servidor HTTP Apache escuchando en el puerto 3372.
+    - ( ) El recurso `http://www.ethereal.com/download.html` tiene un tamaño de 18364 bytes y es servido por un servidor HTTP Apache escuchando en el puerto 3372.
+
+32. Suponga que se usa la utilidad `openssl` como sigue para generar el certificado electrónico de un sitio web, ¿cuál de las siguientes afirmaciones referentes al archivo de configuración, localizado en el directorio `/etc/apache2/sites-available/`, del correspondiente virtual host es correcta?<br><code>sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /usr/fr.key -out /usr/fr.crt</code>
+    - ( ) Debe contener una directiva `SSLCertificateKeyFile` con argumento `/usr/fr.key`
+    - ( ) Debe contener una directiva `SSLProtocol` con opción `-all` y argumento `+TLSv1.2`
+    - (x) Debe contener una directiva `SSLCertificateKeyFile` con argumento `/usr/fr.key`
+    - ( ) Debe contener una directiva `SSLCertificateKeyFile` con argumento `/usr/fr.crt`
