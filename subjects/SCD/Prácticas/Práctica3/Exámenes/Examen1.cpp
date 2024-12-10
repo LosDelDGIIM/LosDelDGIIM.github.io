@@ -39,7 +39,7 @@ double aleatorio_real(int min, int max) {
    static const int precision = 1e3;
 	static default_random_engine generador( (random_device())() );
 	static uniform_int_distribution<int> distribucion_uniforme( 0, precision ) ;
-   int valor_aleatorio = distribucion_uniforme( generador )/((double)precision);
+   double valor_aleatorio = distribucion_uniforme( generador )/((double)precision);
 	return min + valor_aleatorio * (max - min);
 }
 
@@ -99,6 +99,7 @@ void funcion_yoshi() {
 
    MPI_Status estado;
 
+   // Cada ronda
    for (int i = 0; i < num_reposiciones; i++) {
 
       // Enviamos las tartas a los jugadores
@@ -113,7 +114,7 @@ void funcion_yoshi() {
 
          // Producción de tartas
          bloquear(aleatorio_entero(10, 200));
-         cout << "Yoshi: He producido " << num_tartas << " tartas para " << id_a_nombre(id_jugador) << endl;
+         cout << "Yoshi: Número de tartas producidas para " << id_a_nombre(id_jugador) << ": " << num_tartas << endl;
          
          // Enviamos las tartas
          MPI_Send(pesos_tartas, num_tartas, MPI_DOUBLE, id_jugador, tag_yoshi, MPI_COMM_WORLD);
@@ -126,36 +127,35 @@ void funcion_yoshi() {
       double peso_comido_max = 0;
       int id_ganador_ronda;
       for (int j = 1; j <= num_jugadores; j++) {
-         MPI_Recv(peso_comido, 1, MPI_DOUBLE, MPI_ANY_SOURCE, tag_jugador, MPI_COMM_WORLD, &estado);
-         if (peso_comido > peso_comido_max) {
-            peso_comido_max = peso_comido;
+         MPI_Recv(&peso_comido_jugador, 1, MPI_DOUBLE, MPI_ANY_SOURCE, tag_jugador, MPI_COMM_WORLD, &estado);
+         if (peso_comido_jugador > peso_comido_max) {
+            peso_comido_max = peso_comido_jugador;
             id_ganador_ronda = estado.MPI_SOURCE;
          }
       }
 
-      // Sumamos un punto al jugador que más haya comido
+      // Sumamos un punto al jugador que más haya comido. Si hay empate, al que haya comido antes
       puntos[id_ganador_ronda - 1]++;
 
       // Informamos de los puntos actuales
+      cout << "Yoshi: Punto para " << id_a_nombre(id_ganador_ronda) << endl;
       cout << "Yoshi: Puntos en la ronda " << i+1 << ": " << endl;
-      for (int j = 0; j < num_jugadores; j++) {
+      for (int j = 0; j < num_jugadores; j++)
          cout << "\t- " << id_a_nombre(j+1) << ": " << puntos[j] << " puntos." << endl;
-      }
-      cout << endl;
+      cout << "---------------------------------" << endl;
    }
 
    // Finalizamos el juego
-   for (int j = 1; j <= num_jugadores; j++) {
+   for (int j = 1; j <= num_jugadores; j++)
       MPI_Send(&TERMINAR, 1, MPI_DOUBLE, j, tag_yoshi, MPI_COMM_WORLD);
-   }
+   
 
-   // Informamos del ganador
+   // Informamos del ganador. Si hay empate, se queda con el que se apuntase antes
    int id_ganador = 0;
-   for (int j = 0; j < num_jugadores; j++) {
-      if (puntos[j] > puntos[id_ganador]) {
+   for (int j = 0; j < num_jugadores; j++)
+      if (puntos[j] > puntos[id_ganador])
          id_ganador = j;
-      }
-   }
+   
 
    cout << "Yoshi: ¡El ganador es " << id_a_nombre(id_ganador + 1) << "!" << endl;
 }
@@ -178,7 +178,7 @@ void funcion_player(int id_jugador) {
       MPI_Get_count(&estado, MPI_DOUBLE, &num_tartas);
 
       // Una vez sabemos cuántas tartas hay, creamos un vector para almacenar sus pesos
-      int * pesos_tartas = new int[num_tartas];
+      double * pesos_tartas = new double[num_tartas];
 
       // Recibimos las tartas
       MPI_Recv(pesos_tartas, num_tartas, MPI_DOUBLE, estado.MPI_SOURCE, estado.MPI_TAG, MPI_COMM_WORLD, &estado);
@@ -192,22 +192,21 @@ void funcion_player(int id_jugador) {
 
       // Informamos de las tartas recibidas, y calculamos el peso total
       peso_total = 0;
-      cout << id_a_nombre(id_jugador) << ": He recibido " << num_tartas << " tartas: " << endl;
+      cout << id_a_nombre(id_jugador) << ": Número de tartas recibidas: " << num_tartas << endl;
       for (int i = 0; i < num_tartas; i++) {
          cout << "\t- Tarta " << i << ": " << pesos_tartas[i] << " kg."<< endl;
          peso_total += pesos_tartas[i];
       }
-      cout << endl;
 
       // Calculamos el peso que vamos a comer
       peso_comido = aleatorio_real(0, peso_total);
 
       // Simulamos acción de comer
-      cout << id_a_nombre(id_jugador) << ": Voy a comerme " << peso_comido << " kg de tarta." << endl;
+      cout << id_a_nombre(id_jugador) << ": Voy a comerme " << peso_comido << " kg de tarta." << endl << endl;
       bloquear(aleatorio_entero(10, 200));
 
       // Informamos de que hemos terminado de comer
-      MPI_Send(&peso_comido, 1, MPI_INT, ID_YOSHI, tag_jugador, MPI_COMM_WORLD);
+      MPI_Send(&peso_comido, 1, MPI_DOUBLE, ID_YOSHI, tag_jugador, MPI_COMM_WORLD);
       delete[] pesos_tartas;
    }
 }
