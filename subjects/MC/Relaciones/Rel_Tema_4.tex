@@ -210,7 +210,7 @@
 
         \item ¿Es ambigua la gramática $G$? ¿Es la ambigüedad inherente al lenguaje generado por $G$? Justifica adecuadamente la respuesta.
         
-        Para ver si la gramática es ambigua, consideramos la palabra $a-b$. Esta palabra tiene dos árboles de derivación, como se muestra en la Figura~\ref{fig:1.4.3}.
+        Para ver que la gramática es ambigua, consideramos la palabra $a-b$. Esta palabra tiene dos árboles de derivación, como se muestra en la Figura~\ref{fig:1.4.3}.
         \begin{figure}
             \centering
             \begin{forest}
@@ -253,6 +253,7 @@
         \end{figure}
 
         La ambiguedad no es adherente al lenguaje generado por la gramática, ya que este lenguaje es regular. Por tanto, el lenguaje no es inherentemente ambiguo.
+        \begin{comment}
         Una gramática que no sea ambigua y que genere el mismo lenguaje es $G=(V,\{a,b,c,d,-\},P,S)$, con:
         \begin{equation*}
             \begin{aligned}
@@ -265,6 +266,7 @@
                 \right.
             \end{aligned}
         \end{equation*}
+        \end{comment}
         \item ¿Es posible modificar $G$ de manera que la nueva gramática pueda ser usada para generar el lenguaje de las expresiones aritméticas correctas con el operador de resta?
         
         Sí, podemos añadir paréntesis a la gramática para que sea capaz de generar el lenguaje de las expresiones aritméticas correctas con el operador de resta. La gramática modificada sería $G=(V,\{a,b,c,d,-,(,)\},P,S)$, con:
@@ -274,7 +276,7 @@
                 P &= \left\{
                     \begin{aligned}
                         I\rightarrow &a \mid b \mid c \mid d \\
-                        S\rightarrow &I \mid (I-S)
+                        S\rightarrow &I \mid (I-S) \mid (S-I)
                     \end{aligned}
                 \right.
             \end{aligned}
@@ -1080,7 +1082,6 @@
         \begin{equation*}
             S \Rightarrow aAC_a \Rightarrow abAC_aC_a \Rightarrow abbAC_aC_aC_a \Rightarrow abbaC_aC_aC_aC_a \Rightarrow abbaC_aC_aC_aC_a \Rightarrow ab^2a^5
         \end{equation*}
-        % // TODO: Se refiere a esto?
     \end{enumerate}
 \end{ejercicio}
 
@@ -1205,8 +1206,121 @@
         \begin{equation*}
             2n-1<2n-l \Longleftrightarrow -1<-l \Longleftrightarrow l<1
         \end{equation*}
-        Por tanto, llegamos a una contradicción, por lo que $L_1$ no es regular. Veamos que es independiente del contexto. Para esto, construimos % // TODO: Hecho por Irina.
-        % Idea: Partir en subconjuntos disjuntos
+        Por tanto, llegamos a una contradicción, por lo que $L_1$ no es regular. Veamos que es independiente del contexto. Para esto, vemos en el lenguaje descrito que, por cada $c$, hay un $a$ o un $b$. Además, como la desigualdad es estricta, hay al menos un $a$ o un $b$ (o ambos) que no está balanceado con un $c$. Consideramos por tanto los siguientes lenguajes, que nos serán de ayuda:
+        \begin{enumerate}
+            \item $L_{aux}$. Se da la igualdad. Cada $c$ está balanceada con un $a$ o un $b$, y cada $a$ y cada $b$ están balanceados con un $c$.
+            \item $L_{1a}$. $k<i+j$. Cada $c$ está balanceada con un $a$ o un $b$.
+            Cada $b$ está balanceada con un $c$, y al menos un $a$ no está balanceado con un $c$.
+            \item $L_{1b}$. $k<i+j$. Cada $c$ está balanceada con un $a$ o un $b$.
+            Cada $a$ está balanceada con un $c$, y al menos un $b$ no está balanceado con un $c$.
+            \item $L_{1ab}$. $k<i+j$. Cada $c$ está balanceada con un $a$ o un $b$.
+            Al menos un $a$ no está balanceado con un $c$, y al menos un $b$ no está balanceado con un $c$.
+        \end{enumerate}
+
+        Vemos que $L_{1a}\cap L_{1b}\cap L_{1ab}=\emptyset$, y que $L_1=L_{1a}\cup L_{1b}\cup L_{1ab}$. Veamos en primer lugar las gramáticas que generan cada uno de estos lenguajes:
+        \begin{description}
+            \item[Lenguaje auxiliar $L_{aux}$)] Este lenguaje es:
+            \begin{equation*}
+                L_{aux}=\{a^i b^j c^k \mid i,j,k\geq 0, k=i+j\}
+            \end{equation*}
+
+            Notemos que este es una primera aproximación, donde cada $c$ está balanceada con un $a$ o un $b$ y, además, cada $a$ y cada $b$ están balanceados con un $c$. La gramática que genera este lenguaje es:
+            \begin{equation*}
+                \begin{aligned}
+                    G_{aux} &= (V_{aux},\{a,b,c\},P_{aux},S_{aux}) \\
+                    V_{aux} &= \{ S_{aux}, X_{aux} \} \\
+                    P &= \left\{
+                        \begin{aligned}
+                            S_{aux} &\rightarrow aS_{aux}c \mid X_{aux}\\
+                            X_{aux} &\rightarrow bX_{aux}c \mid \veps
+                        \end{aligned}
+                    \right.
+                \end{aligned}
+            \end{equation*}
+
+            Esta gramática no nos es estrictamente necesaria, pero nos será de ayuda para obtener las gramáticas que generan los lenguajes $L_{1a}$, $L_{1b}$ y $L_{1ab}$. Notemos que $S\rightarrow aSc$ genera un $a$ balanceada con un $c$, y $X\rightarrow bXc$ genera un $b$ balanceado con un $c$. Estas dos reglas habrán de mantenerse para que cada $c$ esté balanceada con un $a$ o un $b$.
+
+
+            \item[Lenguaje $L_{1a}$)] En este lenguaje, se mantiene que cada $c$ está balanceada con un $a$ o un $b$ y que cada $b$ está balanceada con un $c$. Sin embargo, al menos un $a$ no está balanceado con un $c$. La gramática que genera este lenguaje es:
+            \begin{equation*}
+                \begin{aligned}
+                    G_{1a} &= (V_{1a},\{a,b,c\},P_{1a},S_{1a}) \\
+                    V_{1a} &= \{ S_{1a}, X_{1a}, A_{1a} \} \\
+                    P_{1a} &= \left\{
+                        \begin{aligned}
+                            S_{1a} &\rightarrow aS_{1a}c \mid A_{1a}X_{1a}\\
+                            X_{1a} &\rightarrow bX_{1a}c \mid \veps\\
+                            A_{1a} &\rightarrow aA_{1a} \mid a
+                        \end{aligned}
+                    \right.
+                \end{aligned}
+            \end{equation*}
+
+            \item[Lenguaje $L_{1b}$)] En este lenguaje, se mantiene que cada $c$ está balanceada con un $a$ o un $b$ y que cada $a$ está balanceada con un $c$. Sin embargo, al menos un $b$ no está balanceado con un $c$. La gramática que genera este lenguaje es:
+            \begin{equation*}
+                \begin{aligned}
+                    G_{1b} &= (V_{1b},\{a,b,c\},P_{1b},S_{1b}) \\
+                    V_{1b} &= \{ S_{1b}, X_{1b}, B_{1b}\} \\
+                    P_{1b} &= \left\{
+                        \begin{aligned}
+                            S_{1b} &\rightarrow aS_{1b}c \mid X_{1b}\\
+                            X_{1b} &\rightarrow bX_{1b}c \mid B_{1b}\\
+                            B_{1b} &\rightarrow bB_{1b} \mid b
+                        \end{aligned}
+                    \right.
+                \end{aligned}
+            \end{equation*}
+
+            \item[Lenguaje $L_{1ab}$)] En este lenguaje, se mantiene que cada $c$ está balanceada con un $a$ o un $b$. Sin embargo, al menos un $a$ no está balanceado con un $c$ y al menos un $b$ no está balanceado con un $c$. La gramática que genera este lenguaje es:
+            \begin{equation*}
+                \begin{aligned}
+                    G_{1ab} &= (V_{1ab},\{a,b,c\},P_{1ab},S_{1ab}) \\
+                    V_{1ab} &= \{ S_{1ab}, X_{1ab}, A_{1ab}, B_{1ab}\} \\
+                    P_{1ab} &= \left\{
+                        \begin{aligned}
+                            S_{1ab} &\rightarrow aS_{1ab}c \mid A_{1ab}X_{1ab}\\
+                            X_{1ab} &\rightarrow bX_{1ab}c \mid B_{1ab}\\
+                            A_{1ab} &\rightarrow aA_{1ab} \mid a\\
+                            B_{1ab} &\rightarrow bB_{1ab} \mid b
+                        \end{aligned}
+                    \right.
+                \end{aligned}
+            \end{equation*}
+        \end{description}
+
+        Como $L_1=L_{1a}\cup L_{1b}\cup L_{1ab}$ y son disjuntos, la gramática que genera $L_1$ es la ``unión'' de las gramáticas que generan $L_{1a}$, $L_{1b}$ y $L_{1ab}$, que describimos a continuación:
+        \begin{equation*}
+            \begin{aligned}
+                G &= (V,\{a,b,c\},P,S) \\
+                V &= V_{1a}\cup V_{1b}\cup V_{1ab} \cup \{ S \} \\
+                P &= P_{1a}\cup P_{1b}\cup P_{1ab} \cup \left\{
+                    \begin{aligned}
+                        S &\rightarrow S_{1a} \mid S_{1b} \mid S_{1ab}
+                    \end{aligned}
+                \right\}
+            \end{aligned}
+        \end{equation*}
+
+        A modo de resumen, y reduciendo el número de variables, la gramática que genera $L_1$ es:
+        \begin{equation*}
+            \begin{aligned}
+                G &= (V,\{a,b,c\},P,S) \\
+                V &= \{ S, A, B, X_{1a}, X_{1b}, X_{1ab} \} \\
+                P &= \left\{
+                    \begin{aligned}
+                        S &\rightarrow aSc \mid A X_{1a} \mid A X_{1ab} \mid X_{1b}\\
+                        A &\rightarrow aA \mid a\\
+                        B &\rightarrow bB \mid b\\
+                        X_{1a} &\rightarrow bX_{1a}c \mid \veps\\
+                        X_{1b} &\rightarrow bX_{1b}c \mid B\\
+                        X_{1ab} &\rightarrow bX_{1ab}c \mid B
+                    \end{aligned}
+                \right.
+            \end{aligned}
+        \end{equation*}
+        
+        Notemos además que esta gramática es no ambigua, por lo que $L_1$ no es inherentemente ambiguo. Además, como $\cc{L}(G)=L_1$, $L_1$ es independiente del contexto.
+
         \item $L_2 = \{ (ab)^i c^j d \mid j = i - 1, i \geq 1 \}$
         
         Veamos que no es regular usando el Lema de Bombeo. Para cada $n\in \bb{N}$, consideramos la palabra $z=(ab)^{n}c^{n-1}d$, con $|z|=2n+n-1+1=3n\geq n$. Entonces, para toda descomposición $z=uvw$ con $u,v,w\in \{a,b,c\}^*$, $|uv|\leq n$ y $|v|\geq 1$, hay dos posibilidades:
