@@ -8,7 +8,7 @@
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas + ADE.
 <!---- **Grupo:** 1. --->
 - **Descripción:** Examen de la práctica 3 de SCD.
-- **Profesor**: José Miguel Mandas Ruíz.
+- **Profesor**: José Miguel Mantas Ruíz.
 <!--- **Fecha:** 15 de noviembre de 2024.--->
 
 ***
