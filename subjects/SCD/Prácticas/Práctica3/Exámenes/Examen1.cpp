@@ -4,7 +4,7 @@
  * 
  * @details La descripción, junto con el enunciado, se encuentran en   ./ExamenI.md
  * 
- * https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Prácticas/Práctica3/Exámenes/ExamenI.md)
+ * https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Prácticas/Práctica3/Exámenes/Examen1.md
  */
 #include <iostream>
 #include <string>

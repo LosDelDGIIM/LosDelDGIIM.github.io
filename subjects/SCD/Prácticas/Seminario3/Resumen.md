@@ -147,7 +147,7 @@ Dado un `status` y un tipo de dato, devuelve el número de ítems que se espera 
 ```
 int MPI_Get_count(MPI_Status* status, MPI_Datatype dtype, int* num)
 ```
-Escribe en `num` el número de ítems recibidos en una llamada `MPI_Recv` previa. EL receptor debe conocer y proporcionar el tipo de los datos.
+Escribe en `num` el número de ítems recibidos en una llamada `MPI_Recv` previa. El receptor debe conocer y proporcionar el tipo de los datos.
 
 ## Ejemplo de envío y recepción
 Como un primer programa simple en el que hacemos que un proceso mande un dato a otro:
@@ -203,7 +203,7 @@ Espera bloqueado hasta que haya al menos un mensaje.
 ```
 int MPI_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
 ```
-El proceso qeuda bloqueado hasta que haya al menos un mensaje enviado a dicho proceso (cuando se desbloquee la instrucción, se dice de forma implícita que hay un mensaje con dichas características).  
+El proceso queda bloqueado hasta que haya al menos un mensaje enviado a dicho proceso (cuando se desbloquee la instrucción, se dice de forma implícita que hay un mensaje con dichas características).  
   
 ### Usos
 Permite hacer recepción de fuentes desconocidas con un tamaño de mensaje desconocido, junto con la función `MPI_Get_count`:
@@ -225,6 +225,6 @@ delete[] buffer;
 ## MPI_Iprobe (I de inmediata)
 Consulta si hay o no algún mensaje pendiente (mismos parámetros que `MPI_Probe` mas el `flag`).
 ```
-int MPI_Iprobe(int source, int tag, MPI_Comm, comm, int* flag, MPI_Status* status)
+int MPI_Iprobe(int source, int tag, MPI_Comm comm, int* flag, MPI_Status* status)
 ```
 Al terminar, `flag` será mayor que 0 solo si hay algún mensaje enviado al proceso que llama y que encaje con los argumentos `tag` y `source` en el comunicador `comm`. Si no, `flag` valdrá 0.

@@ -7,7 +7,7 @@
 - **Curso Académico:** 2022-23.
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas + ADE.
 - **Grupo:** 1.
-- **Descripción:** Examen de las prácticas 1 y 2 de SCD.
+- **Descripción:** Examen de la práctica 3 de SCD.
 <!--- **Fecha:** 15 de noviembre de 2024.
 - **Profesor:** Ana María Sánchez López.--->
 
