@@ -1,5 +1,11 @@
-// El enunciado del problema se encuentra en el archivo:
-// https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Prácticas/Práctica3/Exámenes/Examen2.md
+/**
+ * @file Examen2.cpp
+ * @author José Juan Urrutia Milán
+ * 
+ * @details La descripción, junto con el enunciado, se encuentran en   ./Examen2.md
+ * 
+ * https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/SCD/Prácticas/Práctica3/Exámenes/Examen2.md
+ */
 
 #include<iostream>
 #include<thread>

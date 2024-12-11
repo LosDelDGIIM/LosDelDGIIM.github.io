@@ -4,7 +4,7 @@
 ***
 
 - **Asignatura:** Sistemas Concurrentes y Distribuidos.
-- **Curso Académico:** Desconocido.
+<!--- **Curso Académico:** Desconocido.-->
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas + ADE.
 <!---- **Grupo:** 1. --->
 - **Descripción:** Examen de la práctica 3 de SCD.

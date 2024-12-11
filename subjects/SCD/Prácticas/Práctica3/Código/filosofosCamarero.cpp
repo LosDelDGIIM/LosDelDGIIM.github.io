@@ -179,6 +179,8 @@ void funcion_filosofos( int id_filosofo ){
 
 /**
  * @brief Función que representa cada tenedor
+ * 
+ * @param id_tenedor Identificador del tenedor, distinto a id_global
  */
 void funcion_tenedores( int id_tenedor ){
 	int valor, id_filosofo ;  // valor recibido, identificador del filósofo
