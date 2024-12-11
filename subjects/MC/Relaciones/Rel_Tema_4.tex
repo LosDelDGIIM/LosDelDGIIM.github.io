@@ -1585,10 +1585,52 @@
             \item La variable $B$ genera $u\#v_1u^{-1}v_2$.
         \end{enumerate}
         
-        \item $L_2 = \{ u_1 \# u_2 \# \ldots \# u_k \mid k\in \bb{N}\setminus \{0\}, \text{ cada } u_i \in \{ 0, 1 \}^*, \text{ y para algún } i,j \text{ se tiene que }$ $u_i=u_j^{-1} \}$
+        \item $L_2 = \{ u_1 \# u_2 \# \ldots \# u_k \mid k\in \bb{N}\setminus \{0\}, \text{ cada } u_i \in \{ 0, 1 \}^*, \text{ y para algún } i,j \text{ se tiene que }$ $u_i=u_j^{-1} \}$\\
+
+        En primer lugar, para ayudarnos, usaremos la siguiente regla de producción, que genera cualquier $u_p\in \{0,1\}^*$:
+        \begin{equation*}
+            X\to 0X \mid 1X \mid \veps
+        \end{equation*}
+    
+        Sean ahora $i,j\in \bb{N}$ de forma que $u_i=u_j^{-1}$. Buscamos en primer lugar generar todas las palabras del principio que son anteriores a $u_i$, es decir, todas las $u_p$ con $p<i$. Esto lo hacemos con la siguiente regla de producción:
+        \begin{equation*}
+            A\to X\#A \mid \veps
+        \end{equation*}
+        De esta forma, tenemos:
+        \begin{equation*}
+            A \stackrel{\ast}{\Longrightarrow} u_1\#u_2\#\dots\#u_{i-1}\#
+        \end{equation*}
+    
+        Ahora, generamos todas las palabras del final que son posteriores a $u_j$, es decir, todas las $u_p$ con $p>j$. Esto lo hacemos con la siguiente regla de producción:
+        \begin{equation*}
+            B \to B\#X\mid \veps
+        \end{equation*}
+        De esta forma, tenemos:
+        \begin{equation*}
+            B \stackrel{\ast}{\Longrightarrow} \#u_{j+1}\#\dots\#u_k
+        \end{equation*}
+    
+        Ahora, generamos $u_i$ y $u_j$ con la siguiente regla de producción:
+        \begin{equation*}
+            \begin{array}{ll}
+                P\to 0P0\mid 1P1  & \text{Parte }u_i=u_j^{-1}\\
+                P \to 0\mid 1 \mid \veps    & \text{Si }i=j\\
+                P \to \# A & \text{Si }j\neq i
+            \end{array}
+        \end{equation*}
         
-        %Consideramos la gramática $G=(V,\{0,1,\#\},P,S)$, con:
-        % // TODO: Lo ha hecho JJ. Pedir
+        Unimos ahora todo en una gramática $G=(V,\{0,1,\#\},P,S)$, con $V=\{S,A,B,P,X\}$ y $P$ las reglas de producción siguientes:
+        \begin{equation*}
+            \begin{aligned}
+                S &\to APB\\
+                A &\to X\#A \mid \veps\\
+                B &\to B\#X\mid \veps\\
+                P &\to 0P0\mid 1P1 \mid 0\mid 1 \mid \veps \mid \# A\\
+                X &\to 0X \mid 1X \mid \veps
+            \end{aligned}
+        \end{equation*}
+    
+        Esta gramática es independiente del contexto, y tenemos $L_2=\cc{L}(G)$, luego $L_2$ es independiente del contexto.
     \end{enumerate}
 \end{ejercicio}
 
@@ -1597,11 +1639,111 @@
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.4.18}
-    Sea el lenguaje $L = \{ u\#v u,v\in \{0,1\}^*,~u\neq v\}$. Demostrar que $L$ es independiente del contexto.
+    Sea el lenguaje $L = \{ u\#v\mid u,v\in \{0,1\}^*,~u\neq v\}$. Demostrar que $L$ es independiente del contexto.\\
+
+    En todos los casos, emplearemos la regla de producción siguiente por comodidad:
+    \begin{equation*}
+        \begin{array}{ll}
+            T \to 0\mid 1 & \text{Símbolo terminal}\\
+        \end{array}
+    \end{equation*}
+
+    Sea $n=|u|,~m=|v|$. La palabra que buscamos generar es:
+    \begin{equation*}
+        {a_1\cdots a_n}
+        {\#}
+        {b_1\cdots b_m}\qquad  a_p,b_q\in \{0,1\}~\forall p\in \{1,\ldots,n\},~\forall q\in \{1,\ldots,m\}
+    \end{equation*}
+
+    Distinguimos en función de $u,v$:
+    \begin{enumerate}
+        \item Si $a_i=b_i~\forall i\in \{1,\ldots,\min\{n,m\}\}$:
+        
+        Si tuviésemos $n=m$, entonces $u=v$, por lo que hemos de tener $n\neq m$. Generamos por tanto palabras de la forma $u\#v$ con $n\neq m$.
+        Notemos que todas las palabras de este apartado cumplen efectivamente que $n\neq m$, pero no todas las palabras con $n\neq m$ cumplen la condición de este apartado. Las palabras con $n\neq m$ que no cumplen la condición del apartado se podrán entonces generar con las reglas de producción de este apartado con las del siguiente. Por tanto, la gramática que generaremos es ambigua.\\
+
+        Buscamos genarar entonces palabras de la forma $u\#v$ con $n\neq m$.
+        En este caso, alguna de las dos palabras tiene más símbolos que la otra, por lo que no hemos de preocuparnos de que sean distintas, ya que esto se tiene al ser de distinta longitud. Estas palabras se generan con:
+        \begin{equation*}
+            \begin{array}{ll}
+                A\to TAT & \text{Parte de la misma longitud}\\
+                A\to X_{01}\# & \text{Fuerza a que }|u|>|v|\\
+                A\to \#X_{01} & \text{Fuerza a que }|v|>|u|\\
+                X_{01} \to TX_{01}\mid T & \text{Genera }z\in \{0,1\}^*\setminus \{\veps\}
+            \end{array}
+        \end{equation*}
+
+        \item Si $\exists i\in \{1,\ldots,\min\{n,m\}\}$ tal que $a_i\neq b_i$:
+        
+        Si el primer símbolo distinto está en la posición $i$, buscamos generar una palabra de la forma:
+        \begin{multline*}
+            \underbrace{a_1\cdots a_{i-1}}_{3^\circ}
+            \underbrace{a_i}_{4^\circ}
+            \underbrace{a_{i+1}\cdots a_n}_{5^\circ}
+            \underbrace{\#}_{6^\circ}
+            \underbrace{b_1\cdots b_{i-1}}_{3^\circ}
+            \underbrace{b_i}_{2^\circ}
+            \underbrace{b_{i+1}\cdots b_m}_{1^\circ}
+            \\ a_p,b_q\in \{0,1\}~\forall p\in \{1,\ldots,n\},~\forall q\in \{1,\ldots,m\},~m,n\in \bb{N},a_i\neq b_i
+        \end{multline*}
+
+        Las reglas de producción son las siguientes:
+        \begin{equation*}
+            \begin{array}{ll}
+                C\to CT         & \text{Parte }1^\circ\\
+                C\to C_00       & \text{Parte }2^\circ,~b_i=0,\text{ por lo que }a_i=1\\
+                C\to C_11       & \text{Parte }2^\circ,~b_i=1,\text{ por lo que }a_i=0\\
+                C_0\to TC_0T    & \text{Parte }3^\circ,~b_i=0,\text{ por lo que }a_i=1\\
+                C_1\to TC_1T    & \text{Parte }3^\circ,~b_i=1,\text{ por lo que }a_i=0\\
+                C_0\to 1X_{\#}  & \text{Parte }4^\circ,~b_i=0,~a_i=1\\
+                C_1\to 0X_{\#}  & \text{Parte }4^\circ,~b_i=1,~a_i=0\\
+                X_{\#}\to T X_{\#} & \text{Parte }5^\circ\\
+                X_{\#}\to \#    & \text{Parte }6^\circ
+            \end{array}
+        \end{equation*}        
+    \end{enumerate}
+
+    Por tanto, la gramática que genera $L$ es:
+    \begin{equation*}
+        \begin{aligned}
+            G &= (V,\{0,1,\#\},P,S) \\
+            V &= \{ S, A, X_{01}, C, C_0, C_1, X_{\#} \} \\
+            P &= \left\{
+                \begin{aligned}
+                    S &\to A \mid C\\
+                    T &\to 0\mid 1\\
+                    A &\to TAT \mid X_{01}\# \mid \#X_{01}\\
+                    X_{01} &\to TX_{01}\mid T\\
+                    C &\to CT \mid C_00 \mid C_11\\
+                    C_0 &\to TC_0T \mid 1X_{\#}\\
+                    C_1 &\to TC_1T \mid 0X_{\#}\\
+                    X_{\#} &\to T X_{\#} \mid \#
+                \end{aligned}
+            \right.
+        \end{aligned}
+    \end{equation*}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.4.19}
-    Demostrar que si una gramática $G$ está en forma normal de Chomsky, entonces si $w \in L(G)$ el número de pasos de derivación de toda generación de esta palabra es $2|w| - 1$.
+    Demostrar que si una gramática $G$ está en forma normal de Chomsky, entonces si $w \in \cc{L}(G)$ el número de pasos de derivación de toda generación de esta palabra es $2|w| - 1$.\\
+
+    Sabemos que, si $G$ está en forma normal de Chomsky, $\veps\notin \cc{L}(G)$. Por tanto, si $w\in \cc{L}(G)$, entonces $|w|\geq 1$. Sea $|w|=n\in \bb{N}$, de forma que:
+    \begin{equation*}
+        w=a_1a_2\cdots a_n,\qquad a_i\in T~\forall i\in\{1,\ldots,n\}
+    \end{equation*}
+
+    Como la gramática está en forma de Chomsky, todas las producciones son de la siguiente foma:
+    \begin{align*}
+        A & \to BC\qquad B,C \in V\\
+        A_i &\to a_i\qquad a_i\in T
+    \end{align*}
+
+    De esta forma, por un lado hemos de usar $n$ producciones del segundo tipo para poder llegar así a los símbolos terminales. Además, debemos conseguir las $n$ variables que nos permiten llegar a símbolos iniciales. Sea $k$ el número de veces que empleamos una producción del primer tipo (que son las únicas que nos  permiten aumentar en $1$). Como cada producción de este tipo aumenta en $1$ el número de variables, y usando que partimos con una variable (el símbolo inicial), necesitamos que:
+    \begin{equation*}
+        1+k=n\Longrightarrow k=n-1
+    \end{equation*}
+
+    Por tanto, el número total de pasos de derivación es $2n-1$, es decir, $2|w|-1$.
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.4.20}
@@ -1617,9 +1759,12 @@
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.4.22}
-    Supongamos el conjunto de símbolos terminales $T = \{ \text{if}, \text{condicion}, \text{then}, \text{else}, a := 1 \}$, el alfabeto de variables $V = \{ \langle \text{SENT} \rangle, \langle \text{IF - THEN} \rangle, \langle \text{IF - THEN - ELSE} \rangle, \langle \text{ASIG} \rangle \}$, y las producciones:
-    \begin{equation*}
-        \left\{
+    Supongamos la siguiente gramática:
+    \begin{align*}
+        G&=\left( V,T,P,\langle \text{SENT} \rangle \right)\\
+        V&=\{ \langle \text{SENT} \rangle, \langle \text{IF - THEN} \rangle, \langle \text{IF - THEN - ELSE} \rangle, \langle \text{ASIG} \rangle \}\\
+        T&=\{ \text{if}, \text{condicion}, \text{then}, \text{else}, a := 1 \} \\
+        P&=\left\{
             \begin{aligned}
                 \langle \text{SENT} \rangle &\rightarrow \langle \text{ASIG} \rangle \mid \langle \text{IF - THEN} \rangle \mid \langle \text{IF - THEN - ELSE} \rangle\\
                 \langle \text{IF - THEN} \rangle &\rightarrow \text{if condicion then} \langle \text{SENT} \rangle\\
@@ -1627,8 +1772,11 @@
                 \langle \text{ASIG} \rangle &\rightarrow \text{a := 1}
             \end{aligned}
         \right.
-    \end{equation*}
-    Suponiendo que el símbolo inicial es $\langle \text{SENT} \rangle$, demostrar que la gramática es ambigua. Dar una gramática no ambigua que genere el mismo lenguaje.
+    \end{align*}
+    \begin{enumerate}
+        \item Demostrar que la gramática es ambigua.
+        \item Dar una gramática no ambigua que genere el mismo lenguaje.
+    \end{enumerate}
 \end{ejercicio}
 
 \subsection{Preguntas Tipo Test}
