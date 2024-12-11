@@ -5,6 +5,9 @@
 \usepackage{forest}
 \usepackage{booktabs}
 
+\usepackage{hhline}
+\newcommand{\cell}[1]{\multicolumn{1}{|c|}{$#1$}}
+
 % Para poder añadir autómatas
 % https://www3.nd.edu/~kogge/courses/cse30151-fa17/Public/other/tikz_tutorial.pdf
 \usetikzlibrary{automata} %, positioning, arrows}
@@ -36,8 +39,8 @@
         \item[Asignatura] Modelos de Computación
         \item[Curso Académico] 2024-25.
         \item[Grado] Doble Grado en Ingeniería Informática y Matemáticas.
-        \item[Grupo] A2.
-        \item[Profesor] Serafín Moral García.
+        \item[Grupo] A1.
+        \item[Profesor] Marios Kountouris.
         \item[Descripción] Parcial Temas 3 y 4.
         \item[Fecha] 11 de diciembre de 2024.
         \item[Duración] 60 minutos.    
@@ -51,11 +54,142 @@
             \begin{equation*}
                 L_1 = \{u\in {\{a,b\}}^{\ast} \mid u \text{\ no contiene la subcadena ``} aab\text{''}\}
             \end{equation*}
+
+            El AFD se puede ver en la Figura~\ref{fig:afd1}.
+            \begin{figure}
+                \centering
+                \begin{tikzpicture}
+                    \node[state, initial, accepting] (q0) {$q_0$};
+                    \node[state, right of=q0, accepting] (q1) {$q_1$};
+                    \node[state, right of=q1, accepting] (q2) {$q_2$};
+                    \node[state, right of=q2, error] (E1) {$E_1$};
+                    \draw   (q0) edge[loop above] node{$b$} (q0)
+                            (q0) edge[above] node{$a$} (q1)
+                            (q1) edge[above] node{$a$} (q2)
+                            (q1) edge[above, bend right] node{$b$} (q0)
+                            (q2) edge[above] node{$b$} (E1)
+                            (q2) edge[loop above] node{$a$} (q2)
+                            (E1) edge[loop above] node{$a,b$} (E1);
+                \end{tikzpicture}
+                \caption{Autómata Finito Determinista para $L_1$.}
+                \label{fig:afd1}
+            \end{figure}
         \item Construir un Autómata Finito Determinista para el lenguaje $L_2$ dado por la expresión regular:
             \begin{equation*}
                 ba{(ab+b)}^{\ast}
             \end{equation*}
+
+            El AFD se puede ver en la Figura~\ref{fig:afd2}.
+            \begin{figure}
+                \centering
+                \begin{tikzpicture}
+                    \node[state, initial] (p0) {$p_0$};
+                    \node[state, right of=p0] (p1) {$p_1$};
+                    \node[state, right of=p1, accepting] (p2) {$p_2$};
+                    \node[state, right of=p2] (p3) {$p_3$};
+                    \node[state, below of=p2, error] (E2) {$E_2$};
+                    \draw   (p0) edge[above] node{$b$} (p1)
+                            (p0) edge[above] node{$a$} (E2)
+                            (p1) edge[above] node{$a$} (p2)
+                            (p1) edge[above] node{$b$} (E2)
+                            (p2) edge[above] node{$a$} (p3)
+                            (p2) edge[loop above] node{$b$} (p2)
+                            (p3) edge[above, bend right] node{$b$} (p2)
+                            (p3) edge[above] node{$a$} (E2)
+                            (E2) edge[loop left] node{$a,b$} (E2);
+                \end{tikzpicture}
+                \caption{Autómata Finito Determinista para $L_2$.}
+                \label{fig:afd2}
+            \end{figure}
         \item Construir un Autómata Finito Determinista que acepte el lenguaje $L_1\cap L_2$ y minimizarlo.
+        
+        Para ello, usaremos el autómata producto. Los estados finales son:
+        \begin{equation*}
+            F = \{q_0p_2, q_1p_2, q_2p_2\}
+        \end{equation*}
+
+        En primer lugar, y para que la obtención del autómata sea más sencilla, vemos que todos los estados de la forma $q_iE_2, E_1p_j, E_1E_2$ con $i\in\{0,1,2\}$ y $j\in\{0,1,2,3\}$ son estados indistinguibles, puesto que de ellos nunca vamos a poder salir (al no poder salir de $E_1E_2$). Como ninguno de ellos es final, son indistinguibles y los fusionamos en un único estado de error $E$.
+        El AFD producto al que llegamos, habiendo previamente fusionado dichos estados, se puede ver en la Figura~\ref{fig:afd3}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial] (q0p0) {$q_0p_0$};
+                \node[state, right of=q0p0] (q0p1) {$q_0p_1$};
+                \node[state, right of=q0p1, accepting] (q1p2) {$q_1p_2$};
+                \node[state, right of=q1p2] (q2p3) {$q_2p_3$};
+                \node[state, below of=q2p3, accepting] (q0p2) {$q_0p_2$};
+                \node[state, right of = q0p2] (q1p3) {$q_1p_3$};
+                
+                \node[state, error, above of=q1p2] (E) {$E$};
+
+                \draw   (q0p0) edge[above] node{$a$} (E)
+                        (q0p0) edge[above] node{$b$} (q0p1)
+                        (q0p1) edge[above] node{$a$} (q1p2)
+                        (q0p1) edge[above] node{$b$} (E)
+                        (q1p2) edge[above] node{$a$} (q2p3)
+                        (q1p2) edge[above] node{$b$} (q0p2)
+                        (q2p3) edge[above] node{$a,b$} (E)
+                        (q0p2) edge[above] node{$a$} (q1p3)
+                        (q0p2) edge[loop above] node{$b$} (q0p2)
+                        (q1p3) edge[above, bend right] node{$a$} (E)
+                        (q1p3) edge[above, bend right] node{$b$} (q0p2)
+                        (E) edge[loop left] node{$a,b$} (E);
+            \end{tikzpicture}
+            \caption{Autómata Finito Determinista para $L_1\cap L_2$.}
+            \label{fig:afd3}
+        \end{figure}
+
+        La minimización del autómata producto se muestra en la Tabla~\ref{tab:afd3-min}.
+        \begin{table}
+            \centering
+            \begin{tabular}{r cccccc}
+                \hhline{~*{1}{-}}
+                $q_0p_1$ & \cell{\times} \\ \hhline{~*{2}{-}}
+                $q_1p_2$ & \cell{\times} & \cell{\times} \\ \hhline{~*{3}{-}}
+                $q_2p_3$ & \cell{\times} & \cell{\times} & \cell{\times} \\ \hhline{~*{4}{-}}
+                $q_0p_2$ & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} \\ \hhline{~*{5}{-}}
+                $q_1p_3$ & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} & \cell{\times} \\ \hhline{~*{6}{-}}
+                $E$ & \cell{\times} & \cell{\times} & \cell{\times} & \cell{                                                                                                                                                                                                                                                                                                                                                                                                                                                } & \cell{\times} & \cell{\times} \\ \hhline{~*{6}{-}}
+                & $q_0p_0$ & $q_0p_1$ & $q_1p_2$ & $q_2p_3$ & $q_0p_2$ & $q_1p_3$ \\
+            \end{tabular}
+            \caption{Tabla de minimización del AFD producto.}
+            \label{tab:afd3-min}
+        \end{table}
+
+        Por tanto, hemos detectado que $q_2p_3$ también es de error. Es decir, notando por $\equiv$ a la relación de indistinguibilidad, tenemos que:
+        \begin{equation*}
+            q_2p_3 \equiv E
+        \end{equation*}
+
+        Por tanto, el autómata mínimo es el que se muestra en la Figura~\ref{fig:afd3-min}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial] (q0p0) {$q_0p_0$};
+                \node[state, right of=q0p0] (q0p1) {$q_0p_1$};
+                \node[state, right of=q0p1, accepting] (q1p2) {$q_1p_2$};
+                \node[state, right of=q1p2, accepting] (q0p2) {$q_0p_2$};
+                \node[state, right of = q0p2] (q1p3) {$q_1p_3$};
+                
+                \node[state, error, above of=q1p2] (E) {$E$};
+
+                \draw   (q0p0) edge[above] node{$a$} (E)
+                        (q0p0) edge[above] node{$b$} (q0p1)
+                        (q0p1) edge[above] node{$a$} (q1p2)
+                        (q0p1) edge[above] node{$b$} (E)
+                        (q1p2) edge[right] node{$a$} (E)
+                        (q1p2) edge[above] node{$b$} (q0p2)
+                        (q0p2) edge[above] node{$a$} (q1p3)
+                        (q0p2) edge[loop below] node{$b$} (q0p2)
+                        (q1p3) edge[above] node{$a$} (E)
+                        (q1p3) edge[below, bend left] node{$b$} (q0p2)
+                        (E) edge[loop right] node{$a,b$} (E);
+            \end{tikzpicture}
+            \caption{Autómata Finito Determinista mínimo para $L_1\cap L_2$.}
+            \label{fig:afd3-min}
+        \end{figure}
+
+
     \end{enumerate}
 \end{ejercicio}
 
@@ -65,9 +199,87 @@
         S \rightarrow abSba\ |\ baSab\ |\ ababSbaba\ |\ babaSabab\ |\ ccc
     \end{equation*}
     \begin{enumerate}
-        \item Demuestra que $G$ no es regular.
+        \item Demuestra que $\cc{L}(G)$ no es regular.
+        
+        Veamos en primer lugar el valor de $\cc{L}(G)$ mediante doble inclusión:
+        \begin{equation*}
+            \cc{L}(G)=\{ucccu^{-1}\mid u\in \{ab, ba\}^{\ast}\}
+        \end{equation*}
+        \begin{description}
+            \item[$\subseteq$)] Sea $w\in \cc{L}(G)$. Entonces, existe una sucesión de pasos de derivación desde $S$ tal que $S\stackrel{\ast}{\Longrightarrow}w$. En cada paso de derivación, vamos obteniendo la palabra $u$ y $u^{-1}$, y para finalizar es necesario usar $S\to ccc$. Por tanto, $w=ucccu^{-1}$ con $u\in \{ab, ba\}^{\ast}$.
+            
+            \item[$\supseteq$)] Sea $w=ucccu^{-1}$ con $u\in \{ab, ba\}^{\ast}$. Entonces, con las 2 primeras reglas de $P$ podemos obtener $uSu^{-1}$, y finalmente con la quinta regla obtenemos $ucccu^{-1}$.
+        \end{description}
+
+        Veamos ahora que no es regular usando el recíproco del lema de Bombeo.
+        \begin{comment}
+        Para cada $n\in\bb{N}$, sea $z=$
+        % // TODO: Hacer
+        \end{comment}
         \item Demuestra que $G$ es una gramática ambigua.
-        \item Dar una gramática no ambigua que genere el lenguaje $L(G)$.
+        
+        Para ello, basta con ver que la palabra $(ab)^2c^3(ba)^2\in \cc{L}(G)$ tiene más de un árbol de derivación. En concreto, los árboles de derivación que se pueden obtener son los que se muestran en la Figura~\ref{fig:arboles}.
+        \begin{figure}
+            \centering
+            \resizebox{0.49\textwidth}{!}{
+                \begin{forest}for tree={
+                    edge={-}, % Hace que las líneas no terminen en punta
+                    fit=rectangle, % Ajusta el tamaño del rectángulo al texto
+                }
+                    [$S$
+                        [$a$]
+                        [$b$]
+                        [$S$
+                            [$a$]
+                            [$b$]
+                            [$S$
+                                [$c$]
+                                [$c$]
+                                [$c$]
+                            ]
+                            [$b$]
+                            [$a$]
+                        ]
+                        [$b$]
+                        [$a$]
+                    ]
+                \end{forest}
+            }
+            \resizebox{0.49\textwidth}{!}{
+            \begin{forest}for tree={
+                edge={-}, % Hace que las líneas no terminen en punta
+                fit=rectangle, % Ajusta el tamaño del rectángulo al texto
+            }
+                [$S$
+                    [$a$]
+                    [$b$]
+                    [$a$]
+                    [$b$]
+                    [$S$
+                        [$c$]
+                        [$c$]
+                        [$c$]
+                    ]
+                    [$a$]
+                    [$b$]
+                    [$a$]
+                    [$b$]
+                ]
+            \end{forest}
+            }
+            \caption{Árboles de derivación para $(ab)^2c^3(ba)^2$.}
+            \label{fig:arboles}
+        \end{figure}
+        \item Dar una gramática no ambigua que genere el lenguaje $\cc{L}(G)$.
+        
+        Consideramos la gramática $G'=(\{S'\},\{a,b,c\},P',S')$ con $P'$ el conjunto que contiene las producciones:
+        \begin{equation*}
+            \begin{aligned}
+                S' &\to abS'ba\ |\ baS'ab\ |\ ccc
+            \end{aligned}
+        \end{equation*}
+
+        Es directo ver que $\cc{L}(G')=\cc{L}(G)$, y que $G'$ es una gramática no ambigua, puesto que dependiendo de la palabra tan solo podrá derivar de una forma, ya que cada regla de producción comienza por un símbolo terminal distinto.
     \end{enumerate}
 \end{ejercicio}
 
