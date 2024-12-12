@@ -523,19 +523,95 @@
         \begin{equation*}
             \pi_{\text{codpie}}\left[A\bowtie E\right]
         \end{equation*}
-        \item Entre los proyectos de Jaén, mostrar el que ha suministrado la pieza de mayor peso (puede haber más de uno).
+        \item Entre los proyectos de Jaén, mostrar al que le han suministrado la pieza de mayor peso (puede haber más de uno).
         
-        % TODO: Proyectos no suministran
+        Obtenemos los proyectos de Jaén:
+        \begin{equation*}
+            \rho\left[\sigma_{\text{ciudad}=\text{Jaén}}(\text{Proyecto})\right]=A
+        \end{equation*}
 
-        \item Proyectos para los que la lista de piezas que han suministrado tiene al menos dos piezas distintas.
+        Obtenemos ahora los pares de proyecto de Jaén, peso de una pieza que se ha suministrado a estos proyectos:
+        \begin{equation*}
+            \rho\left[\pi_{\substack{\text{codpj}\\\text{peso}}}\left(\left(\text{A}\bowtie \text{Ventas}\right)\bowtie_{\text{ventas.codpie}=\text{pieza.codpie}} \text{Pieza}\right)\right]=B,C
+        \end{equation*}
+
+        Buscamos ahora los que no son candidatos a máximo:
+        \begin{align*}
+            &\rho\left[\sigma_{B.\text{peso}<C.\text{peso}}(B\times C)\right]=D\\
+            &\rho\left[\pi_{B.\text{peso}}(D)\right]=E
+        \end{align*}
+
+        Por tanto, el mayor peso suministrado a los proyectos de Jaén es:
+        \begin{equation*}
+            \rho\left[\pi_{\text{peso}}(B)-E\right]=F
+        \end{equation*}
+
+        Por tanto, los proyectos de Jaén a los que le han suministrado la pieza de mayor peso son:
+        \begin{equation*}
+            \pi_{\text{codpj}}\left[B\bowtie F\right]
+        \end{equation*}
+
+        \item Proyectos para los que la lista de piezas que les han suministrado tiene al menos dos piezas distintas.
         
-        % TODO: Proyectos no suministran
-        \item Proyectos para los que la lista de piezas que han suministrado tiene exactamente dos piezas distintas.
+        Obtenemos en primer lugar las parejas de proyecto, pieza que se les ha suministrado:
+        \begin{equation*}
+            \rho\left[\pi_{\substack{\text{codpj}\\\text{codpie}}}\left(\text{Ventas}\right)\right]=A,B
+        \end{equation*}
+
+        Obtenemos ahora los proyectos para los que la lista de piezas que les han suministrado tiene al menos dos piezas distintas:
+        \begin{equation*}
+            \pi_{A.\text{codpj}}\left[\sigma_{\substack{A.\text{codpj}= B.\text{codpj}\\\land \\A.\text{codpie}\neq B.\text{codpie}}}(A\times B)\right]
+        \end{equation*}
         
-        % TODO: Proyectos no suministran
+        \item Proyectos para los que la lista de piezas que les han suministrado tiene exactamente dos piezas distintas.
+        
+        Sea $D$ la relación que contiene los códigos de proyectos que tienen al menos dos piezas distintas (resuelto en el apartado anterior).
+        Obtenemos ahora las parejas de proyecto, pieza que se les ha suministrado:
+        \begin{equation*}
+            \rho\left[\pi_{\substack{\text{codpj}\\\text{codpie}}}\left(\text{Ventas}\right)\right]=A,B,C
+        \end{equation*}
+
+        Los proyectos a los que se les han suministrado al menos tres piezas distintas son:
+        \begin{equation*}
+            \rho\left[\pi_{A.\text{codpj}}\left[\sigma_{\substack{A.\text{codpj}= B.\text{codpj}\\\land \\ B.\text{codpj}= C.\text{codpj}\\ \land \\ A.\text{codpie}\neq B.\text{codpie}\\ \land \\ A.\text{codpie}\neq C.\text{codpie}\\ \land \\ B.\text{codpie}\neq C.\text{codpie}}}(A\times B\times C)\right]\right]=E
+        \end{equation*}
+
+        Notemos que la eficiencia de esta consulta no es la mejor, pero podríamos hacer la selección de $A\times B$ y luego hacer el producto con $C$.
+        Por tanto, como los que han sido suministrados al menos dos piezas distintas son los que han suministrado al menos dos piezas distintas y no han suministrado al menos tres piezas distintas, la consulta sería:
+        \begin{equation*}
+            D-E
+        \end{equation*}
+
         \item Proveedores que han hecho una o dos ventas (y no más).
         
-        % // TODO: No hecho. Fácil con AxBxC. A=B pero neq C
+        Buscaremos en primer lugar los proveedores que han hecho al menos tres ventas.
+        Consideramos las tripletas de proveedor, pieza, proyecto que se han vendido:
+        \begin{equation*}
+            \rho\left[\pi_{\substack{\text{codpro}\\\text{codpie}\\\text{codpj}}}\left(\text{Ventas}\right)\right]=A,B,C
+        \end{equation*}
+
+        Para que el proveedor sea el mismo, una de las condiciones que debemos imponer es:
+        \begin{equation*}
+            \theta_1 = A.\text{codpro} = B.\text{codpro} ~\land ~A.\text{codpro} = C.\text{codpro}
+        \end{equation*}
+
+        Para que dos ventas sean distintas teniendo el mismo proveedor, o bien la pieza o bien el proyecto han de ser distintos:
+        \begin{align*}
+            \theta_{AB} &= A.\text{codpie} \neq B.\text{codpie} ~\lor ~A.\text{codpj} \neq B.\text{codpj}\\
+            \theta_{AC} &= A.\text{codpie} \neq C.\text{codpie} ~\lor ~A.\text{codpj} \neq C.\text{codpj}\\
+            \theta_{BC} &= B.\text{codpie} \neq C.\text{codpie} ~\lor ~B.\text{codpj} \neq C.\text{codpj}
+        \end{align*}
+
+        Por tanto, los proveedores que han hecho al menos tres ventas son:
+        \begin{equation*}
+            \rho\left[\pi_{A.\text{codpro}}\left[\sigma_{\theta_1 \land \theta_{AB} \land \theta_{AC} \land \theta_{BC}}(A\times B\times C)\right]\right]=D
+        \end{equation*}
+
+        Por tanto, los proveedores que han hecho una o dos ventas son:
+        \begin{equation*}
+            \pi_{\text{codpro}}(\text{Ventas}) - D
+        \end{equation*}
+
         \item Proveedores en los que todos sus suministros son de una pieza roja o de una pieza de Granada.
         \begin{equation*}
             \pi_{\text{codpro}}(\text{Ventas}) - \pi_{\text{codpro}}(\text{Ventas} \bowtie \sigma_{\text{color}\neq \text{rojo} ~\land~ \text{ciudad}\neq \text{Granada}}(\text{Piezas}))

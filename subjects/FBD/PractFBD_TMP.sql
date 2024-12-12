@@ -448,8 +448,7 @@ SELECT codpro, codpie, codpj
 SELECT codpro, codpie, codpj FROM ventas
     INTERSECT
 SELECT codpro, codpie, codpj FROM proveedor, pieza, proyecto
-    WHERE   proveedor.ciudad = 'Londres'
-        AND proveedor.ciudad = pieza.ciudad
+    WHERE   proveedor.ciudad = pieza.ciudad
         AND proveedor.ciudad = proyecto.ciudad;
 --
 
@@ -478,3 +477,39 @@ SELECT nompro, cantidad
 SELECT DISTINCT codpie FROM ventas
         NATURAL JOIN
     (SELECT * FROM proveedor WHERE ciudad='Madrid');
+    -- Otra forma de hacerlo
+SELECT DISTINCT codpie FROM ventas
+    WHERE codpro IN (SELECT codpro FROM proveedor WHERE ciudad='Madrid');
+--
+
+-- Ejercicio 3.16
+-- Encuentra la ciudad y los códigos de las piezas suministradas a cualquier proyecto por un proveedor que está en la misma ciudad donde está el proyecto.
+SELECT DISTINCT proveedor.ciudad, ventas.codpie FROM ventas
+    JOIN proveedor ON ventas.codpro = proveedor.codpro
+    JOIN proyecto ON ventas.codpj = proyecto.codpj
+    WHERE proveedor.ciudad = proyecto.ciudad;
+--
+
+-- Ejemplo 3.13
+-- Encontrar los nombres de proveedores ordenados alfabéticamente.
+SELECT nompro
+    FROM proveedor
+    ORDER BY nompro;
+--
+
+-- Ejercicio 3.17
+-- Comprobar la salida de la consulta anterior sin la cláusula ORDER BY.
+SELECT nompro
+    FROM proveedor;
+--
+
+-- Ejercicio 3.18
+-- Listar las ventas ordenadas por cantidad. Si algunas ventas coinciden en la cantidad se ordenan en función de la fecha de manera descendente.
+SELECT * FROM ventas
+    ORDER BY cantidad, fecha DESC;
+--jajajja oleee
+
+-- Ejemplo 3.14
+-- Encontrar las piezas suministradas por proveedores de Londres (sin usar el operador de reunión).
+SELECT codpie FROM ventas
+    WHERE codpro IN (SELECT codpro FROM proveedor WHERE ciudad='Londres');
