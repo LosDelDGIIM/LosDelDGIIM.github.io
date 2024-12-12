@@ -1,0 +1,446 @@
+\section{Paso de mensajes}
+
+\begin{ejercicio}\label{ej:rel3_1}
+    En un sistema distribuido, 6 procesos clientes necesitan sincronizarse de forma específica para realizar cierta tarea, de forma que dicha tarea sólo podrá ser realizada cuando tres procesos estén preparados para realizarla. Para ello, envían peticiones a un proceso controlador del recurso y esperan respuesta para poder realizar la tarea específica. El proceso controlador se encarga de asegurar la sincronización adecuada. Para ello, recibe y cuenta las peticiones que le llegan de los procesos, las dos primeras no son respondidas y producen la suspensión del proceso que envía la petición (debido a que se bloquea esperando respuesta) pero la tercera petición produce el desbloqueo de los tres procesos pendientes de respuesta. A continuación, una vez desbloqueados los tres procesos que han pedido (al recibir respuesta), inicializa la cuenta y procede cíclicamente de la misma forma sobre otras peticiones. El código de los procesos clientes aparece aquí abajo. Los clientes usan envío asíncrono seguro para realizar su petición, y esperan con una recepción síncrona antes de realizar la tarea:
+    \begin{figure}[H]
+        \centering
+        \setlength{\columnsep}{1cm}
+        \begin{multicols}{2}
+            \begin{minted}{pascal}
+                process Cliente[ i : 0..5 ];
+                begin
+                   while true do begin
+                      send(peticion, Controlador);
+                      receive(permiso, Controlador);
+                      Realiza_tarea_grupal();
+                   end
+                end
+            \end{minted}
+            \begin{minted}{pascal}
+                process Controlador;
+                begin
+                   while true do begin
+                      ...
+                   end
+                end
+            \end{minted}
+        \end{multicols}
+        \caption{Código para el Ejercicio~\ref{ej:rel3_1}.}
+        \label{fig:cod_1}
+    \end{figure}
+    Describir en pseudocódigo el comportamiento del proceso controlador, utilizando una orden de espera selectiva que permita implementar la sincronización requerida entre los procesos. Es posible utilizar una sentencia del tipo \verb|select for i=... to ...| para especificar diferentes ramas de una sentencia selectiva que comparten el mismo código dependiente del valor de un índice \verb|i|.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:rel3_2}
+    En un sistema distribuido, 3 procesos productores producen continuamente valores enteros y los envían a un proceso buffer que los almacena temporalmente en un array local de 4 celdas enteras para ir enviándoselos a un proceso consumidor. A su vez, el proceso buffer realiza lo siguiente, sirviendo de forma equitativa al resto de procesos:
+    \begin{enumerate}[label=(\alph*)]
+        \item Envía enteros al proceso consumidor siempre que su array local tenga al menos dos elementos disponibles.
+        \item Acepta envíos de los productores mientras el array no esté lleno, pero no acepta que cualquier productor pueda escribir dos veces consecutivas en el búfer.
+    \end{enumerate}
+    El código de los procesos productor y consumidor es el siguiente, asumiendo que se usan operaciones síncronas:
+    \begin{figure}[H]
+        \centering
+        \setlength{\columnsep}{1cm}
+        \begin{multicols}{2}
+            \begin{minted}{pascal}
+                process Productor [ i : 0..2 ];
+                var dato : integer;
+                begin
+                   while true do begin
+                      dato := Producir();
+                      send(dato, Buffer);
+                   end
+                end
+            \end{minted}
+            \begin{minted}{pascal}
+                process Consumidor;
+                begin
+                   while true do begin
+                      receive(dato, Buffer);
+                      Consumir(dato);
+                   end
+                end
+            \end{minted}
+        \end{multicols}
+        \caption{Código para el Ejercicio~\ref{ej:rel3_2}.}
+        \label{fig:cod_2}
+    \end{figure}
+    Describir en pseudocódigo el comportamiento del proceso \verb|Buffer|, utilizando una orden de espera selectiva que permita implementar la sincronización requerida entre los procesos:
+    \begin{minted}{pascal}
+        process Buffer;
+        begin
+           while true do begin
+              ...
+           end
+        end
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:rel3_3}
+    Suponer un proceso productor y 3 procesos consumidores que comparten un buffer acotado de tamaño \verb|B|. Cada elemento depositado por el proceso productor debe ser retirado por todos los 3 procesos consumidores para ser eliminado del buffer. Cada consumidor retirará los datos del buffer en el mismo orden en el que son depositados, aunque los diferentes consumidores pueden ir retirando los elementos a ritmo diferente unos de otros. Por ejemplo, mientras un consumidor ha retirado los elementos 1, 2 y 3, otro consumidor puede haber retirado solamente el elemento 1. De esta forma, el consumidor más rápido podría retirar hasta B elementos más que el consumidor más lento. Describir en pseudocódigo el comportamiento de un proceso que implemente el buffer de acuerdo con el esquema de interacción descrito usando una construcción de espera selectiva, así como el del proceso productor y de los procesos consumidores. Comenzar identificando qué información es necesario representar, para después resolver las cuestiones de sincronización.
+    Una posible implementación del buffer mantendría, para cada proceso consumidor, el puntero de salida y el número de elementos que quedan en el buffer por consumir:
+
+    \begin{figure}[H]
+        \centering
+    \begin{tikzpicture}
+        % Rectángulo principal
+        \draw (0, 0) rectangle (8, 1);
+
+        % Divisiones internas del rectángulo
+        \foreach \x in {1, 2, 3, 4, 5, 6, 7} {
+            \draw (\x, 0) -- (\x, 1);
+        }
+
+        % Números dentro de las cajas
+        \node at (0.5, 0.5) {1};
+        \node at (1.5, 0.5) {2};
+        \node at (2.5, 0.5) {3};
+        \node at (3.5, 0.5) {4};
+        \node at (4.5, 0.5) {5};
+
+        % Tachar el 1
+        \draw[thick] (0.2, 0.6) -- (0.8, 0.4);
+
+        % Flecha y etiquetas: out[1]
+        \draw[-Stealth] (1.5, -0.6) -- (1.5, -0.1);
+        \node[below] at (1.5, -0.6) {\verb|out[1]|};
+
+        % Flecha y etiquetas: out[3]
+        \draw[-Stealth] (3.5, -0.6) -- (3.5, -0.1);
+        \node[below] at (3.5, -0.6) {\verb|out[3]|};
+
+        % Flecha y etiquetas: out[2]
+        \draw[-Stealth] (5.5, -0.6) -- (5.5, -0.1);
+        \node[below] at (5.5, -0.6) {\verb|out[2]|};
+
+        % Flecha y etiqueta "in" por encima
+        \draw[-Stealth] (5.5, 1.6) -- (5.5, 1.1);
+        \node[above] at (5.5, 1.6) {\verb|in|};
+
+     % Texto a la derecha
+        \node[right] at (8.5, 1) {\verb|nElems[1] = 4|};
+        \node[right] at (8.5, 0.5) {\verb|nElems[2] = 0|};
+        \node[right] at (8.5, 0) {\verb|nElems[3] = 2|};
+    \end{tikzpicture}        
+    \caption{Dibujo para el Ejercicio~\ref{ej:rel3_3}.}
+    \label{fig:fig_ej_3}
+    \end{figure}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:rel3_4}
+    Una tribu de antropófagos comparte una olla en la que caben \verb|M| misioneros. Cuando algún salvaje quiere comer, se sirve directamente de la olla, a no ser que ésta esté vacía. Si la olla está vacía, el salvaje despertará al cocinero y esperará a que éste haya rellenado la olla con otros \verb|M| misioneros.
+    \begin{figure}[H]
+        \centering
+        \setlength{\columnsep}{1cm}
+        \begin{multicols}{2}
+            \begin{minted}{pascal}
+                process Salvaje[ i : 0..2 ];
+                var peticion : integer := ... ;
+                begin
+                   while true do begin
+                      { esperar a servirse un misionero }
+                      ...
+                      s_send(peticion, Olla);
+                      { comer }
+                      Comer();
+                   end
+                end
+            \end{minted}
+            \begin{minted}{pascal}
+                process Cocinero;
+                begin
+                   while true do begin
+                      { dormir esperando solicitud para rellenar }
+                      ...
+                      {confirmar que se ha rellenado la olla}
+                      ...
+                   end
+                end
+            \end{minted}
+        \end{multicols}
+        \caption{Código para el Ejercicio~\ref{ej:rel3_4}.}
+        \label{fig:cod_4}
+    \end{figure}
+    Implementar los procesos salvajes y cocinero usando paso de mensajes, usando un proceso olla que incluye una construcción de espera selectiva que sirve peticiones de los salvajes y el cocinero para mantener la sincronización requerida, teniendo en cuenta que:
+    \begin{itemize}
+        \item La solución no debe producir interbloqueo.
+        \item Los salvajes podrán comer siempre que haya comida en la olla.
+        \item Solamente se despertará al cocinero cuando la olla esté vacía.
+    \end{itemize}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:rel3_5}
+    Considerar un conjunto de \verb|N| procesos, \verb|P[i]|, ($i = 0, \ldots, N-1$) que se pasan mensajes cada uno al siguiente (y el primero al último), en forma de anillo. Cada proceso tiene un valor local almacenado en su variable local \verb|mi_valor|. Deseamos calcular la suma de los valores locales almacenados por los procesos de acuerdo aon el algoritmo que se expone a continuación.
+    \begin{figure}[H]
+        \centering
+
+        \setlength{\columnsep}{1cm}
+        \begin{multicols}{2}
+            
+        \begin{tikzpicture}[align=center]
+            % Paso 1
+            \node[draw, rectangle] (a1) at (0, 0) {mi\_valor = 1\\ suma = 1};
+            \node[draw, rectangle, right=of a1] (b1) {mi\_valor = 2\\ suma = 2};
+            \node[draw, rectangle, below=of b1] (c1) {mi\_valor = 3\\ suma = 3};
+            \node[draw, rectangle, left=of c1] (d1) {mi\_valor = 4\\ suma = 4};
+
+            \draw[-Stealth] (a1) -- (b1) node[midway, above] {0};
+            \draw[-Stealth] (b1) -- (c1) node[midway, right] {1};
+            \draw[-Stealth] (c1) -- (d1) node[midway, below] {2};
+            \draw[-Stealth] (d1) -- (a1) node[midway, left] {3};
+
+            \node[above=of a1] {Paso 1};
+
+            % Paso 3
+            \node[draw, rectangle, below=2cm of d1] (a3) {suma = 5};
+            \node[draw, rectangle, right=of a3] (b3) {suma = 4};
+            \node[draw, rectangle, below=of b3] (c3) {suma = 3};
+            \node[draw, rectangle, left=of c3] (d3) {suma = 6};
+
+            \draw[-Stealth] (a3) -- (b3) node[midway, above] {2};
+            \draw[-Stealth] (b3) -- (c3) node[midway, right] {3};
+            \draw[-Stealth] (c3) -- (d3) node[midway, below] {0};
+            \draw[-Stealth] (d3) -- (a3) node[midway, left] {1};
+
+            \node[above=of a3] {Paso 3};
+        \end{tikzpicture}
+
+        \begin{tikzpicture}[align=center]
+
+            % Paso 2
+            \node[draw, rectangle] (a2) {suma = 3};
+            \node[draw, rectangle, right=of a2] (b2) {suma = 1};
+            \node[draw, rectangle, below=of b2] (c2) {suma = 3};
+            \node[draw, rectangle, left=of c2] (d2) {suma = 5};
+
+            \draw[-Stealth] (a2) -- (b2) node[midway, above] {3};
+            \draw[-Stealth] (b2) -- (c2) node[midway, right] {0};
+            \draw[-Stealth] (c2) -- (d2) node[midway, below] {1};
+            \draw[-Stealth] (d2) -- (a2) node[midway, left] {2};
+
+            \node[above=of a2] {Paso 2};
+
+            % Paso 4
+            \node[draw, rectangle, below=3cm of d2] (a4) {suma = 6};
+            \node[draw, rectangle, right=of a4] (b4) {suma = 6};
+            \node[draw, rectangle, below=of b4] (c4) {suma = 6};
+            \node[draw, rectangle, left=of c4] (d4) {suma = 6};
+
+            \node[above=of a4] {Paso 4};
+        \end{tikzpicture}
+        \end{multicols}
+        \caption{Dibujo para el Ejercicio~\ref{ej:rel3_5}.}
+        \label{fig:fig_ej_5}
+    \end{figure}
+    Los procesos realizan una serie de iteraciones para hacer circular sus valores locales por el anillo. En la primera iteración, cada proceso envía su valor local al siguiente proceso del anillo, al mismo tiempo que recibe del proceso anterior el valor local de éste. A continuación acumula la suma de su valor local y el recibido desde el proceso anterior. En las siguientes iteraciones, cada proceso envía al siguiente proceso siguiente el valor recibido en la anterior iteración, al mismo tiempo que recibe del proceso anterior un nuevo valor. Después acumula la suma. Tras un total de \verb|N - 1| iteraciones, cada proceso conocerá la suma de todos los valores locales de los procesos. Dar una descripción en pseudocódigo de los procesos siguiendo un estilo SPMD y usando operaciones de envío y recepción síncronas:
+    \begin{minted}{pascal}
+        process P[ i : 0..N-1 ];
+        var mi_valor : integer := ...; {valor aleatorio, igual a i en la figura}
+            suma : integer := mi_valor;
+        begin
+           for j := 0 to N-1 do begin
+              ...
+           end
+        end
+
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:rel3_6}
+    Considerar un estanco en el que hay tres fumadores y un estanquero. Cada fumador continuamente lía un cigarro y se lo fuma. Para liar un cigarro, el fumador necesita tres ingredientes: tabaco, papel y cerillas. Uno de los fumadores tiene solamente papel, otro tiene solamente tabaco, y el otro tiene solamente cerillas. El estanquero tiene una cantidad infinita de los tres ingredientes.
+    \begin{itemize}
+        \item El estanquero coloca aleatoriamente dos ingredientes diferentes de los tres que se necesitan para hacer un cigarro, desbloquea al fumador que tiene el tercer ingrediente y después se bloquea. El fumador seleccionado, se puede obtener fácilmente mediante una función \verb|genera_ingredientes| que devuelve el índice (0, 1, ó 2) del fumador escogido.
+        \item El fumador desbloqueado toma los dos ingredientes del mostrador, desbloqueando al estanquero, lía un cigarro y fuma durante un tiempo.
+        \item El estanquero, una vez desbloqueado, vuelve a poner dos ingredientes aleatorios en el mostrador, y se repite el ciclo.
+    \end{itemize}
+    Describir una solución distribuida que use envío asíncrono seguro y recepción síncrona, para este problema usando un proceso Estanquero y tres procesos fumadores \verb|Fumador(i)| (con $i=0, 1, 2$).
+
+    \begin{figure}[H]
+        \centering
+        \setlength{\columnsep}{1cm}
+        \begin{multicols}{2}
+            \begin{minted}{pascal}
+                process Estanquero;
+                begin
+                   while true do begin
+                      ... 
+                   end
+                end
+            \end{minted}
+            \begin{minted}{pascal}
+                process Fumador[ i : 0..2 ];
+                begin
+                   while true do begin
+                      ...
+                   end
+                end
+            \end{minted}
+        \end{multicols}
+        \caption{Código para el Ejercicio~\ref{ej:rel3_6}.}
+        \label{fig:cod_6}
+    \end{figure}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:rel3_7}
+    En un sistema distribuido, un gran número de procesos clientes usa frecuentemente un determinado recurso y se desea que puedan usarlo simultáneamente el máximo número de procesos. Para ello, los clientes envían peticiones a un proceso controlador para usar el recurso y esperan respuesta para poder usarlo (véase el código de los procesos clientes). Cuando un cliente termina de usar el recurso, envía una solicitud para dejar de usarlo y espera respuesta del Controlador. El proceso controlador se encarga de asegurar la sincronización adecuada imponiendo una única restricción por razones supersticiosas: nunca habrá 13 procesos exactamente usando el recurso al mismo tiempo.
+    \begin{figure}[H]
+        \centering
+        \setlength{\columnsep}{1cm}
+        \begin{multicols}{2}
+            \begin{minted}{pascal}
+                process Cli[ i : 0..n ];
+                var pet_usar : integer := +1;
+                    pet_liberar : integer := -1;
+                    permiso : integer := ...;
+                begin
+                   while true do begin
+                      send(pet_usar, Controlador);
+                      receive(permiso, Controlador);
+                      Usar_recurso();
+                      send(pet_liberar, Controlador);
+                      receive(permiso, Controlador);
+                   end
+                end
+            \end{minted}
+            \begin{minted}{pascal}
+                process Controlador;
+                begin
+                   while true do begin
+                      select
+                         ...
+                      end
+                   end
+                end
+            \end{minted}
+        \end{multicols}
+        \caption{Código para el Ejercicio~\ref{ej:rel3_7}.}
+        \label{fig:cod_7}
+    \end{figure}
+    Describir en pseudocódigo el comportamiento del proceso controlador, utilizando una orden de espera selectiva que permita implementar la sincronización requerida entre los procesos. Es posible utilizar una sentencia del tipo \verb|select for i=... to ...| para especificar diferentes ramas de una sentencia selectiva que comparten el mismo código dependiente del valor de un índice \verb|i|.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:rel3_8}
+    En un sistema distribuido, tres procesos \verb|Productor| se comunican con un proceso \verb|Impresor| que se encarga de ir imprimiendo en pantalla una cadena con los datos generados por los procesos productores. Cada proceso productor (\verb|Productor[i]|, con $i=0,1,2$) genera continuamente el correspondiente entero \verb|i|, y lo envía al proceso Impresor.
+
+    El proceso Impresor se encarga de ir recibiendo los datos generados por los productores y los imprime por pantalla (usando el procedimiento \verb|imprime(entero)|) generando una cadena dígitos en la salida. No obstante, los procesos se han de sincronizar adecuadamente para que la impresión por pantalla cumpla las siguientes restricciones:
+    \begin{itemize}
+        \item Los dígitos 0 y 1 deben aceptarse por el impresor de forma alterna. Es decir, si se acepta un 0 no podrá volver a aceptarse un 0 hasta que se haya aceptado un 1, y viceversa, si se acepta un 1 no podrá volver a aceptarse un 1 hasta que se haya aceptado un 0.
+        \item El número total de dígitos 0 o 1 aceptados en un instante no puede superar el doble de número de digitos 2 ya aceptados en dicho instante.
+    \end{itemize}
+    Cuando un productor envía un digito que no se puede aceptar por el imprersor, el productor quedará bloqueado esperando completar el \verb|s_send|. El pseudocódigo de los procesos productores (\verb|Productor|) se muestra a continuación , asumiendo que se usan operaciones bloqueantes no buferizadas (síncronas):
+    \begin{figure}[H]
+        \centering
+        \setlength{\columnsep}{1cm}
+        \begin{multicols}{2}
+            \begin{minted}{pascal}
+                process Productor[ i : 0,1,2 ];
+                begin
+                   while true do begin
+                      s_send(i, Impresor);
+                   end
+                end
+            \end{minted}
+            \begin{minted}{pascal}
+                process Impresor;
+                var ...
+                begin
+                   while true do begin
+                      select
+                         ...
+                      end
+                   end
+                end
+            \end{minted}
+        \end{multicols}
+        \caption{Código para el Ejercicio~\ref{ej:rel3_8}.}
+        \label{fig:cod_8}
+    \end{figure}
+    Escribir en pseudocódigo el código del proceso \verb|Impresor|, utilizando para ello un bucle infinito con una orden de espera selectiva \verb|select| que permita implementar la sincronización requerida entre los procesos, según el esquema anterior.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:rel3_9}
+   En un sistema distribuido hay un vector de \verb|n| procesos iguales que envían con send (en un bucle infinito) valores enteros a un proceso receptor, que los imprime. Si en algún momento no hay ningún mensaje pendiente de recibir en el receptor, este proceso debe de imprimir ``no hay mensajes, duermo''; después de bloquearse durante 10 segundos (con \verb|sleep_for(10)|), antes de volver a comprobar si hay mensajes (esto podría hacerse para ahorrar energía, ya que el procesamiento de mensajes se hace en ráfagas separadas por 10 segundos). Este problema no se puede solucionar usando \verb|receive| o \verb|i_receive|. Indica a que se debe esto. Sin embargo, sí se puede hacer con select. Diseña una solución a este problema con \verb|select|:
+    \begin{figure}[H]
+       \centering
+       \setlength{\columnsep}{1cm}
+       \begin{multicols}{2}
+           \begin{minted}{pascal}
+               process Emisor[ i : 1..n ];
+               var dato : integer;
+               begin
+                  while true do begin
+                     dato := Producir();
+                     send(dato, Receptor);
+                  end
+               end
+           \end{minted}
+           \begin{minted}{pascal}
+               process Receptor();
+               var dato : integer;
+               begin
+                  while true do begin
+                     ...
+                  end
+               end
+           \end{minted}
+       \end{multicols}
+       \caption{Código para el Ejercicio~\ref{ej:rel3_9}.}
+       \label{fig:cod_9}
+   \end{figure}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:rel3_10}
+    En un sistema tenemos \verb|N| procesos emisores que envían de forma segura un único mensaje cada uno de ellos a un proceso receptor, mensaje que contiene un entero con el número de proceso emisor. El proceso receptor debe de imprimir el número del proceso emisor que inició el envío en primer lugar. Dicho emisor debe terminar, y el resto quedarse bloqueados:
+    \begin{figure}[H]
+        \centering
+        \begin{minted}[escapeinside=\#\#]{pascal}
+            process Emisor[ i : 1..N ];
+            begin
+               s_send(i, Receptor);
+            end
+
+            process Receptor;
+            var ganador : integer;
+            begin
+               { calcular ganador }
+               ...
+               print #"#El primer envio lo ha realizado: #"#, ganador;
+            end
+        \end{minted}
+        \caption{Código para el Ejercicio~\ref{ej:rel3_10}.}
+        \label{fig:cod_10}
+    \end{figure}
+    Para cada uno de los siguientes casos, describir razonadamente si es posible diseñar una solución a este problema o no lo es. En caso afirmativo, escribe una posible solución:
+    \begin{enumerate}[label=(\alph*)]
+        \item el proceso receptor usa exclusivamente recepción mediante una o varias llamadas a \verb|receive|.
+        \item el proceso receptor usa exclusivamente recepción mediante una o varias llamadas a \verb|i_receive|.
+        \item el proceso receptor usa exclusivamente recepcíon mediante una o varias instrucciones \verb|select|.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:rel3_11}
+    Supongamos que tenemos \verb|N| procesos concurrentes semejantes:
+
+    Cada proceso produce \verb|N-1| caracteres (con \verb|N-1| llamadas a la función \verb|ProduceCaracter|) y envía cada carácter a los otros \verb|N-1| procesos. Además, cada proceso debe imprimir todos los caracteres recibidos de los otros procesos (el orden en el que se escriben es indiferente).
+    \begin{itemize}
+        \item Describe razonadamente si es o no posible hacer esto usando exclusivamente \verb|s_send| para los envíos. En caso afirmativo, escribe una solución.
+        \item Escribe una solución usando \verb|send| y \verb|receive|.
+    \end{itemize}
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:rel3_12}
+    Escribe una nueva solución al Ejercicio~\ref{ej:rel3_11} en la cual se garantize que el orden en el que se imprimen los caracteres es el mismo orden en el que se inician los envíos de dichos caracteres (pista: usa \verb|select| para recibir).
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:rel3_13}
+    Supongamos de nuevo el problema anterior en el cual todos los procesos envían a todos. Ahora cada item de datos a producir y transmitir es un bloque de bytes con muchos valores (por ejemplo, es una imagen que puede tener varios megabytes de tamaño). Se dispone del tipo de datos \verb|TipoBloque| para ello, y el procedimiento \verb|ProducirBloque|, de forma que si b es una variable de tipo \verb|TipoBloque|, entonces la llamada a \verb|ProducirBloque(b)| produce y escribe una secuencia de bytes en \verb|b|. En lugar de imprimir los datos, se deben consumir con una llamada a \verb|ConsumirBloque(b)|.\\
+
+    Cada proceso se ejecuta en un ordenador, y se garantiza que hay la suficiente memoria en ese ordenador como para contener simultáneamente, al menos, hasta N bloques. Sin embargo, el sistema de paso de mensajes (SPM) podría no tener memoria suficiente como para contener los ${(N-1)}^{2}$ mensajes en tránsito simultáneos que podría llegar a haber en un momento dado con la solución anterior.\\
+
+    En estas condiciones, si el SPM agota la memoria, debe retrasar los \verb|send| dejando bloqueados los procesos y, en esas circunstancias, se podría producir interbloqueo. Para evitarlo, se pueden usar operaciones inseguras de envío, \verb|i_send|. Escribe dicha solución, usando como orden de recepción el mismo que en el problema anterior.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:rel3_14}
+    En los tres problemas anteriores, cada proceso va esperando a recibir un item de datos de cada uno de los otros procesos, consume dicho item, y después pasa a recibir del siguiente emisor (en distintos órdenes). Esto implica que un envío ya iniciado, pero pendiente, no puede completarse hasta que el receptor no haya consumido los anteriores bloques, es decir, se podría estar consumiendo mucha memoria en el SPM por mensajes en tránsito pendientes cuya recepción se ve retrasada. Escribe una solución en la cual cada proceso inicia sus envíos y recepciones y después espera a que se completen todas las recepciones antes de iniciar el primer consumo de un bloque recibido. De esta forma todos los mensajes pueden transferirse potencialmente de forma simultánea. Se debe intentar que la transimisión y las producción de bloques sean lo más simultáneas posible. Suponer que cada proceso puede almacenar como mínimo $2\cdot N$ bloques en su memoria local, y que el orden de recepción o de consumo de los bloques es indiferente.
+\end{ejercicio}
+
