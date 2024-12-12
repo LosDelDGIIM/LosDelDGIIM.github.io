@@ -164,7 +164,7 @@ void funcion_camarero( ){
 					peticion_encontrada = flag > 0;
 			} // while
 		
-			tag = (procesa_sentar)? tag_especial_sentar : tag_levantar;
+			tag = (procesa_sentar)? tag_sentar : tag_levantar;
 			id_filosofo = estado.MPI_SOURCE;
 			
 			// Comprobacion
