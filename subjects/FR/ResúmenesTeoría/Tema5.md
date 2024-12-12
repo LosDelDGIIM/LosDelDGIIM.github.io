@@ -212,10 +212,246 @@ Streaming: UDP o TCP.
 
 # DNS (Domain Name Server, Servicio de Nombres de Dominio)
 Similar al árbol de ficheros de un SO pero al revés:
-- Existe un dominio raíz que siempre está presente (se llama .) se suele omitir.
+- Existe un dominio raíz que siempre está presente (como / en linux, se llama .). Se suele omitir. 
 - Después tenemos un dominio (como un directorio), (es, com, ...), se le llama TLD: Top Level Domain 
 - Después un subdominio, como por ejemplo, ugr.
 - Después, un recurso: ejemplo, main. Esto es una máquina.
-mail.ugr.es.
+mail.ugr.es.  : mail     ugr        es   .
+                Máquina  subdominio TLD  Dominio raíz
+                
+Dependen del ICANN, Ministerio de Defensa de EEUU.
+Ver diapositiva para ver los distintos TLD.
+
+## Cómo resuelve
+Un DNS tendrá una función similar al gethostbyname(), de forma que dentro tenemos un resolutor local en cada equipo (/etc/hosts).
+Si la solución no aparece ahí, nos vamos al resolver, quien realiza la petición DNS query, que llega al servidor correspondiente.
+Servidores DNS típicos: 8.8.8.8, 8.8.4.4 (Google), 150.214.204.10 (UGR)
 
 
+Al definir una BD en un DNS, metemos un par (IP, nombre).
+Se suelen meter los Name Servers (NS) donde decimos a qué dominios se van a delegar.
+El delegado no sabe quién le ha dado esa autoridad: Si preguntamos al DNS de la ugr y no ha dado la respuesta, al único que conoce es el ., quien sabe de quién ha delegado, por lo que la respuesta baja hacia debajo para luego volver a ..   VER DIAPOSITIVA 22.
+
+Hay dos tipos de resuluciones: recursiva e iterativa.
+
+### Resolución iterativa
+Preguntamos a DNS --> Raíz --> DNS --> otro DNS --> DNS --> ... Nuestro DNS es quien realiza todas las preguntas.
+
+Se suele usar por dar menos coste a los raíces.
+
+### Resolución recursiva
+Preguntamos a DNS --> Raíz --> ... Va volviendo a través de los mismos.
+
+Más rápida.
+
+## Zonas
+Dominios consecutivos que los asignamos a un DNS.
+
+Existen distintas categorías de DNS: Autoridado o no Autoridado (SOA, Start Of Authority). Cada zona necesita un SOA.
+    Primario: Tengo los datos en mi BS o Secundario: Es autoridad pero consigue los datos por transferencia (pide copia cuando arranca).
+    Los DNS tienen cachés.
+    
+Hay 13 servidores raíz en todo el mundo y suelen ser granjas de servidores
+
+### Tipos de respuestas
+Me responden: 
+- autoridad (en mi BD):
+- Sin autoridad.
+- No conocen eso.
+
+### Organizamiento de la BD
+Se le llama BIND y el principal servidor de DNS de linux tmb es BIND (Berkley Internet Name Domain).
+Tiene un conjunto de registros, cada uno con tupla de 5 valores:
+- Nombre de registro (nombre de dominio).
+- Tiempo de vida (TTL): cuánto tiempo va a ser válido el registro.
+- Clase: IN (de Internet).
+- Tipo de registro.
+- Valor de dicho registro.
+
+#### Tipos de registro
+- SOA: Tal equipo es la autoridad de esta zona.
+- NS: Name Server.
+- A (Address): Tal nombre tiene esta IP.
+- MX (Mail Exchange): El servidor de correo electrónico se configura en el cliente, pero tenemos que saber cuál es el servidor de gmail.
+      Se pregunta a un DNS por un registro del tipo MX: gmail.com, con lo que nuestro DNS enviará un mensaje al servidor de gmail.
+- CNAME: Nombres canónicos (alias).
+- HINFO (Host Info): Preguntar por información como SO o cosas de la máquina.
+- TXT: Preguntar por información del dominio.
+
+### Formato de mensajes
+- Identificar transaccion.
+- Prametro para tipo de mensaje.
+- nº solicitudes / respuestas.
+
+DNS sobre UDP en 53, aunque también sobre TCP (MUY POCO).
+
+##### Ejemplo
+ARP Req
+ARP Rep
+DNS Req
+DNS Rep
+-------- TCP
+SYN X
+SYN Y, ACK X + 1
+ACK X + 1
+-------- TCP
+GET Página
+200 OK Página
+FIN -->
+FIN <--
+
+##### Comandos linux interesantes
+cdn = Content Delivery Network
+Red hecha por un proveedor muy grande con servidores muy cercanos a los usuarios.
+La más conocida es AKAMAI
+
+Pregunta DNS por cdn-dynmedia-1.microsoft.com:
+nslookup cdn-dynmedia-1.microsoft.com
+con el formato de la BD:
+dig cdn-dynmedia-1.microsoft.com
+
+WIFI Windows lo emula como Ethernet.
+
+# 3. Navegación Web (HTTP)
+Sobre TCP, sigue modelo cliente/servidor. 
+URL: Universal Resource Locator
+HTTP: puerto 80, HTTPS: 443.
+Esquema: VER DIAPOSITIVA, normalmente HTTP o HTTPS, aunque pueden ser otros protocolos.
+Normalmente empezaremos por dominio pero podemos decir usuario@correo (user at correo).
+
+\# segmento: inicio de la pagina, final, ..., tiene que estar definido en el paquete HTML, para ir a trozos de la misma página.
+
+## Páginas web estáticas / dinámicas
+Si empieza por www, son estáticas: HTML y ya.
+Si es otro, como wpd, son dinámicas: 
+    Permiten BD, MYSQL, ... 
+    Scripts: Se ejecutan en cliente: JavaScript.
+             Se ejecutan en servidor: PHP.
+             
+## Características HTTP
+Orientado a conexión, fiable, puerto 80 (configurable). 
+
+Ejemplo clásico de aplicación sin estado (las primeras versiones): Pedimos una url, se devuelve dicha url y ya.
+Se vió que hay situaciones donde queremos que cambie. Usamos cookies.
+
+Puede ser persistente o no persistente:
+- No persistente (HTTP/1.0): Utiliza distintas conexiones TCP para cada objeto (lo que añade un syn, (+2), ..., fin (+2) para cada objeto).
+- Persistente (>= HTTP/1.1): Utiliza la misma conexión TCP para cada objeto.
+
+### Peticiones / Métodos (Peticiones si hablamos de aplicaciones)
+1. GET recurso version_http servidor
+   user-agent: navegador que usamos
+   Accept-language: lenguaje preferido
+
+Muchas aplicaciones suelen tener un codigo XYZ mas un mensaje explicativo.
+
+2. Respuesta típica:
+   version_http XYZ mensaje_explicativo
+   Server: Servidor que me lo devuelve
+   Last-Modified: Últ. vez que se modificó la página
+
+Protocolo en banda.
+
+#### Métodos
+- GET: Pide página y se devuelve.
+- HEAD: Igual que GET pero solo devuelve cabecera (equipo muy sencillo y si interesa descargar).
+- POST: Mandar formularios.
+- PUT: Sobreescribir página en el servidor.
+- DELETE: Borrarla.
+
+#### Códigos de respuesta
+XYZ:
+1YZ, 2YZ: éxito
+4YZ, 5YZ: errores
+3YZ: incompleto: se ha iniciado una transacción que está en curso.
+
+#### Cabeceras típicas
+- Content-Type: MIME (Multipurouse Internet Mail Extensions), indica tipo de contenido.
+- Content-Length: Longitud.
+- Content-Encoding: Codificación.
+- Date: Fecha de la operación.
+
+Para peticiones:
+- Accept: Para indicar lo que aceptamos (HTML, video, ...).
+- Authorization.
+- From.
+- If-Modified-Since: Descargar página solo si ha sido modificada desde una fecha.
+- Referer: Qué página es la que me ha referenciado a través de un hipervínculo.
+- User-agent: Tipo y versión de navegador.
+
+Para respuestas:
+- Allow: Para decir qué permito (por ejemplo, put y delete no).
+- Expires: en cache
+- Last-modified.
+
+### Cachés
+Referido a servidores caché, servidores que se ponen en medio, con objetivo de reducir retardo. Son típicos de los ISP (Internet Service Provider).
+Pedimos cosas al caché, si tiene la página la devuelve y si no la pide al servidor y se la guarda.
+Aumenta bastante el rendimiento de HTTP.
+
+- Cache-control.
+- Expires.
+- Last-modified.
+
+Sirven para contenido estático.
+Aunque tengamos páginas dinámicas, la gran parte del contenido es estático.
+
+### Cookies
+Ficheros concretos en un directorio del equipo.
+No se debe permitir que las páginas web accedan a los archivos de una máquina.
+Permitimos que ciertos ficheros sí sean modificables en un directorio específico, ficheros del estilo: variable-valor.
+
+Surgió inicialmente para las compras electrónicas, para dar estados a un protocolo sin estados.
+
+### Acceso restringido
+Pedimos página web y devuelve 401: no autorizado.
+En la siguiente enviamos los datos para la autorización.
+
+# 4. Correo Electrónico
+MUA (Mail User Agent), aplicación de mail/correo de usuario. Somos fulanito@ugr.es
+    Se puede elegir TLS, SSl (si ninguno, texto plano); correo de entrada y correo de salida.
+    
+Mi cliente solo habla con su servidor (ugr.es), MTA (Mail Transfer Agent).
+
+Desde el MUA al MTA usamos SMTP (Simple Mail Transfer Protocol), siempre el mismo.
+Para descargar correos del MTA usamos POP (Post Office Protocol) o IMAP (Internet Mail Application Protocol). Aunque puedan hacer cosas muy parecidas, la filosofia es distinta:
+- POP: borra correos del servidor y los descarga.
+- IMPA: trabaja con los correos en el servidor. Nos permite conectarnos desde distintos dispositivos.
+    Los servidores te dan una cuota (una cantidad máxima de correos).
+
+
+Ventajas de servidores de correo: cliente no encendido siempre, sino servidor.
+
+## Funcionamiento básico
+Si enviamos un correo a otro usuario, este tendrá un MUA: menganito@gmail.com, que tendrá su MTA gmail.com
+Cuando mandamos un correo por SMTP, el servidor ve que es menganito@gmail.com y hace peticion MX preguntando por servidor de gmail.com, devolviendo cuál es.
+Se conecta a dicho equipo, gmail.com. Entre servidores SIEMPRE se usa SMTP, porque se mandan correos y no descargan correos.
+
+
+Son protocolos en modo texto: la información que mandan es textual.
+Se puede cambiar el emisor, aunque algunas aplicaciones permiten ver el paquete original, con el emisor real.
+
+## SMTP (Simple Mail Transfer Protocol)
+Sobre TCP.
+Parecido a HTTP, manda códigos de error, XYZ.
+Es dentro de banda (mismo puerto para msgs de control y descargar correos).
+Sí tiene estados.
+
+- Primero un saludo.
+- Transmitir mensajes.
+- Cierra.
+
+Van a ser de texto, aunque también se permite mandar imágenes, texto, otros correos, ... MIME.
+VER DIAPOSITIVA para funcionamiento de envío de correo electrónico.
+
+## POP, IMAP
+Sobre TCP
+
+### MIME (Multiporpuse Internet Mail Protocol Extensions)
+Permite enviar cosas que no sean solo texto.
+- MIME-Version.
+- Content-Transfer-Encoding.
+- Content-Type.
+
+External-body: si se ejecuta puede contener virus, nos pregunta antes de descargar (mandar información al servidor).
+Multipart: Un mismo contenido trabajan juntos.
