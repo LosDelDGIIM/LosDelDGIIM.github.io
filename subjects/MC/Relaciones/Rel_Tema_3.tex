@@ -2183,7 +2183,97 @@
                 \item Si $|u|\geq 5$ entonces el número de 1's es par.
                 \item $u$ tiene al menos un símbolo 1.
             \end{itemize}
-            % // TODO: Gramática regular para L1
+            
+            
+            Sean los siguientes estados:
+            \begin{itemize}
+                \item $q_0$: Estado inicial.
+                \item $q_{iNV}$ para $i\in \{1,\dots,4\}$: Si $u$ es la cadena leída, tenemos que $|u|=i$ pero $n_1(u)=0$, por lo que no es válido.
+                \item $q_{jI}$ para $j\in \{1,\dots,4\}$: Si $u$ es la cadena leída, tenemos que $|u|=j$ y $n_1(u)$ es impar. Son estados finales.
+                \item $q_I$: Si $u$ es la cadena leída, tenemos que $|u|\geq 5$ y $n_1(u)$ es impar.
+                \item $q_{jP}$ para $j\in \{1,\dots,4\}$: Si $u$ es la cadena leída, tenemos que $|u|=j$ y $n_1(u)$ es par. Además, $n_1(u)>0$.
+                \item $q_P$: Si $u$ es la cadena leída, tenemos que $|u|\geq 5$ y $n_1(u)$ es par. Además, $n_1(u)>0$. Es un estado final.
+            \end{itemize}
+
+            El AFD asociado a $L_1$ es el de la Figura~\ref{fig:1.3.23-L1}.
+            \begin{figure}
+                \centering
+                \begin{tikzpicture}[node distance=2.5cm]
+                    \node[state, initial] (q0) {$q_0$};
+                    \node[state, above right of=q0] (q1NV) {$q_{1NV}$};
+                    \node[state, below right of=q0, accepting] (q1I) {$q_{1I}$};
+                    \node[state, right of=q1NV] (q2NV) {$q_{2NV}$};
+                    \node[state, right of=q1I, accepting] (q2I) {$q_{2I}$};
+                    \node[state, right of=q2NV] (q3NV) {$q_{3NV}$};
+                    \node[state, right of=q2I, accepting] (q3I) {$q_{3I}$};
+                    \node[state, right of=q3NV] (q4NV) {$q_{4NV}$};
+                    \node[state, right of=q3I, accepting] (q4I) {$q_{4I}$};
+                    \node[state, right of=q4I] (qI) {$q_{I}$};
+                    \node[state, below of=q2I] (q2P) {$q_{2P}$};
+                    \node[state, below of=q3I] (q3P) {$q_{3P}$};
+                    \node[state, below of=q4I] (q4P) {$q_{4P}$};
+                    \node[state, below of=qI, accepting] (qP) {$q_{P}$};
+
+                    \draw   (q0) edge[above] node{0} (q1NV)
+                            (q0) edge[below] node{1} (q1I)
+                            (q1NV) edge[above] node{0} (q2NV)
+                            (q1NV) edge[above right] node{1} (q2I)
+                            (q2NV) edge[above] node{0} (q3NV)
+                            (q2NV) edge[above right] node{1} (q3I)
+                            (q3NV) edge[above] node{0} (q4NV)
+                            (q3NV) edge[above right] node{1} (q4I)
+                            (q4NV) edge[loop above] node{0} (q4NV)
+                            (q4NV) edge[above right] node{1} (qI)
+                            (qI) edge[loop above] node{0} (qI)
+                            (qI) edge[left, bend right] node{1} (qP)
+                            (qP) edge[loop below] node{0} (qP)
+                            (qP) edge[right, bend right] node{1} (qI);
+
+                    \draw[blue]
+                            (q1I) edge[above] node{0} (q2I)
+                            (q1I) edge[below] node[pos=0.2]{1} (q2P)
+                            (q2I) edge[above] node{0} (q3I)
+                            (q2I) edge[below] node[pos=0.2]{1} (q3P)
+                            (q3I) edge[above] node{0} (q4I)
+                            (q3I) edge[below] node[pos=0.2]{1} (q4P)
+                            (q4I) edge[above] node{0} (qI)
+                            (q4I) edge[below] node[pos=0.2]{1} (qP);
+                    
+                    \draw[red] 
+                            (q2P) edge[above] node{0} (q3P)
+                            (q2P) edge[above] node[pos=0.2]{1} (q3I)
+                            (q3P) edge[above] node{0} (q4P)
+                            (q3P) edge[above] node[pos=0.2]{1} (q4I)
+                            (q4P) edge[above] node{1} (qI)
+                            (q4P) edge[above] node[pos=0.2]{0} (qP);
+
+                \end{tikzpicture}
+                \caption{AFD asociado a $L_1$ del Ejercicio~\ref{ej:1.3.23}.}
+                \label{fig:1.3.23-L1}
+            \end{figure}
+
+            Si el AFD de la Figura~\ref{fig:1.3.23-L1} es $M=(Q,\{0,1\},\delta,q_0,F)$, entonces la gramática pedida es $G=(Q,\{0,1\},P,q_0)$, donde $P$ es:
+            \begin{align*}
+                P=\left\{
+                    \begin{aligned}
+                        q_0 & \to 0q_{1NV} \mid 1q_{1I}, \\
+                        q_{1NV} & \to 0q_{2NV} \mid 1q_{2I}, \\
+                        q_{2NV} & \to 0q_{3NV} \mid 1q_{3I}, \\
+                        q_{3NV} & \to 0q_{4NV} \mid 1q_{4I}, \\
+                        q_{4NV} & \to 0q_{4NV} \mid 1q_{I}, \\
+                        q_{I} & \to 0q_{I} \mid 1q_{P}, \\
+                        q_{P} & \to 0q_{P} \mid 1q_{I}\mid \veps, \\
+                        q_{1I} & \to 0q_{2I} \mid 1q_{2P}\mid \veps, \\
+                        q_{2I} & \to 0q_{3I} \mid 1q_{3P}\mid \veps, \\
+                        q_{3I} & \to 0q_{4I} \mid 1q_{4P}\mid \veps, \\
+                        q_{4I} & \to 0q_{I} \mid 1q_{P}\mid \veps, \\
+                        q_{2P} & \to 0q_{3P} \mid 1q_{3I}, \\
+                        q_{3P} & \to 0q_{4P} \mid 1q_{4I}, \\
+                        q_{4P} & \to 0q_{P} \mid 1q_{I}
+                    \end{aligned}
+                \right.
+            \end{align*}
+
         \item \label{ej:1.3.23-2}
         Construye un autómata que reconozca el lenguaje $L_2$ dado por:
             \begin{equation*}
@@ -2225,7 +2315,7 @@
 
         \item Diseña el AFD mínimo que reconozca el lenguaje $(L_1 \cup L_2)$.
         
-        % // TODO: Union de L1 y L2
+        Razonando, llegamos a que $L_2\subset L_1$. Por tanto, $L_1\cup L_2=L_1$, por lo que el AFD minimal asociado a $L_1\cup L_2$ es el de la Figura~\ref{fig:1.3.23-L1}.
     \end{enumerate}
 \end{ejercicio}
 
@@ -3408,7 +3498,7 @@
     \end{align*}
     Demostrar que si $L$ es regular, entonces $L_{\nicefrac{1}{2}}$ también lo es, pero que $L_{\nicefrac{-1}{3}}$ no es necesariamente regular.
 
-    % // TODO: Hacer
+    % // TODO: Hacer JJ
 \end{ejercicio}
 
 \subsection{Preguntas Tipo Test}
@@ -3482,18 +3572,18 @@ Se pide discutir la veracidad o falsedad de las siguientes afirmaciones:
 
     \item Si en un autómata finito no hay estados distinguibles de nivel 2, ya no puede haber estados distinguibles de nivel 4.\\
 
-        % // TODO: Hacer (no lo sé)
+        % // TODO: Hacer JJ (no lo sé)
     \item Todo lenguaje generado por una gramática lineal por la derecha es también generado por una gramática lineal por la izquierda.\\
         
         Verdadero, se vió en el Tema 2.
     \item Un autómata finito determinista sin estados inaccesibles ni indistinguibles es minimal.\\
 
         Verdadero, gracias a un resultado visto en teoría.
-    \item Si $L$ es una lenguaje sobre el alfabeto $A$, entonces $CAB(L)$ es siempre igual al cociente $L/A^\ast$.\\
+    \item Si $L$ es una lenguaje sobre el alfabeto $A$, entonces $\operatorname{CAB}(L)$ es siempre igual al cociente $L/A^\ast$.\\
 
-        Verdadero, por definición de $CAB(L)$ y de $L/A^\ast$:
+        Verdadero, por definición de $\operatorname{CAB}(L)$ y de $L/A^\ast$:
         \begin{equation*}
-            L/A^\ast = \{u\in A^\ast \mid \exists v\in A^\ast \text{\ verificando\ } uv \in L\} = CAB(L)
+            L/A^\ast = \{u\in A^\ast \mid \exists v\in A^\ast \text{\ verificando\ } uv \in L\} = \operatorname{CAB}(L)
         \end{equation*}
     \item El lenguaje de las palabras sobre $\{0,1\}$ en las que la diferencia entre el número de ceros y unos es impar es regular.\\
 
@@ -3543,7 +3633,7 @@ Se pide discutir la veracidad o falsedad de las siguientes afirmaciones:
         Falso, sí puede serlo.
     \item El conjunto de las palabras $\{u0011v^{-1} \mid u,v\in {\{0,1\}}^{\ast}\}$ es regular.\\
 
-        Verdadero, para verlo más claro:
+        Verdadero, para verlo más claro (usando que puede $u\neq v$):
         \begin{equation*}
             \{u0011v^{-1}\mid u,v\in {\{0,1\}}^{\ast}\} = \{u0011w \mid u,w\in {\{0,1\}}^{\ast}\}
         \end{equation*}
@@ -3564,7 +3654,10 @@ Se pide discutir la veracidad o falsedad de las siguientes afirmaciones:
 
     \item El conjunto de los números en binario que son múltiplos de 7 es regular.\\
 
-        Verdadero, ya que podemos constuir un autómata finito determinista que reconozca dicho lenguaje, como vemos en la Figura~\ref{fig:tipo_test22}, donde hemos hecho uso de la tabla de estados~\ref{tab:estados}:
+        Verdadero, como vimos en el Ejercicio~\ref{ej:1.1.17}.\ref{ej:1.1.17.b} y en el AFD de la Figura~\ref{fig:1.1.17.b}.
+        
+        \begin{comment}
+        ya que podemos constuir un autómata finito determinista que reconozca dicho lenguaje, como vemos en la Figura~\ref{fig:tipo_test22}, donde hemos hecho uso de la tabla de estados~\ref{tab:estados}:
         \begin{table}[H]
         \centering
         \begin{tabular}{c|c|c|c|c|c|c}
@@ -3610,6 +3703,7 @@ Se pide discutir la veracidad o falsedad de las siguientes afirmaciones:
            \caption{Autómata finito determinista para la pregunta 22.}
            \label{fig:tipo_test22}
        \end{figure}
+       \end{comment}
     \item Hay situaciones en las que los estados inaccesibles de un AFD cumplen una función específica.\\
 
         Falso, no se puede llegar nunca a un estado inaccesible, por lo que son irrelevantes en el reconocimiento de una palabra.
@@ -3646,13 +3740,15 @@ Se pide discutir la veracidad o falsedad de las siguientes afirmaciones:
         Falso, el lenguaje puede verificar la condición del lema de bombeo y no ser regular.
     \item Si $f$ es un homomorfismo entre alfabetos $f:A_1^\ast\rightarrow A_2^\ast$ y $L\subseteq A_1^\ast$ no es regular, podemos concluir que $f(L)$ tampoco es regular.\\
 
-        % TODO: this
+        % // TODO: this
     \item Todo lenguaje que cumple la condición del lema de bombeo para lenguajes regulares puede ser aceptado por un autómata finito no determinista.\\
 
         Falso, anteriormente comentamos que un lenguaje puede verificar la condición del lema de bombeo y no ser regular.
     \item No existe algoritmo para saber si el lenguaje generado por una gramática regular es finito.\\
+    
+        Falso, sí existe. En primer lugar, hemos de eliminar los estados inaccesibles y los estados desde los que no se puede llegar a un estado final (estados de error). Una vez hecho esto, si el autómata finito determinista resultante tiene ciclos, entonces el lenguaje es infinito, ya que podemos ir dando vueltas por el ciclo y generando palabras infinitas. Si no hay ciclos, entonces el lenguaje es finito.
 
-        % TODO: this
+        % // TODO: Hecha por Arturo, Revisar
     \item Dos autómatas finitos deterministas con diferente número de estados y que aceptan el lenguaje vacío tienen el mismo número de estados finales.\\
 
         Falso, solo sería cierto si todos los estados son alcanzables, ya que los autómatas de las Figuras~\ref{fig:tipo_test32_1} y~\ref{fig:tipo_test32_2} ambos aceptan el lenguaje vacío y el número de estados finales es distinto.
@@ -3684,21 +3780,21 @@ Se pide discutir la veracidad o falsedad de las siguientes afirmaciones:
             A^\ast / L = \{u\in A^\ast \mid \exists v\in L \text{\ verificando\ } uv\in A^\ast\}
         \end{equation*}
         \begin{description}
-            \item [$\subseteq$] Es trivial, por ser $A^\ast / L$ un lenguaje.
-            \item [$\supseteq$] Sea $u\in A^\ast$, como $L\neq \emptyset $, existirá $v\in L$, con lo que $uv\in A^\ast$ por ser el conjunto de todas las palabras, con lo que $u\in A^\ast/L$.
+            \item [$\subseteq$)] Es trivial, por ser $A^\ast / L$ un lenguaje.
+            \item [$\supseteq$)] Sea $u\in A^\ast$, como $L\neq \emptyset $, existirá $v\in L$, con lo que $uv\in A^\ast$ por ser el conjunto de todas las palabras, con lo que $u\in A^\ast/L$.
         \end{description}
     \item Si $R^k_{ij}$ son los lenguajes que se usan en la construcción de una expresión regular a partir de un autómata finito, siempre se verifica que $R^{i-1}_{ij}R^{j-1}_{jk}\subseteq R^{j}_{ik}$.\\
 
-        % TODO: Hacer
+        % // TODO: Hacer
     \item El lema de bombeo es útil para demostrar que la intersección de dos lenguajes regulares no es regular.\\
 
-        % TODO: Hacer
+        % // TODO: Hacer
     \item Existe un algoritmo para determinar si el lenguaje generado por una gramática regular es infinito.\\
 
-        % TODO: Hacer
+        % // TODO: Hacer
     \item Existe un algoritmo para determinar si el lenguaje generado por una gramática regular es finito o infinito.\\
 
-        % TODO: Hacer
+        % // TODO: Hacer
     \item La intersección de dos lenguajes regulares da lugar a un lenguaje independiente del contexto.\\
 
         Verdadero, ya que la intersección de dos lenguajes regulares da lugar a un lenguaje regular (tal y como veíamos en la pregunta 3), que a su vez es independiente del contexto.
@@ -3714,7 +3810,7 @@ Se pide discutir la veracidad o falsedad de las siguientes afirmaciones:
         Verdadero, tal y como vimos en teoría.
     \item En un autómata finito determinista, si no hay dos estados que sean indistinguibles entre sí, entonces el autómata es minimal.\\
 
-        Falso, salvo si el autómata no tiene estados inalcanzable, en cuyo caso es verdadero.
+        Falso, salvo si el autómata no tiene estados inalcanzables, en cuyo caso es verdadero.
     \item Dada una gramática lineal por la derecha, siempre existe otra gramática lineal por la izquierda que acepte el mismo lenguaje.\\
 
         Verdadero, tal y como vimos en la teoría del Tema 2.
@@ -3726,7 +3822,7 @@ Se pide discutir la veracidad o falsedad de las siguientes afirmaciones:
         Verdadero, ya que la propiedad del lema de bombeo es una condición necesaria, no suficiente.
     \item Existe un algoritmo para determinar si los lenguajes generados por dos gramáticas regulares son iguales o no.\\
 
-        Verdadero. En teoría hemos visto que si tenemos dos lenguajes, $L_1$ y $L_2$ generados por dos autómatas finitos de terministas, $M_1$ y $M_2$ (respectivamente), entonces podemos construir el autómata finito para el lenguaje $L_1\setminus L_2$, y aplicarle el algoritmo de si el lenguaje que genera es vacío (en cuyo caso, $L_1=L_2$). Además, como tenemos un algoritmo para pasar de gramáticas regulares a autómatas, podemos mecanizar todo este proceso.
+        Verdadero. En teoría hemos visto que si tenemos dos lenguajes, $L_1$ y $L_2$ generados por dos autómatas finitos de terministas, $M_1$ y $M_2$ (respectivamente), entonces podemos construir el autómata finito para el lenguaje diferencia simétrica $L_1 \ \Delta \ L_2=(L_1\setminus L_2)\cup (L_2\setminus L_1)$, y aplicarle el algoritmo de si el lenguaje que genera es vacío (en cuyo caso, $L_1=L_2$). Además, como tenemos un algoritmo para pasar de gramáticas regulares a autómatas, podemos mecanizar todo este proceso.
     \item El conjunto de cadenas aceptado por un autómata finito no determinista con transiciones nulas no puede ser generado por una gramática independiente del contexto.\\
 
         Falso, el conjunto de cadenas acpetadas por un autómata finito no determinista con transiciones nulas es un lenguaje regular, que puede ser generado por una gramática regular por la derecha, que a su vez es independiente del contexto.
@@ -3759,10 +3855,10 @@ Se pide discutir la veracidad o falsedad de las siguientes afirmaciones:
         Verdadero, tal y como comentamos anteriormente en la pregunta 18.
     \item Existe un algoritmo para determinar si el lenguaje generado por una gramática regular es infinito.\\
 
-        % TODO: Hacer
-    \item Para cada autómata finito no determinista $M$ existe una gramática independiente de contexto $G$ tal que $L(M) = L(G)$.\\
+        Verdadero, como razonamos en la pregunta 31.
+    \item Para cada autómata finito no determinista $M$ existe una gramática independiente de contexto $G$ tal que $\cc{L}(M) = \cc{L}(G)$.\\
 
-        Verdadero, ya que sabemos que para cada autómata finito no determinista $M$ existe una gramática regular por la derecha $G$ tal que $L(M) = L(G)$ y sabemos que las gramáticas regulares por la derecha son a su vez independientes del contexto.
+        Verdadero, ya que sabemos que para cada autómata finito no determinista $M$ existe una gramática regular por la derecha $G$ tal que $\cc{L}(M) = \cc{L}(G)$ y sabemos que las gramáticas regulares por la derecha son a su vez independientes del contexto.
     \item El lenguaje formado por las cadenas sobre $\{0,1\}$ que tienen un número impar de 0 y un número par de 1 no es regular.\\
 
         Falso, ya que podemos construir un autómata finito determinista que acepte el lenguaje, tal y como vemos en la Figura~\ref{fig:tipo_test58}.
@@ -3793,7 +3889,7 @@ Se pide discutir la veracidad o falsedad de las siguientes afirmaciones:
            \item $q_3$, la palabra tiene un número impar de ceros y de unos.
        \end{itemize}
        Elegimos como estado inicial $q_0$ ya que la palabra $\veps$ tiene un número par de ceros y de unos.
-    \item Si $L$ es un lenguaje regular, entonces la cabecera de $L$ ($CAB(L)$) es siempre regular.\\
+    \item Si $L$ es un lenguaje regular, entonces la cabecera de $L$ ($\operatorname{CAB}(L)$) es siempre regular.\\
 
         Verdadero, si $L$ es un lenguaje regular, existirá un autómata finito determinista $M=(Q,A,\delta,q_0,F)$ que reconozca dicho lenguaje. Consideramos ahora el autómata $M'=(Q,A,\delta,q_0,F')$, un autómata igual que $M$ con la diferencia de que $q\in F'$ si y solo si existen dos palabras $u,v\in A^\ast$ tales que:
         \begin{equation*}
