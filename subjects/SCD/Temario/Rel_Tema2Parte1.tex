@@ -214,6 +214,106 @@
         \item[(i)] Demostrar que el algoritmo anterior solo permite a un proceso acceder a la sección crítica en cualquier configuración (es decir, independientemente de los valores que pueden alcanzar las variables $s[i]$ durante la ejecución del protocolo).
         \item[(ii)] Demostrar también que cada uno de los procesos $p[i]$ conseguirá entrar en la sección crítica ``infinitamente a menudo''.
     \end{enumerate}
+    Para probar los dos apartados, introducimos primero una notación que nos ayudará a realizar la demostración:
+    \begin{definicion} Sea $P_k$ un proceso (con $k \in \{0,\ldots,n-1\}$), diremos que es distinguido si:
+        \begin{align*}
+            s[i] &= j \qquad \forall i \in \{0,\ldots, k-1\} \\
+            s[i] &= (j+1) \mod 2 \qquad \forall i \in \{k,\ldots,n-1\}
+        \end{align*}
+        Para cierto $j \in \{0,1\}$.
+    \end{definicion}
+    De esta forma, con la configuración inicial ($s[i] = 0$ $\forall i \in \{1,\ldots,n-1\}$), tenemos que el proceso $P_0$ y solo él es distinguido. Notemos que si dos procesos son distinguidos al mismo tiempo entonces son iguales, por lo que solo puede haber como máximo un proceso distinguido a la vez.
+
+    \begin{prop}
+        Si el proceso $P_k$ con $k \in \{0,\ldots,n-2\}$ es distinguido y pasa a ejecutar la sección crítica, tras modificar el valor $s[k]$, el proceso $P_{i+1}$ será distinguido.
+
+        \noindent
+        Análogamente, si el proceso $P_{n-1}$ es distinguido, tras ejecutar la sección crítica y modificar $s[n-1]$, el proceso $P_0$ será distinguido.
+        \begin{proof} Demostremos los dos enunciados:
+            \begin{itemize}
+                \item Supuesto que el proceso $P_k$ con $k \in \{0,\ldots,n-2\}$ es distinguido, entonces estaremos en un estado del programa de forma que:
+                    \begin{align*}
+                        s[i] &= j \qquad \forall i \in \{1,\ldots,k-1\} \\
+                        s[i] &= (j+1)\mod 2 \qquad \forall i \in \{k,\ldots,n-1\} 
+                    \end{align*}
+                    Para cierto $j\in \{0,1\}$. Notemos que esta hipótesis no es incompatible con que $P_k$ ejecuta la sección crítica, ya que:
+                    \begin{equation*}
+                        s[k] = (j+1)\mod 2 \neq j = s[k-1]
+                    \end{equation*}
+                    Tras su ejecución, el proceso realizará la instrucción:
+                    \begin{description}
+                        \item [Supuesto que $k=0$:]~\\
+                            \verb|s[0] = (s[0]+1) mod 2|, con lo que:
+                            \begin{multline*}
+                                \left\{\bigwedge_{i=0}^{n-1}s[i] = (j+1)\mod 2\right\}\ \texttt{s[0] = (s[0]+1) mod 2;}\\ \left\{\left(\bigwedge_{i=1}^{n-1}s[i] = (j+1)\mod 2\right)\land s[0] = j\right\}
+                            \end{multline*}
+                            Por lo que ahora el proceso $P_{k+1} = P_1$ es distinguido.
+                        \item [Supuesto que $k\neq 0$:]~\\
+                            \verb|s[k] = s[k-1]|, por lo que en este caso:
+                            \begin{multline*}
+                                \left\{\left(\bigwedge_{i=0}^{k-1}s[i] = j\right)\land\left(\bigwedge_{i=k}^{n-1}s[i] = (j+1)\mod 2\right)\right\}\ \texttt{s[k] = s[k-1];}\\ 
+                                \left\{\left(\bigwedge_{i=0}^{k}s[i] = j\right)\land\left(\bigwedge_{i=k+1}^{n-1}s[i] = (j+1)\mod 2\right)\right\}
+                            \end{multline*}
+                            Por lo que ahora el proceso $P_{k+1}$ es distinguido.
+                    \end{description}
+                \item Supongamos que el proceso $P_{n-1}$ es distinguido, con lo que tendremos que $s[i] = j$ $\forall i \in \{0,\ldots,n-2\}$ para cierto $j \in \{0,1\}$ y que \newline $s[n-1] = (j+1)\mod 2$. 
+
+                    Notemos que la hipótesis de que $P_{n-1}$ ejecuta la sección crítica es compatible con ser distinguido, ya que:
+                    \begin{equation*}
+                        s[n-1] = (j+1)\mod 2 \neq j = s[n-2]
+                    \end{equation*}
+                    Después de que $P_{n-1}$ ejecute la sección crítica, realizará la asignación \newline \verb|s[n-1] = s[n-2]|, con lo que:
+                    \begin{multline*}
+                        \left\{\left(\bigwedge_{i=0}^{n-2}s[i] = j\right) \land s[n-1] = (j+1)\mod 2\right\}\ \texttt{s[n-1] = s[n-2];}\\ \left\{\bigwedge_{i=0}^{n-1} s[i] = j\right\}
+                    \end{multline*}
+                    Y tenemos que $P_0$ es distinguido.
+            \end{itemize}
+        \end{proof}
+    \end{prop}
+
+    Notemos que en dicha proposición también hemos probado que si un proceso es distinguido, entonces cumplirá la condición para poder entrar a la sección crítica.\\
+
+    Ahora estamos en las condiciones de demostrar los dos apartados:
+    \begin{enumerate}
+        \item[(i)] Demostraremos que el algoritmo de entrada a la sección crítica solo permite el paso a un proceso:
+            \begin{itemize}
+                \item Inicialmente, como $s[i] = 0$ $\forall i \in \{0,\ldots,n-1\}$, entonces el proceso $P_0$ es distinguido, con lo que podrá entrar en la sección crítica. Veamos que ningún otro podrá entrar a la vez, ya que si $k \in \{1,\ldots,n-1\}$, $P_k$ no podrá entrar en sección crítica, ya que:
+                    \begin{equation*}
+                        s[k] = 0 = 0 = s[k-1]
+                    \end{equation*}
+                    Con lo que inicialmente $P_0$ es el único proceso que puede entrar en la sección crítica.
+                \item Supuesto que $P_k$ con $k \in \{0,\ldots,n-1\}$ es un proceso distinguido, entonces tendremos por definición que:
+                \begin{align*}
+                    s[i] &= j \qquad \forall i \in \{0,\ldots, k-1\} \\
+                    s[i] &= (j+1) \mod 2 \qquad \forall i \in \{k,\ldots,n-1\}
+                \end{align*}
+                Con lo que podrá entrar en la sección crítica. Sea $h \in \{0,\ldots,n-1\}\setminus \{k\}$:
+                \begin{itemize}
+                    \item Si $h=0$ (entonces teníamos $k> 0$), tenemos que:
+                        \begin{equation*}
+                            s[0] = j \neq (j+1) \mod 2 = s[n-1]
+                        \end{equation*}
+                    \item Si $0\neq h<k$, tenemos que:
+                        \begin{equation*}
+                            s[h] = j = j = s[h]
+                        \end{equation*}
+                    \item Si $0\neq h>k$, tenemos:
+                        \begin{equation*}
+                            s[h] = (j+1)\mod 2 = (j+1)\mod 2 = s[h]
+                        \end{equation*}
+                \end{itemize}
+                En cualquier caso, $P_h$ no puede entrar en la sección crítica, con lo que $P_k$ es el único proceso que puede entrar en sección crítica.
+                \item Supuesto que no hay ningún proceso distinguido, llegamos a contradicción con la Proposición anterior, ya que inicialmente $P_0$ es distinguido y tras cada ejecución de la sección crítica tenemos que esta propiedad cicla entre los procesos, con lo que siempre habrá un proceso distinguido.
+            \end{itemize}
+        \item[(ii)] Gracias a la anterior Proposición, sabemos que si nos fijamos en un proceso $P_i$ en el momento en el que el proceso $P_k$ es distinguido:
+            \begin{itemize}
+                \item Si $i < k$, dentro de $n-k+i$ turnos, el proceso $P_i$ será distinguido.
+                \item Si $i > k$, dentro de $k-i$ turnos, el proceso $P_i$ será distinguido.
+                \item Si $k = i$, tras la ejecución de la sección crítica por parte de $P_i$, pasarán $n$ turnos para volver a ser un proceso distinguido.
+            \end{itemize}
+            Por tanto, si todos los $n$ procesos intentan a la vez acceder a la sección crítica, la espera por parte de cada proceso para volver a entrar en ella será de como máximo $n$ turnos.
+    \end{enumerate}
+
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:2.6}
