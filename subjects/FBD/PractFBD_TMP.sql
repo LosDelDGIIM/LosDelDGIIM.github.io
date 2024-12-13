@@ -388,7 +388,10 @@ SELECT ciudad FROM pieza WHERE codpie='P1';
 
 -- Ejercicio 3.7
 -- Resolver la consulta del ejemplo 3.8 utilizando el operador ∩ (Interseccion).
--- // TODO: Hacer el ejercicio 3.7
+SELECT ciudad FROM proveedor WHERE status>2 -- Seleccionamos ciudades con proveedores con status mayor de 2
+    INTERSECT
+SELECT proveedor.ciudad FROM proveedor, pieza
+    WHERE pieza.codpie='P1' AND proveedor.ciudad != pieza.ciudad;
 --
 
 -- Ejercicio 3.8
@@ -396,7 +399,7 @@ SELECT ciudad FROM pieza WHERE codpie='P1';
 SELECT codpj FROM ventas    -- Seleccionamos de ventas, porque S1 ha de abastecerle
     MINUS
 SELECT codpj FROM ventas WHERE codpro != 'S1';
--- // TODO: Corregir
+--
 
 -- Ejercicio 3.9
 -- Mostrar todas las ciudades de la base de datos. Utilizar UNION.
@@ -474,12 +477,8 @@ SELECT nompro, cantidad
 
 -- Ejercicio 3.15
 -- Mostrar las piezas vendidas por los proveedores de Madrid.
-SELECT DISTINCT codpie FROM ventas
-        NATURAL JOIN
-    (SELECT * FROM proveedor WHERE ciudad='Madrid');
-    -- Otra forma de hacerlo
-SELECT DISTINCT codpie FROM ventas
-    WHERE codpro IN (SELECT codpro FROM proveedor WHERE ciudad='Madrid');
+SELECT DISTINCT codpie
+    FROM ventas NATURAL JOIN (SELECT * FROM proveedor WHERE ciudad='Madrid');
 --
 
 -- Ejercicio 3.16
@@ -513,3 +512,71 @@ SELECT * FROM ventas
 -- Encontrar las piezas suministradas por proveedores de Londres (sin usar el operador de reunión).
 SELECT codpie FROM ventas
     WHERE codpro IN (SELECT codpro FROM proveedor WHERE ciudad='Londres');
+    -- // TODO: El IN solo lo hace una vez, o todas?
+    --
+SELECT codpie FROM ventas
+    NATURAL JOIN (SELECT codpro FROM proveedor WHERE ciudad='Londres');
+--
+
+-- Ejericio 3.19
+-- Mostrar las piezas vendidas por los proveedores de Madrid (fragmentando la consulta con ayuda del operador IN).
+-- Compara la solución con la del ejercicio 3.15.
+SELECT DISTINCT codpie FROM ventas
+    WHERE codpro IN (SELECT codpro FROM proveedor WHERE ciudad='Madrid');
+--
+
+-- Ejercicio 3.20
+-- Encuentra los proyectos que están en una ciudad donde se fabrica alguna pieza.
+SELECT DISTINCT codpj FROM proyecto
+    WHERE ciudad IN (SELECT ciudad FROM pieza);
+--
+
+-- Ejercicio 3.21
+-- Encuentra los códigos de aquellos proyectos que no utilizan ninguna pieza roja que esté suministrada por un proveedor de Londres. 
+SELECT DISTINCT codpj FROM proyecto
+    WHERE codpj NOT IN 
+        (SELECT codpj FROM ventas
+            WHERE       codpie IN (SELECT codpie FROM pieza WHERE color='Rojo')
+                    AND codpro IN (SELECT codpro FROM proveedor WHERE ciudad='Londres'));
+    -- NOT IN Equivale a MINUS
+SELECT codpj FROM proyecto
+    MINUS
+SELECT codpj FROM ventas
+    WHERE       codpie IN (SELECT codpie FROM pieza WHERE color='Rojo')
+            AND codpro IN (SELECT codpro FROM proveedor WHERE ciudad='Londres');
+    -- // TODO: Cuál es más eficiente?
+--
+
+-- Ejemplo 3.15
+-- Encontrar los proveedores (código y nombre) que suministran la pieza 'P1'.
+SELECT codpro, nompro
+    FROM proveedor
+    WHERE codpro IN (SELECT codpro FROM ventas WHERE codpie='P1');
+--
+
+-- Ejemplo 3.16
+-- Mostrar el código de los proveedores cuyo estatus sea igual al del proveedor 'S3'.
+SELECT codpro
+    FROM proveedor
+    WHERE status = (SELECT status FROM proveedor WHERE codpro='S3'); -- Aquí puedo usar = porque sé que solo hay un resultado por ser codpro clave primaria.
+--
+
+-- Ejemplo 3.17
+-- Muestra el código de las piezas cuyo peso es mayor que el peso de alguna pieza 'tornillo'.
+SELECT codpie
+    FROM pieza
+    WHERE peso > ANY (SELECT peso FROM pieza WHERE nompie='tornillo');
+--
+
+-- Ejercicio 3.22
+-- Muestra el código de las piezas cuyo peso es mayor que el peso de cualquier 'tornillo'.
+SELECT codpie
+    FROM pieza
+    WHERE peso > ALL (SELECT peso FROM pieza WHERE nompie='tornillo');
+--
+
+-- Ejercicio 3.23
+-- Encuentra las piezas con peso máximo. Compara esta solución con la obtenida en el ejercicio 3.14.
+SELECT codpie FROM pieza
+    WHERE peso > ALL (SELECT peso FROM pieza);
+--
