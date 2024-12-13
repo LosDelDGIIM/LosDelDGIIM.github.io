@@ -350,8 +350,8 @@ SELECT * FROM pieza WHERE (ciudad='Madrid' and (color='Rojo' or color='Gris'));
 
 -- Ejercicio 3.4
 -- Encontrar todos los suministros cuya cantidad está entre 200 y 300, ambos inclusive.
-SELECT * FROM ventas WHERE (200<=cantidad and cantidad<=300);
--- SELECT * FROM ventas WHERE cantidad BETWEEN 200 AND 300;    -- Incluye los extremos
+SELECT * FROM ventas WHERE (200<=cantidad AND cantidad<=300);
+SELECT * FROM ventas WHERE cantidad BETWEEN 200 AND 300;    -- Incluye los extremos
 --
 
 -- Ejemplo 3.4
