@@ -103,10 +103,14 @@ int obtener_id_global_tenedor( int id_tenedor ){
 /**
  * @brief Función que obtiene los identificadores de los tenedores de un filósofo
  * 
+ * @param id_filosofo Identificador del filósofo
+ * @param id_ten_izq Referencia al identificador del tenedor izquierdo (no global). Salida
+ * @param id_ten_der Referencia al identificador del tenedor derecho (no global). Salida
+ * 
  */
 void obtener_tenedores (int id_filosofo, int& id_ten_izq, int& id_ten_der){
-	id_ten_izq = (id_filosofo+1)              % num_filo_ten; //id. tenedor izq.
-	id_ten_der = (id_filosofo+num_filo_ten-1) % num_filo_ten; //id. tenedor der.
+	id_ten_izq = id_filosofo; 						//id. tenedor izq.
+	id_ten_der = (id_ten_izq + 1) % num_filosofos;	//id. tenedor der.
 }
 
 

@@ -45,6 +45,15 @@ template< int min, int max > int aleatorio(){
 	return distribucion_uniforme( generador );
 }
 
+/**
+ * @brief Función que determina si un proceso es el camarero
+ * 
+ * @param id_global Identificador global del proceso
+ * @return true Si es camarero, false en caso contrario
+ */
+bool es_camarero( int id_global ){
+	return id_global == id_camarero;
+}
 
 /**
  * @brief Función que determina si un proceso es un filósofo
@@ -64,16 +73,6 @@ bool es_filosofo( int id_global ){
  */
 bool es_tenedor( int id_global ){
 	return !es_camarero(id_global) && id_global % 2 == 1 ;
-}
-
-/**
- * @brief Función que determina si un proceso es el camarero
- * 
- * @param id_global Identificador global del proceso
- * @return true Si es camarero, false en caso contrario
- */
-bool es_camarero( int id_global ){
-	return id_global == id_camarero;
 }
 
 /**
@@ -124,13 +123,13 @@ int obtener_id_global_tenedor( int id_tenedor ){
  * @brief Función que obtiene los identificadores de los tenedores de un filósofo
  * 
  * @param id_filosofo Identificador del filósofo
- * @param id_ten_izq Referencia al identificador del tenedor izquierdo. Salida
- * @param id_ten_der Referencia al identificador del tenedor derecho. Salida
+ * @param id_ten_izq Referencia al identificador del tenedor izquierdo (no global). Salida
+ * @param id_ten_der Referencia al identificador del tenedor derecho (no global). Salida
  * 
  */
 void obtener_tenedores (int id_filosofo, int& id_ten_izq, int& id_ten_der){
-	id_ten_izq = (id_filosofo+1)              % num_filo_ten; //id. tenedor izq.
-	id_ten_der = (id_filosofo+num_filo_ten-1) % num_filo_ten; //id. tenedor der.
+	id_ten_izq = id_filosofo; 						//id. tenedor izq.
+	id_ten_der = (id_ten_izq + 1) % num_filosofos;	//id. tenedor der.
 }
 
 
@@ -203,7 +202,7 @@ void funcion_tenedores( int id_tenedor ){
  * @brief Función que representa al camarero
  */
 void funcion_camarero(){
-	int valor, id_filosofo;
+	int valor;
 	int tag_aceptable;
 	MPI_Status estado;
 
