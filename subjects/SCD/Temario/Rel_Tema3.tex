@@ -28,7 +28,32 @@
         \caption{Código para el Ejercicio~\ref{ej:rel3_1}.}
         \label{fig:cod_1}
     \end{figure}
-    Describir en pseudocódigo el comportamiento del proceso controlador, utilizando una orden de espera selectiva que permita implementar la sincronización requerida entre los procesos. Es posible utilizar una sentencia del tipo \verb|select for i=... to ...| para especificar diferentes ramas de una sentencia selectiva que comparten el mismo código dependiente del valor de un índice \verb|i|.
+    Describir en pseudocódigo el comportamiento del proceso controlador, utilizando una orden de espera selectiva que permita implementar la sincronización requerida entre los procesos. Es posible utilizar una sentencia del tipo \verb|select for i=... to ...| para especificar diferentes ramas de una sentencia selectiva que comparten el mismo código dependiente del valor de un índice \verb|i|.\\
+
+    \begin{minted}{pascal}
+        process Controlador;
+        var contador : integer := 0;
+            necesarios : integer := 3;
+            esperando : array[0..1] of 0..5;
+        begin
+           while true do begin
+              select
+                 for i := 0 to 5
+                    when receive(valor, Cliente[i]) do
+                       if contador < necesarios-1 then begin
+                          esperando[contador] := i;
+                          contador := contador + 1;
+                       else
+                          contador := 0;
+                          send(valor, Cliente[i]);
+                          send(valor, Cliente[esperando[0]]);
+                          send(valor, Cliente[esperando[1]]);
+                       end
+                    end
+              end select
+           end do
+        end
+    \end{minted}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:rel3_2}
@@ -65,12 +90,32 @@
         \caption{Código para el Ejercicio~\ref{ej:rel3_2}.}
         \label{fig:cod_2}
     \end{figure}
-    Describir en pseudocódigo el comportamiento del proceso \verb|Buffer|, utilizando una orden de espera selectiva que permita implementar la sincronización requerida entre los procesos:
+    Describir en pseudocódigo el comportamiento del proceso \verb|Buffer|, utilizando una orden de espera selectiva que permita implementar la sincronización requerida entre los procesos.\\
+
     \begin{minted}{pascal}
         process Buffer;
+        var buffer : array[0..3] of integer;
+            primera_libre, primera_ocupada : integer := 0, 0;
+            ocupadas : integer := 0;
+            ult_productor : integer := -1;
+            dato : integer;
         begin
            while true do begin
-              ...
+              select 
+                 when ocupadas >= 2 do
+                    dato := buffer[primera_ocupada];
+                    primera_ocupada := (primera_ocupada + 1) mod 4;
+                    ocupadas := ocupadas - 1;
+                    send(dato, Consumidor;)
+                 end
+                 for i := 0 to 2
+                    when ocupadas < 4 and i <> ult_productor receive(dato, Productor[i])
+                       ult_productor := i;
+                       buffer[primera_libre] := dato;
+                       primera_libre := (primera_libre + 1) mod 4;
+                       ocupadas := ocupadas + 1;
+                    end
+              end
            end
         end
     \end{minted}
@@ -125,6 +170,72 @@
     \caption{Dibujo para el Ejercicio~\ref{ej:rel3_3}.}
     \label{fig:fig_ej_3}
     \end{figure}
+
+    En primer lugar, describimos los códigos de los procesos productor y consumidores, por ser estos mucho más fáciles que el del proceso intermedio que usaremos para comunicar ambos tipos de procesos, al no requerir estos de sincronización ninguna. Tanto productor como consumidores mandan mensajes al Buffer, y los cosumidores esperan una respuesta del mismo.
+    \begin{figure}[H]
+        \centering
+    \setlength{\columnsep}{1cm}
+    \begin{multicols}{2}
+        \begin{minted}{pascal}
+           process Productor;
+           var dato : integer;
+           begin
+              dato := Producir();
+              send(dato, Buffer);
+           end
+        \end{minted}
+        \begin{minted}{pascal}
+            process Consumidor[ i : 0..2 ];
+            var dato : integer;
+            begin
+               send(peticion, Buffer);
+               receive(dato, Buffer);
+               Consumir(dato);
+            end
+        \end{minted}
+    \end{multicols}
+    \end{figure}
+    Ahora, desarrollamos el código del proceso Buffer, donde \verb|out[i]| indica la siguiente posición a leer del consumidor \verb|i|-ésimo. Por tanto, si tras consumir un valor del buffer vemos que 
+    \begin{minted}{pascal}
+        process Buffer;
+        var buffer : array[0..B-1] of integer;
+            ocupados : integer := 0;
+            in : 0..B-1 := 0;
+            out : array[0..2] of 0..B-1 := (0, 0, 0);
+            nElems : array[0..2] of 0..B-1 := (0, 0, 0);
+            dato : integer;
+        begin
+           while true do begin
+              select 
+                 when ocupados < B receive(dato, Productor) do
+                    buffer[in] := dato;
+                    in := (in + 1) mod B;
+                    ocupados := ocupados + 1;
+                    
+                    for i:= 0 to 2 do
+                       nElems[i] := nElems[i] + 1;
+                 end
+                 for i := 0 to 2
+                    when ocupados > 0 and nElems[i] > 0 receive(peticion, Consumidor[i]) do
+                       dato := buffer[out[i]];
+                       out[i] := out[i] + 1;
+
+                       { Índices de los otros consumidores }
+                       j := (i+1) mod 3;
+                       k := (j+1) mod 3;
+
+                       { Si nElems es el mayor, era el último en consumir }
+                       if nElems[i] > nElems[j] and nElems[i] > nElems[k] then
+                          ocupados := ocupados - 1;
+                       end
+
+                       nElems[i] := nElems[i] - 1;
+                       send(dato, Consumidor[i]);
+                    end
+              end
+           end
+        end
+    \end{minted}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:rel3_4}
@@ -167,6 +278,52 @@
         \item Los salvajes podrán comer siempre que haya comida en la olla.
         \item Solamente se despertará al cocinero cuando la olla esté vacía.
     \end{itemize}
+    Mostramos primero los códigos para los procesos salvajes y cocinero:
+    \begin{figure}[H]
+        \centering
+        \setlength{\columnsep}{1cm}
+        \begin{multicols}{2}
+            \begin{minted}{pascal}
+                process Salvaje[ i : 0..2 ];
+                begin
+                   while true do begin
+                      s_send(peticion, Olla);
+                      s_receive(confirmacion, Olla);
+                      Comer();
+                   end
+                end
+            \end{minted}
+            \begin{minted}{pascal}
+                process Cocinero;
+                begin
+                   while true do begin
+                      s_send(rellenar, Olla);
+                      s_receive(confirmacion, Olla);
+                   end
+                end
+            \end{minted}
+        \end{multicols}
+    \end{figure}
+    A continuación, mostramos el código del proceso Olla:
+    \begin{minted}{pascal}
+        process Olla;
+        var misioneros : integer := 0;
+        begin
+           while true do begin
+              select 
+                 when misioneros = 0 receive(valor, Cocinero) do
+                    misioneros := M;
+                    s_send(valor, Cocinero);
+                 end
+                 for i := 0 to 2 
+                    when misioneros > 0 receive(valor, Salvaje[i]) do
+                       misioneros := misioneros - 1;
+                       s_send(valor, Salvaje[i]);
+                    end
+              end
+           end
+        end
+    \end{minted}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:rel3_5}
