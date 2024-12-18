@@ -1,6 +1,5 @@
 # Fundamentos de Programación. Examen I de Prácticas
 
-**Autor:** José Juan Urrutia Milán.
 ***
 
 - **Asignatura:** Fundamentos de Programación.
