@@ -444,14 +444,99 @@ Sí tiene estados.
 Van a ser de texto, aunque también se permite mandar imágenes, texto, otros correos, ... MIME.
 VER DIAPOSITIVA para funcionamiento de envío de correo electrónico.
 
-## POP, IMAP
-Sobre TCP
+POP e IMAP sobre TCP:
+
+% // TODO: Clase del 19-12
+
+## POP
+Ver diapositivas (C: client, S: server).
+**Pensado para trabajar en local**, descarga correos, lo guarda en un fichero y desaparece del servidor.
+retrieve + delete: coger un correo y eliminarlo.
+
+Muchos protocolos usan NOOP para mantener la conexión viva (porque si no TCP cierra su conexión).
+
+## IMAP
+**Pensado para trabajar en remoto**.
+En función del estado en el que nos encontremos a nivel de aplicación podemos hacer varias cosas.
+Inicialmente estamos en no autenticado, luego en autenticado, donde elegimos un buzón y pasamos a seleccionado.
+En función de el estado en el que nos encontremos podemos mandar un mensaje u otro. Hay mensajes (Capability, Noop, Logout) que se pueden enviar siempre.
+Para pasar entre estados hay que mandar un cierto mensaje.
+
+Desventaja de IMAP: Hay una cuota en el servidor de espacio máximo ocupado.
+Normalmente los correos no se borran inmediatamente, sino que se marcan con un flag de borrar y el servidor lo borra cuando quiere.
+
+Ver diapositiva 92: En X-Original-To y en Delivered-To si no coinciden es que el que pone que es el origen no lo es de verdad.
+
+Podemos configurar POP para que trabaje como IMAP y viceversa, aunque su funcionamiento clásico siempre será de una forma.
+
+## Web mail
+Tenemos un cliente web que se conecta a un servidor web. 
+Hay implementaciones que usan HTTP como transporte, pero en PHP existen librerías k nos permiten configurar clientes:
+    Cuando el cliente se conecta, la parte intermedia puede ser como nosotros queramos.
+    Se puede enviar la información con JSON.
+En servidor web se conecta a un MTA mediante SMTP y este responde por POP/IMAP.
+
+Lo que pasa es que el cliente se conecta al servidor (de la forma que se quiera, donde está implementado webmail) y este hace uso de un MTA.
+Se ha extendido que correo vaya donde HTTPS.
+
+Los puertos no siguen un patrón, aunque los de las diapositivas son los típicos.
 
 ### MIME (Multiporpuse Internet Mail Protocol Extensions)
-Permite enviar cosas que no sean solo texto.
+Permite enviar cosas que no sean solo texto (también para HTTP).
 - MIME-Version.
 - Content-Transfer-Encoding.
 - Content-Type.
 
 External-body: si se ejecuta puede contener virus, nos pregunta antes de descargar (mandar información al servidor).
 Multipart: Un mismo contenido trabajan juntos.
+
+# 5. Aplicaciones multimedia
+Usaban UDP por la velocidad, pero ahora hay tanto ancho de banda que podemos permitirnos usar otros protocolos.
+En cualquier caso, todo lo que sea multimedia tiene asociado **calidad de servicio**: que los datos tengan unos ciertos requisitos de retardo.
+IP no estaba pensado para calidad de servicio (ni en su origen ni en la actualidad): intenta hacer las cosas bien pero si hay problema se encarga una capa superior.
+
+Exiten aplicaciones conversacionales (con requisitos de retardo estrictos, para que no sufra la conversación).
+Video almacenado: Hay un buffer que almacena unos ciertos segundos y que evita que haya pausas. 
+    El problema no es el retardo (que empiece 10 seg más tarde), sino que sea constante (lo que repercuta en parones en la reproducción, JITTER).
+    El mayor problema de las aplicaciones de streaming es el JITTER.
+Suelen ser tolerantes a pérdidas: no es un drama perder paquetes.
+Suelen tener retardo acotado.
+
+Puede utilizar multicast (en Youtube o Netflix no, pero en televisión bajo internet, IPTV sí, cuando hay un decodificador).
+    multicast solo se puede implementar por UDP, TCP no (es orientado a conexión). 
+    Si usamos TCP para algo multicast, la capa de aplicación tiene que implementarlo.
+    TCP es origen, destino y ya.
+    
+#### Calidad de servicio (QoS)
+Cuando tenemos calidad de servicio en un router establecemos prioridades sobre unos paquetes para que el retardo sea menor.
+Diapositva 99 para ver un router que soporta calidad de servicio.
+
+- Boca de entrada.
+- Control de admisión: para dar garantias de calidad de servicio, no dejar pasar más flujo a partir de un momento.
+- Central de conmutación: para decidir por qué puerto encaminamos (normal en todos los routers). Presente en los switches tmb (aunque es hardware en ellos, es mas rapido).
+
+La única manera de garantizar retardo y ancho de banda es que el tráfico venga con una determinada forma
+Gestor de colas y planificación:
+    Colas de prioridad, meter el tráfico en la cola que le corresponda para permitir primero un tipo de paquetes.
+    Hay prioridades estrictas (una cola siempre va primero) y hay otras estadísticas.
+Conformadores (shapers) de tráfico (uno típico es leaky buckets): Conformar tráfico para que vaya a una cierta velocidad, lo que garantiza que el flujo no agote todos los recursos.
+    Le da forma al tráfico: el router no se fía que los paquetes le lleguen con una determinada velocidad.
+    Lo que hace el conformador es que puedas meter cualquier cosa a un router que asegura que los paquetes salgan a un cierto ritmo.
+
+- ¿Cómo se gestiona el retardo?, Si la cola se empieza a llenar el retardo aumenta
+Descartando paquetes: si tu retardo es mayor a tu límite de retardo, te descarto.
+
+- ¿Como se define si un flujo va a una cola u otra, si IP no permite QoS?
+Gracias al campo TOS (Type Of Service, o DSCP), un campo en la cabecera de IP.
+Cuando vamos a transmitir flujos, tiene que haber alguien que le diga que a ciertos flujos hay que ponerle un TOS (1, 2, 3, ...), para indicar que un paquete es de un cierto tipo.
+Puede que los routers no miren los TOS, pero si hay algún router que use QoS, puede que permita estos campos.
+
+En muchos routers aparece WMM (W Multimedia), EDCA: tiene 4 tipos de prioridades (conversacional, video, interactivo, best efford).
+Podemos configurar en nuestro router que unos flujos tengan más prioridad que otros, pero es necesario identificar los flujos.
+Necesita haber alguien que los marque, con lo que usamos el TOS para marcar los paquetes.
+
+Los routeres microtick están basados en linux, que usan las iptables, una tabla que pone reglas:
+filter para reglas de filtrado.
+nat para snat y dnat.
+Se puede definir un flujo al que ponerle un cierto TOS. 
+    De esta forma, a los paquetes que usen un puerto o una dirección se les puede fijar un TOS.
