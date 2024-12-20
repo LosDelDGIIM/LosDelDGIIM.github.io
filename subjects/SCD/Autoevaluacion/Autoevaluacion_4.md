@@ -103,11 +103,11 @@
     - ( ) Excluyen operaciones síncronas.
 
 14. ¿Qué instrucción de MPI inicia una comunicación no bloqueante?
-    - ( ) MPI_Send.
-    - ( ) MPI_Irecv.
-    - ( ) MPI_Recv.
-    - (x) MPI_Isend.
-    - ( ) MPI_Wait.
+    - ( ) `MPI_Send`.
+    - ( ) `MPI_Irecv`.
+    - ( ) `MPI_Recv`.
+    - (x) `MPI_Isend`.
+    - ( ) `MPI_Wait`.
 
 15. ¿Qué ventaja ofrece el paso de mensajes con búfer?
     - ( ) Mejora en la eficiencia del hardware.
@@ -117,11 +117,11 @@
     - ( ) Eliminación de interbloqueos.
 
 16. ¿Qué herramienta facilita la ejecución de programas MPI?
-    - (x) mpirun.
-    - ( ) MPI_Get_Count.
-    - ( ) PVM.
-    - ( ) mpicc.
-    - ( ) mpi.h.
+    - (x) `mpirun`.
+    - ( ) `MPI_Get_Count`.
+    - ( ) `PVM`.
+    - ( ) `mpicc`.
+    - ( ) `mpi.h`.
 
 17. ¿Cuál es un ejemplo de comunicación síncrona en sistemas distribuidos?
     - ( ) Intercambio de mensajes en paralelo.
@@ -144,7 +144,7 @@
     - ( ) Una comunicación síncrona.
     - ( ) Un índice que prioriza procesos.
 
-20. ¿Qué tipo de mensajes permite el uso de MPI_ANY_SOURCE?
+20. ¿Qué tipo de mensajes permite el uso de `MPI_ANY_SOURCE`?
     - (x) Mensajes de cualquier origen.
     - ( ) Mensajes sin etiquetas.
     - ( ) Mensajes con etiquetas específicas.
@@ -173,15 +173,15 @@
     - ( ) La sincronización de todos los procesos.
 
 24. ¿Qué mecanismo minimiza interbloqueos en comunicación no bloqueante?
-    - (x) MPI_Test.
-    - ( ) MPI_Get_Count.
-    - ( ) MPI_Comm_rank.
-    - ( ) MPI_Wait.
-    - ( ) MPI_Recv.
+    - (x) `MPI_Test`.
+    - ( ) `MPI_Get_Count`.
+    - ( ) `MPI_Comm_rank`.
+    - ( ) `MPI_Wait`.
+    - ( ) `MPI_Recv`.
 
 25. ¿Qué instrucción libera una solicitud en MPI?
-    - ( ) MPI_Finalize.
-    - ( ) MPI_Wait.
-    - (x) MPI_Request_free.
-    - ( ) MPI_Recv.
-    - ( ) MPI_Send.
+    - ( ) `MPI_Finalize`.
+    - ( ) `MPI_Wait`.
+    - (x) `MPI_Request_free`.
+    - ( ) `MPI_Recv`.
+    - ( ) `MPI_Send`.
