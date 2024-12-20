@@ -274,7 +274,6 @@ DESCRIBE ventas;
 DESCRIBE medina.ventas;
 INSERT INTO ventas (codpro, codpie, codpj, cantidad, fecha)
     SELECT codpro, rtrim(codpie), rtrim(codpj), cantidad, fecha  FROM medina.ventas;
-DELETE FROM ventas;
 /*
     Notemos que, si vemos el esquema de medina.ventas, este usa tipos de datos distintos (char(3)).
     Estos tipos de datos completan con espacios, por lo que no nos deja incluirlos (pruébese).
@@ -317,3 +316,265 @@ DROP TABLE encuentros;
 DROP TABLE jugadores;
 DROP TABLE equipos;
 COMMIT;
+
+
+/*--------------------------------------------------------------
+    Capítulo 3: Realización de consultas a una base de datos
+*/--------------------------------------------------------------
+
+-- Ejemplo 3.1
+-- AR: \pi_{ciudad}(proyecto)
+--
+
+-- Ejercicio 3.1
+SELECT DISTINCT ciudad FROM proyecto;
+--
+
+-- Ejemplo 3.2
+SELECT * FROM proveedor;
+--
+
+-- Ejercicio 3.2
+SELECT codpro, codpj, codpie FROM ventas;
+-- No es necesario el DISTINCT porque la clave primaria de ventas es (codpro, codpj, codpie)
+--
+
+-- Ejemplo 3.3
+SELECT codpro FROM ventas WHERE codpj='J1';
+--
+
+-- Ejercicio 3.3
+-- Muestra las piezas de Madrid que son grises o rojas.
+SELECT * FROM pieza WHERE (ciudad='Madrid' and (color='Rojo' or color='Gris'));
+--
+
+-- Ejercicio 3.4
+-- Encontrar todos los suministros cuya cantidad está entre 200 y 300, ambos inclusive.
+SELECT * FROM ventas WHERE (200<=cantidad AND cantidad<=300);
+SELECT * FROM ventas WHERE cantidad BETWEEN 200 AND 300;    -- Incluye los extremos
+--
+
+-- Ejemplo 3.4
+-- Mostrar los nombres y ciudades de los proveedores cuyo nombre de ciudad empieza por 'L'. 
+SELECT nompro, ciudad FROM proveedor WHERE ciudad LIKE 'L%';
+--
+
+-- Ejercicio 3.5
+-- Mostrar las piezas que empiezan por un carácter seguido de ornillo.
+SELECT * FROM pieza WHERE nompie LIKE '_ornillo';
+--
+
+-- Ejemplo 3.5
+SELECT cantidad/12, round(cantidad/12,3), trunc(cantidad/12, 3), floor(cantidad/12), ceil(cantidad/12)
+    FROM ventas WHERE (cantidad/12)>10;     -- Si además quiero todos, pongo *.ventas
+--
+
+-- Ejemplo 3.6
+-- Encontrar los proveedores que tienen su status registrado en la base de datos.
+SELECT * FROM proveedor WHERE status IS NOT NULL;
+--
+
+-- Ejemplo 3.7 || Ejercicio 3.6
+-- Mostrar la información de todas las tablas denominadas ventas a las que tienes acceso.
+SELECT * FROM ALL_TABLES WHERE table_name LIKE upper('%ventas%');
+--
+
+-- Ejemplo 3.8
+-- Ciudades donde viven proveedores con status mayor de 2 en las que no se fabrica la pieza 'P1'. 
+SELECT ciudad FROM proveedor WHERE status>2
+    MINUS
+SELECT ciudad FROM pieza WHERE codpie='P1';
+--
+
+-- Ejercicio 3.7
+-- Resolver la consulta del ejemplo 3.8 utilizando el operador ∩ (Interseccion).
+SELECT ciudad FROM proveedor WHERE status>2 -- Seleccionamos ciudades con proveedores con status mayor de 2
+    INTERSECT
+SELECT proveedor.ciudad FROM proveedor, pieza
+    WHERE pieza.codpie='P1' AND proveedor.ciudad != pieza.ciudad;
+--
+
+-- Ejercicio 3.8
+-- Encontrar los códigos de aquellos proyectos a los que solo abastece 'S1'.
+SELECT codpj FROM ventas    -- Seleccionamos de ventas, porque S1 ha de abastecerle
+    MINUS
+SELECT codpj FROM ventas WHERE codpro != 'S1';
+--
+
+-- Ejercicio 3.9
+-- Mostrar todas las ciudades de la base de datos. Utilizar UNION.
+SELECT ciudad FROM proveedor
+    UNION
+SELECT ciudad FROM proyecto
+    UNION
+SELECT ciudad FROM pieza;
+--
+
+-- Ejercicio 3.10
+-- Mostrar todas las ciudades de la base de datos. Utilizar UNION ALL. 
+SELECT ciudad FROM proveedor
+    UNION ALL
+SELECT ciudad FROM proyecto
+    UNION ALL
+SELECT ciudad FROM pieza;
+--
+
+-- Ejercicio 3.11
+-- Comprueba cuántas tuplas resultan del producto cartesiano aplicado a ventas y proveedor. 
+SELECT * FROM proveedor;
+SELECT * FROM ventas;
+SELECT * FROM proveedor, ventas;
+--
+
+-- Ejemplo 3.9
+-- Muestra las posibles ternas (codpro,codpie,codpj) tales que todos los implicados sean de la misma ciudad.
+SELECT codpro, codpie, codpj FROM proveedor, pieza, proyecto
+    WHERE   proveedor.ciudad = pieza.ciudad
+        AND proveedor.ciudad = proyecto.ciudad;
+--
+
+-- Ejemplo 3.10
+-- Mostrar las ternas (codpro,codpie,codpj) tales que todos los implicados son de Londres.
+SELECT codpro, codpie, codpj FROM proveedor, pieza, proyecto
+    WHERE   proveedor.ciudad = 'Londres'
+        AND proveedor.ciudad = pieza.ciudad
+        AND proveedor.ciudad = proyecto.ciudad;
+    -- Esta es poco eficiente. Mejor hacer el filtrado ANTES de hacer el producto cartesiano.
+SELECT codpro, codpie, codpj
+    FROM (SELECT * FROM proveedor WHERE ciudad='Londres'),
+         (SELECT * FROM pieza WHERE ciudad='Londres'),
+         (SELECT * FROM proyecto WHERE ciudad='Londres');
+--
+
+-- Ejericio 3.12
+-- Mostrar las ternas que son de la misma ciudad pero que hayan realizado alguna venta.
+SELECT codpro, codpie, codpj FROM ventas
+    INTERSECT
+SELECT codpro, codpie, codpj FROM proveedor, pieza, proyecto
+    WHERE   proveedor.ciudad = pieza.ciudad
+        AND proveedor.ciudad = proyecto.ciudad;
+--
+
+-- Ejercicio 3.13
+-- Encontrar parejas de proveedores que no viven en la misma ciudad.
+SELECT p1.codpro, p2.codpro FROM proveedor p1, proveedor p2
+    WHERE p1.ciudad > p2.ciudad;    -- No usar != porque produce duplicados (A,B) y (B,A)
+--
+
+-- Ejercicio 3.14
+-- Encuentra las piezas con máximo peso.
+SELECT codpie FROM pieza
+    MINUS
+SELECT A.codpie FROM pieza A, pieza B
+    WHERE A.peso < B.peso;
+--
+
+-- Ejemplo 3.12
+-- Mostrar los nombres de proveedores y la cantidad de aquellas ventas de cantidad superior a 800 unidades.
+SELECT nompro, cantidad
+    FROM proveedor NATURAL JOIN (SELECT * FROM ventas WHERE cantidad>800);
+--
+
+-- Ejercicio 3.15
+-- Mostrar las piezas vendidas por los proveedores de Madrid.
+SELECT DISTINCT codpie
+    FROM ventas NATURAL JOIN (SELECT * FROM proveedor WHERE ciudad='Madrid');
+--
+
+-- Ejercicio 3.16
+-- Encuentra la ciudad y los códigos de las piezas suministradas a cualquier proyecto por un proveedor que está en la misma ciudad donde está el proyecto.
+SELECT DISTINCT proveedor.ciudad, ventas.codpie FROM ventas
+    JOIN proveedor ON ventas.codpro = proveedor.codpro
+    JOIN proyecto ON ventas.codpj = proyecto.codpj
+    WHERE proveedor.ciudad = proyecto.ciudad;
+--
+
+-- Ejemplo 3.13
+-- Encontrar los nombres de proveedores ordenados alfabéticamente.
+SELECT nompro
+    FROM proveedor
+    ORDER BY nompro;
+--
+
+-- Ejercicio 3.17
+-- Comprobar la salida de la consulta anterior sin la cláusula ORDER BY.
+SELECT nompro
+    FROM proveedor;
+--
+
+-- Ejercicio 3.18
+-- Listar las ventas ordenadas por cantidad. Si algunas ventas coinciden en la cantidad se ordenan en función de la fecha de manera descendente.
+SELECT * FROM ventas
+    ORDER BY cantidad, fecha DESC;
+--jajajja oleee
+
+-- Ejemplo 3.14
+-- Encontrar las piezas suministradas por proveedores de Londres (sin usar el operador de reunión).
+SELECT codpie FROM ventas
+    WHERE codpro IN (SELECT codpro FROM proveedor WHERE ciudad='Londres');
+    --
+SELECT codpie FROM ventas
+    NATURAL JOIN (SELECT codpro FROM proveedor WHERE ciudad='Londres');
+--
+
+-- Ejericio 3.19
+-- Mostrar las piezas vendidas por los proveedores de Madrid (fragmentando la consulta con ayuda del operador IN).
+-- Compara la solución con la del ejercicio 3.15.
+SELECT DISTINCT codpie FROM ventas
+    WHERE codpro IN (SELECT codpro FROM proveedor WHERE ciudad='Madrid');
+--
+
+-- Ejercicio 3.20
+-- Encuentra los proyectos que están en una ciudad donde se fabrica alguna pieza.
+SELECT DISTINCT codpj FROM proyecto
+    WHERE ciudad IN (SELECT ciudad FROM pieza);
+--
+
+-- Ejercicio 3.21
+-- Encuentra los códigos de aquellos proyectos que no utilizan ninguna pieza roja que esté suministrada por un proveedor de Londres. 
+SELECT DISTINCT codpj FROM proyecto
+    WHERE codpj NOT IN 
+        (SELECT codpj FROM ventas
+            WHERE       codpie IN (SELECT codpie FROM pieza WHERE color='Rojo')
+                    AND codpro IN (SELECT codpro FROM proveedor WHERE ciudad='Londres'));
+    -- NOT IN Equivale a MINUS
+SELECT codpj FROM proyecto
+    MINUS
+SELECT codpj FROM ventas
+    WHERE       codpie IN (SELECT codpie FROM pieza WHERE color='Rojo')
+            AND codpro IN (SELECT codpro FROM proveedor WHERE ciudad='Londres');
+--
+
+-- Ejemplo 3.15
+-- Encontrar los proveedores (código y nombre) que suministran la pieza 'P1'.
+SELECT codpro, nompro
+    FROM proveedor
+    WHERE codpro IN (SELECT codpro FROM ventas WHERE codpie='P1');
+--
+
+-- Ejemplo 3.16
+-- Mostrar el código de los proveedores cuyo estatus sea igual al del proveedor 'S3'.
+SELECT codpro
+    FROM proveedor
+    WHERE status = (SELECT status FROM proveedor WHERE codpro='S3'); -- Aquí puedo usar = porque sé que solo hay un resultado por ser codpro clave primaria.
+--
+
+-- Ejemplo 3.17
+-- Muestra el código de las piezas cuyo peso es mayor que el peso de alguna pieza 'tornillo'.
+SELECT codpie
+    FROM pieza
+    WHERE peso > ANY (SELECT peso FROM pieza WHERE nompie='tornillo');
+--
+
+-- Ejercicio 3.22
+-- Muestra el código de las piezas cuyo peso es mayor que el peso de cualquier 'tornillo'.
+SELECT codpie
+    FROM pieza
+    WHERE peso > ALL (SELECT peso FROM pieza WHERE nompie='tornillo');
+--
+
+-- Ejercicio 3.23
+-- Encuentra las piezas con peso máximo. Compara esta solución con la obtenida en el ejercicio 3.14.
+SELECT codpie FROM pieza
+    WHERE peso > ALL (SELECT peso FROM pieza);
+--
