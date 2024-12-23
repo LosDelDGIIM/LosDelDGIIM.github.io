@@ -1,26 +1,336 @@
 \section{Teorema Central del Límite}
 
 \begin{ejercicio}
-    Se realizan 2500 lanzamientos independientes de una moneda correcta. Calcular la probabilidad aproximada de obtener $\nicefrac{1}{2}$ como frecuencia relativa de cara con un error máximo de $0.02$.
+    Se realizan 2500 lanzamientos independientes de una moneda correcta. Calcular la probabilidad aproximada de obtener $\nicefrac{1}{2}$ como frecuencia relativa de cara con un error máximo de $0.02$.\\
+
+    De aquí en adelante, fijemos $n=2500$, aunque lo haremos dependiente de $n$ para una mayor generalidad.
+    Para cada $i=1, \ldots, n$, sea $X_i$ una variable aleatoria que toma el valor $1$ si en el $i$-ésimo lanzamiento se obtiene cara, y $0$ en caso contrario, de forma que $X_i \sim B(1, \nicefrac{1}{2})$. Consideramos la variable aleatoria:
+    \[
+        S_{n} = \sum_{i=1}^{n} X_i
+    \]
+
+    De esta forma, por la Reproductividad de la Binomial, $S_{n} \sim B(n, \nicefrac{1}{2})$. Tiene sentido, puesto que $S_{n}$ es el número de caras obtenidas en $n$ lanzamientos de una moneda correcta.
+    Nos piden:
+    \begin{align*}
+        P\left[\left|\frac{S_{n}}{n} - \frac{1}{2}\right| \leq 0.02\right] &= 
+        P\left[-0.02 \leq \frac{S_{n}}{n} - \frac{1}{2} \leq 0.02\right]
+        =\\&= P\left[0.48 \leq \frac{S_{n}}{n} \leq 0.52\right]
+    \end{align*}
+
+    Para calcular esta probabilidad, hay diversas opciones:
+    \begin{description}
+        \item[Usar la distribución de $S_n$] Dado que $S_{n} \sim B(n, \nicefrac{1}{2})$, podemos calcular la probabilidad directamente. Por el Teorema de Cambio de Variable, tenemos que:
+        \begin{align*}
+            P\left[\left|\frac{S_{n}}{n} - \frac{1}{2}\right| \leq 0.02\right] &= P\left[0.48 \leq \frac{S_{n}}{n} \leq 0.52\right]
+            =\\&= P\left[n \cdot 0.48 \leq S_{n} \leq n \cdot 0.52\right]
+        \end{align*}
+
+        Esta probabilidad teóricamente sabemos calcularla de forma exacta, aunque en la práctica es complicado para valores grandes de $n$, ya que obtenemos factoriales de números grandes. Probemos para $n=2500$:
+        \begin{align*}
+            P\left[\left|\frac{S_{2500}}{2500} - \frac{1}{2}\right| \leq 0.02\right] &= P\left[0.48 \leq \frac{S_{2500}}{2500} \leq 0.52\right]
+            =\\&= P\left[1200 \leq S_{2500} \leq 1300\right]
+            =\\&= \sum_{k=1200}^{1300} P[S_{2500} = k]
+            = \sum_{k=1200}^{1300} \binom{2500}{k} \left(\frac{1}{2}\right)^{2500}
+        \end{align*}
+
+        Mediante cálculo numérico con herramientas disponibles en internet, tenemos que:
+        \begin{equation*}
+            P\left[\left|\frac{S_{2500}}{2500} - \frac{1}{2}\right| \leq 0.02\right] \approx 0.95664
+        \end{equation*}
+
+        No obstante, usaremos lo desarrollado en teoría para obtener otras aproximaciones.
+
+        \item [Aproximación de la Binomial a la Normal] Dado que $n\geq 30$ y $0.1 \leq p \leq 0.9$, podemos aproximar la distribución de $S_{n}$ por una normal de media $E[S_{n}] = n \cdot p$ y varianza $\Var[S_{n}] = n \cdot p \cdot (1-p)$. Además, debemos realizar la corrección por continuidad, ya que estamos aproximando una variable discreta por una continua. Por tanto, la probabilidad que nos piden la podemos calcular como:
+        \begin{align*}
+            P\left[\left|\frac{S_{n}}{n} - \frac{1}{2}\right| \leq 0.02\right] &= P\left[n \cdot 0.48 \leq S_{n} \leq n \cdot 0.52\right]
+            \approx\\&\approx P\left[n\cdot 0.48 - 0.5 \leq Y \leq n\cdot 0.52 + 0.5\right]
+        \end{align*}
+        donde $Y \sim N(n \cdot 0.5, n \cdot 0.5 \cdot 0.5)$. Notando por $Z$ a la tipificada de $Y$, tenemos que:
+        \begin{align*}
+            P\left[\left|\frac{S_{n}}{n} - \frac{1}{2}\right| \leq 0.02\right] &\approx P\left[\frac{n\cdot 0.48 - 0.5-n\cdot 0.5}{\sqrt{n \cdot 0.5 \cdot 0.5}} \leq Z \leq \frac{n\cdot 0.52 + 0.5-0.5\cdot n}{\sqrt{n \cdot 0.5 \cdot 0.5}}\right]
+        \end{align*}
+
+        En concreto, para $n=2500$, tenemos que:
+        \begin{align*}
+            P\left[\left|\frac{S_{2500}}{2500} - \frac{1}{2}\right| \leq 0.02\right] &\approx P\left[-2.02 \leq Z \leq 2.02\right]=P[Z \leq 2.02] - P[Z < -2.02]
+            =\\&= P[Z \leq 2.02] -(1-P[Z \geq -2.02])
+            =\\&= P[Z \leq 2.02] - (1-P[Z \leq 2.02])
+            = 2 \cdot P[Z \leq 2.02] - 1
+            \approx \\& \approx 2 \cdot 0.97831 - 1= 0.95662
+        \end{align*}
+
+        \item [Teorema de Lévy. Distribución Degenerada.] Dado que $n$ es grande, podemos aplicar el Teorema de Lévy. Tenemos que:
+        \begin{align*}
+            P\left[\left|\frac{S_{n}}{n} - \frac{1}{2}\right| \leq 0.02\right] &= 
+            P\left[0.48 \leq \frac{S_{n}}{n} \leq 0.52\right]
+            =\\&= P\left[0.48 - \frac{E[S_{n}]}{n} \leq \frac{S_{n}-E[S_n]}{n} \leq 0.52 - \frac{E[S_{n}]}{n}\right]
+            = \\&= P\left[\frac{S_{n}-E[S_n]}{n} \leq 0.52 - \frac{E[S_{n}]}{n}\right] - P\left[\frac{S_{n}-E[S_n]}{n} < 0.48 - \frac{E[S_{n}]}{n}\right]
+        \end{align*}
+
+        Por la Convergencia en Ley a la Distribución Degenerada, tenemos que:
+        \begin{equation*}
+            \left\{\frac{S_{n}-E[S_n]}{n}\right\}\xrightarrow{L} 0
+        \end{equation*}
+        
+        Por tanto, tenemos que:
+        \begin{align*}
+            P\left[\left|\frac{S_{n}}{n} - \frac{1}{2}\right| \leq 0.02\right] &= 
+            P\left[\frac{S_{n}-E[S_n]}{n} \leq 0.52 - \frac{E[S_{n}]}{n}\right] - P\left[\frac{S_{n}-E[S_n]}{n} < 0.48 - \frac{E[S_{n}]}{n}\right]
+            \approx \\&\approx P\left[0 \leq 0.52 - \frac{E[S_{n}]}{n}\right] - P\left[0 < 0.48 - \frac{E[S_{n}]}{n}\right]
+            = \\&= P\left[0 \leq 0.52 - p\right] - P\left[0 < 0.48 - p\right]
+            = 1 - 0 = 1
+        \end{align*}
+
+        \item [Teorema de Lévy. Distribución Normal.] Dado que $n$ es grande, podemos aplicar el Teorema de Lévy. Tenemos que:
+        \begin{align*}
+            P\left[\left|\frac{S_{n}}{n} - \frac{1}{2}\right| \leq 0.02\right] &= 
+            P\left[n\cdot 0.48 \leq S_{n} \leq n\cdot 0.52\right]
+            =\\&= P\left[\frac{n\cdot 0.48 - E[S_{n}]}{\sqrt{\Var[S_{n}]}} \leq \frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}} \leq \frac{n\cdot 0.52 - E[S_{n}]}{\sqrt{\Var[S_{n}]}}\right]
+        \end{align*}
+
+        Por la Convergencia en Ley a la Normal, tenemos que:
+        \begin{equation*}
+            \left\{\frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}}\right\}\xrightarrow{L} \cc{N}(0,1)
+        \end{equation*}
+
+        Por tanto, notando por $Z$ a la tipificada de la normal, tenemos que:
+        \begin{align*}
+            P\left[\left|\frac{S_{n}}{n} - \frac{1}{2}\right| \leq 0.02\right] &= 
+            P\left[\frac{n\cdot 0.48 - E[S_{n}]}{\sqrt{\Var[S_{n}]}} \leq \frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}} \leq \frac{n\cdot 0.52 - E[S_{n}]}{\sqrt{\Var[S_{n}]}}\right]
+            \approx \\&\approx P\left[\frac{n\cdot 0.48 - E[S_{n}]}{\sqrt{\Var[S_{n}]}} \leq Z \leq \frac{n\cdot 0.52 - E[S_{n}]}{\sqrt{\Var[S_{n}]}}\right]
+        \end{align*}
+
+        Usando ahora que $S_{n} \sim B(n, \nicefrac{1}{2})$ y que $n=2500$, tenemos que:
+        \begin{align*}
+            P\left[\left|\frac{S_{2500}}{2500} - \frac{1}{2}\right| \leq 0.02\right] &\approx P\left[\frac{2500\cdot 0.48 - 2500\cdot 0.5}{\sqrt{2500 \cdot 0.5 \cdot 0.5}} \leq Z \leq \frac{2500\cdot 0.52 - 2500\cdot 0.5}{\sqrt{2500 \cdot 0.5 \cdot 0.5}}\right]
+            =\\&= P\left[-2\leq Z \leq 2\right]
+            =\\&= 2\cdot P\left[Z \leq 2\right]-1
+            \approx 2\cdot 0.97725 - 1 = 0.9545
+        \end{align*}
+    \end{description}
+    
+    Por tanto, hemos obtenido tres aproximaciones distintas. Notemos que la primera y la tercera coinciden a excepción de la corrección por continuidad, mientras que la segunda es ligeramente distinta.
+
+    % // TODO: Utilidad de la segunda?
 \end{ejercicio}
 
 \begin{ejercicio}
-    Calcular, aproximadamente, la probabilidad de que al lanzar 100 veces un dado, la media de los puntos obtenidos sea mayor que $3.7$.
+    Calcular, aproximadamente, la probabilidad de que al lanzar 100 veces un dado, la media de los puntos obtenidos sea mayor que $3.7$.\\
+
+    De aquí en adelante, fijemos $n=100$, aunque lo haremos dependiente de $n$ para una mayor generalidad.
+
+    Para cada $i=1, \ldots, n$, sea $X_i$ una variable aleatoria que toma el valor $1, 2, 3, 4, 5$ o $6$ según el resultado del $i$-ésimo lanzamiento de un dado, de forma que se tiene $X_i \sim \cc{U}(\{1, 2, 3, 4, 5, 6\})$. Consideramos la variable aleatoria:
+    \[
+        S_{n} = \sum_{i=1}^{n} X_i
+    \]
+
+    Por tanto, nos piden:
+    \begin{align*}
+        P\left[\frac{S_{n}}{n} > 3.7\right] &= 1 - P\left[\frac{S_{n}}{n} \leq 3.7\right]
+    \end{align*}
+
+    Calculemos dicha probabilidad. Tenemos que, para $n=100$:
+    \begin{align*}
+        P\left[\frac{S_{n}}{n} \leq 3.7\right] &= P\left[S_{n} \leq 3.7 \cdot n\right]
+        = P\left[S_{100} \leq 370\right]
+        = \sum_{k=100}^{370} P[S_{100} = k]
+    \end{align*}
+
+    Calcular de forma directa dicha probabilidad no es sencillo, por lo que haremos aproximaciones. Tenemos que:
+    \begin{align*}
+        E[X_1] &= \frac{1+2+3+4+5+6}{6} = \frac{7}{2} = 3.5\\
+        E[X_1^2] &= \frac{1^2+2^2+3^2+4^2+5^2+6^2}{6} = \frac{91}{6}\\
+        \Var[X_1] &= E[X_1^2] - E[X_1]^2 = \frac{91}{6} - \frac{49}{4} = \frac{35}{12}\\
+        E[S_{n}] &= E\left[\sum_{i=1}^{n} X_i\right] = \sum_{i=1}^{n} E[X_i] = n \cdot E[X_1] = 3.5 \cdot n\\
+        \Var[S_{n}] &= \Var\left[\sum_{i=1}^{n} X_i\right] = \sum_{i=1}^{n} \Var[X_i] = n \cdot \Var[X_1] = \frac{35}{12} \cdot n
+    \end{align*}
+
+    Por el Teorema de Lévy, tenemos que:
+    \begin{align*}
+        \left\{\frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}}\right\} &\xrightarrow{L} \cc{N}(0,1)
+    \end{align*}
+
+    Por tanto, sea $Z$ la tipificada de la normal, tenemos que:
+    \begin{align*}
+        P\left[\frac{S_{n}}{n} > 3.7\right] &= 1 - P\left[\frac{S_{n}}{n} \leq 3.7\right]
+        = 1 - P\left[\frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}} \leq \frac{3.7 \cdot n - E[S_n]}{\sqrt{\Var[S_{n}]}}\right]
+        \approx\\&\approx 1 - P\left[Z \leq \frac{3.7 \cdot n - 3.5\cdot n}{\sqrt{\frac{35}{12}\cdot n}}\right]
+    \end{align*}
+
+    En concreto, para $n=100$, tenemos que:
+    \begin{align*}
+        P\left[\frac{S_{100}}{100} > 3.7\right] &\approx 1 - P\left[Z \leq 1.17\right]
+        \approx 1 - 0.87900 = 0.121
+    \end{align*}
 \end{ejercicio}
 
 \begin{ejercicio}
     El número de piezas correctas elaboradas en una fábrica cuadruplica el de piezas defectuosas, y la probabilidad de producir una pieza defectuosa se mantiene constante durante todo el proceso de fabricación. Se eligen al azar $200$ piezas, calcular aproximadamente la probabilidad de que el número de defectuosas oscile entre $40$ y $50$.
+
+    De aquí en adelante, fijemos $n=200$, aunque lo haremos dependiente de $n$ para una mayor generalidad.
+
+    Obtengamos en primer lugar la probabilidad de que una pieza sea defectuosa. Sea $k$ el número de piezas defectuosas, de forma que el número de piezas correctas es $4k$. Por tanto, tenemos que:
+    \begin{align*}
+        P[\text{defectuosa}] &= \frac{k}{4k+k} = \frac{k}{5k} = \frac{1}{5}
+    \end{align*}
+
+    Para cada $i=1, \ldots, n$, sea $X_i$ una variable aleatoria que toma el valor $1$ si la $i$-ésima pieza es defectuosa, y $0$ en caso contrario, de forma que se tiene $X_i \sim B(1, \nicefrac{1}{5})$. Consideramos la variable aleatoria:
+    \[
+        S_{n} = \sum_{i=1}^{n} X_i
+    \]
+    Notemos que $S_{n} \sim B(n, \nicefrac{1}{5})$ por la propiedad de reproductividad de la binomial. Además, $S_{n}$ es el número de piezas defectuosas en $n$ piezas elegidas al azar. Por tanto, nos piden:
+    \begin{align*}
+        P[40 \leq S_{n} \leq 50]
+    \end{align*}
+
+    Calcular de forma directa dicha probabilidad no es sencillo, por lo que hemos de aproximarlo, y lo haremos por la Convergencia en Ley a la Normal demostrada en el Teorema de Lévy. Tenemos que:
+    \begin{equation*}
+        \left\{\frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}}\right\} \xrightarrow{L} \cc{N}(0,1)
+    \end{equation*}
+
+    Por tanto, sea $Z$ la tipificada de la normal, tenemos que:
+    \begin{align*}
+        P[40 \leq S_{n} \leq 50] &= P\left[\frac{40 - E[S_n]}{\sqrt{\Var[S_{n}]}} \leq \frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}} \leq \frac{50 - E[S_n]}{\sqrt{\Var[S_{n}]}}\right]
+        \approx\\&\approx P\left[\frac{40 - E[S_n]}{\sqrt{\Var[S_{n}]}} \leq Z \leq \frac{50 - E[S_n]}{\sqrt{\Var[S_{n}]}}\right]
+    \end{align*}
+
+    Usando que $S_n\sim B(n, \nicefrac{1}{5})$, tenemos que:
+    \begin{align*}
+        E[S_n] &= n \cdot \frac{1}{5} = \frac{n}{5}\\
+        \Var[S_n] &= n \cdot \frac{1}{5} \cdot \frac{4}{5} = \frac{4n}{25}
+    \end{align*}
+
+    Por tanto, para $n=200$, tenemos que:
+    \begin{align*}
+        P[40 \leq S_{200} \leq 50] &\approx P\left[\frac{40 - \frac{200}{5}}{\sqrt{\frac{4\cdot 200}{25}}} \leq Z \leq \frac{50 - \frac{200}{5}}{\sqrt{\frac{4\cdot 200}{25}}}\right]
+        =\\&= P\left[0 \leq Z \leq 1.7678\right]
+        =\\&= P\left[Z \leq 1.7678\right]-P\left[Z < 0\right]
+        =\\&= 0.96164 - 0.5 = 0.46164
+    \end{align*}
 \end{ejercicio}
 
 \begin{ejercicio}
-    Se elige un punto aleatorio $(X_1, \ldots, X_{100})$ en el espacio $\mathbb{R}^{100}$. Suponiendo que las variables aleatorias son independientes e idénticamente distribuidas según una $\cc{U}([-1, 1])$, calcular, aproximadamente, la probabilidad de que el cuadrado de la distancia del punto al origen sea menor que $40$.
+    Se elige un punto aleatorio $(X_1, \ldots, X_{100})$ en el espacio $\mathbb{R}^{100}$. Suponiendo que las variables aleatorias son independientes e idénticamente distribuidas según una $\cc{U}([-1, 1])$, calcular, aproximadamente, la probabilidad de que el cuadrado de la distancia del punto al origen sea menor que $40$.\\
+
+    De aquí en adelante, fijemos $n=100$, aunque lo haremos dependiente de $n$ para una mayor generalidad.
+
+    Para cada $i=1, \ldots, n$, sea $X_i$ una variable aleatoria que toma valores en $[-1, 1]$, de forma que se tiene $X_i \sim \cc{U}([-1, 1])$. Además, para cada $i=1, \ldots, n$, sea $Y_i = X_i^2$. Consideramos la variable aleatoria que mide el cuadrado de la distancia al origen:
+    \[
+        S_{n} = \sum_{i=1}^{n} X_i^2 = \sum_{i=1}^{n} Y_i
+    \]
+
+    Por tanto, nos piden:
+    \begin{align*}
+        P[S_{n} < 40]
+    \end{align*}
+
+    Calcular de forma directa dicha probabilidad no es sencillo, por lo que hemos de aproximarlo, y lo haremos por la Convergencia en Ley a la Normal demostrada en el Teorema de Lévy. Comprobemos las hipótesis. Como $X_1, \ldots, X_{100}$ son independientes e idénticamente distribuidas, tenemos que $Y_1, \ldots, Y_{100}$ también lo son. La función de densidad de $X_1$ es:
+    \[
+        f_{X_1}(x) = \begin{cases}
+            \frac{1}{1-(-1)} = \nicefrac{1}{2}& x \in \left[-1, 1\right]\\
+            0 & \text{en otro caso}
+        \end{cases}
+    \]
+    
+    Por tanto, tenemos que:
+    \begin{align*}
+        E[Y_1] &= E[X_1^2] = \int_{-1}^{1} x^2 \cdot \frac{1}{2} \ dx= \frac{1}{2} \int_{-1}^{1} x^2 \ dx = \frac{1}{2} \left[\frac{x^3}{3}\right]_{-1}^{1} = \frac{1}{2} \left(\frac{1}{3} - \frac{-1}{3}\right) = \frac{1}{3}\\
+        E[Y_1^2] &= E[X_1^4] = \int_{-1}^{1} x^4 \cdot \frac{1}{2} \ dx= \frac{1}{2} \int_{-1}^{1} x^4 \ dx = \frac{1}{2} \left[\frac{x^5}{5}\right]_{-1}^{1} = \frac{1}{2} \left(\frac{1}{5} - \frac{-1}{5}\right) = \frac{1}{5}\\
+        \Var[Y_1] &= E[Y_1^2] - E[Y_1]^2 = \frac{1}{5} - \frac{1}{9} = \frac{4}{45}\\
+        E[S_{n}] &= E\left[\sum_{i=1}^{n} Y_i\right] = \sum_{i=1}^{n} E[Y_i] = n \cdot E[Y_1] = \frac{n}{3}\\
+        \Var[S_{n}] &= \Var\left[\sum_{i=1}^{n} Y_i\right] = \sum_{i=1}^{n} \Var[Y_i] = n \cdot \Var[Y_1] = \frac{4n}{45}
+    \end{align*}
+
+    Por tanto, por el Teorema de Lévy, tenemos que:
+    \begin{align*}
+        \left\{\frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}}\right\} &\xrightarrow{L} \cc{N}(0,1)
+    \end{align*}
+
+    Por tanto, sea $Z$ la tipificada de la normal, tenemos que:
+    \begin{align*}
+        P[S_{n} < 40] &= P\left[\frac{S_{n}}{n} < \frac{40}{n}\right]
+        = P\left[\frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}} < \frac{40 - E[S_n]}{\sqrt{\Var[S_{n}]}}\right]
+        \approx P\left[Z < \frac{40 - \frac{n}{3}}{\sqrt{\frac{4n}{45}}}\right]
+    \end{align*}
+
+    En concreto, para $n=100$, tenemos que:
+    \begin{align*}
+        P[S_{100} < 40] &\approx P\left[Z < \frac{20\cdot 3}{3\cdot 4\sqrt{5}}\right]
+        = P\left[Z < \sqrt{5}\right]
+        \approx P\left[Z < 2.2361\right]
+        \approx 0.98745
+    \end{align*}
 \end{ejercicio}
 
 \begin{ejercicio}
     Cierta enfermedad afecta al $0.5\%$ de una población. Existe una prueba para la detección de la enfermedad, que da positiva en los individuos enfermos con probabilidad $0.99$ y da negativa en los individuos sanos con probabilidad $0.99$.
     \begin{enumerate}
         \item Calcular la probabilidad de que un individuo elegido al azar esté realmente enfermo si la prueba da resultado positivo.
-        \item Calcular, aproximadamente, el número mínimo de personas con resultado positivo en la prueba que deben ser elegidas, de forma aleatoria e independiente, para asegurar una proporción de personas realmente enfermas en la muestra inferior a un $\nicefrac{1}{2}$, con probabilidad mayor o igual que $0.95$.
+        
+        Notemos de la siguiente forma los siguientes sucesos:
+        \begin{itemize}
+            \item $E$: El individuo está enfermo.
+            \item $S$: El individuo está sano.
+            \item $+$: La prueba da positiva.
+            \item $-$: La prueba da negativa.
+        \end{itemize}
+
+        Sabemos que:
+        \begin{equation*}
+            P[E] = 0.005\quad
+            P[S] = 0.995\quad
+            P[+\mid E] = 0.99\quad
+            P[-\mid S] = 0.99
+        \end{equation*}
+
+        Nos piden calcular $P[E\mid +]$. Por la regla de Bayes, tenemos que:
+        \begin{align*}
+            P[E\mid +] &= \frac{P[+\mid E] \cdot P[E]}{P[+]}
+            = \frac{P[+\mid E] \cdot P[E]}{P[+\mid E] \cdot P[E] + P[+\mid S] \cdot P[S]}
+            =\\&= \frac{0.99 \cdot 0.005}{0.99 \cdot 0.005 + 0.01 \cdot 0.995}
+            = \frac{99}{298}
+            \approx 0.3322
+        \end{align*}
+        \item Calcular, aproximadamente, el número mínimo de personas con resultado positivo en la prueba que deben ser elegidas, de forma aleatoria e independiente, para asegurar una proporción de personas realmente enfermas en la muestra inferior a un $\nicefrac{1}{2}$, con probabilidad mayor o igual que $0.95$.\\
+        
+        Sea $n$ el número de personas elegidas. Para cada $i=1, \ldots, n$, sea $X_i$ una variable aleatoria que toma el valor $1$ si el $i$-ésimo individuo está enfermo, y $0$ en caso contrario, de forma que se tiene $X_i \sim B(1, P[E\mid +])$. Consideramos la variable aleatoria:
+        \[
+            S_{n} = \sum_{i=1}^{n} X_i
+        \]
+
+        Por la reproducción de la binomial, tenemos que $S_{n} \sim B(n, P[E\mid +])$. Además, $S_{n}$ es el número de personas realmente enfermas en $n$ elegidas al azar con resultado positivo en la prueba. Nos piden:
+        \begin{align*}
+            P\left[\frac{S_{n}}{n} < \frac{1}{2}\right] &\geq 0.95
+        \end{align*}
+
+        Como se pide un resultado aproximado, usaremos el Teorema de Lévy. Tenemos que:
+        \begin{align*}
+            E[S_{n}] &= n \cdot P[E\mid +]\\
+            \Var[S_{n}] &= n \cdot P[E\mid +] \cdot P[S\mid +]
+        \end{align*}
+
+        Por tanto, por el Teorema de Lévy, tenemos que:
+        \begin{align*}
+            \left\{\frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}}\right\} &\xrightarrow{L} \cc{N}(0,1)
+        \end{align*}
+
+        Por tanto, sea $Z$ la tipificada de la normal, tenemos que:
+        \begin{align*}
+            P\left[\frac{S_{n}}{n} < \frac{1}{2}\right] \geq 0.95
+            &\Longleftrightarrow P\left[\frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}} < \frac{\nicefrac{n}{2} - E[S_n]}{\sqrt{\Var[S_{n}]}}\right] \geq 0.95
+            \Longleftrightarrow \\ & \Longleftrightarrow P\left[Z < \frac{\nicefrac{n}{2} - n \cdot P[E\mid +]}{\sqrt{n \cdot P[E\mid +] \cdot P[S\mid +]}}\right] \geq 0.95
+        \end{align*}
+
+        Por tanto, consultando en la tabla de la normal, tenemos que:
+        \begin{align*}
+            \frac{\nicefrac{n}{2} - n \cdot P[E\mid +]}{\sqrt{n \cdot P[E\mid +] \cdot P[S\mid +]}} \geq 1.65
+            &\Longleftrightarrow \frac{\nicefrac{n}{2} - n \cdot \nicefrac{99}{298}}{\sqrt{n \cdot \nicefrac{99}{298} \cdot \nicefrac{199}{298}}} \geq 1.65
+            \Longleftrightarrow \\&\Longleftrightarrow \sqrt{n}\cdot \frac{\nicefrac{1}{2} - \nicefrac{99}{298}}{\sqrt{\nicefrac{99}{298} \cdot \nicefrac{199}{298}}} \geq 1.65
+            \Longleftrightarrow \\&\Longleftrightarrow \sqrt{n} \geq 4.6319
+            \Longleftrightarrow n \geq 21.45
+        \end{align*}
+
+        Por tanto, como $n$ ha de ser un número entero, el número mínimo de personas con resultado positivo en la prueba que deben ser elegidas es $22$.
     \end{enumerate}
 \end{ejercicio}
 
@@ -28,12 +338,188 @@
     Una empresa necesita adquirir al menos $100$ vehículos. Para ello realiza una prueba a una población de coches compuesta de dos tipos distintos (un $40\%$ de tipo A y un $60\%$ de tipo B) y un coche es adquirido si supera la prueba. Un coche de tipo A supera la prueba con probabilidad $\nicefrac{1}{3}$, mientras que para uno de tipo B, dicha probabilidad es $\nicefrac{2}{3}$.
     \begin{enumerate}
         \item Calcular la probabilidad de que un coche elegido al azar supere la prueba.
-        \item Calcula el número de coches que deben examinarse para cubrir las necesidades de la empresa con probabilidad mayor o igual que $0.901147$.
+        
+        Notemos de la siguiente forma los siguientes sucesos:
+        \begin{itemize}
+            \item $A$: El coche es de tipo A.
+            \item $B$: El coche es de tipo B.
+            \item $S$: El coche supera la prueba.
+            \item $F$: El coche no supera la prueba.
+        \end{itemize}
+
+        Sabemos que:
+        \begin{equation*}
+            P[A] = 0.4\quad
+            P[B] = 0.6\quad
+            P[S\mid A] = \nicefrac{1}{3}\quad
+            P[S\mid B] = \nicefrac{2}{3}
+        \end{equation*}
+
+        Nos piden calcular $P[S]$. Por la regla de la probabilidad total, tenemos que:
+        \begin{align*}
+            P[S] &= P[S\mid A] \cdot P[A] + P[S\mid B] \cdot P[B]
+            = \frac{1}{3} \cdot 0.4 + \frac{2}{3} \cdot 0.6
+            = \frac{8}{15} = 0.5333
+        \end{align*}
+        \item Calcula el número de coches que deben examinarse para cubrir las necesidades de la empresa con probabilidad mayor o igual que $0.90147$.
+        
+        Sea $n$ el número de coches examinados. Para cada $i=1, \ldots, n$, sea $X_i$ una variable aleatoria que toma el valor $1$ si el $i$-ésimo coche supera la prueba, y $0$ en caso contrario, de forma que se tiene $X_i \sim B(1, P[S])$. Consideramos la variable aleatoria:
+        \[
+            S_{n} = \sum_{i=1}^{n} X_i
+        \]
+
+        Por la reproducción de la binomial, tenemos que $S_{n} \sim B(n, P[S])$. Además, $S_{n}$ es el número de coches que superan la prueba en $n$ examinados. Nos piden:
+        \begin{align*}
+            P[S_{n} \geq 100] &\geq 0.90147
+        \end{align*}
+
+        Como se pide un resultado aproximado, usaremos el Teorema de Lévy. Tenemos que:
+        \begin{align*}
+            E[S_{n}] &= n \cdot P[S]\\
+            \Var[S_{n}] &= n \cdot P[S] \cdot P[F]
+        \end{align*}
+
+        Por tanto, por el Teorema de Lévy, tenemos que:
+        \begin{align*}
+            \left\{\frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}}\right\} &\xrightarrow{L} \cc{N}(0,1)
+        \end{align*}
+
+        Por tanto, sea $Z$ la tipificada de la normal, tenemos que:
+        \begin{align*}
+            P[S_{n} \geq 100] \geq 0.90147
+            &\Longleftrightarrow P\left[\frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}} \geq \frac{100 - E[S_n]}{\sqrt{\Var[S_{n}]}}\right] \geq 0.90147
+            \Longleftrightarrow \\ & \Longleftrightarrow P\left[Z \geq \frac{100 - n \cdot P[S]}{\sqrt{n \cdot P[S] \cdot P[F]}}\right] \geq 0.90147
+            \Longleftrightarrow \\ & \Longleftrightarrow P\left[Z < -\frac{100-n \cdot P[S]}{\sqrt{n \cdot P[S] \cdot P[F]}}\right] \geq 0.90147
+        \end{align*}
+
+        Por tanto, consultando en la tabla de la normal, tenemos que:
+        \begin{align*}
+            -\frac{100-n \cdot P[S]}{\sqrt{n \cdot P[S] \cdot P[F]}} \geq -1.29
+            &\Longleftrightarrow \frac{100-n \cdot P[S]}{\sqrt{n \cdot P[S] \cdot P[F]}} \leq 1.29
+            \Longleftrightarrow \\&\Longleftrightarrow \frac{100-n \cdot \nicefrac{8}{15}}{\sqrt{n \cdot \nicefrac{8}{15} \cdot \nicefrac{7}{15}}} \leq 1.29
+            \Longleftrightarrow \\&\Longleftrightarrow 100-n \cdot \nicefrac{8}{15} \leq \sqrt{n}\cdot 0.6435
+            \Longleftrightarrow \\&\Longleftrightarrow \frac{375}{2}-n-\sqrt{n}\cdot 1.2067 \leq 0
+        \end{align*}
+
+        Resolvemos para el caso de la igualdad. Tenemos que:
+        \begin{equation*}
+            \sqrt{n} = \frac{1.2067\pm \sqrt{1.2067^2+4\cdot \nicefrac{375}{2}}}{-2}
+            = \frac{1.2067\pm 27.4127}{-2}
+            \Longrightarrow
+            \sqrt{n}=13.103 \Longrightarrow n=171.69
+        \end{equation*}
+
+        Por tanto, evaluando vemos que los valores que cumplen la desigualdad han de ser mayores o iguales que $171.69$. Como $n$ ha de ser un número entero, el número de coches que deben examinarse para cubrir las necesidades de la empresa con probabilidad mayor o igual que $0.90147$ es $172$.
     \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
-    Para realizar una compra de un determinado material eléctrico del que se sabe que es defectuoso con probabilidad $0.25$, se le somete a una determinada prueba que da los resultados A, B y C, con probabilidades $0.8$, $0.15$ y $0.05$, si el material es válido, y probabilidades $0.2$, $0.3$ y $0.5$, si el material es defectuoso. Si cada lote se somete a seis pruebas de forma independiente, y se acepta para su compra si no aparece nunca el resultado C ni más de dos veces el resultado B, calcular la probabilidad de que un lote elegido al azar sea aceptado para su compra. Calcular el número de lotes que hay que probar para comprar al menos $20$ con probabilidad mayor o igual que $0.9452$.
+    Para realizar una compra de un determinado material eléctrico del que se sabe que es defectuoso con probabilidad $0.25$, se le somete a una determinada prueba que da los resultados A, B y C, con probabilidades $0.8$, $0.15$ y $0.05$, si el material es válido, y probabilidades $0.2$, $0.3$ y $0.5$, si el material es defectuoso. Si cada lote se somete a seis pruebas de forma independiente, y se acepta para su compra si no aparece nunca el resultado C ni más de dos veces el resultado B, calcular:
+    \begin{enumerate}
+        \item La probabilidad de que un lote elegido al azar sea aceptado para su compra.
+        
+        Notemos de la siguiente forma los siguientes sucesos:
+        \begin{itemize}
+            \item $V$: El material es válido.
+            \item $D$: El material es defectuoso.
+            \item $A$: Aparece el resultado A.
+            \item $B$: Aparece el resultado B.
+            \item $C$: Aparece el resultado C.
+        \end{itemize}
+
+        Sabemos que:
+        \begin{align*}
+            P[V] &= 0.75\quad
+            P[D] = 0.25\\
+            P[A\mid V] &= 0.8\quad
+            P[B\mid V] = 0.15\quad
+            P[C\mid V] = 0.05\\
+            P[A\mid D] &= 0.2\quad
+            P[B\mid D] = 0.3\quad
+            P[C\mid D] = 0.5
+        \end{align*}
+
+        Por la regla de la probabilidad total, tenemos que:
+        \begin{align*}
+            P[A] &= P[A\mid V] \cdot P[V] + P[A\mid D] \cdot P[D] = 0.8 \cdot 0.75 + 0.2 \cdot 0.25 = \frac{13}{20} = 0.65\\
+            P[B] &= P[B\mid V] \cdot P[V] + P[B\mid D] \cdot P[D] = 0.15 \cdot 0.75 + 0.3 \cdot 0.25 = \frac{3}{16} = 0.1875\\
+            P[C] &= P[C\mid V] \cdot P[V] + P[C\mid D] \cdot P[D] = 0.05 \cdot 0.75 + 0.5 \cdot 0.25 = \frac{13}{80} = 0.1625
+        \end{align*}
+
+        Dado $i\in \{A,B,C\}$, sea $X_i$ la variable aleatoria que modela el número de veces que aparece el resultado $i$ en las seis pruebas de un lote. Tenemos que:
+        \begin{equation*}
+            (X_B, X_C) \sim \cc{M}_2(6,P[B],P[C])
+        \end{equation*}
+
+        De esta forma, la probabilidad de que un lote elegido al azar sea aceptado para su compra es:
+        \begin{align*}
+            P[\text{aceptado}] &= P[X_B \leq 2, X_C = 0]
+            =\\&= P[X_B=2, X_C=0] + P[X_B=1, X_C=0] + P[X_B=0, X_C=0]
+        \end{align*}
+
+        Calculamos cada una de las probabilidades:
+        \begin{align*}
+            P[X_B=2, X_C=0] &= \binom{6!}{2!4!} \cdot 0.1875^2 \cdot 0.65^4 \approx 0.0941\\
+            P[X_B=1, X_C=0] &= \binom{6!}{1!5!} \cdot 0.1875 \cdot 0.65^5 \approx 0.1305\\
+            P[X_B=0, X_C=0] &= \binom{6!}{0!6!} \cdot 0.65^6 \approx 0.07542
+        \end{align*}
+
+        Por tanto, la probabilidad de que un lote elegido al azar sea aceptado para su compra es:
+        \begin{align*}
+            P[\text{aceptado}] &\approx 0.0941 + 0.1305 + 0.07542 = 0.3
+        \end{align*}
+
+        \item El número de lotes que hay que probar para comprar al menos $20$ con probabilidad mayor o igual que $0.9452$.
+        
+        Sea $n$ el número de lotes probados. Para cada $i=1, \ldots, n$, sea $X_i$ una variable aleatoria que toma el valor $1$ si el $i$-ésimo lote es aceptado, y $0$ en caso contrario, de forma que se tiene $X_i \sim B(1, P[\text{aceptado}])$. Consideramos la variable aleatoria:
+        \[
+            S_{n} = \sum_{i=1}^{n} X_i
+        \]
+
+        Por la reproducción de la binomial, tenemos que $S_{n} \sim B(n, P[\text{aceptado}])$. Además, $S_{n}$ es el número de lotes aceptados en $n$ probados. Nos piden:
+        \begin{align*}
+            P[S_{n} \geq 20] &\geq 0.9452
+        \end{align*}
+
+        Como se pide un resultado aproximado, usaremos el Teorema de Lévy. Tenemos que:
+        \begin{align*}
+            E[S_{n}] &= n \cdot P[\text{aceptado}]\\
+            \Var[S_{n}] &= n \cdot P[\text{aceptado}] \cdot P[\text{no aceptado}]
+        \end{align*}
+
+        Por tanto, por el Teorema de Lévy, tenemos que:
+        \begin{align*}
+            \left\{\frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}}\right\} &\xrightarrow{L} \cc{N}(0,1)
+        \end{align*}
+
+        Por tanto, sea $Z$ la tipificada de la normal, tenemos que:
+        \begin{align*}
+            P[S_{n} \geq 20] \geq 0.9452
+            &\Longleftrightarrow P\left[\frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}} \geq \frac{20 - E[S_n]}{\sqrt{\Var[S_{n}]}}\right] \geq 0.9452
+            \Longleftrightarrow \\ & \Longleftrightarrow P\left[Z \geq \frac{20 - n \cdot P[\text{aceptado}]}{\sqrt{n \cdot P[\text{aceptado}] \cdot P[\text{no aceptado}]}}\right] \geq 0.9452
+            \Longleftrightarrow \\ & \Longleftrightarrow P\left[Z < -\frac{20 - n \cdot P[\text{aceptado}]}{\sqrt{n \cdot P[\text{aceptado}] \cdot P[\text{no aceptado}]}}\right] \geq 0.9452
+            \Longleftrightarrow \\ & \Longleftrightarrow P\left[Z < -\frac{20 - 0.3n}{\sqrt{0.21n}}\right] \geq 0.9452
+        \end{align*}
+
+        Por tanto, consultando en la tabla de la normal, tenemos que:
+        \begin{align*}
+            -\frac{20 - 0.3n}{\sqrt{0.21n}} \geq 1.6
+            &\Longleftrightarrow \frac{0.3n-20}{\sqrt{0.21n}} \geq 1.6
+            \Longleftrightarrow \\&\Longleftrightarrow 0.3n-20 \geq 0.733\sqrt{n}
+            \Longleftrightarrow \\&\Longleftrightarrow 0.3n-0.733\sqrt{n}-20 \geq 0
+        \end{align*}
+
+        Resolvemos para el caso de la igualdad. Tenemos que:
+        \begin{equation*}
+            \sqrt{n} = \frac{0.733\pm \sqrt{0.733^2+4\cdot 0.3\cdot 20}}{0.6}
+            = \frac{0.733\pm 4.9535}{0.6}
+            \Longrightarrow
+            \sqrt{n}=9.477 \Longrightarrow n=89.823
+        \end{equation*}
+
+        Por tanto, evaluando vemos que los valores que cumplen la desigualdad han de ser mayores o iguales que $89.823$. Como $n$ ha de ser un número entero, el número de lotes que hay que probar para comprar al menos $20$ con probabilidad mayor o igual que $0.9452$ es $90$.
+    \end{enumerate}
+    
 \end{ejercicio}
 
 \begin{ejercicio}
@@ -42,4 +528,57 @@
         f (x) = \exp(1 - x), \quad x > 1.
     \]
     Cuando falla la pieza, se sustituye por otra de las mismas características, y se supone que las longitudes de vida de distintas piezas son independientes. Calcular aproximadamente el número de piezas de recambio necesario para asegurar el funcionamiento de la máquina al menos durante $1000$ horas, con probabilidad mayor que $0.95$.
+
+    Sea $n$ el número de piezas de recambio necesarias. Para cada $i=1, \ldots, n$, sea $X_i$ una variable aleatoria que modela la longitud de vida de la $i$-ésima pieza de recambio. Consideramos la variable aleatoria:
+    \[
+        S_{n} = \sum_{i=1}^{n} X_i
+    \]
+    Vemos que $S_{n}$ es la longitud de vida total de las $n$ piezas de recambio. Nos piden:
+    \begin{align*}
+        P[S_{n} \geq 1000] &\geq 0.95
+    \end{align*}
+
+    Como se pide un resultado aproximado, usaremos el Teorema de Lévy. Tenemos que:
+    \begin{align*}
+        E[X_1] &= \int_{1}^{\infty} x \cdot \exp(1-x) \ dx = \int_{1}^{\infty} x \cdot \exp(1) \cdot \exp(-x) \ dx = e\cdot \int_{1}^{\infty} x \cdot e^{-x} \ dx
+        =\\&= e\cdot \left[-(x+1)e^{-x}\right]_1^\infty
+        = e\cdot 2e^{-1} = 2\\
+        E[X_1^2] &= \int_{1}^{\infty} x^2 \cdot \exp(1-x) \ dx = \int_{1}^{\infty} x^2 \cdot \exp(1) \cdot \exp(-x) \ dx = e\cdot \int_{1}^{\infty} x^2 \cdot e^{-x} \ dx
+        =\\&= e\cdot \left[-(x^2+2x+2)e^{-x}\right]_1^\infty
+        = e\cdot 5e^{-1} = 5\\
+        \Var[X_1] &= E[X_1^2] - E[X_1]^2 = 5 - 4 = 1\\
+        E[S_{n}] &= n \cdot E[X_1] = 2n\\
+        \Var[S_{n}] &= n \cdot \Var[X_1] = n
+    \end{align*}
+
+    Por tanto, por el Teorema de Lévy, tenemos que:
+    \begin{align*}
+        \left\{\frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}}\right\} &\xrightarrow{L} \cc{N}(0,1)
+    \end{align*}
+
+    Por tanto, sea $Z$ la tipificada de la normal, tenemos que:
+    \begin{align*}
+        P[S_{n} \geq 1000] \geq 0.95
+        &\Longleftrightarrow P\left[\frac{S_{n}-E[S_n]}{\sqrt{\Var[S_{n}]}} \geq \frac{1000 - E[S_n]}{\sqrt{\Var[S_{n}]}}\right] \geq 0.95
+        \Longleftrightarrow \\ & \Longleftrightarrow P\left[Z \geq \frac{1000 - 2n}{\sqrt{n}}\right] \geq 0.95
+        \Longleftrightarrow \\ & \Longleftrightarrow P\left[Z < -\frac{1000 - 2n}{\sqrt{n}}\right] \geq 0.95
+    \end{align*}
+
+    Por tanto, consultando en la tabla de la normal, tenemos que:
+    \begin{align*}
+        -\frac{1000 - 2n}{\sqrt{n}} \geq 1.645
+        &\Longleftrightarrow \frac{2n-1000}{\sqrt{n}} \geq 1.645
+        \Longleftrightarrow \\&\Longleftrightarrow 2n-1000 \geq 1.645\sqrt{n}
+        \Longleftrightarrow \\&\Longleftrightarrow 2n-1.645\sqrt{n}-1000 \geq 0
+    \end{align*}
+
+    Resolvemos para el caso de la igualdad. Tenemos que:
+    \begin{equation*}
+        \sqrt{n} = \frac{1.645\pm \sqrt{1.645^2+4\cdot 2\cdot 1000}}{4}
+        = \frac{1.645\pm 89.4578}{4}
+        \Longrightarrow
+        \sqrt{n}=22.7757 \Longrightarrow n=518.73
+    \end{equation*}
+
+    Por tanto, evaluando vemos que los valores que cumplen la desigualdad han de ser mayores o iguales que $518.73$. Como $n$ ha de ser un número entero, el número de piezas de recambio necesario para asegurar el funcionamiento de la máquina al menos durante $1000$ horas, con probabilidad mayor que $0.95$ es $519$.
 \end{ejercicio}
