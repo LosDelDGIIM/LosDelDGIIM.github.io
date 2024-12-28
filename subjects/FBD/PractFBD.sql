@@ -570,11 +570,19 @@ SELECT codpie
 -- Muestra el código de las piezas cuyo peso es mayor que el peso de cualquier 'tornillo'.
 SELECT codpie
     FROM pieza
-    WHERE peso > ALL (SELECT peso FROM pieza WHERE nompie='tornillo');
+    WHERE peso >= ALL (SELECT peso FROM pieza WHERE nompie='tornillo');
 --
 
 -- Ejercicio 3.23
 -- Encuentra las piezas con peso máximo. Compara esta solución con la obtenida en el ejercicio 3.14.
 SELECT codpie FROM pieza
-    WHERE peso > ALL (SELECT peso FROM pieza);
---
+    WHERE peso >= ALL (SELECT peso FROM pieza);
+--  Importante el = en el >=, porque si no, no se incluiría la pieza con el peso máximo.
+
+-- Ejemplo 3.18
+-- Mostrar el código de los proveedores que suministran todas las piezas. en AR
+-- \pi_{codpro, codpie}(ventas) : \pi_{codpie}(pieza)
+
+-- Ejercicio 3.24
+-- Encontrar los códigos de las piezas suministradas a todos los proyectos localizados en Londres.
+-- En AR: 
