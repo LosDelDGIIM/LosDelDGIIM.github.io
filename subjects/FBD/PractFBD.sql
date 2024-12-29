@@ -585,4 +585,467 @@ SELECT codpie FROM pieza
 
 -- Ejercicio 3.24
 -- Encontrar los códigos de las piezas suministradas a todos los proyectos localizados en Londres.
--- En AR: 
+-- En AR: \pi_{codpie, codpj}(ventas) : \pi_{codpj}(\sigma_{ciudad='Londres'}(proyecto))
+-- Enfoque Mixto: Not Exists y Resta
+    -- Obtener los códigos de las piezas para los que no existe un proyecto de Londres que no las use.
+    SELECT codpie FROM pieza
+        WHERE NOT EXISTS (  SELECT codpj FROM proyecto WHERE ciudad='Londres'
+                                MINUS
+                            SELECT codpj FROM ventas WHERE ventas.codpie=pieza.codpie
+        );
+-- Enfoque Cálculo Relacional: Dos Not Exists
+    -- Obetener los códigos de las piezas para los que no existe un proyecto de Londres para el que no existe una venta de esa pieza.
+    SELECT codpie FROM pieza
+        WHERE NOT EXISTS ( 
+            SELECT codpj FROM proyecto WHERE ciudad='Londres'
+                AND NOT EXISTS (
+                    SELECT codpj FROM ventas
+                        WHERE   ventas.codpie=pieza.codpie
+                            AND ventas.codpj=proyecto.codpj
+                )
+        );
+-- Enfoque Álgebra Relacional
+    SELECT codpie FROM pieza
+        MINUS
+    SELECT codpie FROM (SELECT codpie, codpj
+                        FROM pieza,
+                             (SELECT codpj FROM proyecto WHERE ciudad='Londres')
+                                MINUS
+                        SELECT codpie, codpj FROM ventas);
+--
+
+-- Ejercicio 3.25 Encontrar aquellos proveedores que envían piezas procedentes de todas las ciudades donde hay un proyecto.
+-- En AR:   \pi_{codpro, ciudad}(ventas \bowtie pieza) : \pi_{ciudad}(proyecto) 
+-- Enfoque Mixto: Not Exists y Resta
+    -- Obtener los códigos de los proveedores para los que no existe una ciudad de proyecto a la que no envíen piezas.
+    SELECT DISTINCT codpro FROM ventas v1
+        WHERE NOT EXISTS (  SELECT ciudad FROM proyecto
+                                MINUS
+                            SELECT ciudad FROM ventas v2 NATURAL JOIN pieza
+                                WHERE v1.codpro=v2.codpro
+        );
+-- Enfoque Cálculo Relacional: Dos Not Exists
+    -- Obtener los códigos de los proveedores para los que no existe una ciudad de proyecto para la cual no exista una venta de pieza.
+    SELECT DISTINCT codpro FROM ventas v1
+        WHERE NOT EXISTS (
+            SELECT ciudad FROM proyecto
+                WHERE NOT EXISTS (
+                    SELECT * FROM ventas v2 NATURAL JOIN pieza
+                        WHERE   v1.codpro=v2.codpro
+                            AND proyecto.ciudad=pieza.ciudad
+                )
+        );
+-- Enfoque Álgebra Relacional
+    SELECT codpro FROM ventas
+        MINUS
+    SELECT codpro FROM (SELECT codpro, proyecto.ciudad
+                        FROM proveedor, proyecto
+                            MINUS
+                        SELECT codpro, ciudad
+                        FROM ventas NATURAL JOIN pieza
+    );
+--
+-- // TODO: REVISAR División
+
+
+-- Ejemplo 3.19 Mostrar el máximo, el mínimo y el total de unidades vendidas.
+SELECT MAX(cantidad), MIN(cantidad), SUM(cantidad)
+    FROM ventas;
+SELECT MAX(DISTINCT cantidad), MIN(DISTINCT cantidad), SUM(DISTINCT cantidad)
+    FROM ventas;
+    -- En el segundo caso, MAX y MIN son iguales, pero SUM es menor puesto que no se suman los valores repetidos.
+--
+
+-- Ejercicio 3.26 Encontrar el número de envíos con más de 1000 unidades.
+SELECT COUNT(*)
+    FROM ventas
+    WHERE cantidad>1000;
+--
+
+-- Ejercicio 3.27 Mostrar el máximo peso.
+SELECT MAX(peso)
+    FROM pieza;
+--
+
+-- Ejercicio 3.28 Mostrar el código de la pieza de máximo peso. Compara esta solución con las correspondientes de los ejercicios 3.14 y 3.23.
+SELECT codpie FROM pieza
+    WHERE peso = (SELECT MAX(peso) FROM pieza);
+--
+
+-- Ejercicio 3.29 Comprueba si la siguiente sentencia resuelve el ejercicio anterior.
+SELECT codpie, MAX(peso)
+    FROM pieza;
+    -- No funciona, puesto que las funciones de agregacion no se pueden mezclar con columnas no agregadas.
+--
+
+-- Ejercicio 3.30 Muestra los códigos de proveedores que han hecho más de 3 envíos diferentes.
+SELECT codpro
+    FROM proveedor
+    WHERE (SELECT COUNT(*) FROM ventas WHERE ventas.codpro=proveedor.codpro) > 3;
+--
+
+-- Ejemplo 3.20 Para cada proveedor, mostrar la cantidad de ventas realizadas y el máximo de unidades suministrado en una venta.
+SELECT codpro, COUNT(*), MAX(cantidad)
+    FROM ventas
+    GROUP BY codpro;
+--
+
+-- Ejercicio 3.31 Mostrar la media de las cantidades vendidas por cada código de pieza junto con su nombre.
+SELECT codpie, nompie, AVG(cantidad)
+    FROM ventas NATURAL JOIN pieza
+    GROUP BY codpie, nompie;
+--
+
+-- Ejercicio 3.32 Encontrar la cantidad media de ventas de la pieza 'P1' realizadas por cada proveedor.
+SELECT codpro, AVG(cantidad)
+    FROM ventas
+    WHERE codpie='P1'
+    GROUP BY codpro;
+--
+
+-- Ejercicio 3.33 Encontrar la cantidad total de cada pieza enviada a cada proyecto.
+SELECT codpj, codpie, SUM(cantidad)
+    FROM ventas
+    GROUP BY codpj, codpie;
+--
+
+-- Ejemplo 3.21 Hallar la cantidad media de ventas realizadas por cada proveedor, indicando solamente los códigos de proveedores que han hecho más de 3 ventas.
+SELECT codpro, AVG(cantidad)
+    FROM ventas
+    GROUP BY codpro
+    HAVING COUNT(*) > 3;
+--
+
+-- Ejemplo 3.22 Mostrar la media de unidades vendidas de la pieza 'P1' realizadas por cada proveedor, indicando solamente la información de aquellos proveedores que han hecho entre 2 y 10 ventas.
+SELECT codpro, AVG(cantidad)
+    FROM ventas
+    WHERE codpie='P1'
+    GROUP BY codpro
+    HAVING COUNT(*) BETWEEN 2 AND 10;
+--
+
+-- Ejemplo 3.23 y Ejercicio 3.34 Encuentra los nombres de proyectos y cantidad media de piezas que recibe por proveedor.
+SELECT codpro, codpj, nompj, AVG(cantidad)
+    FROM ventas NATURAL JOIN proyecto
+    GROUP BY codpro, codpj, nompj
+    ORDER BY nompj, codpro;
+--
+
+-- Ejercicio 3.35. Mostrar los nombres de proveedores tales que el total de sus ventas superen la cantidad de 1000 unidades.
+SELECT codpro, nompro
+    FROM proveedor
+    WHERE (SELECT SUM(cantidad) FROM ventas WHERE codpro=ventas.codpro)>1000;
+SELECT codpro, nompro
+    FROM proveedor NATURAL JOIN ventas
+    GROUP BY codpro, nompro
+    HAVING SUM(cantidad) > 1000;
+--
+
+-- Ejemplo 3.24 Mostrar el proveedor que más ha vendido en total.
+SELECT codpro, SUM(cantidad)
+    FROM ventas
+    GROUP BY codpro
+    HAVING SUM(cantidad) = (SELECT MAX(SUM(cantidad))
+                                FROM ventas v2
+                                GROUP BY v2.codpro);
+--
+
+-- Ejercicio 3.36. Mostrar la pieza que más se ha vendido en total.
+SELECT codpie, SUM(cantidad)
+    FROM ventas
+    GROUP BY codpie
+    HAVING SUM(cantidad) = (SELECT MAX(SUM(cantidad))
+                                FROM ventas v2
+                                GROUP BY v2.codpie);
+--
+
+-- Ejemplo 3.25 Lista las fechas de las ventas en un formato día, mes y año con 4 dígitos.
+SELECT TO_CHAR(fecha, 'dd-mm-yyyy')
+    FROM ventas;
+--
+
+-- Ejemplo 3.26 Encontrar las ventas realizadas entre el 1 de enero de 2002 y el 31 de diciembre de 2004.
+SELECT * FROM ventas
+    WHERE fecha BETWEEN TO_DATE('01-01-2002', 'dd-mm-yyyy') AND TO_DATE('31-12-2004', 'dd-mm-yyyy');
+--
+
+-- Ejercicio 3.37 Comprueba que no funciona correctamente si las comparaciones de fechas se hacen con cadenas.
+SELECT * FROM ventas
+    WHERE fecha BETWEEN '01/01/2002' AND '31/12/2004';
+--
+
+-- Ejemplo 3.27 Mostrar las piezas que no han sido suministradas después del año 2001.
+SELECT codpie
+    FROM pieza
+MINUS
+SELECT codpie
+    FROM ventas
+    WHERE TO_NUMBER(TO_CHAR(fecha, 'yyyy')) > 2001;
+    --WHERE fecha > TO_DATE('31-12-2001', 'dd-mm-yyyy');
+    --
+SELECT codpie
+    FROM pieza
+    WHERE NOT EXISTS (SELECT * FROM ventas
+                            WHERE ventas.codpie=pieza.codpie
+                            AND TO_NUMBER(TO_CHAR(fecha, 'yyyy')) > 2001);
+--
+
+-- Ejemplo 3.28 Agrupar los suministros de la tabla de ventas por años y sumar las cantidades totales anuales.
+SELECT TO_NUMBER(TO_CHAR(fecha, 'yyyy')), SUM(cantidad)
+    FROM ventas
+    GROUP BY TO_NUMBER(TO_CHAR(fecha, 'yyyy'))
+    ORDER BY TO_NUMBER(TO_CHAR(fecha, 'yyyy'));
+--
+
+-- Ejercicio 3.38 Encontrar la cantidad media de piezas suministradas cada mes.
+SELECT TO_NUMBER(TO_CHAR(fecha, 'mm')), AVG(cantidad)
+    FROM ventas
+    GROUP BY TO_NUMBER(TO_CHAR(fecha, 'mm'))
+    ORDER BY TO_NUMBER(TO_CHAR(fecha, 'mm'));
+
+-- Ejemplo 3.29 Mostrar la información de todos los usuarios del sistema; la vista que nos interesa es ALL_USERS.
+SELECT * FROM ALL_USERS
+ORDER BY username;
+--
+
+-- Ejemplo 3.30 Queremos saber qué índices tenemos definidos sobre nuestras tablas, pero en esta ocasión vamos a consultar al propio catálogo para que nos muestre algunas de las vistas que contiene.
+DESCRIBE DICTIONARY
+
+SELECT * FROM DICTIONARY
+    WHERE table_name
+    LIKE '%INDEX%';
+--
+
+-- Ejercicio 3.39 ¿ Cuál es el nombre de la vista que tienes que consultar y qué campos te pueden interesar?
+-- // TODO: Ej 39
+
+-- Ejercicio 3.40 Muestra las tablas ventas a las que tienes acceso de consulta junto con el nombre del propietario y su número de identificación en el sistema.
+SELECT table_name, owner, user_id
+    FROM ALL_TABLES JOIN ALL_USERS ON owner=username
+    WHERE lower(table_name) LIKE '%ventas%';
+--
+
+-- Ejercicio 3.41 Muestra todos tus objetos creados en el sistema. ¿Hay algo más que tablas?
+-- // TODO: Ej 41
+
+-- Ejercicio 3.42 Mostrar los códigos de aquellos proveedores que hayan superado las ventas totales realizadas por el proveedor 'S1'.
+SELECT codpro
+    FROM ventas
+    GROUP BY codpro
+    HAVING SUM(cantidad) > (SELECT SUM(cantidad) FROM ventas WHERE codpro='S1');
+--
+
+-- Ejercicio 3.43 Mostrar los mejores proveedores, entendiéndose como los que tienen mayores cantidades totales.
+SELECT codpro, SUM(cantidad)
+    FROM ventas
+    GROUP BY codpro
+    HAVING SUM(cantidad) = (SELECT MAX(SUM(cantidad)) FROM ventas GROUP BY codpro);
+--
+
+-- Ejercicio 3.44 Mostrar los proveedores que venden piezas a todas las ciudades de los proyectos a los que suministra 'S3', sin incluirlo.
+-- AR: Ciudades de los proyectos a los que suministra 'S3':
+        -- \pi_{ciudad}(\sigma_{codpro=S3}(ventas) \bowtie proyecto)
+-- AR: Parejas de proveedores y ciudades a las que suministran:
+        -- \pi_{codpro, ciudad}(\sigma_{codpro!=S3}(ventas) \bowtie proyecto)
+-- AR: Proveedores que venden a todas las ciudades de los proyectos a los que suministra 'S3', sin incluirlo:
+        -- \pi_{codpro, ciudad}(\sigma_{codpro!=S3}(ventas) \bowtie proyecto) : \pi_{ciudad}(\sigma_{codpro=S3}(ventas) \bowtie proyecto)
+-- Enfoque Mixto: Not Exists y Resta
+    -- Obtener los códigos de los proveedores para los que no existe una ciudad de proyecto al que suministra 'S3' a la cual no envíen piezas a ningún proyecto de esa ciudad.
+    SELECT DISTINCT codpro
+        FROM ventas v1
+        WHERE v1.codpro != 'S3'
+            AND NOT EXISTS (    SELECT ciudad
+                                    FROM (ventas NATURAL JOIN proyecto)
+                                    WHERE codpro='S3'
+                                MINUS
+                                SELECT ciudad
+                                    FROM ventas v2 NATURAL JOIN proyecto
+                                    WHERE v1.codpro=v2.codpro
+                            );
+-- Enfoque Cálculo Relacional: Dos Not Exists
+    -- Obtener los códigos de los proveedores para los que no existe una ciudad de proyecto al que suministra 'S3' para la cual no exista una venta de ese proveedor a un proyecto de esa ciudad.
+    SELECT DISTINCT codpro
+        FROM ventas v1
+        WHERE v1.codpro != 'S3'
+            AND NOT EXISTS (
+                SELECT ciudad
+                    FROM (ventas NATURAL JOIN proyecto p1)
+                    WHERE codpro='S3'
+                        AND NOT EXISTS (
+                            SELECT * FROM ventas v2 NATURAL JOIN proyecto p2
+                                WHERE   v1.codpro=v2.codpro
+                                    AND p1.ciudad=p2.ciudad
+                        )
+            );
+-- Enfoque Álgebra Relacional
+    SELECT codpro
+        FROM ventas
+        WHERE codpro != 'S3'
+    MINUS
+    SELECT codpro
+        FROM (  SELECT codpro, ciudad
+                    FROM (SELECT codpro FROM ventas WHERE codpro!='S3'),
+                        (SELECT ciudad FROM proyecto NATURAL JOIN ventas WHERE codpro='S3')
+                MINUS
+                SELECT codpro, ciudad
+                    FROM ventas NATURAL JOIN proyecto
+                    WHERE codpro!='S3'
+                    AND ciudad IN (SELECT ciudad FROM ventas NATURAL JOIN proyecto WHERE codpro='S3')
+        );
+--
+
+
+-- Ejercicio 3.45 Encontrar aquellos proveedores que hayan hecho al menos diez pedidos.
+SELECT codpro
+    FROM ventas
+    GROUP BY codpro
+    HAVING COUNT(*) >= 10;
+--
+
+-- Ejercicio 3.46 Encontrar aquellos proveedores que venden todas las piezas suministradas por S1.
+-- En AR: \pi_{codpro, codpie}(ventas) : \pi_{codpie}(\sigma_{codpro=S1}(ventas))
+-- Enfoque Mixto: Not Exists y Resta
+    -- Obtener los códigos de los proveedores para los que no existe una pieza suministrada por 'S1' a la que no envíen piezas.
+    SELECT DISTINCT codpro
+        FROM proveedor v1
+        WHERE   codpro != 'S1'
+                AND NOT EXISTS (  SELECT codpie
+                                    FROM ventas
+                                    WHERE codpro='S1'
+                                MINUS
+                                SELECT codpie
+                                    FROM ventas v2
+                                    WHERE v1.codpro=v2.codpro
+                                );
+-- Enfoque Cálculo Relacional: Dos Not Exists
+    -- Obtener los códigos de los proveedores para los que no existe una pieza suministrada por 'S1' para la cual no exista una venta de ese proveedor.
+    SELECT DISTINCT codpro
+        FROM proveedor v1
+        WHERE   codpro != 'S1'
+                AND NOT EXISTS (
+                    SELECT codpie
+                        FROM ventas v3
+                        WHERE codpro='S1'
+                            AND NOT EXISTS (
+                                SELECT * FROM ventas v2
+                                    WHERE   v1.codpro=v2.codpro
+                                        AND v3.codpie=v2.codpie
+                            )
+                );
+-- Enfoque Álgebra Relacional
+    SELECT codpro
+        FROM proveedor
+        WHERE codpro != 'S1'
+    MINUS
+    SELECT codpro
+        FROM (  SELECT codpro, codpie
+                    FROM proveedor,
+                        (SELECT codpie FROM ventas WHERE codpro='S1')
+                MINUS
+                SELECT codpro, codpie
+                    FROM ventas
+        );
+
+-- Ejercicio 3.47 Encontrar la cantidad total de piezas que ha vendido cada proveedor que cumple la condición de vender todas las piezas suministradas por S1.
+-- La división está en el ejercicio anterior.
+SELECT DISTINCT codpro, SUM(cantidad)
+    FROM ventas v1
+    WHERE   codpro != 'S1'
+            AND NOT EXISTS (
+                SELECT codpie
+                    FROM ventas v3
+                    WHERE codpro='S1'
+                        AND NOT EXISTS (
+                            SELECT * FROM ventas v2
+                                WHERE   v1.codpro=v2.codpro
+                                    AND v3.codpie=v2.codpie
+                        )
+            )
+    GROUP BY codpro;
+
+-- Ejercicio 3.48 Encontrar qué proyectos están suministrados por todos lo proveedores que suministran la pieza P3.
+-- En AR: \pi_{codpj, codpro}(ventas) : \pi_{codpro}(\sigma_{codpie=P3}(ventas))
+-- Enfoque Cálculo Relacional: Dos Not Exists
+    -- Obtener los códigos de los proyectos para los que no existe un proveedor que suministre la pieza 'P3' para el cual no exista una venta entre ese proveedor y el proyecto.
+    SELECT DISTINCT codpj
+        FROM proyecto p1
+        WHERE NOT EXISTS (
+            SELECT codpro
+                FROM ventas v1
+                WHERE codpie='P3'
+                    AND NOT EXISTS (
+                        SELECT * FROM ventas v2
+                            WHERE   v1.codpro=v2.codpro
+                                AND p1.codpj=v2.codpj
+                    )
+        );
+--
+
+-- Ejercicio 3.49 Encontrar la cantidad media de piezas suministrada a aquellos proveedores que venden la pieza P3.
+SELECT codpro, AVG(cantidad)
+    FROM ventas
+    WHERE codpro IN (SELECT codpro FROM ventas WHERE codpie='P3')
+    GROUP BY codpro;
+--
+
+-- Ejercicio 3.50 Queremos saber los nombres de tus índices y sobre qué tablas están montados. Indica además su propietario.
+-- // TODO: Ejercicio 3.50
+
+-- Ejercicio 3.51 Implementar el comando DESCRIBE para tu tabla ventas a través de una consulta a las vistas del catálogo.
+-- // TODO: Ejercicio 3.51
+
+-- Ejercicio 3.52 Mostrar para cada proveedor la media de productos suministrados cada año.
+SELECT codpro, TO_NUMBER(TO_CHAR(fecha, 'yyyy')), AVG(cantidad)
+    FROM ventas
+    GROUP BY codpro, TO_NUMBER(TO_CHAR(fecha, 'yyyy'))
+    ORDER BY codpro, TO_NUMBER(TO_CHAR(fecha, 'yyyy'));
+--
+
+-- Ejercicio 3.53 Encontrar todos los proveedores que venden una pieza roja.
+SELECT DISTINCT codpro FROM ventas
+    WHERE codpie IN (SELECT codpie FROM pieza WHERE color='Rojo');
+SELECT DISTINCT codpro
+    FROM ventas NATURAL JOIN pieza
+    WHERE color='Rojo';
+--
+
+-- Ejercicio 3.54 Encontrar todos los proveedores que venden todas las piezas rojas.
+-- AR: \pi_{codpro, codpie}(ventas) : \pi_{codpie}(\sigma_{color='Rojo'}(pieza))
+-- Enfoque Cálculo Relacional: Dos Not Exists
+    -- Obtener los códigos de los proveedores para los que no existe una pieza roja para la cual no exista una venta de ese proveedor.
+    SELECT DISTINCT codpro
+        FROM proveedor v1
+        WHERE NOT EXISTS (
+            SELECT codpie
+                FROM pieza
+                WHERE color='Rojo'
+                    AND NOT EXISTS (
+                        SELECT * FROM ventas v2
+                            WHERE   v1.codpro=v2.codpro
+                                AND pieza.codpie=v2.codpie
+                    )
+        );
+--
+
+-- Ejercicio 3.55 Encontrar todos los proveedores tales que todas las piezas que venden son rojas. 
+-- De todos los proveedores, no nos sirven los que venden alguna pieza que no sea roja.
+SELECT codpro
+    FROM proveedor
+MINUS
+SELECT codpro
+    FROM ventas NATURAL JOIN pieza
+    WHERE color != 'Rojo';
+--
+
+-- Ejercicio 3.56 Encontrar el nombre de aquellos proveedores que venden más de una pieza roja.
+SELECT codpro, nompro, COUNT(*)
+    FROM ((proveedor NATURAL JOIN ventas) JOIN pieza ON ventas.codpie=pieza.codpie)
+    WHERE color='Rojo'
+    GROUP BY codpro, nompro
+    HAVING COUNT(*) > 1;
+SELECT codpro, nompro, COUNT(*)
+    FROM ventas NATURAL JOIN proveedor
+    WHERE codpie IN (SELECT codpie FROM pieza WHERE color='Rojo')
+    GROUP BY codpro, nompro
+    HAVING COUNT(*) > 1;
+--
