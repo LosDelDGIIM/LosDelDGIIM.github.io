@@ -35,3 +35,11 @@ EGP         Exterior Gateway Protocol
 BGP         Border Gateway Protocol
 RIP         Routing Information Protocol
 OSPF        Open Shortest Path First
+TS/TOS      Tipe of Service
+QoS         Quality of Service
+PPP         Point to Point Protocol
+ARP         Address Resolution Protocol
+RARP        Reverse Address Resolution Protocol
+ICMP        Internet Control Message Protocol
+DHCP        Dynamic Host Configuration Protocol
+ACK         Acknowledgment
