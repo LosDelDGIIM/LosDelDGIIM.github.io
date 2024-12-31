@@ -443,25 +443,132 @@
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.6.8}
-    Dada la gramática:
+    Dada la gramática $G=(\{a,b,c,d\},\{S,A,B,C,D\},S,P)$ con producciones:
+    \begin{align*}
+        S &\rightarrow AB \mid C \\
+        A &\rightarrow aAb \mid ab \\
+        B &\rightarrow cBd \mid cd \\
+        C &\rightarrow aCd \mid aDd \\
+        D &\rightarrow bDc \mid bc
+    \end{align*}
+    determinar mediante el algoritmo de Cocke-Younger-Kasami si las palabras $abbccd$ y $aabbcd$ son generadas.\\
+
+    En primer lugar, eliminamos las producciones unitarias:
+    \begin{align*}
+        S &\rightarrow AB \mid aCd\mid aDd \\
+        A &\rightarrow aAb \mid ab \\
+        B &\rightarrow cBd \mid cd \\
+        C &\rightarrow aCd \mid aDd \\
+        D &\rightarrow bDc \mid bc
+    \end{align*}
+
+    Ahora, obtenemos las producciones en forma normal de Chomsky:
+    \begin{align*}
+        S &\rightarrow AB \mid C_aX_1\mid C_aX_2 \\
+        A &\rightarrow C_aX_3 \mid C_aC_b \\
+        B &\rightarrow C_cX_4 \mid C_cC_d \\
+        C &\rightarrow C_aX_1 \mid C_aX_2 \\
+        D &\rightarrow C_bX_5 \mid C_bC_c \\
+        X_1 &\rightarrow CC_d \\
+        X_2 &\rightarrow DC_d \\
+        X_3 &\rightarrow AC_b \\
+        X_4 &\rightarrow BC_d \\
+        X_5 &\rightarrow DC_c \\
+        C_i &\rightarrow i \qquad \text{Para } i\in \{a,b,c,d\}
+    \end{align*}
+
+    En la Tabla~\ref{fig:1.6.8-1} vemos el algoritmo de Cocke-Younger-Kasami para la cadena $abbccd$, que nos muestra que sí es generada por la gramática. La derivación es:
     \begin{equation*}
-        \begin{array}{lllll}
-            &S\rightarrow AB &S\rightarrow C & & \\
-            &A\rightarrow aAb &A\rightarrow ab &B\rightarrow cBd &B\rightarrow cd \\
-            &C\rightarrow aCd &C\rightarrow aDd &D\rightarrow bDc &D\rightarrow bc
-        \end{array}
+        S\Rightarrow C_aX_2\Rightarrow aDC_d\Rightarrow aC_bX_5d\Rightarrow abDC_cd \Rightarrow abC_bC_cC_cd \Rightarrow abbccd
     \end{equation*}
-    determinar mediante el algoritmo de Cocke-Younger-Kasami si las palabras $abbccd$ y $aabbcd$ son generadas.
+    \begin{table}
+        \centering
+        \begin{tabular}{ccccccc}
+            $a$ & $b$ & $b$ & $c$ & $c$ & $d$ \\ \hhline{*{6}{-}}
+            \cell{C_a} & \cell{C_b} & \cell{C_b} & \cell{C_c} & \cell{C_c} & \cell{C_d} \\ \hhline{*{6}{-}}
+            \cell{A} & \cell{\emptyset} & \cell{D} & \cell{\emptyset} & \cell{B} \\ \hhline{*{5}{-}}
+            \cell{X_3} & \cell{\emptyset} & \cell{X_5} & \cell{\emptyset} \\ \hhline{*{4}{-}}
+            \cell{\emptyset} & \cell{D} & \cell{\emptyset} \\ \hhline{*{3}{-}}
+            \cell{\emptyset} & \cell{X_2} \\ \hhline{*{2}{-}}
+            \cell{S} \\ \hhline{*{1}{-}}
+        \end{tabular}
+        \caption{Algoritmo de Cocke-Younger-Kasami para la cadena $abbccd$.}
+        \label{fig:1.6.8-1}
+    \end{table}
+
+    En la Tabla~\ref{fig:1.6.8-2} vemos el algoritmo de Cocke-Younger-Kasami para la cadena $aabbcd$, que nos muestra que sí es generada por la gramática. La derivación es:
+    \begin{equation*}
+        S\Rightarrow AB\Rightarrow C_aX_3C_cC_d
+        \Rightarrow aAC_bcd \Rightarrow aC_aC_bbcd \Rightarrow aabbcd
+    \end{equation*}
+    \begin{table}
+        \centering
+        \begin{tabular}{ccccccc}
+            $a$ & $a$ & $b$ & $b$ & $c$ & $d$ \\ \hhline{*{6}{-}}
+            \cell{C_a} & \cell{C_a} & \cell{C_b} & \cell{C_b} & \cell{C_c} & \cell{C_d} \\ \hhline{*{6}{-}}
+            \cell{\emptyset} & \cell{A} & \cell{\emptyset} & \cell{D} & \cell{B} \\ \hhline{*{5}{-}}
+            \cell{\emptyset} & \cell{X_3} & \cell{\emptyset} & \cell{X_2} \\ \hhline{*{4}{-}}
+            \cell{A} & \cell{\emptyset} & \cell{\emptyset} \\ \hhline{*{3}{-}}
+            \cell{\emptyset} & \cell{\emptyset} \\ \hhline{*{2}{-}}
+            \cell{S} \\ \hhline{*{1}{-}}
+        \end{tabular}
+        \caption{Algoritmo de Cocke-Younger-Kasami para la cadena $aabbcd$.}
+        \label{fig:1.6.8-2}
+    \end{table}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.6.9}
     Determinar si son regulares y/o independientes del contexto los siguientes lenguajes:
     \begin{enumerate}
         \item $\{uu^{-1}u \mid u\in {\{0,1\}}^{\ast}\}$.
+        
+        Veamos que no es independiente del contexto por el recíproco del Lema de Bombeo. Para cada $n\in \bb{N}$, consideramos la palabra $z=0^n1^{n}2^n0^{n}0^n1^n\in L$, con $|z|=6n\geq n$. Consideramos ahora cualquier descomposición de $z$ en cinco partes $z=uvwxy$, con $u,v,w,x,y\in {\{0,1\}}^{\ast}$, de forma que $|vwx|\leq n$ y $|vx|\geq 1$.
+
+        Como $|vwx|\leq n$, considerando que la palabra $z$ está dividida en seis partes, caben dos opciones:
+        \begin{enumerate}
+            \item $vwx$ está contenido entero en una de las partes.
+            \item $vwx$ corta dos partes consecutivas.
+        \end{enumerate}
+
+        En cualquier caso, no corta a tres partes. Por tanto, en el caso de que $vwx$ comienze por $0$'s (recíprocamente con $1$'s), no podremos bombear $0$'s de dos partes distintas, rompiendo entonces el equilibrio. Por tanto, tenemos que:
+        \begin{equation*}
+            uv^2wx^2y\notin L
+        \end{equation*}
+
+        Por tanto, por el recíproco del Lema de Bombeo, $L$ no es independiente del contexto.
         \item $\{uu^{-1}ww^{-1}\mid u,w\in {\{0,1\}}^{\ast}\}$.
+        
+        Veamos que sí es independiente del contexto. Sea la gramática libre de contexto $G=(\{S,A,B,C\},\{0,1\},P,S)$, con $P$ dada por:
+        \begin{align*}
+            S &\rightarrow AB \\
+            A &\rightarrow 0A0 \mid 1A1 \mid C \\
+            B &\rightarrow 0B0 \mid 1B1 \mid C \\
+            C &\rightarrow 0 \mid 1\mid \veps
+        \end{align*}
+
+        Como $\cc{L}(G)=\{uu^{-1}ww^{-1}\mid u,w\in {\{0,1\}}^{\ast}\}$, tenemos que $L$ es independiente del contexto. Veamos ahora que no es regular por el Lema de Bombeo.
+
+        Para cada $n\in \bb{N}$, consideramos la palabra $z=0^{n}1^{2n}0^{n}\in L$, con $|z|=4n\geq n$. Consideramos ahora cualquier descomposición de $z$ de la forma $z=uvw$, con $u,v,w\in {\{0,1\}}^{\ast}$, de forma que $|v|\geq 1$ y $|uv|\leq n$. De esta forma:
+        \begin{equation*}
+            u=0^k \quad v=0^l \quad w=0^{n-k-l}1^{2n}0^n\qquad \text{con } k+l\leq n, l\geq 1
+        \end{equation*}
+
+        Al bombear $v$ $i=2$ veces, tenemos que:
+        \begin{equation*}
+            uv^2w = 0^{k+2l}0^{n-k-l}1^{2n}0^n = 0^{n+l}1^{2n}0^n \notin L
+        \end{equation*}
+        ya que $n+l\neq n$. Por tanto, por el recíproco del Lema de Bombeo, $L$ no es regular.
+
         \item $\{uu^{-1}w \mid u,w\in {\{0,1\}}^{\ast} \text{\ y\ } |u|\leq 3\}$
+        
+        Consideramos los lenguajes auxiliares:
+        \begin{align*}
+            L_1 &= \{uu^{-1}\mid u\in {\{0,1\}}^{\ast},~|u|\leq 3\} \\
+            L_2 &= \{w\mid w\in {\{0,1\}}^{\ast}\}
+        \end{align*}
+
+        Tenemos que $L_1$ es regular por ser finito, y $L_2$ es regular tener expresión regular $(0+1)^{\ast}$. Por tanto, $L$ es regular por ser la concatenación de dos lenguajes regulares.
     \end{enumerate}
-    Justificar las respuestas.
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.6.10}
@@ -471,15 +578,21 @@
         \item Si $u_1,\ldots,u_n$ ($n\geq 1$) son palabras del lenguaje, entonces $(u_1+\cdots + u_n)$ es una palabra del lenguaje.
         \item Si $u_1,\ldots,u_n$ ($n\geq 1$) son palabras del lenguaje, entonces $[u_1 \ast \cdots \ast u_n]$ es una palabra del lenguaje.
     \end{enumerate}
-    Comprobar por el algoritmo de Cocke-Younger-Kasami si las palabras: $(0+1)*3$ y $[(0+1)]$ son generadas por la gramática.
+    Comprobar por el algoritmo de Cocke-Younger-Kasami si las palabras: $(0+1)*3$ y $[(0+1)]$ son generadas por la gramática.\\
+
+    % \\ TODO: Ejercicio 1.6.10
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.6.11}
     Encuentra una gramática libre de contexto en forma normal de Chomsky que genere el siguiente lenguaje:
     \begin{equation*}
-        L = \{ucv \mid u,v\in {\{0,1\}}^{+} \text{\ y nº de subcadenas '} 01 \text{' en\ } u \text{\ es igual al nº subcadenas '}10 \text{' en\ }v\}
+        L = \{ucv \mid u,v\in {\{0,1\}}^{+} \text{\ y nº de subcadenas ``} 01 \text{'' en\ } u \text{\ es igual al nº subcadenas ``}10 \text{'' en\ }v\}
     \end{equation*}
     Comprueba con el algoritmo CYK si la cadena $010c101$ pertenece al lenguaje generado por la gramática.
+
+    % // TODO: Sabemos el autómata. Algoritmo de autómata a gramática.
+
+    
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.6.12}
