@@ -487,6 +487,8 @@ SELECT DISTINCT proveedor.ciudad, ventas.codpie FROM ventas
     JOIN proveedor ON ventas.codpro = proveedor.codpro
     JOIN proyecto ON ventas.codpj = proyecto.codpj
     WHERE proveedor.ciudad = proyecto.ciudad;
+SELECT DISTINCT ciudad, codpie
+    FROM (ventas NATURAL JOIN proyecto) NATURAL JOIN proveedor;
 --
 
 -- Ejemplo 3.13
@@ -526,13 +528,13 @@ SELECT DISTINCT codpie FROM ventas
 
 -- Ejercicio 3.20
 -- Encuentra los proyectos que están en una ciudad donde se fabrica alguna pieza.
-SELECT DISTINCT codpj FROM proyecto
+SELECT codpj FROM proyecto
     WHERE ciudad IN (SELECT ciudad FROM pieza);
 --
 
 -- Ejercicio 3.21
 -- Encuentra los códigos de aquellos proyectos que no utilizan ninguna pieza roja que esté suministrada por un proveedor de Londres. 
-SELECT DISTINCT codpj FROM proyecto
+SELECT codpj FROM proyecto
     WHERE codpj NOT IN 
         (SELECT codpj FROM ventas
             WHERE       codpie IN (SELECT codpie FROM pieza WHERE color='Rojo')
@@ -543,6 +545,10 @@ SELECT codpj FROM proyecto
 SELECT codpj FROM ventas
     WHERE       codpie IN (SELECT codpie FROM pieza WHERE color='Rojo')
             AND codpro IN (SELECT codpro FROM proveedor WHERE ciudad='Londres');
+    -- Más corto
+SELECT DISTINCT codpj FROM ventas
+        WHERE       codpie NOT IN (SELECT codpie FROM pieza WHERE color='Rojo')
+                AND codpro NOT IN (SELECT codpro FROM proveedor WHERE ciudad='Londres');
 --
 
 -- Ejemplo 3.15
