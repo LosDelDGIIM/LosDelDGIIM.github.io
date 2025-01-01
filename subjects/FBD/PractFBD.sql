@@ -1055,3 +1055,189 @@ SELECT codpro, nompro, COUNT(*)
     GROUP BY codpro, nompro
     HAVING COUNT(*) > 1;
 --
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Ejercicios de JJ (si quieres plantillas k tengo para la tabla de baloncesto, me lo dices):
+-- 3.57 Encontrar todos los proveedores que vendiendo todas las piezas rojas cumplen
+-- la condición de que todas sus ventas son de más de 10 unidades.
+-- Proveedores que venden todas las piezas rojas del 3.54:
+select distinct codpro from ventas v1 where not exists(
+    select * from pieza where color = 'Rojo' and not exists(
+        select * from ventas v2
+            where v2.codpro = v1.codpro and v2.codpie = pieza.codpie
+    )
+);
+
+-- Hacemos la división considerando como candidatos solo aquellos que tienen
+-- todas las ventas de más de 10 unidades:
+select distinct codpro from ventas
+minus
+select distinct codpro from ventas where cantidad < 10;
+
+select codpro 
+from (
+select distinct codpro from ventas
+minus
+select distinct codpro from ventas where cantidad < 10
+) v1 
+where not exists(
+    select * from pieza where color = 'Rojo' and not exists(
+        select * from ventas v2
+            where v2.codpro = v1.codpro and v2.codpie = pieza.codpie
+    )
+);
+
+-- 3.58 Coloca el status igual a 1 a aquellos proveedores que solo suministran la 
+-- pieza P1.
+-- Proveedores que solo suministran la pieza P1:
+select distinct codpro from ventas
+minus
+select distinct codpro from ventas where codpie != 'P1';
+
+update proveedor set status = 1
+where codpro in (
+    select distinct codpro from ventas
+    minus
+    select distinct codpro from ventas where codpie != 'P1'
+);
+select codpro, status from proveedor;
+
+-- (Tenemos que cambar el status a S6 y S7, que tienen status 6 y 7, respectivamente)
+-- Deshacer la consulta:
+update proveedor set status = 6 where codpro = 'S6';
+update proveedor set status = 7 where codpro = 'S7';
+
+-- 3.59 Encuentra, de entre las piezas que no se han vendido en septiembre de 2009,
+-- las ciudades de aquéllas que se han vendido en mayor cantidad durante Agosto de 
+-- ese mismo año.
+-- Piezas que no se han vendido en septiembre de 2009:
+select distinct codpie
+from ventas
+where fecha != to_date('09/09', 'mm/yy');
+
+-- // TODO:
+
+-- Baloncesto SIN OPERADORES DE AGREGACIÓN
+-- 3.60. Muestra la información disponible acerca de los encuentros de liga.
+select * from encuentros;
+
+-- 3.61. Muestra los nombres de los equipos y de los jugadores jugadores 
+-- ordenados alfabéticamente.
+select nombre_j from jugadores order by nombre_j;
+select nombre_e from equipos order by nombre_e;
+
+(select nombre_j as nombre from jugadores
+union
+select nombre_e as nombre from equipos)
+order by nombre;
+
+-- 3.62. Muestra los jugadores que no tienen ninguna falta.
+-- Muestro los jugadores que no aparecen en faltas
+select cod_j from jugadores
+minus
+select cod_j from faltas;
+
+-- 3.63. Muestra los compañeros de equipo del jugador que tiene por código x
+-- (codJ='x') y donde x es uno elegido por ti.
+-- x = J01
+select cod_j, nombre_j
+from jugadores
+where cod_e = (select cod_e from jugadores where cod_j = 'J01');
+
+-- 3.64. Muestra los jugadores y la localidad donde juegan (la de sus equipos).
+select cod_j, nombre_j, localidad
+from jugadores natural join equipos;
+
+-- 3.65. Muestra todos los encuentros posibles de la liga.
+-- Equipos x Equipos donde no se repita (a,a) y si tenemos (a,b), no salga (b, a)
+select e1.cod_e, e2.cod_e
+from equipos e1, equipos e2
+where e1.cod_e < e2.cod_e;
+
+-- 3.66. Muestra los equipos que han ganado algún encuentro jugando como local.
+select distinct e_local
+from encuentros
+where p_local > p_visitante;
+
+-- 3.67. Muestra los equipos que han ganado algún encuentro.
+select cod_e from equipos where
+ cod_e in (select distinct e_local from encuentros where p_local > p_visitante)
+ or
+ cod_e in (select distinct e_visitante from encuentros where p_visitante > p_local);
+ 
+select distinct e_local as cod_e from encuentros where p_local > p_visitante
+union
+select distinct e_visitante as cod_e from encuentros where p_visitante > p_local;
+
+-- 3.68. Muestra los equipos que cumplen que todos los encuentros que han ganado 
+-- lo han hecho como equipo local.
+-- Equipos que han ganado algún encuentro - equipos que han ganado algún 
+-- encuentro como visitante
+(select distinct e_local as cod_e from encuentros where p_local > p_visitante
+union
+select distinct e_visitante as cod_e from encuentros where p_visitante > p_local)
+minus
+select distinct e_visitante as cod_e from encuentros where p_local < p_visitante;
+
+-- 3.69. Muestra los equipos que han ganado todos los encuentros jugando como
+-- equipo local.
+-- Todos los equipos locales menos los equipos locales que han perdido
+select distinct e_local from encuentros
+minus
+select distinct e_local from encuentros where p_local < p_visitante;
