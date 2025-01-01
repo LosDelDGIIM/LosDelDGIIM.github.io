@@ -302,7 +302,74 @@ SELECT codpro,codpie, TO_CHAR(fecha,'"Dia" day,dd/mm/yy')
 
 
 -- Ejercicio 2.7
--- Rellenar Tablas Baloncesto.
+-- Inserción de equipos
+INSERT INTO equipos VALUES ('E01', 'Dragones', 'Madrid', 'Juan Perez', TO_DATE('01/01/2010','DD/MM/YYYY'));
+INSERT INTO equipos VALUES ('E02', 'Fénix', 'Barcelona', 'Laura López', TO_DATE('15/02/2012','DD/MM/YYYY'));
+INSERT INTO equipos VALUES ('E03', 'Tiburones', 'Valencia', 'Carlos Ruiz', TO_DATE('10/06/2015','DD/MM/YYYY'));
+INSERT INTO equipos VALUES ('E04', 'Cóndores', 'Sevilla', 'Ana Martínez', TO_DATE('20/09/2018','DD/MM/YYYY'));
+
+-- Inserción de jugadores
+-- Dragones
+INSERT INTO jugadores VALUES ('J01', 'E01', 'Pedro García');
+INSERT INTO jugadores VALUES ('J02', 'E01', 'Luis Fernández');
+INSERT INTO jugadores VALUES ('J03', 'E01', 'Sergio Sánchez');
+INSERT INTO jugadores VALUES ('J04', 'E01', 'Diego Torres');
+INSERT INTO jugadores VALUES ('J05', 'E01', 'Pablo Gómez');
+
+-- Fénix
+INSERT INTO jugadores VALUES ('J06', 'E02', 'Andrés López');
+INSERT INTO jugadores VALUES ('J07', 'E02', 'Ricardo Díaz');
+INSERT INTO jugadores VALUES ('J08', 'E02', 'Miguel Álvarez');
+INSERT INTO jugadores VALUES ('J09', 'E02', 'Jorge Ramírez');
+INSERT INTO jugadores VALUES ('J10', 'E02', 'David Vega');
+
+-- Tiburones
+INSERT INTO jugadores VALUES ('J11', 'E03', 'José Moreno');
+INSERT INTO jugadores VALUES ('J12', 'E03', 'Hugo Prieto');
+INSERT INTO jugadores VALUES ('J13', 'E03', 'Alberto Márquez');
+INSERT INTO jugadores VALUES ('J14', 'E03', 'Carlos Romero');
+INSERT INTO jugadores VALUES ('J15', 'E03', 'Gabriel Ortiz');
+
+-- Cóndores
+INSERT INTO jugadores VALUES ('J16', 'E04', 'Antonio Flores');
+INSERT INTO jugadores VALUES ('J17', 'E04', 'Mario Castro');
+INSERT INTO jugadores VALUES ('J18', 'E04', 'Iván Gómez');
+INSERT INTO jugadores VALUES ('J19', 'E04', 'Felipe Herrera');
+INSERT INTO jugadores VALUES ('J20', 'E04', 'Julio Jiménez');
+
+-- Inserción de encuentros
+INSERT INTO encuentros VALUES ('E01', 'E02', TO_DATE('01/01/2023','DD/MM/YYYY'), 80, 65);
+INSERT INTO encuentros VALUES ('E01', 'E03', TO_DATE('08/01/2023','DD/MM/YYYY'), 75, 70);
+INSERT INTO encuentros VALUES ('E01', 'E04', TO_DATE('15/01/2023','DD/MM/YYYY'), 85, 60);
+INSERT INTO encuentros VALUES ('E02', 'E03', TO_DATE('22/01/2023','DD/MM/YYYY'), 60, 78);
+INSERT INTO encuentros VALUES ('E02', 'E04', TO_DATE('29/01/2023','DD/MM/YYYY'), 70, 80);
+INSERT INTO encuentros VALUES ('E03', 'E04', TO_DATE('05/02/2023','DD/MM/YYYY'), 88, 90);
+INSERT INTO encuentros VALUES ('E02', 'E01', TO_DATE('12/02/2023','DD/MM/YYYY'), 62, 70);
+INSERT INTO encuentros VALUES ('E03', 'E01', TO_DATE('19/02/2023','DD/MM/YYYY'), 68, 75);
+INSERT INTO encuentros VALUES ('E04', 'E01', TO_DATE('26/02/2023','DD/MM/YYYY'), 55, 65);
+INSERT INTO encuentros VALUES ('E04', 'E02', TO_DATE('05/03/2023','DD/MM/YYYY'), 82, 78);
+
+-- Inserción de faltas (al menos una por encuentro)
+INSERT INTO faltas VALUES ('J01', 'E01', 'E02', 3);
+INSERT INTO faltas VALUES ('J06', 'E01', 'E02', 2);
+INSERT INTO faltas VALUES ('J02', 'E01', 'E03', 1);
+INSERT INTO faltas VALUES ('J11', 'E01', 'E03', 4);
+INSERT INTO faltas VALUES ('J03', 'E01', 'E04', 2);
+INSERT INTO faltas VALUES ('J16', 'E01', 'E04', 3);
+INSERT INTO faltas VALUES ('J07', 'E02', 'E03', 5);
+INSERT INTO faltas VALUES ('J13', 'E02', 'E03', 4);
+INSERT INTO faltas VALUES ('J09', 'E02', 'E04', 2);
+INSERT INTO faltas VALUES ('J19', 'E02', 'E04', 3);
+INSERT INTO faltas VALUES ('J14', 'E03', 'E04', 2);
+INSERT INTO faltas VALUES ('J18', 'E03', 'E04', 1);
+INSERT INTO faltas VALUES ('J08', 'E02', 'E01', 3);
+INSERT INTO faltas VALUES ('J05', 'E02', 'E01', 2);
+INSERT INTO faltas VALUES ('J12', 'E03', 'E01', 4);
+INSERT INTO faltas VALUES ('J04', 'E03', 'E01', 1);
+INSERT INTO faltas VALUES ('J15', 'E04', 'E01', 3);
+INSERT INTO faltas VALUES ('J10', 'E04', 'E01', 2);
+INSERT INTO faltas VALUES ('J20', 'E04', 'E02', 1);
+INSERT INTO faltas VALUES ('J17', 'E04', 'E02', 2);
 --
 
 
@@ -310,11 +377,6 @@ SELECT codpro,codpie, TO_CHAR(fecha,'"Dia" day,dd/mm/yy')
 DROP TABLE prueba1;
 DROP TABLE serjefe;
 DROP TABLE plantilla;
-
-DROP TABLE faltas;
-DROP TABLE encuentros;
-DROP TABLE jugadores;
-DROP TABLE equipos;
 COMMIT;
 
 
@@ -990,7 +1052,7 @@ SELECT DISTINCT codpro, SUM(cantidad)
 -- Ejercicio 3.49 Encontrar la cantidad media de piezas suministrada a aquellos proveedores que venden la pieza P3.
 SELECT codpro, AVG(cantidad)
     FROM ventas
-    WHERE codpro IN (SELECT codpro FROM ventas WHERE codpie='P3')
+    WHERE codpie='P3'
     GROUP BY codpro;
 --
 
@@ -1056,149 +1118,181 @@ SELECT codpro, nompro, COUNT(*)
     HAVING COUNT(*) > 1;
 --
 
+-- Ejercicio 3.57 Encontrar todos los proveedores que vendiendo todas las piezas rojas cumplen la condición de que todas sus ventas son de más de 10 unidades.
+    -- Usamos el Ejercicio 3.54
+SELECT codpro
+    FROM proveedor v1 
+    WHERE NOT EXISTS (
+            SELECT codpie
+                FROM pieza
+                WHERE color='Rojo'
+                    AND NOT EXISTS (
+                        SELECT * FROM ventas v2
+                            WHERE   v1.codpro=v2.codpro
+                                AND pieza.codpie=v2.codpie
+                    )
+        )
+MINUS   -- Importante. No nos quedamos con los que tengan UNA venta de más de 10 unidades, sino con los que tengan TODAS las ventas de más de 10 unidades.
+SELECT codpro
+    FROM ventas
+    WHERE cantidad <= 10;
+
+-- Otra opción. La restricción es sobre los candidatos.
+SELECT codpro
+    FROM (
+        SELECT codpro FROM proveedor
+        MINUS
+        SELECT codpro FROM ventas WHERE cantidad <= 10
+    ) v1
+    WHERE NOT EXISTS (
+            SELECT codpie
+                FROM pieza
+                WHERE color='Rojo'
+                    AND NOT EXISTS (
+                        SELECT * FROM ventas v2
+                            WHERE   v1.codpro=v2.codpro
+                                AND pieza.codpie=v2.codpie
+                    )
+        );
+--
 
 
+-- Ejercicio 3.58 Coloca el status igual a 1 a aquellos proveedores que solo suministran la pieza P1.
+-- Los proveedores elegidos son S6 y S7
+SELECT codpro FROM ventas
+MINUS
+SELECT codpro FROM ventas
+    WHERE codpie != 'P1';
 
+-- Sus status son: S6 -> 6 y S7 -> 7 (necesario para deshacer la consulta)
+SELECT codpro, status FROM proveedor
+    WHERE codpro IN (
+        SELECT codpro FROM ventas
+        MINUS
+        SELECT codpro FROM ventas
+            WHERE codpie != 'P1'
+    );
 
+-- Consulta pedida:
+UPDATE proveedor
+    SET status = 1
+    WHERE codpro IN (
+        SELECT codpro FROM ventas
+        MINUS
+        SELECT codpro FROM ventas
+            WHERE codpie != 'P1'
+    );
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--- Ejercicios de JJ (si quieres plantillas k tengo para la tabla de baloncesto, me lo dices):
--- 3.57 Encontrar todos los proveedores que vendiendo todas las piezas rojas cumplen
--- la condición de que todas sus ventas son de más de 10 unidades.
--- Proveedores que venden todas las piezas rojas del 3.54:
-select distinct codpro from ventas v1 where not exists(
-    select * from pieza where color = 'Rojo' and not exists(
-        select * from ventas v2
-            where v2.codpro = v1.codpro and v2.codpie = pieza.codpie
-    )
-);
-
--- Hacemos la división considerando como candidatos solo aquellos que tienen
--- todas las ventas de más de 10 unidades:
-select distinct codpro from ventas
-minus
-select distinct codpro from ventas where cantidad < 10;
-
-select codpro 
-from (
-select distinct codpro from ventas
-minus
-select distinct codpro from ventas where cantidad < 10
-) v1 
-where not exists(
-    select * from pieza where color = 'Rojo' and not exists(
-        select * from ventas v2
-            where v2.codpro = v1.codpro and v2.codpie = pieza.codpie
-    )
-);
-
--- 3.58 Coloca el status igual a 1 a aquellos proveedores que solo suministran la 
--- pieza P1.
--- Proveedores que solo suministran la pieza P1:
-select distinct codpro from ventas
-minus
-select distinct codpro from ventas where codpie != 'P1';
-
-update proveedor set status = 1
-where codpro in (
-    select distinct codpro from ventas
-    minus
-    select distinct codpro from ventas where codpie != 'P1'
-);
-select codpro, status from proveedor;
-
--- (Tenemos que cambar el status a S6 y S7, que tienen status 6 y 7, respectivamente)
 -- Deshacer la consulta:
-update proveedor set status = 6 where codpro = 'S6';
-update proveedor set status = 7 where codpro = 'S7';
+UPDATE proveedor
+    SET status = 6
+    WHERE codpro = 'S6';
+UPDATE proveedor
+    SET status = 7
+    WHERE codpro = 'S7';
+--
 
--- 3.59 Encuentra, de entre las piezas que no se han vendido en septiembre de 2009,
--- las ciudades de aquéllas que se han vendido en mayor cantidad durante Agosto de 
--- ese mismo año.
+-- Ejercicio 3.59 Encuentra, de entre las piezas que no se han vendido en septiembre de 2009, las ciudades de aquellas que se han vendido en mayor cantidad durante Agosto de ese mismo año.
+-- Piezas, junto a la cantidad que se han vendido en Agosto de 2009:
+SELECT codpie, SUM(cantidad)
+    FROM ventas
+    WHERE TO_CHAR(fecha, 'MM/YYYY') = '08/2009'
+    GROUP BY codpie;
 -- Piezas que no se han vendido en septiembre de 2009:
-select distinct codpie
-from ventas
-where fecha != to_date('09/09', 'mm/yy');
+SELECT codpie FROM pieza
+MINUS 
+SELECT codpie FROM ventas
+    WHERE TO_CHAR(fecha, 'MM/YYYY') = '09/2009';
+-- Piezas que no se han vendido en septiembre de 2009, junto a la cantidad que se han vendido en Agosto de 2009:
+SELECT codpie, SUM(cantidad)
+    FROM (
+        SELECT codpie FROM pieza
+        MINUS 
+        SELECT codpie FROM ventas
+            WHERE TO_CHAR(fecha, 'MM/YYYY') = '09/2009'
+    )  
+    NATURAL JOIN ventas
+    WHERE TO_CHAR(fecha, 'MM/YYYY') = '08/2009'
+    GROUP BY codpie;
+-- CONSULTA. Ciudades de aquellas piezas que no se han vendido en septiembre de 2009 que se han vendido en mayor cantidad durante Agosto de 2009:
+SELECT DISTINCT codpie, ciudad
+    FROM (
+        SELECT codpie FROM pieza
+        MINUS 
+        SELECT codpie FROM ventas
+            WHERE TO_CHAR(fecha, 'MM/YYYY') = '09/2009'
+    )  
+    NATURAL JOIN pieza NATURAL JOIN ventas
+    WHERE cantidad >= ALL (
+        SELECT SUM(cantidad)
+            FROM (
+                SELECT codpie FROM pieza
+                MINUS 
+                SELECT codpie FROM ventas
+                    WHERE TO_CHAR(fecha, 'MM/YYYY') = '09/2009'
+            )  
+            NATURAL JOIN ventas
+            WHERE TO_CHAR(fecha, 'MM/YYYY') = '08/2009'
+            GROUP BY codpie
+    );
+-- 2ª Opción. Obliga a que se hayan vendido en Agosto 2009
+SELECT DISTINCT codpie, ciudad, SUM(cantidad) AS TotalAgosto
+    FROM (
+        SELECT codpie FROM pieza
+        MINUS 
+        SELECT codpie FROM ventas
+            WHERE TO_CHAR(fecha, 'MM/YYYY') = '09/2009'
+    )  
+    NATURAL JOIN pieza NATURAL JOIN ventas
+    WHERE TO_CHAR(fecha, 'MM/YYYY') = '08/2009'
+    GROUP BY codpie, ciudad
+    HAVING SUM(cantidad) >= ALL (
+        SELECT SUM(cantidad)
+            FROM (
+                SELECT codpie FROM pieza
+                MINUS 
+                SELECT codpie FROM ventas
+                    WHERE TO_CHAR(fecha, 'MM/YYYY') = '09/2009'
+            )  
+            NATURAL JOIN ventas
+            WHERE TO_CHAR(fecha, 'MM/YYYY') = '08/2009'
+            GROUP BY codpie
+    );
 
--- // TODO:
+
+-- Base de Datos del Baloncesto
+-- Ejercicio 3.60 Muestra la información disponible acerca de los encuentros de liga.
+SELECT * FROM encuentros;
+--
+
+-- Ejercicio 3.61 Muestra los nombres de los equipos y de los jugadores jugadores ordenados alfabéticamente.
+SELECT nombreJ FROM jugadores
+    ORDER BY nombreJ;
+SELECT nombreE FROM equipos
+    ORDER BY nombreE;
+-- Otra opción, todo junto:
+    SELECT nombreJ AS nombre FROM jugadores
+UNION
+    SELECT nombreE AS nombre FROM equipos
+ORDER BY nombre;
+
+-- Ejercicio 3.62 Muestra los jugadores que no tienen ninguna falta.
+SELECT codJ FROM jugadores
+MINUS
+SELECT codJ FROM faltas
+    WHERE num > 0;
+--
+
+-- Ejercicio 3.63 Muestra los compañeros de equipo del jugador que tiene por código x (codJ='x') y donde x es uno elegido por ti.
+SELECT codJ, nombreJ
+    FROM jugadores
+    WHERE   codE = (SELECT codE FROM jugadores WHERE codJ='J01')
+        AND codJ != 'J01';
+
+
+
 
 -- Baloncesto SIN OPERADORES DE AGREGACIÓN
--- 3.60. Muestra la información disponible acerca de los encuentros de liga.
-select * from encuentros;
-
--- 3.61. Muestra los nombres de los equipos y de los jugadores jugadores 
--- ordenados alfabéticamente.
-select nombre_j from jugadores order by nombre_j;
-select nombre_e from equipos order by nombre_e;
-
-(select nombre_j as nombre from jugadores
-union
-select nombre_e as nombre from equipos)
-order by nombre;
-
--- 3.62. Muestra los jugadores que no tienen ninguna falta.
--- Muestro los jugadores que no aparecen en faltas
-select cod_j from jugadores
-minus
-select cod_j from faltas;
-
--- 3.63. Muestra los compañeros de equipo del jugador que tiene por código x
--- (codJ='x') y donde x es uno elegido por ti.
--- x = J01
-select cod_j, nombre_j
-from jugadores
-where cod_e = (select cod_e from jugadores where cod_j = 'J01');
 
 -- 3.64. Muestra los jugadores y la localidad donde juegan (la de sus equipos).
 select cod_j, nombre_j, localidad
