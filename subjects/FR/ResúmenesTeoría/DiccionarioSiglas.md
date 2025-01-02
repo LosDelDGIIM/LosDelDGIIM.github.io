@@ -43,3 +43,13 @@ RARP        Reverse Address Resolution Protocol
 ICMP        Internet Control Message Protocol
 DHCP        Dynamic Host Configuration Protocol
 ACK         Acknowledgment
+
+# Tema 3
+UDP         User Datagram Protocol | Protocolo de Datagrama de Usuario
+TCP         Transmission Control Protocol | Protocolo de Control de Transmisión
+TPDU        Transmission Paquet Data Unit
+APDU        Application Paquet Data Unit
+TFTP        Trivial File Transport Protocol
+ARQ         Automatic Repeat Request
+ISN         Initial Sequence Number
+MSL         Maximum Segment Lifetime
