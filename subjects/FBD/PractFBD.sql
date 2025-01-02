@@ -1566,3 +1566,59 @@ SELECT * FROM USER_TABLES;
 -- Ejercicio 5.2
 -- // TODO: Ejercicio 5.2
 --
+
+
+
+/*--------------------------------------------------------------------------------------
+    Capítulo 6: Nivel interno: Índices, clusters y hashing
+*/--------------------------------------------------------------------------------------
+
+-- Ejemplo 6.1 Si queremos acelerar las consultas cuando busquemos a un proveedor por su nombre podemos crear un índice asociado al campo nompro de la tabla proveedor.
+CREATE INDEX indice_proveedores ON proveedor(nompro);
+--
+
+-- Ejemplo 6.2 Podemos comprobar la creación de este índice mediante la siguiente consulta al catálogo.
+SELECT *
+    FROM user_indexes
+    WHERE lower(index_name) = 'indice_proveedores';
+--
+
+-- Ejemplo 6.3 Para crear el "cluster" mostrado en la figura 6.1, usamos la siguiente sentencia.
+CREATE CLUSTER cluster_codpro(codpro VARCHAR2(3));
+CREATE TABLE proveedor2(
+    codpro VARCHAR2(3) PRIMARY KEY,
+    nompro VARCHAR2(30) NOT NULL,
+    status NUMBER(2) CHECK(status>=1 AND status<=10),
+    ciudad VARCHAR2(15))
+    CLUSTER cluster_codpro(codpro);
+CREATE TABLE ventas2(
+codpro VARCHAR2(3) REFERENCES proveedor2(codpro),
+    codpie REFERENCES pieza(codpie),
+    codpj REFERENCES proyecto(codpj),
+    cantidad NUMBER(4),
+    fecha DATE,
+    PRIMARY KEY (codpro,codpie,codpj))
+    CLUSTER cluster_codpro(codpro);
+--
+
+-- Ejemplo 6.4 Para crear el índice del "cluster" de la figura 6.1 usaremos:
+CREATE INDEX indice_cluster ON CLUSTER cluster_codpro;
+
+-- Ejercicio 6.1 Rellena las tablas proveedor2 y ventas2 con los datos de sus homólogas originales.
+INSERT INTO proveedor2 (SELECT * FROM proveedor);
+INSERT INTO ventas2 (SELECT * FROM ventas);
+--
+
+-- Ejercicio 6.2 Realiza alguna consulta a los datos contenidos en el "cluster" cluster_codpro.
+SELECT * FROM proveedor2;
+--
+
+-- Ejercicio 6.3 Consulta en el catálogo los objetos recién creados.
+SELECT * FROM user_tables
+    WHERE lower(table_name) LIKE '%proveedor2%';
+--
+
+/*------------------------------------------------------------------------------------------
+    EJERCICIOS ADICIONALES
+*/------------------------------------------------------------------------------------------
+-- Proveedores que han vendido a un único proyecto de cada una de las ciudades donde hay proyectos y una pieza distinta a cada uno necesitando ser esa pieza de una ciudad distinta a la del proveedor en cuestión.
