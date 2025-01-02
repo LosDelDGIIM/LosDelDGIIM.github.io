@@ -1288,50 +1288,72 @@ SELECT codJ, nombreJ
     FROM jugadores
     WHERE   codE = (SELECT codE FROM jugadores WHERE codJ='J01')
         AND codJ != 'J01';
+--
 
+-- Ejercicio 3.64 Muestra los jugadores y la localidad donde juegan (la de sus equipos).
+SELECT codJ, nombreJ, localidad
+    FROM jugadores NATURAL JOIN equipos;
+--
 
+-- Ejercicio 3.65 Muestra todos los encuentros posibles de la liga.
+SELECT e1.codE AS local, e2.codE AS visitante
+    FROM equipos e1, equipos e2
+    WHERE e1.codE != e2.codE;
+--
 
+-- Ejercicio 3.66 Muestra los equipos que han ganado algún encuentro jugando como local.
+SELECT DISTINCT ELocal
+    FROM encuentros
+    WHERE PLocal > PVisitante;
+--
 
--- Baloncesto SIN OPERADORES DE AGREGACIÓN
+-- Ejercicio 3.67 Muestra los equipos que han ganado algún encuentro.
+SELECT ELocal AS equipo FROM encuentros
+    WHERE PLocal > PVisitante
+UNION
+SELECT EVisitante AS equipo FROM encuentros
+    WHERE PVisitante > PLocal;
+-- Otra opción, más larga:
+SELECT CodE FROM equipos
+    WHERE CodE IN (
+        SELECT ELocal FROM encuentros
+            WHERE PLocal > PVisitante
+    )
+    OR CodE IN (
+        SELECT EVisitante FROM encuentros
+            WHERE PVisitante > PLocal
+    );
+--
 
--- 3.64. Muestra los jugadores y la localidad donde juegan (la de sus equipos).
-select cod_j, nombre_j, localidad
-from jugadores natural join equipos;
+-- Ejercicio 3.68 Muestra los equipos que cumplen que todos los encuentros que han ganado lo han hecho como equipo local.
+-- Todos los equipos, menos los que han ganado como visitante
+SELECT CodE FROM equipos
+    MINUS
+SELECT EVisitante FROM encuentros
+    WHERE PLocal < PVisitante;
 
--- 3.65. Muestra todos los encuentros posibles de la liga.
--- Equipos x Equipos donde no se repita (a,a) y si tenemos (a,b), no salga (b, a)
-select e1.cod_e, e2.cod_e
-from equipos e1, equipos e2
-where e1.cod_e < e2.cod_e;
+-- Ejercicio 3.69 Muestra los equipos que han ganado todos los encuentros jugando como equipo local.
+-- Todos los equipos, menos los que han perdido o empatado como local
+SELECT CodE FROM equipos
+    MINUS
+SELECT ELocal FROM encuentros
+    WHERE PLocal <= PVisitante;
+--
 
--- 3.66. Muestra los equipos que han ganado algún encuentro jugando como local.
-select distinct e_local
-from encuentros
-where p_local > p_visitante;
+-- Ejercicio 3.70 Muestra los encuentros que faltan para terminar la liga suponiendo que en la tabla Encuentros solo se almacenan los encuentros celebrados hasta la fecha
+-- A todos los encuentros posibles, le quito los que ya se han jugado
+SELECT e1.codE AS local, e2.codE AS visitante
+    FROM equipos e1, equipos e2
+    WHERE e1.codE != e2.codE
+MINUS
+SELECT ELocal AS local, EVisitante AS visitante
+    FROM encuentros;
+--
 
--- 3.67. Muestra los equipos que han ganado algún encuentro.
-select cod_e from equipos where
- cod_e in (select distinct e_local from encuentros where p_local > p_visitante)
- or
- cod_e in (select distinct e_visitante from encuentros where p_visitante > p_local);
- 
-select distinct e_local as cod_e from encuentros where p_local > p_visitante
-union
-select distinct e_visitante as cod_e from encuentros where p_visitante > p_local;
-
--- 3.68. Muestra los equipos que cumplen que todos los encuentros que han ganado 
--- lo han hecho como equipo local.
--- Equipos que han ganado algún encuentro - equipos que han ganado algún 
--- encuentro como visitante
-(select distinct e_local as cod_e from encuentros where p_local > p_visitante
-union
-select distinct e_visitante as cod_e from encuentros where p_visitante > p_local)
-minus
-select distinct e_visitante as cod_e from encuentros where p_local < p_visitante;
-
--- 3.69. Muestra los equipos que han ganado todos los encuentros jugando como
--- equipo local.
--- Todos los equipos locales menos los equipos locales que han perdido
-select distinct e_local from encuentros
-minus
-select distinct e_local from encuentros where p_local < p_visitante;
+-- Ejercicio 3.71 Muestra los encuentros que tienen lugar en la misma localidad.
+-- (Entendemos que se refiere a encuentros de equipos de la misma localidad)
+SELECT ELocal, EVisitante, l.localidad
+    FROM encuentros JOIN equipos l ON ELocal=l.codE
+                    JOIN equipos v ON EVisitante=v.codE
+    WHERE l.localidad = v.localidad;
+--
