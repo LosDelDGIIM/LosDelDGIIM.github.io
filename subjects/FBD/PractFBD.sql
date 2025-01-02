@@ -1357,3 +1357,212 @@ SELECT ELocal, EVisitante, l.localidad
                     JOIN equipos v ON EVisitante=v.codE
     WHERE l.localidad = v.localidad;
 --
+
+-- Ejercicio 3.72 Para cada equipo muestra cantidad de encuentros que ha disputado como local.
+SELECT ELocal, COUNT(*)
+    FROM encuentros
+    GROUP BY ELocal;
+--
+
+-- Ejercicio 3.73 Muestra los encuentros en los que se alcanzó mayor diferencia.
+SELECT * FROM encuentros
+    WHERE abs(PLocal - PVisitante)=(SELECT MAX(abs(PLocal - PVisitante)) FROM encuentros);
+--
+
+-- Ejercicio 3.74 Muestra los jugadores que no han superado 3 faltas acumuladas.
+SELECT CodJ FROM jugadores
+MINUS
+SELECT CodJ FROM faltas
+    GROUP BY CodJ
+    HAVING (SUM(num)>3);
+-- Si queremos mostrar las faltas que tienen (no saldrán los que tienen 0 faltas)
+SELECT CodJ, SUM(num)
+    FROM faltas
+    GROUP BY CodJ
+    HAVING (SUM(num)<=3);
+--
+
+-- Ejercicio 3.75 Muestra los equipos con mayores puntuaciones en los partidos jugados fuera de casa.
+SELECT EVisitante, PVisitante FROM encuentros
+    WHERE PVisitante=(SELECT MAX(PVisitante) FROM encuentros);
+--
+
+-- Ejercicio 3.76 Muestra la cantidad de victorias de cada equipo, jugando como local o como visitante.
+SELECT equipo, COUNT(*)
+    FROM
+        (SELECT ELocal AS equipo
+            FROM encuentros
+            WHERE PLocal > PVisitante
+        UNION ALL
+        SELECT EVisitante AS equipo
+            FROM encuentros
+            WHERE PLocal < PVisitante)
+    GROUP BY equipo;
+--
+
+-- Ejercicio 3.77 Muestra el equipo con mayor número de victorias.
+SELECT equipo, COUNT(*)
+    FROM
+        (SELECT ELocal AS equipo
+            FROM encuentros
+            WHERE PLocal > PVisitante
+        UNION ALL
+        SELECT EVisitante AS equipo
+            FROM encuentros
+            WHERE PLocal < PVisitante)
+    GROUP BY equipo
+    HAVING COUNT(*)=(SELECT MAX(COUNT(*)) FROM
+            (SELECT ELocal AS equipo
+                FROM encuentros
+                WHERE PLocal > PVisitante
+            UNION ALL
+            SELECT EVisitante AS equipo
+                FROM encuentros
+                WHERE PLocal < PVisitante)
+        GROUP BY equipo
+    );
+--
+
+-- Ejercicio 3.78 Muestra el promedio de puntos por equipo en los encuentros de ida.
+SELECT EVisitante, AVG(PVisitante)
+    FROM encuentros
+    GROUP BY EVisitante;
+--
+
+-- Ejercicio 3.79 Muestra el equipo con mayor número de puntos en total de los encuentros jugados.
+SELECT equipo, SUM(puntos)
+    FROM
+        (SELECT ELocal AS equipo, PLocal AS puntos
+            FROM encuentros
+        UNION ALL
+        SELECT EVisitante AS equipo, PVisitante AS puntos
+            FROM encuentros
+        )
+    GROUP BY equipo
+    HAVING SUM(puntos)=(SELECT MAX(SUM(puntos)) FROM
+            (SELECT ELocal AS equipo, PLocal AS puntos
+                FROM encuentros
+            UNION ALL
+            SELECT EVisitante AS equipo, PVisitante AS puntos
+                FROM encuentros)
+        GROUP BY equipo
+    );
+--
+
+
+/*--------------------------------------------------------------
+    Capítulo 4: Definición del nivel externo de un DBMS
+*/--------------------------------------------------------------
+
+-- Ejemplo 4.1 Elaborar una vista con el conjunto de suministros realizados solo con integrantes procedentes de Paris.
+CREATE VIEW VentasParis (codpro,codpie,codpj,cantidad,fecha) AS
+    SELECT codpro,codpie,codpj,cantidad,fecha
+        FROM ventas
+        WHERE (codpro,codpie,codpj) IN
+            (
+                SELECT codpro,codpie,codpj
+                    FROM proveedor,pieza,proyecto
+                    WHERE proveedor.ciudad='Paris'
+                        AND pieza.ciudad='Paris'
+                        AND proyecto.ciudad='Paris'
+            );
+DROP VIEW VentasParis;
+-- Segunda Opción, haciendo uso del NATURAL JOIN uniendo también por la ciudad
+CREATE VIEW VentasParis (codpro,codpie,codpj,cantidad,fecha) AS
+    SELECT codpro,codpie,codpj,cantidad,fecha
+        FROM ventas NATURAL JOIN proveedor NATURAL JOIN pieza NATURAL JOIN proyecto
+        WHERE ciudad='Paris';
+
+SELECT * FROM VentasParis;
+DROP VIEW VentasParis;
+--
+
+-- Ejemplo 4.2 Elaborar una vista con el conjunto de piezas procedentes de Londres, prescindiendo del atributo ciudad de la tabla original. Después, intenta hacer una inserción en la vista.
+CREATE VIEW PiezasLondres (codpie,nompie,color,peso) AS
+    SELECT codpie,nompie,color,peso
+        FROM pieza
+        WHERE ciudad='Londres';
+INSERT INTO PiezasLondres VALUES ('P9','Pieza 9','rojo',90);
+
+SELECT * FROM PiezasLondres WHERE codpie='P9';
+SELECT * FROM pieza WHERE codpie='P9';
+-- Notemos que, efectivamente, se puede añadir. No obstante, como la vista no tiene el atributo ciudad, este se pone a Null, por lo que no pertenecerá a Londres, y por tanto tampoco a la vista PiezasLondres.
+DELETE FROM PiezasLondres WHERE codpie='P9';
+DROP VIEW PiezasLondres;
+
+-- Ejercicio 4.1 Crear una vista con los proveedores de Londres. ¿Qué sucede si insertamos en dicha vista la tupla (’S7’,’Jose Suarez’,3,’Granada’)?. (Buscar en [3] la cláusula WITH CHECK OPTION ).
+CREATE OR REPLACE VIEW ProveedoresLondres (codpro,nompro,status, ciudad) AS
+    SELECT codpro,nompro,status,ciudad
+        FROM proveedor
+        WHERE ciudad='Londres';
+-- INSERT INTO ProveedoresLondres VALUES ('S7','Jose Suarez',3,'Granada');
+-- Nos da error, puesto que el proveedor S7 ya existe. Que sea de Granada no da problema, probemos con S8
+INSERT INTO ProveedoresLondres VALUES ('S8','Jose Suarez',3,'Granada');
+SELECT * FROM ProveedoresLondres WHERE codpro='S8';
+SELECT * FROM proveedor WHERE codpro='S8';
+DELETE FROM Proveedor WHERE codpro='S8';
+-- Vemos que, efectivamente se añade, pero no se incluye a la vista, solo a la tabla. Para limitar esto, usamos WITH CHECK OPTION
+CREATE OR REPLACE VIEW ProveedoresLondres (codpro,nompro,status,ciudad) AS
+    SELECT codpro,nompro,status,ciudad
+        FROM proveedor
+        WHERE ciudad='Londres'
+    WITH CHECK OPTION;
+-- INSERT INTO ProveedoresLondres VALUES ('S8','Jose Suarez',3,'Granada');
+-- Nos da error, puesto que no cumple la condición de la vista.
+INSERT INTO ProveedoresLondres VALUES ('S8','Jose Suarez',3,'Londres');
+DELETE FROM ProveedoresLondres WHERE codpro='S8';
+DROP VIEW ProveedoresLondres;
+--
+
+-- Ejercicio 4.2 Crear una vista con los nombres de los proveedores y sus ciudades. Inserta sobre ella una tupla y explica cuál es el problema que se plantea. ¿Habría problemas de actualización?
+CREATE OR REPLACE VIEW ProveedoresCiudades (nompro, ciudad) AS
+    SELECT nompro, ciudad
+        FROM proveedor;
+-- INSERT INTO ProveedoresCiudades VALUES ('Jose Suarez','Granada');
+-- ORA-01400: cannot insert NULL into ("X7446815"."PROVEEDOR"."CODPRO")
+-- No nos deja, ya que no conoce qué valor poner en el campo codpro, que no está en la vista.
+DROP VIEW ProveedoresCiudades;
+--
+
+-- Ejercicio 4.3 Crear una vista donde aparezcan el código de proveedor, el nombre de proveedor y el código del proyecto tales que la pieza sumistrada sea gris. Sobre esta vista realiza alguna consulta y enumera todos los motivos por los que sería imposible realizar una inserción
+CREATE OR REPLACE VIEW ProveedoresProyectosGris (codpro, nompro, codpj) AS
+    SELECT codpro, nompro, codpj
+        FROM proveedor NATURAL JOIN ventas JOIN pieza ON ventas.codpie=pieza.codpie
+        WHERE color='Gris';
+SELECT * FROM ProveedoresProyectosGris;
+DROP VIEW ProveedoresProyectosGris;
+-- No puedo hacer insercióones, ya que no proviene de una única tabla.
+
+COMMIT;
+
+
+/*--------------------------------------------------------------------------------------
+    Capítulo 5: Introducción a la administración: el catálogo y gestión de privilegios
+*/--------------------------------------------------------------------------------------
+-- Tabla 5.1
+SELECT * FROM DICTIONARY;
+SELECT * FROM USER_CATALOG;
+SELECT * FROM USER_CONSTRAINTS;
+SELECT * FROM USER_CONS_COLUMNS;
+SELECT * FROM USER_ROLE_PRIVS;
+SELECT * FROM USER_SYS_PRIVS;
+SELECT * FROM USER_TAB_COLUMNS;
+SELECT * FROM USER_TABLES;
+SELECT * FROM USER_VIEWS;
+SELECT * FROM USER_INDEXES;
+SELECT * FROM USER_CLUSTERS;
+SELECT * FROM USER_TABLESPACES;
+SELECT * FROM USER_USERS;
+SELECT * FROM ALL_USERS;
+SELECT * FROM ALL_TABLES;
+SELECT * FROM ALL_VIEWS;
+
+-- Ejercicio 5.1 Ver la descripción de la vista del catálogo USER_TABLES.
+SELECT * FROM ALL_VIEWS
+    WHERE VIEW_NAME='USER_TABLES';
+SELECT * FROM USER_TABLES;
+--
+
+-- Ejercicio 5.2
+-- // TODO: Ejercicio 5.2
+--
