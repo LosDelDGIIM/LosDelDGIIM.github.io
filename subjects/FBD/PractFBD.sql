@@ -713,7 +713,6 @@ SELECT codpie FROM pieza
                         FROM ventas NATURAL JOIN pieza
     );
 --
--- // TODO: REVISAR División
 
 
 -- Ejemplo 3.19 Mostrar el máximo, el mínimo y el total de unidades vendidas.
@@ -885,7 +884,8 @@ SELECT * FROM DICTIONARY
 --
 
 -- Ejercicio 3.39 ¿ Cuál es el nombre de la vista que tienes que consultar y qué campos te pueden interesar?
--- // TODO: Ej 39
+SELECT * FROM user_indexes;
+--
 
 -- Ejercicio 3.40 Muestra las tablas ventas a las que tienes acceso de consulta junto con el nombre del propietario y su número de identificación en el sistema.
 SELECT table_name, owner, user_id
@@ -894,7 +894,9 @@ SELECT table_name, owner, user_id
 --
 
 -- Ejercicio 3.41 Muestra todos tus objetos creados en el sistema. ¿Hay algo más que tablas?
--- // TODO: Ej 41
+SELECT object_name, object_type
+    FROM USER_OBJECTS;
+-- Sí, también hay índices y Clusters, se verán más adelante.
 
 -- Ejercicio 3.42 Mostrar los códigos de aquellos proveedores que hayan superado las ventas totales realizadas por el proveedor 'S1'.
 SELECT codpro
@@ -1057,10 +1059,14 @@ SELECT codpro, AVG(cantidad)
 --
 
 -- Ejercicio 3.50 Queremos saber los nombres de tus índices y sobre qué tablas están montados. Indica además su propietario.
--- // TODO: Ejercicio 3.50
+SELECT index_name, table_name, table_owner
+    FROM USER_INDEXES;
+--
 
 -- Ejercicio 3.51 Implementar el comando DESCRIBE para tu tabla ventas a través de una consulta a las vistas del catálogo.
--- // TODO: Ejercicio 3.51
+SELECT column_name, nullable, data_type FROM user_tab_columns
+    WHERE lower(table_name)='ventas';
+--
 
 -- Ejercicio 3.52 Mostrar para cada proveedor la media de productos suministrados cada año.
 SELECT codpro, TO_NUMBER(TO_CHAR(fecha, 'yyyy')), AVG(cantidad)
@@ -1564,7 +1570,6 @@ SELECT * FROM USER_TABLES;
 --
 
 -- Ejercicio 5.2
--- // TODO: Ejercicio 5.2
 --
 
 
