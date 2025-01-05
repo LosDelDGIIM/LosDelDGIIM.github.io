@@ -8,8 +8,8 @@
             \item Concepto de conmutación de paquetes y datagramas. 
             \item Direccionamiento en Internet.
             \item Encaminamiento salto a salto.
-            \item Asociación con la capa de enlace a través del protocolo \acrshort{ARP}\@.
-            \item Señalización de errores mediante el protocolo \acrshort{ICMP}\@.
+            \item Asociación con la capa de enlace a través del protocolo \acrshort{ARP}.
+            \item Señalización de errores mediante el protocolo \acrshort{ICMP}.
         \end{itemize}
 \end{itemize}
 
@@ -21,15 +21,15 @@ En este tema estudiaremos a fondo la capa de red. Recordemos que seguimos el Mod
 
 Funcionalidades y servicios TCP\@/IP\@:
 \begin{itemize}
-    \item \textbf{Direccionamiento:} identificación de equipos.
-    \item \textbf{Encaminamiento:} llegar salto a salto al destino. 
+    \item \textbf{Direccionamiento:} identificación de equipos dentro de la red.
+    \item \textbf{Encaminamiento:} llegar salto a salto desde el origen al destino. Especifica el camino que deben seguir los paquetes.
     \item \textbf{Fragmentación:} las tarjetas suelen tener un tamaño máximo de paquete, y si queremos enviar un paquete más grande tenemos que fragmentarlo y, en el destino, ensamblarlo. 
     \item \textbf{Conmutación.} 
     \item \textbf{Interconexión de redes.}
     \item En OSI\@: \textbf{control de gestión.}
-\end{itemize} 
+\end{itemize}
 
-Existen más protocolos de red aparte de \acrshort{IP}\@, que es el que veremos: \acrshort{ATM}\@, x25\ldots
+El protocolo que desarrollaremos en este tema es \acrshort{IP} por ser el que en la actualidad se ha impuesto, aunque existen otros como \acrshort{ATM}, x25\ldots
 
 \section{Conmutación}
 
@@ -37,9 +37,10 @@ Existen más protocolos de red aparte de \acrshort{IP}\@, que es el que veremos:
     Acción de establecer o determinar caminos de extremo a extremo que permitan transmitir información.         
 \end{definicion}
 
+Uno de los primeros ejemplos claros de conmutación que se vio en la tecnología de las comunicaciones fue la conmutación de circuitos para la telefonía, que desarrollamos a continuación.
 \subsection{Conmutación de circuitos}
 
-Antiguamente existía una conmutación física de circuitos. Era muy usado en telefonía. De esta forma, hay muchos cables entre los usuarios y las centrales (uno por cada usuario), y menos cables entre cada par de centrales, ya que no todos los usuarios hablan al mismo tiempo. \\
+Antiguamente existía una conmutación física de circuitos, muy usada en telefonía. De esta forma, hay muchos cables entre los usuarios y las centrales (uno por cada usuario), y menos cables entre cada par de centrales, ya que no todos los usuarios hablan al mismo tiempo. \\
 
 La comunicación por conmutación de circuitos implica tres fases:
 \begin{enumerate}
@@ -65,56 +66,79 @@ La comunicación por conmutación de circuitos implica tres fases:
 \end{itemize}
 
 \subsection{Conmutación de paquetes}
-Ahora no enviamos una señal analógica, sino datos en binario por bloques, a los que llamaremos paquetes. 
+En la actualidad, no se envía una señal analógica; sino datos en binario divididos por bloques, a los que denominaremos \emph{paquetes}.
+\begin{definicion}[Paquete]
+    Un paquete es un bloque de datos en binario que se envía por la red.
+\end{definicion}
 
-\begin{observacion}
-    Cada una de las capas del modelo tiene un nombre para los paquetes:
-    \begin{itemize}
-        \item Capa de enlace: trama.
-        \item Capa de red: datagrama.
-        \item Capa de transporte: depende del protocolo:
-            \begin{itemize}
-                \item \acrshort{TCP}\@: segmento.
-                \item \acrshort{UDP}\@: datagrama.
-            \end{itemize}
-        \item Capa de aplicación: mensaje. 
-    \end{itemize}
-\end{observacion}
-
-En este caso, como el medio es común, los equipos de interconexión necesitan colas para poder gestionar los paquetes que le llegan. 
-
-\subsubsection{Conmutación de datagramas}
-Se hace el mejor esfuerzo, pero si algo falla ha fallado.  De fallos de este tipo se encargan otras capas. El protocolo \acrshort{IP} hace envíos de datagramas.
-Características:
+Cada una de las capas del modelo de referencia tiene un nombre para los paquetes:
 \begin{itemize}
-    \item No hay establecimiento de conexión: enviamos un paquete y no sabemos si el otro extremo está encendido.
-    \item El envío de los distintos paquetes se hace independientemente. El encaminamiento se hace paquete a paquete, por lo que se pueden seguir caminos distintos. Por esto los paquetes pueden llegar desordenados; de arreglar esto se encargan otras capas. \\
-        Además, si en algún momento fragmentamos, no ensamblamos hasta que llegue al destino (debido a que los distintos fragmentos seguirán distintos caminos muy probablemente).  
-    \item En cada equipo intermedio los paquetes que llegan se almacenan y cuando sea posible se envían al próximo nodo. 
-    \item Como el encaminamiento se hace salto a salto, todos los paquetes han de tener la dirección de origen (para las respuestas o encaminamientos específicos, aunque esto no lo veremos en la asignatura) y de destino. A veces, para hacer difusiones de datos, nos puede interesar taner varias direcciones de destino, para hacer difusiones.
+    \item Capa de enlace: trama.
+    \item Capa de red: datagrama.
+    \item Capa de transporte: depende del protocolo:
+        \begin{itemize}
+            \item \acrshort{TCP}: segmento.
+            \item \acrshort{UDP}: datagrama.
+        \end{itemize}
+    \item Capa de aplicación: mensaje.
 \end{itemize}
 
-\subsubsection{Conmutación con circuitos virtuales} 
+A la hora de realizar la conmutación, hay dos formas de hacerlo, la conmutación mediante datagramas y la conmutación mediante circuitos virtuales.
 
-Siguen siendo paquetes, pero cuando enviamos datos se reservan recursos. 
-La idea es que si tenemos varios caminos posibles por los que ir, todos los paquetes siguen el mismo camino, estableciéndose el camino desde el principio. Este camino se denomina circuito. Este camino lo decide cada router, y no es dedicado ya que está disponible para más paquetes. 
+\subsubsection{Conmutación de datagramas}
+
+Las características de la conmutación de datagramas son:
+\begin{itemize}
+    \item No hay establecimiento de conexión: enviamos un paquete y no sabemos si el otro extremo está encendido.
+    \item El envío de los distintos paquetes se hace independientemente. El encaminamiento se hace paquete a paquete, por lo que se pueden seguir caminos distintos. Por este motivo, los paquetes pueden llegar desordenados, algo que controlarán otras capas.
+    
+    Además, si se produce fragmentación, no se ensamblarán los paquetes hasta que lleguen al destino, ya que distintos datagramas pueden seguir distintos caminos. 
+    \item En cada nodo intermedio los paquetes que llegan se almacenan en una cola, y cuando sea posible se envían al próximo nodo. 
+    \item Como el encaminamiento se hace salto a salto, todos los paquetes han de tener la dirección de origen (para las respuestas o encaminamientos específicos, aunque esto no lo veremos en la asignatura) y de destino. A veces, para hacer difusiones de datos, nos puede interesar taner varias direcciones de destino.
+\end{itemize}
+
+Como el medio es común, los nodo de interconexión necesitan colas para poder gestionar los paquetes que le llegan.
+A la hora de esta conmutación, se hace el mejor esfuerzo, pero si algo falla la capa de red no se encarga de gestionar el fallo.
+
+Un protocolo que lleve a cabo esta conmutación es \acrshort{IP}, que desarrollaremos más adelante.
+Este es el tipo de conmutación que se usa mayoritariamente en la actualidad, y es en el que nos centraremos en la asignatura.
+
+\subsection{Conmutación con circuitos virtuales}
+
+En este caso, la conmutación difiere ligeramente de la conmutación por datagramas vista, siendo una mezcla entre la conmutación de circuitos y la de paquetes.
+
+En este caso, para enviar un paquete de un origen a un destino, aunque haya distintos caminos posibles, se establece el camino desde el principio denominado circuito (siguiendo la idea de la conmutación de circuitos). Este circuito no obstante es virtual, ya que los recursos no son dedicados completamente, sino que se reservan temporalmente pero se pueden reutilizar.
+
+Cada router decide el camino que seguirá cada paquete, y los paquetes del mismo \acrshort{PDU} seguirán el mismo camino. Por tanto, el primer paquete en llegar al router reservará los recursos para los próximos paquetes.
 
 \begin{itemize}
     \item Hay que establecer conexión para averiguar la ruta a seguir. 
     \item Si un router se cae, se cambia el camino. 
 \end{itemize}
 
+Un protocolo que lleva a cabo esta conmutación es \acrfull{ATM}, que estaba presente en el inicio de la telefonía digital.
+
 
 \section{El protocolo \acrshort{IP}}
 
-Es un protocolo para la interconexión de redes.
-Tenemos dos versiones: \acrshort{IPv4} que es la que se empezó utilizando pero con la limitación en la cantidad de direcciones (es en la que profundizaremos); \acrshort{IPv6} que pasó de 32 a 128 bits, lo que supone una cantidad en la práctica ilimitada de direcciones (de esta versión solo veremos algunas diferencias con la primera). 
+El \acrfull{IP} es un protocolo para la interconexión de redes.
+Existen dos versiones:
+\begin{itemize}
+    \item \acrshort{IPv4}: Es la que se diseñó inicialmente, aunque tiene una limitación en la cantidad de direcciones.
+    \item \acrshort{IPv6}: Pasó de 32 a 128 bits, lo que supone una cantidad en la práctica ilimitada de direcciones.
+\end{itemize}
+En la actualidad la limitación de direcciones se empieza a notar, por lo que hay una transición gradual hacia \acrshort{IPv6}, aunque sigue predominando \acrshort{IPv4}. Desorrallaremos \acrshort{IPv4} en este tema, aunque mencionaremos algunas diferencias con \acrshort{IPv6}.
 
 \subsubsection{Características de \acrshort{IPv4}}
 \begin{itemize}
-    \item Resuelve el direccionamiento en Internet, cada tarjeta de red tiene una dirección IP\@.
-    \item Realiza el encaminamiento (o retransmisión) salto a salto entre equipos y routers. Ofrece un servicio no orientado a conexión y no fiable, no hay conexión lógica entre las entidades, no hay control de errores ni de flujos. Los errores que se produzcan tiene que arreglarlos una capa superior si se precisa. 
-    \item Gestiona la fragmentación para adaptarse a las \acrshort{MTU}s. A la unidad de datos completa se le llama datagrama y a los fragmentos paquetes. 
+    \item Resuelve el direccionamiento en Internet en la capa de red, ya que cada tarjeta de red tiene una dirección IP\@.
+    \item Realiza el encaminamiento (o retransmisión) salto a salto entre equipos y routers.
+    \item Ofrece un servicio no orientado a conexión y no fiable, ya que:
+    \begin{itemize}
+        \item No hay establecimiento de conexión lógica entre las entidades.
+        \item No hay control de errores ni de flujos. Los errores que se produzcan tienen que arreglarlos una capa superior si se precisa.
+    \end{itemize}
+    \item Gestiona la fragmentación para adaptarse al \acrshort{MTU} de cada tarjeta de red, como veremos. A la unidad de datos completa se le llama datagrama y a los fragmentos paquetes. 
     \item Es un protocolo de máximo esfuerzo, los datagramas se pueden perder, duplicar, retrasar, llegar desordenados\ldots
 \end{itemize}
 
@@ -215,10 +239,10 @@ Hay un gran problema en \acrshort{IPv4} la escasez de direcciones. Hay varias so
 
 \subsection{\acrfull{NAT}}
 
-Veamos un ejemplo que ilustra la necesidad y el funcionamiento de \textbf{\acrshort{NAT}\@}:
+Veamos un ejemplo que ilustra la necesidad y el funcionamiento de \textbf{\acrshort{NAT}}:
 
 \begin{ejemplo}
-    Supongamos que estamos en nuestra casa, en el equipo \verb|192.168.1.2/24|, conectados al router \verb|192.168.1.1/24| que conecta con una red pública por la interfaz de IP \verb|33.33.33.33/24|. La red pública se conecta a Internet, donde hay un equipo con IP \verb|66.66.66.66/24| que ofrece un servicio \acrshort{HTTP}\@.
+    Supongamos que estamos en nuestra casa, en el equipo \verb|192.168.1.2/24|, conectados al router \verb|192.168.1.1/24| que conecta con una red pública por la interfaz de IP \verb|33.33.33.33/24|. La red pública se conecta a Internet, donde hay un equipo con IP \verb|66.66.66.66/24| que ofrece un servicio \acrshort{HTTP}.
 
     El equipo envía una petición (1), que pasa al router (2) y este lo envía a Internet con el fin de que llegue al equipo destino. El equipo responde (3), dicha respuesta le llega al router y el router se la reenvia al equipo  (4).
 \end{ejemplo}
@@ -270,7 +294,7 @@ Para el último paso el router necesita guardar información sobre las traduccio
     \item [\acrshort{DNAT}:] el origen de los datos está en la red pública, se cambia la dirección IP de destino. Se realiza antes del encaminamiento (prerouting). En este caso la tabla de traducciones del router que realiza \acrshort{DNAT} tiene que ser estática, es decir tenemos que insertar las líneas a mano, dado que si no lo hacemos el router no sabrá a donde redirigir las peticiones. Este proceso se llama \textbf{port forwarding}.
 \end{description}
 
-El ejemplo visto antes era un ejemplo de \acrshort{SNAT}. Se propone ahora al lector hacer un ejemplo de \acrshort{DNAT}\@.
+El ejemplo visto antes era un ejemplo de \acrshort{SNAT}. Se propone ahora al lector hacer un ejemplo de \acrshort{DNAT}.
 
 \begin{ejercicio}
     Supongamos que la IP del cliente es \verb|66.66.66.66/24|, la pública del router es \verb|33.33.33.33/24| y que la privada del servidor es \verb|192.168.1.2/24|. Escribir las cabeceras IP de los paquetes que se envían si el cliente le manda una petición al servidor. 
@@ -312,7 +336,7 @@ Tenemos dos tipos de encaminamientos:
 \subsubsection{Uso de la tabla de encaminamiento}
 Dada una dirección IP, para buscar su entrada en la tabla de encaminamiento, se hace la operación lógica \verb|AND| con la máscara de cada entrada. Si el resultado coincide con la red de destino entonces la entrada es válida para dicha IP\@.
 \begin{itemize}
-    \item Si no hay ninguna entrada válida, se envía un mensaje de error \acrshort{ICMP}\@, pero no se intenta arreglar dicho error.
+    \item Si no hay ninguna entrada válida, se envía un mensaje de error \acrshort{ICMP}, pero no se intenta arreglar dicho error.
     \item Si hay varias entradas válidas para una IP\@, se escoge la entrada más restrictiva. 
 
         %TODO: hacer dibujo de redes dentro de redes y explicar el ultimo punto
