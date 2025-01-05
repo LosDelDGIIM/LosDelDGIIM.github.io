@@ -523,7 +523,27 @@
         donde, de nuevo, hemos hecho uso de que, cuando la palabra está en equilibrio (en la pila hay un $Z_0$), se ha de leer una $b$.
         \item $L = \{a^i b^j c^k \mid i=j\ \lor\ j = k\}$.
         
-        % // TODO: Autómata para \{a^i b^j c^k \mid i=j\ \lor\ j = k\}. Determinista?
+        Notaremos por $q_i$ a los estados que indican que $i=j$, y por $p_i$ a los estados que indican que $j=k$. Por tanto, el autómata $M$ que acepta el lenguaje por ambos criterios (pila vacía y estados finales) es:
+        \begin{align*}
+            M = (\{q_0,\dots,q_3,p_0,\dots,p_3\},\{a,b,c\},\{Z_0,X\},\delta,q_0,Z_0,\{p_3,q_3\})
+        \end{align*}
+        donde la función de transición $\delta$ viene dada por:
+        \begin{equation*}
+            \begin{array}{lcl}
+                \delta(q_0,\veps,Z_0) = \{(p_0,Z_0)\} &\qquad &\\
+                \delta(q_0,a,Z_0) = \{(q_0,XZ_0)\} &&\delta(p_0,a,Z_0) = \{(p_0,Z_0)\}\\
+                \delta(q_0,a,X) = \{(q_0,XX)\} && \red{\delta(p_0,\veps,Z_0) = \{(p_1,Z_0)\}}\\
+                \red{\delta(q_0,\veps,i) = \{(q_1,i)\}}~~~i\in \{Z_0,X\} && \delta(p_1,b,Z_0) = \{(p_1,XZ_0)\}\\
+                \delta(q_1,b,X) = \{(q_1,\veps)\} && \delta(p_1,b,X) = \{(p_1,XX)\}\\
+                \red{\delta(q_1,\veps,Z_0) = \{(q_2,Z_0)\}} && \red{\delta(p_1,\veps,i) = \{(p_2,i)\}}~~~i\in \{Z_0,X\}\\
+                \delta(q_2,c,Z_0) = \{(q_2,Z_0)\} && \delta(p_2,c,X) = \{(p_2,\veps)\}\\
+                \delta(q_2,\veps,Z_0) = \{(q_3,\veps)\} && \delta(p_2,\veps,Z_0) = \{(p_3,\veps)\}
+            \end{array}
+        \end{equation*}
+
+        No obstante, este autómata no es determinista. Aunque algunos aspectos podrían solventarse, el indeterminismo inicial para saber si $i=j$ o $j=k$ intuitivamente vemos que no se puede evitar.
+        % // TODO: Ver si 1.5.12.2 se puede hacer determinista
+        % Por tanto, no es posible construir un autómata determinista que acepte este lenguaje.
     \end{enumerate}
 \end{ejercicio}
 
@@ -1042,7 +1062,18 @@
     \begin{enumerate}
         \item Palabras de longitud impar con una $b$ en el centro.
         
-        % // TODO: Deterministas?
+        Sea el autómata $M = (\{q_0,q_1\},\{a,b,c\},\{Z_0,X\},\delta,q_0,Z_0,\emptyset)$ que acepta el lenguaje por el criterio de pila vacía. La función de transición $\delta$ viene dada por:
+        \begin{align*}
+            &\delta(q_0,i,Z_0) = \{(q_0,XZ_0)\} \quad \forall i\in A \\
+            &\delta(q_0,i,X) = \{(q_0,XX)\} \quad \forall i\in A \\
+            &\delta(q_0,b,i) = \{(q_1,i)\} \quad \forall i\in \{Z_0,X\} \\
+            &\delta(q_1,i,X) = \{(q_1,\veps)\} \quad \forall i\in A \\
+            &\delta(q_1,\veps,Z_0) = \{(q_1,\veps)\} \\
+        \end{align*}
+
+        No obstante, este autómata no es determinista, ya que en $q_0$, con una $X$ en la pila, y leyendo una $b$, podemos llegar a dos configuraciones distintas. De manera intuitiva, vemos que no es posible construir un autómata determinista para este lenguaje.
+        
+        % // TODO: Determinista para 1.5.23.1
         \item $L = \{a^n b^m c^k \mid n = m\ \lor\ n \leq 3\}$.
         
         Sea el autómata $M$ dado por:
@@ -1089,25 +1120,52 @@
         \item $u\in {\{0,1\}}^{\ast}$ es una cadena de símbolos binarios que determina:
             \begin{enumerate}
                 \item La operación que se ejecutará. Si el número de 0's en la cadena $u$ es igual al números de 1's se realiza una suma, en caso contrario se hace un producto.
-                \item El número de operandos de $\otimes$ (número de ocurrencias de la subcadena '$10$' en $u$).
+                \item El número de operandos de $\otimes$ (número de ocurrencias de la subcadena ``$10$'' en $u$).
             \end{enumerate}
         \item $v\in {\{a,b,c\}}^{\ast}$ es una cadena donde cada símbolo representa un operando de $\otimes$.
     \end{itemize}
     Construir, si es posible:
     \begin{enumerate}
         \item Un autómata finito determinista que reciba como entrada la cadena $u$ y le indique al ordenador si realiza una suma (estado final) o si realiza un producto (estado no final).
+        
+        El lenguaje que debería aceptar el autómata es:
+        \begin{equation*}
+            L = \{u\in {\{0,1\}}^{\ast} \mid N_0(u) = N_1(u)\}
+        \end{equation*}
+        No obstante, este lenguaje es fácil comprobar mediante el recíproco del Lema de Bombeo que no es regular. Por tanto, no es posible construir un autómata finito determinista que acepte este lenguaje.
         \item Construir un autómata con pila determinista por el criterio de pila vacía definido sobre el alfabeto de entrada
             \begin{equation*}
-                A = \{'\otimes', '(', ')', ',', ';', '0', '1', 'a'\}
+                A = \{``\otimes\text{''}, ``(\text{''}, ``)\text{''}, ``,\text{''}, ``;\text{''}, ``0\text{''}, ``1\text{''}, ``a\text{''}, ``b\text{''}, ``c\text{''}\}
             \end{equation*}
             que reciba como entrada una expresión del conjunto
             \begin{equation*}
                 \{\otimes(u,v); \mid u\in {\{0,1\}}^{\ast},\ v\in {\{a,b,c\}}^{\ast}\}
             \end{equation*}
             y nos informe si está bien construida sintácticamente (de acuerdo con lo especificado anteriormente) y si el número de operandos es correcto.
-    \end{enumerate}
 
-    % // TODO: Hacer
+        Sea $M$ el autómata con pila que acepta el lenguaje por ambos criterios (pila vacía y estados finales):
+        \begin{equation*}
+            M=(\{q_0,\dots,q_5,q_2'\},A,\{Z_0,X\},\delta,q_0,Z_0,\emptyset)
+        \end{equation*}
+        donde la función de transición $\delta$ viene dada por:
+        \begin{align*}
+            &\delta(q_0,\otimes,Z_0) = \{(q_1,Z_0)\}\\
+            &\delta(q_1,(,Z_0) = \{(q_2,Z_0)\}\\
+            &\delta(q_2,0,Z_0) = \{(q_2,Z_0)\}\\
+            &\delta(q_2,1,Z_0) = \{(q_2',Z_0)\}\\
+            &\delta(q_2',0,Z_0) = \{(q_2,XZ_0)\}\\
+            &\delta(q_2',1,Z_0) = \{(q_2',Z_0)\}\\
+            &\delta(q_2,0,X) = \{(q_2,X)\}\\
+            &\delta(q_2,1,X) = \{(q_2',X)\}\\
+            &\delta(q_2',0,X) = \{(q_2,XX)\}\\
+            &\delta(q_2',1,X) = \{(q_2',X)\}\\
+            &\delta(q_2,,,i) = \{(q_3,i)\} \quad \forall i\in \{Z_0,X\}\\
+            &\delta(q_2',,,i) = \{(q_3,i)\} \quad \forall i\in \{Z_0,X\}\\
+            &\delta(q_3,i,X) = \{(q_3,\veps)\} \quad \forall i\in \{a,b,c\}\\
+            &\delta(q_3,),Z_0) = \{(q_4,Z_0)\}\\
+            &\delta(q_4,;,Z_0) = \{(q_5,\veps)\}
+        \end{align*}
+    \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.5.25}
@@ -1116,7 +1174,39 @@
         L_1 = \{a^i b^j c^k \mid i = 2j\ \lor\ j = 2k\}
     \end{equation*}
 
-    % // TODO: Determinista?
+    Sea la siguiente gramática:
+    \begin{align*}
+        G&=(\{S,A,C,X,Y\},\{a,b,c\},P,S)\\
+        P&=\left\{
+            \begin{aligned}
+                S&\to XC \mid AY\\
+                A&\to aA \mid \varepsilon\\
+                C&\to cC \mid \varepsilon\\
+                X&\to aaXb \mid \varepsilon\\
+                Y&\to bbYc \mid \varepsilon
+            \end{aligned}
+        \right\}
+    \end{align*}
+
+    Como $\cc{L}(G)=L_1$, tenemos que el autómata con pila que acepta el lenguaje por el criterio de pila vacía es el siguiente:
+    \begin{equation*}
+        M=(\{q\},\{a,b,c\},\{S,A,C,X,Y,a,b,c\},\delta,q,S,\emptyset)
+    \end{equation*}
+    donde la función de transición $\delta$ viene dada por:
+    \begin{align*}
+        &\delta(q,\veps,S) = \{(q,XC),(q,AY)\}\\
+        &\delta(q,\veps,A) = \{(q,aA),(q,\veps)\}\\
+        &\delta(q,\veps,C) = \{(q,cC),(q,\veps)\}\\
+        &\delta(q,\veps,X) = \{(q,aaXb),(q,\veps)\}\\
+        &\delta(q,\veps,Y) = \{(q,bbYc),(q,\veps)\}\\
+        &\delta(q,a,a) = \{(q,\veps)\}\\
+        &\delta(q,b,b) = \{(q,\veps)\}\\
+        &\delta(q,c,c) = \{(q,\veps)\}
+    \end{align*}
+
+    No obstante, vemos que este autómata no es determinista. Aunque ciertos indeterminismos podrían quitarse, no es posible hacerlo en su totalidad, ya que no sabemos si $i=2j$ o $j=2k$. Por tanto, intuitivamente vemos que no es posible construir un autómata determinista para este lenguaje.
+
+    % // TODO: Determinista para 1.5.25
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:1.5.26}
@@ -1127,8 +1217,27 @@
     \begin{enumerate}
         \item Construye una gramática libre de contexto que genere $L$.
         
-        % // TODO: Hacer
-        \item Construye un autómata con pila determinista que reconozca las cadenas del anterior lenguaje $L$ por el criterio de estados finales.
+        % // TODO: Gramática para 1.5.26
+        \item Construye un autómata con pila determinista que reconozca las cadenas del anterior lenguaje $L$ por el criterio de estados finales.\\
+        
+        Aunque se puede obtener a partir de la gramática del apartado anterior, lo más directo es construir un autómata directamente. Sea el autómata $M$ que acepta el lenguaje por el criterio de estados finales:
+        \begin{equation*}
+            M=(\{q_0,\dots,q_3,q_f\},\{a,b,c,d\},\{Z_0,X\},\delta,q_0,Z_0,\{q_f\})
+        \end{equation*}
+
+        La función de transición $\delta$ viene dada por:
+        \begin{align*}
+            &\delta(q_0,a,Z_0) = \{(q_0,XZ_0)\} \\
+            &\delta(q_0,a,X) = \{(q_0,XX)\} \\
+            &\red{\delta(q_0,\veps,i) = \{(q_1,i)\}} \quad \forall i\in \{Z_0,X\} \\
+            &\delta(q_1,b,Z_0) = \{(q_1,XZ_0)\} \\
+            &\delta(q_1,b,X) = \{(q_1,XX)\} \\
+            &\red{\delta(q_1,\veps,i) = \{(q_2,i)\}} \quad \forall i\in \{Z_0,X\} \\
+            &\delta(q_2,c,X) = \{(q_2,\veps)\} \\
+            &\red{\delta(q_2,\veps,i) = \{(q_3,i)\}} \quad \forall i\in \{Z_0,X\} \\
+            &\delta(q_3,d,X) = \{(q_3,\veps)\} \\
+            &\delta(q_3,\veps,i) = \{(q_f,i)\} \quad \forall i\in \{Z_0,X\}
+        \end{align*}
     \end{enumerate}
 \end{ejercicio}
 
