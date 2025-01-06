@@ -1054,8 +1054,8 @@ SELECT DISTINCT codpro, SUM(cantidad)
 -- Ejercicio 3.49 Encontrar la cantidad media de piezas suministrada a aquellos proveedores que venden la pieza P3.
 SELECT codpro, AVG(cantidad)
     FROM ventas
-    WHERE codpie='P3'
-    GROUP BY codpro;
+    GROUP BY codpro
+    HAVING codpro IN (SELECT codpro FROM ventas WHERE codpie='P3');
 --
 
 -- Ejercicio 3.50 Queremos saber los nombres de tus índices y sobre qué tablas están montados. Indica además su propietario.
@@ -1221,27 +1221,6 @@ SELECT codpie, SUM(cantidad)
     WHERE TO_CHAR(fecha, 'MM/YYYY') = '08/2009'
     GROUP BY codpie;
 -- CONSULTA. Ciudades de aquellas piezas que no se han vendido en septiembre de 2009 que se han vendido en mayor cantidad durante Agosto de 2009:
-SELECT DISTINCT codpie, ciudad
-    FROM (
-        SELECT codpie FROM pieza
-        MINUS 
-        SELECT codpie FROM ventas
-            WHERE TO_CHAR(fecha, 'MM/YYYY') = '09/2009'
-    )  
-    NATURAL JOIN pieza NATURAL JOIN ventas
-    WHERE cantidad >= ALL (
-        SELECT SUM(cantidad)
-            FROM (
-                SELECT codpie FROM pieza
-                MINUS 
-                SELECT codpie FROM ventas
-                    WHERE TO_CHAR(fecha, 'MM/YYYY') = '09/2009'
-            )  
-            NATURAL JOIN ventas
-            WHERE TO_CHAR(fecha, 'MM/YYYY') = '08/2009'
-            GROUP BY codpie
-    );
--- 2ª Opción. Obliga a que se hayan vendido en Agosto 2009
 SELECT DISTINCT codpie, ciudad, SUM(cantidad) AS TotalAgosto
     FROM (
         SELECT codpie FROM pieza
@@ -1259,8 +1238,7 @@ SELECT DISTINCT codpie, ciudad, SUM(cantidad) AS TotalAgosto
                 MINUS 
                 SELECT codpie FROM ventas
                     WHERE TO_CHAR(fecha, 'MM/YYYY') = '09/2009'
-            )  
-            NATURAL JOIN ventas
+            ) NATURAL JOIN ventas
             WHERE TO_CHAR(fecha, 'MM/YYYY') = '08/2009'
             GROUP BY codpie
     );

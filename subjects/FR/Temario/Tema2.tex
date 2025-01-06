@@ -66,22 +66,10 @@ La comunicación por conmutación de circuitos implica tres fases:
 \end{itemize}
 
 \subsection{Conmutación de paquetes}
-En la actualidad, no se envía una señal analógica; sino datos en binario divididos por bloques, a los que denominaremos \emph{paquetes}.
-\begin{definicion}[Paquete]
-    Un paquete es un bloque de datos en binario que se envía por la red.
-\end{definicion}
-
-Cada una de las capas del modelo de referencia tiene un nombre para los paquetes:
-\begin{itemize}
-    \item Capa de enlace: trama.
-    \item Capa de red: datagrama.
-    \item Capa de transporte: depende del protocolo:
-        \begin{itemize}
-            \item \acrshort{TCP}: segmento.
-            \item \acrshort{UDP}: datagrama.
-        \end{itemize}
-    \item Capa de aplicación: mensaje.
-\end{itemize}
+En la actualidad, no se envía una señal analógica; sino que, como sabemos, se envía el \acrshort{SDU} junto con la cabecera. En la capa de red, vimos que el \acrshort{SDU} se denomina \emph{datagrama}, y veremos que este se ha de fragmentar en distontos bloques, a los que denominaremos \emph{paquetes}. Por tanto, los paquetes son cada uno de los bloques de un datagrama, y es lo que se envía como tal por la red.
+\begin{observacion}
+    En general, cuando se quiera hacer referencia a un conjunto de datos que se envía por la red, sin especificar en qué capa nos encontramos, o sin ser más precisos, también usaremos el término de \emph{paquete}.
+\end{observacion}
 
 A la hora de realizar la conmutación, hay dos formas de hacerlo, la conmutación mediante datagramas y la conmutación mediante circuitos virtuales.
 
@@ -92,7 +80,7 @@ Las características de la conmutación de datagramas son:
     \item No hay establecimiento de conexión: enviamos un paquete y no sabemos si el otro extremo está encendido.
     \item El envío de los distintos paquetes se hace independientemente. El encaminamiento se hace paquete a paquete, por lo que se pueden seguir caminos distintos. Por este motivo, los paquetes pueden llegar desordenados, algo que controlarán otras capas.
     
-    Además, si se produce fragmentación, no se ensamblarán los paquetes hasta que lleguen al destino, ya que distintos datagramas pueden seguir distintos caminos. 
+    Además, si se produce fragmentación, no se ensamblarán los paquetes hasta que lleguen al destino, ya que distintos paquetes de un mismo datagrama pueden seguir distintos caminos. 
     \item En cada nodo intermedio los paquetes que llegan se almacenan en una cola, y cuando sea posible se envían al próximo nodo. 
     \item Como el encaminamiento se hace salto a salto, todos los paquetes han de tener la dirección de origen (para las respuestas o encaminamientos específicos, aunque esto no lo veremos en la asignatura) y de destino. A veces, para hacer difusiones de datos, nos puede interesar taner varias direcciones de destino.
 \end{itemize}
@@ -109,7 +97,7 @@ En este caso, la conmutación difiere ligeramente de la conmutación por datagra
 
 En este caso, para enviar un paquete de un origen a un destino, aunque haya distintos caminos posibles, se establece el camino desde el principio denominado circuito (siguiendo la idea de la conmutación de circuitos). Este circuito no obstante es virtual, ya que los recursos no son dedicados completamente, sino que se reservan temporalmente pero se pueden reutilizar.
 
-Cada router decide el camino que seguirá cada paquete, y los paquetes del mismo \acrshort{PDU} seguirán el mismo camino. Por tanto, el primer paquete en llegar al router reservará los recursos para los próximos paquetes.
+Cada router decide el camino que seguirá cada paquete, y los paquetes del mismo datagrama seguirán el mismo camino. Por tanto, el primer paquete en llegar al router reservará los recursos para los próximos paquetes.
 
 \begin{itemize}
     \item Hay que establecer conexión para averiguar la ruta a seguir. 
@@ -144,161 +132,359 @@ En la actualidad la limitación de direcciones se empieza a notar, por lo que ha
 
 \subsection{Direccionamiento}
 
-Una dirección IP consta de 32 bits y la nomenclatura usada es: \verb|A.B.C.D| donde cada letra es un número decimal. El rango que tenemos es \verb|0.0.0.0-255.255.255.255.| Una dirección tiene dos partes bien diferenciadas, la que identifica la red y la que identifica el equipo en cuestión (en realidad la tarjeta de red). \
+Para identificar cada equipo en la red, se usan direcciones IP\@. El lector posiblemente esté más familiarizado con las direcciones red, como \verb|www.google.com|, pero estas en realidad son nombres de dominio que se traducen a direcciones IP\@, como veremos en el Capítulo dedicado a la capa de aplicación. Mientras tanto, hemos de saber que todo equipo en la red tiene una dirección IP asociada. Además, esta (a priori) es única y no se puede repetir, lo que supone una limitación. Como más adelante veremos, para solventar este problema se usan también direcciones privadas, algo que no contemplaremos por el momento.\\
 
+Una dirección \acrshort{IP} consta de 32 bits y la nomenclatura usada es: \verb|A.B.C.D| donde cada letra es un número decimal en el rango \verb|0-255| (ya que codificará 8 bits). El rango por tanto que tenemos es \verb|0.0.0.0-255.255.255.255.| Una dirección tiene dos partes bien diferenciadas, la que identifica la red y la que identifica el equipo en cuestión (en realidad, identifica la tarjeta de red).\\
+
+Para saber qué parte de la dirección IP identifica el equipo y cuál la red, se emplea la máscara de red.
 \begin{definicion}[Máscara de red]
-    Es lo que nos identifica los bits que son de red (los que están a 1) y lo que son de equipo (los que están a 0). Viendo esta definición podemos ver que tiene la misma notación que las direcciones IP\@. Otra notación más simple es: \verb|A.B.C.D/n| donde \verb|/n| es lo que nos indica la máscara y n es el número de bits de red. \verb|255.0.0.0| $\equiv$ \verb|/8|.
-\textbf{¿Cómo se usa la máscara?}\
-Se hace un \verb|AND| lógico con la dirección IP lo que nos da la dirección de la subred. Todos los bits de equipo a 0, que es lo que nos daría dicha operación, es la dirección reservada a la red. Veremos más direcciones reservadas. \
+    Es un conjunto de $32$ bits (al igual que una dirección IP) que se usa para identificar qué parte de la dirección IP identifica la red y cuál el equipo.Contiene los primeros $n$ bits consecutivos a $1$, y el resto a $0$.
 \end{definicion}
+\textbf{¿Cómo se usa la máscara?}\
+
+Para saber cuál es la dirección de la red, se hace un \verb|AND| lógico entre la dirección IP y la máscara (por lo que nos quedaremos con los primeros $n$ bits de la dirección IP\@). El resto de bits identificará al equipo dentro de dicha red.\\
+
+Notemos por tanto que, dentro de las posibles direcciones IP de una misma red, la dirección con todos los bits de equipo a 0 está \emph{reservada} para la dirección de la red, y no podrá asignarse a ningún equipo.
+\begin{notacion}
+    Es común querer dar una dirección IP junto a su máscara de red. Para esto, se podrá usar la notación \verb|A.B.C.D/n|, donde \verb|A.B.C.D| es la dirección IP en sí y \verb|n| es el número de bits a $1$ de la máscara de red. Como ya hemos mencionado que estos bits han de estar al inicio y consecutivos, sabiendo el valor de \verb|n| sabremos cuál es la máscara de red.
+\end{notacion}
+
+\begin{ejemplo}
+    Supongamos que tenemos una dirección IP \verb|192.168.1.27/24|, y queremos saber cuál es la dirección de la red. Pasando a binario y haciendo un \verb|AND|, tenemos:
+    \begin{equation*}
+        \begin{array}{rcl}
+            & 1100~0000~.~1010~1000~.~0000~0001~.~0001~1011 & \text{(dirección IP)}\\
+            \texttt{AND} & 1111~1111~.~1111~1111~.~1111~1111~.~0000~0000 & \text{(máscara de red)}\\ \hline
+            & 1100~0000~.~1010~1000~.~0000~0001~.~0000~0000 & \text{(dirección de la red)}
+        \end{array}
+    \end{equation*}
+    Por tanto, pasando de nuevo a decimal, la dirección de la red es \verb|192.168.1.0|.
+\end{ejemplo}
 
 \subsubsection{Direccionamiento jeráriquico}
 \noindent
-Internet usa direccionamiento jerárquico basado en clases:
+Internet usa direccionamiento jerárquico basado en clases. Cada clase contiene las direcciones IP de un rango determinado:
 \begin{itemize}
-    \item Clase A $\rightarrow$ \verb|0xx|\ldots\verb|x/8| $\Longrightarrow $ \verb|0.0.0.0 - 127.255.255.255|. Tenemos 128 redes con $2^{24} \approx 16.000.000$ equipos en cada una. 
-    \item Clase B $\rightarrow$ \verb|10xx|\ldots\verb|x/16| $\Longrightarrow $ \verb|128.0.0.0 - 191.255.255.255|. Tenemos $2^{14} = 16384$ redes con $2^{16}=65536$ equipos en cada una. 
-    \item Clase C $\rightarrow$ \verb|110xx|\ldots\verb|x/24| $\Longrightarrow $ \verb|192.0.0.0 - 223.255.255.255|. Tenemos $2^{21} \approx 2.000.000$ de redes con $2^{8} = 256$ equipos en cada una. 
-    \item Clase D $\rightarrow$ \verb|1110xx|\ldots\verb|x| $\Longrightarrow$ \verb|224.0.0.0 - 239.255.255.255|. No se usa para identificar equipos ni redes sino para multidifusión. Cada dirección identifica a todo un grupo de equipos. Para gestionar esto existe el protocolo \acrshort{IGMP} para suscribirse a grupos. 
-    \item Clase E $\rightarrow$ \verb|1111xx|\ldots\verb|x| $\Longrightarrow $ \verb|240.0.0.0 - 255.255.255.255|. Es el rango experimental, es decir, las direcciones que se dejan para hacer pruebas. 
+    \item Clase A $\rightarrow$ \verb|0xx|\ldots\verb|x/8| $\Longrightarrow $ \verb|0.0.0.0 - 127.255.255.255|. Tenemos $2^7~=~128$ redes con $2^{24} \approx 16\cdot 10^6$ equipos en cada una. 
+    \item Clase B $\rightarrow$ \verb|10xx|\ldots\verb|x/16| $\Longrightarrow $ \verb|128.0.0.0 - 191.255.255.255|. Tenemos $2^{14}~=~16384$ redes con $2^{16}=65536$ equipos en cada una. 
+    \item Clase C $\rightarrow$ \verb|110xx|\ldots\verb|x/24| $\Longrightarrow $ \verb|192.0.0.0 - 223.255.255.255|. Tenemos $2^{21}~\approx~2\cdot 10^6$ de redes con $2^{8} = 256$ equipos en cada una. 
+    \item Clase D $\rightarrow$ \verb|1110xx|\ldots\verb|x| $\Longrightarrow$ \verb|224.0.0.0 - 239.255.255.255|. No se usa para identificar equipos ni redes sino para multidifusión (\textit{multicast}). Cada dirección identifica a todo un grupo de equipos. Para gestionar esto existe el protocolo \acrshort{IGMP} para suscribirse a grupos.
+    \item Clase E $\rightarrow$ \verb|1111xx|\ldots\verb|x| $\Longrightarrow $ \verb|240.0.0.0 - 255.255.255.255|. Es el rango experimental; es decir, las direcciones que se dejan para hacer pruebas. 
 \end{itemize}
 
 \subsubsection{Direcciones reservadas}
+Además de las restricciones de cada clase, hay determinadas direcciones que están reservadas y no se pueden asignar a ningún equipo. Algunas de estas direcciones son:
 \begin{itemize}
-    \item \verb|192.168.1.0/24|. Como hemos mencionado antes, la dirección con los bits de equipo todo a 0 es la dirección reservada a la subred. 
-    \item \verb|192.168.1.255/24|. Por otro lado, tenemos la dirección con los bits de equipo todo a 1, que será la dirección de difusión. Esta se utiliza cuando se tiene que encontrar un equipo y no se sabe cuál, se manda por la dirección de difusión y lo escuchará quien tenga que escucharlo. 
-    \item \verb|127.a.b.c| $\equiv$ local loop $\equiv$ local host, para cuando intentamos conectar a un servidor de la propia máquina. Originalmente era la \verb|127.0.0.1|.
+    \item Dirección de red: Cualquier dirección IP con todos los bits de equipo a $0$. Está dedicada para identificar la red en sí.
+    \item Dirección de difusión (\textit{broadcast}): Cualquier dirección IP con todos los bits de equipo a $1$. Se usa para enviar un paquete a todos los equipos de la red.
+    
+    Cuando se tiene que encontrar un equipo y no se sabe cuál, se manda por la dirección de difusión y lo escuchará quien tenga que escucharlo.
+
+    \item \verb|127.a.b.c|: Denominada dirección de \textit{loopback}, \textit{localhost} o \textit{localloop}. Se usa para hacer pruebas, y es una conexión que hacemos a nuestra propia máquina. Originalmente (y la más común) era \verb|127.0.0.1|, pero en la actualidad se ha aumentado el rango.
+    Estas redes no requieren de una tarjeta de red específica.
 \end{itemize}
 
+Llegados a este punto, podemos dar una definición más correcta de router, que ya habíamos mencionado anteriormente.
 \begin{definicion}[Router]
-    Ya vimos que era un dispositivo que conecta redes. Por lo que ahora sabemos este tiene que tener varias tarjetas de red, una por cada red a la que se conecte y su función es encaminar paquetes. 
+    Es un dispositivo de la capa de red cuya funcionalidad principal es conectar distintas redes y encaminar los paquetes a través de ellas.
+    
+    Cuenta con varias tarjetas de red (también llamadas interfaces), una por cada red a la que se conecta, y cada una cuenta con una dirección IP asociada en cada red.\\
+
+    Como curiosidad, es posible crear routers en un ordenador con varias tarjetas de red con \verb|Linux|. Con el comando \verb|sysctl -a| podemos consultar el valor de la variable \verb|net.ipv4.ip_forward|, que nos informa sobre si redirigimos paquetes o no. Si está con el valor $1$, dicho equipo es un router.
 \end{definicion}
 
 \begin{observacion}
-    Como un switch funciona a nivel de enlace todo lo conectado a dicho switch está en la misma red. Por tanto, tampoco tiene dirección IP.
+    Como un switch funciona a nivel de enlace, todo lo conectado a dicho switch está en la misma red. Por tanto, tampoco tiene dirección IP asignada.
 \end{observacion}
 
-%TODO: mencionar sobre dibujos de redes, switches, router domestico .. .
+% // TODO: mencionar sobre dibujos de redes, switches, router domestico .. .
 
-\subsubsection{Desperdicio de direcciones IP}
+\subsubsection{Direccionamiento sin clases}
 
-Si usamos solo el direccionamiento con clases estaríamos desperdiciando muchísimas direcciones IP. Por ejemplo, si tenemos 1000 equipos tendríamos que usar una red de clase B, con la que desperdiciaríamos más de 60.000 direcciones. La solución a este problema es usar el direccionamiento sin clase. 
+Si usamos solo el direccionamiento con clases estaríamos desperdiciando muchísimas direcciones IP. Por ejemplo, si tenemos 1000 equipos ($2^8<1000<2^16$) tendríamos que usar una red de clase B, con la que desperdiciaríamos más de 60.000 direcciones. La solución a este problema es usar el direccionamiento sin clase, que nos permite usar la máscara de red deseada.
 
 \begin{itemize}
     \item \textbf{Subredes}\
 
-    Si queremos una red de menos de 256 equipos, por ejemplo, podemos añadir bits a la máscara para conseguier más huecos para red y menos para equipos. Cada vez que añadimos un bit a la máscara, estamos dividiendo una red en dos mitades. 
+    Si, por ejemplo, queremos una red de menos de 256 equipos, podemos aumentar el número de bits de la máscara a $1$, para conseguier más bits dedicados a identificar la red y menos para identicar equipos. Cada vez que añadimos un bit a la máscara, estamos dividiendo una red en dos mitades. 
     \begin{ejemplo}
-        Tenemos 100 equipos. Para direccionarlos necesitamos 7 bits $\Longrightarrow $ la máscara a usar será \verb|/25|. 
+        Supongamos que queremos identificar 100 equipos dentro de una misma red. Contando además con la dirección de red y la de difusión, necesitamos 102 direcciones. Como $2^6<102<2^7$, necesitamos 7 bits para identificar a los equipos. Por tanto, la máscara a usar será \verb|/25|.
     \end{ejemplo}
         \item \textbf{Superredes}\
 
-            Si hacemos el procedimiento inverso, quitarle un bit a la máscara, duplicamos la cantidad de equipos que podemos direccionar. De esta forma, en \verb|/23| estamos juntando dos redes de clase C. 
+            Si hacemos el procedimiento inverso, quitarle un bit a la máscara, duplicamos la cantidad de equipos que podemos direccionar. Por ejemplo, en \verb|/23| estamos juntando dos redes de clase C. 
     \begin{ejemplo}
-        Tenemos 1000 equipos. Para direccionarlos necesitamos 10 bits $\Longrightarrow $ la máscara a usar será \verb|/22|. 
+        Supongamos que queremos una red de 1000 equipos. Contando con la dirección de red y la de difusión, necesitamos 1002 direcciones. Como $2^9<1002<2^{10}$, necesitamos 10 bits para identificar a los equipos. Por tanto, la máscara a usar será \verb|/22|.
     \end{ejemplo}
 \end{itemize}
 
 
-Como vemos el funcionamiento es igual que en el direccionamiento con clase pero evita que desperdiciemos tantísimas direcciones. Igualmente se desperdician direcciones. A nivel práctico red, subred y superred no se diferencian. 
+Como vemos el funcionamiento es igual que en el direccionamiento con clase, pero reduce significativamente (aunque no elimina) el desperdicio de direcciones. A nivel práctico red, subred y superred no se diferencian, y nos referimos a todas ellas como redes.
 
 
 %Vamos a ver un par de ejemplos de asignaciones de direcciones en subredes y superredes. 
-%TODO: hacer el dibujo del circulo (/27) pag 11 de los apuntes
-%Todo: hacer el ejemplo del /22 (700 equipos)
+% // TODO: hacer el dibujo del circulo (/27) pag 11 de los apuntes
+% // TODO: hacer el ejemplo del /22 (700 equipos)
 
 
 \subsubsection{Direcciones privadas}
 
-Hay un gran problema en \acrshort{IPv4} la escasez de direcciones. Hay varias soluciones posibles: 
-\begin{itemize}
-    \item Direccionamiento sin clase: de lo cual ya hemos hablado.
-    \item \acrshort{IPv6} con 128 bits para direcciones. La notación utilizada es\
+Como hemos venido mencionando en distintas ocasiones, la escasez de direcciones es un gran problema presente en \acrshort{IPv4}, ya que tan solo hay $2^{32}$ direcciones posibles, las cuales ya se agotaron en Noviembre de 2019. Aunque se vayan recopilando direcciones de sitios obsoletos, empresas desaparecidas, etc. el problema sigue existiendo.\\
 
-        \verb|FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF|. En hexadecimal y cada 4 separados por dos puntos. 
-    \item Direcciones privadas, que es lo que vamos a pasar a desarrollar.
+Hay varias soluciones posibles para solventarlo.
+\begin{itemize}
+    \item Direccionamiento sin clase: es una solucion que reduce el desperdicio de direcciones, peero aun así tiene la limitación de $2^{32}$ direcciones.
+    \item \acrshort{IPv6}, el cual usa 128 bits para las direcciones. La notación utilizada es\
+
+        \verb|FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF|, en el que cada dígito es un número hexadecimal.
+
+    En total hay $2^{128}$ direcciones posibles (más de $10^{37}$), lo que en la práctica las hace ilimitadas. Aunque sea compatible con \acrshort{IPv4}, la transición está siendo lenta.
+    \item Direcciones privadas: esta es la principal solución que se usa en la actualidad, ya que hace el número de direcciones prácticamente ilimitado. Desarrollaremos este concepto a continuación.
 \end{itemize}
 
 \begin{description}
-    \item [Direcciones públicas: ] Cada dirección se asigna a un único dispositivo en todo Internet. Se asignan centralizadamente y además hay que pagar por un dirección pública. 
-    \item [Direcciones privadas: ] Solo en intranets, es decir en redes privadas y se pueden repetir direcciones en distintas intranets. Se asignan según el criterio del usuario. Para poder comunicarse con el resto de Internet tiene que haber un punto de salida, una pasarela con una dirección pública en Internet. 
-    \item [Rangos reservados a IPs privadas:] 
-    Estos rangos no se pueden comunicar con Internet.\
-    \begin{itemize}
-        \item Clase A $\rightarrow$ \verb|10.x.y.z|
-        \item Clase B $\rightarrow$ \verb|172.16-32.y.z|
-        \item Clase C $\rightarrow$ \verb|192.168.y.z|
-    \end{itemize}
+    \item [Direcciones públicas:] Cada dirección se asigna a un único dispositivo en todo Internet. Se asignan centralizadamente\footnote{Inicialmente por \acrshort{IANA}, actualmente por \acrshort{ICANN}.}, y como son limitadas, hay que pagar por cada una.
+    \item [Direcciones privadas:] Solo se pueden usar en redes privadas o \textit{intranets}, sin acceso directo al resto de Internet. Por tanto, al no ser accesibles desde fuera, se pueden repetir en distintas redes privadas, lo que aumenta el número de direcciones disponibles.
+    
+    Para poder comunicarse con el resto de Internet (ya que si no tendrían poca utilidad), será necesario una dirección pública por la cual se haga la comunicación. Para esto se usa el \acrshort{NAT}, que veremos más adelante.
 \end{description}
 
-\begin{observacion}
-    Una interfaz de un dispositivo es equivalente a una tarjeta de red.
-\end{observacion}
+Respecto al direccionamiento jerárquico con clases, dentro de cada clase se definen algunos rangos de direcciones a usar como IP privadas. Estos rangos son:
+\begin{itemize}
+    \item Clase A $\rightarrow$ \verb|10.x.y.z/8|
+    \item Clase B $\rightarrow$ \verb|172.16-32.y.z/16|
+    \item Clase C $\rightarrow$ \verb|192.168.y.z/24|
+\end{itemize}
 
 
 
 \subsection{\acrfull{NAT}}
 
-Veamos un ejemplo que ilustra la necesidad y el funcionamiento de \textbf{\acrshort{NAT}}:
+Como hemos mencionado anteriormente, para que una red privada pueda comunicarse con el resto de Internet, es necesario que haya una dirección pública que haga de intermediario. Para esto se usa la técnica de \acrshort{NAT}, que posibilita la traducción de direcciones.
+Al encontramos en la capa de red, el \acrshort{PDU} contiene la cabecera IP que contiene, entre otros datos:
+\begin{itemize}
+    \item Dirección IP origen ({IPsc}) junto con el puerto origen ({sport}).
+    \item Dirección IP destino ({IPdest}) junto con el puerto destino ({dport}).
+\end{itemize}
 
-\begin{ejemplo}
-    Supongamos que estamos en nuestra casa, en el equipo \verb|192.168.1.2/24|, conectados al router \verb|192.168.1.1/24| que conecta con una red pública por la interfaz de IP \verb|33.33.33.33/24|. La red pública se conecta a Internet, donde hay un equipo con IP \verb|66.66.66.66/24| que ofrece un servicio \acrshort{HTTP}.
+El concepto de puerto lo veremos más adelante y desarrollaremos a fondo en la Capa de Transporte. Por el momento, tan solo es necesario saber que es un número que se asigna a cada proceso que se comunica en la red, y que se usa para saber a qué proceso enviar la respuesta.\\
 
-    El equipo envía una petición (1), que pasa al router (2) y este lo envía a Internet con el fin de que llegue al equipo destino. El equipo responde (3), dicha respuesta le llega al router y el router se la reenvia al equipo  (4).
-\end{ejemplo}
-
-\begin{enumerate}[label=(\arabic*)]
-    \item Una petición \acrshort{HTTP} esta formada por una cabecera HTTP y por datos. La cabecera contiene una cabecera IP:
-        \begin{itemize}
-            \item Dirección IP origen (source) + puerto origen (sport): \verb|192.168.1.2| + \verb|1075|.
-            \item Dirección IP destino (destination) + puerto destino (dport): \verb|66.66.66.66| + \verb|80|.
-        \end{itemize}
-    El concepto de puerto lo veremos más adelante. Simplemente tenemos que saber que cuando un PC tiene muchos procesos usando servicios de navegador el SO asigna puertos por encima de 1024 para saber a qué proceso enviarle qué respuestas.
-    \item El router modifica la cabecera IP poniendo como IP origen su propia IP y como puerto origen un puerto que aún no haya sido usado para saber después a qué equipo mandarle la respuesta. Quedaría así:
-        \begin{itemize}
-            \item Dirección IP origen + puerto origen: \verb|33.33.33.33| + \verb|12345|.
-            \item Dirección IP destino + puerto destino: \verb|66.66.66.66| + \verb|80|.
-        \end{itemize}
-    
-    \item El paquete llega al servidor y este responde con su paquete de respuesta:
-        \begin{itemize}
-            \item Dirección IP origen + puerto origen: \verb|66.66.66.66| + \verb|80|.
-            \item Dirección IP destino + puerto destino: \verb|33.33.33.33| + \verb|12345|.
-        \end{itemize}
-    
-    \item El paquete llega sin problema al router, ya que la IP destino es pública. El router debe enviárselo ahora al equipo. Debe cambiar de nuevo la dirección y puerto destino. 
-        \begin{itemize}
-            \item Dirección IP origen + puerto origen: \verb|66.66.66.66| + \verb|80|.
-            \item Dirección IP destino + puerto destino: \verb|192.168.1.2| + \verb|1075|.
-        \end{itemize}
-\end{enumerate}
-
-Para el último paso el router necesita guardar información sobre las traducciones de direcciones que ha efectuado. 
+Para posibilitar la traducción, se usa una tabla de direcciones a modo de ``diccionario'', tal y como introducimos a continuación.
 \begin{definicion}[Tabla de traducciones]
-    Es una tabla que consta de dos columnas. Por un lado guardo la IP y puerto origen de la petición y por otro le asocio la IP y puerto que salen en el paquete enviado hacia fuera. 
-    La tabla funciona con un temporizador y se van borrando entradas cada cierto tiempo para no saturar la memoria del router. 
-    Para una segunda petición igual, se reutiliza la información de la tabla. 
-\end{definicion}    
+    La Tabla de Traducciones es una tabla que se guarda en la memoria de todo router que haga \acrshort{NAT}.
+    Por cada traducción que deba hacerse, se guarda una entrada en la tabla que relaciona la dirección IP y puerto originales con la dirección IP y puerto traducidos.
 
-\begin{definicion}[Masquerading]
-    Proceso de enmascaramiento que hace el router al traducir la dirección privada del equipo en su dirección pública. 
+    La tabla se va actualizando con cada nueva traducción, y cuenta con un temporizador (normalmente de 5 minutos) que borra las entradas que lleven un tiempo sin usarse. De esta forma, se evita que la tabla se sature y se libera memoria.
+
+    En el caso de que llegue una petición que ya esté en la tabla, se reutiliza la información de la tabla, sin crearse una nueva entrada.
+\end{definicion}
+
+\begin{definicion}[\textit{Masquerading}]
+    Proceso de enmascaramiento que hace el router al traducir la dirección privada del equipo en su dirección pública.
+
+    Se ``enmascara'' la dirección privada, de forma que el servidor no sabe a qué equipo de la red privada está respondiendo.
 \end{definicion}
 
 \begin{observacion}
-    Un posible problema de seguridad: Un atacante, conociendo la IP del router, hace un barrido de puertos y puede conseguir que algún paquete entre y si le responde ya sabe que la IP existe. 
-    Posible solución: guardar en la tabla de traducciones tanto la IP + puerto origen como la IP + puerto destino. Así, si llega una peticion que no coincide con IP + puerto destino se descarta simplemente. 
+    El uso de \acrshort{NAT} plantea un problema de seguridad. Un atacante, conociendo la IP pública del router, puede hacer un barrido de puertos y puede conseguir que algún paquete entre. En tal caso, el router le responderá, y el atacante sabrá que hay un equipo detrás de esa IP pública y puerto, por lo que podrá intentar atacar a ese equipo.
+    
+    Para evitar esto, para cada traducción puede guardarse tanto las IP y puerto de origen y destino sin traducir, como las traducidas. De esta forma, si llega una petición que coincide con la IP y puerto origen, pero no con la IP y puerto destino, se descarta directamente. Esta técnica se denomina \textit{NAT estricto}.
 \end{observacion}
 
+
+Hay dos tipos de \acrshort{NAT}, en función de dónde y cuándo se haga la traducción.
 \begin{description}
-    \item [\acrshort{SNAT}:] el origen de los datos está en una red privada, cambia la dirección IP de origen, se realiza tras el encaminamiento (postrouting).
-    \item [\acrshort{DNAT}:] el origen de los datos está en la red pública, se cambia la dirección IP de destino. Se realiza antes del encaminamiento (prerouting). En este caso la tabla de traducciones del router que realiza \acrshort{DNAT} tiene que ser estática, es decir tenemos que insertar las líneas a mano, dado que si no lo hacemos el router no sabrá a donde redirigir las peticiones. Este proceso se llama \textbf{port forwarding}.
+    \item [\acrfull{SNAT}:] el origen de los datos está en una red privada. Por tanto, al enviarse se cambia la dirección IP de origen, y la traducción a la correcta (en la respuesta) se hará tras el encaminamiento (\textit{postrouting}).
+    \item [\acrfull{DNAT}:] el origen de los datos está en la red pública. Por tanto, al recibir los datos se cambia la dirección IP de destino, y la traducción a la correcta (en la respuesta) se hará antes del encaminamiento (\textit{prerouting}).
+    
+    En este caso la tabla de traducciones del router que realiza \acrshort{DNAT} ha de ser estática (la inserción debe ser a mano), ya que en otro caso el router no sabrá a donde redirigir las peticiones entrantes. Este proceso se denomina \textit{port forwarding}.
 \end{description}
 
-El ejemplo visto antes era un ejemplo de \acrshort{SNAT}. Se propone ahora al lector hacer un ejemplo de \acrshort{DNAT}.
 
-\begin{ejercicio}
-    Supongamos que la IP del cliente es \verb|66.66.66.66/24|, la pública del router es \verb|33.33.33.33/24| y que la privada del servidor es \verb|192.168.1.2/24|. Escribir las cabeceras IP de los paquetes que se envían si el cliente le manda una petición al servidor. 
-\end{ejercicio}
+Planteemos un primer ejemplo de \acrshort{SNAT}, que nos ayudará a comprender cómo funciona esta técnica.
+\begin{ejemplo}
+    Supongamos la situación de la Figura~\ref{fig:ejemplo_nat}, en la que un portátil dentro de una red privada quiere acceder a un servidor HTTP en Internet.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}[node distance=6cm]
+
+            \node[laptop] (laptop) {};
+            \node[below= 0 of laptop] {192.168.1.2/24};
+            
+            \node[router, right of=laptop] (router) {};
+            %\node[below=0cm of router] {222.222.222.222/24};
+
+            \node[cloud, right of=router, xshift=-3cm] (internet) {Internet};
+    
+            \node[server, right of=internet, xshift=-2cm] (server) {};
+            \node[below=0cm of server] {66.66.66.66/24};
+    
+            \draw (laptop) -- (router) -- (internet) -- (server);
+    
+            % Conexiones del router
+            \draw[fill] (router.west) circle [radius=0.1cm];
+            \draw (router.west) -- ++(0,-1) node[below] {192.168.1.1/24};
+            \draw[fill] (router.east) circle [radius=0.1cm];
+            \draw (router.east) -- ++(0,1) node[above] {33.33.33.33/24};
+
+            % 1: Petición del portátil al router
+            \draw[-Stealth, dashed] ($(laptop.east) + (0.5,0.5)$) -- ($(router.west) + (-0.5,0.5)$) node[midway, above] {1};
+
+            % 2: Petición del router a Internet
+            \draw[-Stealth, dashed] ($(router.east) + (0.1,0.5)$) -- ($(internet.west) + (-0.1,0.5)$) node[midway, above] {};
+            \draw[-Stealth, dashed] ($(internet.east) + (0.2,0.5)$) -- ($(server.west) + (-0.2,0.5)$) node[midway, above] {2};
+
+            % 3: Respuesta del servidor al router
+            \draw[-Stealth, dashed] ($(server.west) + (-0.2,-0.5)$) -- ($(internet.east) + (0.2,-0.5)$) node[midway, below] {3};
+            \draw[-Stealth, dashed] ($(internet.west) + (-0.1,-0.5)$) -- ($(router.east) + (0.1,-0.5)$) node[midway, below] {};
+
+            % 4: Respuesta del router al portátil
+            \draw[-Stealth, dashed] ($(router.west) + (-0.5,-0.5)$) -- ($(laptop.east) + (0.5,-0.5)$) node[midway, below] {4};
+        
+        \end{tikzpicture}
+        \caption{Ejemplo de red con \acrshort{SNAT}.}
+        \label{fig:ejemplo_nat}
+    \end{figure}
+
+    El equipo envía una petición al router (1), que este reenvía al servidor (2). El servidor responde al router (3), que a su vez reenvía la respuesta al equipo (4). Se trata de \acrshort{SNAT}, ya que la petición parte de una red privada. Veamos qué ocurre en cada uno de los pasos:
+    \begin{enumerate}[label=(\arabic*)]
+        \item El ordenador envía una petición \acrshort{HTTP} al router.
+        
+        El puerto de origen, el cual asignará alteatoriamente el SO (ya se verá), pongamos que es el 1075. El puerto de destino, en el caso de \acrshort{HTTP}, es el 80. Por tanto, la cabecera IP del paquete que envía el portátil al router contendrá:
+        \begin{itemize}
+            \item {IPsc}:{sport}: \verb|192.168.1.2:1075|.
+            \item {IPdest}:{dport}: \verb|66.66.66.66:80|.
+        \end{itemize}
+            
+        \item El router ha de realizar la traducción de direcciones, ya que la IP del portátil es privada y no puede ser usada en Internet. Para esto, modifica la cabecera IP poniendo como IP origen su propia IP pública, y como puerto origen un puerto que aún no haya sido usado (por ejemplo, 12345). La cabecera IP así:
+        \begin{itemize}
+            \item {IPsc}:{sport}: \verb|33.33.33.33:12345|.
+            \item {IPdest}:{dport}: \verb|66.66.66.66:80|.
+        \end{itemize}
+
+        La tabla de traducciones del router quedaria (donde notamos con ``$'$'' la traducida):
+        \begin{table}[H]
+            \centering
+            \begin{tabular}{|c|c||c|c|}
+                \hline
+                IPsc & sport & IPsc$'$ & sport$'$ \\
+                \hline
+                \verb|192.168.1.2| & \verb|1075| & \verb|33.33.33.33| & \verb|12345|\\
+                \hline
+            \end{tabular}
+            \caption{Tabla de traducciones del router con SNAT.}
+            \label{tab:tabla_traducciones}            
+        \end{table}
+
+        Tras esta traducción, el router envía el paquete al servidor.
+        
+        \item Tras el procesamiento del paquete en el servidor, este envía la respuesta al router. La cabecera IP del paquete de respuesta contendrá:
+            \begin{itemize}
+                \item {IPsc}:{sport}: \verb|66.66.66.66:80|.
+                \item {IPdest}:{dport}: \verb|33.33.33.33:12345|.
+            \end{itemize}
+        
+        \item El paquete llega sin problema al router, ya que la IP de destino es pública. El router debe realizar de nuevo la traducción para saber a qué equipo de la red privada debe enviar la respuesta. Para ello, consulta la tabla de traducciones (Tabla~\ref{tab:tabla_traducciones}) y, tras modificar de nuevo la cabecera IP (\textit{postrouting}), esta queda:
+            \begin{itemize}
+                \item {IPsc}:{sport}: \verb|66.66.66.66:80|.
+                \item {IPdest}:{dport}: \verb|192.168.1.2:1075|.
+            \end{itemize}
+    \end{enumerate}
+\end{ejemplo}
+
+
+Planteamos ahora el siguiente ejemplo de \acrshort{DNAT}, que nos ayudará ahora a comprender cómo funciona esta técnica.
+\begin{ejemplo}
+    Supongamos la situación de la Figura~\ref{fig:ejemplo_dnat}, en la que un portátil dentro de una red privada quiere acceder a un servidor HTTP en Internet.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}[node distance=6cm]
+
+            \node[server] (server) {};
+            \node[below= 0 of server] {192.168.1.2/24};
+            
+            \node[router, right of=server] (router) {};
+            %\node[below=0cm of router] {222.222.222.222/24};
+
+            \node[cloud, right of=router, xshift=-3cm] (internet) {Internet};
+    
+            \node[laptop, right of=internet, xshift=-2cm] (laptop) {};
+            \node[below=0cm of laptop] {66.66.66.66/24};
+    
+            \draw (server) -- (router) -- (internet) -- (laptop);
+    
+            % Conexiones del router
+            \draw[fill] (router.west) circle [radius=0.1cm];
+            \draw (router.west) -- ++(0,-1) node[below] {192.168.1.1/24};
+            \draw[fill] (router.east) circle [radius=0.1cm];
+            \draw (router.east) -- ++(0,1) node[above] {33.33.33.33/24};
+
+            % 1: Petición del laptop al router
+            \draw[-Stealth, dashed] ($(laptop.west) + (-0.2,0.5)$) -- ($(internet.east) + (0.2,0.5)$) node[midway, above] {1};
+            \draw[-Stealth, dashed] ($(internet.west) + (-0.1,0.5)$) -- ($(router.east) + (0.1,0.5)$) node[midway, above] {};
+
+            % 2: Petición del router a Internet
+            \draw[-Stealth, dashed] ($(router.west) + (-0.5,0.5)$) -- ($(server.east) + (0.5,0.5)$) node[midway, above] {2};
+
+            % 3: Respuesta del sever al router
+            \draw[-Stealth, dashed] ($(server.east) + (0.5,-0.5)$) -- ($(router.west) + (-0.5,-0.5)$) node[midway, below] {3};
+
+            % 4: Respuesta del router al laptop
+            \draw[-Stealth, dashed] ($(router.east) + (0.1,-0.5)$) -- ($(internet.west) + (-0.1,-0.5)$) node[midway, below] {};
+            \draw[-Stealth, dashed] ($(internet.east) + (0.2,-0.5)$) -- ($(laptop.west) + (-0.2,-0.5)$) node[midway, below] {4};        
+        \end{tikzpicture}
+        \caption{Ejemplo de red con \acrshort{DNAT}.}
+        \label{fig:ejemplo_dnat}
+    \end{figure}
+
+    El equipo envía una petición al router (1), que este reenvía al servidor (2). El servidor responde al router (3), que a su vez reenvía la respuesta al equipo (4). Se trata de \acrshort{DNAT}, ya que la petición parte de la red pública. Veamos qué ocurre en cada uno de los pasos:
+    \begin{enumerate}[label=(\arabic*)]
+        \item El ordenador envía una petición \acrshort{HTTP} al router.
+        
+        El puerto de origen pongamos que es el 1050. El puerto de destino, tras la traducción efectivamente ha de ser el 80 (ya que es un servidor \acrshort{HTTP}). No obstante, antes de la traducción este puerto ha de ser el correspondiente al puerto que hayamos asignado al servidor \acrshort{HTTP} al que queremos acceder. Por ejemplo, sea la tabla de traducciones del router la de la Tabla~\ref{tab:tabla_traducciones_DNAT} (que hemos de haber configurado previamente en el \textit{port forwarding}).
+        \begin{table}[H]
+            \centering
+            \begin{tabular}{|c|c||c|c|}
+                \hline
+                IPdest & dport & IPdest$'$ & dport$'$ \\
+                \hline
+                \verb|33.33.33.33| & \verb|23456| & \verb|192.168.1.2| & \verb|80|\\
+                \hline
+            \end{tabular}
+            \caption{Tabla de traducciones del router con \acrshort{DNAT}.}
+            \label{tab:tabla_traducciones_DNAT}
+        \end{table}
+
+        En tal caso, el puerto de destino será el 23456. Por tanto, la cabecera IP del paquete que envía el portátil al router contendrá:
+            \begin{itemize}
+                \item {IPsc}:{sport}: \verb|66.66.66.66:1050|.
+                \item {IPdest}:{dport}: \verb|33.33.33.33:23456|.
+            \end{itemize}
+        Notemos que la IP de destino no es el servidor como tal, sino el router (ya que es es al que tiene acceso el portátil), y el puerto de destino es el que hemos asignado en la tabla de traducciones para el servidor \acrshort{HTTP} al que queremos acceder.
+            
+        \item Tras llegar al router, este ha de realizar la traducción de direcciones (\textit{prerouting}), ya que la IP de destino era el router mismo. Consultando la tabla de traducciones (Tabla~\ref{tab:tabla_traducciones_DNAT}), la cabecera IP del paquete que envía el router al servidor quedará:
+            \begin{itemize}
+                \item {IPsc}:{sport}: \verb|66.66.66.66:1050|.
+                \item {IPdest}:{dport}: \verb|192.168.1.2:80|.
+            \end{itemize}
+
+        Tras esta traducción, el router envía el paquete al servidor (ya en la red privada).
+        
+        \item Tras el procesamiento del paquete en el servidor, este envía la respuesta al router. La cabecera IP del paquete de respuesta contendrá:
+            \begin{itemize}
+                \item {IPsc}:{sport}: \verb|192.168.1.2:80|.
+                \item {IPdest}:{dport}: \verb|66.66.66.66:1050|.
+            \end{itemize}
+        
+        \item El paquete llega sin problema al router, ya que la IP de destino es pública. El router debe realizar de nuevo la traducción para saber ahora de qué equipo de la red privada proviene la petición. Para ello, consulta de nuevo la tabla de traducciones (Tabla~\ref{tab:tabla_traducciones}) y, tras modificar de nuevo la cabecera IP, esta queda:
+            \begin{itemize}
+                \item {IPdest}:{dport}: \verb|33.33.33.33:23456|.
+                \item {IPdest}:{dport}: \verb|66.66.66.66:1050|.
+            \end{itemize}
+    \end{enumerate}
+
+    Notemos que, en el \acrshort{SNAT}, la tabla de traducciones se va actualizando con cada nueva traducción, mientras que en el \acrshort{DNAT} la tabla de traducciones ha de ser estática, ya que en otro caso el router no sabrá a donde redirigir las peticiones entrantes.
+\end{ejemplo}
 
 \subsection{Encaminamiento}
 Se dice del proceso de encontrar el mejor camino para llevar la información (paquetes) de un origen a un destino dado. \\
