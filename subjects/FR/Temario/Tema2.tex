@@ -1087,28 +1087,53 @@ Como aspectos relevantes, además de informar de errores nos permite conocer la 
 
 El \acrfull{DHCP} es un protocolo para configurar de forma automática la capa de red. Este protocolo se encarga de asignar direcciones IP, máscaras, pasarelas por defecto e IP del servidor \acrshort{DNS}. Su funcionalidad es a nivel de red, aunque se implementa en capa de aplicación y se encapsula en \acrshort{UDP}. \\
 
-Contamos con un cliente, que inicialmente no tiene dirección IP asignada (emplearemos la \verb|0.0.0.0|), y un servidor \acrshort{DHCP}, el cual se encargará de asignársela. Para conseguir una dirección IP, se intercambian los siguientes mensajes entre el cliente y el servidor \acrshort{DHCP}:
+Contamos con un cliente, que inicialmente no tiene dirección IP asignada (emplearemos la \verb|0.0.0.0|), y un servidor \acrshort{DHCP}, el cual se encargará de asignársela. Se trata de un protocolo de \textit{leasing} (alquiler), ya que la dirección IP que se asigna al cliente es válida durante un tiempo.\\
+
+Para conseguir una dirección IP, se intercambian los siguientes mensajes entre el cliente y el servidor \acrshort{DHCP} (donde cada par pregunta-respuesta se etiqueta con un identificador de transacción para que el cliente sepa que el mensaje va para él):
 \begin{itemize}
     \item \verb|DHCP Discover|: El cliente envía un mensaje para que saber si hay algún servidor \acrshort{DHCP} en la red. Lo envía por tanto a la dirección de difusión.
+    \begin{align*}
+        \text{Dirección IP origen} &= \texttt{0.0.0.0} \\
+        \text{Dirección IP destino} &= \texttt{255.255.255.255} \\
+        \text{ID transacción} &= X
+    \end{align*}
+
     \item \verb|DHCP Offer|: El servidor responde identificándose y proponiéndole una dirección IP al cliente, que será válida durante cierto tiempo (\textit{lease time}), el cual se configura en el servidor \acrshort{DHCP}. Notemos que esto es solo una oferta, no una imperativa.
     
     Como el cliente aún no tiene dirección IP asignada, se envía de nuevo a la dirección de difusión.
-    \item \verb|DHCP Request|: El cliente le solicita al servidor la dirección IP que le ha ofrecido el servidor.
+    \begin{align*}
+        \text{Dirección IP origen} &= \text{Dirección IP del servidor} \\
+        \text{Dirección IP destino} &= \texttt{255.255.255.255} \\
+        \text{ID transacción} &= X \\
+        \text{Dirección IP ofrecida} &= Y \\
+        \text{Lease time} &= \unit[Z]{s}
+    \end{align*}
+    \item \verb|DHCP Request|: El cliente le solicita al servidor la dirección IP que le ha ofrecido el servidor (o la misma que ya estaba usando, en el caso de que se trate de una renovación).
     
-    Ya no es necesario que se envíe a la dirección de difusión, ya que el cliente conoce la dirección IP del servidor \acrshort{DHCP} que le ha hecho la oferta.
-    \item DHCP ACK: el servidor responde con la IP definitiva, y esta sí es imperativa. 
+    Aunque ya no es necesario que se envíe a la dirección de difusión (ya que el cliente conoce la dirección IP del servidor \acrshort{DHCP} que le ha hecho la oferta), el estándar establece que se envíe aun así a la dirección de difusión (aunque permite ambas formas).
+    \begin{align*}
+        \text{Dirección IP origen} &= \texttt{0.0.0.0} \\
+        \text{Dirección IP destino} &= \texttt{255.255.255.255} \\
+        \text{ID transacción} &= X' \\
+        \text{Dirección IP solicitada} &= Y \\
+        \text{Lease time} &= \unit[Z]{s}
+    \end{align*}
+    \item \verb|DHCP ACK|: El servidor responde con la dirección IP del cliente definitiva, y esta sí es imperativa.
+    
+    De nuevo, en este caso el servidor se ve obligado a enviar a la dirección de difusión.
+    \begin{align*}
+        \text{Dirección IP origen} &= \text{Dirección IP del servidor} \\
+        \text{Dirección IP destino} &= \texttt{255.255.255.255} \\
+        \text{ID transacción} &= X' \\
+        \text{Dirección IP asignada} &= Y \\
+        \text{Lease time} &= \unit[Z]{s}
+    \end{align*}
 \end{itemize}
 
-% // TODO: Por aqui
+Como hemos mencionado, la IP de destino en toda la transacción es la de difusión, y la de origen es la \verb|0.0.0.0| en caso de ser el cliente el origen, o la del servidor \acrshort{DHCP} en caso de ser él el origen.\\
 
-La IP destino usada en toda la transacción es la de difusión 255.255.255.255, y la de origen es la 0.0.0.0 en caso de ser el cliente o la del servidor DHCP en caso de ser el mismo. Los puertos usados son el 67 para el servidor y el 68 para el cliente.\\
-
-Los pares pregunt-respuesta se etiquetan con un identificador de transacción para que el cliente sepa que el mensaje va para él.\\
-
-\acrshort{DHCP} es un protocolo de \textit{leasing} o alquiler, la IP (y el resto de cosas) se asignan de forma temporal. Cuando tiempo va a expirar es necesario que el equipo mande una solicitud para que el servidor refresque el alquiler. El \textbf{DHCP release} se manda cuando queremos liberar la IP que se nos ha asignado, por ejemplo antes de que el dispositivo se apague. Sin embargo, si el servidor no recibe una petición del equipo antes de que se expire su alquiler libera la IP igualmente, dado que es posible que el equipo ya no la esté usando y sea necesario liberarla para no quedarnos sin IPs disponibles. 
+Por último, para liberar la direcciín IP de forma correcta (sin que surja ningún error), el cliente debe enviar el mensaje \verb|DHCP Release| al servidor \acrshort{DHCP} antes de que termine el tiempo de alquiler. En caso contrario, el servidor liberará la IP igualmente, ya que es posible que el cliente ya no la esté usando y sea necesario liberarla para no quedarnos sin direcciones IPs disponibles. En el caso de que el cliente busque renovar su alquiler, volverá a enviará un mensaje \verb|DHCP Request| al servidor \acrshort{DHCP}.
 
 \begin{observacion}
     Es posible configurar un servidor para que algunas IPs fijas se asignen a ciertos dispositivos.
 \end{observacion}
-
-
