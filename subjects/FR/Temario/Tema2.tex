@@ -73,7 +73,7 @@ En la actualidad, no se envía una señal analógica; sino que, como sabemos, se
 
 A la hora de realizar la conmutación, hay dos formas de hacerlo, la conmutación mediante datagramas y la conmutación mediante circuitos virtuales.
 
-\subsubsection{Conmutación de datagramas}
+\subsubsection{Conmutación de datagramas}\label{sec:conmutacion_de_datagramas}
 
 Las características de la conmutación de datagramas son:
 \begin{itemize}
@@ -181,7 +181,7 @@ Además de las restricciones de cada clase, hay determinadas direcciones que est
     Cuando se tiene que encontrar un equipo y no se sabe cuál, se manda por la dirección de difusión y lo escuchará quien tenga que escucharlo.
 
     \item \verb|127.a.b.c|: Denominada dirección de \textit{loopback}, \textit{localhost} o \textit{localloop}. Se usa para hacer pruebas, y es una conexión que hacemos a nuestra propia máquina. Originalmente (y la más común) era \verb|127.0.0.1|, pero en la actualidad se ha aumentado el rango.
-    Estas redes no requieren de una tarjeta de red específica.
+    Estas redes no requieren de una tarjeta de red específica, y su interfaz de red se denomina \verb|lo|.
 \end{itemize}
 
 Llegados a este punto, podemos dar una definición más correcta de router, que ya habíamos mencionado anteriormente.
@@ -487,50 +487,170 @@ Planteamos ahora el siguiente ejemplo de \acrshort{DNAT}, que nos ayudará ahora
 \end{ejemplo}
 
 \subsection{Encaminamiento}
-Se dice del proceso de encontrar el mejor camino para llevar la información (paquetes) de un origen a un destino dado. \\
-
-Se realiza salto a salto y datagrama a datagrama en función de la IP destino del paquete y de las tablas de encaminamiento que hay en los routers. \\
-
-Todo equipo en red tiene tablas de encaminamiento, tanto los hosts como los routers.
+Se dice del proceso de encontrar el mejor camino para llevar la información (paquetes) de un origen a un destino dado. Como se vió en la Sección~\ref{sec:conmutacion_de_datagramas}, este se realiza salto a salto y paquete a paquete en función de la dirección IP destino del paquete y de las tablas de encaminamiento que hay en cada uno de los routers.
 
 \subsubsection{Tablas de encaminamiento}
-Veamos los campos que tienen estas tablas, primero los campos importantes y luego los menos relevantes (entre paréntesis).
+
+Las tablas de encaminamiento son tablas que se guardan en la memoria de todo equipo conectado a la red (tanto hosts como routers), que informan sobre las redes a las que se puede llegar y la mejor forma de llegar a ellas.\\
+
+Veamos los campos que tienen estas tablas, donde notaremos entre paréntesis aquellos que tienen menor relevancia y que incluso no son siempre necesarios.
 \begin{itemize}
-    \item Red destino. 
-    \item Máscara.
-    \item Siguiente salto. 
-    \item (Interfaz de salida del equipo), puede ser redundante. 
+    \item Red destino: Red a la que pertenecerá la dirección IP de destino, y a la cual queremos llegar.
+    \item Máscara de red: Máscara de red correspondiente a dicha red de destino.
+    \item Siguiente salto: Nodo al que debemos reenviar el paquete para que llegue a la red de destino.
+    \item (Interfaz de salida del equipo), dato que puede ser redundante. 
     \item (Protocolo).
     \item (Flags).
-    \item (Coste) esperado para llegar a dicho equipo, por ejemplo el número de saltos. 
+    \item (Coste): Coste esperado para llegar a dicha dirección IP de destino. Este se puede medir, por ejemplo, mediante el número de saltos que se han de realizar.
 \end{itemize}
 
-Tenemos varios tipos de rutas:
+Hay distntos tipos de rutas que se pueden almacenar en una tabla de encaminamiento:
 \begin{description}
-    \item [Rutas directas:] (marcado con * en siguiente salto). Para llegar a alguna de las redes en las que estamos. No es necesario realizar ningún salto, ponemos el paquete en la red y será recibido por el destinatario. Normalmente, un router suele estar en varias redes (dado que hace de puente entre distintas redes), y un host suele estar en una única red. 
-    \item [Rutas indirectas:] Para llegar a redes a las que no estamos directamente conectados a través de un intermediario. Es necesario pasar por mínimo un salto para llegar al destino.  
-    \item [Entrada por defecto (default):] (notado por \verb|0.0.0.0| o \textit{default} en red destino y /0 en máscara). Hace referencia a cualquier red que no haya sido aceptada por el resto de entradas. Al equipo que sale en \textit{siguiente salto} (el que nos conecta con el exterior) lo llamamos pasarela (\textit{gateway} en inglés). No siempre es necesario. Poner simplemente un \verb|\0| en máscara es equivalente a una entrada por defecto.
+    \item [Rutas directas:] (marcadas con $\ast$ en el campo de ``Siguiente salto''). Estas son las redes a las que tenemos conexión directa, sin realizar ningún salto. Podemos enviar directamente el paquete al destinatario sin necesidad de pasar por nodos intermedios.
+    
+    Un router tiene acceso directo a las redes que interconecta (por lo que tendrá una entrada de este tipo por cada red), mientras que un host suele estar en una única red (por lo que tan solo tendrá una entrada de este tipo).
+
+    En la mayoría de los casos, cuando se asigna una dirección IP a determinada tarjeta de red de un equipo, se almacena la entrada de esta ruta directa de forma automática.
+    \item [Rutas indirectas:] Estas son las redes a las que no tenemos conexión directa, pero sí a través de un intermediario. Por tanto, es necesario dar mínimo un salto para llegar al destino.
+     
+    \item [Entrada por defecto:] (notado por \verb|0.0.0.0| o \verb|default| en red destino y \verb|/0| en máscara). Hace referencia a cualquier red que no haya sido aceptada por el resto de entradas. El equipo que se encuentra en el campo de ``Siguiente salto'' será el que nos conexta con el exterior, y lo denominaremos \emph{pasarela} o \textit{gateway}.
+    
+    Esta entrada no siempre es necesaria, aunque permite que no se produzcan errores (puesto que siempre habrá, al menos, una entrada válida para cada dirección IP, como más adelante veremos).
+    
+    \begin{comment}
+    Además, poner simplemente un \verb|\0| en máscara es equivalente a una entrada por defecto (algo que veremos cuando entendamos el uso de estas tablas).
+    \end{comment}
+
+    \item [Entrada de \texttt{localhost}:] En el caso de que queramos usar esta técnica, también debe haber una entrada en la tabla de encaminamiento con este fin. Su red de destino será \verb|localhost|, y su interfaz, como mencionamos anteriormente, será \verb|lo|.
 \end{description}
 
 \noindent
 Tenemos dos tipos de encaminamientos:
 \begin{description}
-    \item [Estático:] se hace a mano.
-    \item [Dinámico:] se hace por protocolo. Puede ir cambiando, por ejemplo, si se rompe un router se busca otro camino para llegar al destino.
+    \item [Estático:] La tabla de encaminamiento se rellena a mano.
+    \item [Dinámico:] La tabla de encaminamiento se rellena de forma automática, ya que hay un protocolo (\acrshort{RIP}, \acrshort{OSPF}\ldots) que se encarga de actualizarla. Tiene como ventaja que es dinámica (puede cambiar), ya que si se cae cierto router se puede buscar otro camino para llegar al destino.
 \end{description}
 
-\subsubsection{Uso de la tabla de encaminamiento}
-Dada una dirección IP, para buscar su entrada en la tabla de encaminamiento, se hace la operación lógica \verb|AND| con la máscara de cada entrada. Si el resultado coincide con la red de destino entonces la entrada es válida para dicha IP\@.
-\begin{itemize}
-    \item Si no hay ninguna entrada válida, se envía un mensaje de error \acrshort{ICMP}, pero no se intenta arreglar dicho error.
-    \item Si hay varias entradas válidas para una IP\@, se escoge la entrada más restrictiva. 
+\begin{observacion}
+    En casos muy específicos (menos del $0.1\%$), se puede encaminar en función de la dirección IP origen, pero este caso no se desarrollará en la asignatura.
+\end{observacion}
 
-        %TODO: hacer dibujo de redes dentro de redes y explicar el ultimo punto
+\subsubsection{Uso de la tabla de encaminamiento}
+
+En esta sección entenderemos cómo funcionan estas tablas. Dada una dirección IP de destino, buscamos saber cuál es la dirección IP del nodo al que debemos enviarle el paquete para que este, finalmente, llegue al destino.\\
+
+Para esto, buscamos las redes de destino de la tabla de encaminamiento que admitan a la dirección IP de destino. Para ello, se hace la operación lógica \verb|AND| entre la dirección IP de destino y la máscara de cada entrada, y si el resultado coincide con la red de destino entonces dicha entrada es válida para dicha IP\@.
+\begin{itemize}
+    \item Si no hay ninguna entrada válida, se envía un mensaje de error \acrshort{ICMP}, pero no se intenta solventar dicho error.
+    \item Si hay más de una entrada válida, se escogerá aquella con la máscara de red más restrictiva, ya que la red de destino será más pequeña, teniendo así (a priori) una conexión más directa. Esto lo veremos en detalle en el próximo ejemplo.
 \end{itemize}
 
-\begin{observacion}
-    \textit{localhost} tiene que estar en la tabla de encaminamiento. Su interfaz es \textit{lo}.
-\end{observacion}
+Por tanto, una vez que tenemos la entrada asignada a la dirección IP de destino, se envía el paquete a la dirección IP del siguiente salto, continuando así el encaminamiento hasta llegar al destino.
+
+\begin{ejemplo}\label{ejemplo:tabla_encaminamiento}
+    Veamos un ejemplo de encaminamiento. Supongamos que estamos en la situación de la Figura~\ref{fig:ejemplo_tabla_encaminamiento}, y que la tabla de encaminamiento de R6 es la que se muestra en la Tabla~\ref{tab:encaminamientoR6} (donde hemos notado por \verb|IP_Exterior| a la IP del siguiente router que nos conecta con Internet).
+    \begin{figure}
+        \centering
+        \resizebox{1\textwidth}{!}{
+        \begin{tikzpicture}[node distance=3cm]
+
+            \node[laptop] (l1) {};
+            \node[laptop, right of=l1] (l2) {};
+            \node[laptop, right of=l2] (l3) {};
+            \node[laptop, right of=l3] (l4) {};
+            \node[laptop, right of=l4] (l5) {};
+            \node[laptop, right of=l5] (l6) {};
+            \node[router, below of=l1, xshift=1.5cm] (r1) {};
+            \node[router, below of=l3, xshift=1.5cm] (r2) {};
+            \node[router, below of=l5, xshift=1.5cm] (r3) {};
+            \node[router, below of=r1, xshift=3cm, yshift=1cm] (r4) {};
+            \node[router, below of=r3, xshift=-3cm, yshift=1cm] (r5) {};
+            \node[router, below of=r4, xshift=3cm, yshift=1cm] (r6) {};
+
+            % Bucle for para marcar los routers
+            \foreach \i in {1,...,6} {
+                \node[yshift=-0.8em] at (r\i) {\color{white} \textbf{R\i}};
+            }
+            % Bucle for para marcar los laptops
+            \foreach \i in {1,...,6} {
+                \node[xshift=0.7em, yshift=0.7em] at (l\i) {\color{white} \textbf{L\i}};
+            }
+
+            \node[cloud, right of=r6] (cloud) {Internet};
+
+
+            % Conexiones
+            \draw[red] (l1.south) |- ($(r1.north) + (0,0.5)$) -| (l2.south);
+            \draw[red] ($(r1.north) + (0,0.5)$) -- (r1.north);
+            \draw (l3.south) |- ($(r2.north) + (0,0.5)$) -| (l4.south);
+            \draw ($(r2.north) + (0,0.5)$) -- (r2.north);
+            \draw (l5.south) |- ($(r3.north) + (0,0.5)$) -| (l6.south);
+            \draw ($(r3.north) + (0,0.5)$) -- (r3.north);
+
+            \draw[olive] (r1.east) -- (r2.west);
+            \draw[olive] ($(r4.north) + (0,1.1)$) -- (r4.north);
+            \draw (r2.east) -- (r3.west);
+            \draw ($(r5.north) + (0,1.1)$) -- (r5.north);
+            \draw[blue] (r4.east) -- (r5.west);
+            \draw[blue] ($(r6.north) + (0,1.1)$) -- (r6.north);
+
+            \draw (r6.east) -- (cloud.west);
+
+            % Conexiones adicionales
+            \draw[red] ($(l1.south) - (0,0.65)$) |- ($(r6.south) - (0,0.5)$) -- (r6.south);
+            \draw[olive] ($(r1.east) + (0.5,0)$) |- (r6.west);
+
+            % Conexiones del router r1
+            %\draw[fill, red] (r1.north) circle [radius=0.1cm];
+            %\draw[red] (r1.north) -- ++(0.5,0) node[right] {192.168.0.1/27};
+            %\draw[fill, olive] (r1.east) circle [radius=0.1cm];
+            %\draw[olive] (r1.east) |- ($(r1.south) +(0,0)$) -- ($(r1.south) +(0,-0.2)$) node[below] {192.168.0.1/24};
+
+            % Conexiones del router r4
+            %\draw[fill, olive] (r4.north) circle [radius=0.1cm];
+            %\draw[olive] (r4.north) -- ++(0.5,0) node[right] {192.168.0.2/24};
+            %\draw[fill, blue] (r4.east) circle [radius=0.1cm];
+            %\draw[blue] (r4.east) |- ($(r4.east) +(0,0.4)$) -- ($(r4.east) +(0.2,0.4)$) node[right] {192.168.0.1/16};
+
+            % Conexiones del router r6
+            %\draw[fill, blue] (r6.north) circle [radius=0.1cm];
+            %\draw[blue] (r6.north) -- ++(0.5,0) node[right] {192.168.0.2/16};
+            %\draw[fill, olive] (r6.west) circle [radius=0.1cm];
+            %\draw[olive] (r6.west) |- ($(r6.west) +(0,-0.2)$) -- ($(r6.west) +(-0.2,-0.2)$) node[left] {192.168.0.3/24};
+            %\draw[fill, red] (r6.south) circle [radius=0.1cm];
+            %\draw[red] (r6.south) -- ($(r6.south) +(0.5,0)$) node[right] {192.168.0.3/27};
+
+            % Conexiones del L1
+            \draw[red] (l1.north) node[above] {192.168.0.2/27};
+
+            % Redes
+            \node[red, above] at ($(r1.north) + (0,0.5)$) {192.168.0.0/27};
+            \node[olive, above] at ($(r4.north) + (0,1.1)$) {192.168.0.0/24};
+            \node[blue, above] at ($(r6.north) + (0,1.1)$) {192.168.0.0/16};
+        \end{tikzpicture}}
+        \caption{Situación para el ejemplo de la página~\pageref{ejemplo:tabla_encaminamiento}.}
+        \label{fig:ejemplo_tabla_encaminamiento}
+    \end{figure}
+    \begin{table}
+        \centering
+        \begin{tabular}{|c|c|c|c|}
+            \hline
+            {Red de Destino} & {Máscara} & {Siguiente Salto} & {Interfaz}\\ \hline
+            192.168.0.0 & {\color{red}/27} & $*$ & {\color{red}-}\\
+            192.168.0.0 & {\color{olive}/24} & $*$ & {\color{olive}-}\\
+            192.168.0.0 & {\color{blue}/16} & $*$ & {\color{blue}-}\\
+            \verb|default| & {/0} & \verb|IP_Exterior| & -\\
+            \hline
+        \end{tabular}
+        \caption{Tabla de encaminamiento de R6 para la Figura~\ref{fig:ejemplo_tabla_encaminamiento}.}
+        \label{tab:encaminamientoR6}
+    \end{table}
+
+    Supongamos que a R6 le llega un paquete con destino L1 (dirección IP de destino \verb|192.168.0.1|). Tras hacer el \verb|AND| con cada una de las máscaras, vemos que las 4 entradas son válidas para dicha dirección IP\@. No obstante, la máscara más restrictiva es \verb|/27|, por lo que se elegirá dicha entrada y, por tanto, reenviará el paquete por la interfaz de red de R6 que pertenece a dicha red de destino. Esto permite que el camino se haga directo, con menos saltos.
+\end{ejemplo}
+
+
+% // TODO: Por aquí, agrupamiento
 
 A veces es útil minimizar las tablas de encaminamiento, agrupando las redes con las que se trabaja. A menudo tenemos que compartir las tablas de encaminamiento (como veremos en algunos de los siguientes protocolos) y para ello lo mejor es que sean lo más compactas posible. Lo ideal es tener una entrada por cada interfaz del dispositivo. 
 
