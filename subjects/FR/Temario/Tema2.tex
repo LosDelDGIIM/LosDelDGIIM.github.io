@@ -535,6 +535,10 @@ Tenemos dos tipos de encaminamientos:
     En casos muy específicos (menos del $0.1\%$), se puede encaminar en función de la dirección IP origen, pero este caso no se desarrollará en la asignatura.
 \end{observacion}
 
+\begin{observacion}
+    Como curiosidad, para consultar la tabla de encaminamiento de un equipo con \verb|Linux| se puede emplear el comando \verb|route -n|.
+\end{observacion}
+
 \subsubsection{Uso de la tabla de encaminamiento}
 
 En esta sección entenderemos cómo funcionan estas tablas. Dada una dirección IP de destino, buscamos saber cuál es la dirección IP del nodo al que debemos enviarle el paquete para que este, finalmente, llegue al destino.\\
@@ -649,184 +653,453 @@ Por tanto, una vez que tenemos la entrada asignada a la dirección IP de destino
     Supongamos que a R6 le llega un paquete con destino L1 (dirección IP de destino \verb|192.168.0.1|). Tras hacer el \verb|AND| con cada una de las máscaras, vemos que las 4 entradas son válidas para dicha dirección IP\@. No obstante, la máscara más restrictiva es \verb|/27|, por lo que se elegirá dicha entrada y, por tanto, reenviará el paquete por la interfaz de red de R6 que pertenece a dicha red de destino. Esto permite que el camino se haga directo, con menos saltos.
 \end{ejemplo}
 
+En la mayoría de los casos, se buscará minimizar las tablas de encaminamiento agrupando las redes con las que se trabaja, permitiendo así que el encaminamiento sea más eficiente. Lo ideal es tener una entrada por cada interfaz del dispositivo, ya que así por cada dirección IP de destino sabremos qué interfaz usar. Además, a menudo tenemos que compartir las tablas de encaminamiento (como veremos en algunos de los siguientes protocolos), y para ello lo mejor es que sean lo más compactas posible.
 
-% // TODO: Por aquí, agrupamiento
+\section{Protocolos de intercambio de información de encaminamiento}
 
-A veces es útil minimizar las tablas de encaminamiento, agrupando las redes con las que se trabaja. A menudo tenemos que compartir las tablas de encaminamiento (como veremos en algunos de los siguientes protocolos) y para ello lo mejor es que sean lo más compactas posible. Lo ideal es tener una entrada por cada interfaz del dispositivo. 
+Para facilitar la administración y aumentar la escalabilidad, Internet se jerarquiza en \acrfull{AS}, que son redes muy grandes (en la mayoría de los casos, abarcan todo un país) gestionadas por una única autoridad.
+\begin{observacion}
+Cada \acrshort{AS} tiene un número único de $32$ bits que lo identifica. Por ejemplo, La red Iris tiene el número \verb|AS766|.
+\end{observacion}
 
-\subsubsection{Protocolos de intercambio de información de encaminamiento}
-
-Para facilitar la administración y aumentar la escalabilidad, Internet se jerarquiza en \acrfull{AS}, redes muy grandes gestionadas por una autoridad. Los \acrshort{AS} suelen ser del orden de un país. Se definen dos niveles de encaminamiento (intercambio de tablas):
+De esta forma, cada \acrshort{AS} informará al resto de los demás \acrshort{AS} sobre las redes que tienen, de forma que compartirán su información de encaminamiento. Hay dos niveles de intercambio de tablas de encaminamiento:
 \begin{itemize}
-    \item Algoritmos \acrfull{IGP}: \acrshort{RIP}, \acrshort{OSPF}\ldots Es dentro de cada \acrshort{AS}.
-    \item Algoritmos \acrfull{EGP}: \acrshort{BGP}. Es entre distintos \acrshort{AS}.
+    \item Algoritmos \acrfull{IGP}: protocolos de intercambio de información de encaminamiento dentro de un mismo \acrshort{AS}. Cada autoridad tiene libertad de elección, y los más comunes son \acrshort{RIP}, \acrshort{OSPF}\ldots.
+
+    \item Algoritmos \acrfull{EGP}: protocolo de intercambio de información de encaminamiento entre distintos \acrshort{AS}. Al ser estos distintas, se usa un único protocolo, \acrshort{BGP}.
 \end{itemize}
 
 \subsection{\acrfull{RIP}}
 
-Aunque es una funcionalidad de la capa de red, se implementa sobre la capa de aplicación, opera sobre \acrshort{UDP} en el puerto 520 (son cosas independientes la funcionalidad y la implementación). \\
+Aunque es una funcionalidad de la capa de red, se implementa sobre la capa de aplicación (opera sobre \acrshort{UDP} en el puerto 520), ya que la funcionalidad y la implementación son independientes.\\
 
-Es un protocolo que adopta un algoritmo vector-distancia, es decir, se basa exclusivamente en el número de saltos, ignorando la velocidad. Una vez que aprende un camino, no aprende otro a no ser que mejore el anterior.\\
+Es un protocolo que adopta un algoritmo vector-distancia; es decir, se basa exclusivamente en el número de saltos, ignorando la velocidad de cada una de las conexiones. Una vez que un router aprende un camino para llegar a cierta red, no aprende otro a no ser que el número de saltos sea menor.\\
 
-Cuando un router RIP se enciende y es configurado, recibe de todos sus vecinos (dirección multicast 224.0.0.9) por defecto cada 30 segundos, los vectores-distancia para todos los posibles destinos, es decir, información sobre las rutas a las que saben llegar. De entre ellos, para un destino dado, se elige el camino de menor coste y se guarda la información sumando 1 al coste anunciado por dicho vecino. \\
+Cuando un router RIP se enciende y es configurado, envía cada cierto tiempo (por defecto $\unit[30]{s}$) a todos los routers de sus respectivas redes un mensaje en el que informa de las redes a las que sabe llegar, junto con el coste que le supone para cada una de ellas. Además, recibirá de forma periódica la información correspondiente de los demás routers. Cuando un router recibe información de un vecino, si encuentra una ruta que no conocía, la añade a su tabla de encaminamiento, con el coste que le ha anunciado dicho vecino más $1$ (el salto al correspondiente vecino). En el resto de casos, tan solo si el coste es menor que el que ya tenía, se actualiza la entrada.\\
 
-La dirección multicast que mencionábamos antes la escuchan todos los routers que soportan \acrshort{RIP}.\\ 
+Toda esta información se comparte por la dirección multicast \verb|224.0.0.9|, en la que escuchan todos los routers que soportan \acrshort{RIP}.
 
-\begin{figure}[H]
+\subsubsection{Problema de la cuenta al infinito}
+
+\begin{figure}
     \centering
-    \includegraphics[width=0.6\linewidth]{./images/cuenta-infinito-rip.png}
+    \begin{tikzpicture}[node distance=4cm]
+        \node[router] (r1) {};
+        \node[router, right of=r1] (r2) {};
+        \node[router, right of=r2] (r3) {};
+
+        % Bucle for para marcar los routers
+        \foreach \i in {1,...,3} {
+            \node[yshift=-0.8em] at (r\i) {\color{white} \textbf{R\i}};
+        }
+
+        \node[cloud, left of=r1] (cloud) {Red 1};
+
+        % Conexiones
+        \draw (cloud.east) -- (r1.west);
+        \draw (r1.east) -- (r2.west);
+        \draw (r2.east) -- (r3.west);
+
+        % Rotura de la Conexion entre cloud y R1
+        \draw[red, dashed, thick] ($(cloud.north) + (2,0.2)$) -- ($(cloud.south) + (2,-0.2)$);
+    \end{tikzpicture}
+    \caption{Problema de la cuenta al infinito en \acrshort{RIP}.}
     \label{fig:rip}
 \end{figure}
 
-Un problema que puede ocurrir es que algún camino se rompa y, dado la naturaleza del protocolo, esto tarda en notificarse. En el ejemplo que vemos arriba, R1 es notificado de que ya no es posible llegar a la red 1 por el camino que tenía aprendido. Pero R2, que aún no ha sido notificado, le comunica que él sabe llegar, por tanto R1 lo aprende. Cuando R2 se entera pasa un poco lo mismo, que aprende el camino por R1. Así pasa hasta el infinito (que en el caso de \acrshort{RIP} es equivalente a coste 16). Por esto a esto se le llama problema de la ``cuenta al infinito''. Veamos algunas posibles soluciones:
+Un problema que puede surgir al emplear \acrshort{RIP} es la convergencia lenta, ya que las malas noticias tardan en propagarse. Puede ocurrir que algún camino se rompa y, dada la naturaleza del protocolo, esta información tarda en notificarse.
+
+Este se maximiza en el conocido ``problema de la cuenta al infinito'', que se muestra en la Figura~\ref{fig:rip}. En dicha figura, podemos ver que, inicialmente, R1 tenía acceso a la red 1, aunque posteriormente dicho camino se rompe y R1 es notificado de que ha perdido acceso a dicha red. No obstante, R2, que aún no ha sido notificado de que ya no puede llegar a dicha red, al comparte a R1 su tabla de encaminamiento le informa de que él si sabe llegar a la red 1, por lo que R1 lo aprende (aumentando en una unidad el coste), y así sucesivamente. Cuando R2 reciba la información del corte, aprenderá el camino por R1, y así sucesivamente. Esto podría llegar a repetirse indefinidamente (de ahí del nombre) hasta $16$ (ya que ese es el límite para \acrshort{RIP} en el que se asume que no se sabe llegar a dicha red), sin que ninguno en realidad supiese llegar a dicha red. Veamos algunas posibles soluciones:
 \begin{description}
     \item [Split horizon:] Se basa en que a un router se le prohíbe compartir una ruta por la misma interfaz por la que la aprendió en primer lugar.
+    
+    De esta forma, R2 no podría enseñarle a R1 cómo llegar a la red 1, por lo que el problema no empieza a sucederse.
     \item [Hold down:] Retrasa los mensajes que nos llegan de una dirección que ya conocemos 180 segundos, esperando a que nos respondan los anteriores, si siguen activos. 
-    \item [Poison reverse:] Si no sabemos llegar a un destino, decimos que el coste es infinito (coste = 16).
+    \item [Poison reverse:] Si no sabemos llegar a un destino, informamos de que nuestro coste es infinito (coste $16$).
 \end{description}
 
 \subsection{\acrfull{OSPF}}
 
-Este protocolo permite definir el coste. Tiene un criterio por defecto, en el que el coste de un enlace es el inverso del ancho de banda (la velocidad) de dicho enlace. Busca el camino global que minimiza la suma de todos los costes usando Dijkstra. \\
+A diferencia de \acrshort{RIP} (que siempre consideraba el coste como el número de saltos), \acrshort{OSPF} es un protocolo que permite al administrador definir el coste en función de distintos aspectos (velocidad, latencia, etc.).
+Como criterio por defecto, el coste de un enlace es el inverso del ancho de banda (la velocidad) de dicho enlace. Este protocolo busca el camino global que minimiza la suma de todos los costes, usando para ello el algoritmo de Dijkstra\footnote{Trata en la asignatura de Algorítmica}.\\
 
 Permite definir áreas, de forma que la difusión se hace en unas áreas concretas. Esto hace que sea mucho más escalable, al contrario que \acrshort{RIP}.\\
 
 \noindent
-Los mensajes que tenemos son:
-
+Los mensajes que se envían entre los routers que usan \acrshort{OSPF} son:
 \begin{itemize}
-    \item Hello: para saludar a mis vecinos.
-    \item Database description: para mandar la topología que conocemos. 
-    \item Link status request/update/ack: para consultar o enviar cambios.
+    \item \verb|Hello|: mensaje empleado para establecer la conexión, en el que se avisa a los routers que se van a comunicar.
+    \item \verb|Database description|: mensaje empleado para informar sobre la topología de las redes que conocemos. 
+    \item \verb|Link status request|/\verb|update|/\verb|ack|: mensajes enviados para consultar, actualizar, o confirmar cambios.
 \end{itemize}
 
 
 \subsection{Cabecera IP}
-La cabecera IP tiene 20 Bytes. Veamos los campos, en orden, que la componen:
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.4\linewidth]{./images/cabecera-ip.png}
-\end{figure}
 
-\begin{itemize}
-    \item Versión (4 bits): La versión utilizada de \acrshort{IP}, 0100 si \acrshort{IPv4} y 0110 si \acrshort{IPv6}. 
-    \item Tamaño de cabecera (4 bits): longitud de la cabecera IP en palabras de 32 bits. Como mínimo 5 palabras y como máximo 15 palabras.
-    \item Tipo de Servicio (8 bits): hace referencia a la calidad de servicio deseada durante el tránsito del paquete por una red. Hay redes que ofrecer prioridades de servicios, considerando determinados tipos de paquetes más prioritarios que otros.
-    \item Longitud total (16 bits): es el tamaño total, en octetos, del datagrama, incluyendo el tamaño de la cabecera y el de los datos.
-    \item Identificador (16 bits): identificador único del datagrama. Se utiliza en caso de que el datagrama deba ser fragmentado, para poder distinguir los fragmentos de un datagrama de los de otro.
-    \item Flags (3 bits): En la actualidad se utiliza para especificar valores relativos a la fragmentación.
+En la presente sección profundizaremos en la cabecera \acrshort{IP}, junto con sus campos. Esta se puede ver en la Tabla~\ref{tab:cabecera_ip}. Como vemos, está organizada en palabras de $32$ bits (4 Bytes), y como mínimo ocupa 20 Bytes (ya que el campo \textit{opciones} es opcional, y el de \textit{relleno} se emplea para que sean múltiplos de 32 bits).
+    \begin{table}
+        \centering
+        \begin{tabular}{|cccccccc|}
+        \hline \rowcolor[HTML]{EFEFEF}
+        \multicolumn{1}{|c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{0-3}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{4-7}}} & \multicolumn{2}{c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{8-15}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{16-18}}} & \multicolumn{3}{c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{19-31}}} \\ \hline \hline
+        \multicolumn{1}{|c|}{V}            & \multicolumn{1}{c|}{LC}           & \multicolumn{2}{c|}{TS}            & \multicolumn{4}{c|}{Longitud Total}                                       \\ \hline
+        \multicolumn{4}{|c|}{Identificador}                                                                         & \multicolumn{1}{c|}{I}          & \multicolumn{3}{c|}{Desplazamiento} \\ \hline
+        \multicolumn{2}{|c|}{TTL}                                              & \multicolumn{2}{c|}{Protocolo}     & \multicolumn{4}{c|}{Checksum}                                             \\ \hline
+        \multicolumn{8}{|c|}{Dirección IP de Origen}                                                                                                                                            \\ \hline
+        \multicolumn{8}{|c|}{Dirección IP de Destino}                                                                                                                                           \\ \hline
+        \multicolumn{5}{|c|}{Opciones}                                                                                                                    & \multicolumn{3}{c|}{Relleno}        \\ \hline
+        \end{tabular}
+        \caption{Cabecera IP.}
+        \label{tab:cabecera_ip}
+    \end{table}
+
+Veamos los campos, en orden, que la componen:
+\begin{description}
+    \item[Versión:] (4 bits) Indica la versión de \acrshort{IP} que se está utilizando. Contiene \verb|0100| si es \acrshort{IPv4} y \verb|0110| si es \acrshort{IPv6}.
+    \item[Tamaño de cabecera:] (4 bits) Indica el tamaño de la cabecera en palabras de 32 bits. Su valor mínimo es de $5$ palabras ($20$ Bytes) y su máximo de $15$ palabras ($60$ Bytes).
+    \item[Tipo de Servicio:] (8 bits) Indica la calidad de servicio deseada durante el tránsito del paquete por una red. Algunas redes ofrecen prioridades de servicios, considerando determinados tipos de paquetes más prioritarios que otros (especialmente cuando la carga de la red es alta).
+    \item[Longitud total:] (16 bits) Indica el tamaño total, en bytes (también llamados octetos), del datagrama, incluyendo el tamaño de la cabecera y el de los datos.
+    \item[Identificador:] (16 bits) Identificador único del datagrama. Se utiliza en caso de que el datagrama deba ser fragmentado, para poder distinguir los fragmentos de un datagrama de los de otro. Resaltamos por tanto que todos los fragmentos de un mismo datagrama tienen el mismo identificador.
+    \item[Identificadores:] (3 bits) En la actualidad se utiliza para especificar valores relativos a la fragmentación. Los tres bits (por orden de mayor a menor peso) son:
+    \begin{equation*}
+        \begin{array}{|c|c|c|}
+            \hline
+            0 & \text{DF} & \text{MF} \\ \hline
+        \end{array}
+    \end{equation*}
+    donde:
         \begin{itemize}
-            \item bit 0: Reservado, debe ser 0.
-            \item bit 1 (DF): 0 = divisible; 1 = no divisible.
-            \item bit 2 (MF): 0 = último fragmento; 1 = fragmento intermedio, le siguen más fragmentos. 
+            \item Bit 0: Reservado, debe ser 0.
+            \item Bit 1 (\acrfull{DF}): indica si el datagrama puede ser fragmentado (0) o no (1). Si un paquete necesita ser fragmentado para enviarse y este bit es 1, se descartará.
+            \item Bit 2 (\acrfull{MF}): indica si el fragmento es el último (0) o si le siguen más fragmentos (1).
         \end{itemize}
-    \item Desplazamiento (13 bits): en paquetes fragmentados indica la posición, en unidades de 64 bits, que ocupa dentro del datagrama original. 
-    \item Tiempo de vida, \acrshort{TTL} (8 bits): indica el número de saltos máximo de un paquete en una red para evitar paquetes navegando en la red indefinidamente. En cada salto, el campo se reduce en una unidad, si llega a 0 se descarta.
-    \item Protocolo (8 bits): tiene un identificador del protocolo de las capas superiores al que debe entregarse el paquete.
-    \item Suma de Control de Cabecera (16 bits): es una comprobación de la corrección del datagrama. Se recalcula cada vez que algún nodo cambia alguno de sus campos. El método de cálculo consiste en suma en complemento a 1 cada palabra de 16 bits de la cabecera (poniendo 0 en este campo) y hacer el complemento a 1 del valor resultante. Así cuando llega al destino se hace esta misma operación y se comprueba si es correcta la cabecera.
-    \item Dirección IP de origen (32 bits).
-    \item Dirección IP de destino (32 bits).
-    \item Opciones (opcional).
-    \item Relleno: este campo tiene tantos como sea necesario para que la cabecera tenga un número de bits múltiplo de 32. 
-\end{itemize}
+
+    \item[Desplazamiento:] (13 bits) En paquetes fragmentados, indica la posición, en unidades de $\unit[64]{b}=\unit[8]{B}$, que ocupa dentro del datagrama original.
+    
+    \item[\acrfull{TTL}:] (8 bits) Indica el número de saltos máximo de un paquete en una red para evitar que los paquetes naveguen en la red indefinidamente. En cada salto, el campo se reduce en una unidad; y si este campo llega a 0, el paquete se descarta.
+    
+    \item[Protocolo:] (8 bits) Valor numérico que indica el protocolo de las capas superiores al que debe entregarse el paquete\footnote{Estos valores se pueden consultar \href{https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml}{\ul{aquí}}.}.
+    
+    \item[Checksum:] (16 bits) Es una comprobación de la corrección del datagrama. Se recalcula cada vez que algún nodo cambia alguno de sus campos (como el \acrshort{TTL}).
+    
+    El método de cálculo consiste en sumar en complemento a 1 cada palabra de 16 bits de la cabecera (considerando como $0$ el campo del \textit{checksum}) y hacer el complemento a 1 del valor resultante. Así, cuando llega al destino, se hace esta misma operación y se comprueba si es correcta la cabecera.
+
+    \item[Dirección IP de origen:] (32 bits) Dirección IP del emisor del paquete.
+    
+    \item[Dirección IP de destino:] (32 bits) Dirección IP del destino del paquete.
+    
+    \item[Opciones:] (opcional) Campo que puede contener información adicional, como la ruta que ha seguido el paquete.
+    
+    \item[Relleno:] Este campo tiene tantos bits como sean necesarios para que la cabecera tenga un tamaño múltiplo de $\unit[32]{b}=\unit[4]{B}$.
+\end{description}
 
 \subsection{Fragmentación}
-Las redes no permiten paquetes de cualquier tamaño. El tamaño máximo es $2^{16}$ Bytes, aunque ninguna red suele aceptar dicho tamaño. \\
 
-Las redes cuentan con un \acrfull{MTU}: esta nos dice cuál es el tamaño máximo de lo que podemos transportar en la capa de datos a nivel de enlace, es decir, datos y cabecera de IP normalmente. \\ 
+Como hemos visto en el aprtado anterior, el tamaño máximo de un paquete que se envíe usando el protocolo \acrshort{IP} es de $2^{16}-1$ Bytes, aunque este es un valor teórico que ninguna red suele aceptar. 
+Dentro de una red, cada tarjeta de red tiene un \acrfull{MTU}, un valor numérico que indica el tamaño máximo de un paquete que se pasar a la capa de enlace para ser enviado por la red.\\
 
-El \acrshort{MTU} depende del estándar de una tarjeta:
+Como hemos mencionado, el \acrshort{MTU} depende del estándar de cada tarjeta de red. Algunos ejemplos son:
 \begin{itemize}
     \item Ethernet: 1500 Bytes.
-    \item Wifi: permite más pero normalmente el punto de acceso lo restringe a 1500 Bytes.
+    \item Wifi: Aunque el valor es mayor, normalmente el \acrshort{SAP} lo restringe a 1500 Bytes.
 \end{itemize}
 
-\noindent
-Tenemos los siguientes campos en la cabecera de fragmentación:
-\begin{itemize}
-    \item Identificación: identifica al datagrama completo, no al paquete. Por esto, si un datagrama es fragmentado todos los fragmentos tendrán el mismo identificador.
-    \item Campo de indicadores, como el \textit{more fragments}: si hay más fragmentos será un 1, y si es el último será un 0; o el \textit{don't fragment} que indica si un paquete puede ser fragmentado (si no puede y es necesario el paquete se descartará).
-    \item Campo de desplazamiento (offset): sirve para ensamblar los paquetes en el destino. 
-\end{itemize}
+Notemos que, en la cabecera \acrshort{IP} vista en la sección anterior, los campos de \textit{identificación}, \textit{desplazamiento} e \textit{Identificadores} son los que se usan para controlar la fragmentación.\\
 
-Algunas observaciones importantes:
+Algunas observaciones importantes son:
 \begin{itemize}
     \item Si hay algún error y no llegan todos los fragmentos de un datagrama se descarta todo y debe ser una capa superior la que se encargue de arreglar el problema.
-    \item Solo fragmentamos cuando pasamos a un \acrshort{MTU} menor y solo se ensamblan en el destino, puesto que distintos fragmentos pueden seguir caminos distintos, dependiendo del encaminamiento.
+    \item Un datagrama solo se fragmentará cuando vaya a pasar por una tarjeta de red con un \acrshort{MTU} menor que el del paquete. Esta fragmentación se hará cuando sea necesaria, y puede ser en cualquier nodo del encaminamiento.
+    \item Los datagramas tan solo se podrán ensamblar en el destino, ya que distintos fragmentos podrán seguir caminos distintos, dependiendo del encaminamiento.
 \end{itemize}
 
+\begin{observacion}
+    Es común hablar del \acrshort{MTU} de una red. Esto se dirá cuando las tarjetas de red de dicha red tengan el mismo valor \acrshort{MTU}.
+\end{observacion}
 
-\section{Asociación con la capa de enlace: el protocolo \acrshort{ARP}}
-Cuando queremos enviar un paquete a un destino, mirando la tabla de encaminamiento sabemos la dirección IP del siguiente salto, pero para poder mandarle el paquete en el nivel de enlace necesitamos saber la dirección \acrshort{MAC}. \\
+\begin{ejemplo}\label{ejemplo:fragmentacion}
+    \begin{figure}
+        \centering
+        \resizebox{\linewidth}{!}{
+            \begin{tikzpicture}[node distance=5.5cm]
+                \node[cloud] (redA) {\large{A}};
+                \node[router, right of=redA, xshift=-2.5cm] (r1) {};
+                \node[router, right of=r1] (r2) {};
+                \node[router, right of=r2] (r3) {};
+                \node[cloud, right of=r3, xshift=-2.5cm] (redB) {\large{B}};
 
-A diferencia de las direcciones IP origen y destino, que no cambian en ningún salto (salvo que se use \acrshort{NAT}); las direcciones MAC origen y destino cambian en cada reenvío del paquete, pues el nivel de enlace solo se encarga de encaminar punto a punto.\\
+                % Bucle for para marcar los routers
+                \foreach \i in {1,...,3} {
+                    \node[yshift=-0.8em] at (r\i) {\color{white} \textbf{R\i}};
+                }
 
-Entonces para mandar los paquetes necesitamos saber las direcciones MAC de los dispositivos. Esto se soluciona con el protocolo \acrfull{ARP}. 
+                % Conexiones
+                \draw (redA.east) -- (r1.west);
+                \draw (r1.east) -- node[midway, above]{$\text{MTU}_1=\unit[1500]{B}$} (r2.west);
+                \draw (r2.east) -- node[midway, above]{$\text{MTU}_1=\unit[1000]{B}$}(r3.west);
+                \draw (r3.east) -- (redB.west);
+            \end{tikzpicture}
+        }
+        \caption{Red para el ejemplo de la Página~\pageref{ejemplo:fragmentacion}.}
+        \label{fig:fragmentacion}
+    \end{figure}
+
+    Supongamos que queremos enviar un datagrama con $\unit[4180]{B}$ de datos desde la red A a la red B, según el diagrama de la Figura~\ref{fig:fragmentacion}. Supongamos que su identificador es $X$. Veamos si se produce fragmentación, y en qué paquetes se fragmenta.\\
+
+    Como la cabecera ocupa $20$ Bytes, el tamaño a enviar es de $\unit[4200]{B}$. Este no se podrá enviar por la red que une R1 y R2, pues su \acrshort{MTU} es de $\unit[1500]{B}$. Por tanto, se fragmentará en R1. Veamos cada uno de los paquetes, teniendo en cuenta que de los $\unit[1500]{B}$ de límite, $20$ han de ser para la cabecera:
+    \begin{enumerate}
+        \item \ul{Paquete 1.} Faltan por enviar $\unit[4180]{B}$ de datos, por lo que se envían:
+        \begin{equation*}
+            \begin{array}{|c|c|}
+                \hline 20 & \hspace{1cm} 1480 \hspace{1cm}~\\ \hline
+            \end{array}
+        \end{equation*}
+        La cabecera IP de este paquete tendrá los campos:
+        \begin{equation*}
+            \text{Identificador} = X,\qquad \text{MF} = 1,\qquad \text{Desplazamiento} = 0
+        \end{equation*}
+
+        \item \ul{Paquete 2.} Faltan por enviar $\unit[4180]{B}-\unit[1480]{B}=\unit[2700]{B}$ de datos, por lo que se envían:
+        \begin{equation*}
+            \begin{array}{|c|c|}
+                \hline 20 & \hspace{1cm} 1480 \hspace{1cm}~\\ \hline
+            \end{array}
+        \end{equation*}
+        La cabecera IP de este paquete tendrá los campos:
+        \begin{equation*}
+            \text{Identificador} = X,\qquad \text{MF} = 1,\qquad \text{Desplazamiento} = 1480
+        \end{equation*}
+
+        \item \ul{Paquete 3.} Faltan por enviar $\unit[2700]{B}-\unit[1480]{B}=\unit[1220]{B}$ de datos, por lo que se envían:
+        \begin{equation*}
+            \begin{array}{|c|c|}
+                \hline 20 & \hspace{1cm} 1220 \hspace{1cm}~\\ \hline
+            \end{array}
+        \end{equation*}
+        La cabecera IP de este paquete tendrá los campos:
+        \begin{equation*}
+            \text{Identificador} = X,\qquad \text{MF} = \red{0},\qquad \text{Desplazamiento} = 2960
+        \end{equation*}
+    \end{enumerate}
+
+    Cuando cada uno de estos paquetes llegue a R2, como el \acrshort{MTU} de la red que lo conecta con R3 es de $\unit[1000]{B}$ y todos los paquetes tienen un tamaño mayor, se fragmentarán en R2. Veamos cada uno de los paquetes, teniendo en cuenta que de los $\unit[1000]{B}$ de límite, $20$ han de ser para la cabecera:
+    \begin{enumerate}
+        \item \ul{Paquete 1.1.} Faltan por enviar $\unit[1480]{B}$ de datos, por lo que se envían:
+        \begin{equation*}
+            \begin{array}{|c|c|}
+                \hline 20 & \hspace{1cm} 980 \hspace{1cm}~\\ \hline
+            \end{array}
+        \end{equation*}
+
+        La cabecera IP de este paquete tendrá los campos:
+        \begin{equation*}
+            \text{Identificador} = X,\qquad \text{MF} = 1,\qquad \text{Desplazamiento} = 0
+        \end{equation*}
+
+        \item \ul{Paquete 1.2.} Faltan por enviar $\unit[1480]{B}-\unit[980]{B}=\unit[500]{B}$ de datos, por lo que se envían:
+        \begin{equation*}
+            \begin{array}{|c|c|}
+                \hline 20 & \hspace{1cm} 500 \hspace{1cm}~\\ \hline
+            \end{array}
+        \end{equation*}
+
+        La cabecera IP de este paquete tendrá los campos:
+        \begin{equation*}
+            \text{Identificador} = X,\qquad \text{MF} = \red{1},\qquad \text{Desplazamiento} = 980
+        \end{equation*}
+
+        \item \ul{Paquete 2.1.} Faltan por enviar $\unit[1480]{B}$ de datos, por lo que se envían:
+        \begin{equation*}
+            \begin{array}{|c|c|}
+                \hline 20 & \hspace{1cm} 980 \hspace{1cm}~\\ \hline
+            \end{array}
+        \end{equation*}
+
+        La cabecera IP de este paquete tendrá los campos:
+        \begin{equation*}
+            \text{Identificador} = X,\qquad \text{MF} = 1,\qquad \text{Desplazamiento} = 1480
+        \end{equation*}
+
+        \item \ul{Paquete 2.2.} Faltan por enviar $\unit[1480]{B}-\unit[980]{B}=\unit[500]{B}$ de datos, por lo que se envían:
+        \begin{equation*}
+            \begin{array}{|c|c|}
+                \hline 20 & \hspace{1cm} 500 \hspace{1cm}~\\ \hline
+            \end{array}
+        \end{equation*}
+
+        La cabecera IP de este paquete tendrá los campos:
+        \begin{equation*}
+            \text{Identificador} = X,\qquad \text{MF} = \red{1},\qquad \text{Desplazamiento} = 2460
+        \end{equation*}
+
+        \item \ul{Paquete 3.1.} Faltan por enviar $\unit[1220]{B}$ de datos, por lo que se envían:
+        \begin{equation*}
+            \begin{array}{|c|c|}
+                \hline 20 & \hspace{1cm} 980 \hspace{1cm}~\\ \hline
+            \end{array}
+        \end{equation*}
+
+        La cabecera IP de este paquete tendrá los campos:
+        \begin{equation*}
+            \text{Identificador} = X,\qquad \text{MF} = 1,\qquad \text{Desplazamiento} = 2960
+        \end{equation*}
+
+        \item \ul{Paquete 3.2.} Faltan por enviar $\unit[1220]{B}-\unit[980]{B}=\unit[240]{B}$ de datos, por lo que se envían:
+        \begin{equation*}
+            \begin{array}{|c|c|}
+                \hline 20 & \hspace{1cm} 240 \hspace{1cm}~\\ \hline
+            \end{array}
+        \end{equation*}
+
+        La cabecera IP de este paquete tendrá los campos:
+        \begin{equation*}
+            \text{Identificador} = X,\qquad \text{MF} = \red{0},\qquad \text{Desplazamiento} = 3940
+        \end{equation*}
+    \end{enumerate}
+
+    Cuando cada uno de estos paquetes llegue a R3, este los reenviará a la IP de destino, dentro de la red B. Allí, se ensamblarán de vuelta los paquetes, obteniendo así el datagrama original.
+\end{ejemplo}
+
+
+\section{Asociación con la capa de enlace: \acrfull{ARP}}
+Cuando queremos enviar un datagrama desde un origen a un destino, usando la tabla de encaminamiento del nodo en cuestión podemos saber la dirección IP del siguiente salto. No obstante, al bajar a la capa de enlace, ya no contemplamos direcciones IP\@, ya que el direccionamiento en esta capa se hace mediante direcciones \acrshort{MAC}. Además, debido a que el encaminamiento en la capa de enlace se hace punto a punto, las direcciones \acrshort{MAC} de origen y de destino cambian en cada salto.\\
+
+Como hemos visto, sabemos las dirección IP de origen y la del siguiente salto, pero no la dirección \acrshort{MAC} del siguiente salto. Esto nos lo proporcionará el protocolo \acrshort{ARP}, que es un protocolo de la capa de enlace que se encarga de resolver direcciones \acrshort{MAC} a partir de direcciones IP\@.
 
 \subsubsection{Funcionamiento}
-Supongamos que A quiere mandar un paquete a B y tiene como intermediario a R1. A sabe la IP de R1 (por las tablas de encaminamiento) pero necesita saber la dirección MAC. 
-\begin{itemize}
-    \item A manda un ARP Request a nivel de enlace por la dirección FF:\ldots:FF (la dirección de difusión a nivel de enlace), preguntando por la MAC de la IP que conoce. 
-    \item R1 contesta con un mensaje ARP Reply con su dirección MAC en unicast (es decir, respuesta única, no difusión) pues se conoce la MAC del que pregunta.
-\end{itemize}
 
-Este proceso no se hace siempre, sino se introduciría mucho tráfico. Las direcciones MAC que recibimos se van guardando en una caché y cuando pasa mucho tiempo expiran.\\
-
-\begin{figure}[H]
+\begin{figure}
     \centering
-    \includegraphics[width=0.6\linewidth]{./images/cabecera-arp.png}
+    \begin{tikzpicture}[node distance=5cm]
+        \node[laptop] (l1) {};
+        \node[laptop, right of=l1] (l2) {};
+
+        % Bucle for para marcar los laptops
+        \foreach \i in {1,2} {
+            \node[xshift=0.6em, yshift=0.7em] at (l\i) {\color{white} \textbf{PC\i}};
+        }
+
+        % Conexion
+        \draw (l1.east) -- (l2.west);
+    \end{tikzpicture}
+    \caption{Red para el funcionamiento de \acrshort{ARP}.}
+    \label{fig:arp}
 \end{figure}
 
-
-\noindent Campos de la cabecera: (H es referido a hardware, para nivel 2 para abajo; P es referido a protocolo, para nivel 3 para arriba):
+Supongamos la situación de la Figura~\ref{fig:arp}, en la que PC1 quiere mandar un datagrama a PC2 (notemos que no consideramos intermedirarios, puesto que en el nivel de enlace el encaminamiento se hace punto a punto). El nodo PC1 conoce de sí mismo tanto su dirección IP como su dirección MAC\@, mientras que del siguiente salto (PC2) tan solo conoce la dirección IP tras haber consultado la tabla de encaminamiento. Para poder enviarle la trama\footnote{El datagrama ya se ha encapsulado en una trama, ya que en el nivel de enlace el \acrshort{SDU} se denomina trama.} a PC2, necesita saber la dirección MAC de PC2\@. Esto nos lo proporciona el protocolo \acrshort{ARP}, que funciona de la siguiente forma:
 \begin{itemize}
-    \item Htipo: protocolo que se usa en el nivel de enlace.
-    \item Ptipo: protocolo que se usa en el nivel de red.
-    \item Hlen: longitud de la dirección hardware.
-    \item Plen: longitud de la dirección del protocolo de red.
-    \item Operación: Request o Reply.
-    \item Hemisor: dirección hardware del emisor (MAC).
-    \item Pemisor: dirección de red del emisor (IP).
-    \item Hsol: dirección MAC del receptor.
-    \item Psol: dirección IP del receptor.
+    \item PC1 manda una petición \verb|ARP Request| a nivel de enlace por la dirección \verb|FF:FF:FF:FF:FF:FF| (la dirección de difusión a nivel de enlace), preguntando por la dirección MAC de la dirección IP de PC2.
+    
+    \item PC2, que habrá recibido dicha petición, identifica que la dirección IP de la petición es la suya, por lo que contesta con un mensaje \verb|ARP Reply| con su dirección MAC en unicast a PC1 (cuya dirección MAC ya conoce).
 \end{itemize}
 
-Dependiendo de la operación que sea se rellenarán unos campos u otros.
+Este proceso no se hace (pues introduciría mucho tráfico) cada vez que se quiera mandar una trama, sino que las direcciones \acrshort{MAC} que recibimos se van guardando en una caché y, tras cierto tiempo, expiran.
+\begin{observacion}
+    Como curiosidad, para consultar dicha caché en un equipo con \verb|Linux| se puede emplear el comando \verb|arp -a|.
+\end{observacion}
+
+\subsection{Cabecera \acrshort{ARP}}
+
+\begin{table}
+    \centering
+    \begin{tabular}{|cccc|}
+    \hline \rowcolor[HTML]{EFEFEF}
+    \multicolumn{1}{|c|}{\cellcolor[HTML]{EFEFEF}\qquad\scriptsize{\textbf{0-7}}\qquad~} & \multicolumn{1}{c|}{\cellcolor[HTML]{EFEFEF}\qquad\scriptsize{\textbf{8-15}}\qquad~} & \multicolumn{1}{c|}{\cellcolor[HTML]{EFEFEF}\qquad\scriptsize{\textbf{16-23}}\qquad~} & \multicolumn{1}{c|}{\cellcolor[HTML]{EFEFEF}\qquad\scriptsize{\textbf{24-31}}\qquad~} \\ \hline \hline
+    \multicolumn{2}{|c|}{Htipo}            & \multicolumn{2}{c|}{Ptipo} \\ \hline
+    \multicolumn{1}{|c|}{Hlen}            &
+    \multicolumn{1}{c|}{Plen}            & \multicolumn{2}{c|}{Operacion} \\ \hline
+    \multicolumn{4}{|c|}{Hemisor (Bytes 0-3)} \\ \hline
+    \multicolumn{2}{|c|}{Hemisor (Bytes 4-5)}            & \multicolumn{2}{c|}{Pemisor (Bytes 0-1)} \\ \hline
+    \multicolumn{2}{|c|}{Pemisor (Bytes 2-3)}            & \multicolumn{2}{c|}{Hsol (Bytes 0-1)} \\ \hline
+    \multicolumn{4}{|c|}{Hsol (Bytes 2-5)} \\ \hline
+    \multicolumn{4}{|c|}{Psol (Bytes 0-3)} \\ \hline
+    \end{tabular}
+    \caption{Cabecera \acrshort{ARP}.}
+    \label{tab:cabecera_arp}
+\end{table}
+
+La cabecera de una trama \acrshort{ARP} se muestra en la Tabla~\ref{tab:cabecera_arp}, donde notemos que ``H'' indica ``Hardware'' (capa de enlace) y ``P'' indica ``Protocol'' (capa de red). Los campos de dicha cabecera son:
+\begin{description}
+    \item[Htipo:] (2 Bytes) Número que indica el protocolo que se usa en el nivel de enlace (por ejemplo, Ethernet es \verb|1|).
+    \item[Ptipo:] (2 Bytes) Número que indica el protocolo que se usa en el nivel de red (por ejemplo, \acrshort{IP} es \verb|0x0800|).
+    \item[Hlen:] (1 Byte) Número que indica la longitud de la dirección hardware (en Bytes). Para direcciones \acrshort{MAC} es 6.
+    \item[Plen:] (1 Byte) Número que indica la longitud de la dirección del protocolo de red (en Bytes). Para direcciones \acrshort{IPv4} es 4.
+    \item[Operación:] (2 Bytes) Número que indica si es una petición o una respuesta. El valor \verb|1| indica \verb|Request| y el valor \verb|2| indica \verb|Reply|.
+    \item[Hemisor:] (6 Bytes) Dirección hardware (normalmente MAC) del emisor.
+    \item[Pemisor:] (4 Bytes) Dirección de red (normalmente IP) del emisor.
+    \item[Hsol:] (6 Bytes) Dirección hardware (normalmente MAC) del receptor.
+    \item[Psol:] (4 Bytes) Dirección de red (normalmente IP) del receptor.
+\end{description}
+
+Notemos que, en una petición, el campo de Hsol no será válido, puesto que es el valor que se está pidiendo.\\
+
+Por último, destacar que el protocolo \acrshort{ARP} tiene su homólogo \acrfull{RARP} que hace lo contrario, es decir, dado una dirección \acrshort{MAC} nos devuelve su dirección IP\@. Cuando Internet comenzó, había equipos sencilos con pocas características, incluso sin disco duro. Al no tener disco duro, estos no podían almacenar su dirección IP, aunque las tarjetas de red si guardaban su dirección \acrshort{MAC}. Era por tanto necesario un protocolo que nos diera la dirección IP a partir de la dirección \acrshort{MAC}, y así nació el protocolo \acrshort{RARP}. En la actualidad se encuentra en desuso, pero fue el precursor de \acrshort{BOOTP}, el cual más tarde fue sustituido por \acrshort{DHCP}.
 
 \section{El protocolo \acrshort{ICMP}}
-Es un protocolo que no es imprescindible pero ayuda. Sirve en general para informar al origen de que ha habido un error. Este protocolo es útil pues \acrshort{IP} no arregla ningún tipo de problema, pero al menos por este medio informa para que las capas superiores decidan si tomar acción.\\
+El \acrfull{ICMP} es un protocolo que, aunque no es imprescindible, es de gran ayuda. En general, sirve para informar al origen de que ha habido un error. Este protocolo es útil pues, aunque \acrshort{IP} no arregla ningún tipo de problema, este protocolo informa para que las capas superiores decidan qué hacer. Este es un protocolo de nivel de red que se encapsula también en el nivel de red, en un datagrama \acrshort{IP}.\\
 
-Cuando ocurre un error, el equipo manda un paquete ICMP al origen. Es un nivel de red que se encapsula dentro de \acrshort{IP}. 
+\subsection{Paquete \acrshort{ICMP}}
 
-\subsubsection{Paquete \acrshort{ICMP}}
-La cabecera es una palabra de 32 bits:
-\begin{itemize}
-    \item Tipo de mensaje, que indica el tipo de error que ocurrió.
-    \item Código (subtipo de mensaje), para especificar más el error.
-    \item Comprobación.
-\end{itemize}
-
-La parte de datos contiene los primeros 64 bytes del paquete que provocó el error, los 20 de la cabecera y 44 de datos del paquete IP. Esto es para ubicar el paquete que provocó el error.\\
-
-De esta forma lo que tenemos es una cabecera IP y en la parte de datos un paquete ICMP, que a su vez se compone por una cabecera y en los datos tenemos una cabecera IP y algunos datos del paquete problemático.
-
-\begin{figure}[H]
+\begin{table}
     \centering
-    \includegraphics[width=0.4\linewidth]{./images/codigos-icmp.png}
-    \label{fig:icmp}
-\end{figure}
+    \begin{tabular}{|ccc|}
+    \hline \rowcolor[HTML]{EFEFEF}
+    \multicolumn{1}{|c|}{\cellcolor[HTML]{EFEFEF}\qquad\scriptsize{\textbf{0-7}}\qquad~} & \multicolumn{1}{c|}{\cellcolor[HTML]{EFEFEF}\qquad\scriptsize{\textbf{8-15}}\qquad~} & \multicolumn{1}{c|}{\cellcolor[HTML]{EFEFEF}\qquad\scriptsize{\textbf{16-31}}\qquad~} \\ \hline \hline
+    \multicolumn{1}{|c|}{Tipo}            & \multicolumn{1}{c|}{Comprobación} & \multicolumn{1}{c|}{Mensaje} \\ \hline
+    \end{tabular}
+    \caption{Cabecera \acrshort{ICMP}.}
+    \label{tab:cabecera_icmp}
+\end{table}
 
-\section{Autoconfiguración de la capa de red (\acrfull{DHCP})}
 
-Es un protocolo automático para asignar direcciones IP, máscaras, pasarelas por defecto e IP del servidor \acrshort{DNS}. Funciona a nivel de red pero se implementa en capa de aplicación, se encapsula en \acrshort{UDP}. \\
+La cabecera, que se muestra en la Tabla~\ref{tab:cabecera_icmp}, se compone de $32$ bits. Veamos cada uno de los campos que la componen:
+\begin{description}
+    \item[Tipo:] (1 Byte) Indica el tipo de mensaje que se está enviando. Los tipos más se muestran en la Tabla~\ref{tab:tipos_icmp}.
+    \item[Código:] (1 Byte) Para cada tipo de mensaje, indica el subtipo que se está enviando, para detallarlo aún más.
+    \item[Comprobación:] (2 Bytes) Es un campo de checksum de la cabecera.
+\end{description}
+\begin{table}
+\centering
+    \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Tipo} & \textbf{Descripción} \\ \hline
+        8/0 & Solicitud/Respuesta ``echo'' (\verb|ping|) \\
+        3 & Destino inalcanzable \\
+        4 & Ralentización del origen \\
+        5 & Redireccionamiento \\ 
+        11 & \acrshort{TTL} excedido \\
+        12 & Problema de parámetros \\
+        13/14 & Solicitud/Respuesta de sello de tiempo\\
+        17/18 & Solicitud/Respuesta de máscara de red\\ \hline
+    \end{tabular}
+    \caption{Tipos de mensajes \acrshort{ICMP}.}
+    \label{tab:tipos_icmp}
+\end{table}
 
-Al principio cuando no tenemos IP, la IP es 0.0.0.0. Para conseguir una IP se intercambian los siguientes mensajes entre el cliente y el servidor DHCP:
+Respecto a la parte de datos, este paquete contiene los primeros 64 bytes del paquete que provocó el error. Es decir (suponiendo que la cabecera \acrshort{IP} no tiene campo de ``Opciones''), contiene los 20 Bytes de la cabecera \acrshort{IP} y los 44 Bytes de datos del paquete \acrshort{IP} que provocó el error. De esta forma, cuando el origen reciba este paquete podrá encontrar información sobre el paquete que provocó el error.\\
+
+No debemos olvidar que \acrshort{ICMP} se encapsula sobre el protocolo \acrshort{IP}. Por tanto, el datagrama que se envía por la red (que es correcto) contiene una cabecera \acrshort{IP} y en el \acrshort{SDU} contiene el paquete \acrshort{ICMP}, que contiene su respectiva cabecera y, en la parte de datos, la cabecera \acrshort{IP} y los primeros 44 Bytes de datos del paquete que provocó el error. Por tanto, en el mismo datagrama se enviará tanto la cabecera del paquete \acrshort{IP} que provocó el error como la cabecera \acrshort{IP} que se envía encapsulando el mensaje \acrshort{ICMP} que informa del error.\\
+
+Como aspectos relevantes, además de informar de errores nos permite conocer la situación de la red usando el comando \verb|ping|, que envía un paquete \acrshort{ICMP} de tipo ``echo'' (tipo 8) y espera una respuesta de tipo ``echo'' (tipo 0). Además, nos permite conocer la ruta que sigue un paquete usando el comando \verb|traceroute|, que envía paquetes \acrshort{ICMP} de tipo ``echo'' (tipo 8) con un \acrshort{TTL} creciente (1,2,...). De esta forma, en cada salto, un paquete excederá su \acrshort{TTL}, por lo que se enviará un mensaje \acrshort{ICMP} de tipo ``TTL excedido'' (tipo 11) que informará de que el paquete no ha podido llegar a su destino. Esto nos permitirá saber todos los nodos que se encuentran en la ruta que sigue el paquete.
+
+
+\section{Autoconfiguración de la capa de red (\acrshort{DHCP})}
+
+El \acrfull{DHCP} es un protocolo para configurar de forma automática la capa de red. Este protocolo se encarga de asignar direcciones IP, máscaras, pasarelas por defecto e IP del servidor \acrshort{DNS}. Su funcionalidad es a nivel de red, aunque se implementa en capa de aplicación y se encapsula en \acrshort{UDP}. \\
+
+Contamos con un cliente, que inicialmente no tiene dirección IP asignada (emplearemos la \verb|0.0.0.0|), y un servidor \acrshort{DHCP}, el cual se encargará de asignársela. Para conseguir una dirección IP, se intercambian los siguientes mensajes entre el cliente y el servidor \acrshort{DHCP}:
 \begin{itemize}
-    \item DHCP Discover: lo primero que hace es preguntar si hay alguien. 
-    \item DHCP Offer: se presenta el servido y le ofrece una IP a usar. Esto es solo una oferta, no una imperativa.
-    \item DHCP Request: el equipo comprueba si ya ha tenido una IP en la red y solicita tener esa IP en caso de que sí. 
+    \item \verb|DHCP Discover|: El cliente envía un mensaje para que saber si hay algún servidor \acrshort{DHCP} en la red. Lo envía por tanto a la dirección de difusión.
+    \item \verb|DHCP Offer|: El servidor responde identificándose y proponiéndole una dirección IP al cliente, que será válida durante cierto tiempo (\textit{lease time}), el cual se configura en el servidor \acrshort{DHCP}. Notemos que esto es solo una oferta, no una imperativa.
+    
+    Como el cliente aún no tiene dirección IP asignada, se envía de nuevo a la dirección de difusión.
+    \item \verb|DHCP Request|: El cliente le solicita al servidor la dirección IP que le ha ofrecido el servidor.
+    
+    Ya no es necesario que se envíe a la dirección de difusión, ya que el cliente conoce la dirección IP del servidor \acrshort{DHCP} que le ha hecho la oferta.
     \item DHCP ACK: el servidor responde con la IP definitiva, y esta sí es imperativa. 
 \end{itemize}
+
+% // TODO: Por aqui
 
 La IP destino usada en toda la transacción es la de difusión 255.255.255.255, y la de origen es la 0.0.0.0 en caso de ser el cliente o la del servidor DHCP en caso de ser el mismo. Los puertos usados son el 67 para el servidor y el 68 para el cliente.\\
 
