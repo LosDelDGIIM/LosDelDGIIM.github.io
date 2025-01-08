@@ -272,4 +272,326 @@ Considerar el esquema relacional de la Figura~\ref{fig:modelo1}, donde cada paci
 \end{ejercicio}
 
 
+\newpage
+\section{Modelo 2}\label{sec:modelo2}
+
+Considerar el esquema relacional de la Figura~\ref{fig:modelo2}, donde cada proyecto tiene asignada la empresa que lo elabora. La tabla \verb|Revisión| registra revisiones indicando qué revisor revisa qué proyecto en qué fecha.
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=4 em]
+        \node (empresa) {Empresa(id\_empresa, nombre\_empresa, país)};
+        \node (proyecto) [below of=empresa] {Proyecto(id\_proyecto, titulo, id\_empresa, fecha\_elaboracion)};
+        \node (revisor) [below of=proyecto] {Revisor(id\_revisor, nombre\_revisor, categoria, tarifa)};
+        \node (revision) [below of=revisor] {Revisión(id\_revisor, id\_proyecto, fecha, puntuacion)};
+
+        \node[CP, xshift=-7ex] (CPEmpresa) at(empresa) {id\_empresa};
+        \node[CP, xshift=-13ex] (CPRevisor) at(revisor) {id\_revisor};
+        \node[CP, xshift=-14ex] (CPProyecto) at(proyecto) {id\_proyecto};
+        \node[CP, xshift=-2ex] (CPRevision) at(revision) {id\_revisor, id\_proyecto, fecha};
+
+        \node[CE, xshift=19ex] (CEProyecto) at(CPProyecto) {id\_empresa};
+        \node[CE, xshift=-10ex] (CERevisionRevisor) at(CPRevision) {id\_revisor};
+        \node[CE, xshift=2ex] (CERevisionProyecto) at(CPRevision) {id\_proyecto};
+
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEProyecto) {(1)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CERevisionRevisor) {(2)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CERevisionProyecto) {(3)};
+
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPEmpresa) {(1)};
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPRevisor) {(2)};
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPProyecto) {(3)};
+    \end{tikzpicture}
+    \caption{Esquema relacional del Modelo~\ref{sec:modelo2}.}
+    \label{fig:modelo2}
+\end{figure}
+
+\begin{ejercicio}[SQL]
+    Encontrar, considerando sólo los revisores que han hecho revisiones en el 2012, el nombre del revisor que ha otorgado mayor total de puntos sumando todas sus revisiones de ese año. Puede haber más de un revisor que cumpla estacondición.
+    \begin{minted}{sql}
+        SELECT id_revisor, nombre_revisor, SUM(puntuacion)
+            FROM revisor NATURAL JOIN revision
+            WHERE TO_CHAR(fecha, 'YYYY') = '2012'
+            GROUP BY id_revisor, nombre_revisor
+            HAVING SUM(puntuacion) = (
+                SELECT MAX(SUM(puntuacion))
+                    FROM revision
+                    WHERE TO_CHAR(fecha, 'YYYY') = '2012'
+                    GROUP BY id_revisor
+            );
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}[SQL]
+    Encontrar el nombre y la tarifa de los revisores con categoría \verb|SENIOR| que, para cada empresa que hay en la base de datos, han hecho al menos una revisión con una puntuación mayor de 75 puntos a un proyecto de esa empresa.\\
+
+    Buscamos los revisores con categoría \verb|SENIOR| para los que no existe una empresa para la que no hay una revisión con puntuación mayor de $75$ a un proyecto de esa empresa.
+    \begin{minted}{sql}
+        SELECT id_revisor, nombre_revisor, tarifa
+            FROM revisor
+            WHERE categoria = 'SENIOR'
+                AND NOT EXISTS (
+                    SELECT id_empresa
+                        FROM empresa
+                    MINUS
+                    SELECT id_empresa
+                        FROM proyecto NATURAL JOIN revision
+                        WHERE puntuacion > 75
+                            AND revision.id_revisor = revisor.id_revisor
+                );
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}[SQL]
+    Encontrar, considerando sólo proyectos que han tenido alguna revisión durante el año 2015, la fecha de elaboración del proyecto que ha tenido más revisiones en dicho año. Puede haber más de un proyecto que cumpla esta condición.
+    \begin{minted}{sql}
+        SELECT id_proyecto, fecha_elaboracion, COUNT(*)
+            FROM proyecto NATURAL JOIN revision
+            WHERE TO_CHAR(fecha, 'YYYY') = '2015'
+            GROUP BY id_proyecto, fecha_elaboracion
+            HAVING COUNT(*) = (
+                SELECT MAX(COUNT(*))
+                    FROM revision
+                    WHERE TO_CHAR(fecha, 'YYYY') = '2015'
+                    GROUP BY id_proyecto
+            );
+    \end{minted}
+\end{ejercicio}
+
+\newpage
+\section{Modelo 3}\label{sec:modelo3}
+
+Considerar el esquema relacional de la Figura~\ref{fig:modelo3}, donde cada vehículo tiene asignado un modelo de una marca determinada. La tabla \verb|Repara| registra reparaciones indicando qué mecánico repara qué vehículo en qué fecha.
+\begin{figure}[H]
+    \centering
+    \resizebox{1.1\textwidth}{!}{
+        \begin{tikzpicture}[node distance=15em]
+            \node(modelo) {Modelo(id\_modelo, marca, descripcion)};
+            \node(vehiculo)[right of=modelo, xshift=7em] {Vehículo(matrícula, id\_modelo, fecha\_matriculación)};
+            \node(mecanico)[below of=modelo, yshift=10em] {Mecánico(id\_mecánico, nombre\_mecánico, cargo, salario)};
+            \node(repara)[right of=mecanico, xshift=10em] {Repara(id\_mecánico, matrícula, fecha, número\_horas)};
+
+            \node[CP, xshift=-6ex] (CP_modelo) at(modelo) {id\_modelo};
+            \node[CP, xshift=-12ex] (CP_vehiculo) at(vehiculo) {matrícula};
+            \node[CP, xshift=-11.5ex] (CP_mecanico) at(mecanico) {id\_mecánico};
+            \node[CP, xshift=-3.5ex] (CP_repara) at(repara) {id\_mecánico, matrícula, fecha};
+
+            \node[CE, xshift=11ex] (CE_vehiculo) at(CP_vehiculo) {id\_modelo};
+            \node[CE, xshift=-10ex] (CE_repara_mecanico) at(CP_repara) {id\_mecánico};
+            \node[CE, xshift=3ex] (CE_repara_vehiculo) at(CP_repara) {matrícula};
+
+            \node[yshift=1.4em, xshift=1.4em, purple] at (CE_vehiculo) {(1)};
+            \node[yshift=1.4em, xshift=1.4em, purple] at (CE_repara_mecanico) {(2)};
+            \node[yshift=1.4em, xshift=1.4em, purple] at (CE_repara_vehiculo) {(3)};
+
+            \node[yshift=-1.4em, xshift=1.4em, purple] at (CP_modelo) {(1)};
+            \node[yshift=-1.4em, xshift=1.4em, purple] at (CP_mecanico) {(2)};
+            \node[yshift=-1.4em, xshift=1.4em, purple] at (CP_vehiculo) {(3)};
+
+        \end{tikzpicture}
+    }
+    \caption{Esquema relacional del Modelo~\ref{sec:modelo3}.}
+    \label{fig:modelo3}
+\end{figure}
+
+\begin{ejercicio}[SQL]
+    Encontrar, de entre los coches que han sufrido reparaciones en el año 2017, la fecha de matriculación del coche al que le han realizado más reparaciones en dicho año. Puede haber más de un coche que cumpla esta condición.
+    \begin{minted}{sql}
+        SELECT matrícula, fecha_matriculación, COUNT(*)
+            FROM vehículo NATURAL JOIN repara
+            WHERE TO_CHAR(fecha, 'YYYY') = '2017'
+            GROUP BY matrícula, fecha_matriculación
+            HAVING COUNT(*) = (
+                SELECT MAX(COUNT(*))
+                    FROM repara
+                    WHERE TO_CHAR(fecha, 'YYYY') = '2017'
+                    GROUP BY matrícula
+            );
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}[SQL]
+    Encontrar la matrícula y la fecha de matriculación de los vehículos con \verb|id_modelo| igual a \verb|AURIS| que, por cada cargo de mecánico que han en la BD, han sido atendidos al menos una vez durante más de una hora por un mecánico con ese cargo.\\
+
+    Buscamos los vehículos con \verb|id_modelo| igual a \verb|AURIS| para los que no existe un cargo de mecánico para el que no hay una reparación con duración mayor de una hora a un vehículo de ese modelo.
+    \begin{minted}{sql}
+        SELECT matrícula, fecha_matriculación
+            FROM vehículo
+            WHERE id_modelo = 'AURIS'
+                AND NOT EXISTS (
+                    SELECT cargo
+                        FROM mecánico
+                    MINUS
+                    SELECT cargo
+                        FROM mecánico NATURAL JOIN repara
+                        WHERE número_horas > 1
+                            AND repara.matrícula = vehículo.matrícula
+                );
+    \end{minted}
+\end{ejercicio}
+
+\newpage
+\section{Modelo 4}\label{sec:modelo4}
+
+Considerar el esquema relacional de la Figura~\ref{fig:modelo4}, donde cada grupo musical tiene asignado un género musical. La tabla \verb|Actuación| registra
+actuaciones indicando qué grupo actúa en qué población y cuándo.
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=4 em]
+        \node (genero) {Género(id\_género, nombre\_género, país\_origen)};
+        \node (grupo) [below of=genero] {Grupo(id\_grupo, nombre\_grupo, id\_género, fecha\_creación)};
+        \node (poblacion) [below of=grupo] {Población(id\_población, nombre\_población, número, habitantes)};
+        \node (actuacion) [below of=poblacion] {Actuación(id\_poblacion, id\_grupo, fecha, duración)};
+
+        \node[CP, xshift=-10ex] (CPGenero) at(genero) {id\_genero};
+        \node[CP, xshift=-14.5ex] (CPPoblacion) at(poblacion) {id\_poblacion};
+        \node[CP, xshift=-17ex] (CPGrupo) at(grupo) {id\_grupo};
+        \node[CP, xshift=0ex] (CPActuacion) at(actuacion) {id\_poblacion, id\_grupo, fecha};
+
+        \node[CE, xshift=25ex] (CEGenero) at(CPGrupo) {id\_genero};
+        \node[CE, xshift=-9ex] (CEActuacionPoblacion) at(CPActuacion) {id\_población};
+        \node[CE, xshift=4ex] (CEActuacionGrupo) at(CPActuacion) {id\_grupo};
+
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEGenero) {(1)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEActuacionPoblacion) {(2)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEActuacionGrupo) {(3)};
+
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPGenero) {(1)};
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPPoblacion) {(2)};
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPGrupo) {(3)};
+    \end{tikzpicture}
+    \caption{Esquema relacional del Modelo~\ref{sec:modelo4}.}
+    \label{fig:modelo4}
+\end{figure}
+
+\begin{ejercicio}[AR]
+    Elaborar un listado de los países que han dado origen a un solo género musical.\\
+
+    Creamos en primer lugar el siguiente alias.
+    \begin{equation*}
+        \rho(\text{Género})=G_1,G_2
+    \end{equation*}
+
+    Los países buscados son los que no han dado origen a dos géneros musicales distintos:
+    \begin{equation*}
+        \pi_{\text{país}}(\text{Género})
+        - \pi_{G_1.\text{país}}\left(\sigma_{\substack{G_1.\text{país}=G_2.\text{país}\\\land \\ G_1.\text{id\_género}\neq G_2.\text{id\_género}}}(G_1\times G_2)\right)
+    \end{equation*}
+\end{ejercicio}
+
+\newpage
+\section{Ejercicios Comunes}
+
+\begin{ejercicio}[AR]\label{ej:comunes1}
+    Considere el esquema relacional de la Figura~\ref{fig:comunes1}.
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[node distance=7 em]
+            \node (A) {$A(F,B)$};
+            \node (D) [right of=A] {$D(E,B)$};
+            \node (C) [right of=D] {$C(F,E)$};
+
+            \node[CP, xshift=-1ex] (CPA) at(A) {$F$};
+            \node[CP, xshift=-1ex] (CPD) at(D) {$E$};
+            \node[CP, xshift=1ex] (CPC) at(C) {$F,E$};
+
+            \node[CE, xshift=-2ex] (CEF) at(CPC) {F};
+            \node[CE, xshift=2ex] (CEE) at(CPC) {E};
+
+            \node[yshift=1.5em, xshift=-1.5em, purple] at (CEF) {(1)};
+            \node[yshift=1.5em, xshift=1.5em, purple] at (CEE) {(2)};
+
+            \node[yshift=-1.5em, xshift=1.5em, purple] at (CPA) {(1)};
+            \node[yshift=-1.5em, xshift=1.5em, purple] at (CPD) {(2)};
+
+        \end{tikzpicture}
+        \caption{Esquema relacional del Ejercicio~\ref{ej:comunes1}.}
+        \label{fig:comunes1}
+    \end{figure}
+
+    Encontrar los valores del atributo $F$ de la tabla $A$ que cumplen la condición de que aparecen relacionados en la tabla $C$ con todos los valores de $E$ que tienen asociado en la tabla $D$ el mismo valor del atributo $B$ que tiene asociado el valor de $F$ en la tabla $A$. Es decir, un valor $x$ debería aparecer en el resultado si existe una tupla $(x,y)\in A$ tal que, para cada tupla $(z,y)\in D$, existe una tupla $(x,z)\in C$ (siendo $x\in F$, $z \in E$ e $y\in B$).\\
+
+    Los valores del atributo $F$ de la tabla $A$ son:
+    \begin{equation*}
+        \pi_{F}(A)
+    \end{equation*}
+
+    Los valores de $E$ que tienen asociado en la tabla $D$ el mismo valor del atributo $B$ que tiene asociado el valor de $F$ en la tabla $A$ son:
+    \begin{equation*}
+        \pi_{E}(D \bowtie A)
+    \end{equation*}
+
+    Por tanto, los valores del atributo $F$ que aparecen relacionados en la tabla $C$ con todos los valores de $E$ que tienen asociado en la tabla $D$ el mismo valor del atributo $B$ que tiene asociado el valor de $F$ en la tabla $A$ son:
+    \begin{equation*}
+        C \div \pi_E(D \bowtie A)
+    \end{equation*}
+
+    Como se pide además que dichos valores sean de $A$, la consulta pedida es:
+    \begin{equation*}
+        \pi_F(A) \cap \left( C \div \pi_E(D \bowtie A) \right)
+    \end{equation*}
+
+    No obstante, como $F$ en $C$ es una clave externa a $A$, se tiene que $\pi_F(C)\subset \pi_F(A)$, por lo que la consulta anterior es equivalente a:
+    \begin{equation*}
+        C \div \pi_E(D \bowtie A)
+    \end{equation*}
+\end{ejercicio}
+
+
+
+\begin{ejercicio}[AR]\label{ej:comunes2}
+    Considere el esquema relacional de la Figura~\ref{fig:comunes2}.
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[node distance=7 em]
+            \node (A) {$B(E,A)$};
+            \node (D) [right of=A] {$D(F,A)$};
+            \node (C) [right of=D] {$C(E,F)$};
+
+            \node[CP, xshift=-1ex] (CPA) at(A) {$F$};
+            \node[CP, xshift=-1ex] (CPD) at(D) {$E$};
+            \node[CP, xshift=1ex] (CPC) at(C) {$F,E$};
+
+            \node[CE, xshift=-2ex] (CEF) at(CPC) {F};
+            \node[CE, xshift=2ex] (CEE) at(CPC) {E};
+
+            \node[yshift=1.5em, xshift=-1.5em, purple] at (CEF) {(1)};
+            \node[yshift=1.5em, xshift=1.5em, purple] at (CEE) {(2)};
+
+            \node[yshift=-1.5em, xshift=1.5em, purple] at (CPA) {(1)};
+            \node[yshift=-1.5em, xshift=1.5em, purple] at (CPD) {(2)};
+
+        \end{tikzpicture}
+        \caption{Esquema relacional del Ejercicio~\ref{ej:comunes2}.}
+        \label{fig:comunes2}
+    \end{figure}
+
+    Encontrar los valores del atributo $E$ de la tabla $B$ que cumplen la condición de que aparecen relacionados en la tabla $C$ con todos los valores de $F$ que tienen asociado en la tabla $D$ el mismo valor del atributo $A$ que tiene asociado el valor de $E$ en la tabla $B$. Es decir, un valor $x$ debería aparecer en el resultado si existe una tupla $(x,y)\in B$ tal que, para cada tupla $(z,y)\in D$, existe una tupla $(x,z)\in C$ (siendo $x\in E$, $z \in F$ e $y\in A$).\\
+
+    Los valores del atributo $E$ de la tabla $B$ son:
+    \begin{equation*}
+        \pi_{E}(B)
+    \end{equation*}
+
+    Los valores de $F$ que tienen asociado en la tabla $D$ el mismo valor del atributo $A$ que tiene asociado el valor de $E$ en la tabla $B$ son:
+    \begin{equation*}
+        \pi_{F}(D \bowtie B)
+    \end{equation*}
+
+    Por tanto, los valores del atributo $E$ que aparecen relacionados en la tabla $C$ con todos los valores de $F$ que tienen asociado en la tabla $D$ el mismo valor del atributo $A$ que tiene asociado el valor de $E$ en la tabla $B$ son:
+    \begin{equation*}
+        C \div \pi_F(D \bowtie B)
+    \end{equation*}
+
+    Como se pide además que dichos valores sean de $B$, la consulta pedida es:
+    \begin{equation*}
+        \pi_E(B) \cap \left( C \div \pi_F(D \bowtie B) \right)
+    \end{equation*}
+
+    No obstante, como $E$ en $C$ es una clave externa a $B$, se tiene que $\pi_E(C)\subset \pi_E(B)$, por lo que la consulta anterior es equivalente a:
+    \begin{equation*}
+        C \div \pi_F(D \bowtie B)
+    \end{equation*}
+\end{ejercicio}
+
+
 \end{document}
