@@ -1,0 +1,263 @@
+\documentclass[12pt]{article}
+
+\input{../../_assets/preambulo.tex}
+\usetikzlibrary{er, fit}
+
+\newcommand{\key}[1]{\ul{#1}}
+
+% Definición de estilos
+\tikzset{atributo/.style={attribute}}
+\tikzset{entidad/.style={entity}}
+\tikzset{relacion/.style={relationship}}
+\tikzset{atributo derivado/.style={attribute, dashed}}
+\tikzset{union discriminante/.style={dashed}}
+\tikzset{entidad debil/.style={entidad, double distance=1.5 pt}}
+\tikzset{participacion obligatoria/.style={double distance=1.5 pt}}
+\tikzset{herencia/.style={draw, isosceles triangle, isosceles triangle apex angle=60, shape border rotate=230, minimum height=1cm, minimum width=1cm, fill=blue!20}}
+\tikzset{agregacion/.style={draw, fit=#1, inner sep=0.5em}}
+
+
+% Estilos estéticos
+\tikzset{every entity/.style={draw=orange, fill=orange!20}}
+\tikzset{every attribute/.style={draw=purple, fill=purple!20, font=\footnotesize}}
+\tikzset{every relationship/.style={draw=green, fill=green!20, minimum height=2cm, minimum width=2cm}}
+
+\begin{comment}
+    \begin{tikzpicture}[node distance=6 em]
+        \node [entidad](person){Person};
+        \node [atributo derivado](pid) at (0.8,-2){\key{ID}} edge (person);
+        \node [atributo](name) at (-0.8, -2) {Name} edge (person);
+        \node [atributo](phone)[left of=person]{Phone} edge[union discriminante] (person);
+        \node [atributo](address)[above left of=person]{Address} edge[-stealth] (person);
+        \node [atributo](street)[above left of=address]{Street} edge (address);
+        \node [atributo](city)[left of=address]{City} edge (address);
+        \node [atributo](age)[above of=person]{Age} edge (person);
+        \node [relacion](uses)[right of=person]{Uses} edge[participacion obligatoria] (person);
+        \node [entidad debil](tool)[right of=uses]{Tool} edge (uses);
+        \node [atributo](tid)[right of=tool]{\key{ID}} edge[Stealth-Stealth] (tool);
+        \node [atributo](tname)[below of=tool]{Name} edge (tool);
+    
+        % Línea desde encima de Name hasta encima de ID
+        \draw ([yshift=1em]name.north) -- ([yshift=1em]pid.north) node[circle, fill, inner sep=1.5pt] {};
+    
+        \node[agregacion=(A) (B) (R)] (box) {};
+    
+        \node [herencia, below of= B](H){} edge (B);
+    \end{tikzpicture}
+\end{comment}
+
+% ---------------------------------------------------
+\tikzset{
+    CP/.style={
+        overlay, text opacity=0, fill opacity=0,
+        append after command={
+            \pgfextra{
+                \draw[thick] (\tikzlastnode.south west) -- (\tikzlastnode.south east);
+                \node[below=0ex of \tikzlastnode] {CP};
+            }
+        }
+    },
+    CC/.style={
+        overlay, text opacity=0, fill opacity=0,
+        append after command={
+            \pgfextra{
+                \draw[thick] (\tikzlastnode.south west) -- (\tikzlastnode.south east);
+                \node[below=0ex of \tikzlastnode] {CC};
+            }
+        }
+    },
+    CE/.style={
+        overlay, text opacity=0, fill opacity=0,
+        append after command={
+            \pgfextra{
+                \draw[thick, purple] (\tikzlastnode.north west) -- (\tikzlastnode.north east);
+                \node[above=0ex of \tikzlastnode, text=purple] {CE};
+            }
+        }
+    }
+}
+
+
+\begin{document}
+
+    % 1. Foto de fondo
+    % 2. Título
+    % 3. Encabezado Izquierdo
+    % 4. Color de fondo
+    % 5. Coord x del titulo
+    % 6. Coord y del titulo
+    % 7. Fecha
+
+    
+    \input{../../_assets/portada}
+    \portadaExamen{etsiitA4.jpg}{FBD\\Examen VI}{FBD. Examen VI}{MidnightBlue}{-8}{28}{2024-2025}{Arturo Olivares Martos}
+
+    \begin{description}
+        \item[Asignatura] Fundamentos de Bases de Datos.
+        \item[Curso Académico] 2017-18.
+        %\item[Grado] Doble Grado en Ingeniería Informática y Matemáticas.
+        %\item[Grupo] Único.
+        %\item[Profesor] Nicolás Marín Ruiz.
+        \item[Descripción] Convocatoria Extraordinaria. Práctico Parcial 2 (Seminarios 3-4).
+        %\item[Fecha] 8 de noviembre de 2021.
+        % \item[Duración] 60 minutos.
+    
+    \end{description}
+    \newpage
+
+
+
+Disponemos de la BD de la Figura~\ref{fig:diagrama} sobre gestión de varias ligas de agentes inteligentes (bots). Hay varios grupos separados. Cada participante está en un grupo. Cada participante juega con un único bot. Hay varias ligas, identificadas por la fecha de comienzo de la liga y el grupo que juega la liga. En cada partido de liga de un grupo juegan dos bots diferentes (\verb|jLocal| y \verb|jVisit|) y se guarda si ha ganado el bot local (\verb|gLocal|), el visitante (\verb|gVisit|) o si hay empate (\verb|empate|).
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[node distance=15em]
+        \node (Grupo) {Grupo(ID, descripción)};
+        \node (Participante) [right of=Grupo, xshift=-1em] {Participante(email, \textbf{grupo}, nombre)};
+        \node (Bot) [right of=Participante, xshift=1em] {Bot(email, \textbf{nombreBot}, cpp, h)};
+
+        \node (Partido) [below of=Grupo, yshift=9em, xshift=10em] {Partido(fecha, grupo, jLocal, jVisit, \textbf{gLocal}, \textbf{gVisit}, \textbf{empate})};
+        \node (Liga) [right of=Partido, xshift=5em] {Liga(fecha, grupo)};
+
+        \node[CP, xshift=-3ex] (CPGrupo) at (Grupo) {ID};
+        \node[CP, xshift=-2ex] (CPParticipante) at (Participante) {email};
+        \node[CP, xshift=-9ex] (CPBot) at (Bot) {email};
+        \node[CC, xshift=11ex] (CCBot) at (CPBot) {nombreBot};
+        \node[CP, xshift=-9ex] (CPPartido) at (Partido) {fecha, grupo, jLocal, jVisit};
+        \node[CP, xshift=2.5ex] (CPLiga) at (Liga) {fecha, grupo};
+
+        \node[CE, xshift=7ex] (CEParticipante) at (CPParticipante) {grupo};
+        \node[CE, xshift=0ex] (CEBot) at (CPBot) {email};
+        \node[CE, xshift=-7.5ex] (CEPartidoLiga) at (CPPartido) {fecha, grupo};
+        \node[CE, xshift=4ex] (CEPartidoLocal) at (CPPartido) {jLocal};
+        \node[CE, xshift=12ex] (CEPartidoVisit) at (CPPartido) {jVisit};
+        \node[CE, xshift=3ex] (CELiga) at (CPLiga) {grupo};
+
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEParticipante) {(1)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEBot) {(2)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEPartidoLiga) {(3)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEPartidoLocal) {(4)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEPartidoVisit) {(5)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CELiga) {(6)};
+
+        \node[yshift=-1.5em, xshift=1.9em, purple] at (CPGrupo) {(1,6)};
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPParticipante) {(2)};
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPLiga) {(3)};
+        \node[yshift=-1.5em, xshift=1.9em, purple] at (CPBot) {(4,5)};
+        
+    \end{tikzpicture}
+    \caption{Diagrama Entidad-Relación}
+    \label{fig:diagrama}
+\end{figure}
+
+
+
+\begin{ejercicio}
+    Escribe las instrucciones en SQL para la creación de las tablas \verb|Partido| y \verb|Bot|. Se presuponen creadas todas las restantes tablas. Además de las restricciones de integridad especificadas en el dibujo, deben considerarse las siguientes:
+    \begin{enumerate}
+        \item Los campos en negrita no pueden ser nulos.
+        \item \verb|gLocal|, \verb|gVisit| y \verb|empate| deben tener valores sólo 0 o 1 (\verb|gLocal=1| gana el local, \verb|gVisit=1| gana el visitante, \verb|empate=1| hay empate).
+        \item Solo es posible que gane un único jugador, o que haya empate.
+        \item Un bot no puede jugar consigo mismo un partido.
+        \item \verb|cpp| y \verb|h| deben ser cadenas largas, pues contendrán el código fuente del bot.
+    \end{enumerate}
+
+    \begin{minted}{sql}
+        CREATE TABLE Bot (
+            email CONSTRAINT Bot_PK PRIMARY KEY CONSTRAINT Bot_FK_Participante REFERENCES Participante(email),
+            nombreBot VARCHAR2(50) CONSTRAINT Bot_NombreBot_NN NOT NULL CONSTRAINT Bot_NombreBot_UN UNIQUE,
+            cpp VARCHAR2(4000),
+            h VARCHAR2(4000)
+        );
+        CREATE TABLE Partido (
+            fecha,
+            grupo,
+            jLocal CONSTRAINT Partido_FK_Bot_Local REFERENCES Bot(email),
+            jVisit CONSTRAINT Partido_FK_Bot_Visit REFERENCES Bot(email),
+            gLocal INT CONSTRAINT Partido_GLocal_CK CHECK (gLocal IN (0, 1)),
+            gVisit INT CONSTRAINT Partido_GVisit_CK CHECK (gVisit IN (0, 1)),
+            empate INT CONSTRAINT Partido_Empate_CK CHECK (empate IN (0, 1)),
+            CONSTRAINT Partido_PK PRIMARY KEY (fecha, grupo, jLocal, jVisit),
+            CONSTRAINT Partido_FK_Liga FOREIGN KEY (fecha, grupo) REFERENCES Liga(fecha, grupo),
+            CONSTRAINT Partido_CK CHECK (gLocal + gVisit + empate = 1),
+            CONSTRAINT Partido_CK_Bot_Distinto CHECK (jLocal != jVisit)
+        );
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}[AR y SQL]
+    Mostrar los nombres de los participantes del grupo \verb|A1| cuyos bots han jugado algún partido como local en todas las ligas de su grupo.\\
+
+    Mostraremos en primer lugar el resultado en Álgebra Relacional. Las ligas del grupo \verb|A1| son:
+    \[
+        \sigma_{\text{grupo}=\text{A1}}(\text{Liga})
+    \]
+
+    Buscamos ahora todas las parejas participante del grupo \verb|A1|, liga; en las que dicho participante ha jugado como local en algún partido de la liga:
+    \[
+        \pi_{\substack{\text{email}\\ \text{fecha}\\ \text{grupo}}}\left(\sigma_{\text{grupo}=\text{A1}}(\text{Participante})\bowtie_{\text{jLocal}=\text{email}}\text{Partido}\right)
+    \]
+
+    Por tanto, el email de los participantes del grupo \verb|A1| cuyos bots han jugado algún partido como local en todas las ligas de su grupo es:
+    \[
+        \pi_{\substack{\text{email}\\ \text{fecha}\\ \text{grupo}}}\left(\sigma_{\text{grupo}=\text{A1}}(\text{Participante})\bowtie_{\text{jLocal}=\text{email}}\text{Partido}\right)
+        \div \sigma_{\text{grupo}=\text{A1}}(\text{Liga})
+    \]
+
+    Por tanto, los nombres de los participantes del grupo \verb|A1| cuyos bots han jugado algún partido como local en todas las ligas de su grupo son:
+    \[
+        \pi_{\text{nombre}}\left[\left[\pi_{\substack{\text{email}\\ \text{fecha}\\ \text{grupo}}}\left(\sigma_{\text{grupo}=\text{A1}}(\text{Participante})\bowtie_{\text{jLocal}=\text{email}}\text{Partido}\right)
+        \div \sigma_{\text{grupo}=\text{A1}}(\text{Liga})\right]\bowtie \text{Participante}\right]
+    \]~\\
+
+    En SQL, la consulta sería:
+    \begin{minted}{sql}
+        SELECT nombre
+        FROM Participante
+        WHERE grupo = 'A1'
+            AND NOT EXISTS (
+                SELECT *
+                    FROM Liga
+                    WHERE grupo = 'A1'
+                MINUS
+                    SELECT fecha, grupo
+                    FROM Partido
+                    WHERE jLocal = email
+            );
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}[SQL]
+    Mostrar nombre y puntuación de aquellos bots que, jugando como local en la liga del 3 de Junio de 2018, obtuvieron un total de puntos superior a 4. La puntuación jugando como local se calcula como $3\times$Partidos ganados como local $+$ partidos empatados.
+    \begin{minted}{sql}
+        SELECT nombreBot, SUM(3*gLocal + empate) AS puntuacion
+            FROM bot JOIN Partido ON email = jLocal
+            WHERE TO_CHAR(fecha, 'DD-MM-YYYY') = TO_DATE('03-06-2018', 'DD-MM-YYYY')
+            GROUP BY nombreBot
+            HAVING SUM(3*gLocal + empate) > 4;
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}[AR y SQL]
+    Mostrar los emails de los participantes que hayan ganado al bot de nombre \verb|GreedyBot| como local y como visitante.\\
+
+    En Álgebra Relacional, los emails de los participantes que hayan ganado al bot de nombre \verb|GreedyBot| como local y como visitante son:
+    \begin{multline*}
+        \pi_{\text{email}}\left(\sigma_{\text{nombreBot}=\text{GreedyBot}}(\text{Bot})\bowtie_{\text{email}=\text{jLocal}}\sigma_{\text{gLocal}=1}(\text{Partido})\right)
+        \qquad \cap\\
+        \cap\qquad \pi_{\text{email}}\left(\sigma_{\text{nombreBot}=\text{GreedyBot}}(\text{Bot})\bowtie_{\text{email}=\text{jVisit}}\sigma_{\text{gVisit}=1}(\text{Partido})\right)
+    \end{multline*}
+
+    En SQL, la consulta sería:
+    \begin{minted}{sql}
+        SELECT email
+            FROM Bot JOIN Partido ON email = jLocal
+            WHERE nombreBot = 'GreedyBot' AND gLocal = 1
+        INTERSECT
+        SELECT email
+            FROM Bot JOIN Partido ON email = jVisit
+            WHERE nombreBot = 'GreedyBot' AND gVisit = 1;
+    \end{minted}
+\end{ejercicio}
+
+
+\end{document}
