@@ -1,6 +1,7 @@
 # Fundamentos de Bases de Datos. Tipo Test Parcial II
 
 **Autor**: Elías Monge Sánchez
+**Autor**: Arturo Olivares Martos
 ***
 
 - **Asignatura:** Fundamentos de Bases de Datos
@@ -48,7 +49,7 @@ ______
     - ( ) Todas las consultas que se pueden resolver con SQL, se pueden resolver con Álgebra Relacional.
     - ( ) No sabe o no contesta.
 
-8. Considere dos tablas \\(T_1\\) y \\(T_2\\) tales que el esquema de \\(T_2\\) está contenido en el de \\(T1\\). Considere la siguiente expresión en Álgebra Relacional: \\((T_1/T_2) \times T_2\\). El resultado de aplicar dicha operación sobre dos instancias \\(t_1\\) y \\(t_2\\) de las tablas:
+8. Considere dos tablas \\(T_1\\) y \\(T_2\\) tales que el esquema de \\(T_2\\) está contenido en el de \\(T_1\\). Considere la siguiente expresión en Álgebra Relacional: \\((T_1\div T_2) \times T_2\\). El resultado de aplicar dicha operación sobre dos instancias \\(t_1\\) y \\(t_2\\) de las tablas:
     - (x) Producirá como resultado una instancia \\(t\\) contenida en o igual a \\(t_1\\).
     - ( ) Producirá siempre como resultado la instancia \\(t_1\\).
     - ( ) Ninguna de las otras opciones es cierta.
@@ -124,8 +125,8 @@ ______
     - (x) Ninguna de las otras es cierta
 
 23. Considere que se está usando Hashing dinámico. En un momento dado, al insertar un nuevo registro en un cubo con profundidad local igual a la profundidad global:
-    - (x) En ningún caso habrá que desdoblar la tabla índice.
-    - ( ) Es posible que no haya que desdoblar la tabla índice
+    - ( ) En ningún caso habrá que desdoblar la tabla índice.
+    - (x) Es posible que no haya que desdoblar la tabla índice
     - ( ) Necesariamente habrá que desdoblar la tabla índice.
 
 24. Considere un fichero secuencial indexado:
@@ -254,10 +255,10 @@ ______
     - ( ) 16
     - ( ) 5
 
-47. Cuando se necesita acceder a la tabla `alumnos` por rangos de notas el mejor mecanismo es:
+47. Cuando se necesita acceder a la tabla `alumnos` por rangos de notas (sin decimales) el mejor mecanismo es:
     - ( ) Un índice no denso.
-    - (x) Un índice denso
-    - ( ) Un índice de mapa de bits
+    - ( ) Un índice denso
+    - (x) Un índice de mapa de bits
     - ( ) Hashing básico.
 
 48. Cuando la cardinalidad del campo por el que se indexa una tabla es muy baja, el mejor mecanismo de indexación es:
@@ -339,14 +340,14 @@ ______
     - ( ) Nos bastará con tenerla en memoria principal, sin necesidad de respaldo de un dispositivo no volátil como el disco duro.
     - (x) Ninguna de las otras es cierta.
 
-63. En general, si quiero optimizar consultas del tipo "dame los registros cuyo valor del campo `X`, está comprendido entre \\(x_1\\) y \\(x_2\\), con \\(x1<x2\\):
+63. En general, si quiero optimizar consultas del tipo "dame los registros cuyo valor del campo `X`, está comprendido entre \\(x_1\\) y \\(x_2\\), con \\(x_1<x_2\\)":
     - ( ) Debo optar por técnicas de hashing dinámico.
     - ( ) Debo optar por técnicas de hashing básico.
     - (x) Ninguna de las otras es cierta.
   
-64. Considere los árboles B+ (Tree1 y Tree2) construidos sobre la misma clave y el mismo fichero, y que el valor de M en Tree1 es mayor que el valor de M en el Tree2:
-    - ( ) Entonces el número de valores de la clave presentes en el nivel de las hojas de Tree1 será menor que el número de valores de la clave presentes en el nivel de las hojas de Tree2.
-    - ( ) Entonces el número de valores de la clave presentes en el nivel de las hojas de Tree1 será mayor que el número de valores de la clave presentes en el nivel de las hojas de Tree2.
+64. Considere los árboles B+ (`Tree1` y `Tree2`) construidos sobre la misma clave y el mismo fichero, y que el valor de `M` en `Tree1` es mayor que el valor de `M` en el `Tree2`:
+    - ( ) Entonces el número de valores de la clave presentes en el nivel de las hojas de `Tree1` será menor que el número de valores de la clave presentes en el nivel de las hojas de `Tree2`.
+    - ( ) Entonces el número de valores de la clave presentes en el nivel de las hojas de `Tree1` será mayor que el número de valores de la clave presentes en el nivel de las hojas de `Tree2`.
     - (x) Ninguna de las otras es cierta.
 
 65. La gestión de archivos de S.O es llevada a cabo por:
