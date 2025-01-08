@@ -1,0 +1,275 @@
+\documentclass[12pt]{article}
+
+\input{../../_assets/preambulo.tex}
+\usetikzlibrary{er, fit}
+
+\newcommand{\key}[1]{\ul{#1}}
+
+% Definición de estilos
+\tikzset{atributo/.style={attribute}}
+\tikzset{entidad/.style={entity}}
+\tikzset{relacion/.style={relationship}}
+\tikzset{atributo derivado/.style={attribute, dashed}}
+\tikzset{union discriminante/.style={dashed}}
+\tikzset{entidad debil/.style={entidad, double distance=1.5 pt}}
+\tikzset{participacion obligatoria/.style={double distance=1.5 pt}}
+\tikzset{herencia/.style={draw, isosceles triangle, isosceles triangle apex angle=60, shape border rotate=230, minimum height=1cm, minimum width=1cm, fill=blue!20}}
+\tikzset{agregacion/.style={draw, fit=#1, inner sep=0.5em}}
+
+
+% Estilos estéticos
+\tikzset{every entity/.style={draw=orange, fill=orange!20}}
+\tikzset{every attribute/.style={draw=purple, fill=purple!20, font=\footnotesize}}
+\tikzset{every relationship/.style={draw=green, fill=green!20, minimum height=2cm, minimum width=2cm}}
+
+\begin{comment}
+    \begin{tikzpicture}[node distance=6 em]
+        \node [entidad](person){Person};
+        \node [atributo derivado](pid) at (0.8,-2){\key{ID}} edge (person);
+        \node [atributo](name) at (-0.8, -2) {Name} edge (person);
+        \node [atributo](phone)[left of=person]{Phone} edge[union discriminante] (person);
+        \node [atributo](address)[above left of=person]{Address} edge[-stealth] (person);
+        \node [atributo](street)[above left of=address]{Street} edge (address);
+        \node [atributo](city)[left of=address]{City} edge (address);
+        \node [atributo](age)[above of=person]{Age} edge (person);
+        \node [relacion](uses)[right of=person]{Uses} edge[participacion obligatoria] (person);
+        \node [entidad debil](tool)[right of=uses]{Tool} edge (uses);
+        \node [atributo](tid)[right of=tool]{\key{ID}} edge[Stealth-Stealth] (tool);
+        \node [atributo](tname)[below of=tool]{Name} edge (tool);
+    
+        % Línea desde encima de Name hasta encima de ID
+        \draw ([yshift=1em]name.north) -- ([yshift=1em]pid.north) node[circle, fill, inner sep=1.5pt] {};
+    
+        \node[agregacion=(A) (B) (R)] (box) {};
+    
+        \node [herencia, below of= B](H){} edge (B);
+    \end{tikzpicture}
+\end{comment}
+
+% ---------------------------------------------------
+\tikzset{
+    CP/.style={
+        overlay, text opacity=0, fill opacity=0,
+        append after command={
+            \pgfextra{
+                \draw[thick] (\tikzlastnode.south west) -- (\tikzlastnode.south east);
+                \node[below=0ex of \tikzlastnode] {CP};
+            }
+        }
+    },
+    CC/.style={
+        overlay, text opacity=0, fill opacity=0,
+        append after command={
+            \pgfextra{
+                \draw[thick] (\tikzlastnode.south west) -- (\tikzlastnode.south east);
+                \node[below=0ex of \tikzlastnode] {CC};
+            }
+        }
+    },
+    CE/.style={
+        overlay, text opacity=0, fill opacity=0,
+        append after command={
+            \pgfextra{
+                \draw[thick, purple] (\tikzlastnode.north west) -- (\tikzlastnode.north east);
+                \node[above=0ex of \tikzlastnode, text=purple] {CE};
+            }
+        }
+    }
+}
+
+
+\begin{document}
+
+    % 1. Foto de fondo
+    % 2. Título
+    % 3. Encabezado Izquierdo
+    % 4. Color de fondo
+    % 5. Coord x del titulo
+    % 6. Coord y del titulo
+    % 7. Fecha
+
+    
+    \input{../../_assets/portada}
+    \portadaExamen{etsiitA4.jpg}{FBD\\Examen IV}{FBD. Examen IV}{MidnightBlue}{-8}{28}{2024-2025}{Arturo Olivares Martos}
+
+    \begin{description}
+        \item[Asignatura] Fundamentos de Bases de Datos.
+        \item[Curso Académico] 2020-21.
+        %\item[Grado] Doble Grado en Ingeniería Informática y Matemáticas.
+        %\item[Grupo] Único.
+        %\item[Profesor] Nicolás Marín Ruiz.
+        \item[Descripción] Convocatoria Ordinaria. Práctico Parcial 2 (Seminarios 3-4).
+        %\item[Fecha] 8 de noviembre de 2021.
+        % \item[Duración] 60 minutos.
+    
+    \end{description}
+    \newpage
+
+\section{Modelo 1}\label{sec:modelo1}
+Considerar el esquema relacional de la Figura~\ref{fig:modelo1}, donde cada paciente tiene asignada una aseguradora que cubre sus gastos médicos. La tabla \verb|Consulta| almacena citas en las que un médico ha atendido a un paciente en una fecha dada.
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=4 em]
+        \node (aseguradora) {Asegura(id\_aseguradora, nombre\_aseguradora, país)};
+        \node (paciente) [below of=aseguradora] {Paciente(id\_paciente, nombre\_paciente, id\_aseguradora, fecha\_nacimiento)};
+        \node (medico) [below of=paciente] {Médico(id\_medico, nombre\_medico, especialidad, sueldo)};
+        \node (consulta) [below of=medico] {Consulta(id\_paciente, id\_medico, fecha, precio\_facturado, numero\_horas)};
+
+        \node[CP, xshift=-9ex] (CPAseguradora) at(aseguradora) {id\_aseguradora};
+        \node[CP, xshift=-15ex] (CPMedico) at(medico) {id\_medico};
+        \node[CP, xshift=-21ex] (CPPaciente) at(paciente) {id\_paciente};
+        \node[CP, xshift=-11ex] (CPConsulta) at(consulta) {id\_paciente, id\_medico, fecha};
+
+        \node[CE, xshift=31ex] (CEPaciente) at(CPPaciente) {id\_aseguradora};
+        \node[CE, xshift=-10ex] (CEConsultaPaciente) at(CPConsulta) {id\_paciente};
+        \node[CE, xshift=2ex] (CEConsultaMedico) at(CPConsulta) {id\_medico};
+
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEPaciente) {(1)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEConsultaPaciente) {(2)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEConsultaMedico) {(3)};
+
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPAseguradora) {(1)};
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPMedico) {(3)};
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPPaciente) {(2)};
+    \end{tikzpicture}
+    \caption{Esquema relacional del Modelo~\ref{sec:modelo1}.}
+    \label{fig:modelo1}
+\end{figure}
+
+\begin{ejercicio}[SQL ]
+    Encontrar, considerando sólo los médicos que han realizado consultas en el 2014, el sueldo del médico que ha realizado menos consultas durante dicho año. Puede haber más de un médico que cumpla esta condición.
+    \begin{minted}{sql}
+        SELECT id_medico, sueldo, count(*)
+            FROM medico NATURAL JOIN consulta
+            WHERE TO_CHAR(fecha, 'YYYY') = '2014'
+            GROUP BY id_medico, sueldo
+            HAVING COUNT(*) = (
+                SELECT MIN(COUNT(*))
+                    FROM consulta
+                    WHERE TO_CHAR(fecha, 'YYYY') = '2014'
+                    GROUP BY id_medico
+            );
+    \end{minted}
+\end{ejercicio}
+
+
+\begin{ejercicio}[SQL]
+    Encontrar, entre los pacientes que han tenido consultas en el 2011, el id de la aseguradora de aquel paciente que ha gastado en total menos dinero sumando sus consultas en dicho año. Puede haber más de un paciente que cumpla esta condición.\\
+
+    En primer lugar, buscamos los pacientes que han tenido consultas en el 2011 y han gastado menos dinero sumando sus consultas en dicho año.
+    \begin{minted}{sql}
+        SELECT id_paciente, SUM(precio_facturado)
+            FROM consulta
+            WHERE TO_CHAR(fecha, 'YYYY') = '2011'
+            GROUP BY id_paciente
+            HAVING SUM(precio_facturado) = (
+                SELECT MIN(SUM(precio_facturado))
+                    FROM consulta
+                    WHERE TO_CHAR(fecha, 'YYYY') = '2011'
+                    GROUP BY id_paciente
+            );
+    \end{minted}
+
+    Una vez obtenidos los pacientes que cumplen la condición, buscamos el id de la aseguradora de cada uno de ellos.
+    \begin{minted}{sql}
+        SELECT id_aseguradora, id_paciente, SUM(precio_facturado)
+            FROM paciente, consulta
+            WHERE TO_CHAR(fecha, 'YYYY') = '2011'
+            GROUP BY id_aseguradora, id_paciente
+            HAVING SUM(precio_facturado) = (
+                SELECT MIN(SUM(precio_facturado))
+                    FROM consulta
+                    WHERE TO_CHAR(fecha, 'YYYY') = '2011'
+                    GROUP BY id_paciente
+            );
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}[SQL]
+    Encontrar el nombre y sueldo de los médicos con especialidad \verb|VASCULAR| que, para cada aseguradora que hay en la base de datos, han hecho al menos una consulta con un precio superior a $100$ a un paciente de esa aseguradora.\\
+
+    Buscamos los médicos con especialidad \verb|VASCULAR| para los que no existe una aseguradora para la que no hay una consulta con precio superior a $100$ a un paciente de esa aseguradora.
+    \begin{minted}{sql}
+        SELECT id_medico, nombre_medico, sueldo
+            FROM medico
+            WHERE especialidad = 'VASCULAR'
+                AND NOT EXISTS (
+                    SELECT id_aseguradora
+                        FROM aseguradora
+                    MINUS
+                    SELECT id_aseguradora
+                        FROM paciente NATURAL JOIN consulta
+                        WHERE precio_facturado > 100
+                            AND consulta.id_medico = medico.id_medico
+                );
+    \end{minted}
+\end{ejercicio}
+
+
+\begin{ejercicio}[SQL]
+    Encontrar el \verb|id_paciente| y el \verb|id_aseguradora| de los pacientes que, para cada especialidad de los médicos que tienen un sueldo superior a 4000, han sido atendidos al menos una vez durante menos de una hora por un médico con esa especialidad (gane lo que gane ese médico).\\
+
+    Buscamos los pacientes para los que no existe una especialidad de los médicos con sueldo superior a $4000$ para la que no hay una consulta entre dicho paciente y un médico con esa especialidad que haya durado menos de una hora.
+    \begin{minted}{sql}
+        SELECT id_paciente, id_aseguradora
+            FROM paciente
+            WHERE NOT EXISTS (
+                SELECT especialidad
+                    FROM medico
+                    WHERE sueldo > 4000
+                MINUS
+                SELECT especialidad
+                    FROM medico consulta
+                    WHERE numero_horas < 1
+                    AND consulta.id_paciente = paciente.id_paciente
+            );
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}[SQL]
+    Encontrar, considerando sólo los médicos que han realizado consultas en el año 2017, el nombre del médico que ha facturado en total más dinero sumando sus consultas durante dicho año. Puede haber más de un médico que cumpla esta condición.
+    \begin{minted}{sql}
+        SELECT id_medico, nombre_medico, SUM(precio_facturado)
+            FROM medico NATURAL JOIN consulta
+            WHERE TO_CHAR(fecha, 'YYYY')='2017'
+            GROUP BY id_medico, nombre_medico
+            HAVING SUM(precio_facturado)=(
+                SELECT MAX(SUM(precio_facturado))
+                    FROM consulta
+                    WHERE TO_CHAR(fecha, 'YYYY')='2017'
+                    GROUP BY id_medico
+            );
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}[AR]
+    Elaborar un listado con el id de los pacientes atendidos en consulta para los que todas sus consultas son siempre del mismo médico.\\
+
+    Creamos en primer lugar el siguiente alias.
+    \begin{equation*}
+        \rho(\text{Consulta})=C_1,C_2
+    \end{equation*}
+
+    Los pacientes buscados son los que no han sido atendidos por dos médicos distintos:
+    \begin{equation*}
+        \pi_{\text{id\_paciente}}(\text{Consulta})
+        - \pi_{C_1.\text{id\_paciente}}\left(\sigma_{\substack{C_1.\text{id\_paciente}=C_2.\text{id\_paciente}\\\land \\ C_1.\text{id\_médico}\neq C_2.\text{id\_médico}}}(C_1\times C_2)\right)
+    \end{equation*}
+\end{ejercicio}
+
+\begin{ejercicio}[AR]
+    Elaborar un listado de países con una única aseguradora.\\
+    Creamos en primer lugar el siguiente alias.
+    \begin{equation*}
+        \rho(\text{Aseguradora})=A_1,A_2
+    \end{equation*}
+
+    Los pacientes buscados son los que no han sido atendidos por dos médicos distintos:
+    \begin{equation*}
+        \pi_{\text{país}}(\text{Aseguradora})
+        - \pi_{A_1.\text{país}}\left(\sigma_{\substack{A_1.\text{país}=A_2.\text{país}\\\land \\ A_1.\text{id\_aseguradora}\neq A_2.\text{id\_aseguradora}}}(A_1\times A_2)\right)
+    \end{equation*}
+\end{ejercicio}
+
+
+\end{document}
