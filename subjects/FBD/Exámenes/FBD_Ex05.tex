@@ -1,0 +1,444 @@
+\documentclass[12pt]{article}
+
+\input{../../_assets/preambulo.tex}
+\usetikzlibrary{er, fit}
+
+\newcommand{\key}[1]{\ul{#1}}
+
+% Definición de estilos
+\tikzset{atributo/.style={attribute}}
+\tikzset{entidad/.style={entity}}
+\tikzset{relacion/.style={relationship}}
+\tikzset{atributo derivado/.style={attribute, dashed}}
+\tikzset{union discriminante/.style={dashed}}
+\tikzset{entidad debil/.style={entidad, double distance=1.5 pt}}
+\tikzset{participacion obligatoria/.style={double distance=1.5 pt}}
+\tikzset{herencia/.style={draw, isosceles triangle, isosceles triangle apex angle=60, shape border rotate=230, minimum height=1cm, minimum width=1cm, fill=blue!20}}
+\tikzset{agregacion/.style={draw, fit=#1, inner sep=0.5em}}
+
+
+% Estilos estéticos
+\tikzset{every entity/.style={draw=orange, fill=orange!20}}
+\tikzset{every attribute/.style={draw=purple, fill=purple!20, font=\footnotesize}}
+\tikzset{every relationship/.style={draw=green, fill=green!20, minimum height=2cm, minimum width=2cm}}
+
+\begin{comment}
+    \begin{tikzpicture}[node distance=6 em]
+        \node [entidad](person){Person};
+        \node [atributo derivado](pid) at (0.8,-2){\key{ID}} edge (person);
+        \node [atributo](name) at (-0.8, -2) {Name} edge (person);
+        \node [atributo](phone)[left of=person]{Phone} edge[union discriminante] (person);
+        \node [atributo](address)[above left of=person]{Address} edge[-stealth] (person);
+        \node [atributo](street)[above left of=address]{Street} edge (address);
+        \node [atributo](city)[left of=address]{City} edge (address);
+        \node [atributo](age)[above of=person]{Age} edge (person);
+        \node [relacion](uses)[right of=person]{Uses} edge[participacion obligatoria] (person);
+        \node [entidad debil](tool)[right of=uses]{Tool} edge (uses);
+        \node [atributo](tid)[right of=tool]{\key{ID}} edge[Stealth-Stealth] (tool);
+        \node [atributo](tname)[below of=tool]{Name} edge (tool);
+    
+        % Línea desde encima de Name hasta encima de ID
+        \draw ([yshift=1em]name.north) -- ([yshift=1em]pid.north) node[circle, fill, inner sep=1.5pt] {};
+    
+        \node[agregacion=(A) (B) (R)] (box) {};
+    
+        \node [herencia, below of= B](H){} edge (B);
+    \end{tikzpicture}
+\end{comment}
+
+% ---------------------------------------------------
+\tikzset{
+    CP/.style={
+        overlay, text opacity=0, fill opacity=0,
+        append after command={
+            \pgfextra{
+                \draw[thick] (\tikzlastnode.south west) -- (\tikzlastnode.south east);
+                \node[below=0ex of \tikzlastnode] {CP};
+            }
+        }
+    },
+    CC/.style={
+        overlay, text opacity=0, fill opacity=0,
+        append after command={
+            \pgfextra{
+                \draw[thick] (\tikzlastnode.south west) -- (\tikzlastnode.south east);
+                \node[below=0ex of \tikzlastnode] {CC};
+            }
+        }
+    },
+    CE/.style={
+        overlay, text opacity=0, fill opacity=0,
+        append after command={
+            \pgfextra{
+                \draw[thick, purple] (\tikzlastnode.north west) -- (\tikzlastnode.north east);
+                \node[above=0ex of \tikzlastnode, text=purple] {CE};
+            }
+        }
+    }
+}
+
+
+\begin{document}
+
+    % 1. Foto de fondo
+    % 2. Título
+    % 3. Encabezado Izquierdo
+    % 4. Color de fondo
+    % 5. Coord x del titulo
+    % 6. Coord y del titulo
+    % 7. Fecha
+
+    
+    \input{../../_assets/portada}
+    \portadaExamen{etsiitA4.jpg}{FBD\\Examen V}{FBD. Examen V}{MidnightBlue}{-8}{28}{2024-2025}{Arturo Olivares Martos}
+
+    \begin{description}
+        \item[Asignatura] Fundamentos de Bases de Datos.
+        \item[Curso Académico] 2020-21.
+        %\item[Grado] Doble Grado en Ingeniería Informática y Matemáticas.
+        %\item[Grupo] Único.
+        %\item[Profesor] Nicolás Marín Ruiz.
+        \item[Descripción] Convocatoria Extraordinaria. Práctico Parcial 2 (Seminarios 3-4).
+        %\item[Fecha] 8 de noviembre de 2021.
+        % \item[Duración] 60 minutos.
+    
+    \end{description}
+    \newpage
+
+\section{Modelo 1}\label{sec:modelo1}
+Considerar el esquema relacional de la Figura~\ref{fig:modelo1}, donde cada paciente tiene asignada una aseguradora que cubre sus gastos médicos. La tabla \verb|Consulta| almacena citas en las que un médico ha atendido a un paciente en una fecha dada.
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=4 em]
+        \node (aseguradora) {Asegura(id\_aseguradora, nombre\_aseguradora, país)};
+        \node (paciente) [below of=aseguradora] {Paciente(id\_paciente, nombre\_paciente, id\_aseguradora, fecha\_nacimiento)};
+        \node (medico) [below of=paciente] {Médico(id\_medico, nombre\_medico, especialidad, sueldo)};
+        \node (consulta) [below of=medico] {Consulta(id\_paciente, id\_medico, fecha, precio\_facturado, numero\_horas)};
+
+        \node[CP, xshift=-9ex] (CPAseguradora) at(aseguradora) {id\_aseguradora};
+        \node[CP, xshift=-15ex] (CPMedico) at(medico) {id\_medico};
+        \node[CP, xshift=-21ex] (CPPaciente) at(paciente) {id\_paciente};
+        \node[CP, xshift=-11ex] (CPConsulta) at(consulta) {id\_paciente, id\_medico, fecha};
+
+        \node[CE, xshift=31ex] (CEPaciente) at(CPPaciente) {id\_aseguradora};
+        \node[CE, xshift=-10ex] (CEConsultaPaciente) at(CPConsulta) {id\_paciente};
+        \node[CE, xshift=2ex] (CEConsultaMedico) at(CPConsulta) {id\_medico};
+
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEPaciente) {(1)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEConsultaPaciente) {(2)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEConsultaMedico) {(3)};
+
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPAseguradora) {(1)};
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPMedico) {(3)};
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPPaciente) {(2)};
+    \end{tikzpicture}
+    \caption{Esquema relacional del Modelo~\ref{sec:modelo1}.}
+    \label{fig:modelo1}
+\end{figure}
+
+\begin{ejercicio}[SQL]
+    Encontrar el id del paciente y el id de la aseguradora de los pacientes atendidos en consulta para los que el precio más alto de sus consultas es más bajo que el precio facturado medio del paciente de código \verb|PAC01|.
+    \begin{minted}{sql}
+        SELECT id_paciente, id_aseguradora, MAX(precio_facturado)
+            FROM paciente NATURAL JOIN consulta
+            GROUP BY id_paciente, id_aseguradora
+            HAVING MAX(precio_facturado) < (
+                SELECT AVG(precio_facturado)
+                    FROM consulta
+                    GROUP BY id_paciente
+                    HAVING id_paciente = 'PAC01'
+            );
+    \end{minted}
+\end{ejercicio}
+
+
+\begin{ejercicio}[SQL]
+    Encontrar el id y el nombre de los médicos que, no habiendo atendido en consulta nunca a un paciente asegurado por la aseguradora de id \verb|MAP01|, han atendido al menos una consulta en los tres primeros meses de 2017.\\
+    \begin{minted}{sql}
+        SELECT id_medico, nombre_medico
+            FROM medico
+            WHERE id_medico IN (
+                SELECT id_medico
+                    FROM consulta
+                    WHERE TO_CHAR(fecha, 'MM/YYYY')
+                        BETWEEN TO_DATE('01/2017', 'MM/YYYY') AND TO_DATE('03/2017', 'MM/YYYY')
+                MINUS
+                SELECT id_medico
+                    FROM consulta NATURAL JOIN paciente
+                    WHERE id_aseguradora = 'MAP01'
+            );
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}[AR]
+    Encontrar, para cada médico que ha atendido en consulta, el precio más alto que ha facturado. Es suficiente con mostrar el id del médico, junto al precio facturado.\\
+
+    Establecemos los siguientes alias:
+    \begin{equation*}
+        \rho(\text{Consulta})=C_1,C_2
+    \end{equation*}
+    
+    Busquemos en primer lugar, para cada médico, los precios que no son candidatos a ser el precio más alto facturado por un médico.
+    \begin{equation*}
+        \pi_{\substack{C_1.\text{id\_médico}\\C_1.\text{precio\_facturado}}}\left(\sigma_{\substack{C_1.\text{id\_médico}=C_2.\text{id\_médico}\\\land\\C_1.\text{precio\_facturado}<C_2.\text{precio\_facturado}}}(C_1\times C_2)\right)
+    \end{equation*}
+
+    Por tanto, el precio más alto facturado por cada médico es:
+    \begin{equation*}
+        \pi_{\substack{\text{id\_médico}\\\text{precio\_facturado}}}\left(\text{Consulta}\right)
+        -
+        \pi_{\substack{C_1.\text{id\_médico}\\C_1.\text{precio\_facturado}}}\left(\sigma_{\substack{C_1.\text{id\_médico}=C_2.\text{id\_médico}\\\land\\C_1.\text{precio\_facturado}<C_2.\text{precio\_facturado}}}(C_1\times C_2)\right)
+    \end{equation*}
+\end{ejercicio}
+
+
+\newpage
+\section{Modelo 2}\label{sec:modelo2}
+
+Considerar el esquema relacional de la Figura~\ref{fig:modelo2}, donde cada proyecto tiene asignada la empresa que lo elabora. La tabla \verb|Revisión| registra revisiones indicando qué revisor revisa qué proyecto en qué fecha.
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=4 em]
+        \node (empresa) {Empresa(id\_empresa, nombre\_empresa, país)};
+        \node (proyecto) [below of=empresa] {Proyecto(id\_proyecto, titulo, id\_empresa, fecha\_elaboracion)};
+        \node (revisor) [below of=proyecto] {Revisor(id\_revisor, nombre\_revisor, categoria, tarifa)};
+        \node (revision) [below of=revisor] {Revisión(id\_revisor, id\_proyecto, fecha, puntuacion)};
+
+        \node[CP, xshift=-7ex] (CPEmpresa) at(empresa) {id\_empresa};
+        \node[CP, xshift=-13ex] (CPRevisor) at(revisor) {id\_revisor};
+        \node[CP, xshift=-14ex] (CPProyecto) at(proyecto) {id\_proyecto};
+        \node[CP, xshift=-2ex] (CPRevision) at(revision) {id\_revisor, id\_proyecto, fecha};
+
+        \node[CE, xshift=19ex] (CEProyecto) at(CPProyecto) {id\_empresa};
+        \node[CE, xshift=-10ex] (CERevisionRevisor) at(CPRevision) {id\_revisor};
+        \node[CE, xshift=2ex] (CERevisionProyecto) at(CPRevision) {id\_proyecto};
+
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEProyecto) {(1)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CERevisionRevisor) {(2)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CERevisionProyecto) {(3)};
+
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPEmpresa) {(1)};
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPRevisor) {(2)};
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPProyecto) {(3)};
+    \end{tikzpicture}
+    \caption{Esquema relacional del Modelo~\ref{sec:modelo2}.}
+    \label{fig:modelo2}
+\end{figure}
+
+\begin{ejercicio}[SQL]
+    Encontrar el id y el nombre de los revisores que, no habiendo revisado nunca un proyecto de la empresa con id \verb|EMP04|, han hecho al menos una revisión en los primeros seis meses de 2018.
+    \begin{minted}{sql}
+        SELECT nombre_revisor, id_revisor
+            FROM revisor
+            WHERE id_revisor IN (
+                SELECT id_revisor
+                    FROM revisión
+                    WHERE TO_CHAR(fecha, 'MM/YYYY')
+                        BETWEEN TO_DATE('01/2018', 'MM/YYYY') AND TO_DATE('06/2018', 'MM/YYYY')
+                MINUS
+                SELECT id_revisor
+                    FROM revisión NATURAL JOIN proyecto
+                    WHERE id_empresa = 'EMP04'
+            );
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}[AR]
+    Encontrar, para cada proyecto revisado, la puntuación más baja que ha obtenido en sus revisiones. Es suficiente con mostrar el id del proyecto, junto a la puntuación solicitada.\\
+
+    Establecemos los siguientes alias:
+    \begin{equation*}
+        \rho(\text{Revisión})=R_1,R_2
+    \end{equation*}
+
+    Busquemos en primer lugar, para cada proyecto, las puntuaciones que no son candidatas a ser la puntuación más baja obtenida por un proyecto.
+    \begin{equation*}
+        \pi_{\substack{R_1.\text{id\_proyecto}\\R_1.\text{puntuación}}}\left(\sigma_{\substack{R_1.\text{id\_proyecto}=R_2.\text{id\_proyecto}\\\land\\R_1.\text{puntuación}>R_2.\text{puntuación}}}(R_1\times R_2)\right)
+    \end{equation*}
+
+    Por tanto, la puntuación más baja obtenida por cada proyecto es:
+    \begin{equation*}
+        \pi_{\substack{\text{id\_proyecto}\\\text{puntuación}}}\left(\text{Revisión}\right)
+        -
+        \pi_{\substack{R_1.\text{id\_proyecto}\\R_1.\text{puntuación}}}\left(\sigma_{\substack{R_1.\text{id\_proyecto}=R_2.\text{id\_proyecto}\\\land\\R_1.\text{puntuación}>R_2.\text{puntuación}}}(R_1\times R_2)\right)
+    \end{equation*}
+\end{ejercicio}
+
+
+\newpage
+\section{Modelo 3}\label{sec:modelo3}
+
+Considerar el esquema relacional de la Figura~\ref{fig:modelo3}, donde cada vehículo tiene asignado un modelo de una marca determinada. La tabla \verb|Repara| registra reparaciones indicando qué mecánico repara qué vehículo en qué fecha.
+\begin{figure}[H]
+    \centering
+    \resizebox{1.1\textwidth}{!}{
+        \begin{tikzpicture}[node distance=15em]
+            \node(modelo) {Modelo(id\_modelo, marca, descripcion)};
+            \node(vehiculo)[right of=modelo, xshift=7em] {Vehículo(matrícula, id\_modelo, fecha\_matriculación)};
+            \node(mecanico)[below of=modelo, yshift=10em] {Mecánico(id\_mecánico, nombre\_mecánico, cargo, salario)};
+            \node(repara)[right of=mecanico, xshift=10em] {Repara(id\_mecánico, matrícula, fecha, número\_horas)};
+
+            \node[CP, xshift=-6ex] (CP_modelo) at(modelo) {id\_modelo};
+            \node[CP, xshift=-12ex] (CP_vehiculo) at(vehiculo) {matrícula};
+            \node[CP, xshift=-11.5ex] (CP_mecanico) at(mecanico) {id\_mecánico};
+            \node[CP, xshift=-3.5ex] (CP_repara) at(repara) {id\_mecánico, matrícula, fecha};
+
+            \node[CE, xshift=11ex] (CE_vehiculo) at(CP_vehiculo) {id\_modelo};
+            \node[CE, xshift=-10ex] (CE_repara_mecanico) at(CP_repara) {id\_mecánico};
+            \node[CE, xshift=3ex] (CE_repara_vehiculo) at(CP_repara) {matrícula};
+
+            \node[yshift=1.4em, xshift=1.4em, purple] at (CE_vehiculo) {(1)};
+            \node[yshift=1.4em, xshift=1.4em, purple] at (CE_repara_mecanico) {(2)};
+            \node[yshift=1.4em, xshift=1.4em, purple] at (CE_repara_vehiculo) {(3)};
+
+            \node[yshift=-1.4em, xshift=1.4em, purple] at (CP_modelo) {(1)};
+            \node[yshift=-1.4em, xshift=1.4em, purple] at (CP_mecanico) {(2)};
+            \node[yshift=-1.4em, xshift=1.4em, purple] at (CP_vehiculo) {(3)};
+
+        \end{tikzpicture}
+    }
+    \caption{Esquema relacional del Modelo~\ref{sec:modelo3}.}
+    \label{fig:modelo3}
+\end{figure}
+
+\begin{ejercicio}[SQL]
+    Encontrar la matrícula y el id del modelo de los vehículos reparados para los que la duración más corta de sus reparaciones es más alta que la duración media de las reparaciones del vehículo con matrícula \verb|1234|.
+
+    \begin{minted}{sql}
+        SELECT matrícula, id_modelo
+            FROM vehículo NATURAL JOIN repara
+            GROUP BY matrícula, id_modelo
+            HAVING MIN(número_horas) > (
+                SELECT AVG(número_horas)
+                    FROM repara
+                    WHERE matrícula = '1234'
+                    GROUP BY matrícula
+            );
+    \end{minted}
+\end{ejercicio}
+
+
+\begin{ejercicio}[SQL]
+    Encontrar la matrícula y la fecha de matriculación de los vehículos reparados para los que la fecha más reciente de reparación es anterior a la reparación más antigua del vehículo con matrícula \verb|5678| (recuerde que, en SQL, las fechas más recientes son mayores que las más antiguas).
+    \begin{minted}{sql}
+        SELECT matrícula, fecha_matriculación
+            FROM vehículo NATURAL JOIN repara
+            GROUP BY matrícula, fecha_matriculación
+            HAVING MAX(fecha) < (
+                SELECT MIN(fecha)
+                    FROM repara
+                    WHERE matrícula = '5678'
+                    GROUP BY matrícula
+            );
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}[SQL]
+    Encontrar el id y el nombre de los mecánicos que, no habiendo reparado nunca un coche con id de modelo \verb|AURIS|, han hecho al menos una reparación en los últimos seis meses de 2020.
+    \begin{minted}{sql}
+        SELECT id_mecánico, nombre_mecánico
+            FROM mecánico
+            WHERE id_mecánico IN (
+                SELECT id_mecánico
+                    FROM repara
+                    WHERE TO_CHAR(fecha, 'MM/YYYY')
+                        BETWEEN TO_DATE('07/2020', 'MM/YYYY') AND TO_DATE('12/2020', 'MM/YYYY')
+                MINUS
+                SELECT id_mecánico
+                    FROM repara NATURAL JOIN vehículo
+                    WHERE id_modelo = 'AURIS'
+            );
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}[AR]
+    Encontrar, para cada modelo, la fecha de matriculación más reciente de vehículos de ese modelo (considere un orden en las fechas, en las que las más recientes son mayores que las más antiguas). Es suficiente con mostrar el id del modelo, junto a la fecha solicitada.\\
+
+    Establecemos los siguientes alias:
+    \begin{equation*}
+        \rho\left(\pi_{\substack{\text{id\_modelo}\\\text{fecha\_matriculación}}}\left(\text{Vehículo}\right)\right)=V_1,V_2
+    \end{equation*}
+
+    Busquemos en primer lugar, para cada modelo, las fechas que no son candidatas a ser la fecha de matriculación más reciente de un vehículo de ese modelo.
+    \begin{equation*}
+        \pi_{\substack{V_1.\text{id\_modelo}\\V_1.\text{fecha\_matriculación}}}\left(\sigma_{\substack{V_1.\text{id\_modelo}=V_2.\text{id\_modelo}\\\land\\V_1.\text{fecha\_matriculación}<V_2.\text{fecha\_matriculación}}}(V_1\times V_2)\right)
+    \end{equation*}
+
+    Por tanto, la fecha de matriculación más reciente de cada modelo es:
+    \begin{equation*}
+        \pi_{\substack{\text{id\_modelo}\\\text{fecha\_matriculación}}}\left(\text{Vehículo}\right)
+        -
+        \pi_{\substack{V_1.\text{id\_modelo}\\V_1.\text{fecha\_matriculación}}}\left(\sigma_{\substack{V_1.\text{id\_modelo}=V_2.\text{id\_modelo}\\\land\\V_1.\text{fecha\_matriculación}<V_2.\text{fecha\_matriculación}}}(V_1\times V_2)\right)
+    \end{equation*}
+\end{ejercicio}
+
+
+\newpage
+\section{Modelo 4}\label{sec:modelo4}
+
+Considerar el esquema relacional de la Figura~\ref{fig:modelo4}, donde cada grupo musical tiene asignado un género musical. La tabla \verb|Actuación| registra
+actuaciones indicando qué grupo actúa en qué población y cuándo.
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=4 em]
+        \node (genero) {Género(id\_género, nombre\_género, país\_origen)};
+        \node (grupo) [below of=genero] {Grupo(id\_grupo, nombre\_grupo, id\_género, fecha\_creación)};
+        \node (poblacion) [below of=grupo] {Población(id\_población, nombre\_población, número, habitantes)};
+        \node (actuacion) [below of=poblacion] {Actuación(id\_poblacion, id\_grupo, fecha, duración)};
+
+        \node[CP, xshift=-10ex] (CPGenero) at(genero) {id\_genero};
+        \node[CP, xshift=-14.5ex] (CPPoblacion) at(poblacion) {id\_poblacion};
+        \node[CP, xshift=-17ex] (CPGrupo) at(grupo) {id\_grupo};
+        \node[CP, xshift=0ex] (CPActuacion) at(actuacion) {id\_poblacion, id\_grupo, fecha};
+
+        \node[CE, xshift=25ex] (CEGenero) at(CPGrupo) {id\_genero};
+        \node[CE, xshift=-9ex] (CEActuacionPoblacion) at(CPActuacion) {id\_población};
+        \node[CE, xshift=4ex] (CEActuacionGrupo) at(CPActuacion) {id\_grupo};
+
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEGenero) {(1)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEActuacionPoblacion) {(2)};
+        \node[yshift=1.5em, xshift=1.5em, purple] at (CEActuacionGrupo) {(3)};
+
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPGenero) {(1)};
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPPoblacion) {(2)};
+        \node[yshift=-1.5em, xshift=1.5em, purple] at (CPGrupo) {(3)};
+    \end{tikzpicture}
+    \caption{Esquema relacional del Modelo~\ref{sec:modelo4}.}
+    \label{fig:modelo4}
+\end{figure}
+
+\begin{ejercicio}[SQL]
+    Encuentre el id y la fecha de creación de los grupos con actuaciones para los que la fecha más reciente de actuación es anterior a la actuación más antigua del grupo de código \verb|GRUP77| (recuerde que, en SQL, las fechas más recientes son mayores que las más antiguas).
+    \begin{minted}{sql}
+        SELECT id_grupo, fecha_creación
+            FROM grupo
+            WHERE id_grupo IN (
+                SELECT id_grupo
+                    FROM actuación
+                    GROUP BY id_grupo
+                    HAVING MAX(fecha) < (
+                        SELECT MIN(fecha)
+                            FROM actuación
+                            WHERE id_grupo = 'GRUP77'
+                            GROUP BY id_grupo
+                    )
+            );
+    \end{minted}
+\end{ejercicio}
+
+\begin{ejercicio}[AR]
+    Elaborar un listado de los países que han dado origen a un solo género musical.\\
+
+    Creamos en primer lugar el siguiente alias.
+    \begin{equation*}
+        \rho(\text{Género})=G_1,G_2
+    \end{equation*}
+
+    Los países buscados son los que no han dado origen a dos géneros musicales distintos:
+    \begin{equation*}
+        \pi_{\text{país}}(\text{Género})
+        - \pi_{G_1.\text{país}}\left(\sigma_{\substack{G_1.\text{país}=G_2.\text{país}\\\land \\ G_1.\text{id\_género}\neq G_2.\text{id\_género}}}(G_1\times G_2)\right)
+    \end{equation*}
+\end{ejercicio}
+
+\end{document}
