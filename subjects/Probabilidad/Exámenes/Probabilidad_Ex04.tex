@@ -3,6 +3,8 @@
 \input{../../_assets/preambulo.tex}
 \usepgfplotslibrary{fillbetween}
 
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Cov}{Cov}
 \begin{document}
 
     % 1. Foto de fondo
@@ -35,21 +37,342 @@
         \begin{equation*}
             C = \{(x,y)\in \mathbb{R}^2 \mid y-x<1 \ \land \ x<0,\ y>0\}
         \end{equation*}
-        \begin{enumerate}[label=\alph*)]
+        \begin{enumerate}
             \item \textbf{(0.25 puntos)} Obtener la función de densidad conjunta.
+            
+            Veamos el conjunto $C$ gráficamente en la Figura~\ref{fig:conjuntoC}.
+            \begin{figure}[H]
+                \centering
+                \begin{tikzpicture}
+                    \begin{axis}[
+                        axis lines = center,
+                        xlabel = $x$,
+                        ylabel = $y$,
+                        xmin = -2,
+                        xmax = 1,
+                        ymin = -1,
+                        ymax = 2,
+                        xtick = {-1},
+                        ytick = {1},
+                        xticklabels = {$-1$},
+                        yticklabels = {$1$},
+                        legend pos=north east,
+                        axis equal,
+                    ]
+                    \addplot [
+                        domain=-2:2,
+                        samples=2,
+                        color=red,
+                        style=dashed,
+                    ] {x+1};
+                    \addlegendentry{$y-x=1$}
+
+
+                    % Zona R0
+                    % (-1,0) (-1,5) (-3,5) (-3,-5) (2,-5) (2,0) (-1,0)
+                    \addplot [
+                        fill=gray,
+                        fill opacity=0.5,
+                        draw=none,
+                        forget plot,
+                    ] coordinates {(-1,0) (-1,5) (-3,5) (-3,-5) (2,-5) (2,0) (-1,0)};
+                    \node at (axis cs:-0.5,-0.5) {$R_0$};
+
+                    % Zona R1 (C)
+                    % (-1,0) (0,0) (0,1)
+                    \addplot [
+                        fill=orange,
+                        fill opacity=0.5,
+                        draw=none,
+                    ] coordinates {(-1,0) (0,0) (0,1)};
+                    \node at (axis cs:-0.3,0.3) {$R_1 (C)$};
+
+                    % Zona R2
+                    % (-1,0) (-1,4) (0,4) (0,0)
+                    \addplot [
+                        fill=blue,
+                        fill opacity=0.5,
+                        draw=none,
+                        forget plot,
+                    ] coordinates {(-1,0) (-1,4) (0,4) (0,1)};
+                    \node at (axis cs:-0.65,1) {$R_2$};
+
+                    % Zona R3
+                    % (0,0) (0,1) (2,1) (2,0)
+                    \addplot [
+                        fill=green,
+                        fill opacity=0.5,
+                        draw=none,
+                        forget plot,
+                    ] coordinates {(0,0) (0,1) (2,1) (2,0)};
+                    \node at (axis cs:0.7,0.5) {$R_3$};
+
+                    % Zona R4
+                    % (0,1) (0,4) (2,4) (2,1)
+                    \addplot [
+                        fill=yellow,
+                        fill opacity=0.5,
+                        draw=none,
+                        forget plot,
+                    ] coordinates {(0,1) (0,4) (2,4) (2,1)};
+                    \node at (axis cs:0.7,1.3) {$R_4$};                    
+                    \end{axis}
+                \end{tikzpicture}
+                \caption{Conjunto $C$.}
+                \label{fig:conjuntoC}
+            \end{figure}
+
+            Como se distribuye uniformemente, la función de densidad conjunta es constante en la región $C$ y nula en el resto del plano. Por tanto, la función de densidad conjunta es:
+            \begin{equation*}
+                f_{X,Y}(x,y) = \begin{cases}
+                    k & \text{si } (x,y) \in C \\
+                    0 & \text{en otro caso}
+                \end{cases}
+            \end{equation*}
+
+            Para obtener la constante $k$, calculamos la integral de la función de densidad conjunta en la región $C$:
+            \begin{align*}
+                1 &= \int_{\bb{R}^2} f_{X,Y} = \int_{C} k = k\lm(C) = k\cdot \frac{1}{2}\Longrightarrow
+                k = 2
+            \end{align*}
             \item \textbf{(1.50 puntos)} Obtener la función de distribución de probabilidad conjunta.
+            \begin{observacion}
+                Se obtiene \textbf{hasta 1 punto} si las integrales se dejan indicadas y \textbf{hasta 1.5 puntos} si se obtienen sus primitivas de forma explícita.
+            \end{observacion}
+
+            Estudiamos cada uno de los casos en función de los valores de $x$ e $y$:
+            \begin{itemize}
+                \item \ul{$Si (x,y)\in R_0$} ($x<-1$ o $y<0$):
+                \begin{align*}
+                    F_{X,Y}(x,y) &= \int_{-\infty}^{x}\int_{-\infty}^{y} f_{X,Y}(u,v) \ du \ dv
+                    = \int_{-\infty}^{x}\int_{-\infty}^{y} 0 \ du \ dv = 0
+                \end{align*}
+
+                \item \ul{$Si (x,y)\in R_1$} ($-1\leq x<0$ y $0\leq y<1-x$):
+                \begin{align*}
+                    F_{X,Y}(x,y) &= \int_{-\infty}^{x}\int_{-\infty}^{y} f_{X,Y}(u,v) \ du \ dv
+                    = \int_{-1}^{y-1}\int_{0}^{u+1} 2 \ du \ dv + \int_{y-1}^{x}\int_{0}^{y} 2 \ du \ dv
+                    =\\&= 2\int_{-1}^{y-1} (u+1) \ du + 2\int_{y-1}^{x} y \ du
+                    = 2\left[\frac{u^2}{2}+u\right]_{-1}^{y-1} + 2y\left[u\right]_{y-1}^{x}
+                    =\\&= 2\left[\frac{(y-1)^2}{2} + y-1-\frac{1}{2}+1\right] + 2y(x-y+1)
+                    =\\&= (y-1)^2 + 2(y-1) + 1 + 2y(x-y+1)
+                    =\\&= (y-1+1)^2 + 2y(x-y+1) = y^2 + 2y(x-y+1)
+                    =\\&= y^2 + 2xy - 2y^2 + 2y
+                    = -y^2 + 2xy + 2y
+                \end{align*}
+
+                \item \ul{$Si (x,y)\in R_2$} ($-1\leq x<0$ y $y-x\geq 1$):
+                \begin{align*}
+                    F_{X,Y}(x,y) &= \int_{-\infty}^{x}\int_{-\infty}^{y} f_{X,Y}(u,v) \ du \ dv
+                    = \int_{-1}^{x}\int_{0}^{u+1} 2 \ du \ dv
+                    = 2\int_{-1}^{x} (u+1) \ du
+                    =\\&= 2\left[\frac{u^2}{2}+u\right]_{-1}^{x}
+                    = 2\left[\frac{x^2}{2}+x+\frac{1}{2}\right]
+                    = x^2 + 2x + 1 = (x+1)^2
+                \end{align*}
+
+                \item \ul{$Si (x,y)\in R_3$} ($0\leq x$ y $0\leq y<1$):
+                \begin{align*}
+                    F_{X,Y}(x,y) &= \int_{-\infty}^{x}\int_{-\infty}^{y} f_{X,Y}(u,v) \ du \ dv
+                    = \int_{-1}^{y-1}\int_{0}^{u+1} 2 \ du \ dv
+                    + \int_{y-1}^{0}\int_{0}^{y} 2 \ du \ dv
+                    =\\&= 2\int_{-1}^{y-1} (u+1) \ du + 2\int_{y-1}^{0} y \ du
+                    = 2\left[\frac{u^2}{2}+u\right]_{-1}^{y-1} + 2y\left[u\right]_{y-1}^{0}
+                    =\\&= 2\left[\frac{(y-1)^2}{2} + y-1+\frac{1}{2}\right] - 2y(y-1)
+                    =\\&= (y-1)^2 + 2(y-1)+1 - 2y(y-1)
+                    = (y-1+1)^2 - 2y(y-1)
+                    =\\&= y^2 - 2y^2 + 2y = -y^2 + 2y = y(2-y)
+                \end{align*}
+
+                \item \ul{$Si (x,y)\in R_4$} ($0\leq x$ y $1\leq y$):
+                \begin{align*}
+                    F_{X,Y}(x,y) &= \int_{-\infty}^{x}\int_{-\infty}^{y} f_{X,Y}(u,v) \ du \ dv
+                    = 1
+                \end{align*}
+            \end{itemize}
+
+            Por tanto, la función de distribución de probabilidad conjunta es:
+            \begin{equation*}
+                F_{X,Y}(x,y) = \begin{cases}
+                    0 & \text{si } x<-1 \ \lor \ y<0 \qquad (x,y)\in R_0 \\
+                    -y^2 + 2xy + 2y & \text{si } -1\leq x<0 \ \land \ 0\leq y<1-x \qquad (x,y)\in R_1 \\
+                    (x+1)^2 & \text{si } -1\leq x<0 \ \land \ y-x\geq 1 \qquad (x,y)\in R_2 \\
+                    y(2-y) & \text{si } 0\leq x \ \land \ 0\leq y<1 \qquad (x,y)\in R_3 \\
+                    1 & \text{si } 0\leq x \ \land \ 1\leq y \qquad (x,y)\in R_4
+                \end{cases}
+            \end{equation*}
+
+
+            
             \item \textbf{(0.75 puntos)} Obtener las funciones de densidad condicionadas.
+            
+            Para obtener las funciones de densidad condicionadas, calculamos en primer lugar las funciones de densidad marginales. Tenemos que:
+            \begin{align*}
+                f_X(x) &= \int_{-\infty}^{\infty} f_{X,Y}(x,y) \ dy
+                = \int_{0}^{1-x} 2 \ dy = 2\left[y\right]_{0}^{1-x} = 2(1-x) \qquad \forall x\in \left[-1,0\right] \\
+                f_Y(y) &= \int_{-\infty}^{\infty} f_{X,Y}(x,y) \ dx
+                = \int_{y-1}^{0} 2 \ dx = 2\left[x\right]_{y-1}^{0} = 2(1-y) \qquad \forall y\in \left[0,1\right]
+            \end{align*}
+
+            Por tanto, las funciones de densidad condicionadas son:
+            \begin{align*}
+                f_{X\mid Y=y}(x) &= \frac{f_{X,Y}(x,y)}{f_Y(y)} = \frac{2}{2(1-y)} = \frac{1}{1-y} \qquad \forall x\in \left[-1,y^*-1\right], \ y\in \left[0,1\right] \\
+                f_{Y\mid X=x}(y) &= \frac{f_{X,Y}(x,y)}{f_X(x)} = \frac{2}{2(1-x)} = \frac{1}{1-x} \qquad \forall y\in \left[0,1+x\right], \ x\in \left[-1,0\right]
+            \end{align*}
             \item \textbf{(0.25 puntos)} Obtener la probabilidad de que $X-Y > 0$.
+            
+            Tenemos que:
+            \begin{equation*}
+                \left\{(x,y)\in \bb{R}^2 \mid x-y>0\right\}\cap C=\emptyset
+            \end{equation*}
+
+            Por tanto, la probabilidad de que $X-Y>0$ es nula.
             \item \textbf{(0.25 puntos)} Obtener la probabilidad de que $X+Y < 0$.
+            
+            Veamos el conjunto $\left\{(x,y)\in \bb{R}^2 \mid x+y<0\right\}$ gráficamente en la Figura~\ref{fig:conjuntoXY}.
+            \begin{figure}[H]
+                \centering
+                \begin{tikzpicture}
+                    \begin{axis}[
+                        axis lines = center,
+                        xlabel = $x$,
+                        ylabel = $y$,
+                        xmin = -2,
+                        xmax = 1,
+                        ymin = -1,
+                        ymax = 2,
+                        xtick = {-1},
+                        ytick = {1},
+                        xticklabels = {$-1$},
+                        yticklabels = {$1$},
+                        legend pos=north east,
+                        axis equal,
+                    ]
+                    \addplot [
+                        domain=-2:2,
+                        samples=2,
+                        color=red,
+                        style=dashed,
+                    ] {x+1};
+                    \addlegendentry{$y-x=1$}
+
+                    \addplot [
+                        domain=-2:2,
+                        samples=2,
+                        color=blue,
+                        style=dashed,
+                    ] {-x};
+                    \addlegendentry{$x+y=0$}
+
+                    \addplot [
+                        fill=orange,
+                        fill opacity=0.5,
+                        draw=none,
+                    ] coordinates {(-1,0) (0,0) (-0.5,0.5)};
+                    
+                    % Punto en (-0.5,0.5), con etiqueta
+                    \addplot [mark=*] coordinates {(-0.5,0.5)};
+                    \node[left] at (axis cs:-0.5,0.5) {$(\nicefrac{-1}{2},\nicefrac{1}{2})$};
+                    \end{axis}
+                \end{tikzpicture}
+                \caption{Conjunto $\left\{(x,y)\in \bb{R}^2 \mid x+y<0\right\}$.}
+                \label{fig:conjuntoXY}
+            \end{figure}
+
+            Calculamos la probabilidad de que $X+Y<0$:
+            \begin{align*}
+                P[X+Y<0] &= \int_{-1}^{\nicefrac{-1}{2}}\int_{0}^{1+x} 2 \ dy \ dx + \int_{\nicefrac{-1}{2}}^{0}\int_{0}^{-x} 2 \ dy \ dx
+                =\\&= 2\int_{-1}^{\nicefrac{-1}{2}} (1+x) \ dx + 2\int_{\nicefrac{-1}{2}}^{0} -x \ dx
+                = 2\left[\frac{x^2}{2}+x\right]_{-1}^{\nicefrac{-1}{2}} + 2\left[-\frac{x^2}{2}\right]_{\nicefrac{-1}{2}}^{0}
+                =\\&= 2\left[\frac{1}{8}-\frac{1}{2}-\frac{1}{2}+1\right] + 2\left[0+\frac{1}{8}\right]
+                = 2\cdot 2\cdot \frac{1}{8} = \frac{1}{2}
+            \end{align*}
             \item \textbf{(1.50 puntos)} Obtener la mejor aproximación minimo cuadrática a la variable aleatoria $Y$ conocidos los valores de la variable $X$ y el error cuadrático medio de esta aproximación.
-            \item \textbf{(0.50 puntos)} Obtener una medida de la bondad del ajuste del apartado anterior.
+            
+            Para obtener la mejor aproximación mínimos cuadrados de la variable aleatoria $Y$ conocidos los valores de la variable $X$, calculamos la curva de regresión de $Y$ sobre $X$. Para ello, tenemos que:
+            \begin{align*}
+                E[Y\mid X=x] &= \int_{-\infty}^{\infty} y\cdot f_{Y\mid X=x}(y) \ dy
+                = \int_{0}^{1+x} y\cdot \frac{1}{1+x} \ dy
+                = \frac{1}{1+x}\int_{0}^{1+x} y \ dy
+                =\\&= \frac{1}{1+x}\left[\frac{y^2}{2}\right]_{0}^{1+x}
+                = \frac{1}{1+x}\cdot \frac{(1+x)^2}{2}
+                = \frac{1+x}{2}
+            \end{align*}
+
+            Por tanto, la mejor aproximación mínimos cuadrados de la variable aleatoria $Y$ conocidos los valores de la variable $X$ es:
+            \begin{equation*}
+                E[Y\mid X] = \frac{1+X}{2}
+            \end{equation*}
+
+            Para calcular el error cuadrático medio de esta aproximación, tenemos que:
+            \begin{align*}
+                \text{E.C.M.}(E[Y\mid X]) &= E[(Y-E[Y\mid X])^2]
+                = E\left[\left(Y-\frac{1+X}{2}\right)^2\right]
+                =\\&= E\left[Y^2 - Y(1+X) + \frac{(1+X)^2}{4}\right]
+                =\\&= E[Y^2] - E[Y]-E[XY] + \frac{1}{4}E[X^2] + \frac{1}{2}E[X] + \frac{1}{4}
+            \end{align*}
+
+            De forma análoga, tenemos que:
+            \begin{align*}
+                \text{E.C.M.}(E[Y\mid X]) &= E[\Var[Y\mid X]]
+                = E[E[Y^2\mid X] - E^2[Y\mid X]]
+                = E[Y^2] - E\left[\left(E[Y\mid X]\right)^2\right]
+                =\\&= E[Y^2] - E\left[\left(\frac{1+X}{2}\right)^2\right]
+            \end{align*}
+
+            Como podemos ver, en este caso se trata del cálculo de menos esperanzas, por lo que nos decantamos por esta opción.
+            \begin{align*}
+                E[Y^2] &= \int_{-\infty}^{\infty} y^2\cdot f_Y(y) \ dy
+                = 2\int_{0}^{1} y^2(1-y) \ dy
+                = 2\int_{0}^{1} y^2-y^3 \ dy
+                =\\&= 2\left[\frac{y^3}{3}-\frac{y^4}{4}\right]_{0}^{1}
+                = \frac{2}{3}-\frac{1}{2} = \frac{1}{6} \\
+                E\left[\left(\frac{1+X}{2}\right)^2\right] &= \frac{1}{4}\int_{-1}^{0} \left(1+x\right)^2\cdot 2(1+x) \ dx
+                = \frac{1}{2}\int_{-1}^{0} (1+x)^3 \ dx
+                = \frac{1}{2}\left[\frac{(1+x)^4}{4}\right]_{-1}^{0}
+                = \frac{1}{8}
+            \end{align*}
+
+            Por tanto, el error cuadrático medio de la mejor aproximación mínimos cuadrados de la variable aleatoria $Y$ conocidos los valores de la variable $X$ es:
+            \begin{equation*}
+                \text{E.C.M.}(E[Y\mid X]) = E[Y^2] - E\left[\left(\frac{1+X}{2}\right)^2\right] = \frac{1}{6} - \frac{1}{8} = \frac{1}{24}
+            \end{equation*}
+            \item \textbf{(0.50 puntos)} Obtener una medida de la bondad del ajuste del apartado anterior.\\
+            
+            Para obtener una medida de la bondad del ajuste del apartado anterior, calculamos el coeficiente de determinación. Para ello, tenemos que:
+            \begin{align*}
+                \eta^2_{Y / X} &= \frac{\Var[E[Y\mid X]]}{\Var[Y]}
+                = 1-\frac{\text{E.C.M.}(E[Y\mid X])}{\Var[Y]}
+            \end{align*}
+
+            Calculamos la varianza de $Y$:
+            \begin{align*}
+                E[Y] &= \int_{-\infty}^{\infty} y\cdot f_Y(y) \ dy
+                = 2\int_{0}^{1} y(1-y) \ dy
+                = 2\int_{0}^{1} y-y^2 \ dy
+                =\\&= 2\left[\frac{y^2}{2}-\frac{y^3}{3}\right]_{0}^{1}
+                = 2\left[\frac{1}{2}-\frac{1}{3}\right]
+                = \frac{1}{3} \\
+                E[Y^2] &= \frac{1}{6} \\
+                \Var[Y] &= E[Y^2] - E^2[Y] = \frac{1}{6} - \left(\frac{1}{3}\right)^2 = \frac{1}{18}
+            \end{align*}
+
+            Por tanto, el coeficiente de determinación es:
+            \begin{align*}
+                \eta^2_{Y / X} &= 1-\frac{\text{E.C.M.}(E[Y\mid X])}{\Var[Y]}
+                = 1-\frac{\nicefrac{1}{24}}{\nicefrac{1}{18}}
+                = 1-\frac{3}{4}
+                = \frac{1}{4}
+            \end{align*}
+
+            Por tanto, la bondad del ajuste es del 25\%. Como vemos, no se trata de un ajuste de muy buena calidad.
         \end{enumerate}
     \end{ejercicio}
 
     \begin{ejercicio}[1 puntos]
         Dado un vector aleatorio $(X,Y)$ con función generatriz de momentos
         \begin{equation*}
-            M_{(X,Y)}(t_1,t_2) = exp\left(\dfrac{t_2+16t_1^2 + 4t_2^2 + 10t_1t_2}{2}\right)
+            M_{(X,Y)}(t_1,t_2) = \exp\left(\dfrac{t_2+16t_1^2 + 4t_2^2 + 10t_1t_2}{2}\right)
         \end{equation*}
         \begin{enumerate}[label=\alph*)]
             \item \textbf{(0.25 puntos)} Obtener la razón de correlación y el coeficiente de correlación lineal de las variables $(X,Y)$.
@@ -69,13 +392,6 @@
     \begin{ejercicio}[1 punto]
         Sean $X_1$, $X_2$, \ldots, $X_n$ $n$ variables aleatorias independientes e identicamente distribuidas según una ley uniforme en el intervalo $[0,\theta]$ con $\theta > 0$. Se considera la sucesión de variables aleatorias cuyo término general es de la forma $X_{(n)} = \max\{X_1, X_2, \ldots, X_n\}$. Probar que la sucesión anterior converge en ley a una variable aleatoria degenerada en $\theta$.
     \end{ejercicio}
-
-    \begin{observacion}
-        A tener en cuenta:
-        \begin{itemize}
-            \item En el \textbf{apartado 1.b} se obtiene \textbf{hasta 1 punto} si las integrales se dejan indicadas y \textbf{hasta 1.5 puntos} si se obtienen sus primitivas de forma explícita.
-        \end{itemize}
-    \end{observacion}
 
 
 \end{document}
