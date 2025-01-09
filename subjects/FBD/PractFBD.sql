@@ -1457,7 +1457,7 @@ CREATE OR REPLACE VIEW ProveedoresProyectosGris (codpro, nompro, codpj) AS
         WHERE color='Gris';
 SELECT * FROM ProveedoresProyectosGris;
 DROP VIEW ProveedoresProyectosGris;
--- No puedo hacer insercióones, ya que no proviene de una única tabla.
+-- No puedo hacer inserciones, ya que no proviene de una única tabla.
 
 COMMIT;
 
@@ -1491,6 +1491,25 @@ SELECT * FROM USER_TABLES;
 --
 
 -- Ejercicio 5.2
+-- Complete la siguiente secuencia:
+-- Crear en la cuenta una tabla cualquiera.
+DROP TABLE acceso;
+CREATE TABLE acceso (testigo NUMBER);
+-- Insertar algunas tuplas de prueba.
+INSERT INTO acceso VALUES(1);
+INSERT INTO acceso VALUES(2);
+-- Autorizar al usuario de tu derecha para que pueda hacer consultas sobre esa tabla.
+GRANT SELECT ON acceso TO XX;
+-- Comprobar que se puede acceder a la tabla del usuario de la izquierda.
+SELECT * FROM XX.acceso;
+-- Retirar el privilegio de consulta antes concedido.
+REVOKE SELECT ON acceso FROM XX;
+-- Autorizar ahora al usuario de la derecha para que pueda hacer consultas sobre la tabla, pero ahora con posibilidad de que este propague ese privilegio.
+GRANT SELECT ON acceso TO XX WITH GRANT OPTION;
+-- Propagar el privilegio concedido por el usuario de la izquierda hacia el usuario de la derecha.
+GRANT SELECT ON acceso TO XX;
+-- Comprobar que se pueden acceder a las tablas del usuario de la derecha y del anterior.
+SELECT * FROM XX.acceso;
 --
 
 
@@ -1498,6 +1517,46 @@ SELECT * FROM USER_TABLES;
 /*--------------------------------------------------------------------------------------
     Capítulo 6: Nivel interno: Índices, clusters y hashing
 */--------------------------------------------------------------------------------------
+
+-- Prueba de la creación de índices BITMAP
+DROP TABLE Prueba_Bit;
+CREATE TABLE Prueba_Bit (color Varchar2(10));
+
+BEGIN
+    FOR i IN 1..200000 LOOP
+        INSERT INTO Prueba_bit (
+            SELECT decode(
+                round(dbms_random.value(1,4)),1,'Rojo',2,'Verde',3,'Amarillo',4,'Azul'
+            ) FROM dual);
+    END LOOP;
+END;
+/
+
+SELECT COUNT(*) FROM Prueba_Bit;
+
+SELECT count(*) FROM Prueba_Bit -- 0.142 segundos
+    WHERE color='Amarillo' OR color= 'Azul';
+
+CREATE INDEX Prueba_IDX ON Prueba_Bit(color);
+SELECT count(*) FROM Prueba_Bit -- 0.068 segundos
+    WHERE color='Amarillo' OR color= 'Azul';
+DROP INDEX Prueba_IDX;
+
+CREATE BITMAP INDEX Prueba_BITMAP_IDX ON Prueba_Bit(color);
+SELECT count(*) FROM Prueba_Bit -- 0.033 segundos
+    WHERE color='Amarillo' OR color= 'Azul';
+DROP INDEX Prueba_BITMAP_IDX;
+
+DROP TABLE Prueba_bit;
+--
+
+-- IOT
+DROP TABLE Prueba_IOT;
+CREATE TABLE Prueba_IOT (id INT PRIMARY KEY) ORGANIZATION INDEX;
+-- Insertar ./Carga_prueba_iot.sql
+SELECT id FROM Prueba_IOT;
+DROP TABLE Prueba_IOT;
+
 
 -- Ejemplo 6.1 Si queremos acelerar las consultas cuANDo busquemos a un proveedor por su nombre podemos crear un índice asociado al campo nompro de la tabla proveedor.
 CREATE INDEX indice_proveedores ON proveedor(nompro);
