@@ -317,8 +317,8 @@ ______
 
 58. Un factor de bloqueo alto:
     - ( ) Aumenta la aparición de valores nulos en el campo de la clave física.
-    - (x) Disminuye la aparición de valores nulos en el campo de la clave física.
-    - ( ) Ninguna de las otras es cierta.
+    - ( ) Disminuye la aparición de valores nulos en el campo de la clave física.
+    - (x) Ninguna de las otras es cierta.
 
 59. Considere un índice montado sobre los siguientes campos de un registro (en el orden que se muestran): `nombre, ciudad, color`:
     - (x) El índice es útil para consultas que tratan de localizar los registros correspondientes a un determinado nombre.

@@ -11,9 +11,9 @@ Descripción: Prácticas de FBD, ejercicios obtenidos del Cuaderno dado por el p
 */--------------------------------------------------------------
 --DROP TABLE prueba1;
 CREATE TABLE prueba1 (
-    cad char(3),
-    n int,
-    x float
+    cad CHAR(3),
+    n INT,
+    x FLOAT
 );
 
 -- Ejercicio 1.1. Ver la descripción de la tabla prueba1.
@@ -24,11 +24,11 @@ DESCRIBE prueba1;
 --DROP TABLE serjefe;
 --DROP TABLE plantilla;
 CREATE TABLE plantilla(
-    dni varchar2(9),
-    nombre varchar2(15),
-    estadocivil varchar2(10)
+    dni VARCHAR2(9),
+    nombre VARCHAR2(15),
+    estadocivil VARCHAR2(10)
         CHECK (estadocivil IN ('soltero', 'casado', 'divorciado', 'viudo')),
-    fechaalta date,
+    fechaalta DATE,
     PRIMARY KEY (dni)
 );
 CREATE TABLE serjefe(
@@ -61,7 +61,7 @@ CREATE TABLE proveedor(
     codpro VARCHAR2(3) CONSTRAINT codpro_clave_primaria PRIMARY KEY,
     nompro VARCHAR2(30) CONSTRAINT nompro_no_nulo NOT NULL,
     status NUMBER CONSTRAINT status_entre_1_y_10
-        CHECK (status>=1 and status <=10),
+        CHECK (status>=1 AND status <=10),
     ciudad VARCHAR2(15)
 );
 DESCRIBE proveedor;
@@ -74,7 +74,7 @@ CREATE TABLE pieza(
     nompie VARCHAR2(10) CONSTRAINT nompie_no_nulo NOT NULL,
     color VARCHAR2(10),
     peso NUMBER(5,2)
-        CONSTRAINT peso_entre_0_y_100 CHECK (peso>0 and peso <=100),
+        CONSTRAINT peso_entre_0_y_100 CHECK (peso>0 AND peso <=100),
     ciudad VARCHAR2(15)    
 );
 DESCRIBE pieza;
@@ -110,10 +110,10 @@ DESCRIBE ventas;
 --
 
 -- Ejercicio 1.7
---DROP TABLE faltas;
---DROP TABLE encuentros;
---DROP TABLE jugadores;
---DROP TABLE equipos;
+DROP TABLE faltas;
+DROP TABLE encuentros;
+DROP TABLE jugadores;
+DROP TABLE equipos;
 CREATE TABLE equipos(
     codE VARCHAR2(3) CONSTRAINT codE_clave_primaria PRIMARY KEY,
     nombreE VARCHAR2(20) CONSTRAINT nombreE_no_nulo NOT NULL CONSTRAINT nombreE_unico UNIQUE,
@@ -148,7 +148,7 @@ CREATE TABLE faltas(
     ELocal,
     EVisitante,
     num NUMBER(1) DEFAULT 0 CONSTRAINT num_entre_0_y_5
-        CHECK (num >= 0 and num <= 5),
+        CHECK (num >= 0 AND num <= 5),
     CONSTRAINT clave_primaria_faltas PRIMARY KEY (codJ, ELocal, EVisitante),
     CONSTRAINT clave_externa_encuentro FOREIGN KEY (ELocal, EVisitante)
         REFERENCES encuentros(ELocal, EVisitante)
@@ -160,6 +160,7 @@ COMMIT;
 /*--------------------------------------------------------------
     Capítulo 2: Mantenimiento de una base de datos
 */--------------------------------------------------------------
+
 -- Ejemplo 2.1
 INSERT INTO prueba1 VALUES ('aa', 1, 1.1);
 INSERT INTO prueba1 VALUES ('Aa', 2, 2.1);
@@ -217,7 +218,7 @@ SELECT * FROM plantilla;
 
 INSERT INTO plantilla
     VALUES ('11223355','Miguel','casado',
-                TO_DATE('22/10/2005','dd/mm/yyyy'),
+                TO_DATE('22/10/2005','DD/MM/YYYY'),
             null);  -- Como no hemos especificado el nombre de las columnas, debemos insertar TODOS los valores, no puedo quitar el null
 SELECT * FROM plantilla;
 DELETE FROM plantilla WHERE nombre='Miguel';
@@ -233,7 +234,7 @@ SELECT * FROM plantilla;
 -- Seccion 2.2
 DESCRIBE proveedor;
 INSERT INTO proveedor (codpro, nompro, status, ciudad)
-    VALUES ('S1', 'Jose Fernandez', 2, 'Madrid');
+    VALUES ('S1', 'Jose FernANDez', 2, 'Madrid');
 INSERT INTO proveedor (codpro, nompro, status, ciudad)
     VALUES ('S2', 'Manuel Vidal', 1, 'Londres');
 INSERT INTO proveedor (codpro, nompro, status, ciudad)
@@ -254,7 +255,7 @@ INSERT INTO pieza (codpie, nompie, color, peso, ciudad)
 INSERT INTO pieza (codpie, nompie, color, peso, ciudad)
     VALUES ('P2', 'Tornillo', 'Rojo', 1.25, 'Paris');
 INSERT INTO pieza (codpie, nompie, color, peso, ciudad)
-    VALUES ('P3', 'Arandela', 'Blanco', 3, 'Londres');
+    VALUES ('P3', 'ArANDela', 'Blanco', 3, 'Londres');
 INSERT INTO pieza (codpie, nompie, color, peso, ciudad)
     VALUES ('P4', 'Clavo', 'Gris', 5.5, 'Lisboa');
 INSERT INTO pieza (codpie, nompie, color, peso, ciudad)
@@ -275,7 +276,7 @@ DESCRIBE medina.ventas;
 INSERT INTO ventas (codpro, codpie, codpj, cantidad, fecha)
     SELECT codpro, rtrim(codpie), rtrim(codpj), cantidad, fecha  FROM medina.ventas;
 /*
-    Notemos que, si vemos el esquema de medina.ventas, este usa tipos de datos distintos (char(3)).
+    Notemos que, si vemos el esquema de medina.ventas, este usa tipos de datos distintos (CHAR(3)).
     Estos tipos de datos completan con espacios, por lo que no nos deja incluirlos (pruébese).
     Para evitar este problema, usamos la función rtrim, que recorta por la derecha.
 */
@@ -284,7 +285,7 @@ INSERT INTO ventas (codpro, codpie, codpj, cantidad, fecha)
 
 -- Ejercicio 2.4
 INSERT INTO ventas VALUES ('S3', 'P1', 'J1', 150, '24/12/05');
-        DELETE FROM ventas WHERE (codpro='S3' and codpj='J1' and codpie='P1');  -- Para que no tenga efectos.
+        DELETE FROM ventas WHERE (codpro='S3' AND codpj='J1' AND codpie='P1');  -- Para que no tenga efectos.
 --INSERT INTO ventas (codpro, codpj) VALUES ('S4', 'J2');             -- No se puede porque codpie no puede ser NULL (es parte de la CP)
 --INSERT INTO ventas VALUES('S5','P3','J6',400,TO_DATE('25/12/00'));  -- No se puede porque J6 no existe en proyecto
 --
@@ -296,80 +297,13 @@ INSERT INTO ventas VALUES ('S3', 'P1', 'J1', 150, '24/12/05');
 --
 
 -- Ejercicio 2.6
-SELECT codpro,codpie, TO_CHAR(fecha,'"Dia" day,dd/mm/yy')
+SELECT codpro,codpie, TO_CHAR(fecha,'"Dia" day,DD/MM/YY')
     FROM ventas;
 --
 
 
 -- Ejercicio 2.7
--- Inserción de equipos
-INSERT INTO equipos VALUES ('E01', 'Dragones', 'Madrid', 'Juan Perez', TO_DATE('01/01/2010','DD/MM/YYYY'));
-INSERT INTO equipos VALUES ('E02', 'Fénix', 'Barcelona', 'Laura López', TO_DATE('15/02/2012','DD/MM/YYYY'));
-INSERT INTO equipos VALUES ('E03', 'Tiburones', 'Valencia', 'Carlos Ruiz', TO_DATE('10/06/2015','DD/MM/YYYY'));
-INSERT INTO equipos VALUES ('E04', 'Cóndores', 'Sevilla', 'Ana Martínez', TO_DATE('20/09/2018','DD/MM/YYYY'));
-
--- Inserción de jugadores
--- Dragones
-INSERT INTO jugadores VALUES ('J01', 'E01', 'Pedro García');
-INSERT INTO jugadores VALUES ('J02', 'E01', 'Luis Fernández');
-INSERT INTO jugadores VALUES ('J03', 'E01', 'Sergio Sánchez');
-INSERT INTO jugadores VALUES ('J04', 'E01', 'Diego Torres');
-INSERT INTO jugadores VALUES ('J05', 'E01', 'Pablo Gómez');
-
--- Fénix
-INSERT INTO jugadores VALUES ('J06', 'E02', 'Andrés López');
-INSERT INTO jugadores VALUES ('J07', 'E02', 'Ricardo Díaz');
-INSERT INTO jugadores VALUES ('J08', 'E02', 'Miguel Álvarez');
-INSERT INTO jugadores VALUES ('J09', 'E02', 'Jorge Ramírez');
-INSERT INTO jugadores VALUES ('J10', 'E02', 'David Vega');
-
--- Tiburones
-INSERT INTO jugadores VALUES ('J11', 'E03', 'José Moreno');
-INSERT INTO jugadores VALUES ('J12', 'E03', 'Hugo Prieto');
-INSERT INTO jugadores VALUES ('J13', 'E03', 'Alberto Márquez');
-INSERT INTO jugadores VALUES ('J14', 'E03', 'Carlos Romero');
-INSERT INTO jugadores VALUES ('J15', 'E03', 'Gabriel Ortiz');
-
--- Cóndores
-INSERT INTO jugadores VALUES ('J16', 'E04', 'Antonio Flores');
-INSERT INTO jugadores VALUES ('J17', 'E04', 'Mario Castro');
-INSERT INTO jugadores VALUES ('J18', 'E04', 'Iván Gómez');
-INSERT INTO jugadores VALUES ('J19', 'E04', 'Felipe Herrera');
-INSERT INTO jugadores VALUES ('J20', 'E04', 'Julio Jiménez');
-
--- Inserción de encuentros
-INSERT INTO encuentros VALUES ('E01', 'E02', TO_DATE('01/01/2023','DD/MM/YYYY'), 80, 65);
-INSERT INTO encuentros VALUES ('E01', 'E03', TO_DATE('08/01/2023','DD/MM/YYYY'), 75, 70);
-INSERT INTO encuentros VALUES ('E01', 'E04', TO_DATE('15/01/2023','DD/MM/YYYY'), 85, 60);
-INSERT INTO encuentros VALUES ('E02', 'E03', TO_DATE('22/01/2023','DD/MM/YYYY'), 60, 78);
-INSERT INTO encuentros VALUES ('E02', 'E04', TO_DATE('29/01/2023','DD/MM/YYYY'), 70, 80);
-INSERT INTO encuentros VALUES ('E03', 'E04', TO_DATE('05/02/2023','DD/MM/YYYY'), 88, 90);
-INSERT INTO encuentros VALUES ('E02', 'E01', TO_DATE('12/02/2023','DD/MM/YYYY'), 62, 70);
-INSERT INTO encuentros VALUES ('E03', 'E01', TO_DATE('19/02/2023','DD/MM/YYYY'), 68, 75);
-INSERT INTO encuentros VALUES ('E04', 'E01', TO_DATE('26/02/2023','DD/MM/YYYY'), 55, 65);
-INSERT INTO encuentros VALUES ('E04', 'E02', TO_DATE('05/03/2023','DD/MM/YYYY'), 82, 78);
-
--- Inserción de faltas (al menos una por encuentro)
-INSERT INTO faltas VALUES ('J01', 'E01', 'E02', 3);
-INSERT INTO faltas VALUES ('J06', 'E01', 'E02', 2);
-INSERT INTO faltas VALUES ('J02', 'E01', 'E03', 1);
-INSERT INTO faltas VALUES ('J11', 'E01', 'E03', 4);
-INSERT INTO faltas VALUES ('J03', 'E01', 'E04', 2);
-INSERT INTO faltas VALUES ('J16', 'E01', 'E04', 3);
-INSERT INTO faltas VALUES ('J07', 'E02', 'E03', 5);
-INSERT INTO faltas VALUES ('J13', 'E02', 'E03', 4);
-INSERT INTO faltas VALUES ('J09', 'E02', 'E04', 2);
-INSERT INTO faltas VALUES ('J19', 'E02', 'E04', 3);
-INSERT INTO faltas VALUES ('J14', 'E03', 'E04', 2);
-INSERT INTO faltas VALUES ('J18', 'E03', 'E04', 1);
-INSERT INTO faltas VALUES ('J08', 'E02', 'E01', 3);
-INSERT INTO faltas VALUES ('J05', 'E02', 'E01', 2);
-INSERT INTO faltas VALUES ('J12', 'E03', 'E01', 4);
-INSERT INTO faltas VALUES ('J04', 'E03', 'E01', 1);
-INSERT INTO faltas VALUES ('J15', 'E04', 'E01', 3);
-INSERT INTO faltas VALUES ('J10', 'E04', 'E01', 2);
-INSERT INTO faltas VALUES ('J20', 'E04', 'E02', 1);
-INSERT INTO faltas VALUES ('J17', 'E04', 'E02', 2);
+-- Consultar el archivo ./Inserción_SQL.sql
 --
 
 
@@ -407,7 +341,7 @@ SELECT codpro FROM ventas WHERE codpj='J1';
 
 -- Ejercicio 3.3
 -- Muestra las piezas de Madrid que son grises o rojas.
-SELECT * FROM pieza WHERE (ciudad='Madrid' and (color='Rojo' or color='Gris'));
+SELECT * FROM pieza WHERE (ciudad='Madrid' AND (color='Rojo' or color='Gris'));
 --
 
 -- Ejercicio 3.4
@@ -449,7 +383,7 @@ SELECT ciudad FROM pieza WHERE codpie='P1';
 --
 
 -- Ejercicio 3.7
--- Resolver la consulta del ejemplo 3.8 utilizando el operador ∩ (Interseccion).
+-- Resolver la consulta del ejemplo 3.8 utilizANDo el operador ∩ (Interseccion).
 SELECT ciudad FROM proveedor WHERE status>2 -- Seleccionamos ciudades con proveedores con status mayor de 2
     INTERSECT
 SELECT proveedor.ciudad FROM proveedor, pieza
@@ -582,7 +516,7 @@ SELECT codpie FROM ventas
 --
 
 -- Ejericio 3.19
--- Mostrar las piezas vendidas por los proveedores de Madrid (fragmentando la consulta con ayuda del operador IN).
+-- Mostrar las piezas vendidas por los proveedores de Madrid (fragmentANDo la consulta con ayuda del operador IN).
 -- Compara la solución con la del ejercicio 3.15.
 SELECT DISTINCT codpie FROM ventas
     WHERE codpro IN (SELECT codpro FROM proveedor WHERE ciudad='Madrid');
@@ -776,14 +710,14 @@ SELECT codpj, codpie, SUM(cantidad)
     GROUP BY codpj, codpie;
 --
 
--- Ejemplo 3.21 Hallar la cantidad media de ventas realizadas por cada proveedor, indicando solamente los códigos de proveedores que han hecho más de 3 ventas.
+-- Ejemplo 3.21 Hallar la cantidad media de ventas realizadas por cada proveedor, indicANDo solamente los códigos de proveedores que han hecho más de 3 ventas.
 SELECT codpro, AVG(cantidad)
     FROM ventas
     GROUP BY codpro
     HAVING COUNT(*) > 3;
 --
 
--- Ejemplo 3.22 Mostrar la media de unidades vendidas de la pieza 'P1' realizadas por cada proveedor, indicando solamente la información de aquellos proveedores que han hecho entre 2 y 10 ventas.
+-- Ejemplo 3.22 Mostrar la media de unidades vendidas de la pieza 'P1' realizadas por cada proveedor, indicANDo solamente la información de aquellos proveedores que han hecho entre 2 y 10 ventas.
 SELECT codpro, AVG(cantidad)
     FROM ventas
     WHERE codpie='P1'
@@ -847,21 +781,21 @@ SELECT codpie
 MINUS
 SELECT codpie
     FROM ventas
-    WHERE TO_NUMBER(TO_CHAR(fecha, 'yyyy')) > 2001;
+    WHERE TO_NUMBER(TO_CHAR(fecha, 'YYYY')) > 2001;
     --WHERE fecha > TO_DATE('31-12-2001', 'dd-mm-yyyy');
     --
 SELECT codpie
     FROM pieza
     WHERE NOT EXISTS (SELECT * FROM ventas
                             WHERE ventas.codpie=pieza.codpie
-                            AND TO_NUMBER(TO_CHAR(fecha, 'yyyy')) > 2001);
+                            AND TO_NUMBER(TO_CHAR(fecha, 'YYYY')) > 2001);
 --
 
 -- Ejemplo 3.28 Agrupar los suministros de la tabla de ventas por años y sumar las cantidades totales anuales.
-SELECT TO_NUMBER(TO_CHAR(fecha, 'yyyy')), SUM(cantidad)
+SELECT TO_NUMBER(TO_CHAR(fecha, 'YYYY')), SUM(cantidad)
     FROM ventas
-    GROUP BY TO_NUMBER(TO_CHAR(fecha, 'yyyy'))
-    ORDER BY TO_NUMBER(TO_CHAR(fecha, 'yyyy'));
+    GROUP BY TO_NUMBER(TO_CHAR(fecha, 'YYYY'))
+    ORDER BY TO_NUMBER(TO_CHAR(fecha, 'YYYY'));
 --
 
 -- Ejercicio 3.38 Encontrar la cantidad media de piezas suministradas cada mes.
@@ -890,7 +824,7 @@ SELECT * FROM user_indexes;
 -- Ejercicio 3.40 Muestra las tablas ventas a las que tienes acceso de consulta junto con el nombre del propietario y su número de identificación en el sistema.
 SELECT table_name, owner, user_id
     FROM ALL_TABLES JOIN ALL_USERS ON owner=username
-    WHERE lower(table_name) LIKE '%ventas%';
+    WHERE LOWER(table_name) LIKE '%ventas%';
 --
 
 -- Ejercicio 3.41 Muestra todos tus objetos creados en el sistema. ¿Hay algo más que tablas?
@@ -1063,16 +997,16 @@ SELECT index_name, table_name, table_owner
     FROM USER_INDEXES;
 --
 
--- Ejercicio 3.51 Implementar el comando DESCRIBE para tu tabla ventas a través de una consulta a las vistas del catálogo.
+-- Ejercicio 3.51 Implementar el comANDo DESCRIBE para tu tabla ventas a través de una consulta a las vistas del catálogo.
 SELECT column_name, nullable, data_type FROM user_tab_columns
-    WHERE lower(table_name)='ventas';
+    WHERE LOWER(table_name)='ventas';
 --
 
 -- Ejercicio 3.52 Mostrar para cada proveedor la media de productos suministrados cada año.
-SELECT codpro, TO_NUMBER(TO_CHAR(fecha, 'yyyy')), AVG(cantidad)
+SELECT codpro, TO_NUMBER(TO_CHAR(fecha, 'YYYY')), AVG(cantidad)
     FROM ventas
-    GROUP BY codpro, TO_NUMBER(TO_CHAR(fecha, 'yyyy'))
-    ORDER BY codpro, TO_NUMBER(TO_CHAR(fecha, 'yyyy'));
+    GROUP BY codpro, TO_NUMBER(TO_CHAR(fecha, 'YYYY'))
+    ORDER BY codpro, TO_NUMBER(TO_CHAR(fecha, 'YYYY'));
 --
 
 -- Ejercicio 3.53 Encontrar todos los proveedores que venden una pieza roja.
@@ -1143,7 +1077,7 @@ SELECT codpro
     FROM ventas
     WHERE cantidad <= 10;
 
--- Otra opción. La restricción es sobre los candidatos.
+-- Otra opción. La restricción es sobre los cANDidatos.
 SELECT codpro
     FROM (
         SELECT codpro FROM proveedor
@@ -1285,7 +1219,7 @@ SELECT e1.codE AS local, e2.codE AS visitante
     WHERE e1.codE != e2.codE;
 --
 
--- Ejercicio 3.66 Muestra los equipos que han ganado algún encuentro jugando como local.
+-- Ejercicio 3.66 Muestra los equipos que han ganado algún encuentro jugANDo como local.
 SELECT DISTINCT ELocal
     FROM encuentros
     WHERE PLocal > PVisitante;
@@ -1316,7 +1250,7 @@ SELECT CodE FROM equipos
 SELECT EVisitante FROM encuentros
     WHERE PLocal < PVisitante;
 
--- Ejercicio 3.69 Muestra los equipos que han ganado todos los encuentros jugando como equipo local.
+-- Ejercicio 3.69 Muestra los equipos que han ganado todos los encuentros jugANDo como equipo local.
 -- Todos los equipos, menos los que han perdido o empatado como local
 SELECT CodE FROM equipos
     MINUS
@@ -1371,7 +1305,7 @@ SELECT EVisitante, PVisitante FROM encuentros
     WHERE PVisitante=(SELECT MAX(PVisitante) FROM encuentros);
 --
 
--- Ejercicio 3.76 Muestra la cantidad de victorias de cada equipo, jugando como local o como visitante.
+-- Ejercicio 3.76 Muestra la cantidad de victorias de cada equipo, jugANDo como local o como visitante.
 SELECT equipo, COUNT(*)
     FROM
         (SELECT ELocal AS equipo
@@ -1523,6 +1457,7 @@ COMMIT;
 /*--------------------------------------------------------------------------------------
     Capítulo 5: Introducción a la administración: el catálogo y gestión de privilegios
 */--------------------------------------------------------------------------------------
+
 -- Tabla 5.1
 SELECT * FROM DICTIONARY;
 SELECT * FROM USER_CATALOG;
@@ -1556,14 +1491,14 @@ SELECT * FROM USER_TABLES;
     Capítulo 6: Nivel interno: Índices, clusters y hashing
 */--------------------------------------------------------------------------------------
 
--- Ejemplo 6.1 Si queremos acelerar las consultas cuando busquemos a un proveedor por su nombre podemos crear un índice asociado al campo nompro de la tabla proveedor.
+-- Ejemplo 6.1 Si queremos acelerar las consultas cuANDo busquemos a un proveedor por su nombre podemos crear un índice asociado al campo nompro de la tabla proveedor.
 CREATE INDEX indice_proveedores ON proveedor(nompro);
 --
 
 -- Ejemplo 6.2 Podemos comprobar la creación de este índice mediante la siguiente consulta al catálogo.
 SELECT *
     FROM user_indexes
-    WHERE lower(index_name) = 'indice_proveedores';
+    WHERE LOWER(index_name) = 'indice_proveedores';
 --
 
 -- Ejemplo 6.3 Para crear el "cluster" mostrado en la figura 6.1, usamos la siguiente sentencia.
@@ -1598,7 +1533,7 @@ SELECT * FROM proveedor2;
 
 -- Ejercicio 6.3 Consulta en el catálogo los objetos recién creados.
 SELECT * FROM user_tables
-    WHERE lower(table_name) LIKE '%proveedor2%';
+    WHERE LOWER(table_name) LIKE '%proveedor2%';
 --
 
 /*------------------------------------------------------------------------------------------
@@ -1610,668 +1545,690 @@ SELECT * FROM user_tables
 /*-------------------------------------------
 -- Relación de ejercicios 1 de AR --
 */-------------------------------------------
+
+DROP TABLE repara;
+DROP TABLE mecanico;
+DROP TABLE vehiculo;
+DROP TABLE modelo;
+CREATE TABLE modelo(
+    id_modelo VARCHAR2(5) CONSTRAINT pk_modelo PRIMARY KEY,
+    marca VARCHAR2(20),
+    descripcion VARCHAR2(50)
+);
+CREATE TABLE vehiculo(
+    matricula VARCHAR2(7) CONSTRAINT pk_vehiculo PRIMARY KEY,
+    id_modelo CONSTRAINT fk_modelo REFERENCES modelo(id_modelo),
+    fecha_matriculacion DATE
+);
+CREATE TABLE mecanico(
+    id_mecanico VARCHAR2(5) CONSTRAINT pk_mecanico PRIMARY KEY,
+    nombre_mecanico VARCHAR2(20),
+    cargo VARCHAR2(20),
+    salario INT,
+    fecha_nacimiento DATE
+);
+CREATE TABLE repara(
+    id_mecanico CONSTRAINT fk_mecanico REFERENCES mecanico(id_mecanico),
+    matricula CONSTRAINT fk_vehiculo REFERENCES vehiculo(matricula),
+    fecha DATE,
+    numero_horas INT,
+    CONSTRAINT pk_repara PRIMARY KEY(id_mecanico, matricula, fecha)
+);
+
 -- 1. Reparaciones de más de 20 horas.
-select * from repara where numero_horas > 20;
+SELECT * FROM repara
+    WHERE numero_horas > 20;
 
 -- 2. Códigos de mecánicos que han reparado el vehículo de matrícula 012BCD.
-select distinct id_mecanico
-from repara
-where matricula = '012BCD';
+SELECT DISTINCT id_mecanico
+    FROM repara
+    WHERE matricula = '012BCD';
 
 -- 3. Parejas de mecánicos que se pueden hacer en la empresa.
-select m1.id_mecanico, m2.id_mecanico
-from mecanico m1, mecanico m2
-where m1.id_mecanico < m2.id_mecanico;
+SELECT m1.id_mecanico, m2.id_mecanico
+    FROM mecanico m1, mecanico m2
+    WHERE m1.id_mecanico < m2.id_mecanico;
 
 -- 4. Marca de los vehículos matriculados después del 1/1/20.
-select distinct marca
-from modelo natural join vehiculo
-where fecha_matriculacion > to_date('01/01/20', 'dd/mm/yy');
+SELECT DISTINCT marca
+    FROM modelo NATURAL JOIN vehiculo
+    WHERE fecha_matriculacion > TO_DATE('01/01/2020', 'DD/MM/YYYY');
 
 -- 5. Parejas <cargo, marca> entre las que se ha dado alguna reparación.
-select distinct cargo, marca
-from mecanico natural join (select id_mecanico, matricula from repara)
-    natural join vehiculo natural join modelo;
+SELECT DISTINCT cargo, marca
+FROM mecanico NATURAL JOIN (SELECT id_mecanico, matricula FROM repara)
+    NATURAL JOIN vehiculo NATURAL JOIN modelo;
 
--- 6. Vehículos que o tienen una fecha de matriculación posterior al 1/1/22 o 
--- han sido reparados con posterioridad a esa misma fecha.
-select matricula
-    from vehiculo
-    where fecha_matriculacion > to_date('01/01/22', 'dd/mm/yy')
-union
-select distinct matricula
-    from repara
-    where fecha > to_date('01/01/22', 'dd/mm/yy');
+-- 6. Vehículos que o tienen una fecha de matriculación posterior al 1/1/22 o han sido reparados con posterioridad a esa misma fecha.
+SELECT matricula
+    FROM vehiculo
+    WHERE fecha_matriculacion > TO_DATE('01/01/2022', 'DD/MM/YYYY')
+UNION
+SELECT matricula
+    FROM repara
+    WHERE fecha > TO_DATE('01/01/2022', 'DD/MM/YYYY');
 
--- 7. Vehículos con fecha de matriculación posterior al 1/1/22 que han sido 
--- reparados alguna vez.
-select distinct matricula
-from vehiculo natural join repara
-where fecha_matriculacion > to_date('01/01/22', 'dd/mm/yy');
+-- 7. Vehículos con fecha de matriculación posterior al 1/1/22 que han sido reparados alguna vez.
+SELECT DISTINCT matricula
+    FROM vehiculo NATURAL JOIN repara
+    WHERE fecha_matriculacion > TO_DATE('01/01/2022', 'DD/MM/YYYY');
 
 -- 8. Marca de los vehículos que no han tenido ninguna reparación en el año 2022.
 -- Vehículos que no han tenido reparaciones en 2022:
-select matricula from vehiculo
-minus
-select distinct matricula
-from repara
-where to_char(fecha, 'yyyy') != '2022';
+SELECT matricula FROM vehiculo
+MINUS
+SELECT matricula
+    FROM repara
+    WHERE TO_CHAR(fecha, 'YYYY') != '2022';
 
 -- Consulta:
-select distinct marca
-from modelo natural join (
-    select matricula from vehiculo
-    minus
-    select distinct matricula
-    from repara
-    where to_char(fecha, 'yyyy') != '2022'
+SELECT DISTINCT marca
+    FROM modelo NATURAL JOIN (
+        SELECT matricula FROM vehiculo
+        MINUS
+        SELECT matricula
+            FROM repara
+            WHERE TO_CHAR(fecha, 'YYYY') != '2022'
 );
 
--- 9. Código de los mecánicos que han reparado vehículos de, al menos, 
--- dos marcas distintas.
+-- 9. Código de los mecánicos que han reparado vehículos de, al menos, dos marcas distintas.
 -- Parejas (mecanico, marcas de los vehículos que ha reparado):
-select distinct id_mecanico, marca
-from (select id_mecanico, matricula from repara) natural join vehiculo
-     natural join modelo;
+SELECT DISTINCT id_mecanico, marca
+    FROM (SELECT id_mecanico, matricula FROM repara)
+        NATURAL JOIN vehiculo
+        NATURAL JOIN modelo;
  
 -- Consulta:
-select distinct id_mecanico, count(distinct marca)
-from (select id_mecanico, matricula from repara) natural join vehiculo
-     natural join modelo
-group by id_mecanico
-having count(distinct marca) > 1;
+SELECT id_mecanico, COUNT(DISTINCT marca)
+    FROM (SELECT id_mecanico, matricula FROM repara)
+        NATURAL JOIN vehiculo
+        NATURAL JOIN modelo
+    GROUP BY id_mecanico
+    HAVING COUNT(DISTINCT marca) > 1;
 
 -- 10. Vehículos que tienen una sola reparación.
-select matricula, count(*)
-from repara
-group by matricula
-having count(*) = 1;
+SELECT matricula, COUNT(*)
+    FROM repara
+    GROUP BY matricula
+    HAVING COUNT(*) = 1;
 
 -- 11. Vehículos que han sufrido las reparaciones con la duración más alta.
--- Parejas (matricula, duracion):
-select matricula, numero_horas from repara;
-
--- Consulta:
-select matricula, numero_horas from repara
-where numero_horas = (select max(numero_horas) from repara);
+SELECT matricula, numero_horas
+    FROM repara
+    WHERE numero_horas = (SELECT MAX(numero_horas) FROM repara);
 
 -- 12. Mecánicos que tienen el salario más bajo.
-select id_mecanico, salario
-from mecanico
-where salario = (select min(salario) from mecanico);
+SELECT id_mecanico, salario
+    FROM mecanico
+    WHERE salario = (SELECT MIN(salario) FROM mecanico);
 
 -- 13. Mecánicos cuyo salario es uno de los dos salarios más bajos.
-select id_mecanico, salario
-from mecanico
-where salario <= (
-    select min(salario)
-    from mecanico
-    where salario > any (
-        select salario from mecanico
-    )
-);
+-- El 2º Salario más bajo es el mínimo salario de aquellos que no son el mínimo. Es decir, es el mínimo de aquellos que son mayores que alguno. Es decir. El 2º salario más bajo es:
+SELECT MIN(salario)
+    FROM mecanico
+    WHERE salario > any (
+        SELECT salario FROM mecanico
+    );
+-- La consulta es:
+SELECT id_mecanico, salario
+    FROM mecanico
+    WHERE salario <= (
+        SELECT MIN(salario)
+            FROM mecanico
+            WHERE salario > any (
+                SELECT salario FROM mecanico
+            )
+    );
 
 -- 14. Vehículos que han sido reparados alguna vez por cada uno de los mecánicos.
 -- pi_matricula,id_mecanico(Repara) / pi_id_mecanico(Mecanico)
-
--- 1. AR
-select matricula from vehiculo
-minus
-select matricula from(
-    select matricula, id_mecanico
-        from vehiculo, mecanico
-    minus
-    select matricula, id_mecanico from repara
+-- Opción 1: AR
+SELECT matricula FROM vehiculo
+MINUS
+SELECT matricula FROM(
+    SELECT matricula, id_mecanico
+        FROM vehiculo, mecanico
+    MINUS
+    SELECT matricula, id_mecanico FROM repara
 );
 
--- 2. DOBLE NOT EXISTS
-select matricula from vehiculo where not exists(
-    select * from mecanico where not exists(
-        select * from repara
-            where repara.matricula = vehiculo.matricula
-              and repara.id_mecanico = mecanico.id_mecanico
-    )
+-- Opción 2: Doble NOT EXISTS
+SELECT matricula
+    FROM vehiculo
+    WHERE NOT EXISTS(
+        SELECT id_mecanico FROM mecanico WHERE NOT EXISTS(
+            SELECT * FROM repara
+                WHERE repara.matricula = vehiculo.matricula
+                AND repara.id_mecanico = mecanico.id_mecanico
+        )
 );
 
--- 3. NOT EXISTS & MINUS
-select matricula from vehiculo where not exists(
-    select id_mecanico from mecanico
-    minus
-    select id_mecanico from repara
-        where repara.matricula = vehiculo.matricula
-);
+-- Opción 3: NOT EXISTS & MINUS
+SELECT matricula 
+    FROM vehiculo
+    WHERE NOT EXISTS(
+        SELECT id_mecanico FROM mecanico
+        MINUS
+        SELECT id_mecanico FROM repara
+            WHERE repara.matricula = vehiculo.matricula
+    );
 
 -- 15. Mecánicos que han reparado vehículos de todas las marcas.
 -- (Mecanico, marca que ha reparado) / pi_mara(modelo)
 -- (mecanico, marca que ha reparado):
-select distinct id_mecanico, marca
-from mecanico natural join (select matricula, id_mecanico from repara)
-     natural join vehiculo natural join modelo;
-
--- 1. AR
-select id_mecanico from mecanico
-minus
-select id_mecanico from(
-    select id_mecanico, marca from mecanico, modelo
-    minus
-    select distinct id_mecanico, marca
-        from mecanico natural join (select matricula, id_mecanico from repara)
-                      natural join vehiculo natural join modelo
+SELECT DISTINCT id_mecanico, marca
+    FROM mecanico
+        NATURAL JOIN (SELECT matricula, id_mecanico FROM repara)
+        NATURAL JOIN (SELECT matricula, id_modelo FROM vehiculo)
+        NATURAL JOIN (SELECT id_modelo, marca FROM modelo);
+-- Opción 1: AR
+SELECT id_mecanico FROM mecanico
+MINUS
+SELECT id_mecanico FROM(
+    SELECT id_mecanico, marca
+        FROM mecanico, modelo
+    MINUS
+    SELECT id_mecanico, marca
+        FROM mecanico
+            NATURAL JOIN (SELECT matricula, id_mecanico FROM repara)
+            NATURAL JOIN (SELECT matricula, id_modelo FROM vehiculo)
+            NATURAL JOIN (SELECT id_modelo, marca FROM modelo)
 );
 
--- 2. Doble not exists
-select id_mecanico from mecanico m1 where not exists(
-    select * from modelo mod1 where not exists(
-        select *
-        from mecanico natural join (select matricula, id_mecanico from repara)
-                      natural join vehiculo natural join modelo
-        where id_mecanico = m1.id_mecanico
-          and marca = mod1.marca
+-- Opción 2: Doble NOT EXISTS
+SELECT id_mecanico FROM mecanico m1 WHERE NOT EXISTS(
+    SELECT marca FROM modelo mod1 WHERE NOT EXISTS(
+        SELECT id_mecanico, marca
+            FROM mecanico
+                NATURAL JOIN (SELECT matricula, id_mecanico FROM repara)
+                NATURAL JOIN (SELECT matricula, id_modelo FROM vehiculo)
+                NATURAL JOIN (SELECT id_modelo, marca FROM modelo)
+            WHERE id_mecanico = m1.id_mecanico
+                AND marca = mod1.marca
     )
 );
 
--- 3. NOt EXITS & MINUS
-select id_mecanico from mecanico m1 where not exists(
-    select marca from modelo
-    minus
-    select distinct marca
-    from mecanico natural join (select matricula, id_mecanico from repara)
-         natural join vehiculo natural join modelo
-    where id_mecanico = m1.id_mecanico
+-- Opción 3: NOT EXISTS & MINUS
+SELECT id_mecanico FROM mecanico m1 WHERE NOT EXISTS(
+    SELECT marca FROM modelo
+    MINUS
+    SELECT DISTINCT marca
+    FROM mecanico NATURAL JOIN (SELECT matricula, id_mecanico FROM repara)
+         NATURAL JOIN vehiculo NATURAL JOIN modelo
+    WHERE id_mecanico = m1.id_mecanico
 );
 
--- 16. Vehículos a los que el mecánico de id ME1 les ha hecho todas las 
--- reparaciones.
-select matricula from repara
-minus
-select matricula from repara
-where id_mecanico != 'ME1';
+-- 16. Vehículos a los que el mecánico de id ME1 les ha hecho todas las reparaciones.
+SELECT matricula FROM repara
+MINUS
+SELECT matricula FROM repara
+    WHERE id_mecanico != 'ME1';
 
--- 17. Marcas para las que todos sus vehículos han sido reparados alguna vez 
--- por un empleado con un salario superior a 3000.
--- Una marca no está si hay un vehiculo de dicha marca que tiene todas sus 
--- reparaciones por mecanicos con salario <= 3000, luego:
--- Marcas - Marcas de vehiculos reparados solo por mecanicos con salario <= 3000
-select distinct marca from modelo
-minus
-select marca
-from modelo natural join vehiculo natural join (
-    select matricula from vehiculo
-    minus
-    select matricula
-    from (select id_mecanico from mecanico where salario > 3000) natural join
-         (select id_mecanico, matricula from repara)
-);
+-- 17. Marcas para las que todos sus vehículos han sido reparados alguna vez por un empleado con un salario superior a 30000.
+-- Una marca no está si hay un vehiculo de dicha marca que nunca ha sido reparado por un mecánico con salario > 30000; luego la consulta es:
+-- Marcas - Marcas de vehiculos que nunca han sido reparados por un mecánico con salario > 30000
+SELECT marca FROM modelo
+MINUS
+SELECT marca
+    FROM modelo
+        NATURAL JOIN vehiculo
+        NATURAL JOIN (
+            SELECT matricula FROM vehiculo
+            MINUS
+            SELECT matricula
+                FROM (SELECT id_mecanico FROM mecanico WHERE salario > 30000)
+                    NATURAL JOIN (SELECT id_mecanico, matricula FROM repara)
+        );
 
--- 18. Vehículos que, para todos los cargos que hay en la empresa, han tenido 
--- al menos una reparación de más de 2 horas de duración con un empleado de ese 
--- cargo.
+-- 18. Vehículos que, para todos los cargos que hay en la empresa, han tenido al menos una reparación de más de 2 horas de duración con un empleado de ese cargo.
 -- (Vehiculo, cargo) de una reparacion de > de 2h / (cargo)
 -- Dividendo:
-select distinct matricula, cargo
-from mecanico natural join repara
-where numero_horas > 2;
+SELECT DISTINCT matricula, cargo
+    FROM mecanico NATURAL JOIN repara
+    WHERE numero_horas > 2;
 
--- 1. AR
-select matricula from vehiculo
-minus
-select matricula from (
-    select matricula, cargo
-    from vehiculo, mecanico
-    minus
-    select distinct matricula, cargo
-    from mecanico natural join repara
-    where numero_horas > 2
+-- Opción 1: AR
+SELECT matricula FROM vehiculo
+MINUS
+SELECT matricula FROM (
+    SELECT matricula, cargo
+        FROM vehiculo, mecanico
+    MINUS
+    SELECT matricula, cargo
+        FROM mecanico NATURAL JOIN repara
+        WHERE numero_horas > 2
 );
 
--- 2. DOBLE NOT EXISTS
-select matricula from vehiculo v where not exists(
-    select * from mecanico m where not exists(
-        select *
-        from mecanico natural join repara
-        where numero_horas > 2
-          and matricula = v.matricula
-          and cargo = m.cargo
+-- Opción 2: Doble NOT EXISTS
+SELECT matricula FROM vehiculo v WHERE NOT EXISTS(
+    SELECT cargo FROM mecanico m WHERE NOT EXISTS(
+        SELECT matricula, cargo
+            FROM mecanico NATURAL JOIN repara
+            WHERE numero_horas > 2
+                AND matricula = v.matricula
+                AND cargo = m.cargo
     )
 );
 
--- 3. NOT EXISTS & MINUS
-select matricula from vehiculo v where not exists(
-    select distinct cargo from mecanico
-    minus
-    select distinct cargo
-    from mecanico natural join repara
-    where numero_horas > 2
-      and matricula = v.matricula
+-- Opción 3: NOT EXISTS & MINUS
+SELECT matricula FROM vehiculo v WHERE NOT EXISTS(
+    SELECT cargo FROM mecanico
+    MINUS
+    SELECT cargo
+        FROM mecanico NATURAL JOIN repara
+        WHERE numero_horas > 2
+            AND matricula = v.matricula
 );
 
--- 19. Marcas para las que todos sus vehículos han sido reparados alguna vez 
--- por el mismo mecánico.
--- Marcas : E mec Forall vehiculo(marca), (mec, vehiculo) \in Repara
--- Negación: Marcas : Forall mec E vehiculo(marca), (mec, vehiculo) \notin Repara
+-- 19. Marcas para las que todos sus vehículos han sido reparados alguna vez por el mismo mecánico.
+-- Marcas : \exists mec \mid Forall vehiculo(marca), (mec, vehiculo) \in Repara
+-- Negación: Marcas : Forall mec \exists vehiculo(marca), (mec, vehiculo) \notin Repara
 
--- Cojo (mec, vehiculo) \notin Repara => (mec, marca) de forma que hay un vehiculo
--- de dicha marca que no se repara por dicho mecanico
+-- Cogemos (mec, vehiculo) \notin Repara => Tendremos (mec, marca) de forma que hay un vehiculo
+--      de dicha marca que no se repara por dicho mecanico
 -- Si esto se cumple Forall mecanicos (dividir), entonces la marca no nos sirve
 
 -- 1. Dividendo: (mec, vehiculo) \notin Repara => (mec, marca):
-select distinct id_mecanico, marca from (
-    select id_mecanico, matricula
-        from mecanico, vehiculo
-    minus
-    select id_mecanico, matricula
-        from repara
-) natural join vehiculo natural join modelo;
+SELECT DISTINCT id_mecanico, marca
+    FROM (
+        SELECT id_mecanico, matricula
+            FROM mecanico, vehiculo
+        MINUS
+        SELECT id_mecanico, matricula
+            FROM repara
+    ) NATURAL JOIN vehiculo NATURAL JOIN modelo;
 
 -- Dividendo / todos los mecanicos
--- 1. AR
-select distinct marca from modelo
-minus
-select marca from(
-    select id_mecanico, marca
-        from mecanico, modelo
-    minus
-    select distinct id_mecanico, marca from (
-        select id_mecanico, matricula
-            from mecanico, vehiculo
-        minus
-        select id_mecanico, matricula
-            from repara
-    ) natural join vehiculo natural join modelo
+-- Opción 1: AR
+SELECT marca FROM modelo
+MINUS
+SELECT marca FROM(
+    SELECT id_mecanico, marca
+        FROM mecanico, modelo
+    MINUS
+    SELECT id_mecanico, marca
+    FROM (
+        SELECT id_mecanico, matricula
+            FROM mecanico, vehiculo
+        MINUS
+        SELECT id_mecanico, matricula
+            FROM repara
+    ) NATURAL JOIN vehiculo NATURAL JOIN modelo
 );
 
--- 2. DOBLE NOT EXISTS
-select distinct marca from modelo mod where not exists(
-    select * from mecanico mec where not exists(
-        select * from (
-            select id_mecanico, matricula
-                from mecanico, vehiculo
-            minus
-            select id_mecanico, matricula
-                from repara
-        ) natural join vehiculo natural join modelo
-        where id_mecanico = mec.id_mecanico
-          and marca = mod.marca
+-- Opción 2: Doble NOT EXISTS
+SELECT DISTINCT marca FROM modelo mod WHERE NOT EXISTS(
+    SELECT id_mecanico FROM mecanico mec WHERE NOT EXISTS(
+        SELECT id_mecanico, marca
+            FROM (
+                SELECT id_mecanico, matricula
+                    FROM mecanico, vehiculo
+                MINUS
+                SELECT id_mecanico, matricula
+                    FROM repara
+            ) NATURAL JOIN vehiculo NATURAL JOIN modelo
+            WHERE id_mecanico = mec.id_mecanico
+                AND marca = mod.marca
     )
 );
 
--- 3. NOT EXISTS & MINUS
-select distinct marca from modelo mod where not exists(
-    select id_mecanico from mecanico
-    minus
-    select distinct id_mecanico from (
-        select id_mecanico, matricula
-            from mecanico, vehiculo
-        minus
-        select id_mecanico, matricula
-            from repara
-    ) natural join vehiculo natural join modelo
-    where marca = mod.marca
+-- Opción 3: NOT EXISTS & MINUS
+SELECT DISTINCT marca FROM modelo mod WHERE NOT EXISTS(
+    SELECT id_mecanico FROM mecanico
+    MINUS
+    SELECT id_mecanico
+        FROM (
+            SELECT id_mecanico, matricula
+                FROM mecanico, vehiculo
+            MINUS
+            SELECT id_mecanico, matricula
+                FROM repara
+        ) NATURAL JOIN vehiculo NATURAL JOIN modelo
+        WHERE marca = mod.marca
 );
 
 -- Consulta: Todas las marcas menos las marcas que hemos obtenido.
 -- AR:
-select distinct marca from modelo
-minus
-select distinct marca from modelo
-minus
-select marca from(
-    select id_mecanico, marca
-        from mecanico, modelo
-    minus
-    select distinct id_mecanico, marca from (
-        select id_mecanico, matricula
-            from mecanico, vehiculo
-        minus
-        select id_mecanico, matricula
-            from repara
-    ) natural join vehiculo natural join modelo
+SELECT marca FROM modelo
+MINUS
+(SELECT marca FROM modelo
+MINUS
+SELECT marca FROM(
+    SELECT id_mecanico, marca
+        FROM mecanico, modelo
+    MINUS
+    SELECT id_mecanico, marca
+    FROM (
+        SELECT id_mecanico, matricula
+            FROM mecanico, vehiculo
+        MINUS
+        SELECT id_mecanico, matricula
+            FROM repara
+    ) NATURAL JOIN vehiculo NATURAL JOIN modelo
+));
+
+-- Como vemos, es de la forma A-(A-B). La consulta es:
+SELECT marca FROM(
+    SELECT id_mecanico, marca
+        FROM mecanico, modelo
+    MINUS
+    SELECT id_mecanico, marca
+    FROM (
+        SELECT id_mecanico, matricula
+            FROM mecanico, vehiculo
+        MINUS
+        SELECT id_mecanico, matricula
+            FROM repara
+    ) NATURAL JOIN vehiculo NATURAL JOIN modelo
 );
 
--- 20. Mecánico más joven que ha reparado vehículos de todas las marcas (se 
--- puede cambiar por mecánico de mayor sueldo que ha reparado vehículos de 
--- todas las marcas).
--- De los mecánicos que reparan los vehículos de todas las marcas, nos quedamos
--- con el de mayor sueldo.
+
+-- 20. Mecánico más joven que ha reparado vehículos de todas las marcas
+-- De los mecánicos que reparan los vehículos de todas las marcas, nos quedamos con el más joven
 -- Mecánicos que reparan vehiculos de todas las marcas: (mec, marca) / marcas
 -- Dividendo:
-select distinct id_mecanico, marca
-from (select id_mecanico, matricula from repara) natural join vehiculo
-     natural join modelo;
+SELECT DISTINCT id_mecanico, marca
+    FROM repara NATURAL JOIN vehiculo NATURAL JOIN modelo;
      
--- 1. AR
-select id_mecanico from mecanico
-minus
-select id_mecanico from(
-    select id_mecanico, marca
-        from mecanico, modelo
-    minus
-    select distinct id_mecanico, marca
-    from (select id_mecanico, matricula from repara) natural join vehiculo
-         natural join modelo
+-- Opción 1: AR
+SELECT id_mecanico FROM mecanico
+MINUS
+SELECT id_mecanico FROM(
+    SELECT id_mecanico, marca
+        FROM mecanico, modelo
+    MINUS
+    SELECT id_mecanico, marca
+        FROM repara NATURAL JOIN vehiculo NATURAL JOIN modelo
 );
 
--- 2. DOBLE NOT EXISTS
-select id_mecanico from mecanico mec where not exists(
-    select * from modelo mod where not exists(
-        select *
-        from (select id_mecanico, matricula from repara) natural join vehiculo
-             natural join modelo
-        where id_mecanico = mec.id_mecanico
-          and marca = mod.marca
+-- Opción 2: Doble NOT EXISTS
+SELECT id_mecanico FROM mecanico mec WHERE NOT EXISTS(
+    SELECT marca FROM modelo mod WHERE NOT EXISTS(
+        SELECT id_mecanico, marca
+            FROM repara NATURAL JOIN vehiculo NATURAL JOIN modelo
+        WHERE id_mecanico = mec.id_mecanico
+            AND marca = mod.marca
     )
 );
 
--- 3. NOT EXISTS & MINUS
-select id_mecanico from mecanico mec where not exists(
-    select marca from modelo
-    minus
-    select distinct marca
-    from (select id_mecanico, matricula from repara) natural join vehiculo
-         natural join modelo
-    where id_mecanico = mec.id_mecanico
+-- Opción 3: NOT EXISTS & MINUS
+SELECT id_mecanico FROM mecanico mec WHERE NOT EXISTS(
+    SELECT marca FROM modelo
+    MINUS
+    SELECT marca
+        FROM repara NATURAL JOIN vehiculo NATURAL JOIN modelo
+        WHERE id_mecanico = mec.id_mecanico
 );
 
--- Nos quedamos con el de mayor sueldo:
--- 1. 
-select id_mecanico, salario from(
-    select id_mecanico from mecanico
-    minus
-    select id_mecanico from(
-        select id_mecanico, marca
-            from mecanico, modelo
-        minus
-        select distinct id_mecanico, marca
-        from (select id_mecanico, matricula from repara) natural join vehiculo
-             natural join modelo
+-- Nos quedamos con el más joven
+SELECT id_mecanico, fecha_nacimiento FROM mecanico mec
+    WHERE NOT EXISTS(
+        SELECT marca FROM modelo
+        MINUS
+        SELECT marca
+            FROM repara NATURAL JOIN vehiculo NATURAL JOIN modelo
+            WHERE id_mecanico = mec.id_mecanico
     )
-) natural join mecanico
-where salario >= all (
-    select salario from(
-        select id_mecanico from mecanico
-        minus
-        select id_mecanico from(
-            select id_mecanico, marca
-                from mecanico, modelo
-            minus
-            select distinct id_mecanico, marca
-            from (select id_mecanico, matricula from repara) natural join vehiculo
-                 natural join modelo
+    AND fecha_nacimiento = (
+        SELECT MAX(fecha_nacimiento) FROM mecanico mec WHERE NOT EXISTS(
+            SELECT marca FROM modelo
+            MINUS
+            SELECT marca
+                FROM repara NATURAL JOIN vehiculo NATURAL JOIN modelo
+                WHERE id_mecanico = mec.id_mecanico
         )
-    ) natural join mecanico
-);
-
--- 2. 
-select id_mecanico, salario from mecanico mec where not exists(
-    select * from modelo mod where not exists(
-        select *
-        from (select id_mecanico, matricula from repara) natural join vehiculo
-             natural join modelo
-        where id_mecanico = mec.id_mecanico
-          and marca = mod.marca
-    )
-) and salario >= all (
-    select salario from mecanico mec where not exists(
-        select * from modelo mod where not exists(
-            select *
-            from (select id_mecanico, matricula from repara) natural join vehiculo
-                 natural join modelo
-            where id_mecanico = mec.id_mecanico
-              and marca = mod.marca
-        )
-    )
-);
-
--- 3. 
-select id_mecanico, salario from mecanico mec where not exists(
-    select marca from modelo
-    minus
-    select distinct marca
-    from (select id_mecanico, matricula from repara) natural join vehiculo
-         natural join modelo
-    where id_mecanico = mec.id_mecanico
-) and salario >= all (
-    select salario from mecanico mec where not exists(
-        select marca from modelo
-        minus
-        select distinct marca
-        from (select id_mecanico, matricula from repara) natural join vehiculo
-             natural join modelo
-        where id_mecanico = mec.id_mecanico
-    )
-);
+    );
 
 /*-------------------------------------------
 -- Relación de ejercicios 2 de AR --
 */-------------------------------------------
--- 1. Encontrar todas las parejas de ciudades tales que la primera sea la de un 
--- proveedor y la segunda la de un proyecto entre los cuales haya algún suministro.
-select distinct proveedor.ciudad, proyecto.ciudad
-from proveedor natural join (select codpro, codpj from ventas) v
-     join proyecto on (proyecto.codpj = v.codpj);
 
--- 2. Encontrar los códigos de las piezas suministradas a algún proyecto por 
--- un proveedor que se encuentre en la misma ciudad que el proyecto.
-select distinct codpie
-from proveedor natural join ventas natural join proyecto;
+-- 1. Encontrar todas las parejas de ciudades tales que la primera sea la de un proveedor y la segunda la de un proyecto entre los cuales haya algún suministro.
+SELECT DISTINCT proveedor.ciudad, proyecto.ciudad
+    FROM (SELECT codpro, codpj FROM ventas) v
+        NATURAL JOIN proveedor
+        JOIN proyecto ON (proyecto.codpj = v.codpj);
 
--- 3. Encontrar los códigos de los proyectos que tienen al menos un proveedor 
--- que no se encuentre en su misma ciudad.
-select distinct pj.codpj
-from (proveedor p natural join (select codpro, codpj from ventas) v)
-     join proyecto pj on (v.codpj = pj.codpj and p.ciudad != pj.ciudad);
+-- 2. Encontrar los códigos de las piezas suministradas a algún proyecto por un proveedor que se encuentre en la misma ciudad que el proyecto.
+SELECT DISTINCT codpie
+    FROM ventas NATURAL JOIN proveedor NATURAL JOIN proyecto;
 
--- 4. Mostrar todas las ciudades de donde proceden piezas y las ciudades donde 
--- hay proyectos.
-select ciudad from pieza
-union
-select ciudad from proyecto;
+-- 3. Encontrar los códigos de los proyectos que tienen al menos un proveedor que no se encuentre en su misma ciudad.
+SELECT DISTINCT proyecto.codpj
+FROM proveedor
+    NATURAL JOIN ventas
+    JOIN proyecto ON (proyecto.codpj = ventas.codpj AND proveedor.ciudad != proyecto.ciudad);
 
--- 5. Mostrar todas las ciudades de los proveedores en las que no se fabriquen 
--- piezas.
-select ciudad from proveedor
-minus
-select ciudad from pieza;
+-- 4. Mostrar todas las ciudades de donde proceden piezas y las ciudades donde hay proyectos.
+SELECT ciudad FROM pieza
+UNION
+SELECT ciudad FROM proyecto;
 
--- 6. Mostrar todas las ciudades de los proveedores en las que además se 
--- fabriquen piezas.
-select ciudad from proveedor
-intersect
-select ciudad from pieza;
+-- 5. Mostrar todas las ciudades de los proveedores en las que no se fabriquen piezas.
+SELECT ciudad FROM proveedor
+MINUS
+SELECT ciudad FROM pieza;
+
+-- 6. Mostrar todas las ciudades de los proveedores en las que además se fabriquen piezas.
+SELECT ciudad FROM proveedor
+INTERSECT
+SELECT ciudad FROM pieza;
 
 -- 7. Encontrar los códigos de los proyectos que usan una pieza que vende S1.
-select distinct codpj
-from ventas
-where codpro = 'S1';
+SELECT DISTINCT codpj
+    FROM ventas
+    WHERE codpro = 'S1';
 
 -- 8. Encontrar la cantidad más pequeña enviada en algún suministro.
-select min(cantidad)
-from ventas;
+SELECT MIN(cantidad)
+    FROM ventas;
 
--- 9. Encontrar los códigos de los proyectos que no utilizan una pieza roja 
--- suministrada por un proveedor de Londres.
-select codpj from proyecto
-minus
-select codpj
-from ventas
-where codpie in (select codpie from pieza where color = 'Rojo')
-      and codpro in (select codpro from proveedor where ciudad = 'Londres');
+-- 9. Encontrar los códigos de los proyectos que no utilizan una pieza roja suministrada por un proveedor de Londres.
+SELECT codpj FROM proyecto
+MINUS
+SELECT codpj
+    FROM ventas
+    WHERE   codpie in (SELECT codpie FROM pieza WHERE color = 'Rojo')
+        AND codpro in (SELECT codpro FROM proveedor WHERE ciudad = 'Londres');
+--
+SELECT codpj FROM proyecto
+MINUS
+SELECT codpj
+    FROM ventas NATURAL JOIN pieza
+        JOIN proveedor ON (ventas.codpro = proveedor.codpro)
+    WHERE color = 'Rojo' AND proveedor.ciudad = 'Londres';
+
 
 -- 10. Encontrar los códigos de los proyectos que tienen como único proveedor a S1.
-select distinct codpj from ventas
-minus
-select distinct codpj from ventas where codpro != 'S1';
+SELECT codpj FROM ventas
+MINUS
+SELECT codpj FROM ventas WHERE codpro != 'S1';
 
--- 11. Encontrar los códigos de las piezas que se suministran a todos los 
--- proyectos de París.
+-- 11. Encontrar los códigos de las piezas que se suministran a todos los proyectos de París.
 -- (piezas, proyectos) / proyectos de paris
 -- Dividendo:
-select distinct codpie, codpj from ventas;
+SELECT DISTINCT codpie, codpj FROM ventas;
 -- Divisor:
-select codpj from proyecto where ciudad = 'Paris';
+SELECT codpj FROM proyecto WHERE ciudad = 'Paris';
 
--- 1. AR
-select distinct codpie from ventas
-minus
-select codpie from(
-    select codpie, codpj from
-        (select codpie from pieza),
-        (select codpj from proyecto where ciudad = 'Paris')
-    minus
-    select distinct codpie, codpj from ventas
+-- Opción 1: AR
+SELECT codpie FROM pieza
+MINUS
+SELECT codpie FROM(
+    SELECT codpie, codpj FROM
+        (SELECT codpie FROM pieza),
+        (SELECT codpj FROM proyecto WHERE ciudad = 'Paris')
+    MINUS
+    SELECT codpie, codpj FROM ventas
 );
 
--- 2. DOBLE NOT EXISTS
-select distinct codpie from ventas v where not exists(
-    select * from proyecto pj where ciudad = 'Paris' and not exists(
-        select * from ventas
-            where codpie = v.codpie and codpj = pj.codpj
+-- Opción 2: Doble NOT EXISTS
+SELECT codpie FROM pieza WHERE NOT EXISTS(
+    SELECT codpj FROM proyecto WHERE ciudad = 'Paris' AND NOT EXISTS(
+        SELECT * FROM ventas
+            WHERE codpie = pieza.codpie AND codpj = proyecto.codpj
     )
 );
 
--- 3. NOT EXISTS & MINUS
-select distinct codpie from ventas v where not exists(
-    select codpj from proyecto where ciudad = 'Paris'
-    minus
-    select codpj from ventas
-        where codpie = v.codpie
+-- Opción 3: NOT EXISTS & MINUS
+SELECT codpie FROM pieza WHERE NOT EXISTS(
+    SELECT codpj FROM proyecto WHERE ciudad = 'Paris'
+    MINUS
+    SELECT codpj FROM ventas
+        WHERE codpie = pieza.codpie
 );
 
--- 12. Encontrar los códigos de los proveedores que venden la misma pieza a 
--- todos los proyectos.
+-- 12. Encontrar los códigos de los proveedores que venden la misma pieza a todos los proyectos.
 -- (proveedor, pieza, proyecto) / (proyecto)
+-- Dividendo:
+SELECT codpro, codpie, codpj FROM ventas;
 
--- 1. NOT EXISTS & MINUS
-select distinct codpro, codpie from ventas v where not exists(
-    select codpj from proyecto
-    minus
-    select codpj from ventas
-        where codpro = v.codpro and codpie = v.codpie
+-- Opción 1: NOT EXISTS & MINUS
+SELECT DISTINCT codpro, codpie FROM ventas v WHERE NOT EXISTS(
+    SELECT codpj FROM proyecto
+    MINUS
+    SELECT codpj FROM ventas
+        WHERE codpro = v.codpro AND codpie = v.codpie
 );
 
--- 2. DOBLE NOT EXISTS
-select distinct codpro, codpie from ventas v where not exists(
-    select * from proyecto pj where not exists(
-        select * from ventas
-            where codpro = v.codpro and codpie = v.codpie
-                  and codpj = pj.codpj
+-- Opción 2: Doble NOT EXISTS
+SELECT DISTINCT codpro, codpie FROM ventas v WHERE NOT EXISTS(
+    SELECT * FROM proyecto pj WHERE NOT EXISTS(
+        SELECT * FROM ventas
+            WHERE codpro = v.codpro AND codpie = v.codpie
+                AND codpj = pj.codpj
     )
 );
 
--- 3. AR
-select distinct codpro, codpie from ventas
-minus
-select codpro, codpie from(
-    select codpro, codpie, codpj from
-        (select codpro, codpie from ventas),
-        (select codpj from proyecto)
-    minus
-    select codpro, codpie, codpj from ventas
+-- Opción 3: AR
+SELECT codpro, codpie FROM ventas
+MINUS
+SELECT codpro, codpie FROM(
+    SELECT codpro, codpie, codpj FROM
+        (SELECT codpro, codpie FROM ventas),
+        (SELECT codpj FROM proyecto)
+    MINUS
+    SELECT codpro, codpie, codpj FROM ventas
 );
 
--- 13. Encontrar los códigos de los proyectos a los que el proveedor S1 
--- suministra todas las piezas existentes.
+-- 13. Encontrar los códigos de los proyectos a los que el proveedor S1 suministra todas las piezas existentes.
 -- (proyecto, piezas dadas por S1) / (piezas)
 -- Dividendo:
-select distinct codpj, codpie from ventas where codpro = 'S1';
+SELECT DISTINCT codpj, codpie FROM ventas WHERE codpro = 'S1';
 
--- 1. AR
-select distinct codpj from ventas
-minus
-select codpj from (
-    select codpj, codpie from proyecto, pieza
-    minus
-    select distinct codpj, codpie from ventas where codpro = 'S1'
+-- Opción 1: AR
+SELECT codpj FROM ventas
+MINUS
+SELECT codpj FROM (
+    SELECT codpj, codpie FROM proyecto, pieza
+    MINUS
+    SELECT codpj, codpie FROM ventas WHERE codpro = 'S1'
 );
 
--- 2. DOBLE NOT EXISTS
-select distinct codpj from ventas v where not exists(
-    select * from pieza p where not exists(
-        select * from ventas 
-            where codpro = 'S1'
-              and codpj = v.codpj and codpie = p.codpie
+-- Opción 2: Doble NOT EXISTS
+SELECT DISTINCT codpj FROM ventas v WHERE NOT EXISTS(
+    SELECT codpie FROM pieza WHERE NOT EXISTS(
+        SELECT * FROM ventas 
+            WHERE codpro = 'S1'
+              AND codpj = v.codpj AND codpie = pieza.codpie
     )
 );
 
--- 3. NOT EXISTS & MINUS
-select distinct codpj from ventas v where not exists(
-    select codpie from pieza
-    minus
-    select codpie from ventas 
-        where codpro = 'S1' and codpj = v.codpj
+-- Opción 3: NOT EXISTS & MINUS
+SELECT DISTINCT codpj FROM ventas v WHERE NOT EXISTS(
+    SELECT codpie FROM pieza
+    MINUS
+    SELECT codpie FROM ventas 
+        WHERE codpro = 'S1' AND codpj = v.codpj
 );
 
--- 14. Mostrar los códigos de los proveedores que suministran todas las piezas 
--- a todos los proyectos.
+-- 14. Mostrar los códigos de los proveedores que suministran todas las piezas a todos los proyectos.
 -- (codpro, codpie, codpj) / (codpie, codpj)
--- 1. AR
-select distinct codpro from ventas
-minus
-select codpro from(
-    select codpro, codpie, codpj from proveedor, pieza, proyecto
-    minus
-    select codpro, codpie, codpj from ventas
+-- Opción 1: AR
+SELECT codpro FROM ventas
+MINUS
+SELECT codpro FROM(
+    SELECT codpro, codpie, codpj FROM proveedor, pieza, proyecto
+    MINUS
+    SELECT codpro, codpie, codpj FROM ventas
 );
 
--- 2. DOBLE NOT EXISTS
-select distinct codpro from ventas v1 where not exists(
-    select * from ventas v2 where not exists(
-        select * from ventas 
-            where codpro = v1.codpro
-              and codpie = v2.codpie
-              and codpj = v2.codpj
+-- Opción 2: Doble NOT EXISTS
+SELECT DISTINCT codpro FROM ventas v1 WHERE NOT EXISTS(
+    SELECT codpie, codpj FROM ventas v2 WHERE NOT EXISTS(
+        SELECT * FROM ventas 
+            WHERE codpro = v1.codpro
+              AND codpie = v2.codpie
+              AND codpj = v2.codpj
     )
 );
 
--- 3. NOT EXISTS & MINUS
-select distinct codpro from ventas v where not exists(
-    select codpie, codpj from ventas
-    minus
-    select codpie, codpj from ventas
-        where codpro = v.codpro
+-- Opción 3: NOT EXISTS & MINUS
+SELECT DISTINCT codpro FROM ventas v WHERE NOT EXISTS(
+    SELECT codpie, codpj FROM ventas
+    MINUS
+    SELECT codpie, codpj FROM ventas
+        WHERE codpro = v.codpro
 );
 
 -- 15. Pieza con más peso entre las que pesan menos de 100.
-select codpie, peso from pieza
-where peso <= 100 and peso = (select max(peso) from pieza where peso <= 100);
+SELECT codpie, peso FROM pieza
+    WHERE peso < 100
+        AND peso = (SELECT MAX(peso) FROM pieza WHERE peso < 100);
 
 -- 16. Entre los proyectos de Jaén, mostrar el que ha suministrado la pieza de 
 -- mayor peso (puede haber más de uno).
-select distinct codpj, peso
-from ventas natural join pieza
-where peso = (select max(peso) from pieza natural join ventas);
+SELECT DISTINCT codpj, peso
+    FROM ventas
+        NATURAL JOIN pieza
+        NATURAL JOIN (SELECT codpj FROM proyecto WHERE ciudad = 'Jaen')
+    WHERE peso = (
+        SELECT MAX(peso)
+            FROM ventas
+                NATURAL JOIN pieza
+                NATURAL JOIN (SELECT codpj FROM proyecto WHERE ciudad = 'Jaen')
+    );
 
--- 17. Proyectos para los que la lista de piezas que han suministrado tiene 
--- al menos dos piezas distintas.
+-- 17. Proyectos para los que la lista de piezas que han suministrado tiene al menos dos piezas distintas.
 -- Con AR:
-select distinct v1.codpj
-from ventas v1 join ventas v2 on 
-        (v1.codpj = v2.codpj and v1.codpie != v2.codpie);
+SELECT DISTINCT v1.codpj
+    FROM ventas v1
+        JOIN ventas v2 ON (v1.codpj = v2.codpj)
+    WHERE v1.codpie != v2.codpie;
         
 -- Con SQL:
-select codpj, count(distinct codpie)
-from ventas
-group by codpj
-having count(distinct codpie) >= 2;
+SELECT codpj, COUNT(DISTINCT codpie)
+    FROM ventas
+    GROUP BY codpj
+    HAVING COUNT(DISTINCT codpie) >= 2;
 
--- 18. Proyectos para los que la lista de piezas que han suministrado tiene 
--- exactamente dos piezas distintas.
-select codpj, count(distinct codpie)
-from ventas
-group by codpj
-having count(distinct codpie) = 2;
+-- 18. Proyectos para los que la lista de piezas que les han suministrado tiene exactamente dos piezas distintas.
+SELECT codpj, COUNT(DISTINCT codpie)
+    FROM ventas
+    GROUP BY codpj
+    HAVING COUNT(DISTINCT codpie) = 2;
 
 -- 19. Proveedores que han hecho una o dos ventas (y no más).
-select codpro, count(*)
-from ventas
-group by codpro
-having count(*) between 1 and 2;
+SELECT codpro, COUNT(*)
+    FROM ventas
+    GROUP BY codpro
+    HAVING COUNT(*) between 1 AND 2;
 
--- 20. Proveedores en los que todos sus suministros son de una pieza roja o 
--- de una pieza de Granada.
-select distinct codpro from ventas
-minus
-select codpro from ventas
-where codpie in 
-    (select codpie from pieza where color != 'Rojo' and ciudad != 'Granada');
+-- 20. Proveedores en los que todos sus suministros son de una pieza roja o de una pieza de Granada.
+SELECT codpro FROM ventas
+MINUS
+SELECT codpro FROM ventas
+    WHERE codpie IN 
+        (SELECT codpie 
+            FROM pieza 
+            WHERE color != 'Rojo'
+                AND ciudad != 'Granada'
+    );
+    --
+SELECT codpro FROM ventas
+MINUS
+SELECT codpro 
+    FROM ventas NATURAL JOIN pieza
+    WHERE color != 'Rojo'
+        AND ciudad != 'Granada';
 
