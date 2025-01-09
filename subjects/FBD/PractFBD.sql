@@ -1046,16 +1046,24 @@ SELECT codpro
 --
 
 -- Ejercicio 3.56 Encontrar el nombre de aquellos proveedores que venden más de una pieza roja.
-SELECT codpro, nompro, COUNT(*)
+SELECT codpro, nompro, COUNT(DISTINCT ventas.codpie)
     FROM ((proveedor NATURAL JOIN ventas) JOIN pieza ON ventas.codpie=pieza.codpie)
     WHERE color='Rojo'
     GROUP BY codpro, nompro
-    HAVING COUNT(*) > 1;
-SELECT codpro, nompro, COUNT(*)
+    HAVING COUNT(DISTINCT ventas.codpie) > 1;
+SELECT codpro, nompro, COUNT(DISTINCT ventas.codpie)
     FROM ventas NATURAL JOIN proveedor
     WHERE codpie IN (SELECT codpie FROM pieza WHERE color='Rojo')
     GROUP BY codpro, nompro
-    HAVING COUNT(*) > 1;
+    HAVING COUNT(DISTINCT ventas.codpie) > 1;
+--
+SELECT v1.codpro
+    FROM (SELECT * FROM ventas NATURAL JOIN pieza) v1,
+         (SELECT * FROM ventas NATURAL JOIN pieza) v2
+    WHERE v1.codpro=v2.codpro
+        AND v1.codpie > v2.codpie
+        AND v1.color='Rojo'
+        AND v2.color=v1.color;
 --
 
 -- Ejercicio 3.57 Encontrar todos los proveedores que vendiendo todas las piezas rojas cumplen la condición de que todas sus ventas son de más de 10 unidades.
@@ -1535,12 +1543,6 @@ SELECT * FROM proveedor2;
 SELECT * FROM user_tables
     WHERE LOWER(table_name) LIKE '%proveedor2%';
 --
-
-/*------------------------------------------------------------------------------------------
-    EJERCICIOS ADICIONALES
-*/------------------------------------------------------------------------------------------
--- Proveedores que han vendido a un único proyecto de cada una de las ciudades donde hay proyectos y una pieza distinta a cada uno necesitando ser esa pieza de una ciudad distinta a la del proveedor en cuestión.
-
 
 /*-------------------------------------------
 -- Relación de ejercicios 1 de AR --
@@ -2232,3 +2234,188 @@ SELECT codpro
     WHERE color != 'Rojo'
         AND ciudad != 'Granada';
 
+
+/*------------------------------------------------------------------------------------------
+    EJERCICIOS ADICIONALES
+*/------------------------------------------------------------------------------------------
+-- Proveedores que han vendido a un único proyecto de cada una de las ciudades donde hay proyectos y una pieza distinta a cada uno necesitando ser esa pieza de una ciudad distinta a la del proveedor en cuestión.
+
+
+-- A. Proveedor que tiene el mayor número de ventas de la pieza P1 en el último año (puede ser más de uno).
+SELECT codpro, SUM(cantidad)
+    FROM ventas
+    WHERE codpie = 'P1'
+        AND fecha > ADD_MONTHS(SYSDATE, -12)
+    GROUP BY codpro
+    HAVING SUM(cantidad) = (
+        SELECT MAX(SUM(cantidad))
+            FROM ventas
+            WHERE codpie = 'P1'
+                AND fecha > ADD_MONTHS(SYSDATE, -12)
+            GROUP BY codpro
+    );
+
+-- B. Piezas de color blanco que aparecen en, al menos, tres envíos con proveedores diferentes.
+SELECT codpie, COUNT(DISTINCT codpro)
+    FROM ventas
+        NATURAL JOIN pieza
+    WHERE color = 'Blanco'
+    GROUP BY codpie
+    HAVING COUNT(DISTINCT codpro) >= 3;
+
+-- C. Proyectos en los que los suministros en el año 2000 tienen una cantidad media superior a 150.
+SELECT codpj, AVG(cantidad)
+    FROM ventas
+    WHERE TO_CHAR(fecha, 'YYYY') = '2000'
+    GROUP BY codpj
+    HAVING AVG(cantidad) > 150;
+
+-- D. Proveedores con el número más alto de suministros a proyectos de Londres realizados durante el mes de enero de 2000.
+SELECT codpro, COUNT(*)
+    FROM ventas NATURAL JOIN proyecto
+    WHERE TO_CHAR(fecha, 'MM/YYYY') = '01/2000'
+        AND ciudad = 'Londres'
+    GROUP BY codpro
+    HAVING COUNT(*) = (
+        SELECT MAX(COUNT(*))
+            FROM ventas NATURAL JOIN proyecto
+            WHERE TO_CHAR(fecha, 'MM/YYYY') = '01/2000'
+                AND ciudad = 'Londres'
+            GROUP BY codpro
+    );
+
+
+-- E. Proveedores que han suministrado al menos tres piezas distintas a cada proyecto.
+-- Dividendo: (Proveedor, proyecto) que han suministrado al menos 3 piezas
+SELECT codpro, codpj
+    FROM ventas
+    GROUP BY codpro, codpj
+    HAVING COUNT(codpie)>=3;    -- No hace falta DISTINCT, ya que (codpro, codpj, codpie) es clave primaria
+-- Divisor: Proyectos
+SELECT codpj FROM proyecto;
+
+-- Opción 1: AR
+SELECT codpro FROM proveedor
+MINUS
+SELECT codpro FROM(
+    SELECT codpro, codpj FROM
+        (SELECT codpro FROM proveedor),
+        (SELECT codpj FROM proyecto)
+    MINUS
+    SELECT codpro, codpj FROM ventas
+        GROUP BY codpro, codpj
+        HAVING COUNT(codpie)>=3
+);
+-- Opción 2: Doble NOT EXISTS
+SELECT codpro FROM proveedor WHERE NOT EXISTS(
+    SELECT codpj FROM proyecto WHERE NOT EXISTS(
+        SELECT * FROM ventas
+            WHERE codpro = proveedor.codpro
+                AND codpj = proyecto.codpj
+            GROUP BY codpro, codpj
+            HAVING COUNT(codpie)>=3
+    )
+);
+-- Opción 3: NOT EXISTS & MINUS
+SELECT codpro FROM proveedor WHERE NOT EXISTS(
+    SELECT codpj FROM proyecto
+    MINUS
+    SELECT codpj FROM ventas
+        WHERE codpro = proveedor.codpro
+        GROUP BY codpro, codpj
+        HAVING COUNT(codpie)>=3
+);
+
+
+
+-- F. Piezas que aparecen en un único suministro durante el año 2010.
+SELECT codpie
+    FROM ventas
+    WHERE TO_CHAR(fecha, 'YYYY') = '2010'
+    GROUP BY codpie
+    HAVING COUNT(*) = 1;
+
+-- G. Piezas cuyo último suministro fue realizado en marzo de 2010.
+SELECT codpie
+    FROM ventas
+    GROUP BY codpie
+    HAVING MAX(fecha) = TO_DATE('03/2010', 'MM/YYYY');
+
+-- H. Proyectos que reciben solo tres piezas distintas de proveedores de Londres.
+SELECT codpj
+    FROM ventas NATURAL JOIN proveedor
+    WHERE ciudad = 'Londres'
+    GROUP BY codpj
+    HAVING COUNT(DISTINCT codpie) = 3;
+
+-- I. Proyectos que solo tienen un proveedor con varios suministros en el último año.
+-- Proveedores con varios suministros en el último año:
+SELECT codpro
+    FROM ventas
+    WHERE fecha > ADD_MONTHS(SYSDATE, -12)
+    GROUP BY codpro
+    HAVING COUNT(*) > 1;
+-- Proyectos con un único proveedor con varios suministros en el último año:
+SELECT codpj
+    FROM ventas
+    WHERE codpro IN (
+        SELECT codpro
+            FROM ventas
+            WHERE fecha > ADD_MONTHS(SYSDATE, -12)
+            GROUP BY codpro
+            HAVING COUNT(*) > 1
+    )
+    GROUP BY codpj
+    HAVING COUNT(DISTINCT codpro) = 1;
+
+-- J. Piezas de color rojo que han sido suministradas al menos dos veces cada año (considerando solo los años en los que se han producido envíos en la BD).
+-- Dividendo: (Pieza, año) que ha sido suministrada al menos 2 veces
+SELECT codpie, TO_CHAR(fecha, 'YYYY')
+    FROM ventas NATURAL JOIN pieza
+    WHERE color = 'Rojo'
+    GROUP BY codpie, TO_CHAR(fecha, 'YYYY')
+    HAVING COUNT(*) >= 2;
+
+-- Divisor: Años en los que se han producido envíos
+SELECT DISTINCT TO_CHAR(fecha, 'YYYY')
+    FROM ventas;
+
+-- Opción 1: AR
+SELECT codpie FROM pieza
+    WHERE color = 'Rojo'
+MINUS
+SELECT codpie FROM(
+    SELECT codpie, TO_CHAR(fecha, 'YYYY') FROM
+        (SELECT codpie FROM pieza
+            WHERE color = 'Rojo'),
+        (SELECT fecha FROM ventas)
+    MINUS
+    SELECT codpie, TO_CHAR(fecha, 'YYYY')
+        FROM ventas NATURAL JOIN pieza
+        WHERE color = 'Rojo'
+        GROUP BY codpie, TO_CHAR(fecha, 'YYYY')
+        HAVING COUNT(*) >= 2
+);
+
+-- Opción 2: Doble NOT EXISTS
+SELECT codpie FROM pieza WHERE color = 'Rojo' AND NOT EXISTS(
+    SELECT TO_CHAR(fecha, 'YYYY') FROM ventas WHERE NOT EXISTS(
+        SELECT * FROM ventas NATURAL JOIN pieza
+            WHERE color = 'Rojo'
+                AND codpie = pieza.codpie
+                AND TO_CHAR(fecha, 'YYYY') = TO_CHAR(ventas.fecha, 'YYYY')
+        GROUP BY codpie, TO_CHAR(fecha, 'YYYY')
+        HAVING COUNT(*) >= 2
+    )
+);
+
+-- Opción 3: NOT EXISTS & MINUS
+SELECT codpie FROM pieza WHERE color = 'Rojo' AND NOT EXISTS(
+    SELECT TO_CHAR(fecha, 'YYYY') FROM ventas
+    MINUS
+    SELECT TO_CHAR(fecha, 'YYYY')
+        FROM ventas NATURAL JOIN pieza
+        WHERE color = 'Rojo'
+        GROUP BY codpie, TO_CHAR(fecha, 'YYYY')
+        HAVING COUNT(*) >= 2
+);
