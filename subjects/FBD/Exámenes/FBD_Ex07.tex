@@ -1,0 +1,262 @@
+\documentclass[12pt]{article}
+
+\input{../../_assets/preambulo.tex}
+\usetikzlibrary{er, fit}
+
+\newcommand{\key}[1]{\ul{#1}}
+
+% Definición de estilos
+\tikzset{atributo/.style={attribute}}
+\tikzset{entidad/.style={entity}}
+\tikzset{relacion/.style={relationship}}
+\tikzset{atributo derivado/.style={attribute, dashed}}
+\tikzset{union discriminante/.style={dashed}}
+\tikzset{entidad debil/.style={entidad, double distance=1.5 pt}}
+\tikzset{participacion obligatoria/.style={double distance=1.5 pt}}
+\tikzset{herencia/.style={draw, isosceles triangle, isosceles triangle apex angle=60, shape border rotate=230, minimum height=1cm, minimum width=1cm, fill=blue!20}}
+\tikzset{agregacion/.style={draw, fit=#1, inner sep=0.5em}}
+
+
+% Estilos estéticos
+\tikzset{every entity/.style={draw=orange, fill=orange!20}}
+\tikzset{every attribute/.style={draw=purple, fill=purple!20, font=\footnotesize}}
+\tikzset{every relationship/.style={draw=green, fill=green!20, minimum height=2cm, minimum width=2cm}}
+
+\begin{comment}
+    \begin{tikzpicture}[node distance=6 em]
+        \node [entidad](person){Person};
+        \node [atributo derivado](pid) at (0.8,-2){\key{ID}} edge (person);
+        \node [atributo](name) at (-0.8, -2) {Name} edge (person);
+        \node [atributo](phone)[left of=person]{Phone} edge[union discriminante] (person);
+        \node [atributo](address)[above left of=person]{Address} edge[-stealth] (person);
+        \node [atributo](street)[above left of=address]{Street} edge (address);
+        \node [atributo](city)[left of=address]{City} edge (address);
+        \node [atributo](age)[above of=person]{Age} edge (person);
+        \node [relacion](uses)[right of=person]{Uses} edge[participacion obligatoria] (person);
+        \node [entidad debil](tool)[right of=uses]{Tool} edge (uses);
+        \node [atributo](tid)[right of=tool]{\key{ID}} edge[Stealth-Stealth] (tool);
+        \node [atributo](tname)[below of=tool]{Name} edge (tool);
+    
+        % Línea desde encima de Name hasta encima de ID
+        \draw ([yshift=1em]name.north) -- ([yshift=1em]pid.north) node[circle, fill, inner sep=1.5pt] {};
+    
+        \node[agregacion=(A) (B) (R)] (box) {};
+    
+        \node [herencia, below of= B](H){} edge (B);
+    \end{tikzpicture}
+\end{comment}
+
+% ---------------------------------------------------
+\tikzset{
+    CP/.style={
+        overlay, text opacity=0, fill opacity=0,
+        append after command={
+            \pgfextra{
+                \draw[thick] (\tikzlastnode.south west) -- (\tikzlastnode.south east);
+                \node[below=0ex of \tikzlastnode] {CP};
+            }
+        }
+    },
+    CC/.style={
+        overlay, text opacity=0, fill opacity=0,
+        append after command={
+            \pgfextra{
+                \draw[thick] (\tikzlastnode.south west) -- (\tikzlastnode.south east);
+                \node[below=0ex of \tikzlastnode] {CC};
+            }
+        }
+    },
+    CE/.style={
+        overlay, text opacity=0, fill opacity=0,
+        append after command={
+            \pgfextra{
+                \draw[thick, purple] (\tikzlastnode.north west) -- (\tikzlastnode.north east);
+                \node[above=0ex of \tikzlastnode, text=purple] {CE};
+            }
+        }
+    }
+}
+
+
+\begin{document}
+
+    % 1. Foto de fondo
+    % 2. Título
+    % 3. Encabezado Izquierdo
+    % 4. Color de fondo
+    % 5. Coord x del titulo
+    % 6. Coord y del titulo
+    % 7. Fecha
+
+    
+    \input{../../_assets/portada}
+    \portadaExamen{etsiitA4.jpg}{FBD\\Examen VII}{FBD. Examen VII}{MidnightBlue}{-8}{28}{2024-2025}{}
+
+    \begin{description}
+        \item[Asignatura] Fundamentos de Bases de Datos.
+        \item[Curso Académico] 2024-25.
+        \item[Grado] Doble Grado en Ingeniería Informática y Matemáticas.
+        \item[Grupo] Único.
+        \item[Profesor] Nicolás Marín Ruiz.
+        \item[Descripción] Convocatoria Ordinaria. Parcial Práctico 2 (Seminarios 3-4).
+        \item[Fecha] 10 de enero de 2025.
+        \item[Duración] 90 minutos (durante los cuales también se tenía que hacer la parte de teoría, 20 preguntas tipo test).
+    
+    \end{description}
+    \newpage
+
+    Ante el siguiente esquema de la BD:
+    \begin{itemize}
+        \item Empresa(id\_empresa, nombre\_empresa, pais)
+            \begin{itemize}
+                \item Donde ``id\_empresa'' es la clave primaria.
+            \end{itemize}
+        \item Proyecto(id\_proyecto, id\_empresa, titulo, fecha\_creacion)
+            \begin{itemize}
+                \item Donde ``id\_proyecto'' es la clave primaria.
+                \item ``id\_empresa'' es una clave externa que referencia a Empresa(id\_empresa).
+            \end{itemize}
+        \item Revisor(id\_revisor, nombre\_revisor, tarifa, categoria)
+            \begin{itemize}
+                \item Donde ``id\_revisor'' es la clave primaria.
+            \end{itemize}
+        \item Revision(id\_revisor, id\_proyecto, fecha, puntuacion)
+            \begin{itemize}
+                \item Donde ``(id\_revisor, id\_proyecto, fecha)'' es la clave primaria.
+                \item ``id\_revisor'' es una clave externa que referencia a Revisor(id\_revisor).
+                \item ``id\_proyecto'' es una clave externa que referencia a Proyecto(id\_proyecto).
+            \end{itemize}
+    \end{itemize}
+
+    \subsection*{SQL}
+    \begin{ejercicio}
+        Actualiza la puntuación de las revisiones del revisor con id ``1234'', sumándole 10 a cada puntuación realizada por él.
+    \end{ejercicio}
+    \begin{ejercicio}
+        Sobre la tabla \verb|Proyecto|:
+        \begin{enumerate}[label=\alph*)]
+            \item Cree un índice de mapa de bits sobre el campo \verb|titulo|.
+            \item ¿Es una buena opción? Justifique su respuesta.
+            \item Borre el índice.
+        \end{enumerate}
+    \end{ejercicio}
+    \begin{ejercicio}
+        Mostrar para cada revisor la suma de las puntuaciones de las revisiones hechas en 2024 solo de aquellos proveedores que hayan hecho al menos 5 revisiones en 2023.
+    \end{ejercicio}
+    \begin{ejercicio}
+        Mostrar los revisores que han hecho al menos una revisión a cada uno de los proyectos de la empresa con id ``EMP1''. 
+    \end{ejercicio}
+    \subsection*{AR}
+    \begin{ejercicio}
+        Haga una lista de \verb|id_revisor|, \verb|fecha| de las revisiones realizadas ppr los revisores de categoría ``SENIOR''.
+    \end{ejercicio}
+    \begin{ejercicio}
+        Mostrar las empresas de los proyectos que han obtenido la mayor puntuación.
+    \end{ejercicio}
+    \begin{ejercicio}
+        Mostrar el id de los revisores cuyo conjunto de puntuaciones otorgadas coincide con el conjunto de puntuaciones que han sido otorgadas por el revisor de id ``1234''.
+    \end{ejercicio}
+
+    \newpage
+    \setcounter{ejercicio}{0}
+    \subsection*{SQL}
+    \begin{ejercicio}
+        Actualiza la puntuación de las revisiones del revisor con id ``1234'', sumándole 10 a cada puntuación realizada por él.
+        \begin{minted}[numbers=none]{sql}
+            update revision set puntuacion = puntuacion + 10
+            where id_revisor = '1234';
+        \end{minted}
+    \end{ejercicio}
+    \begin{ejercicio}
+        Sobre la tabla \verb|Proyecto|:
+        \begin{enumerate}[label=\alph*)]
+            \item Cree un índice de mapa de bits sobre el campo \verb|titulo|.
+                \begin{minted}[numbers=none]{sql}
+                    create bitmap index indice_bmp_titulo
+                    on proyecto(titulo);
+                \end{minted}
+            \item ¿Es una buena opción? Justifique su respuesta.\\
+                No es una opción buena, ya que los índices de mapas de bits son útiles sobre atributos de relaciones cuyo dominio activo cuenta con pocos valores. En este caso, es probable que el atributo ``titulo'' de la tabla ``Proyecto'' contenga un título distinto por cada proyecto (aunque también existan proyectos que tengan el mismo título, aunque pocos), así como una gran variedad de títulos en el sistema.
+
+                Como contamos una entradad por cada valor y un bit por cada registro, obtendríamos una gran cantidad de enormes mapas de bits en los que cada uno contenga una gran cantidad de ceros.
+            \item Borre el índice.
+                \begin{minted}[numbers=none]{sql}
+                    drop index indice_bmp_titulo;
+                \end{minted}
+        \end{enumerate}
+    \end{ejercicio}
+    \begin{ejercicio}
+        Mostrar para cada revisor la suma de las puntuaciones de las revisiones hechas en 2024 solo de aquellos proveedores que hayan hecho al menos 5 revisiones en 2023.
+        \begin{minted}[numbers=none]{sql}
+            select id_revisor, sum(puntuacion)
+            from revision
+            where to_char(fecha, 'yyyy') = 2024
+            group by id_revisor
+            having id_revisor in (
+                select id_revisor
+                from revision
+                where to_char(fecha, 'yyyy') = 2023
+                group by id_revisor
+                having count(*) >= 5
+            );
+        \end{minted}    
+    \end{ejercicio}
+    \begin{ejercicio}
+        Mostrar los revisores que han hecho al menos una revisión a cada uno de los proyectos de la empresa con id ``EMP1''. 
+        \begin{minted}[numbers=none]{sql}
+            select distinct id_revisor
+            from revision r
+            where not exists (
+                select * from proyecto p
+                where id_empresa = 'EMP1' and not exists (
+                    select * from revision 
+                    where id_revisor = r.id_revisor
+                      and id_proyecto = p.id_proyecto
+                )
+            );
+        \end{minted}    
+    \end{ejercicio}
+    \subsection*{AR}
+    \begin{ejercicio}
+        Haga una lista de \verb|id_revisor|, \verb|fecha| de las revisiones realizadas ppr los revisores de categoría ``SENIOR''.
+        \begin{equation*}
+            \pi_{id\_revisor, fecha}(Revision \bowtie \sigma_{categoria='SENIOR'}(Revisor))
+        \end{equation*}
+    \end{ejercicio}
+    \begin{ejercicio}
+        Mostrar las empresas de los proyectos que han obtenido la mayor puntuación.\\
+
+        Primero calculamos los proyectos que han obtenido la mayor puntuación en una revisión:
+        \begin{gather*}
+            R = \rho(Revision) \\
+            \alpha = \rho(\pi_{id\_proyecto}(R) - \pi_{R.id\_proyecto}(R\bowtie_{R.puntuacion<Revision.puntuacion} Revision));
+        \end{gather*}   
+        Finalmente, nos quedamos con las empresas de dichos proyectos:
+        \begin{equation*}
+            \pi_{id\_empresa}(\alpha \bowtie Proyecto)
+        \end{equation*}
+    \end{ejercicio}
+    \begin{ejercicio}
+        Mostrar el id de los revisores cuyo conjunto de puntuaciones otorgadas coincide con el conjunto de puntuaciones que han sido otorgadas por el revisor de id ``1234''.\\
+
+        \noindent
+        Conjunto de puntuaciones otorgadas por el revisor de id ``1234'':
+        \begin{equation*}
+            P = \rho(\pi_{puntuacion}(\sigma_{id\_revisor='1234'}(Revision)))
+        \end{equation*}
+        Revisores que han otorgado puntuaciones que no están en $P$:
+        \begin{equation*}
+            \alpha = \rho (\pi_{id\_revisor}(Revision \bowtie (\pi_{puntuacion}(Revision) - P)))
+        \end{equation*}
+        Revisores que no han otorgado puntuaciones que no están en $P$ (es decir, el conjunto de revisores que solo otorgan puntuaciones de $P$):
+        \begin{equation*}
+            \beta = \rho(\pi_{id\_revisor}(Revision) - \alpha)
+        \end{equation*}
+        Tenemos que asegurarnos de que dichos revisor otorgen \textbf{todas} las puntuaciones que hay en $P$, con lo que habrán otorgado exactamente las puntuaciones que hay en $P$:
+        \begin{equation*}
+            \pi_{id\_revisor,\ puntuacion}(\beta \bowtie Revision) \div P
+        \end{equation*}
+    \end{ejercicio}
+
+
+\end{document}
