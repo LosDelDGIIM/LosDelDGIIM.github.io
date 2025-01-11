@@ -2,6 +2,8 @@
 
 \input{../../_assets/preambulo.tex}
 \usepgfplotslibrary{fillbetween}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Cov}{Cov}
 
 \begin{document}
 
@@ -32,10 +34,12 @@
 
     \begin{ejercicio}
         Sean $X_1$, $X_2$, \ldots, $X_n$ variables aleatorias continuas e independientes, tales que $\exists E[X_i]$ $\forall i=1,\ldots,n$, con momento no centrado de orden dos finito. Justificar que:
-        \begin{enumerate}[label=\alph*)]
-            \item \textbf{(0.5 puntos)} $\exists Var(\sum_{i=1}^{n}a_iX_i) = \sum_{i=1}^{n}a_i^2 Var(X_i)$ $\forall a_1,\ldots,a_n\in \mathbb{R}$.
+        \begin{enumerate}
+            \item \textbf{(0.5 puntos)} $\exists \Var\left(\sum\limits_{i=1}^{n}a_iX_i\right) = \sum\limits_{i=1}^{n}a_i^2 \Var(X_i)$ $\forall a_1,\ldots,a_n\in \mathbb{R}$.
             \item \textbf{(0.5 puntos)} $(X_1, \ldots, X_n)$ es un vector aleatorio continuo.
         \end{enumerate}
+
+        Ambos apartados se encuentran demostrados en el Tema correspondiente a independencia de variables aleatorias.
     \end{ejercicio}
 
     \begin{ejercicio}
@@ -43,16 +47,266 @@
         \begin{equation*}
             C = \{(x,y)\in \mathbb{R}^2 \mid x^2+y^2 < 1 \quad x,y\geq 0\}
         \end{equation*}
-        \begin{enumerate}[label=\alph*)]
+        \begin{observacion}
+            Si necesitara obtener la primitiva de la función $f(x) = \sqrt{1-x^2}$, realizar el cambio de variable unidimensional $x=\sen(t)$.
+        \end{observacion}
+        \begin{enumerate}
             \item \textbf{(1.25 puntos)} Calcular la función de distribución de probabilidad conjunta.
+            \begin{observacion}
+                Se obtiene \textbf{hasta 1 punto} si las integrales se dejan indicadas y \textbf{hasta 1.25 puntos} si se obtienen sus primitivas de forma explícita.
+            \end{observacion}
+
+            Calculamos en primer lugar la función de densidad conjunta.
+            Esta es constante en $C$, por lo que:
+            \begin{equation*}
+                f(x, y) = \begin{cases}
+                    k, & x^2+y^2<1, x,y\geq 0 \\
+                    0, & \text{en otro caso}.
+                \end{cases}
+            \end{equation*}
+
+            Para que $f$ sea una función de densidad, tenemos que:
+            \begin{align*}
+                1&=\int_{-\infty}^{+\infty} \int_{-\infty}^{+\infty} f(x, y) \, dx \, dy
+            \end{align*}
+
+            Hay dos opciones:
+            \begin{description}
+                \item[Integrando de la forma usual:]
+                
+                Es necesario que:
+                \begin{equation*}
+                    1=\int_{0}^{1} \int_{0}^{\sqrt{1-x^2}} k \, dy \, dx = k\int_{0}^{1} \sqrt{1-x^2} \, dx
+                \end{equation*}
+
+                Haciendo el cambio de variable $x=\sen(t)$, tenemos que:
+                \begin{align*}
+                    1&=k\int_{0}^{\frac{\pi}{2}} \cos(t)\cos(t) \, dt = k\int_{0}^{\frac{\pi}{2}} \cos^2(t) \, dt
+                    = k\int_{0}^{\frac{\pi}{2}} \dfrac{1+\cos(2t)}{2} \, dt
+                    =\\&= k\left[\dfrac{t}{2}+\dfrac{\sen(2t)}{4}\right]_0^{\frac{\pi}{2}}
+                    = k\left[\dfrac{\pi}{4}\right] \Longrightarrow k=\dfrac{4}{\pi}.
+                \end{align*}
+
+                \item[Razonando la forma de $C$:]
+                
+                Sabemos que $C$ es un cuarto de círculo de radio 1, por lo que su área es $\nicefrac{\pi}{4}$. Por tanto, tenemos que:
+                \begin{equation*}
+                    1=\int_C f(x, y) = k\int_C 1 = k\cdot \lm(C) = k\cdot \dfrac{\pi}{4} \Longrightarrow k=\dfrac{4}{\pi}.
+                \end{equation*}
+            \end{description}
+
+
+            Para calcular la función de distribución conjunta, dividimos el plano cartesiano en las distintas regiones:
+            \begin{figure}[H]
+                \centering
+                \begin{tikzpicture}
+                    \begin{axis}[
+                        axis lines = center,
+                        xlabel = $X$,
+                        ylabel = $Y$,
+                        xmin = -0.5, xmax = 1.5,
+                        ymin = -0.5, ymax = 1.5,
+                        xtick = {0,1},
+                        ytick = {0,1},
+                        yticklabel style = {yshift=-1.5ex},
+                        xticklabel style = {xshift=-1.5ex},
+                        axis equal,
+                    ]
+                        % R2: Cuarto de circunferencia
+                        \addplot [name path=A, blue, thick, forget plot, samples=70, domain=0:1] {sqrt(1-x^2)};
+                        
+                        % Dibuja la línea horizontal en y=0
+                        \addplot [name path=B, forget plot, draw=none] {0};
+
+                        % Dibuja la línea horizontal en y=0
+                        \addplot [name path=C, forget plot, draw=none] {1};
+                    
+                        % Rellena el área bajo la curva entre x=0 y x=1
+                        \addplot [
+                            thick,
+                            color=orange,
+                            fill=orange,
+                            fill opacity=0.4
+                        ]
+                        fill between [
+                            of=A and B,
+                            soft clip={domain=0:1},
+                        ];
+                        
+                        % Señalamos zona R2
+                        \node at (0.5, 0.5) {$R_2$};
+
+                        % R1: (0, 2), (-2, 2), (-2, -2), (2, -2), (2, 0), (0, 0)
+                        \addplot[fill=red, opacity=0.2] coordinates {
+                            (0, 2) (-2, 2) (-2, -2) (2, -2) (2, 0) (0, 0)
+                        } --cycle;
+                        \node at (-0.25, -0.25) {$R_1$};
+
+                        \addplot [
+                            thick,
+                            color=teal,
+                            fill=teal,
+                            fill opacity=0.4
+                        ]
+                        fill between [
+                            of=C and A,
+                            soft clip={domain=0:1},
+                        ];
+                        \node at (0.8, 0.8) {$R_3$};
+
+                        \addplot[fill=blue, opacity=0.2] coordinates {
+                            (0, 1) (1,1) (1,2) (0,2)
+                        } --cycle;
+                        \node at (0.5, 1.25) {$R_4$};
+
+                        \addplot[fill=green, opacity=0.2] coordinates {
+                            (1, 1) (2,1) (2,0) (1,0)
+                        } --cycle;
+                        \node at (1.25, 0.5) {$R_5$};
+
+                        \addplot[fill=olive, opacity=0.2] coordinates {
+                            (1, 1) (2,1) (2,2) (1,2)
+                        } --cycle;
+                        \node at (1.25, 1.25) {$R_6$};
+                    \end{axis}
+                \end{tikzpicture}
+            \end{figure}
+
+            Distinguimos casos:
+            \begin{itemize}
+                \item \ul{Si $x\leq 0$ \quad o \quad $y\leq 0$} (zona $R_1$):
+                \begin{equation*}
+                    F_{(X,Y)}(x, y) = \int_{-\infty}^x \int_{-\infty}^y f(u, v) \, du \, dv = 0.
+                \end{equation*}
+
+                \item \ul{Si $x\in \left]0,1\right[$ \quad y \quad $y\in \left]0,\sqrt{1-x^2}\right[$} (zona $R_2$):
+                \begin{align*}
+                    F_{(X,Y)}(x, y) &= \int_{-\infty}^x \int_{-\infty}^y f(u, v) \, dv \, du = \int_{0}^x \int_{0}^y \dfrac{4}{\pi} \, dv \, du = \int_{0}^x \dfrac{4}{\pi}y \, du
+                    =\\&= \dfrac{4}{\pi}\left[yu\right]_0^x = \dfrac{4}{\pi}\cdot xy
+                \end{align*}
+
+                \item \ul{Si $x\in \left]0,1\right[$ \quad y \quad $y\in \left]\sqrt{1-x^2},1\right[$} (zona $R_3$):
+                \begin{align*}
+                    F_{(X,Y)}(x, y) &= \int_{-\infty}^x \int_{-\infty}^y f(u, v) \, dv \, du =\\&= \int_{0}^{\sqrt{1-y^2}}\int_0^y \dfrac{4}{\pi} \, dv \, du + \int_{\sqrt{1-y^2}}^x \int_0^{\sqrt{1-u^2}} \dfrac{4}{\pi} \, dv \, du =\\
+                    &= \int_{0}^{\sqrt{1-y^2}} \dfrac{4}{\pi}y \, du + \int_{\sqrt{1-y^2}}^x \dfrac{4}{\pi}\sqrt{1-u^2} \, du
+                \end{align*}
+
+                Para resolver la segunda integral, hacemos el cambio de variable dado por $u=\sen(t)$, $du=\cos(t)dt$:
+                \begin{align*}
+                    F_{(X,Y)}(x, y) &= \dfrac{4}{\pi} y\sqrt{1-y^2} + \dfrac{4}{\pi}\int_{\arcsen(\sqrt{1-y^2})}^{\arcsen(x)} \cos^2(t) \, dt
+                    =\\&= \dfrac{4}{\pi} y\sqrt{1-y^2} + \dfrac{4}{\pi}\int_{\arcsen(\sqrt{1-y^2})}^{\arcsen(x)} \dfrac{1+\cos(2t)}{2} \, dt
+                    =\\&= \dfrac{4}{\pi} y\sqrt{1-y^2} + \dfrac{4}{\pi}\left[\dfrac{t}{2}+\dfrac{\sen(2t)}{4}\right]_{\arcsen(\sqrt{1-y^2})}^{\arcsen(x)}
+                    =\\&= \dfrac{4}{\pi} y\sqrt{1-y^2} + \dfrac{4}{\pi}\left[\dfrac{\arcsen(x)}{2}+\dfrac{\sen(2\arcsen(x))}{4}-\right.\\&\qquad -\left.\dfrac{\arcsen(\sqrt{1-y^2})}{2}-\dfrac{\sen(2\arcsen(\sqrt{1-y^2}))}{4}\right]
+                \end{align*}
+
+                Veamos cuánto vale anteriormente $\sen(2\arcsen(x))$ para cierto $x\in \bb{R}$:
+                \begin{align*}
+                    \sen(2\arcsen(x)) &= 2\sen(\arcsen(x))\cos(\arcsen(x)) = 2x\sqrt{1-x^2}.
+                \end{align*}
+
+                Por tanto, tenemos que:
+                \begin{align*}
+                    F_{(X,Y)}(x, y) &= \dfrac{4}{\pi} y\sqrt{1-y^2} + \dfrac{4}{\pi}\left[\dfrac{\arcsen(x)}{2}+\dfrac{2x\sqrt{1-x^2}}{4}-\right.\\&\qquad -\left.\dfrac{\arcsen(\sqrt{1-y^2})}{2}-\dfrac{2\sqrt{1-y^2}\sqrt{y^2}}{4}\right]
+                    =\\&= \dfrac{4}{\pi} y\sqrt{1-y^2} + \dfrac{2}{\pi}\arcsen(x)+\dfrac{2}{\pi}x\sqrt{1-x^2}-\\&\qquad-\dfrac{2}{\pi}\arcsen(\sqrt{1-y^2})-\dfrac{2}{\pi}y\sqrt{1-y^2}.
+                    =\\&= \dfrac{2}{\pi} y\sqrt{1-y^2} + \dfrac{2}{\pi}\arcsen(x)+\dfrac{2}{\pi}x\sqrt{1-x^2}-\dfrac{2}{\pi}\arcsen(\sqrt{1-y^2})
+                \end{align*}
+
+                \item \ul{Si $x\in \left]0,1\right[$ \quad y \quad $y\geq 1$} (zona $R_4$):
+                \begin{align*}
+                    F_{(X,Y)}(x, y) &= \int_{-\infty}^x \int_{-\infty}^y f(u, v) \, dv \, du = \int_{0}^x \int_{0}^{\sqrt{1-u^2}} \dfrac{4}{\pi} \, dv \, du
+                    =\\&= \int_{0}^x \dfrac{4}{\pi}\sqrt{1-u^2} \, du
+                \end{align*}
+
+                Para resolver la integral, de nuevo hacemos el cambio de variable dado por $u=\sen(t)$, $du=\cos(t)dt$:
+                \begin{align*}
+                    F_{(X,Y)}(x, y) &= \dfrac{4}{\pi}\int_{0}^{\arcsen(x)} \cos^2(t) \, dt
+                    = \dfrac{4}{\pi}\int_{0}^{\arcsen(x)} \dfrac{1+\cos(2t)}{2} \, dt
+                    =\\&= \dfrac{4}{\pi}\left[\dfrac{t}{2}+\dfrac{\sen(2t)}{4}\right]_0^{\arcsen(x)}
+                    = \dfrac{4}{\pi}\left[\dfrac{\arcsen(x)}{2}+\dfrac{\sen(2\arcsen(x))}{4}\right]
+                    =\\&= \dfrac{4}{\pi}\left[\dfrac{\arcsen(x)}{2}+\dfrac{2x\sqrt{1-x^2}}{4}\right]
+                    = \dfrac{2}{\pi}\arcsen(x)+\dfrac{2}{\pi}x\sqrt{1-x^2}.
+                \end{align*}
+
+                \item \ul{Si $y\in \left]0,1\right[$ \quad y \quad $x\geq 1$} (zona $R_5$):
+                \begin{align*}
+                    F_{(X,Y)}(x, y) &= \int_{-\infty}^x \int_{-\infty}^y f(u, v) \, dv \, du =\\
+                    &= \int_{0}^{\sqrt{1-y^2}} \int_{0}^y \dfrac{4}{\pi} \, dv \, du + \int_{\sqrt{1-y^2}}^1 \int_{0}^{\sqrt{1-u^2}} \dfrac{4}{\pi} \, dv \, du
+                    =\\&= \int_{0}^{\sqrt{1-y^2}} \dfrac{4}{\pi}y \, du + \int_{\sqrt{1-y^2}}^1 \dfrac{4}{\pi}\sqrt{1-u^2} \, du
+                \end{align*}
+
+                Para resolver la segunda integral, de nuevo hacemos el cambio de variable dado por $u=\sen(t)$, $du=\cos(t)dt$:
+                \begin{align*}
+                    F_{(X,Y)}(x, y) &= \dfrac{4}{\pi}y\left[u\right]_0^{\sqrt{1-y^2}} + \dfrac{4}{\pi}\int_{\arcsen(\sqrt{1-y^2})}^{\nicefrac{\pi}{2}} \cos^2(t) \, dt
+                    =\\&= \dfrac{4}{\pi}y\sqrt{1-y^2} + \dfrac{4}{\pi}\int_{\arcsen(\sqrt{1-y^2})}^{\nicefrac{\pi}{2}} \dfrac{1+\cos(2t)}{2} \, dt
+                    =\\&= \dfrac{4}{\pi}y\sqrt{1-y^2} + \dfrac{4}{\pi}\left[\dfrac{t}{2}+\dfrac{\sen(2t)}{4}\right]_{\arcsen(\sqrt{1-y^2})}^{\nicefrac{\pi}{2}}
+                    =\\&= \dfrac{4}{\pi}y\sqrt{1-y^2} + \dfrac{4}{\pi}\left[\dfrac{\nicefrac{\pi}{2}}{2}+\dfrac{\sen(\pi)}{4}-\dfrac{\arcsen(\sqrt{1-y^2})}{2}-\right.\\&\qquad\left.-\dfrac{\sen(2\arcsen(\sqrt{1-y^2}))}{4}\right]
+                    =\\&= \dfrac{4}{\pi}y\sqrt{1-y^2} + 1 - \dfrac{2}{\pi}\arcsen(\sqrt{1-y^2}) - \dfrac{2}{\pi}y\sqrt{1-y^2}
+                    =\\&= \dfrac{2}{\pi}y\sqrt{1-y^2} + 1 - \dfrac{2}{\pi}\arcsen(\sqrt{1-y^2})
+                \end{align*}
+
+                \item \ul{Si $x,y\geq 1$} (zona $R_6$):
+                \begin{equation*}
+                    F_{(X,Y)}(x, y) = 1.
+                \end{equation*}
+            \end{itemize}
+
+            Por tanto, tenemos que:
+            \begin{equation*}
+                F_{(X,Y)}(x, y) = \begin{cases}
+                    0, & (x,y)\in R_1, \\
+                    \nicefrac{4}{\pi}xy, & (x,y)\in R_2, \\
+                    \nicefrac{2}{\pi}\left[y\sqrt{1-y^2} + x\sqrt{1-x^2}-\arcsen(\sqrt{1-y^2})\right], & (x,y)\in R_3 \\
+                    \nicefrac{2}{\pi}\left[\arcsen(x)+x\sqrt{1-x^2}\right], & (x,y)\in R_4, \\
+                    \nicefrac{2}{\pi}\left[y\sqrt{1-y^2} + \nicefrac{\pi}{2} - \arcsen(\sqrt{1-y^2})\right], & (x,y)\in R_5, \\
+                    1, & (x,y)\in R_6.
+                \end{cases}
+            \end{equation*}
             \item \textbf{(1.25 puntos)} Calcular las funciones de densidad condicionadas.
+            
+            Para ello, calculamos en primer lugar las funciones de densidad marginales. Para $x\in [0,1]$, ya que la función de densidad es constante, tenemos que:
+            \begin{align*}
+                f_X(x) &= \int_{-\infty}^{+\infty} f(x, y) \, dy = \int_{0}^{\sqrt{1-x^2}} \dfrac{4}{\pi} \, dy = \dfrac{4}{\pi}\left[y\right]_{0}^{\sqrt{1-x^2}} = \dfrac{4}{\pi}\cdot \sqrt{1-x^2}.
+            \end{align*}
+    
+            Para $y\in [0,1]$, ya que la función de densidad es constante, tenemos que:
+            \begin{align*}
+                f_Y(y) &= \int_{-\infty}^{+\infty} f(x, y) \, dx = \int_{0}^{\sqrt{1-y^2}} \dfrac{4}{\pi} \, dx = \dfrac{4}{\pi}\left[x\right]_{0}^{\sqrt{1-y^2}} = \dfrac{4}{\pi}\cdot \sqrt{1-y^2}.
+            \end{align*}
+
+            Una vez calculadas estas, calculamos las funciones de densidad condicionadas. Dado $x^\ast\in [0,1]$, tenemos para $y\in [0,\sqrt{1-(x^{\ast})^2}]$:
+            \begin{equation*}
+                f_{Y\mid X=x^\ast} (y) = \dfrac{f_{(X,Y)}(x^\ast, y)}{f_X(x^\ast)} = \dfrac{\nicefrac{4}{\pi}}{\dfrac{4}{\pi}\cdot \sqrt{1-(x^{\ast})^2}} = \dfrac{1}{\sqrt{1-(x^{\ast})^2}}.
+            \end{equation*}
+    
+            Dado $y^\ast\in [0,1]$, tenemos para $x\in [0,\sqrt{1-(y^{\ast})^2}]$:
+            \begin{equation*}
+                f_{X\mid Y=y^\ast} (x) = \dfrac{f_{(X,Y)}(x, y^\ast)}{f_Y(y^\ast)} = \dfrac{\nicefrac{4}{\pi}}{\dfrac{4}{\pi}\cdot \sqrt{1-(y^{\ast})^2}} = \dfrac{1}{\sqrt{1-(y^{\ast})^2}}.
+            \end{equation*}
         \end{enumerate}
     \end{ejercicio}
 
     \begin{ejercicio}
         Sea considera $(X,Y)$ la distribución uniforme en el cuadrado unidad.
-        \begin{enumerate}[label=\alph*)]
-            \item \textbf{(1.25 puntos)} Calcular la función de densidad de probabilidad de $Z = (X+Y,X-Y)$.
+        \begin{enumerate}
+            \item \textbf{(1.25 puntos)} Calcular la función de densidad de probabilidad del vector aleatorio $Z = (X+Y,X-Y)$.
+            
+            Como cuadrado unidad, entendemos $C=[0,1]\times[0,1]$. La función de densidad conjunta es constante en $C$, por lo que:
+            \begin{equation*}
+                f_{(X,Y)}(x, y) = \begin{cases}
+                    k, & (x,y)\in C, \\
+                    0, & \text{en otro caso}.
+                \end{cases}
+            \end{equation*}
+
+            Para que $f_{(X,Y)}$ sea una función de densidad, tenemos que:
+            \begin{align*}
+                1&=\int_{-\infty}^{+\infty} \int_{-\infty}^{+\infty} f_{(X,Y)}(x, y) \, dx \, dy
+                =\\&= \int_{0}^{1} \int_{0}^{1} k \, dx \, dy
+                = k\int_{0}^{1} \left[x\right]_{0}^{1} \, dy
+                = k\int_{0}^{1} 1 \, dy
+                = k\left[y\right]_{0}^{1}
+                = k.
+            \end{align*}
             \item \textbf{(1.25 puntos)} La función de densidad de proabbilidad conjunta del máximo y el mínimo.
         \end{enumerate}
     \end{ejercicio}
@@ -79,18 +333,10 @@
             \hline
         \end{tabular}
         \end{table}
-        \begin{enumerate}[label=\alph*)]
+        \begin{enumerate}
             \item \textbf{(1.25 puntos)} Obtener la mejor aproximación minimo-cuadrática a la variable $Y$ conocidos valores de la variable $X$, así como calcular una medida de la bondad del ajuste.
             \item \textbf{(1.25 puntos)} Obtener las ecuaciones de la rectas de regresión de $Y|X$ y $X|Y$ y el error cuadrático medio.
         \end{enumerate}
     \end{ejercicio}
-
-    \begin{observacion}
-        A tener en cuenta:
-        \begin{itemize}
-            \item En el \textbf{apartado 2.a} se obtiene \textbf{hasta 1 punto} si las integrales se dejan indicadas y \textbf{hasta 1.25 puntos} si se obtienen sus primitivas de forma explícita.
-            \item Si necesitara obtener la primitiva de la función $f(x) = \sqrt{1-x^2}$, realizar el cambio de variable unidimensional $x=\sin(t)$.
-        \end{itemize}
-    \end{observacion}
 
 \end{document}
