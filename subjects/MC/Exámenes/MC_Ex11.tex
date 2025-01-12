@@ -90,4 +90,256 @@
 \begin{ejercicio}[1.25 puntos]
     ¿Es cierto que todo lenguaje independiente del contexto puede ser aceptado por un autómata con pila por el criterio de pila vacía y con un sólo estado?. Justifica la respuesta.
 \end{ejercicio}
+
+\newpage
+\setcounter{ejercicio}{0}
+\section*{Soluciones}
+\begin{ejercicio}[2.5 puntos]
+    Sean los alfabetos $A = \{a, b, c\}$ y $B = \{0, 1\}$,
+    \begin{enumerate}
+        \item Construye un AFD que acepte el lenguaje $L$ de todas las palabras sobre el alfabeto $A$ en los que cada $b$ de esta palabra esté precedida por por la palabra $ac$.
+        
+        El AFD se muestra en la Figura~\ref{fig:afd}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \node[state, initial, accepting] (q0) {$q_0$};
+                \node[state, right of=q0, accepting] (q1) {$q_1$};
+                \node[state, right of=q1, accepting] (q2) {$q_2$};
+                \node[state, error, below of=q1] (E) {$E$};
+
+                \draw   (q0) edge[above] node{$a$} (q1)
+                        (q1) edge[above] node{$c$} (q2)
+                        (q2) edge[above, bend right=45, looseness=1.1] node{$b,c$} (q0);
+
+                \draw   (q0) edge[loop above] node{$c$} (q0)
+                        (q0) edge[below] node{$b$} (E)
+                        (q1) edge[loop above] node{$a$} (q1)
+                        (q1) edge[left] node{$b$} (E)
+                        (q2) edge[below, bend left] node{$a$} (q1)
+                        (E) edge[loop right] node{$a,b,c$} (E);
+
+            \end{tikzpicture}
+            \caption{AFD que acepta el lenguaje $L$.}
+            \label{fig:afd}
+        \end{figure}
+        \item Sea el homomorfismo entre $A$ y $B$ dado por $f(a) = 01$, $f(b) = 00$, $f(c) = 11$. Determinar una expresión regular asociada a $f(L)$.\\
+        
+        Para ello, necesitamos la expresión regular asociada a $L$. Esta es:
+        \begin{equation*}
+            (a+c+acb)^*
+        \end{equation*}
+
+        No obstante, hagámoslo mediante el proceso algorítmico. Planteamos el siguiente sistema de ecuaciones:
+        \begin{align*}
+            q_0 &= cq_0+aq_1+\veps\\
+            q_1 &= aq_1+cq_2+\veps\\
+            q_2 &= aq_1+(b+c)q_0+\veps
+        \end{align*}
+
+        Sustituyendo el valor de $q_2$ en la ecuación de $q_1$, obtenemos:
+        \begin{align*}
+            q_1 &= aq_1+c[aq_1+(b+c)q_0+\veps]+\veps
+            =\\&= (a+ca)q_1+c[(b+c)q_0+\veps]+\veps
+        \end{align*}
+
+        Aplicando el Lema de Arden, obtenemos:
+        \begin{equation*}
+            q_1 = (a+ca)^*[c[(b+c)q_0+\veps]+\veps]
+        \end{equation*}
+
+        Sustituyendo el valor de $q_1$ en la ecuación de $q_0$, obtenemos:
+        \begin{align*}
+            q_0 &= cq_0+a(a+ca)^*[c[(b+c)q_0+\veps]+\veps]+\veps
+            =\\&= (c+a(a+ca)^*c(b+c))q_0+a(a+ca)^*[c+\veps]+\veps
+        \end{align*}
+
+        Aplicando de nuevo el Lema de Arden, obtenemos:
+        \begin{align*}
+            q_0 &= [c+a(a+ca)^*c(b+c)]^*[a(a+ca)^*[c+\veps]+\veps]
+            =\\&= [c+a(a+ca)^*c(b+c)]^*[a(a+ca)^*[c+\veps]+\veps]
+            =\\&= [c+a(a+ca)^*cc + a(a+ca)^*cb]^*[a(a+ca)^*[c+\veps]+\veps]
+            =\\&= [c+a(a+ca)^* + a(a+ca)^*cb]^*[a(a+ca)^*[c+\veps]+\veps]
+            =\\&= [c+a+ a(a+ca)^*cb]^*[a(a+ca)^*[c+\veps]+\veps]
+            =\\&= [c+a+ acb]^*[a(a+ca)^*[c+\veps]+\veps]
+            =\\&= [c+a+ acb]^*
+        \end{align*}
+
+        La expresión asociada a $f(L)$ es:
+        \begin{align*}
+            r& \equiv (11+00+0011)^*
+            \equiv \\&\equiv [11+01(01+1101)^*11(00+11)]^*[01(01+1101)^*[11+\veps]+\veps]
+        \end{align*}
+        
+        Notemos que, aun sin simplificar la expresión regular asociada a $L$, al obtener la asociada a $f(L)$ ambas expresiones serían equivalentes.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}[2.5 puntos]
+    Es fácil comprobar que una palabra $w$ no es un palíndromo sobre el alfabeto $\{0, 1\}$ si y solo si $w = x0z1x^{-1}$ o $w = x1z0x^{-1}$ donde $x$ y $z$ son palabras cualesquiera (incluyendo la palabra vacía). Teniendo esto en cuenta:
+    \begin{enumerate}
+        \item Construir una gramática independiente del contexto que genere todas las palabras sobre $\{0, 1\}$ que no son palíndromos.
+        
+        Esta gramática es $G=(\{S,Z\}, \{0,1\}, S, P)$ donde $P$ viene dado por:
+        \begin{align*}
+            S &\rightarrow 0S0 \mid 1S1 \mid 0Z1 \mid 1Z0\\
+            Z &\rightarrow 0Z \mid 1Z \mid \veps
+        \end{align*}
+        \item Comprobar usando el algoritmo de CYK que la palabra $00110$ no es un palíndromo.
+        
+        Para aplicar este algoritmo, necesitamos la gramática en forma normal de Chomsky. En primer lugar, eliminamos las producciones nulas:
+        \begin{align*}
+            S &\rightarrow 0S0 \mid 1S1 \mid 0Z1 \mid 1Z0 \mid 01 \mid 10\\
+            Z &\rightarrow 0Z \mid 1Z \mid 0\mid 1
+        \end{align*}
+
+        Ahora, deberíamos eliminar las producciones unitarias, pero no hay ninguna. Por último, pasamos como tal a la forma normal de Chomsky:
+        \begin{align*}
+            S &\rightarrow C_0S_0 \mid C_1S_1 \mid C_0Z_1 \mid C_1Z_0 \mid C_0C_1 \mid C_1C_0\\
+            Z &\rightarrow C_0Z \mid C_1Z \mid 0\mid 1\\
+            S_0 &\rightarrow SC_0\\
+            S_1 &\rightarrow SC_1\\
+            Z_0 &\rightarrow ZC_0\\
+            Z_1 &\rightarrow ZC_1\\
+            C_0 &\rightarrow 0\\
+            C_1 &\rightarrow 1
+        \end{align*}
+
+        El algoritmo de CYK aplicado a la palabra $00110$ se muestra en la Tabla~\ref{tab:cyk}.
+        \begin{table}
+            \centering
+            \begin{tabular}{cccccc}
+                $0$ & $0$ & $1$ & $1$ & $0$ \\ \hhline{*{5}{-}}
+                \cell{Z,C_0} & \cell{Z,C_0} & \cell{Z,C_1} & \cell{Z,C_1} & \cell{Z,C_0} \\ \hhline{*{5}{-}}
+                \cell{Z_0,Z} & \cell{Z_1,S,Z} & \cell{Z_1,Z} & \cell{Z_0,S,Z} \\ \hhline{*{4}{-}}
+                \cell{S,Z,Z_1} & \cell{S,Z,S_1,Z_1} & \cell{S,Z,Z_0} \\ \hhline{*{3}{-}}
+                \cell{S,Z,S_1,Z_1} & \cell{Z,S_0,Z_0} \\ \hhline{*{2}{-}}
+                \cell{S,Z,S_0,S_0} \\ \hhline{*{1}{-}}
+            \end{tabular}
+            \caption{Algoritmo de Cocke-Younger-Kasami para la cadena $00110$.}
+            \label{tab:cyk}
+        \end{table}
+
+        Por tanto, como la palabra $00110$ sí es generada por la gramática, no es un palíndromo. La derivación es:
+        \begin{equation*}
+            S\Rightarrow C_0S_0\Rightarrow 0SC_0\Rightarrow 0C_0Z_10
+            \Rightarrow 00ZC_10
+            \Rightarrow 00110
+        \end{equation*}
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}[1.25 puntos]
+    Decir si las siguientes afirmaciones son verdaderas o falsas. Justificar las respuestas:
+    \begin{enumerate}
+        \item Todo lenguaje regular no es inherentemente ambiguo.
+        
+        Cierto. Dado un lenguaje regular $L$, existe un AFD $M=(Q,A,\delta,q_0,F)$ tal que $\cc{L}(M)=L$. Construimos la gramática regular por la derecha asociada a este autómata:
+        \begin{align*}
+            G&=(Q,A,q_0,P)\\
+            P&=\left\{
+                \begin{aligned}
+                    q_i &\rightarrow aq_j \qquad \text{si } \delta(q_i,a)=q_j\qquad \forall q_i,q_j\in Q, a\in A\\
+                    q_i &\rightarrow \veps \qquad \forall q_i\in F
+                \end{aligned}
+            \right.
+        \end{align*}
+
+        Por el determinismo del autómata, la gramática calculada no es ambigua, y tenemos que $\cc{L}(G)=L$. Por tanto, todo lenguaje regular no es inherentemente ambiguo.
+
+        \item Todo lenguaje regular es aceptado por un autómata con pila determinista por el criterio de pila vacía.
+        
+        Un lenguaje es aceptado por un autómata con pila determinista por el criterio de pila vacía si y solo es aceptado por un autómata con pila determinista por estados finales y cumple la propiedad prefijo. Como el lenguaje $L$ cuya expresión regular asociada es $a^*$ no cumple esta propiedad, sabemos que no es aceptado por un autómata con pila determinista por el criterio de pila vacía. Por tanto, la afirmación es falsa.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}[1.25 puntos]
+    Decir si los siguientes lenguajes sobre el alfabeto $\{0, 1\}$ son regulares y/o independientes del contexto, justificando las respuestas:
+    \begin{enumerate}
+        \item $L_1$: Palabras de la forma $0^n1^n$ donde $n > 0$ y no es múltiplo de $3$.
+        
+        Veamos en primer lugar que es regular. Definimos los siguientes lenguajes:
+        \begin{align*}
+            L_1^1 &= \{u\in \{0,1\}^*\mid N_0(u)=N_1(u)\}\\
+            L_1^2 & \qquad \text{ con expresión regular } 0^+1^+\\
+            L_1^3 &= \{u\in \{0,1\}^*\mid N_0(u)\mod 3\neq 0\}\\
+            L_1^4 &= \{u\in \{0,1\}^*\mid N_1(u)\mod 3\neq 0\}
+        \end{align*}
+
+        Por un lado, tenemos que $L_1^1$ es independiente del contexto. Por otro lado, $L_1^2$ es regular de forma directa y $L_1^3$ y $L_1^4$ son regulares porque son aceptados por un AFD. Por tanto, como la intersección de regulares es regular, tenemos que:
+        \begin{equation*}
+            L_1^2 \cap L_1^3 \cap L_1^4 \qquad \text{es regular}
+        \end{equation*}
+
+        Por tanto, como la intersección de uno regular con uno independiente del contexto es independiente del conexto, tenemos que:
+        \begin{equation*}
+            L_1 = L_1^1 \cap \left(L_1^2 \cap L_1^3 \cap L_1^4\right) \qquad \text{es independiente del contexto}
+        \end{equation*}
+
+        De hecho, $L_1$ es generado por la gramática independiente del conexto $G=(\{S_0,S_1,S_2\}, \{0,1\}, S_0, P)$ donde $P$ viene dado por:
+        \begin{align*}
+            S_0 &\rightarrow 0S_1 1\\
+            S_1 &\rightarrow 0S_2 1\mid \veps\\
+            S_2 &\rightarrow 0S_0 1\mid \veps
+        \end{align*}
+
+        Veamos ahora que no es regular por el recíproco del lema de bombeo. Para cada $n\in \bb{N}$, consideramos $z=0^{3n+1}1^{3n+1}$, con $|z|=6n+2>n$. Además, $3n+1\mod 3=1\neq 0$, luego $z\in L_1$. Para cada descomposición $z=uvw$, con $|uv|\leq n$ y $|v|\geq 1$, tenemos que:
+        \begin{equation*}
+            u=0^k \qquad v=0^l\qquad w=0^{3n+1-k-l}1^{3n+1}
+            \qquad 0\leq k+l\leq n \qquad 1\leq l
+        \end{equation*}
+
+        Por tanto, bombeando con $i=2$, obtenemos:
+        \begin{equation*}
+            uv^2w=0^{3n+1+l}1^{3n+1}\notin L_1
+        \end{equation*}
+        ya que $3n+1+l\neq 3n+1$. Por tanto, $L_1$ no es regular.
+        \item $L_2$: Palabras de longitud par que contienen $010$ en la primera mitad de la palabra.
+        
+        Este es independiente del contexto, ya que es aceptado por la gramática independiente del contexto $G=(\{S,X,Y\}, \{0,1\}, S, P)$ donde $P$ viene dado por:
+        \begin{align*}
+            S &\rightarrow XSX\mid 001YXXX\\
+            Y & XYX \mid \veps\\
+            X & \rightarrow 0\mid 1
+        \end{align*}
+
+        No obstante, no es regular. Para cada $n\in \bb{N}$, consideramos $z=0^{n}0100^{n+3}$, con $|z|=2n+6>n$. Para cada descomposición $z=uvw$, con $|uv|\leq n$ y $|v|\geq 1$, tenemos que:
+        \begin{equation*}
+            u=0^k \qquad v=0^l\qquad w=0^{n-k-l}0100^{n+3}
+            \qquad 0\leq k+l\leq n \qquad 1\leq l
+        \end{equation*}
+
+        Por tanto, bombeando con $i=7$, obtenemos:
+        \begin{equation*}
+            uv^2w=0^{n+6l}0100^{n+3}\notin L_2
+        \end{equation*}
+        ya que, aunque es de longitud par, la primera mitad es $0^{n+6l}$, que no contiene $010$. Por tanto, $L_2$ no es regular.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}[1.25 puntos]
+    Pon ejemplos de las siguientes situaciones:
+    \begin{enumerate}
+        \item Un lenguaje $L$ que no sea regular, pero $L^*$ sí.
+        
+        % // TODO: Poner un ejemplo
+        \item Un lenguaje $L$ que sea independiente del contexto determinista, pero que su complementario no sea independiente del contexto.
+        
+        Sabemos que los lenguajes independientes del contexto deterministas son cerrados por complemento. Por tanto, no podemos dar un ejemplo de un lenguaje que sea independiente del contexto determinista, pero que su complementario no lo sea.
+    \end{enumerate}
+\end{ejercicio}
+
+\begin{ejercicio}[1.25 puntos]
+    ¿Es cierto que todo lenguaje independiente del contexto puede ser aceptado por un autómata con pila por el criterio de pila vacía y con un sólo estado? Justifica la respuesta.\\
+
+    Sí, es cierto. Dado un lenguaje independiente del contexto $L$, por definición existirá $G=(V,A,S,P)$ gramática independiente del contexto tal que $\cc{L}(G)=L$. A partir de dicha gramática, podemos construir un autómata con pila por el criterio de pila vacía y con un solo estado. Este autómata será:
+    \begin{equation*}
+        M=(\{q\}, A, V\cup A, \delta, S, \emptyset)
+    \end{equation*}
+    donde $\delta$ viene dado por:
+    \begin{align*}
+        \delta(q,\veps,X) &= \{(q,\alpha)\mid X\rightarrow \alpha\in P\}\qquad \forall X\in V\\
+        \delta(q,a,a) &= \{(q,\veps)\}\qquad \forall a\in A
+    \end{align*}
+\end{ejercicio}
 \end{document}
