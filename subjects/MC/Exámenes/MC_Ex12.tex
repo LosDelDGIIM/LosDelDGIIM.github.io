@@ -1,0 +1,316 @@
+\documentclass[12pt]{article}
+
+\input{../../_assets/preambulo.tex}
+% Para poder incluir árboles
+\usepackage{forest}
+\usepackage{booktabs}
+
+\usepackage{hhline}
+\newcommand{\cell}[1]{\multicolumn{1}{|c|}{$#1$}}
+
+% Para poder añadir autómatas
+% https://www3.nd.edu/~kogge/courses/cse30151-fa17/Public/other/tikz_tutorial.pdf
+\usetikzlibrary{automata} %, positioning, arrows}
+\tikzset{
+    -Stealth,
+    node distance=3cm, % specifies the minimum distance between two nodes. Change if necessary.
+    every state/.style={thick, fill=gray!10, shape=ellipse}, % sets the properties for each ’state’ node
+    initial text=$ $, % sets the text that appears on the start arrow
+    % Un tipo de nodo, que es error, que lo pone rojo
+    error/.style={thick, fill=red!20},
+}
+
+
+\begin{document}
+
+    % 1. Foto de fondo
+    % 2. Título
+    % 3. Encabezado Izquierdo
+    % 4. Color de fondo
+    % 5. Coord x del titulo
+    % 6. Coord y del titulo
+    % 7. Fecha
+
+    
+    \input{../../_assets/portada}
+    \portadaExamen{etsiitA4.jpg}{Modelos de\\Computación\\Examen XII}{MC. Examen XII}{MidnightBlue}{-8}{28}{2024-2025}{Arturo Olivares Martos}
+
+    \begin{description}
+        \item[Asignatura] Modelos de Computación
+        \item[Curso Académico] 2020-21.
+        \item[Grado] Doble Grado en Ingeniería Informática y Matemáticas o ADE.
+        \item[Grupo] Único.
+        %\item[Profesor] Serafín Moral García.
+        \item[Descripción] Convocatoria Ordinaria.
+        \item[Fecha] 20 de enero de 2021.
+        \item[Duración] $2.5$ horas.    
+    \end{description}
+    \newpage
+
+    \begin{ejercicio}[2.5 puntos]
+        Determinar cuales de los siguientes lenguajes sobre el alfabeto $\{0, 1\}$ son regulares y/o independientes del contexto.
+        Justificar las respuestas.
+        \begin{enumerate}
+            \item $L_1 = \{u0^n u^{-1} \mid u \in \{0, 1\}^*, n \geq 0\}$
+            \item $L_2 = \{0^i 1^j \mid 1 \leq i \leq j \leq 2i\}$
+            \item $L_3 = LL'$ donde $L$ es el conjunto de las palabras que contienen la subcadena ``01'' y $L'$ el conjunto de palabras
+            que contienen la subcadena ``00''.
+            \item $L_4 = \{0^i 1^j 0^i 1^j \mid i, j \geq 1\}$
+        \end{enumerate}
+    \end{ejercicio}
+
+    \begin{ejercicio}[2.5 puntos]
+        Construir un autómata con pila determinista que acepte el lenguaje $L$ sobre el alfabeto $\{0, 1\}$ dado por las palabras de
+        longitud mayor o igual que $1$ que:
+        \begin{itemize}
+            \item Si empiezan por $0$, tienen más $0$'s que $1$'s.
+            \item Si empiezan por $1$, tienen más $1$'s que $0$'s.
+        \end{itemize}
+        A partir del autómata anterior construir un autómata con pila que acepte las palabras de $L$ que, además tengan un
+        número par de $0$'s. Se valorará que se haga con el procedimiento visto en clase para la intersección de un lenguaje
+        regular y un lenguaje independiente del contexto.
+    \end{ejercicio}
+
+    \begin{ejercicio}[1.25 puntos]
+        Comenta si existe alguna dificultad en realizar un algoritmo que lea como entrada un lenguaje cualquiera sobre el
+        alfabeto $\{0, 1\}$ y determine si el lenguaje es finito.
+    \end{ejercicio}
+
+    \begin{ejercicio}[1.25 puntos]
+        Cuando se construye una gramática lineal por la derecha a partir de un autómata finito determinista, ¿puede ser ambigua
+        dicha gramática? Justifica la respuesta. ¿Puede ser un lenguaje regular inherentemente ambiguo?
+    \end{ejercicio}
+
+    \begin{ejercicio}[1.25 puntos]
+        Sea $G$ una gramática independiente del contexto cualquiera, si construimos un grafo en el que los nodos son las variables
+        y existe un enlace de la variable $A$ a la variable $B$ si existe una producción $A \to \alpha B \beta$, donde $\alpha, \beta \in (V \cup T)^*$
+        y dicho grafo tiene un ciclo, ¿qué conclusión importante podemos extraer sobre el lenguaje generado por la gramática?
+    \end{ejercicio}
+
+    \begin{ejercicio}[1.25 puntos]
+        ¿Puede tener un autómata finito determinista transiciones nulas? ¿puede tener un autómata con pila determinista
+        transiciones nulas? En ambos casos, si la respuesta fuese afirmativa di bajo qué condiciones pueden existir esas transiciones nulas.
+    \end{ejercicio}
+
+
+    \newpage
+    \setcounter{ejercicio}{0}
+    \section*{Soluciones}
+    \begin{ejercicio}[2.5 puntos]
+        Determinar cuales de los siguientes lenguajes sobre el alfabeto $\{0, 1\}$ son regulares y/o independientes del contexto.
+        Justificar las respuestas.
+        \begin{enumerate}
+            \item $L_1 = \{u0^n u^{-1} \mid u \in \{0, 1\}^*, n \geq 0\}$
+            
+            Veamos en primer lugar que no es regular usando el recíproco del lema de bombeo. Para cada $n\in \mathbb{N}$, sea $z=1^n01^n\in L_1$, con $|z|=2n+1\geq n$. Cualquier descomposición $z=uvw$ con $|uv|\leq n$ y $|v|\geq 1$ debe cumplir:
+            \begin{equation*}
+                u=1^k \quad v=1^l \quad w=1^{n-k-l}01^n \quad \text{con } 0\leq k+l\leq n \quad \text{y } l\geq 1
+            \end{equation*}
+
+            Bombeando con $i=2$ obtenemos:
+            \begin{equation*}
+                uv^2w=1^k1^{2l}1^{n-k-l}01^n=1^{n+l}01^n\notin L_1
+            \end{equation*}
+            Por tanto, por el recíproco del lema de bombeo, $L_1$ no es regular. No obstante, sí es independiente del contexto, puesto que es generado por la gramática $G=(\{S,X\},\{0,1\},P,S)$ con $P$ dado por:
+            \begin{align*}
+                S&\to 0S0\mid 1S1\mid X\\
+                X&\to 0X\mid \varepsilon
+            \end{align*}
+
+            \item $L_2 = \{0^i 1^j \mid 1 \leq i \leq j \leq 2i\}$
+            
+            Veamos en primer lugar que no es regular usando el recíproco del lema de bombeo. Para cada $n\in \mathbb{N}$, sea $z=0^n1^{n}\in L_2$, con $|z|=2n\geq n$. Cualquier descomposición $z=uvw$ con $|uv|\leq n$ y $|v|\geq 1$ debe cumplir:
+            \begin{equation*}
+                u=0^k \quad v=0^l \quad w=0^{n-k-l}1^n \quad \text{con } 0\leq k+l\leq n \quad \text{y } l\geq 1
+            \end{equation*}
+
+            Bombeando con $i=2$ obtenemos:
+            \begin{equation*}
+                uv^2w=0^k0^{2l}0^{n-k-l}1^n=0^{n+l}1^n\notin L_2
+            \end{equation*}
+            ya que $n+l>n$. Por tanto, por el recíproco del lema de bombeo, $L_2$ no es regular. No obstante, sí es independiente del contexto, puesto que es generado por la gramática $G=(\{S\},\{0,1\},P,S)$ con $P$ dado por:
+            \begin{align*}
+                S&\to 0S1 \mid 0S11 \mid 01\mid 011
+            \end{align*}
+
+            En vez de dar una gramática, se podría pensar en dar un APND que lo aceptase. Este se encuentra disponible en el Ejercicio 1.5.11 de las relaciones, por lo que no se ha incluido aquí (además de por ser una solución bastante más compleja).
+            \item $L_3 = LL'$ donde $L$ es el conjunto de las palabras que contienen la subcadena ``01'' y $L'$ el conjunto de palabras
+            que contienen la subcadena ``00''.
+
+            Sabemos que $L,L'$ son regulares con expresiones regulares asociadas:
+            \begin{align*}
+                L&\equiv (0+1)^*01(0+1)^*\\
+                L'&\equiv (0+1)^*00(0+1)^*
+            \end{align*}
+
+            Por tanto, $L_3$ es regular, ya que la concatenación de dos lenguajes regulares es regular. De hecho, su expresión regular asociada es:
+            \begin{equation*}
+                L_3\equiv (0+1)^*01(0+1)^*00(0+1)^*
+            \end{equation*}
+            \item $L_4 = \{0^i 1^j 0^i 1^j \mid i, j \geq 1\}$
+            
+            Demostremos que no es independiente del contexto (y por tanto tampoco regular) usando el recíproco del lema de bombeo para lenguajes independientes del contexto. Para cada $n\in \mathbb{N}$, sea $z=0^n1^n0^n1^n\in L_4$, con $|z|=4n\geq n$. Consideramos ahora cualquier descomposición $z=uvwxy$ con $|vwx|\leq n$ y $|vx|\geq 1$. Considerando cada una de las 4 partes de $z$, como $|vwx|\leq n$, $uvw$ estará entera contenida en una o dos de las partes, pero no pertenecerá a más de dos. Por tanto, al bombear con $i>1$, como $|vx|\geq 1$, se bombeará algún caracter que provoque un desequilibrio, teniendo entonces que:
+            \begin{equation*}
+                uv^iwx^iy\notin L_4
+            \end{equation*}
+
+            Por tanto, por el recíproco del lema de bombeo, $L_4$ no es independiente del contexto, y por tanto tampoco regular.
+        \end{enumerate}
+    \end{ejercicio}
+
+    \begin{ejercicio}[2.5 puntos]
+        Construir un autómata con pila determinista que acepte el lenguaje $L$ sobre el alfabeto $\{0, 1\}$ dado por las palabras de
+        longitud mayor o igual que $1$ que:
+        \begin{itemize}
+            \item Si empiezan por $0$, tienen más $0$'s que $1$'s.
+            \item Si empiezan por $1$, tienen más $1$'s que $0$'s.
+        \end{itemize}
+        A partir del autómata anterior construir un autómata con pila que acepte las palabras de $L$ que, además tengan un número par de $0$'s. Se valorará que se haga con el procedimiento visto en clase para la intersección de un lenguaje regular y un lenguaje independiente del contexto.\\
+
+        Para el primer apartado, consideramos los estados:
+        \begin{itemize}
+            \item $q$: Estado inicial. Desde él, se decidirá si la palabra empieza por $0$ o por $1$, y por tanto qué camino tomar.
+            \item $q_0$: La palabra ha empezado por $0$, pero $N_0(u)\leq N_1(u)$, por lo que no es un estado final.
+            \item $q_1$: La palabra ha empezado por $1$, pero $N_1(u)\leq N_0(u)$, por lo que no es un estado final.
+            \item $q_0^f$: La palabra ha empezado por $0$, y $N_0(u)>N_1(u)$, por lo que es un estado final.
+            \item $q_1^f$: La palabra ha empezado por $1$, y $N_1(u)>N_0(u)$, por lo que es un estado final.
+        \end{itemize}
+        
+        Además, la variable $0$ de la pila se usará para contar el número de $0$'s que llevamos, y la variable $1$ para contar el número de $1$'s. Las respectivas variables con el subíndice $i$ se usarán para notar que son el último que provoca la diferencia, y que al leer el símbolo contrario se provocará la igualdad, pasando por tanto a un estado no final.\\
+        Por tanto, el autómata con pila que acepta $L$ por el criterio de estados finales es:
+        \begin{equation*}
+            M=(\{q,q_0,q_1,q_0^f,q_1^f\},\{0,1\},\{Z_0,0,1,0_i,1_i\},\delta,q,Z_0,\{q_0^f,q_1^f\})
+        \end{equation*}
+        donde la función de transición $\delta$ viene dada por:
+        \begin{align*}
+            \delta(q,0,Z_0)&=\left\{\left(q_0^f,0_iZ_0\right)\right\}\\
+            \delta(q,1,Z_0)&=\left\{\left(q_1^f,1_iZ_0\right)\right\}\\ \\
+            \delta(q_0^f,0,0)&=\left\{\left(q_0^f,00\right)\right\}\\
+            \delta(q_0^f,1,0)&=\left\{\left(q_0^f,\veps\right)\right\}\\
+            \delta(q_0^f,0,0_i)&=\left\{\left(q_0^f,00_i\right)\right\}\\
+            \delta(q_0^f,1,0_i)&=\left\{\left(q_0,\veps\right)\right\}\\
+            \delta(q_0,0,1)&=\left\{\left(q_0,\veps\right)\right\}\\
+            \delta(q_0,1,1)&=\left\{\left(q_0,11\right)\right\}\\
+            \delta(q_0,0,Z_0)&=\left\{\left(q_0^f,0_iZ_0\right)\right\}\\
+            \delta(q_0,1,Z_0)&=\left\{\left(q_0,1Z_0\right)\right\}\\ \\
+            \delta(q_1^f,0,1)&=\left\{\left(q_1^f,\veps\right)\right\}\\
+            \delta(q_1^f,1,1)&=\left\{\left(q_1^f,11\right)\right\}\\
+            \delta(q_1^f,0,1_i)&=\left\{\left(q_1,\veps\right)\right\}\\
+            \delta(q_1^f,1,1_i)&=\left\{\left(q_1^f,11_i\right)\right\}\\
+            \delta(q_1,1,0)&=\left\{\left(q_1,\veps\right)\right\}\\
+            \delta(q_1,0,0)&=\left\{\left(q_1,00\right)\right\}\\
+            \delta(q_1,1,Z_0)&=\left\{\left(q_1^f,1_iZ_0\right)\right\}\\
+            \delta(q_1,0,Z_0)&=\left\{\left(q_1,0Z_0\right)\right\}
+        \end{align*}
+
+        Para el segundo apartado, consideramos en primer lugar el AFD de la Figura~\ref{fig:AFD} que acepta el lenguaje $L_0$ de las palabras con un número par de $0$'s.
+        \begin{figure}[h]
+            \centering
+            \begin{tikzpicture}
+                \node[state,initial] (p0) {$p_0$};
+                \node[state,accepting,right of=p0] (p1) {$p_1$};
+
+                \draw (p0) edge[loop above] node{1} (p0);
+                \draw (p0) edge[bend left] node[above]{0} (p1);
+                \draw (p1) edge[loop above] node{1} (p1);
+                \draw (p1) edge[bend left] node[below]{0} (p0);
+            \end{tikzpicture}
+            \caption{\centering Autómata finito determinista que acepta el lenguaje $L_0$ de las palabras con un número par de $0$'s.}
+            \label{fig:AFD}
+        \end{figure}
+
+        Sea $M'=(\{p_0,p_1\},\{0,1\},\delta',p_0,\{p_1\})$ el AFD de la Figura~\ref{fig:AFD}. Para construir el autómata con pila que acepta la intersección de $L$ y $L_0$ por el criterio de estados finales, consideramos el autómata con pila siguiente:
+        \begin{align*}
+            M''&=\left(Q\times P,\{0,1\},B,\delta'',(q_0,p_0),Z_0,\left\{\left(q_0^f,p_1\right),\left(q_1^f,p_1\right)\right\}\right) \\
+            B&=\{Z_0,0,1,0_i,1_i\} \\
+            P&=\{p_0,p_1\} \\
+            Q&=\{q,q_0,q_1,q_0^f,q_1^f\}
+        \end{align*}
+        donde la función de transición $\delta''$ viene dada por:
+        \begin{equation*}
+            \delta''((q,p),a,X)=\left\{\left((q',\delta'(p,a)),\alpha\right) \mid \delta(q,a,X)=\left\{(q',\alpha)\right\}\right\} \qquad \forall (q,p)\in Q\times P,a\in \{0,1\},X\in B
+        \end{equation*}
+    \end{ejercicio}
+
+    \begin{ejercicio}[1.25 puntos]
+        Comenta si existe alguna dificultad en realizar un algoritmo que lea como entrada un lenguaje cualquiera sobre el
+        alfabeto $\{0, 1\}$ y determine si el lenguaje es finito.\\
+
+        Sí, hay diversos problemas.
+        \begin{enumerate}
+            \item En primer lugar, el hecho de ``leer'' un lenguaje no es sencillo, y hay distintas alternativas. El lenguaje se puede dar mediante una expresión matemática ($0^n1^n$, por ejemplo), se puede dar mediante una gramática, se puede dar mediante una expresión semántica (``las palabras que empiezan por 0 y acaban por 1''), etc. Además, en función del tipo de lenguaje, se podría dar de otras formas, como autómatas o una expresión regular.
+            \item Por otro lado, en la asignatura hemos visto algoritmos para resolver este hecho si el lenguaje es regular o independiente del contexto. No obstante, no hay un algoritmo para determinar de qué tipo es un lenguaje, por lo que no sabríamos qué opción tomar.
+            \item En el caso de que el lenguaje sea regular y, además, tuviésemos un reconocedor suyo, sí se podría. Distinguimos en función del reconocedor:
+            \begin{itemize}
+                \item AFD: Se eliminarían los estados inalcanzables y se comprobaría si hay un ciclo. Si hay ciclos, el lenguaje es infinito; en caso contrario, es finito.
+                \item Expresión regular, gramática regular o AFND: Se convertiría a AFD y se aplicaría el mismo procedimiento.
+            \end{itemize}
+
+            No obstante, aunque el lenguaje fuese regular, si no tuviésemos un reconocedor, no podríamos determinar si es finito o no; ya que no hay un algoritmo que, dado un lenguaje regular, te proporcione un reconocedor del mismo.
+
+            \item En el caso de que el lenguaje fuese independiente del contexto y, además, tuviésemos un reconocedor suyo, sí se podría. Distinguimos en función del reconocedor:
+            \begin{itemize}
+                \item Gramática independiente del contexto: Tras eliminar producciones y símbolos inútiles y producciones unitarias y nulas, se construye un grafo en el que los nodos son las variables y existe un arco de la variable $A$ a la variable $B$ si existe una producción $A \to \alpha B \beta$, donde $\alpha, \beta \in (V \cup T)^*$. Si el grafo tiene un ciclo, el lenguaje es infinito; en caso contrario, es finito.
+                \item APND: Se obtiene la gramática independiente del contexto asociada y se aplica el procedimiento anterior.
+            \end{itemize}
+
+            No obstante, aunque el lenguaje fuese independiente del contexto, si no tuviésemos un reconocedor, no podríamos determinar si es finito o no; ya que no hay un algoritmo que, dado un lenguaje independiente del contexto, te proporcione un reconocedor del mismo.
+
+            \item En el caso de que el lenguaje no fuese independiente del contexto, no conocemos ningún algoritmo que determine si es finito o no.
+        \end{enumerate}
+    \end{ejercicio}
+
+    \begin{ejercicio}[1.25 puntos]
+        Cuando se construye una gramática lineal por la derecha a partir de un autómata finito determinista, ¿puede ser ambigua
+        dicha gramática? Justifica la respuesta. ¿Puede ser un lenguaje regular inherentemente ambiguo?\\
+
+        No, debido al determinismo del AFD. Dado un AFD $M=(Q,A,\delta,q_0,F)$, la gramática lineal por la derecha $G=(V,T,P,S)$ asociada a $M$ es:
+        \begin{align*}
+            V&=Q\\
+            T&=A \\
+            S&=q_0 \\
+            P&=\left\{
+                \begin{array}{ll}
+                    q\to aq' & \text{si } \delta(q,a)=q' \\
+                    q\to \veps & \text{si } q\in F
+                \end{array}
+            \right.
+        \end{align*}
+
+        De esta forma, $\cc{L}(G)=\cc{L}(M)$. Sea ahora $z\in \cc{L}(G)$, y veamos que tan solo hay una derivación para $z$.
+        \begin{itemize}
+            \item Si $z$ es la palabra vacía, y como desde $q_0$ tan solo podemos, o introducir un símbolo de $A$ o aplicar $q_0\to \veps$, la única derivación es $q_0\Rightarrow \veps$.
+            \item Si $|z|\geq 1$, y $z=a_1a_2\ldots a_n$, con $a_i\in A$, entonces para generar $a_1$ desde $q_0$ podemos aplicar cualquier regla de las de la forma $q_0\to a_1q'$ tal que $\delta(q_0,a_1)=q'$, y por ser el autómata determinista esta transición es única, luego tan solo hay una única derivación para $a_1$. De forma análoga, para generar $a_2$ desde $q'$, tan solo hay una única derivación, y así sucesivamente hasta $a_n$. La derivación única derivación para $z$, por tanto, es:
+            \begin{equation*}
+                q_0\Rightarrow a_1\delta^*(q_0,a_1)\Rightarrow a_1a_2\delta^*(q_0,a_1a_2)\Rightarrow \ldots \Rightarrow a_1a_2\ldots a_n\delta^*(q_0,a_1a_2\ldots a_n)\Rightarrow a_1a_2\ldots a_n=z
+            \end{equation*}
+            donde, al terminar, hacemos uso de que $\delta^*(q_0,z)=\delta^*(q_0,a_1a_2\ldots a_n)\in F$, luego podemos aplicar $\delta^*(q_0,a_1a_2\ldots a_n)\to \veps$.
+        \end{itemize}
+    \end{ejercicio}
+
+    \begin{ejercicio}[1.25 puntos]
+        Sea $G$ una gramática independiente del contexto cualquiera, si construimos un grafo en el que los nodos son las variables y existe un enlace de la variable $A$ a la variable $B$ si existe una producción $A \to \alpha B \beta$, donde $\alpha, \beta \in (V \cup T)^*$ y dicho grafo tiene un ciclo, ¿qué conclusión importante podemos extraer sobre el lenguaje generado por la gramática?\\
+
+        Si la gramática no tiene símbolos ni producciones inútiles, ni producciones unitarias, ni producciones nulas, entonces el lenguaje generado por la gramática es infinito. Supongamos que el ciclo se encuentra entre las variables $A$ y $B$. Esto implica que desde $A$ se puede derivar $B$, y desde $B$ se puede derivar $A$, y al no haber producciones unitarias siempre estaremos añadiendo símbolos o variables, y al no haber producciones nulas estas variables no se pueden eliminar sin incluir un símbolo terminal. Por tanto, siempre se podrá seguir añadiendo símbolos y variables, y por tanto el lenguaje es infinito.\\
+
+        Notemos que es importante que la gramática no tenga símbolos ni producciones inútiles, ya que el ciclo podría estar entre variables inútiles, y por tanto no afectar al lenguaje generado por la gramática. De igual forma, es importante que no haya producciones unitarias, ya que si $A\to B$ y $B\to A$ habría un ciclo entre ellas pero no se estaría añadiendo símbolos o variables, y por tanto el lenguaje podría ser finito. Por último, es importante que no haya producciones nulas, ya que aunque haya ciclos entre variables, si se puede eliminar una variable sin añadir un símbolo terminal, el lenguaje podría ser finito.
+    \end{ejercicio}
+
+    \begin{ejercicio}[1.25 puntos]
+        ¿Puede tener un autómata finito determinista transiciones nulas? ¿puede tener un autómata con pila determinista
+        transiciones nulas? En ambos casos, si la respuesta fuese afirmativa di bajo qué condiciones pueden existir esas transiciones nulas.\\
+
+        Por definición, dado un AFD $M=(Q,A,\delta,q_0,F)$, la función de transición $\delta$ es tal que $\delta:Q\times A\to Q$. Por tanto, no puede haber transiciones nulas, ya que $\veps\notin A$.\\
+
+        Por otro lado, dado un APND $M=(Q,A,B,\delta,q_0,Z_0,F)$, la función de transición $\delta$ es una función del tipo:
+        \begin{equation*}
+            \delta:Q\times (A\cup\{\veps\})\times B\to \cc{P}(Q\times B^*)
+        \end{equation*}
+        Este es el caso general por lo que sí puede haber transiciones nulas en un APND general. En los APD, se exige que en cada configuración, leyendo cierto símbolo de $A\cup \{\veps\}$ tan solo se pueda llegar a una configuración. Es decir, se exige que:
+        \begin{equation*}
+            |\delta(q,a,X)|\leq 1 \qquad \forall q\in Q,a\in A\cup\{\veps\},X\in B
+        \end{equation*}
+
+        Además, no puede haber transiciones nulas desde configuraciones que ya tienen una transición para cierto símbolo del alfabeto. Es decir, para cada $q\in Q,X\in B$ si $\delta(q,a,X)\neq \emptyset$ para algún $a\in A$, entonces $\delta(q,\veps,X)=\emptyset$. Bajo estas condiciones, pueden existir transiciones nulas en un APD.
+    \end{ejercicio}
+\end{document}
