@@ -1,5 +1,8 @@
 \chapter{Capa de red}
 
+En el presente tema, estudiaremos a fondo la capa de red. Recordemos que seguimos el Modelo TCP/IP descrito en la Tabla~\ref{table:_tabla_de_capas}.
+Esta capa es la capa de más bajo nivel que ya no pertenece al \acrshort{NOS}, y será la primera estudiada en la asignatura.
+
 \subsubsection{Objetivos}
 
 \begin{itemize}
@@ -12,10 +15,6 @@
             \item Señalización de errores mediante el protocolo \acrshort{ICMP}.
         \end{itemize}
 \end{itemize}
-
-\subsubsection{Introducción}
-
-En este tema estudiaremos a fondo la capa de red. Recordemos que seguimos el Modelo TCP/IP descrito en la Tabla~\ref{table:_tabla_de_capas}.
 
 \section{Funcionalidades}
 
@@ -261,7 +260,7 @@ Respecto al direccionamiento jerárquico con clases, dentro de cada clase se def
 \subsection{\acrfull{NAT}}
 
 Como hemos mencionado anteriormente, para que una red privada pueda comunicarse con el resto de Internet, es necesario que haya una dirección pública que haga de intermediario. Para esto se usa la técnica de \acrshort{NAT}, que posibilita la traducción de direcciones.
-Al encontramos en la capa de red, el \acrshort{PDU} contiene la cabecera IP que contiene, entre otros datos:
+Al encontramos en la capa de red, el \acrshort{PDU} contiene la cabecera IP\footnote{En realidad, los puertos se encuentran en la cabecera de la capa de transporte; pero tras encapsularlo se puede acceder desde la capa de aplicación.} que contiene, entre otros datos:
 \begin{itemize}
     \item Dirección IP origen ({IPsc}) junto con el puerto origen ({sport}).
     \item Dirección IP destino ({IPdest}) junto con el puerto destino ({dport}).
@@ -961,9 +960,9 @@ Algunas observaciones importantes son:
 
 
 \section{Asociación con la capa de enlace: \acrfull{ARP}}
-Cuando queremos enviar un datagrama desde un origen a un destino, usando la tabla de encaminamiento del nodo en cuestión podemos saber la dirección IP del siguiente salto. No obstante, al bajar a la capa de enlace, ya no contemplamos direcciones IP\@, ya que el direccionamiento en esta capa se hace mediante direcciones \acrshort{MAC}. Además, debido a que el encaminamiento en la capa de enlace se hace punto a punto, las direcciones \acrshort{MAC} de origen y de destino cambian en cada salto.\\
+Cuando queremos enviar un datagrama desde un origen a un destino, usando la tabla de encaminamiento del nodo en cuestión podemos saber la dirección IP del siguiente salto. No obstante, al bajar a la capa de enlace, ya no contemplamos direcciones IP\@, ya que el direccionamiento en esta capa se hace mediante direcciones \acrshort{MAC_red}. Además, debido a que el encaminamiento en la capa de enlace se hace punto a punto, las direcciones \acrshort{MAC_red} de origen y de destino cambian en cada salto.\\
 
-Como hemos visto, sabemos las dirección IP de origen y la del siguiente salto, pero no la dirección \acrshort{MAC} del siguiente salto. Esto nos lo proporcionará el protocolo \acrshort{ARP}, que es un protocolo de la capa de enlace que se encarga de resolver direcciones \acrshort{MAC} a partir de direcciones IP\@.
+Como hemos visto, sabemos las dirección IP de origen y la del siguiente salto, pero no la dirección \acrshort{MAC_red} del siguiente salto. Esto nos lo proporcionará el protocolo \acrshort{ARP}, que es un protocolo de la capa de enlace que se encarga de resolver direcciones \acrshort{MAC_red} a partir de direcciones IP\@.
 
 \subsubsection{Funcionamiento}
 
@@ -992,7 +991,7 @@ Supongamos la situación de la Figura~\ref{fig:arp}, en la que PC1 quiere mandar
     \item PC2, que habrá recibido dicha petición, identifica que la dirección IP de la petición es la suya, por lo que contesta con un mensaje \verb|ARP Reply| con su dirección MAC en unicast a PC1 (cuya dirección MAC ya conoce).
 \end{itemize}
 
-Este proceso no se hace (pues introduciría mucho tráfico) cada vez que se quiera mandar una trama, sino que las direcciones \acrshort{MAC} que recibimos se van guardando en una caché y, tras cierto tiempo, expiran.
+Este proceso no se hace (pues introduciría mucho tráfico) cada vez que se quiera mandar una trama, sino que las direcciones \acrshort{MAC_red} que recibimos se van guardando en una caché y, tras cierto tiempo, expiran.
 \begin{observacion}
     Como curiosidad, para consultar dicha caché en un equipo con \verb|Linux| se puede emplear el comando \verb|arp -a|.
 \end{observacion}
@@ -1021,7 +1020,7 @@ La cabecera de una trama \acrshort{ARP} se muestra en la Tabla~\ref{tab:cabecera
 \begin{description}
     \item[Htipo:] (2 Bytes) Número que indica el protocolo que se usa en el nivel de enlace (por ejemplo, Ethernet es \verb|1|).
     \item[Ptipo:] (2 Bytes) Número que indica el protocolo que se usa en el nivel de red (por ejemplo, \acrshort{IP} es \verb|0x0800|).
-    \item[Hlen:] (1 Byte) Número que indica la longitud de la dirección hardware (en Bytes). Para direcciones \acrshort{MAC} es 6.
+    \item[Hlen:] (1 Byte) Número que indica la longitud de la dirección hardware (en Bytes). Para direcciones \acrshort{MAC_red} es 6.
     \item[Plen:] (1 Byte) Número que indica la longitud de la dirección del protocolo de red (en Bytes). Para direcciones \acrshort{IPv4} es 4.
     \item[Operación:] (2 Bytes) Número que indica si es una petición o una respuesta. El valor \verb|1| indica \verb|Request| y el valor \verb|2| indica \verb|Reply|.
     \item[Hemisor:] (6 Bytes) Dirección hardware (normalmente MAC) del emisor.
@@ -1032,7 +1031,7 @@ La cabecera de una trama \acrshort{ARP} se muestra en la Tabla~\ref{tab:cabecera
 
 Notemos que, en una petición, el campo de Hsol no será válido, puesto que es el valor que se está pidiendo.\\
 
-Por último, destacar que el protocolo \acrshort{ARP} tiene su homólogo \acrfull{RARP} que hace lo contrario, es decir, dado una dirección \acrshort{MAC} nos devuelve su dirección IP\@. Cuando Internet comenzó, había equipos sencilos con pocas características, incluso sin disco duro. Al no tener disco duro, estos no podían almacenar su dirección IP, aunque las tarjetas de red si guardaban su dirección \acrshort{MAC}. Era por tanto necesario un protocolo que nos diera la dirección IP a partir de la dirección \acrshort{MAC}, y así nació el protocolo \acrshort{RARP}. En la actualidad se encuentra en desuso, pero fue el precursor de \acrshort{BOOTP}, el cual más tarde fue sustituido por \acrshort{DHCP}.
+Por último, destacar que el protocolo \acrshort{ARP} tiene su homólogo \acrfull{RARP} que hace lo contrario, es decir, dado una dirección \acrshort{MAC_red} nos devuelve su dirección IP\@. Cuando Internet comenzó, había equipos sencilos con pocas características, incluso sin disco duro. Al no tener disco duro, estos no podían almacenar su dirección IP, aunque las tarjetas de red si guardaban su dirección \acrshort{MAC_red}. Era por tanto necesario un protocolo que nos diera la dirección IP a partir de la dirección \acrshort{MAC_red}, y así nació el protocolo \acrshort{RARP}. En la actualidad se encuentra en desuso, pero fue el precursor de \acrshort{BOOTP}, el cual más tarde fue sustituido por \acrshort{DHCP}.
 
 \section{El protocolo \acrshort{ICMP}}
 El \acrfull{ICMP} es un protocolo que, aunque no es imprescindible, es de gran ayuda. En general, sirve para informar al origen de que ha habido un error. Este protocolo es útil pues, aunque \acrshort{IP} no arregla ningún tipo de problema, este protocolo informa para que las capas superiores decidan qué hacer. Este es un protocolo de nivel de red que se encapsula también en el nivel de red, en un datagrama \acrshort{IP}.\\
