@@ -63,8 +63,7 @@ Los mecanismos de seguridad que vamos a estudiar, como hemos mencionado antes, s
 
     \item Para garantizar el no repudio:
     \begin{itemize}
-        \item Firma digital.
-        \item Certificados digitales.
+        \item Firma digital y Certificados digitales.
     \end{itemize}
 \end{itemize}
 
@@ -75,7 +74,7 @@ Se trata de un procedimiento para garantizar la confidencialidad.\\
 El proceso se ilustra en la Figura~\ref{fig:cifrado/descifrado}. Inicialmente, se dispone de un texto plano a transmitir (P), que buscamos que tan solo pueda ser leído por el receptor. Para ello, se emplea una función de cifrado $E_k$ que dará lugar a un texto cifrado (C), el cual se mandará a través del canal de comunicaciones (no supone un problema, ya que este texto cifrado no será entendible). Llegará al otro extremo y será descifrado con una función $D_{k'}$, obteniendo así de nuevo el texto plano (P).
 
 Los algoritmos de cifrado y descifrado ($E_k$ y $D_{k'}$) normalmente son conocidos, pero estos dependen de claves $k$ y $k'$ que son secretas. La dificultad reside en hallar estas claves.
-\begin{figure}[H]
+\begin{figure}
     \centering
     \includegraphics[width=1\linewidth]{./images/cifrado.png}
     \caption{Proceso de cifrado y descifrado.}
@@ -93,11 +92,9 @@ Veremos dos tipos de algoritmos de cifrado:
 Este tipo de algoritmos de cifrado se denomina simétrico porque se usa la misma clave para cifrar y descifrar los datos. Por tanto, la clave es secreta y tan solo es conocida por el emisor de los datos y el receptor.
 
 \subsubsection{\acrfull{DES}}
-Se trata de algoritmo de cifrado simétrico que se basa en realizar permutaciones y funciones \verb|XOR| encadenadas. Se cifran palabras de 64 bits usando para ello una clave de 56 bits.
+Se trata de algoritmo de cifrado simétrico que se basa en realizar permutaciones y funciones \verb|XOR| encadenadas. Se cifran palabras de 64 bits usando una clave de 56 bits.\\
 
-Como principal ventaja, como estas operaciones se pueden implementar de forma sencilla en hardware, es un algoritmo muy rápido, por lo que se puede usar en tiempo real (por ejemplo para codificar voz). 
-
-No obstante, presenta una serie de problemas:
+Como principal ventaja, como estas operaciones se pueden implementar de forma sencilla en hardware, es un algoritmo muy rápido, por lo que se puede usar en tiempo real (por ejemplo para codificar voz). No obstante, presenta una serie de problemas:
 \begin{itemize}
     \item La longitud de la clave es corta ($2^{56}$ posibles claves), por lo que es vulnerable a ataques de fuerza bruta.
     \item Lo que se termina obteniendo es una sustitución, por lo que con la misma entrada el resultado siempre será el mismo. Usando estudios estadísticos dependiendo del idioma, se puede llegar a descifrar el mensaje.
@@ -105,65 +102,122 @@ No obstante, presenta una serie de problemas:
 
 Para mitigar este segundo aspecto, se utiliza un esquema de cifrado reentrante, donde la salida de aplicar una transformación se usa para el cifrado de la siguiente palabra a cifrar. De esta forma, quien recibe el mensaje codificado necesita conocer la última entrada usada para codificar y podrá así aplicar el proceso inverso.
 
-\subsubsection{DES doble y 3DES\@}
-Son mejoras de DES que proporcionan robustez al algoritmo. Se toman dos claves $k_1$ y $k_2$ y para cifrar se toma una función $E$ y su inversa $D$ y se concatenan $E_{k_1}$, $D_{k_2}$, $E_{k_1}$ y para descifrar se concatenan $D_{k_1}$, $E_{k_2}$, $D_{k_1}$. 
-\subsubsection{IDEA\@}
-Usa la misma idea que DES pero con claves de 128 bits, lo que aumenta la complejidad de violación del protocolo. 
+\subsubsection{\acrshort{DES} doble y 3\acrshort{DES}}
+
+Estas son distintas mejoras del algoritmo \acrshort{DES} para aumentar su seguridad y robustez. Se toman dos claves $k_1$ y $k_2$ (en el caso de 3\acrshort{DES}, podrían ser 3 distintas) y para cifrar se toma una función $E$ y su inversa $D$ y se concatenan $E_{k_1}$, $D_{k_2}$, $E_{k_1}$ y para descifrar se concatenan $D_{k_1}$, $E_{k_2}$, $D_{k_1}$.
+
+De esta forma, podemos simular una clave de 112 bits (en el caso de 2\acrshort{DES}) o de 168 bits (en el caso de 3\acrshort{DES}); aunque se reduce la velocidad de cifrado.
+\subsubsection{\acrfull{IDEA}}
+
+Emplea la misma idea que \acrshort{DES} (cifrado empleando permutaciones y funciones \verb|XOR|), pero con claves de 128 bits en vez de 56. De esta forma, hay $2^{128}$ posibles claves, lo que reduce las posibilidades de un ataque por fuerza bruta. Los bloques que se encriptan siguen siendo de 64 bits.
 
 \subsection{Cifrado asimétrico}
-Cada usuario $A$ tiene una clave pública $K_{pub_A}$ y una clave privada $K_{pri_A}$ distintas. Conociendo la pública no es posible conocer la privada, por lo que la pública la conocen todos pero la privada solo la conoce $A$. 
+Cada usuario $A$ tiene una clave pública $K_{\text{pub}_A}$ y una clave privada $K_{\text{pri}_A}$ distintas. Conociendo la pública no es posible conocer la privada, por lo que la pública la conocen todos pero la privada solo la conoce su propietario, $A$.  Además, hay una correspondencia biunívoca entre las claves públicas y privadas.\\
+
+Veamos ahora la forma de funcionar de estos algoritmos. Supongamos que $A$ quiere enviar un mensaje a $B$, por lo que cifraremos con la clave pública de $B$, de forma que sólo $B$ podrá descifrarlo con su clave privada. De esta forma, se garantiza la confidencialidad del mensaje. Si $P$ es el mensaje a enviar y $C$ el mensaje cifrado, se tiene que:
 \begin{equation*}
-    C = K_{pub_A}(P) \rightarrow P = K_{pri_A}(C)
-\end{equation*}
-\begin{equation*}
-    C = K_{pri_A}(P) \rightarrow P = K_{pub_A}(C)
+    C = K_{\text{pub}_B}(P) \longrightarrow P = K_{\text{pri}_B}(C)
 \end{equation*}
 
-Esta es la forma de funcionar de cualquier cifrado con clave pública. Además hay una correspondencia biunívoca entre las claves públicas y privadas. 
-\subsubsection{RSA\@}
-\noindent
-Es un algoritmo para sacar las claves del cifrado asimétrico. 
+De cara a la autentificación, si se cifra un documento con la clave privada de $A$, se garantiza que solo $A$ ha podido cifrarlo, por lo que se garantiza la autentificación de $A$.
+\begin{equation*}
+    C = K_{\text{pri}_A}(P) \longrightarrow P = K_{\text{pub}_A}(C)
+\end{equation*}
+Este último aspecto tiene algunos inconvenientes que veremos más adelante.
+
+\subsubsection{\acrshort{RSA}}
+Este algoritmo, cuyo nombre se debe a sus creadores, es ampliamente utilizado en la actualidad. Es un algoritmo de cifrado asimétrico que se basa en la factorización de números enteros.
+Aunque no entraremos en el detalle de por qué es así el algoritmo\footnote{Se basa en factorización de números enteros, y se emplea para ello conocimientos mátemáticos, algunos vistos en la asignatura de Álgebra I, como la función de Euler.}, explicaremos tanto la generación de claves como el cifrado y descifrado de mensajes. Respecto a la generación de claves, se sigue el siguiente procedimiento:
 \begin{enumerate}
-    
-    \item Elegimos $p$ y $q$ primos grandes ($>10^{100}$)
-    \item $n = p\cdot q$ y $z = (p-1)\cdot(q-1)$
-    \item Elegimos $d$ primo relativo de $z$
-    \item Calculamos $e$ tal que $e\cdot d mod z = 1$
-    \item $K_pub = (e,n)$ y $K_{pri} = (d,n)$ de tal forma que:
-        \begin{itemize}
-            \item $C=P^e modn$
-            \item $P=C^d modn$
-        \end{itemize}
+    \item Elegimos $p,q$ primos grandes ($p,q>10^{100}$).
+    \item $n = p\cdot q\qquad z = (p-1)\cdot(q-1)$.
+    \item Elegimos $d$ primo relativo de $z$ ($\mcd(d,z)=1$).
+    \item Calculamos $e$ tal que $e\cdot d \mod z = 1$.
 \end{enumerate}
+Las claves serán los siguientes pares:
+\begin{equation*}
+    K_{\text{pub}} = (e,n)\qquad K_{\text{pri}} = (d,n)
+\end{equation*}
+
+Para cifrar un número entero $P$ en $C$, y descifrarlo de nuevo en $P$, se usan las siguientes funciones:
+\begin{align*}
+    \text{Cifrado:} &\quad C = P^e \mod n\qquad \text{con } K_{\text{pub}} = (e,n)\\
+    \text{Descifrado:} &\quad P = C^d \mod n \qquad \text{con } K_{\text{pri}} = (d,n)
+\end{align*}
+
+\begin{ejemplo}
+    Veamos el siguiente ejemplo de aplicación del algoritmo.
+    \begin{enumerate}
+        \item Elegimos $p=3$ y $q=11$.
+        \item $n = 3\cdot 11 = 33\qquad z = (3-1)\cdot(11-1) = 20$.
+        \item Elegimos $d=7$, ya que $\mcd(7,20)=1$.
+        \item Tomamos $e=3$, ya que $3\cdot 7 \mod 20 = 1$.
+        \item Tenemos $K_{\text{pub}} = (3,33)$ y $K_{\text{pri}} = (7,33)$.
+    \end{enumerate}
+
+    Suponemos que queremos codificar la palabra ``SUZANNE''. Para ello, asignamos un número a cada letra (el orden en el alfabeto sin la ñ), y el proceso se ilustra en la Tabla~\ref{tab:rsa}. Notemos que, por la red, tan solo se envía el número cifrado, $C$, y no se podría descifrar sin conocer la clave privada.
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{cc||c||c||c}
+            Simbólico & Numérico ($P$) & $C=P^3\mod 33$ & $P=C^7\mod 33$ & Simbólico\\
+            \hline
+            S & 19 & 28 & 19 & S\\
+            U & 21 & 21 & 21 & U\\
+            Z & 26 & 10 & 26 & Z\\
+            A & 1 & 1 & 1 & A\\
+            N & 14 & 5 & 14 & N\\
+            N & 14 & 5 & 14 & N\\
+            E & 5 & 26 & 5 & E
+        \end{tabular}
+        \caption{Cifrado y descifrado de la palabra ``SUZANNE''.}
+        \label{tab:rsa}
+    \end{table}
+\end{ejemplo}
 
 \section{Autenticación}
-Pongámonos en el supuesto de que dos equipos, $A$ y $B$, quieren autenticarse. Lo más sencillo es que cada uno tenga una BBDD con el usuario y la clave que comparten con el otro y que cada uno le mande a otro su usuario y la clave y que el servidor confirme si son correctos o no. Esto es vulnerable pero se usa en muchos servicios. Se hacen algunas mejoras de este método como por ejemplo que el envío de información se haga a través de túneles cifrados. 
+Pongámonos en el supuesto de que dos equipos, $A$ y $B$, quieren autenticarse. Lo más sencillo es que cada uno tenga una base de datos con el usuario y la clave que comparten con el otro. Para autenticarse $A$, este le manda a $B$ su usuario y su clave compartida, y $B$ comprueba si son correctos. De forma análoga, $B$ se autentica con $A$. Al estar enviándose la clave, este método es vulnerable, pero se usa en muchos servicios, como en el protocolo \acrshort{PAP}. Se pueden hacer algunas mejoras, como enviar la información a través de túneles cifrados, pero la vulnerabilidad sigue presente.\\
 
+Para evitar este problema, se pueden usar algoritmos de reto-respuesta.
 \subsection{Reto-respuesta}
-Tenemos como antes una BBDD con la clave que comparten $A$ y $B$. Supongamos ahora que $A$ quiere conectarse con $B$. Lo primero que hace es enviarle su identidad, lo que no es un dato sensible. Lo que ahora manda $B$ es un reto, un número aleatorio. $A$ calcula X, un cifrado con la clave compartida del reto. $B$ cifra el reto también, X' y cuando $A$ le responde comprueba que X=X' y así autentica a $A$. Ahora falta autenticar a $B$, y esto se hace de la misma forma. 
-\begin{figure}[H]
+Este algoritmo se ilustra en la Figura~\ref{fig:reto-respuesta}.
+Al igual que antes, supongamos que dos equipos $A$ y $B$ quieren autenticarse. Ambos tienen una base de datos que contiene, para cada usuario, la clave que comparten. Para autenticarse $A$ con $B$, este envía su identidad (usuario) $A$ (que no es un dato sensible), y $B$ le contesta con un número aleatorio $(R_B)$ denominado reto. Usando la clave compartida $K_{AB}$, $A$ cifra el reto ($K_{AB}(R_B)$) y se lo envía a $B$. El quipo $B$ también cifra el reto con la clave compartida que posee en su base de datos, y si coincide con el que ha recibido, $A$ queda autenticado. Además, $A$ habrá enviado ya un reto $R_A$ a $B$ para que este se autentique de la misma forma. De esta forma, se garantiza la autenticación de ambos equipos.\\
+\begin{figure}[h]
     \centering
     \includegraphics[width=0.4\linewidth]{./images/reto-respuesta.png}
+    \caption{Algoritmo de reto-respuesta.}
     \label{fig:reto-respuesta}
 \end{figure}
 
-Este sistema tiene algunas vulnerabilidades:
+Notemos que por la red no se envía ningún dado sensible, sino que solo se envían números aleatorios cifrados. Aunque parece seguro, este algoritmo tiene algunas vulnerabilidades:
 \begin{itemize}
-    \item \textbf{Ataque por repetición:} el atacante escucha por mucho tiempo y va guardando las respuestas, hasta que se repita un reto y así puede responder. \textbf{Solución:} que el reto no se pueda repetir (NONCE), Ej: fecha + hora. 
-    \item \textbf{Ataque por reflexión:} el atacante antes de responder manda el mismo reto, espera a la respuesta y la reenvía. \textbf{Solución:} usar dominios de claves disjuntas.
+    \item \textbf{Ataque por repetición:} el atacante escucha por mucho tiempo y va guardando las respuestas correctas para cada resto. De esta forma, cuando se repita un reto, ya sabe qué respuesta ha de enviar para identificarse él, suplantando así la identidad. \textbf{Solución:} que el reto no se pueda repetir (denominado \emph{nonce}), como puede ser el instante de tiempo junto a un número aleatorio (por ejemplo).
+    \item \textbf{Ataque por reflexión:} el atacante, tras escuchar el reto de $B$, le envía a $B$ su mismo reto, como si este fuese el reto de $A$. Cuando $B$ le responda, le reenvía dicha respuesta a $B$ como si hubiese sido él quien la ha cifrado. \textbf{Solución:} usar dominios de retos disjuntas, para que así no se pueda reenviar el reto de $B$ a $B$.
 \end{itemize}
 
 \subsection{Intercambio de Diffie-Hellman}
-Permite establecer una clave secreta entre dos entidades a través de un canal no seguro. 
-\begin{figure}[H]
+
+Aunque en el algoritmo de reto-respuesta no se envían claves, estas se han tenido que establecer en algún momento.
+Además, también es posible que no sea posible almacenar las claves en las bases de datos mencionadas, y que tengamos que calcular una clave secreta y compartida en cada autenticación. Estos dos problemas se resuelven con el intercambio de Diffie-Hellman, ya que este algoritmo permite establecer una clave secreta entre dos entidades a través de un canal no seguro.
+
+El algoritmo se muestra en la Figura~\ref{fig:diffie-hellman}. Aunque tampoco entraremos en detalle en las matemáticas que hay detrás, el algoritmo para crear una clave secreta compartida entre $A$ y $B$ es el siguiente:
+\begin{enumerate}
+    \item $A$ elige enteros $x,n$ y $g$, y $B$ elige el entero $y$.
+    \item $A$ envía a $B$ los valores $g$, $n$ y $g^x \mod n$.
+    \item $B$ envía a $A$ el valor $g^y \mod n$, que calcula a partir de los valores recibidos.
+    \item La clave secreta que comparten $A$ y $B$, que nunca se ha transmitido por la red y, como no se ha transmitido ni $x$ ni $y$, tampoco la podrá calcular un atacante, es:
+    \begin{align*}
+        K_{AB}  &= (g^y \mod n)^x \mod n = g^{xy} \mod n\\
+        K_{BA}  &= (g^x \mod n)^y \mod n = g^{xy} \mod n
+    \end{align*}
+\end{enumerate}
+\begin{figure}
     \centering
     \includegraphics[width=0.4\linewidth]{./images/diffie-hellman.png}
+    \caption{Algoritmo de intercambio de Diffie-Hellman.}
     \label{fig:diffie-hellman}
 \end{figure}
 
-\noindent
-Este sistema es vulnerable al ataque man-in-the-middle:\\
-El atacante se pone en medio e intercepta el mensaje de A, y le manda su propia clave a B, y esa misma clave se la responde a A, y espera que B le responda. De esta forma, hace de mensajero invisible, A y B ni siquiera saben que están escuchando sus mensajes. 
+No obstante, este algoritmo también tiene sus vulnerabilidades. Por ejemplo, puede sufrir un ataque del tipo \textit{man-in-the-middle}, en el que un atacante se sitúa entre $A$ y $B$ y se hace pasar por $A$ ante $B$ y por $B$ ante $A$. De esta forma, hace de mensajero invisible, y las claves compartidas en realidad serán con el atacante.
 
 \section{Funciones Hash}
 
@@ -225,10 +279,10 @@ Todo menos el identificador va cifrado con la clave que comparte A con BB. El me
 
 Supongamos que A le quiere mandar un mensaje a B. La idea se basa en lo siguiente:
 \begin{itemize}
-    \item $k_{pri_A}\equiv$ autenticación, solo A ha podido cifrarlo.
+    \item $k_{\text{pri}_A}\equiv$ autenticación, solo A ha podido cifrarlo.
     \item $k_{pub_B}\equiv$ confidencialidad, solo B podrá descifrarlo.
 \end{itemize}
-De esta manera, juntando las dos obtenemos autenticación + confidencialidad: $k_{pub_B}(K_{pri_A} (P))$ (puede cifrarse al revés, no es relevante).\\
+De esta manera, juntando las dos obtenemos autenticación + confidencialidad: $k_{pub_B}(K_{\text{pri}_A} (P))$ (puede cifrarse al revés, no es relevante).\\
 
 Sin embargo todo esto no garantiza el \textbf{no repudio}, puesto que nada nos garantiza que A sea el dueño de la clave. Para garantizarlo necesitamos los certificados digitales que deben ser emitidos por autoridades de certificación, que son entidades fiables. 
 

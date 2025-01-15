@@ -200,7 +200,7 @@ Llegados a este punto, podemos dar una definición más correcta de router, que 
 
 \subsubsection{Direccionamiento sin clases}
 
-Si usamos solo el direccionamiento con clases estaríamos desperdiciando muchísimas direcciones IP. Por ejemplo, si tenemos 1000 equipos ($2^8<1000<2^16$) tendríamos que usar una red de clase B, con la que desperdiciaríamos más de 60.000 direcciones. La solución a este problema es usar el direccionamiento sin clase, que nos permite usar la máscara de red deseada.
+Si usamos solo el direccionamiento con clases estaríamos desperdiciando muchísimas direcciones IP. Por ejemplo, si tenemos 1000 equipos ($2^8<1000<2^{16}$) tendríamos que usar una red de clase B, con la que desperdiciaríamos más de 60.000 direcciones. La solución a este problema es usar el direccionamiento sin clase, que nos permite usar la máscara de red deseada.
 
 \begin{itemize}
     \item \textbf{Subredes}\
@@ -262,7 +262,7 @@ Respecto al direccionamiento jerárquico con clases, dentro de cada clase se def
 Como hemos mencionado anteriormente, para que una red privada pueda comunicarse con el resto de Internet, es necesario que haya una dirección pública que haga de intermediario. Para esto se usa la técnica de \acrshort{NAT}, que posibilita la traducción de direcciones.
 Al encontramos en la capa de red, el \acrshort{PDU} contiene la cabecera IP\footnote{En realidad, los puertos se encuentran en la cabecera de la capa de transporte; pero tras encapsularlo se puede acceder desde la capa de aplicación.} que contiene, entre otros datos:
 \begin{itemize}
-    \item Dirección IP origen ({IPsc}) junto con el puerto origen ({sport}).
+    \item Dirección IP origen ({IPsrc}) junto con el puerto origen ({sport}).
     \item Dirección IP destino ({IPdest}) junto con el puerto destino ({dport}).
 \end{itemize}
 
@@ -351,13 +351,13 @@ Planteemos un primer ejemplo de \acrshort{SNAT}, que nos ayudará a comprender c
         
         El puerto de origen, el cual asignará alteatoriamente el SO (ya se verá), pongamos que es el 1075. El puerto de destino, en el caso de \acrshort{HTTP}, es el 80. Por tanto, la cabecera IP del paquete que envía el portátil al router contendrá:
         \begin{itemize}
-            \item {IPsc}:{sport}: \verb|192.168.1.2:1075|.
+            \item {IPsrc}:{sport}: \verb|192.168.1.2:1075|.
             \item {IPdest}:{dport}: \verb|66.66.66.66:80|.
         \end{itemize}
             
         \item El router ha de realizar la traducción de direcciones, ya que la IP del portátil es privada y no puede ser usada en Internet. Para esto, modifica la cabecera IP poniendo como IP origen su propia IP pública, y como puerto origen un puerto que aún no haya sido usado (por ejemplo, 12345). La cabecera IP así:
         \begin{itemize}
-            \item {IPsc}:{sport}: \verb|33.33.33.33:12345|.
+            \item {IPsrc}:{sport}: \verb|33.33.33.33:12345|.
             \item {IPdest}:{dport}: \verb|66.66.66.66:80|.
         \end{itemize}
 
@@ -366,7 +366,7 @@ Planteemos un primer ejemplo de \acrshort{SNAT}, que nos ayudará a comprender c
             \centering
             \begin{tabular}{|c|c||c|c|}
                 \hline
-                IPsc & sport & IPsc$'$ & sport$'$ \\
+                IPsrc & sport & IPsrc$'$ & sport$'$ \\
                 \hline
                 \verb|192.168.1.2| & \verb|1075| & \verb|33.33.33.33| & \verb|12345|\\
                 \hline
@@ -379,13 +379,13 @@ Planteemos un primer ejemplo de \acrshort{SNAT}, que nos ayudará a comprender c
         
         \item Tras el procesamiento del paquete en el servidor, este envía la respuesta al router. La cabecera IP del paquete de respuesta contendrá:
             \begin{itemize}
-                \item {IPsc}:{sport}: \verb|66.66.66.66:80|.
+                \item {IPsrc}:{sport}: \verb|66.66.66.66:80|.
                 \item {IPdest}:{dport}: \verb|33.33.33.33:12345|.
             \end{itemize}
         
         \item El paquete llega sin problema al router, ya que la IP de destino es pública. El router debe realizar de nuevo la traducción para saber a qué equipo de la red privada debe enviar la respuesta. Para ello, consulta la tabla de traducciones (Tabla~\ref{tab:tabla_traducciones}) y, tras modificar de nuevo la cabecera IP (\textit{postrouting}), esta queda:
             \begin{itemize}
-                \item {IPsc}:{sport}: \verb|66.66.66.66:80|.
+                \item {IPsrc}:{sport}: \verb|66.66.66.66:80|.
                 \item {IPdest}:{dport}: \verb|192.168.1.2:1075|.
             \end{itemize}
     \end{enumerate}
@@ -456,14 +456,14 @@ Planteamos ahora el siguiente ejemplo de \acrshort{DNAT}, que nos ayudará ahora
 
         En tal caso, el puerto de destino será el 23456. Por tanto, la cabecera IP del paquete que envía el portátil al router contendrá:
             \begin{itemize}
-                \item {IPsc}:{sport}: \verb|66.66.66.66:1050|.
+                \item {IPsrc}:{sport}: \verb|66.66.66.66:1050|.
                 \item {IPdest}:{dport}: \verb|33.33.33.33:23456|.
             \end{itemize}
         Notemos que la IP de destino no es el servidor como tal, sino el router (ya que es es al que tiene acceso el portátil), y el puerto de destino es el que hemos asignado en la tabla de traducciones para el servidor \acrshort{HTTP} al que queremos acceder.
             
         \item Tras llegar al router, este ha de realizar la traducción de direcciones (\textit{prerouting}), ya que la IP de destino era el router mismo. Consultando la tabla de traducciones (Tabla~\ref{tab:tabla_traducciones_DNAT}), la cabecera IP del paquete que envía el router al servidor quedará:
             \begin{itemize}
-                \item {IPsc}:{sport}: \verb|66.66.66.66:1050|.
+                \item {IPsrc}:{sport}: \verb|66.66.66.66:1050|.
                 \item {IPdest}:{dport}: \verb|192.168.1.2:80|.
             \end{itemize}
 
@@ -471,7 +471,7 @@ Planteamos ahora el siguiente ejemplo de \acrshort{DNAT}, que nos ayudará ahora
         
         \item Tras el procesamiento del paquete en el servidor, este envía la respuesta al router. La cabecera IP del paquete de respuesta contendrá:
             \begin{itemize}
-                \item {IPsc}:{sport}: \verb|192.168.1.2:80|.
+                \item {IPsrc}:{sport}: \verb|192.168.1.2:80|.
                 \item {IPdest}:{dport}: \verb|66.66.66.66:1050|.
             \end{itemize}
         
