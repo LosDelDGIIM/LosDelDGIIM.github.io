@@ -54,7 +54,7 @@ Los mecanismos de seguridad que vamos a estudiar, como hemos mencionado antes, s
     \begin{itemize}
         \item Autentificación con clave secreta (reto-respuesta).
         \item Intercambio de Diffie-Hellman (establecimiento de clave secreta).
-        \item Firma digital.
+        \item Firma junto con Certificado Digital.
     \end{itemize}
 
     \item Para garantizar la integridad:
@@ -300,31 +300,50 @@ No obstante, este algoritmo también tiene sus vulnerabilidades. Por ejemplo, pu
 
 \section{Funciones Hash}
 
-Son funciones de forma que dada una palabra P, nos da una palabra a modo de resumen o compendio de los datos, R. P puede ser de cualquier longitud, R, sin embargo, suele ser de longitud fija y ademas la función es unidireccional, irreversible, es decir, no se puede obtener P a partir de R. Dado un mensaje P, se envía P junto con su hash. \\
+Las funciones hash son funciones de forma que, dado un texto de entrada $M$ de longitud variable, nos proporcionan un resumen (también llamado compendio) $R$ de longitud fija. Estas funciones son unidireccionales e irreversibles; es decir, a partir de un resumen $R$ no se puede obtener el mensaje original $M$. Estas deben además ser de cálculo sencillo, pues se usan en muchos protocolos de comunicación y han de poder calcularse rápidamente. Además, son invulnerables a ataques de colisión; es decir, dos mensajes distintos no pueden tener el mismo resumen.\\
 
-Para que no se pueda modificar el mensaje a P' e incluir su resumen se tienen varias alternativas: 
+
+
+Su principal utilidad es garantizar la \textbf{integridad} de un mensaje enviado. Un mensaje $M$ se enviará junto al resumen $R$ de este, y el receptor, tras recibir el mensaje, calculará el resumen del mensaje, $R'$, y comprobará si coincide con el resumen recibido. En tal caso, se garantiza que el mensaje no ha sido modificado en el camino.\\
+
+No obstante, podría ocurrir que un atacante interceptase el mensaje y lo modificase, cambiando $M$ por $M'$ y $h(M)$ por $h(M')$. Para evitar esto, hay varias alternativas:
 \begin{itemize}
-    \item En el resumen podemos meter la clave que se comparte. A este hash (P + $K_{AB}$) se le suele llamar MAC (Message Authentification Code).
-    \item Cifrar el hash con la clave compartida.
+    \item Cifrar el hash con la clave compartida, de forma que el atacante no podría cifrar $h(M')$ por no conocer la clave.
+    \item El resumen puede incluir también a la clave compartida entre las entidades. A estos mensajes ($M$ junto a $h(K\mid B)$) se les denomina \acrfull{HMAC}.
 \end{itemize}
-
-Así conseguimos integridad del mensaje y por otra parte autenticación con los MAC\@.
+De ambas formas, también se garantiza la autenticación del emisor del mensaje. La confidencialidad no obstante no se garantiza, pues el mensaje no se cifra, sino que se envía en texto plano.
 
 \subsubsection{\acrfull{MD5}}
 
-Se trata de una función hash que, dado un mensaje, nos proporciona un resumen de 128 bits.\\
+Se trata de una función hash que, dado un mensaje, nos proporciona un resumen de 128 bits. Su funcionamiento se muestra en la Figura~\ref{fig:md5}, y se desarrolla a continuación.\\
 
-Como el algoritmo trabaja sobre bloques de 512 bits, el mensaje será \emph{siempre} extendido hasta que su longitud sea congruente con 448 módulo 512 (es decir, notando por $l$ a su longitud, se extiende hasta que $l\equiv 448\mod 512$, o lo que es lo mismo, hasta que $l-448\mod 512 = 0$). Esta extensión se hace añadiendo un $1$ seguido de ceros hasta que se cumpla la congruencia, y se hace \emph{siempre} (aunque la longitud del mensaje ya sea congruente con 448 módulo 512).
+Como el algoritmo trabaja sobre bloques de 512 bits, el mensaje será \emph{siempre} extendido hasta que su longitud sea congruente con 448 módulo 512 (es decir, notando por $K$ a su longitud, se extiende hasta que $K\equiv 448\mod 512$, o lo que es lo mismo, hasta que $K-448\mod 512 = 0$). Esta extensión se hace añadiendo un $1$ seguido de ceros hasta que se cumpla la congruencia, y se hace \emph{siempre} (aunque la longitud del mensaje ya sea congruente con 448 módulo 512).
 
 A continuación, se añade un campo de longitud de 64 bits, que indica la longitud del mensaje original. Si la longitud del mensaje original era mayor a $2^{64}$, se toman los 64 bits de menor peso.\\
 
 Tras añadir este campo de 64 bits, como $448+64=512$, el mensaje ya tendrá longitud múltiplo de 512, por lo que se divide en bloques de 512 bits, que son a los que les aplicaremos la función hash. Se hace un procesamiento secuencial por bloques, teniendo en cuenta que la salida tras procesar un bloque sirve como entrada para procesar el siguiente. El resumen se obtendrá tras procesar el último bloque.
-
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{./images/hash.png}
+    \caption{Funcionamiento de la función hash \acrshort{MD5}.}
+    \label{fig:md5}
+\end{figure}
 
 \subsubsection{\acrfull{SHA-1}}
 
 El funcionamiento, desde el punto de vista de usuario\footnote{No entraremos en detalle en cómo está implementada como tal la función hash, aunque evidentemente son distintas.}, es análogo al de \acrshort{MD5}, ya que también se procesan bloques de 512 bits; aunque en este caso los resúmenes son de 160 bits.
 
+\subsection{Ataque por Extensión}
+
+Supongamos que una entidad $A$ quiere enviarle un mensaje $M$ a otra entidad $B$. Para garantizar la integridad del mensaje, lo enviará junto a su resumen, y para evitar que estos sean reemplazados por un atacante, el resumen también se hará de la clave compartida; es decir, se enviará $M$ junto a $h(K_{AB}\mid M)$.\\
+
+Supongamos no obstante que hay un atacante escuchando, y que intercepta el mensaje $M$ junto al resumen calculado. Aunque no puede cambiar completamente $M$, sí podrá añadirle información (de ahí el nombre de extensión). Con el mensaje $M$, puede rellenarlo tal y como se describe en las funciones anteriores, y después de convertirlo a un mensaje con longitud múltiplo de 512, puede añadir al mensaje lo que quiera, obteniendo así un mensaje modificado $M'$. Para calcular $h(K_{AB}\mid M')$, como desconoce la clave compartida, no podrá hacerlo de forma directa. No obstante, como hemos visto que las funciones hash se basan en realimentación, podría usar el resumen $h(K_{AB}\mid M)$ que ha interceptado como entrada para el primer bloque que él haya añadida. De esta forma, cuando el mensaje llegue a $B$, este calculará el resumen de $M'$, que coincidirá con el que ha calculado el atacante, creyendo por tanto que el mensaje no ha sido modificado y produciéndose una vulnerabilidad.\\
+
+Para evitar este problema, el \acrshort{HMAC} que en realidad se envía es:
+\begin{equation*}
+    h\left(K_{AB}\mid h(K_{AB}\mid M)\right)
+\end{equation*}
+De esta forma, el atacante podrá modificar el resumen calculado en la función exterior, pero nunca podrá calcular ni modificar el resumen que hay en el interior, ya que no conoce la clave compartida.
 
 \section{Firma digital y certificados digitales}
 
@@ -339,7 +358,7 @@ Una \textbf{firma digital} intenta ser un sustituto de una firma escrita para po
 Hay dos tipos de firmas digitales, mediante clave secreta o mediante doble cifrado.
 \subsection{Firma digital con clave secreta. \emph{Big Brother}.}
 
-Este método se basa el uso de una entidad fiable, denominada \emph{Big Brother} o \emph{BB}, en la que todos los usuarios confían (posiblemente sea del estado). Este comparte una clave con cada una de las entidades, de forma que todos los mensajes pasan por él (comportándose como un ``man-in-the-middle''). De esta forma, si surge algún problema, el BB puede demostrar ante un juez quién ha hecho una transacción, en qué momento, etc.
+Este método se basa el uso de una entidad fiable, denominada \emph{Big Brother} o \emph{BB}, en la que todos los usuarios confían (posiblemente sea del estado). Este comparte una clave con cada una de las entidades, de forma que todos los mensajes pasan por él. De esta forma, si surge algún problema, el Big Brother puede demostrar ante un juez quién ha hecho una transacción, en qué momento, etc.
 
 Supongamos que $A$ quiere enviarle un mensaje $P$ a $B$ firmado digitalmente. La forma de hacerlo se ilustra en la Figura~\ref{fig:big-brother}. En primer lugar, $A$ le envía al Big Brother un mensaje que contiene:
 \begin{itemize}
@@ -369,7 +388,7 @@ Todo esto va cifrado con la clave que comparte $B$ con el BB, garantizando así 
     \node[entity, right=6.6cm of A] (BB) {$BB$};
     \node[entity, right=6.6cm of BB] (B) {$B$};
     
-    \node[box, right=1.05cm of A.north, yshift=-1cm] (msg1) {$A,K_a(B,R_A,t,P)$};
+    \node[box, right=1.05cm of A.north, yshift=-1cm] (msg1) {$A,K_A(B,R_A,t,P)$};
     \node[box, right=1.05cm of BB.north, yshift=-2cm] (msg2) {$K_B(A,R_A,t,P,K_{BB}(A,t,P))$};
 
     
@@ -407,7 +426,7 @@ Sin embargo todo esto no garantiza el \textbf{no repudio}, puesto que nada nos g
     Entidad fiable (posiblemente del estado) que garantiza la asociación entre identidad y claves. En España, por ejemplo, la más extendida es la \acrshort{FNMT}, aunque hay otras.
 \end{definicion}
 
-En primer lugar, el usuario obtiene sus claves pública y privada y envía una solitud firmada digitalmente a la Autoridad de Certificación. Esta, tras comprobar la firma y que el solicitante es quien dice ser, emite el certificado digital solicitado, que contiene (entre otros campos):
+En primer lugar, el usuario obtiene sus claves pública y privada y envía una solicitud firmada digitalmente a la Autoridad de Certificación. Esta, tras comprobar la firma y que el solicitante es quien dice ser, emite el certificado digital solicitado, que contiene (entre otros campos):
 \begin{itemize}
     \item Identidad de la Autoridad de Certificación.
     \item Identidad del usuario.
@@ -448,7 +467,7 @@ Al enviar $A$ el correo, el proceso es el siguiente:
 \begin{enumerate}
     \item Se hace un resumen del mensaje mediante el algoritmo \acrshort{MD5}, $R=\text{MD5}(P)$.
     \item Este se firma digitalmente con la clave privada de $A$, $FD=K_{\text{pri}_A}(R)$.
-    \item Tanto el resumen cifrado comprime (para enviar menos datos) usando para ello el el formato ZIP\@, $Z=\text{ZIP}(FD+P)$.
+    \item Tanto el mensaje como resumen cifrado se comprimen (para enviar menos datos) usando para ello el el formato ZIP\@, $Z=\text{ZIP}(FD+P)$.
     \item Se genera una clave privada específica para ese mensaje, $K$, y se cifra $Z$ con esta clave usando para ello el algoritmo de \acrshort{IDEA}, $\text{IDEA}_K(Z)$.  A esta clave $K$ se le denomina \emph{clave de sesión}, pues solo se usa en esa sesión. Notemos que, si un atacante la consigue, tan solo podrá descifrar ese mensaje, y no otros.
     \item Se cifra también la clave de sesión con la clave pública de $B$, $K_{\text{pub}_B}(K)$, para que solo $B$ pueda obtener dicha clave y, por tanto, descifrar el mensaje. Por tanto, el mensaje cifrado es $C=K_{\text{pub}_B}(K)+\text{IDEA}_K(Z)$.
     \item Este mensaje cifrado se codifica con el sistema Base64\footnote{No tiene que ver con seguridad y no se verá en la asignatura. Es una forma de codificar mensajes para enviar por internet.}, $M=\text{Base64}(C)$,
@@ -507,16 +526,31 @@ Con este proceso conseguimos garantizar los siguientes aspectos de seguridad:
 
 \subsection{Seguridad en la Capa de Sesión. \acrshort{SSL} y \acrshort{TLS}.}
 
-Esta capa ofrece servicios de seguridad empleados por gran variedad de protocolos de aplicación, como \acrshort{HTTPS}, \acrshort{IMAPS} o \acrshort{SSL}-\acrshort{POP}. Los principales protocolos de esta capa son \acrshort{SSL} y \acrshort{TLS}, que en esencia crean túneles cifrados para el intercambio de información.
+Esta capa ofrece servicios de seguridad empleados por gran variedad de protocolos de aplicación, como \acrshort{HTTPS}, \acrshort{IMAPS}, \acrshort{SSL}-\acrshort{POP} o \acrshort{VPN}. Los principales protocolos de esta capa son \acrshort{SSL} y \acrshort{TLS}, que en esencia crean túneles cifrados para el intercambio de información.
 
 \subsubsection{\acrfull{SSL}}
-En realidad, no es un protocolo sino una familia de ellos.
+En realidad, no es un protocolo sino una familia de ellos que se usan de forma conjunta.
 \begin{itemize}
-    \item SSL Record Protocol: encapsula los protocolos y ofrece un canal seguro con privacidad, autenticación e integridad. Lo que se hace es que cuando voy a mandar datos, los parto en fragmentos, cada fragmento lo comprimos, hago un resumen y cifro datos + resumen. Y esto último es lo que se transmite, encapsulado en un paquete TCP\@.
-    \item SSL Handshake Protocol: se negocia el algoritmo de cifrado, la función hash, autentica al servidor, el cliente genera claves de sesión (temporales) con el algoritmo de Diffie-Hellman o aleatorias y que irán cifradas con la clave pública del servidor. \\
-        El problema del hombre en medio se resuelve autenticando al servidor. Así, si el mensaje que me llega con $g^ymodn$ no viene del servidor no lo tomo. 
-    \item SSL Assert Protocol: informa sobre errores en la sesión.
-    \item Change Cipher Spec Protocol: para notificar cambios en el cifrado.
+    \item \ul{\acrshort{SSL} Handshake Protocol}: se negocia el algoritmo de cifrado y la función hash; y el servidor se autentica con un certificado digital del tipo {X.509}. El cliente genera claves de sesión (de esta forma, si un atacante la consigue tan solo podrá obtener los mensajes de esa sesión), y hay dos opciones para ello:
+    \begin{itemize}
+        \item Se generan aleatoriamente y se envían cifradas con la clave pública del servidor (este ya se ha autenticado).
+        \item Se generan mediante el intercambio de Diffie-Hellman. El problema del ``man-in-the-middle'' no se tiene en este caso, pues el servidor ya se ha autenticado.
+    \end{itemize}
+
+    \item \ul{\acrshort{SSL} Assert Protocol}: informa sobre errores en la sesión.
+    \item \ul{Change Cipher Spec Protocol}: usado para notificar cambios en el cifrado.
+
+    \item \ul{\acrshort{SSL} Record Protocol}: encapsula los protocolos anteriores, y ofrece un canal seguro.\\
+    
+    Para enviar datos, se hace lo siguiente:
+    \begin{enumerate}
+        \item Se fragmenta el mensaje en fragmentos denominados \emph{registros}.
+        \item Cada registro es comprimido, y al comprimido se le calcula un resumen mediante la función hash acordada.
+        \item Se cifra el mensaje comprimido junto con su resumen mediante la clave de sesión.
+        \item Esto será lo que trasmite, encapsulado en un paquete \acrshort{TCP}.
+    \end{enumerate}
+    
+    Se garantiza \emph{confidencialidad} (pues se cifra), \emph{integridad} (pues se calcula el resumen) y \emph{autenticación} por parte del servidor (pues se ha autenticado con su firma y certificado digital).
 \end{itemize}
 
 
