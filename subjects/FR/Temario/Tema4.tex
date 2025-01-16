@@ -40,7 +40,7 @@ Veamos algunos ejemplos de ataque de seguridad:
     \item \textbf{Snooping (phishing):} suplantación de la identidad de alguna entidad. Se vulnera la autentificación.
     \item \textbf{Man in the Middle:} un atacante se situa en medio de dos equipos que se comunican e intercepta todos los mensajes que se transmiten.
     \item \textbf{\acrfull{DDoS}:} ataque consistente en enviar muchas peticiones a un servidor para que este no pueda atender a todas, consiguiendo que el servicio deje de funcionar. Se denomina \emph{distributed} si las peticiones provienen de distintos equipos, que suele ser lo más común. 
-    \item \textbf{Malware:} software malicioso, como troyanos, gusanos, \textit{spyware}, \textit{backdoors}, \textit{rootkits}, \textit{keyloggers}, etc. Un ejemplo es \textit{ransomware}, en el que se encriptan todos o parte de los datos y se pide un recate a cambio de estos.
+    \item \textbf{Malware:} software malicioso, como troyanos, gusanos, \textit{spyware}, \textit{backdoors}, \textit{rootkits}, \textit{keyloggers}, etc. Un ejemplo es \textit{ransomware}, en el que se encriptan todos o parte de los datos y se pide un rescate a cambio de estos.
 \end{itemize}
 
 
@@ -54,11 +54,12 @@ Los mecanismos de seguridad que vamos a estudiar, como hemos mencionado antes, s
     \begin{itemize}
         \item Autentificación con clave secreta (reto-respuesta).
         \item Intercambio de Diffie-Hellman (establecimiento de clave secreta).
+        \item Firma digital.
     \end{itemize}
 
     \item Para garantizar la integridad:
     \begin{itemize}
-        \item Funciones Hash (\acrfull{HMAC}).
+        \item Funciones Hash.
     \end{itemize}
 
     \item Para garantizar el no repudio:
@@ -68,7 +69,7 @@ Los mecanismos de seguridad que vamos a estudiar, como hemos mencionado antes, s
 \end{itemize}
 
 \section{Cifrado}
-Se trata de un procedimiento para garantizar la confidencialidad.\\
+Se trata de un procedimiento para garantizar la confidencialidad, y en muchos casos también la autenticación.\\
 
 
 El proceso se ilustra en la Figura~\ref{fig:cifrado/descifrado}. Inicialmente, se dispone de un texto plano a transmitir (P), que buscamos que tan solo pueda ser leído por el receptor. Para ello, se emplea una función de cifrado $E_k$ que dará lugar a un texto cifrado (C), el cual se mandará a través del canal de comunicaciones (no supone un problema, ya que este texto cifrado no será entendible). Llegará al otro extremo y será descifrado con una función $D_{k'}$, obteniendo así de nuevo el texto plano (P).
@@ -79,7 +80,7 @@ Los algoritmos de cifrado y descifrado ($E_k$ y $D_{k'}$) normalmente son conoci
     \includegraphics[width=1\linewidth]{./images/cifrado.png}
     \caption{Proceso de cifrado y descifrado.}
     \label{fig:cifrado/descifrado}
-\end{figure}
+\end{figure}~\\
 
 Veremos dos tipos de algoritmos de cifrado:
 \begin{itemize}
@@ -119,11 +120,10 @@ Veamos ahora la forma de funcionar de estos algoritmos. Supongamos que $A$ quier
     C = K_{\text{pub}_B}(P) \longrightarrow P = K_{\text{pri}_B}(C)
 \end{equation*}
 
-De cara a la autentificación, si se cifra un documento con la clave privada de $A$, se garantiza que solo $A$ ha podido cifrarlo, por lo que se garantiza la autentificación de $A$.
+De cara a la autentificación, si se cifra un documento con la clave privada de $A$, se garantiza que solo $A$ ha podido cifrarlo, por lo que a priori\footnote{En el apartado dedicado a la Firga digital se verá que no es suficiente.} se garantiza la autentificación de $A$.
 \begin{equation*}
     C = K_{\text{pri}_A}(P) \longrightarrow P = K_{\text{pub}_A}(C)
 \end{equation*}
-Este último aspecto tiene algunos inconvenientes que veremos más adelante.
 
 \subsubsection{\acrshort{RSA}}
 Este algoritmo, cuyo nombre se debe a sus creadores, es ampliamente utilizado en la actualidad. Es un algoritmo de cifrado asimétrico que se basa en la factorización de números enteros.
@@ -158,7 +158,7 @@ Para cifrar un número entero $P$ en $C$, y descifrarlo de nuevo en $P$, se usan
     Suponemos que queremos codificar la palabra ``SUZANNE''. Para ello, asignamos un número a cada letra (el orden en el alfabeto sin la ñ), y el proceso se ilustra en la Tabla~\ref{tab:rsa}. Notemos que, por la red, tan solo se envía el número cifrado, $C$, y no se podría descifrar sin conocer la clave privada.
     \begin{table}[H]
         \centering
-        \begin{tabular}{cc||c||c||c}
+        \begin{tabular}{cc||c||cc}
             Simbólico & Numérico ($P$) & $C=P^3\mod 33$ & $P=C^7\mod 33$ & Simbólico\\
             \hline
             S & 19 & 28 & 19 & S\\
@@ -181,9 +181,43 @@ Para evitar este problema, se pueden usar algoritmos de reto-respuesta.
 \subsection{Reto-respuesta}
 Este algoritmo se ilustra en la Figura~\ref{fig:reto-respuesta}.
 Al igual que antes, supongamos que dos equipos $A$ y $B$ quieren autenticarse. Ambos tienen una base de datos que contiene, para cada usuario, la clave que comparten. Para autenticarse $A$ con $B$, este envía su identidad (usuario) $A$ (que no es un dato sensible), y $B$ le contesta con un número aleatorio $(R_B)$ denominado reto. Usando la clave compartida $K_{AB}$, $A$ cifra el reto ($K_{AB}(R_B)$) y se lo envía a $B$. El quipo $B$ también cifra el reto con la clave compartida que posee en su base de datos, y si coincide con el que ha recibido, $A$ queda autenticado. Además, $A$ habrá enviado ya un reto $R_A$ a $B$ para que este se autentique de la misma forma. De esta forma, se garantiza la autenticación de ambos equipos.\\
-\begin{figure}[h]
+\begin{figure}
     \centering
-    \includegraphics[width=0.4\linewidth]{./images/reto-respuesta.png}
+    \begin{tikzpicture}[
+        node distance=2cm and 1.5cm,
+        every node/.style={font=\small},
+        box/.style={draw, rounded corners, fill=yellow!20, minimum width=2.5cm, minimum height=0.8cm, align=center},
+        entity/.style={draw, fill=green!20, minimum width=1cm, minimum height=4.5cm, align=center},
+        arrow/.style={-{Latex[length=2mm, width=2mm]}}
+    ]
+    
+    % Nodes
+    \node[entity] (A) {$A$};
+    
+    
+    \node[box, right=3cm of A.north, yshift=-0.5cm] (msg1) {$A$};
+    \node[box, below=0.1cm of msg1] (msg2) {$R_B$};
+    \node[box, below=0.1cm of msg2] (msg3) {$K_{AB}(R_B)$};
+    \node[box, below=0.1cm of msg3] (msg4) {$R_A$};
+    \node[box, below=0.1cm of msg4] (msg5) {$K_{AB}(R_A)$};
+
+    \node[entity, right=7.5cm of A] (B) {$B$};
+    
+    % Arrows
+    % Bucle para los que van hacia la derecha
+    \foreach \i in {1,3,4}{
+        \draw (msg\i.west) -- ++(-2.5cm,0);
+        \draw[arrow] (msg\i.east) -- ++(2.5cm, 0);
+    }
+
+    % Bucle para los que van hacia la izquierda
+    \foreach \i in {2,5}{
+        \draw (msg\i.east) -- ++(2.5cm,0);
+        \draw[arrow] (msg\i.west) -- ++(-2.5cm, 0);
+    }
+
+    
+    \end{tikzpicture}
     \caption{Algoritmo de reto-respuesta.}
     \label{fig:reto-respuesta}
 \end{figure}
@@ -212,7 +246,52 @@ El algoritmo se muestra en la Figura~\ref{fig:diffie-hellman}. Aunque tampoco en
 \end{enumerate}
 \begin{figure}
     \centering
-    \includegraphics[width=0.4\linewidth]{./images/diffie-hellman.png}
+    \begin{tikzpicture}[
+        node distance=2cm and 1.5cm,
+        every node/.style={font=\small},
+        box/.style={draw, rounded corners, fill=yellow!20, minimum width=3.5cm, minimum height=0.8cm, align=center},
+        entity/.style={draw, fill=green!20, minimum width=1cm, minimum height=3cm, align=center},
+        arrow/.style={-{Latex[length=2mm, width=2mm]}}
+    ]
+    
+    % Nodes
+    \node[entity] (A) {$A$};
+    
+    
+    \node[box, right=3cm of A.north, yshift=-1cm] (msg1) {$n,~g,~~~g^x\mod n$};
+    \node[box, below=0.1cm of msg1] (msg2) {$g^y \mod n$};
+
+    \node[entity, right=8.5cm of A] (B) {$B$};
+    
+    % Arrows
+    % Bucle para los que van hacia la derecha
+    \foreach \i in {1}{
+        \draw (msg\i.west) -- ++(-2.5cm,0);
+        \draw[arrow] (msg\i.east) -- ++(2.5cm, 0);
+    }
+
+    % Bucle para los que van hacia la izquierda
+    \foreach \i in {2}{
+        \draw (msg\i.east) -- ++(2.5cm,0);
+        \draw[arrow] (msg\i.west) -- ++(-2.5cm, 0);
+    }
+
+    \node[above of=A,yshift=0.1cm] {$A$ elige $x,n,g$};
+    \node[above of=B, yshift=0.1cm] {$B$ elige $y$};
+
+    \node[below of=A, yshift=-0.1cm] {
+        $\begin{array}{rl}
+            K_{AB} & = (g^y \mod n)^x \mod n \\
+                & = g^{xy} \mod n
+        \end{array}$
+    };
+    \node[below of=B, yshift=-0.1cm] {
+        $\begin{array}{rl}
+            K_{BA} & = (g^x \mod n)^y \mod n \\
+                & = g^{xy} \mod n
+        \end{array}$
+    };
+    \end{tikzpicture}
     \caption{Algoritmo de intercambio de Diffie-Hellman.}
     \label{fig:diffie-hellman}
 \end{figure}
@@ -231,122 +310,207 @@ Para que no se pueda modificar el mensaje a P' e incluir su resumen se tienen va
 
 Así conseguimos integridad del mensaje y por otra parte autenticación con los MAC\@.
 
-\subsubsection{MD5 (Message Digest)}
+\subsubsection{\acrfull{MD5}}
 
-Dada una palabra nos da un resumen de 128 bits. El algoritmo trabaja sobre bloques de 512 bits, por lo que si la palabra no tiene un número de bits múltiplo de 512 rellenamos con 100\ldots0 hasta que sea congruente con 448módulo 512, y se le añade un campo de longitud de 64 bits. A continuación se divide el mensaje en bloques de 512 bits y hacemos un procesamiento secuencial por bloques, es decir, que cada salida sirve como entrada para la siguiente caja MD5\@.
+Se trata de una función hash que, dado un mensaje, nos proporciona un resumen de 128 bits.\\
+
+Como el algoritmo trabaja sobre bloques de 512 bits, el mensaje será \emph{siempre} extendido hasta que su longitud sea congruente con 448 módulo 512 (es decir, notando por $l$ a su longitud, se extiende hasta que $l\equiv 448\mod 512$, o lo que es lo mismo, hasta que $l-448\mod 512 = 0$). Esta extensión se hace añadiendo un $1$ seguido de ceros hasta que se cumpla la congruencia, y se hace \emph{siempre} (aunque la longitud del mensaje ya sea congruente con 448 módulo 512).
+
+A continuación, se añade un campo de longitud de 64 bits, que indica la longitud del mensaje original. Si la longitud del mensaje original era mayor a $2^{64}$, se toman los 64 bits de menor peso.\\
+
+Tras añadir este campo de 64 bits, como $448+64=512$, el mensaje ya tendrá longitud múltiplo de 512, por lo que se divide en bloques de 512 bits, que son a los que les aplicaremos la función hash. Se hace un procesamiento secuencial por bloques, teniendo en cuenta que la salida tras procesar un bloque sirve como entrada para procesar el siguiente. El resumen se obtendrá tras procesar el último bloque.
 
 
-\subsubsection{SHA (Secure Hash Algorithm)}
+\subsubsection{\acrfull{SHA-1}}
 
-Funciona igual que MD5 pero los resúmenes son de 160 bits. 
+El funcionamiento, desde el punto de vista de usuario\footnote{No entraremos en detalle en cómo está implementada como tal la función hash, aunque evidentemente son distintas.}, es análogo al de \acrshort{MD5}, ya que también se procesan bloques de 512 bits; aunque en este caso los resúmenes son de 160 bits.
 
 
 \section{Firma digital y certificados digitales}
 
 Una \textbf{firma digital} intenta ser un sustituto de una firma escrita para poder garantizar el \textbf{no repudio} en nuestras acciones en Internet. Con ellas conseguimos:
 \begin{itemize}
-    \item Autenticación por parte del receptor de la identidad del emisor.
+    \item Autenticación del firmante frente al receptor.
     \item No repudio por parte del firmante.
-    \item El emisor obtiene garantía de no falsificación. (Integridad).
+    \item El firmante obtiene garantía de no falsificación, proporcionando integridad.
+    \item Se garantiza la confidencialidad del mensaje entre el firmante y el receptor.
 \end{itemize}
 
-\subsection{Firma con clave secreta o Big Brother (BB)}
+Hay dos tipos de firmas digitales, mediante clave secreta o mediante doble cifrado.
+\subsection{Firma digital con clave secreta. \emph{Big Brother}.}
 
-El protocolo consiste en usar una entidad en la que todos los usuarios confían y que vigilará las transacciones de todos los usuarios. Es una especie de man-in-the-middle. Si A quiere enviar un mensaje a B, el BB formará parte de la comunicación haciendo de puente que guardará cada una de las transacciones realizadas. 
+Este método se basa el uso de una entidad fiable, denominada \emph{Big Brother} o \emph{BB}, en la que todos los usuarios confían (posiblemente sea del estado). Este comparte una clave con cada una de las entidades, de forma que todos los mensajes pasan por él (comportándose como un ``man-in-the-middle''). De esta forma, si surge algún problema, el BB puede demostrar ante un juez quién ha hecho una transacción, en qué momento, etc.
 
-\begin{figure}[H]
+Supongamos que $A$ quiere enviarle un mensaje $P$ a $B$ firmado digitalmente. La forma de hacerlo se ilustra en la Figura~\ref{fig:big-brother}. En primer lugar, $A$ le envía al Big Brother un mensaje que contiene:
+\begin{itemize}
+    \item {$A$}: Identificador de $A$.
+    \item {$B$}: Identificador de $B$, el destinatario.
+    \item {$R_A$}: Resumen del mensaje para garantizar la integridad.
+    \item {$t$}: Instante de tiempo.
+    \item {$P$}: Mensaje a enviar, en texto plano.
+\end{itemize}
+Notemos que, exceptuando el identificador de $A$, el resto de campos van cifrados con la clave que comparte $A$ con el Big Brother, proporcinando así confidencialidad con el BB y atenticándose así $A$. El mensaje es recibido por el BB, que lo descifra, identificando así que tiene que reenviarlo a $B$. Para ello, añade:
+\begin{itemize}
+    \item {$K_{BB}(A,t,P)$}: Datos de la transacción, cifrados con la clave del BB, que solo él posee y por tanto se convierte en una prueba ante un juez. Se consigue así el no repudio.
+\end{itemize}
+Todo esto va cifrado con la clave que comparte $B$ con el BB, garantizando así la confidencialidad del mensaje.
+\begin{figure}
     \centering
-    \includegraphics[width=0.8\linewidth]{./images/big-brother.png}
+    \begin{tikzpicture}[
+        node distance=2cm and 1.5cm,
+        every node/.style={font=\small},
+        box/.style={draw, rounded corners, fill=yellow!20, minimum width=5.5cm, minimum height=0.8cm, align=center},
+        entity/.style={draw, fill=green!20, minimum width=1cm, minimum height=3cm, align=center},
+        arrow/.style={-{Latex[length=2mm, width=2mm]}}
+    ]
+    
+    % Nodes
+    \node[entity] (A) {$A$};
+    \node[entity, right=6.6cm of A] (BB) {$BB$};
+    \node[entity, right=6.6cm of BB] (B) {$B$};
+    
+    \node[box, right=1.05cm of A.north, yshift=-1cm] (msg1) {$A,K_a(B,R_A,t,P)$};
+    \node[box, right=1.05cm of BB.north, yshift=-2cm] (msg2) {$K_B(A,R_A,t,P,K_{BB}(A,t,P))$};
+
+    
+    % Arrows
+    % Bucle para los que van hacia la derecha
+    \foreach \i in {1,2}{
+        \draw (msg\i.west) -- ++(-0.55cm,0);
+        \draw[arrow] (msg\i.east) -- ++(0.55cm, 0);
+    }
+    \end{tikzpicture}
+    \caption{Firma digital con clave secreta. \emph{Big Brother}.}
     \label{fig:big-brother}
 \end{figure}
 
-El BB tiene una clave compartida con todos. A le manda a BB:
-\begin{description}
-    \item [A:]Identificador.
-    \item [B:] El destinatario.
-    \item [$R_A$:] Un resumen para dar integridad.
-    \item [t:] el instante de tiempo.
-    \item [P:] texto plano, el mensaje a enviar. 
-\end{description}
-Todo menos el identificador va cifrado con la clave que comparte A con BB. El mensaje es recibido y reenviado por BB añadiéndole algunos detalles.
-\begin{description}
-    \item [$K_{BB}(A,t,P)$:] Esta clave solo la tiene el BB lo que prueba ante un juez quién ha hecho dicha transacción, en qué momento y el contenido de la transacción.  
-    \item [$K_B(\ldots)$:] Además todo va cifrado con la clave de B para confidencialidad. 
-\end{description}
 
+\subsection{Firma digital con clave asimétrica. Doble cifrado}
 
-\subsection{Firma digital con clave asimétrica o Doble cifrado}
-
-Supongamos que A le quiere mandar un mensaje a B. La idea se basa en lo siguiente:
+Supongamos que $A$ le quiere mandar un mensaje a $B$. La idea se basa en lo siguiente:
 \begin{itemize}
-    \item $k_{\text{pri}_A}\equiv$ autenticación, solo A ha podido cifrarlo.
-    \item $k_{pub_B}\equiv$ confidencialidad, solo B podrá descifrarlo.
+    \item Cifrar con $K_{\text{pri}_A}$ garantiza autenticación, ya que solo $A$ ha podido cifrarlo.
+    \item Cifrar con $K_{\text{pub}_B}$ garantiza confidencialidad, ya que solo $B$ podrá descifrarlo.
 \end{itemize}
-De esta manera, juntando las dos obtenemos autenticación + confidencialidad: $k_{pub_B}(K_{\text{pri}_A} (P))$ (puede cifrarse al revés, no es relevante).\\
+De esta manera, realizando ambos cifrados se garantiza la autenticación y la confidencialidad del mensaje. El orden de los cifrados no importa, pero ha de establecerse previamente para que el destinatario sepa cómo descifrarlo.
+\begin{align*}
+    C&=K_{\text{pub}_B}\left(K_{\text{pri}_A}(P)\right)\\
+    P&=K_{\text{pub}_A}\left(K_{\text{pri}_B}(C)\right)
+\end{align*}
 
-Sin embargo todo esto no garantiza el \textbf{no repudio}, puesto que nada nos garantiza que A sea el dueño de la clave. Para garantizarlo necesitamos los certificados digitales que deben ser emitidos por autoridades de certificación, que son entidades fiables. 
+Sin embargo todo esto no garantiza el \textbf{no repudio}, puesto que nada nos garantiza que $K_{\text{pri}_A}$ sea realmente de $A$. Para garantizarlo, necesitamos los \textbf{certificados digitales}, que son emitidos por autoridades de certificación.
 
-\begin{definicion}[Autoridades de certificación (AC\@)]
-    Entidad que garantiza la asociación entre identidad y claves.
-\end{definicion}
 
 \subsubsection{Certificado digital}
-El usuario obtiene sus claves pública y privada, envía una solicitud, firmada digitalmente, a la AC indicando su identidad y clave pública. La AC comprueba la firma y emite el certificado: este tiene los datos que a continuación detallaremos y va firmado digitalmente por la clave firmada de la AC con objeto de que el certificado no pueda falseficarse. Campos de un certificado X\@.509:
+
+\begin{definicion}[Autoridades de certificación]
+    Entidad fiable (posiblemente del estado) que garantiza la asociación entre identidad y claves. En España, por ejemplo, la más extendida es la \acrshort{FNMT}, aunque hay otras.
+\end{definicion}
+
+En primer lugar, el usuario obtiene sus claves pública y privada y envía una solitud firmada digitalmente a la Autoridad de Certificación. Esta, tras comprobar la firma y que el solicitante es quien dice ser, emite el certificado digital solicitado, que contiene (entre otros campos):
 \begin{itemize}
+    \item Identidad de la Autoridad de Certificación.
     \item Identidad del usuario.
-    \item Su clave pública.
-    \item La AC que lo ha emitido.
-    \item Periodo de validez.
-    \item Algunos datos más como la versión del certificado, el número de serie\ldots
+    \item Clave pública del usuario.
+\end{itemize}
+Cualquier persona puede consultar este certificado digital, comprobando así que la clave pública que se le proporciona es realmente de la persona que dice ser. Para evitar falsificaciones, el certificado se cifra con la $K_{\text{priv}_\text{AC}}$ de la Autoridad de Certificación, de forma que solo esta ha podido ser la emisora del certificado.\\
+
+El formato de certificados digitales más extendido es el estándar X.509, cuyos campos son:
+\begin{itemize}
+    \item Versión del estándar X.509.
+    \item Número de serie único, usado por la Autoridad de Certificación para identificar el certificado.
+    \item Algoritmo empleado para calcular las claves.
+    \item Identidad de la Autoridad de Certificación que ha emitido el certificado.
+    \item Periodo de validez del certificado.
+    \item Usuario al que se le ha emitido el certificado.
+    \item Clave pública del usuario al que se le ha emitido el certificado.
 \end{itemize}
 
 \section{Protocolos seguros}
 La seguridad se divide en dos tipos:
 \begin{itemize}
-    \item \textbf{Perimetral:} uso de \textit{firewalls}, \textit{sistemas de detección de intrusiones} o \textit{sistemas de respuesta}.
-    \item \textbf{Seguridad en protocolos:} consiste en usar protocolos para garantizar seguridad.
-        \begin{itemize}
-            \item Capa de aplicación: PGP o SSH\@.
-            \item Capa de sesión (entre aplicación y transporte): TLS\@, SSL\@.
-            \item Capa de red: IPSec\@.
-        \end{itemize}
+    \item \textbf{Perimetral:} consiste en garantizar la seguridad dentro de una misma red. Se usan firewalls, \acrfull{IDS} o \acrfull{IRS}.
+    
+    \item \textbf{Seguridad en protocolos:} si no podemos garantizar la seguridad en la red (o aun así, queremos mejorar la seguridad), se usan protocolos seguros para garantizar seguridad. Como vimos, estos han de establecerse en todas las capas, pues la seguridad la fija el punto más débil.
+    \begin{itemize}
+        \item Capa de aplicación: \acrshort{PGP} o \acrshort{SSH}.
+        \item Capa de sesión\footnote{Entre aplicación y transporte. Ver Tabla~\ref{tab:mod_osi} correspondiente al Modelo \acrshort{OSI}.}: \acrshort{TLS} o \acrshort{SSL}.
+        \item Capa de red: \acrshort{IPSec}.
+    \end{itemize}
 \end{itemize}
 
-\subsection{PGP (Pretty Good Privacy)}
+\subsection{Seguridad en la Capa de Aplicación. \acrshort{PGP}.}
 
-Es un protocolo de correo electrónico seguro. 
+En capa de aplicación deben usarse protocolos distintos para garantizar la seguridad en cada uno de los servicios prestados. Uno de ellos, el protocolo \acrfull{PGP}, tiene como objetivo garantizar la seguridad en el correo electrónico.\\
 
-\begin{figure}[H]
+Supongamos que $A$ quiere enviar un mensaje $P$ a $B$ mediante el correo electrónico. El protocolo se ilustra en la Figura~\ref{fig:pgp}.
+Al enviar $A$ el correo, el proceso es el siguiente:
+\begin{enumerate}
+    \item Se hace un resumen del mensaje mediante el algoritmo \acrshort{MD5}, $R=\text{MD5}(P)$.
+    \item Este se firma digitalmente con la clave privada de $A$, $FD=K_{\text{pri}_A}(R)$.
+    \item Tanto el resumen cifrado comprime (para enviar menos datos) usando para ello el el formato ZIP\@, $Z=\text{ZIP}(FD+P)$.
+    \item Se genera una clave privada específica para ese mensaje, $K$, y se cifra $Z$ con esta clave usando para ello el algoritmo de \acrshort{IDEA}, $\text{IDEA}_K(Z)$.  A esta clave $K$ se le denomina \emph{clave de sesión}, pues solo se usa en esa sesión. Notemos que, si un atacante la consigue, tan solo podrá descifrar ese mensaje, y no otros.
+    \item Se cifra también la clave de sesión con la clave pública de $B$, $K_{\text{pub}_B}(K)$, para que solo $B$ pueda obtener dicha clave y, por tanto, descifrar el mensaje. Por tanto, el mensaje cifrado es $C=K_{\text{pub}_B}(K)+\text{IDEA}_K(Z)$.
+    \item Este mensaje cifrado se codifica con el sistema Base64\footnote{No tiene que ver con seguridad y no se verá en la asignatura. Es una forma de codificar mensajes para enviar por internet.}, $M=\text{Base64}(C)$,
+    y será el que se envíe por internet.
+\end{enumerate}
+\begin{figure}
     \centering
-    \begin{subfigure}[b]{0.45\linewidth}
-        \centering
-        \includegraphics[width=0.6\linewidth]{./images/pgp-emisor.png}
-        \label{fig:pgp-emisor}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.45\linewidth}
-        \centering
-        \includegraphics[width=0.6\linewidth]{./images/pgp-receptor.png}
-        \label{fig:pgp-receptor}
-    \end{subfigure}
+    \includegraphics[width=0.8\textwidth]{images/pgp.jpeg}
+    \caption{Protocolo \acrshort{PGP}.}
+    \label{fig:pgp}
 \end{figure}
 
-El emisor hace un resumen del mensaje, lo firma; esto lo comprime junto con el mensaje, cifra esa compresión con IDEA y una clave de sesión K (generada solo para esa sesión), que manda cifrada con la clave pública del receptor y esto lo codifica con base 64 (esto no tiene nada que ver con seguridad). El resultado de esto último es lo que le manda al destinatario. El receptor simplemente tiene que hacer el proceso inverso para sacar el mensaje y con el resumen comprobar que no se ha modificado.\\
+El receptor, por su parte, cuando reciba el mensaje $M$, hará el proceso inverso:
+\begin{enumerate}
+    \item Decodificará el mensaje usando Base64, $C=\text{Base64}^{-1}(M)=K_{\text{pub}_B}(K)+\text{IDEA}_K(Z)$.
+    \item Descifrará la clave de sesión con su clave privada, $K=K_{\text{pri}_B}\left(K_{\text{pub}_B}(K)\right)$.
+    \item Descifrará el mensaje con la clave de sesión, $Z=\text{IDEA}^{-1}_K\left(\text{IDEA}_K(Z)\right)$.
+    \item Descomprimirá el mensaje, $FD+P=\text{ZIP}^{-1}(Z)$.
+    \item Se obtiene el resumen recibido, $R=K_{\text{pub}_A}(FD)$.
+    \item Se calcula el resumen del mensaje recibido, $R'=\text{MD5}(P)$.
+    \item Para comprobar que no se ha modificado, se comprueba si el resumen calculado es el mismo que el recibido, $R=R'$.
+\end{enumerate}
 
-Con este proceso conseguimos:
+En resumen, tenemos lo siguiente:
+\begin{equation*}
+    \begin{array}{l}
+        \qquad \text{\ul{Emisor}}\ (A)\\\\
+        R = \text{MD5}(P)\\
+        FD = K_{\text{pri}_A}(R)\\
+        Z = \text{ZIP}(FD+P)\\
+        \text{Generación}\ K \\
+        C = K_{\text{pub}_B}(K)+\text{IDEA}_K(Z)\\
+        M = \text{Base64}(C)
+    \end{array}
+    \hspace{2cm}
+    \begin{array}{l}
+        \qquad \text{\ul{Receptor}}\ (B)\\\\
+        C = \text{Base64}^{-1}(M)\\
+        K = K_{\text{pri}_B}\left(K_{\text{pub}_B}(K)\right)\\
+        Z = \text{IDEA}^{-1}_K\left(\text{IDEA}_K(Z)\right)\\
+        FD+P = \text{ZIP}^{-1}(Z)\\
+        R = K_{\text{pub}_A}(FD)\\
+        R' = \text{MD5}(P)\\
+        \text{¿}\ R = R'\ \text{?}
+    \end{array}
+\end{equation*}
+
+Con este proceso conseguimos garantizar los siguientes aspectos de seguridad:
 \begin{itemize}
-    \item Confidencialidad: el mensaje va cifrado.
-    \item Integridad: gracias al resumen.
-    \item Autenticación: gracias al cifrado con la clave privada.
-    \item No repudio: solo si hay un certificado digital.
+    \item Confidencialidad: el mensaje va cifrado con la clave pública de $B$, luego solo $B$ podrá descifrarlo.
+    \item Integridad: gracias al resumen, comprobamos que el mensaje no se ha modificado.
+    \item Autenticación: gracias al cifrado con la clave privada de $A$, $B$ sabe que el mensaje viene de $A$.
+    \item No repudio: Tan solo si hay un certificado digital de $A$ emitido por una Autoridad de Certificación, $B$ podrá demostrar que el mensaje viene de $A$.
 \end{itemize}
 
 
-\subsection{TLS\@, SSL}
-Se usan para muchos protocolos (HHTPS\@, IMAPS\@, SSL\@-POP\@). TLS fue el original y SSL se acabó popularizando más. Hacen más o menos lo mismo, pero no son compatibles. Lo que hacen en esencia es crear túneles cifrados. 
+\subsection{Seguridad en la Capa de Sesión. \acrshort{SSL} y \acrshort{TLS}.}
 
-\subsubsection{SSL}
-No es un protocolo sino una familia de ellos.
+Esta capa ofrece servicios de seguridad empleados por gran variedad de protocolos de aplicación, como \acrshort{HTTPS}, \acrshort{IMAPS} o \acrshort{SSL}-\acrshort{POP}. Los principales protocolos de esta capa son \acrshort{SSL} y \acrshort{TLS}, que en esencia crean túneles cifrados para el intercambio de información.
+
+\subsubsection{\acrfull{SSL}}
+En realidad, no es un protocolo sino una familia de ellos.
 \begin{itemize}
     \item SSL Record Protocol: encapsula los protocolos y ofrece un canal seguro con privacidad, autenticación e integridad. Lo que se hace es que cuando voy a mandar datos, los parto en fragmentos, cada fragmento lo comprimos, hago un resumen y cifro datos + resumen. Y esto último es lo que se transmite, encapsulado en un paquete TCP\@.
     \item SSL Handshake Protocol: se negocia el algoritmo de cifrado, la función hash, autentica al servidor, el cliente genera claves de sesión (temporales) con el algoritmo de Diffie-Hellman o aleatorias y que irán cifradas con la clave pública del servidor. \\
@@ -354,6 +518,10 @@ No es un protocolo sino una familia de ellos.
     \item SSL Assert Protocol: informa sobre errores en la sesión.
     \item Change Cipher Spec Protocol: para notificar cambios en el cifrado.
 \end{itemize}
+
+
+
+\subsubsection{TLS}
 
 \subsection{IPSec}
 Su objetivo es garantizar autenticación, integridad y opcionalmente privacidad a nivel IP\@. Crea túneles unidireccionales. 
