@@ -139,15 +139,40 @@ El protocolo \acrshort{TCP} es un protocolo de la capa de transporte encapsulado
     \item Usa ``piggybacking'', concepto que consiste en que, al mandar una confirmación (\acrshort{ACK}) se aprovecha y se envían más datos.
 \end{itemize}
 
-\subsection{Cabecera TCP}
-\begin{itemize}
-    \item Puerto origen (16 bits): identifica el puerto del emisor.
-    \item Puerto destino (16 bits): identifica el puerto del receptor.
-    \item Número de secuencia (32 bits): identifica el byte del flujo de datos enviados por el emisor al receptor que representa el offset del segmento.
-    \item Número de acuse de recibo (32 bits): el valor del siguiente número de secuencia que el receptor del segmento espera recibir. De esta forma se confirma todo lo anterior también.
-    \item Longitud de cabecera (4 bits): indica el tamaño de la cabecera en palabras de 32 bits. De normal el tamaño es de \textbf{20 bytes}.
-    \item Reservado: por si dentro de unos años hacen falta más bits.
-    \item Flags:
+\subsection{Cabecera \acrshort{TCP}}
+
+En la presente sección profundizaremos en la cabecera \acrshort{TCP}, junto con sus campos. Esta se puede ver en la Tabla~\ref{tab:cabecera_tcp}. Como vemos, está organizada en palabras de $32$ bits (4 Bytes), y como mínimo ocupa 20 Bytes (ya que el campo \textit{Opciones} es opcional).
+    \begin{table}
+        \centering
+        \begin{tabular}{|ccccccc|}
+        \hline \rowcolor[HTML]{EFEFEF}
+        \multicolumn{1}{|c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{0-3}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{4-9}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{10-15}}} & \multicolumn{4}{c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{16-31}}}  \\ \hline \hline
+        \multicolumn{3}{|c}{Puerto Origen}  & \multicolumn{4}{|c|}{Puerto Destino}  \\ \hline
+        \multicolumn{7}{|c|}{Número de Secuencia}  \\ \hline
+        \multicolumn{7}{|c|}{Número de Acuse de Recibo}  \\ \hline
+        \multicolumn{1}{|c}{Hlen} & \multicolumn{1}{|c}{Reservado} & \multicolumn{1}{|c}{Flags} & \multicolumn{4}{|c|}{Ventana del Receptor}  \\ \hline
+        \multicolumn{3}{|c}{Checksum}  & \multicolumn{4}{|c|}{Puntero de Datos Urgentes}  \\ \hline
+        \multicolumn{7}{|c|}{Opciones}  \\ \hline
+        \end{tabular}
+        \caption{Cabecera \acrshort{TCP}.}
+        \label{tab:cabecera_tcp}
+    \end{table}
+Veamos los campos, en orden, que la componen:
+\begin{description}
+    \item [Puerto origen:] (16 bits): identifica el puerto del emisor.
+    \item [Puerto destino:] (16 bits) identifica el puerto del receptor.
+    \item [Número de secuencia:] (32 bits) identifica el byte del flujo de datos enviados por el emisor al receptor que representa el ``offset'' del segmento. Se desarrollará más adelante.
+    \item [Número de acuse de recibo:] (32 bits) el valor del siguiente número de secuencia que el receptor del segmento espera recibir. De esta forma se confirma todo lo anterior también. Se desarrollará más adelante.
+    \item [Longitud de cabecera:] (4 bits) indica el tamaño de la cabecera en palabras de 32 bits (4 Bytes). Sin campos opcionales, es de $5$, y como máximo es de $15$, que equivale a $60$ bytes.
+    \item [Reservado: ] (6 bits) bits reservados para un posible uso futuro. Deben estar a $0$.
+    \item [Flags: ] (6 bits)Los bits (por orden de mayor a menor peso) son:
+        \begin{equation*}
+            \begin{array}{|c|c|c|c|c|c|}
+                \hline
+                \text{U} & \text{A} & \text{P} & \text{R} & \text{S} & \text{F}\\
+                \hline
+            \end{array}
+        \end{equation*}
         \begin{description}
             \item [U:] Urgente. De normal los datos se van introduciendo en el buffer del receptor por la derecha y sacando por la izquierda, buffer circular con ventana deslizante. Pero hay datos urgentes que precisan que este orden no se siga. 
             \item [A:] ACK es una confirmación. Si vale 0 el campo de acuse no es de utilidad.
@@ -156,11 +181,11 @@ El protocolo \acrshort{TCP} es un protocolo de la capa de transporte encapsulado
             \item [S:] Sincronismo. Esta a 1 en el momento del establecimiento de conexión.
             \item [F:] Fin. Cuando está a 1 es porque quiero terminar la conexión. 
         \end{description}
-    \item Ventana ofertada para el control de flujo (16 bits): nos indica cuanto espacio libre le queda al buffer del receptor. 
-    \item Comprobación (16 bits): incluye cabecera y datos. 
-    \item Puntero de datos urgentes (16 bits): si el flag \textbf{P} está activo, este campo nos indica donde empiezan los datos urgentes, puesto que puede que no todo el segmento sea urgente.
-    \item Opciones: son opcionales (por ejemplo las características de las extensiones de TCP).
-\end{itemize}
+    \item [Ventana ofertada para el control de flujo:] (16 bits) nos indica cuanto espacio libre le queda al buffer del receptor. 
+    \item [Comprobación:] (16 bits) incluye cabecera y datos. 
+    \item [Puntero de datos urgentes:] (16 bits) si el flag \textbf{P} está activo, este campo nos indica donde empiezan los datos urgentes, puesto que puede que no todo el segmento sea urgente.
+    \item [Opciones:] son opcionales (por ejemplo las características de las extensiones de TCP).
+\end{description}
 
 \subsection{Multiplexación/demultiplexación}
 Existen puertos preasignados con servicios normalizados:
