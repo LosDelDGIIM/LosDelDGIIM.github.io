@@ -17,79 +17,126 @@ En el presente tema, estudiaremos a fondo la capa de transporte. Recordemos que 
 
 \section{Introducción}
 
-Tanto la capa de red como la de enlace realizan encaminamiento punto a punto, pero la capa de transporte en cambio se encarga de la comunicación extremo a extremo. Por tant,o solo los dispositivos extremos (normalmente los hosts) cuentan con la capacidad de procesamiento a nivel de transporte. \\
+Tanto la capa de red como la de enlace realizan encaminamiento punto a punto, pero la capa de transporte en cambio se encarga de la comunicación extremo a extremo. Por tanto, solo los dispositivos extremos (normalmente los hosts) cuentan con la capacidad de procesamiento a nivel de transporte. \\
 
-Como vimos en el primer tema, el \acrshort{PDU} de la capa de transporte se denomina ``datagrama'' si se usa el protocolo \acrshort{UDP} y ``segmento'' si se trata de \acrshort{TCP}. El \acrshort{SDU} de esta capa, como es lógico pensar, es el \acrshort{PDU} de la capa de aplicación.
+Como vimos en el primer tema, el \acrshort{PDU} de la capa de transporte se denomina ``datagrama'' si se usa el protocolo \acrshort{UDP} y ``segmento'' si se trata de \acrshort{TCP}. El \acrshort{SDU} de esta capa, como es lógico pensar, es el \acrshort{PDU} de la capa de aplicación.\\
 
-\subsubsection{Funciones y servicios}
-\begin{itemize}
-    \item Comunicación extremo a extremo.
-    \item Multiplexación y demultiplexación de aplicaciones por puertos (cualquier protocolo de transporte debe implementar esta funcionalidad): esto es que en el origen puede entrar en la red información de muchos procesos distintos (multiplexación) y al llegar al destino se distribuye la información entre los procesos necesarios (demultiplexación). Esto se hace a través de puertos. 
-\end{itemize}
-
+Como principales funcionalidades comunes a cualquier protocolo de transporte se encuentrn la comunicación extremo a extremo y la multiplexación/demultiplexación de aplicaciones. Esta segunda consiste en permitir la entrada desde en el origen de muchos paquetes (multiplexación), y que al llegar al destino se distribuyan adecuadamente a los procesos indicados (demultiplexación). Esto se logra mediante los puertos, concepto que introducimos a continuación.
 \begin{definicion}[Puertos]
-    Es un número que le dice al SO ``Cuando llegue un paquete por este puerto, está asociado a cierto proceso''. Los puertos que están por debajo de 1024 el SO los ofrece a los usuarios root y los que están por encima están a disposición del desarrollador y no se necesitan permisos de root para utilizarlos. Los puertos de TCP y UDP (que veremos más adelante) son independientes.
+    Un puerto es un número natural que es usado por el Sistema Operativo para saber a qué proceso está destinado cada paquete que llegue por la red. Es decir, cuando un paquete llegue por la red a un equipo, el sistema operativo consultará el puerto para saber a qué proceso corresponde.
 \end{definicion}
 
+Los puertos que están por debajo de 1024 están reservados, y el Sistema Operativo los ofrece a los usuarios con privilegios de administrador. Por encima de este número, los puertos están a disposición del desarrollador y no se necesitan permisos de administrador para utilizarlos.
+    
+Por último, cabe mencionar que los puertos de distintos protocolos son independientes. Esto permite que dos paquetes que se han recibido usando distintos protocolos pero que tengan el mismo número de puerto correspondan, sin problema alguno, a procesos distintos.
+\begin{observacion}
+    Como curiosidad, en sistemas Linux el archivo \verb|/etc/services| muestra los puertos activos, donde además se muestra el protocolo al que pertenecen.
+\end{observacion}
+
+
+Adicionalmente, cada protocolo de transporte puede implementar funcionalidades adicionales. Los principales protocolos presentes en la actualidad son \acrshort{UDP} y \acrshort{TCP}, aunque existen otros como \acrshort{SCTP}, que trata de ofrecer una mezcla entre los dos anteriores. En la asignatura veremos los dos primeros, cuyas descripciones breves se presentan a continuación.
 \begin{description}
-    \item [UDP]~\\
-        Es un servicio no orientado a conexión, no fiable. Su intención no es ser iable, sino ir rápido.
-    \item [TCP]~\\ 
-        Es un servicio orientado a conexión, fiable. Hace control de errores, de flujo, de conexión y de congestión. En redes cableadas TCP siempre asume que los errores son por congestión (ya que la tasa de fallo es de 1 entre 1 millón). Sin embargo, en redes inalámbricas sí hay que asumir que puede ser por otras razones (la tasa de fallo es del 10\%).
+    \item [\acrshort{UDP}]~\\
+        Es un servicio no orientado a conexión, y por tanto no fiable. Su intención no es esta, sino la de ofrecer una comunicación rápida.
+    \item [\acrshort{TCP}]~\\
+        Es un servicio fiable,  y por tanto orientado a conexión. Como funcionalidades adicionales, ofrece control de conexión, de errores, de flujo y de congestión. Respecto a los errores, si la red es cableada se asume que son por congestión (pues la tasa de fallo es de 1 entre 1 millón si el medio es cableado), mientras que si es inalámbrica se asume que puede ser por otros motivos (pues la tasa de fallo es del $10\%$).
 \end{description}
 
-La velocidad en UDP depende de la aplicación, va sobre una media. En TCP va a la máxima velocidad que puede pero controlando que no haya errores ni pérdidas. 
-
-\section{Protocolo de datagrama de usuario (UDP)}
-Es un protocolo ``best effort'' (intenta hacerlo lo mejor posible, pero si hay algún error no intenta solucionarlo). No es orientado a conexión: no hay \textit{hand-shaking}, no hay retardos de establecimiento. Cada paquete es totalmente independiente. Cada \acrlong{TPDU} es independiente. Cada paquete UDP se encapsula en un datagrama IP. \\
-
-Ofrece un servicio no fiable, puede haber pérdidas. Sin embargo esto no significa que no puedan haber aplicaciones fiables sobre UDP, pero quien tiene que encargarse de arreglar los posibles errores es la capa de aplicación.\\
-
-Los datos pueden llegar desordenados (por haber tomado distintos caminos en el encaminamiento, o por distintas prioridades) pero UDP no hace nada para arreglarlo.\\
-
-No hay control de congestión, los datos se \textbf{intentan} entregar lo más rápido posible.\\ 
-
-Lo único que hace UDP (al igual que cualquier protocolo de transporte) es multiplexar y demultiplexar.\\
-
-UDP se usa frecuentemente para aplicaciones multimedia que son tolerantes a fallos y sensibles a retardos. 
-
-\subsection{Cabeceras UDP}
-Son 8 Bytes de cabecera. 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.6\linewidth]{./images/cabecera-udp.png}
-\end{figure}
-
+\section{\acrfull{UDP}}
+El protocolo \acrshort{UDP} es un protocolo de la capa de transporte encapsulado sobre \acrshort{IP}.
+Este, al igual que \acrshort{IP}, es un protocolo de máximo esfuerzo, ya que intenta hacerlo lo mejor posible pero no se encarga de corregir errores. Esto se debe a que:
 \begin{itemize}
-    \item Puerto origen (16 bits): donde escucha el emisor.
-    \item Puerto destino (16 bits): donde escucha el receptor.
-    \item Longitud UDP (16 bits): en bytes, datos + cabecera.
-    \item Comprobación, checksum (16 bits): no comprueba los datos, sino la cabecera y pseudocabecera, que es una parte de la cabecera IP con datos relevantes para UDP.
-        \begin{itemize}
-            \item IP origen.
-            \item IP destino.
-            \item Protocolo.
-            \item Longitud UDP.
-        \end{itemize}
+    \item Servicio no orientado a conexión.
+    
+    No hay \textit{hand-shaking}, lo que permite que no haya retardo de establecimiento (aumentando la velocidad de la comunicación). Además, cada \acrshort{TPDU} es totalmente independiente.
+
+    \item Servicio no fiable.
+    
+    Puede haber pérdidas, por ejemplo debido a que nunca se produzca la conexión. No obstante, esto no significa que no puedan haber aplicaciones fiables sobre \acrshort{UDP}, sino que es la capa de aplicación la que debe encargarse de corregir los errores.
+
+    \item No hay garantías de entrega ordenada.
+    
+    Como el lector conoce, los paquetes en la capa de red pueden fragmentarse y llegar desordenados. El protocolo \acrshort{UDP} no hace nada para ordenarlo, por lo que debe ser la capa de aplicación la que se encargue de ello.
+
+    \item No hay control de congestión.
+    
+    Debido a que se busca que la entrega de los datos a las capas adyacentes sean lo más rápida posible, no se implementa control de congestión.
 \end{itemize}
 
-\subsection{Multiplexación/demultiplexación}
-Existen puertos preasignados con servicios normalizados:
-\begin{figure}[H]
+Por tanto, las únicas funcionalidades de este protocolo son las comunes a cualquier protocolo de la capa de transporte, la conexión extremo a extremo y la multiplexación/demultiplexación.
+
+Sus principales usos en la actualidad son las aplicaciones multimedia que son tolerantes a fallos y sensibles a retardos, como la voz sobre IP o el streaming.
+
+\subsection{Cabecer \acrshort{UDP}}
+En la presente sección profundizaremos en la cabecera \acrshort{UDP}, junto con sus campos. Esta se puede ver en la Tabla~\ref{tab:cabecera_udp}. Como vemos, está organizada en palabras de $32$ bits (4 Bytes), y ocupa $8$ Bytes.
+\begin{table}
     \centering
-    \includegraphics[width=0.6\linewidth]{./images/puertos-udp.png}
-\end{figure}
+    \begin{tabular}{cccc}
+    \hline \rowcolor[HTML]{EFEFEF}
+    \multicolumn{1}{|c|}{\cellcolor[HTML]{EFEFEF}\qquad\scriptsize{\textbf{0-7}}\qquad~} &  \multicolumn{1}{c|}{\cellcolor[HTML]{EFEFEF}\qquad\scriptsize{\textbf{8-15}}\qquad~} &  \multicolumn{1}{c|}{\cellcolor[HTML]{EFEFEF}\qquad\scriptsize{\textbf{16-23}}\qquad~}&  \multicolumn{1}{c|}{\cellcolor[HTML]{EFEFEF}\qquad\scriptsize{\textbf{24-31}}\qquad~} \\ \hline \hline
+    \multicolumn{2}{|c|}{Puerto Origen}            & \multicolumn{2}{|c|}{Puerto Destino}  \\ \hline
+    \multicolumn{2}{|c|}{Longitud UDP}            & \multicolumn{2}{|c|}{Checksum}  \\ \hline \\ \hline
+    \rowcolor[HTML]{EFEFEF}
+    \multicolumn{4}{|c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{Pseudocabecera}} \\ \hline
+    \multicolumn{4}{|c|}{IP Origen}\\ \hline
+    \multicolumn{4}{|c|}{IP Destino}\\ \hline
+    \multicolumn{1}{|c|}{$0\ldots0$}
+    & \multicolumn{1}{|c|}{Protocolo}
+    & \multicolumn{2}{|c|}{Longitud UDP}
+    \\ \hline
+    \end{tabular}
+    \caption{Cabecera \acrshort{UDP}.}
+    \label{tab:cabecera_udp}
+\end{table}
 
+Veamos los campos, en orden, que la componen:
+\begin{description}
+    \item [Puerto origen:] (16 bits) Puerto en el que escucha el emisor.
+    \item [Puerto destino:] (16 bits) Puerto al que está destinado el mensaje, donde se supone que escucha el receptor (aunque no se garantiza pues ser \acrshort{SNOC}).
+    \item [Longitud UDP:] (16 bits): en bytes, mide la lontidud total del \acrshort{PDU} (cabecera, junto con datos).
+    \item [Checksum:] (16 bits) suma de comprobación calculada mediante el mismo algoritmo que en el caso de la cabecera \acrshort{IP}. Comprueba la cabecera \acrshort{UDP} y una pseudocabecera, que consiste en una parte relevante de la cabecera \acrshort{IP} con datos relevantes para este \acrshort{UDP}. Estos son:
+        \begin{itemize}
+            \item Dirección IP de origen.
+            \item Dirección IP de destino.
+            \item Protocolo empleado (en la capa de red).
+            \item Longitud UDP.
+        \end{itemize}
+\end{description}
 
-\section{Protocolo de control de transmisión (TCP)}
+\subsection{Multiplexación/demultiplexación}
+
+Como se mencionó anteriormente, los puertos con un número menor a $1024$ están preasignados con servicios normalizados, y tan solo se podrán usar con privilegios de administrados. En el caso de \acrshort{UDP}, algunos se muestran en la Tabla~\ref{tab:puertos-udp}.
+\begin{table}
+    \centering
+    \begin{tabular}{|c|c|c|}
+        \hline Puerto & Aplicación/Servicio & Descripción\\\hline
+        7 & ``Echo'' & ``Echo''\\
+        13 & ``Daytime'' & Fecha y Hora\\
+        37 & ``Time'' & Fecha y Hora\\
+        42 & ``Nameserver'' & Servidor de nombres\\
+        53 & ``Domain'' o \acrshort{DNS}  & Servicio de nombres de dominio\\
+        69 & \acrshort{TFTP} & Transferencia simple de archivos\\
+        123 & \acrshort{NTP} & Protocolo de tiempo de red\\\hline
+    \end{tabular}
+    \caption{Puertos preasignados en \acrshort{UDP}.}
+    \label{tab:puertos-udp}
+\end{table}
+
+\section{\acrfull{TCP}}
+El protocolo \acrshort{TCP} es un protocolo de la capa de transporte encapsulado sobre \acrshort{IP}. Algunas de sus características son las siguientes:
 \begin{itemize}
-    \item Es un protocolo punto a punto (UDP no), ya que va desde un origen hasta un destino concreto. Cuando se manda un paquete multicast necesariamente tiene que ser en UDP, puesto que TCP es punto a punto, no puede hablar con muchos. 
-    \item Es un servicio orientado a conexión, utiliza un protocolo (hand-shaking, aunque se traduce como protocolo es más bien un intercambio muy específico de mensajes). Exige un estado común entre el emisor y el receptor.
-    \item Los datos deben entregarse ordenados (esto no significa que necesariamente lleguen ordenados, pero esto se gestiona de tal forma que parezca que sí para la aplicación que usa los datos).
+    \item Servicio orientado a conexión:
+    
+    Emplea un protocolo\footnote{Aunque se traduce como protocolo, es más bien un intercambio muy específico de mensajes.} de establecimiento de conexión (\textit{handshake}). Es por tanto un servicio punto a punto, y exige un estado común entre el emisor y el receptor. 
+    
+    \item Es punto a punto (al contrario que \acrshort{UDP}). Por tanto, si se quiere enviar un mensaje mediante la dirección de difusión, se deberá emplear \acrshort{UDP}.
+    
+    \item La entrega de los datos a la capa de aplicación es ordenada; aunque no necesariamente lo es la llegada de los datos. Este protocolo se encarga de ordenarlos.
     \item Es transmisión full-duplex.
-    \item Tiene un mecanismo de detección y recuperación de errores, retransmitiendo si es necesario (ARQ). Lo consigue usando confiramaciones, que son positivas (solo confirma lo que ha llegado bien, no se dice nada de lo que ha llegado mal o no ha llegado) y acumulativas (si se ha confirmado hasta cierto byte, entonces todo lo anterior ha llegado bien).
-    \item Es un servicio fiable: control de flujo y de congestión.
-    \item Usa piggybacking: al mandar una confirmación (ACK) se puede aprovechar y mandar datos a la vez.
+    \item Tiene un mecanismo de detección y recuperación de errores, retransmitiendo si es necesario. Emplea para ello confirmaciones (\acrshort{ACK}).
+    % Lo consigue usando confiramaciones, que son positivas (solo confirma lo que ha llegado bien, no se dice nada de lo que ha llegado mal o no ha llegado) y acumulativas (si se ha confirmado hasta cierto byte, entonces todo lo anterior ha llegado bien).
+    \item Es un servicio fiable, ya que tiene mecanismos de control de flujo y de congestión.
+    \item Usa ``piggybacking'', concepto que consiste en que, al mandar una confirmación (\acrshort{ACK}) se aprovecha y se envían más datos.
 \end{itemize}
 
 \subsection{Cabecera TCP}
