@@ -1,6 +1,6 @@
 \chapter{Seguridad en redes}
 
-En el presente tema, dejaremos por un momento de lado la capa de transporte para centrarnos en la seguridad en las comunicaciones, concepto esencial que iremos detallando a lo largo de las siguientes páginas.
+En el presente tema, dejaremos por un momento de lado la capa de aplicación para centrarnos en la seguridad en las comunicaciones, concepto esencial que iremos detallando a lo largo de las siguientes páginas.
 
 \subsubsection{Objetivos}
 \begin{itemize}
@@ -308,8 +308,8 @@ Su principal utilidad es garantizar la \textbf{integridad} de un mensaje enviado
 
 No obstante, podría ocurrir que un atacante interceptase el mensaje y lo modificase, cambiando $M$ por $M'$ y $h(M)$ por $h(M')$. Para evitar esto, hay varias alternativas:
 \begin{itemize}
-    \item Cifrar el hash con la clave compartida, de forma que el atacante no podría cifrar $h(M')$ por no conocer la clave.
-    \item El resumen puede incluir también a la clave compartida entre las entidades. A estos mensajes ($M$ junto a $h(K\mid B)$) se les denomina \acrfull{HMAC}.
+    \item Cifrar el resumen usando la clave compartida, de forma que el atacante no podría cifrar $h(M')$ por no conocer la clave.
+    \item El resumen puede incluir también a la clave compartida entre las entidades. A estos mensajes ($M$ junto a $h(K\mid M)$) se les denomina \acrfull{HMAC}.
 \end{itemize}
 De ambas formas, también se garantiza la autenticación del emisor del mensaje. La confidencialidad no obstante no se garantiza, pues el mensaje no se cifra, sino que se envía en texto plano.
 
@@ -517,7 +517,7 @@ En resumen, tenemos lo siguiente:
 
 Con este proceso conseguimos garantizar los siguientes aspectos de seguridad:
 \begin{itemize}
-    \item Confidencialidad: el mensaje va cifrado con la clave pública de $B$, luego solo $B$ podrá descifrarlo.
+    \item Confidencialidad: el mensaje va cifrado con $K$, que va cifrada con la clave pública de $B$, luego solo $B$ podrá obtener $B$ y, por tanto, solo él descifrar el mensaje.
     \item Integridad: gracias al resumen, comprobamos que el mensaje no se ha modificado.
     \item Autenticación: gracias al cifrado con la clave privada de $A$, $B$ sabe que el mensaje viene de $A$.
     \item No repudio: Tan solo si hay un certificado digital de $A$ emitido por una Autoridad de Certificación, $B$ podrá demostrar que el mensaje viene de $A$.
@@ -555,26 +555,38 @@ En realidad, no es un protocolo sino una familia de ellos que se usan de forma c
 
 
 
-\subsubsection{TLS}
+\subsubsection{\acrfull{TLS}}
 
-\subsection{IPSec}
-Su objetivo es garantizar autenticación, integridad y opcionalmente privacidad a nivel IP\@. Crea túneles unidireccionales. 
+Inicialmente, el protocolo que había era \acrshort{SSL}, desarrollado por la empresa Netscape. No obstante, y basándose en este, se desarrolló el protocolo \acrshort{TLS}, al que se le cambió el nombre para indicar que ya no estaba asociado con dicha empresa. Este protocolo solventa distintas vulnerabilidades de \acrshort{SSL}, aunque las diferencias inicialmente no eran muy significativas, \textbf{impedían la compatibilidad} entre ambos protocolos. En la actualidad el protocolo usado es \acrshort{TLS}, aunque es común que, erróneamente y debido a la confusión histórica, la gente se refiera a él como \acrshort{SSL}.\\
 
-\begin{definicion}[Túnel]
-    Es un sitio donde entra un paquete y a la salida tendremos exactamente el mismo paquete. Para ello encapsulamos el paquete dentro de otro paquete. Si el túnel va cifrado (la parte de los datos va cifrada) entonces el túnel es seguro.
-\end{definicion}
+En la asignatura, y debido a que nos centramos tan solo en los contenidos básicos sin entrar en detalle en cada uno de los protocolos, hemos estudiado \acrshort{SSL} por ser el primero, aunque en lo estudiado no difieren.
 
-Son tres procedimientos:
+\subsection{Seguridad en la Capa de Red. \acrshort{IPSec}.}
+
+En la capa de red, se garantiza la seguridad mediante el protocolo \acrfull{IPSec}. Su objetivo es garantizar autenticación, integridad y (opcionalmente) confidencialidad. Se basa en la creación de túneles unidireccionales seguros\footnote{Por tanto, para enviar de forma segura y bidireccional hemos de establecer dos túneles.}, para lo cual encapsularemos cada paquete \acrshort{IP} en otro paquete \acrshort{IP}, con la diferencia de que el paquete encapsulado va cifrado. Se basa en tres procedimientos:
 \begin{enumerate}
-    \item Establecimiento de una ``Asociación de seguridad'': con el objetivo de establecer una clave secreta (Diffie-Hellman), con la previa autenticación. Es simplex. Vulnera el carácter NO orientado a conexión. 
-    \item Garantizar la autenticación e integridad de los datos mediante las ``Cabeceras de autenticación''.
-    \item (Opcional) Garantizar la privacidad de los datos mediante el protocolo de ``Encapsulado de seguridad de la carga''.
+    \item \ul{Establecimiento de una ``Asociación de seguridad''}:
+    
+    Tiene el objetivo de establecer una clave secreta mediante el Intercambio de Diffie-Hellman, y para evitar el ataque de ``man-in-the-middle''se establece una conexión entre dos routers. ha de haber autenticación previa mediante certificados.
+
+    Se identifica mediante la dirección IP de origen y un número de 32 bits, denominado \emph{Security Parameter Index}. Se trata for tanto de una comunicación simplex (en un solo sentido).\\
+
+    Como aspecto negativo, vulnera el carácter NO orientado a conexión del protocolo \acrshort{IP}, y por tanto tu aceptación no es universal.
+
+    \item \ul{Garantizar la autenticación e integridad de los datos}:
+    
+    Una vez se ha establecido una ``Asociación de seguridad'', ha de garantizarse la integridad de los datos y la autenticación de sus orígenes. Esto se consigue añadiendo cabeceras denominadas ``Cabeceras de autenticación''.
+    \item \ul{Garantizar la confidencialidad de los datos}:
+    
+    Opcionalmente, este aspecto de seguridad se puede garantizar mediante el protocolo de ``Encapsulado de seguridad de la carga''.
 \end{enumerate}
 
-Dos tipos de túneles:
+Este protocolo tiene dos modos de funcionamiento, que diferen en qué túneles se establecen:
 \begin{itemize}
-    \item Modo transporte: la asociación se hace extremo a extremo entre el host origen y destino.
-    \item Modo túnel: la asociación se hace entre dos routers intermediarios. Útil por ejemplo si una empresa quiere comunicar dos sucursales, en vez de comunicar cada dos trabajadores, se comunican mediante esos routers intermediarios y solo hacen falta dos túneles (para ambas direcciones).
+    \item \ul{Modo transporte}: la asociación (túnel) se hace extremo a extremo entre el host origen y destino, por lo que se protege toda la comunicación entre ambos.
+    \item \ul{Modo túnel}: la asociación se hace entre dos routers intermediarios.
+    
+    Como ejemplo para ilustrar su utilidad, supongamos una empresa con varias sucursales. Si se establece una asociación entre los routers de las distintas sucursales, se garantiza la seguridad de la comunicación entre ellas. Dentro de una misma sucursal la red es segura, pues se habrán establecido medidas de seguridad perimetrales para evitar que entren intrusos desde Internet.
 \end{itemize}
 
 
