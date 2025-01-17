@@ -139,12 +139,20 @@ El protocolo \acrshort{TCP} es un protocolo de la capa de transporte encapsulado
     \item Usa ``piggybacking'', concepto que consiste en que, al mandar una confirmación (\acrshort{ACK}) se aprovecha y se envían más datos.
 \end{itemize}
 
+
+\subsubsection{\acrfull{MSS}}
+
+En el Capítulo anterior, vimos en la capa de enlace existe un concepto denominado \acrshort{MTU} que indica el valor máximo de su \acrshort{SDU}. De igual forma, en la capa de transporte existe un valor denominado \acrshort{MSS} que indica el tamaño máximo de los datos que se pueden enviar en un segmento. Este, viene determinado por el \acrshort{MTU}, y se calcula como sigue:
+\begin{equation*}
+    \text{\acrshort{MSS}} = \text{\acrshort{MTU}} - \text{Longitud de cabecera \acrshort{IP}} - \text{Longitud de cabecera \acrshort{TCP}}
+\end{equation*}
+
 \subsection{Cabecera \acrshort{TCP}}
 
 En la presente sección profundizaremos en la cabecera \acrshort{TCP}, junto con sus campos. Esta se puede ver en la Tabla~\ref{tab:cabecera_tcp}. Como vemos, está organizada en palabras de $32$ bits (4 Bytes), y como mínimo ocupa 20 Bytes (ya que el campo \textit{Opciones} es opcional).
     \begin{table}
         \centering
-        \begin{tabular}{|ccccccc|}
+        \begin{tabular}{ccccccc}
         \hline \rowcolor[HTML]{EFEFEF}
         \multicolumn{1}{|c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{0-3}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{4-9}}} & \multicolumn{1}{c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{10-15}}} & \multicolumn{4}{c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{16-31}}}  \\ \hline \hline
         \multicolumn{3}{|c}{Puerto Origen}  & \multicolumn{4}{|c|}{Puerto Destino}  \\ \hline
@@ -152,20 +160,33 @@ En la presente sección profundizaremos en la cabecera \acrshort{TCP}, junto con
         \multicolumn{7}{|c|}{Número de Acuse de Recibo}  \\ \hline
         \multicolumn{1}{|c}{Hlen} & \multicolumn{1}{|c}{Reservado} & \multicolumn{1}{|c}{Flags} & \multicolumn{4}{|c|}{Ventana del Receptor}  \\ \hline
         \multicolumn{3}{|c}{Checksum}  & \multicolumn{4}{|c|}{Puntero de Datos Urgentes}  \\ \hline
-        \multicolumn{7}{|c|}{Opciones}  \\ \hline
+        \multicolumn{7}{|c|}{Opciones}
+        \\ \hline \\ \hline
+        \rowcolor[HTML]{EFEFEF}
+        \multicolumn{7}{|c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{Pseudocabecera}} \\ \hline \rowcolor[HTML]{EFEFEF}
+        \multicolumn{1}{|c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{0-7}}} & \multicolumn{2}{c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{8-15}}} & \multicolumn{4}{c|}{\cellcolor[HTML]{EFEFEF}\scriptsize{\textbf{16-31}}}  \\ \hline
+        \multicolumn{7}{|c|}{IP Origen}\\ \hline
+        \multicolumn{7}{|c|}{IP Destino}\\ \hline
+        \multicolumn{1}{|c}{$0000\ 0000$}
+        & \multicolumn{2}{|c}{Protocolo}
+        & \multicolumn{4}{|c|}{Longitud UDP}
+        \\ \hline
         \end{tabular}
         \caption{Cabecera \acrshort{TCP}.}
         \label{tab:cabecera_tcp}
     \end{table}
 Veamos los campos, en orden, que la componen:
 \begin{description}
-    \item [Puerto origen:] (16 bits): identifica el puerto del emisor.
+    \item [Puerto origen:] (16 bits) identifica el puerto del emisor.
     \item [Puerto destino:] (16 bits) identifica el puerto del receptor.
     \item [Número de secuencia:] (32 bits) identifica el byte del flujo de datos enviados por el emisor al receptor que representa el ``offset'' del segmento. Se desarrollará más adelante.
     \item [Número de acuse de recibo:] (32 bits) el valor del siguiente número de secuencia que el receptor del segmento espera recibir. De esta forma se confirma todo lo anterior también. Se desarrollará más adelante.
+    \begin{observacion}
+        Para simplificar diagramas para ilustrar ciertas situaciones, este se notará como $\text{ack}=\text{Número de acuse}$, pues como hemos indicado al actualizar el número de acuse de recibo se confirma todo lo demás. No obstante, este campo no debe confundirse con el bit de ACK, que se desarrollará más adelante.
+    \end{observacion}
     \item [Longitud de cabecera:] (4 bits) indica el tamaño de la cabecera en palabras de 32 bits (4 Bytes). Sin campos opcionales, es de $5$, y como máximo es de $15$, que equivale a $60$ bytes.
     \item [Reservado: ] (6 bits) bits reservados para un posible uso futuro. Deben estar a $0$.
-    \item [Flags: ] (6 bits)Los bits (por orden de mayor a menor peso) son:
+    \item [Flags: ] (6 bits) Los bits (por orden de mayor a menor peso) son:
         \begin{equation*}
             \begin{array}{|c|c|c|c|c|c|}
                 \hline
@@ -174,214 +195,531 @@ Veamos los campos, en orden, que la componen:
             \end{array}
         \end{equation*}
         \begin{description}
-            \item [U:] Urgente. De normal los datos se van introduciendo en el buffer del receptor por la derecha y sacando por la izquierda, buffer circular con ventana deslizante. Pero hay datos urgentes que precisan que este orden no se siga. 
-            \item [A:] ACK es una confirmación. Si vale 0 el campo de acuse no es de utilidad.
-            \item [P:] Push. En TCP el paquete no se manda a la aplicación hasta que no se llene cierto tamaño. Es más eficiente de esta forma, pero a veces necesitamos que los datos se envíen en un momento preciso y para ello sirve este flag, para decir que se manden los datos.
+            \item [U:] Urgente. De normal los datos se van introduciendo en el buffer del receptor por la derecha y sacando por la izquierda, tratándose de un buffer circular con ventana deslizante. No obstante, hay datos urgentes que precisan que este orden no se siga. 
+            \item [A:] \acrshort{ACK}. Se trata de un mensaje de confirmación. Si vale 0 el campo de acuse no es de utilidad.
+            \item [P:] Push. En \acrshort{TCP}, el paquete no se transifiere a la aplicación hasta que no se alcance cierto tamaño. Esta forma es más eficiente, aunque a veces se necesita que los datos se envíen en un momento preciso, para lo cual se activará este flag.
             \item [R:] Reset. Se resetea la conexión.
-            \item [S:] Sincronismo. Esta a 1 en el momento del establecimiento de conexión.
-            \item [F:] Fin. Cuando está a 1 es porque quiero terminar la conexión. 
+            \item [S:] Sincronismo. Es bit se encuentra activado en el momento del establecimiento de conexión.
+            \item [F:] Fin. Cuando un equipo quiere terminar la conexión, activa este bit.
         \end{description}
-    \item [Ventana ofertada para el control de flujo:] (16 bits) nos indica cuanto espacio libre le queda al buffer del receptor. 
-    \item [Comprobación:] (16 bits) incluye cabecera y datos. 
-    \item [Puntero de datos urgentes:] (16 bits) si el flag \textbf{P} está activo, este campo nos indica donde empiezan los datos urgentes, puesto que puede que no todo el segmento sea urgente.
-    \item [Opciones:] son opcionales (por ejemplo las características de las extensiones de TCP).
+    \item [Ventana ofertada para el control de flujo:] (16 bits) nos indica cuánto espacio libre le queda al buffer del receptor. Se desarrollará más adelante. 
+    \item [Checksum:] (16 bits) Se calcula la suma de comprobación de igual forma a como se calculaba en el protocolo \acrshort{IP}. Incluye la cabecera, los datos, y una pseudocabecera como la que se emplea en el protocolo \acrshort{UDP}.
+    \item [Puntero de datos urgentes:] (16 bits) si el flag \textbf{P} está activo, este campo nos indica dónde terminan los datos urgentes, puesto que puede que no todo el segmento sea urgente.
+    \item [Opciones:] son opcionales. Por ejemplo, se emplean en distintas extensiones de este protocolo, que se denominan ``sabores''.
 \end{description}
 
 \subsection{Multiplexación/demultiplexación}
-Existen puertos preasignados con servicios normalizados:
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.6\linewidth]{./images/puertos-tcp.png}
-\end{figure}
 
-La conexión TCP se identifica por: puerto e IP origen y puerto e IP destino.
-\subsection{Control de conexión}
-Como ya hemos comentado, TCP ofrece un servicio orientado a conexión. El intercambio de mensajes tiene tres fases:
+Una conexión \acrshort{TCP} se identifica por:
 \begin{itemize}
-    \item Establecimiento de conexión (sincroniza el número de secuencia y se reservan recursos).
-    \item Intercambio de datos, full-duplex.
-    \item Cierre de conexión, libera recursos.
+    \item Puerto y dirección \acrshort{IP} de origen.
+    \item Puerto y dirección \acrshort{IP} de destino.
 \end{itemize}
+
+Al igual que ocurría con el protocolo \acrshort{UDP}, los puertos inferiores a $1024$ están preasignados, y se necesitan permisos de administrador para usarlos. Algunos de ellos se muestran en la Tabla~\ref{tab:puertos-tcp}.
+\begin{table}
+    \centering
+    \begin{tabular}{|c|c|c|}
+        \hline Puerto & Aplicación/Servicio & Descripción\\\hline
+        20 & \acrshort{FTP}-Data & Transferencia de archivos: datos\\
+        21 & \acrshort{FTP} & Transferencia de archivos: control\\
+        22 & \acrshort{SSH} & Terminal seguro\\
+        23 & \acrshort{Telnet} & Acceso remoto\\
+        25 & \acrshort{SMTP} & Correo electrónico\\
+        53 & \acrshort{DNS} & Servicio de nombres de dominio\\
+        80 & \acrshort{HTTP} & Acceso hipertexto (web)\\
+        110 & \acrshort{POP3} & Descarga de correo electrónico\\
+        443 & \acrshort{HTTPS} & Acceso hipertexto seguro (web)\\ \hline
+    \end{tabular}
+    \caption{Puertos preasignados en \acrshort{TCP}.}
+    \label{tab:puertos-tcp}
+\end{table}
+
+\subsection{Control de conexión}
+Como ya hemos comentado, el protocolo \acrshort{TCP} ofrece un servicio orientado a conexión. El intercambio de mensajes que se dan en una conexión \acrshort{TCP} tiene tres fases, que posteriormente desarrollaremos:
+\begin{enumerate}
+    \item Establecimiento de conexión (sincroniza el número de secuencia y se reservan los recursos necesarios).
+    \item Intercambio de datos, donde la conexión sigue un esquema full-duplex.
+    \item Cierre de conexión, en el que se liberan los recursos empleados.
+\end{enumerate}
+
+Notemos además que no es posible garantizar un establecimiento y cierre de conexión fiable de forma directa, pues los segmentos de \acrshort{TCP} se encapsulan en datagramas de \acrshort{IP}, que no es un protocolo fiable. Para garantizar la fiabilidad, se emplean temporizadores y reenvíos de paquetes que más adelante se desarrollarán.
 
 \subsubsection{Establecimiento de conexión}
-Se le conoce como ``three-way handshake''. Supongamos que A se quiere comunicar con B. 
+Este tipo de establecimiento se denomina ``three-way handshake'', pues se intercambian tres mensajes. Supongamos que A quiere establecer una conexión \acrshort{TCP} con B para comunicarse. Los mensajes que se intercambian, siempre que no haya incidencias, son los siguientes:
 \begin{enumerate}
-    \item A manda una solicitud a B para activar una conexión, activando para ello el flag de sincronismo y en el campo de secuencia se pone un byte aleatorio X.
-    \item Cuando B lo recibe, activa el flag de A (para confirmar el sincronismo) y en el campo de acuse pone X+1 (esto es por convenio). Además, por piggybacking, enviamos el sincronismo en el sentido contrario, activando el bit S y poniendo en el campo de secuencia otro número aleatorio Y.
-    \item A recibe esto último y confirma poniendo el flag A a 1 y poniendo en el campo de acuse Y+1. En este mensaje se pueden mandar datos (piggybacking). (Aunque por simplicidad en los ejercicios no lo haremos).
+    \item A envía un primer mensaje, para solicitar el inicio de la conexión. Al tratarse de un mensaje de sincronismo, se activa el flag \textbf{SYN}, y además se envía un número de secuencia aleatorio $X$.
+    \begin{equation*}
+        \text{SYN} = 1, \quad \text{Número de secuencia} = X
+    \end{equation*}
+
+    \item Cuando B recibe dicho segmento, activa el flag \textbf{ACK} (para confirmar el sincronismo) y, por convenio, en el número de acuse pone $X+1$. Además, haciendo uso del ``piggybacking'', iniciamos el sincronismo en el sentido contrario activando el flag \textbf{SYN} enviando un número de secuencia aleatorio $Y$.
+    \begin{equation*}
+        \text{SYN},\text{ACK} = 1, \quad \text{Número de Acuse} = X+1,\quad \text{Número de secuencia} = Y
+    \end{equation*}
+
+    \item Cuando A recibe este último mensaje, activa el flag \textbf{ACK} para confirmar la llegada, y en el número de acuse de recibo pone $Y+1$. El flag de sincronismo no se activa, pues la sincronzación ya está terminada y, debido al ``piggybacking'', en la práctica se envían ya datos en este segmento.
+    No obstante, por simplicidad, en la asignatura no realizaremos envío de datos en este mensaje.
+    \begin{equation*}
+        \text{ACK} = 1, \quad \text{Número de Acuse} = Y+1
+    \end{equation*}
 \end{enumerate}
-Entonces tenemos que A realiza una \textbf{apertura activa}, siendo el cliente; y B realiza una \textbf{apertura pasiva} siendo el servidor. Los campos que tenemos involucrados son: el bit de sincronismo S, el número de secuencia, el número de acuse, y el bit de ACK A.
 
-La conexión es iniciada siempre por el cliente. Esto se denomina \textbf{apertura activa}. El servidor por su lado siempre está escuchando y cuando le llega una petición hace una \textbf{apertura pasiva}.
-
-\begin{observacion}
-    No es posible garantizar un establecimiento de conexión fiable teniendo en cuenta que los mensajes van sobre IP (que no es fiable). Para garantizarlo hay temporizadores y si expiran se reenvían paquetes. 
-\end{observacion}
+Notemos que, la entidad que inicia la conexión (en este caso A, normalmente un cliente) realiza lo que se denomina una \textbf{apertura activa}, mientras que la otra entidad está escuchando (en este caso B, normalmente un servidor) y realiza una \textbf{apertura pasiva}.
 
 \subsubsection{Número de secuencia}
+
+En este apartado, desarrollaremos más a fondo el concepto de número de secuencia, ya introducido en la cabecera \acrshort{TCP}. Es un campo de 32 bits cuya finalidad es contar qué byte del flujo de datos se ha enviado, para poder así ordenarlos en el destino. Cuando este llega al máximo ($2^{32}-1$) se reinicia a $0$.\\
+
+Como hemos mencionado en el apartado anterior, este campo de la cabecera no se inicializa a $0$, sino que su valor inicial es un número aleatorio\footnote{Como el lector sabrá, en la Informática no es posible generar números completamente aleatorios. Por tanto, en realidad es un número pseudoaleatorio, ``teóricamente'' aleatorio.} denominado \acrfull{ISN} y elegido por el Sistema Operativo. El estándar \acrshort{TCP} \emph{sugiere} que se emplee un contador entero cíclico incrementado en una unidad cada $\unit[4]{\mu s}$, por lo que el valor del \acrshort{ISN} se repitirá tras casi $\unit[5]{h}$.
+\begin{observacion}
+    Este mecanismo es suficiente para proteger de coincidencias (que dos conexiones distintas y simultáneas tengan el mismo valor en este campo), pero no protege frente a sabotajes, ya que es sencillo obtener el \acrshort{ISN} de una conexión y suplantar a alguno de los participantes.
+\end{observacion}
+
+Por norma general, al enviar un segmento \acrshort{TCP}, se aumenta el número de secuencia anterior según los bytes que ocupase el segmento anteriormente enviado. No obstante, existen las siguientes excepciones:
 \begin{itemize}
-    \item Es un campo para indicar el orden de los paquetes. Tiene 32 bits. Cuando el número de secuencia llega al máximo ($2^{32}$) se reinicia.
-    \item El número de secuencia no empieza normalmente en 0, sino en un valor denominado \acrfull{ISN}, teóricamente aleatorio.
-    \item Realmente el ISN es elegido por el SO normalmente. Lo que hace es tener un contador que se va incrementando cada \unit[4]{$\mu s$}. Por lo que tarda en repetirse un ISN casi \unit[5]{horas}.
-    \item Este mecanismo de selección de ISN es suficiente para proteger evitar coincidencias, pero no es un mecanismo de protección frente a sabotajes. Es muy fácil averiguar el ISN de una conexión y suplantar a alguno de los participantes.
-    \item Se incrementa el número de secuencia de cada segmento según los bytes del segmento anterior. 
-    \item Cuando los flags S y F están activados se incrementa en 1 el número de secuencia.
+    \item Los flags SYN y FIN, cuando están activados, aumentan tan solo en una unidad este valor.
+    \item El flag ACK, cuando está activado, no aumenta este valor.
 \end{itemize}
 
-Veamos algunos ejemplos de establecimientos de conexión particulares:
+Veamos algunos ejemplos de establecimientos de conexión particulares, aunque este protocolo contempla muchas otras opciones en las que no entraremos en detalle.
 \begin{description}
-    \item [Establecimiento sin incidencias:]~\\ 
-\begin{figure}[H]
+    \item [Establecimiento sin incidencias:]
+    
+    Este es el caso deseado, en que no hay problema alguno. El intercambio de mensajes es el descrito previamente, y se ilustra en la Figura~\ref{fig:tcp_sin_incidencias}.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}[
+                every node/.style={font=\scriptsize},
+                box/.style={draw, rounded corners, fill=yellow!20, minimum width=2.5cm, minimum height=0.8cm, align=center},
+                entity/.style={draw, fill=gray!20, minimum width=1cm, minimum height=4cm, align=center},
+                arrow/.style={-{Latex[length=2mm, width=2mm]}}
+            ]
+        
+            \node[entity] (A) {\phantom{\qquad TCP $A$\qquad~}};
+            \node[above] at (A.north) {TCP $A$};
+
+            \node[entity, right of=A, xshift=7cm] (B) {\phantom{\qquad TCP $B$\qquad~}};
+            \node[above] at (B.north) {TCP $B$};
+
+            % Estados Iniciales
+            \node[below] at (A.north) {Closed};
+            \node[below] at (B.north) {Listen};
+
+            % Primer mensaje
+            \node at ($(A) + (0,1.2)$) {$\begin{array}{c}
+                \text{SYN-SENT}\\
+                (\text{ISN}=100)\\
+            \end{array}$};
+            \draw[arrow] ($(A.east) + (0,1.2)$) -- node[midway, above, sloped] {$\text{seq}=100$, SYN} ($(B.west) + (0,0.7)$);
+            \node at ($(B) + (0,0.7)$) {SYN-RECEIVED};
+
+            % Segundo mensaje
+            \node at ($(B) + (0,0.1)$) {$(\text{ISN}=300)$};
+            \draw[arrow] ($(B.west) + (0,0.1)$) -- node[midway, above, sloped] {$\text{seq}=300$, $\text{ack}=101$, SYN, ACK} ($(A.east) + (0,-0.5)$);
+            \node at ($(A) + (0,-0.5)$) {Established};
+
+            % Tercer mensaje
+            \draw[arrow] ($(A.east) + (0,-0.8)$) -- node[midway, above, sloped] {$\text{seq}=101$, $\text{ack}=301$, ACK} ($(B.west) + (0,-1.5)$);
+            \node at ($(B) + (0,-1.5)$) {Established};
+        \end{tikzpicture}
+        \caption{Establecimiento de conexión \acrshort{TCP} sin incidencias.}
+        \label{fig:tcp_sin_incidencias}
+    \end{figure}
+    \item [Caso de conexión simultánea:] En este caso, ambas entidades buscan inicar la conexión a la vez, situación que se ilustra en la Figura~\ref{fig:tcp_simultanea}. En este supuesto, el segundo y el tercer mensaje se combinan en un único mensaje, que envía cada una de las entidades. Por tanto, ambas se confirman a la vez.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}[
+            every node/.style={font=\scriptsize},
+            box/.style={draw, rounded corners, fill=yellow!20, minimum width=2.5cm, minimum height=0.8cm, align=center},
+            entity/.style={draw, fill=gray!20, minimum width=1cm, minimum height=3.5cm, align=center},
+            arrow/.style={-{Latex[length=2mm, width=2mm]}}
+        ]
+
+            \node[entity] (A) {\phantom{\qquad TCP $A$\qquad~}};
+            \node[above] at (A.north) {TCP $A$};
+
+            \node[entity, right of=A, xshift=10cm] (B) {\phantom{\qquad TCP $B$\qquad~}};
+            \node[above] at (B.north) {TCP $B$};
+
+            % Estados Iniciales
+            \node[below] at (A.north) {Closed};
+            \node[below] at (B.north) {Closed};
+
+            % Primer mensaje
+            \node at ($(A) + (0,0.8)$) {$\begin{array}{c}
+                \text{SYN-SENT}\\
+                (\text{ISN}=100)\\
+            \end{array}$};
+            \draw[arrow] ($(A.east) + (0,0.8)$) -- node[pos=0.25, above, sloped] {$\text{seq}=100$, SYN} ($(B.west) + (0,0.2)$);
+            \node at ($(B) + (0,0.2)$) {SYN-RECEIVED};
+
+            \node at ($(B) + (0,0.8)$) {$\begin{array}{c}
+                \text{SYN-SENT}\\
+                (\text{ISN}=300)\\
+            \end{array}$};
+            \draw[arrow] ($(B.west) + (0,0.8)$) -- node[pos=0.25, above, sloped] {$\text{seq}=300$, SYN} ($(A.east) + (0,0.2)$);
+            \node at ($(A) + (0,0.2)$) {SYN-RECEIVED};
+
+            % Tercer mensaje
+            \draw[arrow] ($(A.east) + (0,-0.7)$) -- node[pos=0.25, above, sloped] {$\text{seq}=101$, $\text{ack}=301$, ACK} ($(B.west) + (0,-1.5)$);
+            \node at ($(B) + (0,-1.5)$) {Established};
+
+            \draw[arrow] ($(B.west) + (0,-0.7)$) -- node[pos=0.25, above, sloped] {$\text{seq}=301$, $\text{ack}=101$, ACK} ($(A.east) + (0,-1.5)$);
+            \node at ($(A) + (0,-1.5)$) {Established};
+        \end{tikzpicture}
+        \caption{Establecimiento de conexión \acrshort{TCP} simultánea.}
+        \label{fig:tcp_simultanea}
+    \end{figure}
+
+    \item [Caso con SYN retrasados y duplicados:] En este caso, el mensaje de apuertura de la primera entidad se retrasa, por lo que agota su timeout y se reenvía. Esta situación se ilustra en la Figura~\ref{fig:tcp_retardo}.
+    
+    En este supuesto, cuando el emisor recibe el \acrshort{ACK} de la petición que ya ha descartado, envía un segmento al receptor con el flag de RST activado, para que este se resetee y ambos puedan, de nuevo, sincronizarse.
+\begin{figure}
     \centering
-    \includegraphics[width=0.6\linewidth]{./images/conexion-normal.png}
-\end{figure}
-    \item [Caso de conexión simultánea:] En este caso simplemente en el segundo mensaje no es necesario el SYN (pues ya se ha mandado antes).
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.6\linewidth]{./images/conexion-simul.png}
-\end{figure}
-    \item [Caso con SYN retrasados y duplicados:] En este caso cuando el emisor recibe el ACK de la petición que ya ha descartado lo que hace es mandar un mensaje para que el receptor resetee la conexión y ambos estén sincronizados.
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.6\linewidth]{./images/conexion-retardo.png}
+    \begin{tikzpicture}[
+        every node/.style={font=\scriptsize},
+        box/.style={draw, rounded corners, fill=yellow!20, minimum width=2.5cm, minimum height=0.8cm, align=center},
+        entity/.style={draw, fill=gray!20, minimum width=1cm, minimum height=11cm, align=center},
+        arrow/.style={-{Latex[length=2mm, width=2mm]}}
+    ]
+
+        \node[entity] (A) {\phantom{\qquad TCP $A$\qquad~}};
+        \node[above] at (A.north) {TCP $A$};
+
+        \node[entity, right of=A, xshift=10cm] (B) {\phantom{\qquad TCP $B$\qquad~}};
+        \node[above] at (B.north) {TCP $B$};
+
+        % Estados Iniciales
+        \node[below] at (A.north) {Closed};
+        \node[below] at (B.north) {Listen};
+
+        % Primer mensaje
+        \node at ($(A) + (0,3.7)$) {$\begin{array}{c}
+            \text{SYN-SENT}\\
+            (\text{ISN}=90)\\
+            \vdots\\
+            (\text{timeout})\\
+            \text{Closed}
+        \end{array}$};
+        \draw[arrow] ($(A.east) + (0,4.4)$) -- node[midway, above, sloped] {$\text{seq}=90$, SYN} ($(B.west) + (-2.8,4.1)$);
+        \node[circle, minimum size=1cm, align=center, draw=black, fill=teal!20] at ($(B.west) + (-2,4)$) {$\begin{array}{c}
+            \text{SYN}\\
+            90
+        \end{array}$};
+
+        \node at ($(A) + (0,2.2)$) {$\begin{array}{c}
+            \text{SYN-SENT}\\
+            (\text{ISN}=100)
+        \end{array}$};
+        \draw[arrow] ($(A.east) + (0,2.3)$) -- node[midway, above, sloped] {$\text{seq}=100$, SYN} ($(B.west) + (-2.8,2)$);
+        \node[circle, minimum size=1cm, align=center, draw=black, fill=blue!20] at ($(B.west) + (-2,2)$) {$\begin{array}{c}
+            \text{SYN}\\
+            100
+        \end{array}$};
+
+        
+        \node[circle, minimum size=1cm, align=center, draw=black, fill=teal!20] at ($(A.east) + (2,1)$) {$\begin{array}{c}
+            \text{SYN}\\
+            90
+        \end{array}$};
+        \draw[arrow] ($(A.east) + (2.75,1)$) -- node[midway, above, sloped] {$\text{seq}=90$, SYN} ($(B.west) + (0,0.6)$);
+        \node at ($(B) + (0,0.6)$) {$\text{SYN-RECEIVED}$};
+
+        \node at ($(B) + (0,0.1)$) {$(\text{ISN}=300)$};
+        \draw[arrow] ($(B.west) + (0,0.1)$) -- node[midway, above, sloped] {$\text{seq}=300$, $\text{ack}=91$, SYN, ACK} ($(A.east) + (0,-0.6)$);
+        \draw[arrow] ($(A.east) + (0,-0.9)$) -- node[midway, above, sloped] {$\text{seq}=91$, RST} ($(B.west) + (0,-1.3)$);
+        \node at ($(B) + (0,-1.3)$) {Listen};
+
+
+
+
+        \node[circle, minimum size=1cm, align=center, draw=black, fill=blue!20] at ($(A.east) + (2,-2)$) {$\begin{array}{c}
+            \text{SYN}\\
+            100
+        \end{array}$};
+        \draw[arrow] ($(A.east) + (2.75,-2)$) -- node[midway, above, sloped] {$\text{seq}=100$, SYN} ($(B.west) + (0,-2.4)$);
+        \node at ($(B) + (0,-2.4)$) {$\text{SYN-RECEIVED}$};
+
+        \node at ($(B) + (0,-3)$) {$(\text{ISN}=400)$};
+        \draw[arrow] ($(B.west) + (0,-3)$) -- node[midway, above, sloped] {$\text{seq}=400$, $\text{ack}=101$, SYN, ACK} ($(A.east) + (0,-3.5)$);
+        \node at ($(A) + (0,-3.5)$) {Established};
+        \draw[arrow] ($(A.east) + (0,-3.8)$) -- node[midway, above, sloped] {$\text{seq}=101$, $\text{ack}=401$, ACK} ($(B.west) + (0,-4.4)$);
+        \node at ($(B) + (0,-4.4)$) {Established};
+    \end{tikzpicture}
+    \caption{Establecimiento de conexión \acrshort{TCP} con SYN retrasados y duplicados.}
+    \label{fig:tcp_retardo}
 \end{figure}
 \end{description}
 
 \subsubsection{Cierre de conexión}
+Una vez visto cómo se establece la conexión, veamos ahora cómo se cierra, procedimiento en el que, además, han de liberarse los recursos. Supongamos que A quiere cerrar la conexión \acrshort{TCP} con B. Los mensajes que se intercambian, siempre que no haya incidencias, son los siguientes:
 \begin{enumerate}
-    \item Se envía un FIN (flag F a 1) y se envía en el número de secuencia el siguiente byte que el otro espera recibir X.
-    \item El otro responde con ACK con X+1 y envía un FIN con número de secuencia Y (el siguiente byte que espera recibir el primero).
-    \item El primero responde con ACK con Y+1. 
+    \item A envía un mensaje con el flag \textbf{FIN} activado, y en el número de secuencia pone el correspondiente, $X$.
+    \begin{equation*}
+        \text{FIN} = 1, \quad \text{Número de secuencia} = X
+    \end{equation*}
+    \item La entidad B recibe el mensaje, y activa el flag \textbf{ACK} para confirmar la llegada, y en el número de acuse de recibo pone $X+1$. Además, el número de secuencia que envía es el que correspondía, $Y$, y activa también el flag \textbf{FIN}.
+    \begin{equation*}
+        \text{FIN},\text{ACK} = 1, \quad \text{Número de Acuse} = X+1,\quad \text{Número de secuencia} = Y
+    \end{equation*}
+    \item La entidad A recibe el mensaje, y activa el flag \textbf{ACK} para confirmar la llegada, y en el número de acuse de recibo pone $Y+1$.
+    \begin{equation*}
+        \text{ACK} = 1, \quad \text{Número de Acuse} = Y+1
+    \end{equation*}
 \end{enumerate}
 
-En este caso, al igual que en el establecimiento de conexión, el que inicia el cierre realiza un cierre activo y el otro un cierre pasivo. Dependiendo de la aplicación el cierre activo puede realizarlo tanto el cliente como el servidor.\\
+En este caso, al igual que en el establecimiento de conexión, el que inicia el cierre realiza un \textbf{cierre activo}, mientras que la otra entidad realiza un \textbf{cierre pasivo}. Dependiendo de la aplicación, el cierre activo puede realizarlo tanto el cliente como el servidor.\\
 
-La conexión se cierra, pero para liberar los recursos se deja un tiempo de margen por si tienen que llegar datos aún (suelen ser 2 minutos).
+Aunque la conexión se cierra, para liberar los recursos se deja un tiempo de margen por si tienen que llegar datos aún, denominado \acrfull{MSL}. Este normalmente es de $\unit[2]{min}$, aunque puede variar. Toda esta situación se describe en la Figura~\ref{fig:tcp_cierre_sin_incidencias}.
 
-\subsubsection{MSS (Maximum Segment Size)}
-El MTU, que es un concepto de capa de enlace (capa 2), especifica la longitud máxima de datos de un paquete de enlace, es decir, cabecera IP + datos IP. \\
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[
+            every node/.style={font=\scriptsize},
+            box/.style={draw, rounded corners, fill=yellow!20, minimum width=2.5cm, minimum height=0.8cm, align=center},
+            entity/.style={draw, fill=gray!20, minimum width=1cm, minimum height=4cm, align=center},
+            arrow/.style={-{Latex[length=2mm, width=2mm]}}
+        ]
+    
+        \node[entity] (A) {\phantom{\qquad TCP $A$\qquad~}};
+        \node[above] at (A.north) {TCP $A$};
 
-MSS es un concepto de la capa de transporte. Indica lo que puede ocupar como máximo los datos de TCP. Por tanto, al MTU le tenemos que quitar lo que ocupa la cabecera IP y la cabecera TCP para calcular el MSS. 
+        \node[entity, right of=A, xshift=7cm] (B) {\phantom{\qquad TCP $B$\qquad~}};
+        \node[above] at (B.north) {TCP $B$};
+
+        % Estados Iniciales
+        \node[below] at (A.north) {Established};
+        \node[below] at (B.north) {Established};
+
+        % Primer mensaje
+        \node at ($(A) + (0,1.2)$) {FIN-WAIT-1};
+        \draw[arrow] ($(A.east) + (0,1.2)$) -- node[midway, above, sloped] {$\text{seq}=100$, $\text{ack}=300$, FIN, ACK} ($(B.west) + (0,0.7)$);
+        \node at ($(B) + (0,0.7)$) {CLOSE-WAIT};
+
+        % Segundo mensaje
+        \node at ($(B) + (0,0.1)$) {LAST-ACK};
+        \draw[arrow] ($(B.west) + (0,0.1)$) -- node[midway, above, sloped] {$\text{seq}=300$, $\text{ack}=101$, FIN, ACK} ($(A.east) + (0,-0.5)$);
+        \node at ($(A) + (0,-0.5)$) {TIME-WAIT};
+
+        % Tercer mensaje
+        \draw[arrow] ($(A.east) + (0,-0.7)$) -- node[midway, above, sloped] {$\text{seq}=101$, $\text{ack}=301$, ACK} ($(B.west) + (0,-1.2)$);
+        \node at ($(B) + (0,-1.2)$) {CLOSED};
+
+        \node at ($(A) + (0,-1.8)$) {CLOSED};
+
+        \draw[decorate,decoration={brace,amplitude=10pt,mirror}] ($(A.west) + (0,-0.3)$) -- ($(A.west) + (0,-1.9)$) node[midway,xshift=-0.9cm] {\acrshort{MSL}};
+    \end{tikzpicture}
+    \caption{Cierre de conexión \acrshort{TCP} sin incidencias.}
+    \label{fig:tcp_cierre_sin_incidencias}
+\end{figure}
 
 \subsubsection{Diagrama de estados de conexiones TCP}
 Un diagrama de estados es un autómata finito de estados TCP desde los cuales puedo hacer una serie de acciones, en las cuales puedo recibir y transmitir datos: a/b equivale a que recibo a y transmito b.
 
 \subsection{Control de errores}
-Los campos que tenemos involucrados en el control de errores son:
+Una vez visto el control de la conexión, desarrollamos ahora cómo controla \acrshort{TCP} los eventuales errores que se produzcan.
+Los campos de la cabecera \acrshort{TCP} que tenemos involucrados en el control de errores son:
 \begin{itemize}
-    \item Número de secuencia.
-    \item Campo de acuse.
-    \item Bit de ACK.
-    \item Campo de checksum (incluye cabecera y datos TCP y pseudocabecera IP). 
+    \item Número de secuencia: Como se ha comentado, se utiliza para ordenar los datos en el receptor. Indica el offset en bytes dentro del flujo de datos enviado por el emisor.
+    \item Número de acuse de recibo: Indica el siguiente byte que se espera recibir.
+    \item Flag de ACK.
+    \item Campo de checksum, que como se indicó incluye todo el segmento (cabecera \acrshort{TCP} y \acrshort{SDU}) y la pseudocabecera \acrshort{IP}.
 \end{itemize}
 
-El sistema que se usa para el control de errores es el de confirmaciones positivas y acumulativas. Si el emisor pierde un ACK tiene que reenviar los datos, independientemente de que se haya perdido el dato o el ACK, tienen el mismo efecto ambos sucesos.\\
+Este control de errores se realiza siguiendo un esquema denominado \acrfull{ARQ}, donde se hacen uso de confirmaciones positivas y acumulativas. En este esquema, si el emisor no ha recibido una confirmación de llegada mediante el \acrshort{ACK}, reenvía automáticamente el segmento (de ahí lo de ``automatic''). Para las confirmaciones se emplea el bit de \acrshort{ACK} de la cabecera \acrshort{TCP} junto con el número de acuse de recibo, y son positivas y acumulativas:
+\begin{itemize}
+    \item \ul{Positivas}: Tan solo se confirma lo que ha llegado bien. Si cierto segmento no llega, directamente no se confirma.
+    
+    \item \ul{Acumulativas}: Cuando en el campo de acuse de recibo se indica un número $X$, se está confirmando que se han recibido todos los bytes hasta $X-1$.
+\end{itemize}
 
-Lo que se hace es que el emisor tenga unos timeouts para que si este expira reenviemos el dato si no se ha recibido el ACK. Hay que calcular muy bien los timeouts puesto que si es muy corto se reenviarán datos innecesariamente y si es muy largo tardamos mucho en darnos cuenta del error.\\
+De esta forma, el emisor cuenta con temporizadores (``timeouts'') para esperar el \acrshort{ACK} de un segmento. Si este expira, se supone que ha habido un error y, por tanto, se reenvía el segmento. De esta forma, tan solo se reenvía un segmento si su correspondiente temporizador ha expirado. Es importante ajustar bien estos temporizadores, pues si son muy cortos no dará tiempo a que lleguen los \acrshort{ACK} (provocando reenvíos innecesarios), y si son muy largos se tardará en detectar los errores, ralentizando la comunicación.\\
 
-Por otra parte tenemos el buffer del receptor. Se va rellenando con los datos que van llegando y se van colocando en orden gracias al número de secuencia, es decir, los datos se introducen por la derecha. Hay que destacar que hay un buffer por cada conexión TCP. Cuando la aplicación pide un dato, el SO saca un paquete de más a la izquierda del buffer. Por esto, decimos que el buffer es una ventana deslilzante, una cola FIFO circular.
+Respecto a la ordenación de los segmentos (recordamos que pueden llegar desordenados por la fragmentación de la capa de red), \acrshort{TCP} emplea el número de secuencia para ordenarlos. El receptor cuenta con un buffer donde va almacenando los segmentos que llegan, y los va ordenando según el número de secuencia. De esta forma, cuando llega un segmento con un número de secuencia mayor al esperado, se dejará un hueco en el buffer pero se colocará donde le corresponde. Cuando la aplicación pida un dato a la capa de transporte, esta le devolverá los datos que lleven más tiempo en el buffer, gestionándose este como una cola \acrshort{FIFO} circular.
 
 \subsubsection{Generación de ACKs}
-Vamos a ver situaciones que se dan en el receptor y el comportamiento que sigue a dichas situaciones:   
+
+Como describíamos anteriormente, es vital la generación de mensajes de confirmación de llegada \acrshort{ACK}s, de forma que el emisor sepa que los datos han llegado correctamente y, por tanto, no los reenvíe. Veamos cómo es esta generación:
+
 \begin{enumerate}
-    \item Si ocurre una llegada ordenada de segmento, sin discontinuidad, y con todo lo anterior ya confirmado, se retrasa el envío del ACK. Se pone un temporizador a \unit{500}{ms} (este tiempo está estipulado en el correspondiente RFC) y si traspasado ese tiempo no ha llegado otro segmento, en ese momento ya sí se envía el ACK. 
-    \item Si tenemos todo en orden, y ocurre una llegada ordenada, sin discontinuidad y hay pendiente un ACK retrasado, se manda inmediatamente el ACK acumulativo. Vemos por tanto que se manda un ACK cada dos segmentos, si va todo bien. 
-    \item Supongamos que ahora nos llega un segmento con número de secuencia mayor que el esperado, por lo que tenemos una discontinuidad. En este caso se envía un ACK duplicado, indicando el número de secuencia del siguiente byte esperado.
-    \item Supongamos por último que llega un segmento que completa una discontinuidad total (tapa el hueco entero) o parcialmente (tapa parte del hueco). En este caso se manda inmediatamente un ACK con el número de segmento del siguiente byte que se espera.
+    \item \ul{Llegada ordenada de segmento, sin discontinuidad, y con todo lo anterior ya} \\ \ul{confirmado}
+    
+    En este caso, y para no saturad la red, se retrasa el envío del \acrshort{ACK}. Se establece un temporiador de $\unit[500]{ms}$ (tiempo fijado por el \acrshort{RFC} correspondiente) y, si transcurrido este tiempo no ha llegado otro segmento, se envía el \acrshort{ACK}.
+
+    \item \ul{Llegada ordenada de segmento, sin discontinuidad, y con \acrshort{ACK} retrasado} \\ \ul{pendiente de enviar}
+    
+    Esta es la situación que complementa a la anterior. En el caso de que todo vaya bien, se habrá recibido un segmento y no habrá sido confirmado porque se están esperando los $\unit{500}{ms}$. Si, en ese tiempo, llega otro segmento, como hay un \acrshort{ACK} pendiente, se envía inmediatamente el \acrshort{ACK} acumulativo, que confirma la llegada ambos segmentos.
+
+    Vemos por tanto que, si todo va bien, se envía un \acrshort{ACK} cada dos segmentos, lo que permite reducir el tráfico en la red.
+    \item \ul{Llegada desordenada de un segmento
+    con número de secuencia mayor que el}\\\ul{esperado}
+
+    En este caso, se ha detectado una discontinuidad, y \acrshort{TCP} debe encargarse de mantener el orden en el buffer. Como se ha mencionado, se colocará donde le corresponde según su número de secuencia, y por tanto se dejará una discontinuidad (hueco). Se envía inmediatamente un \acrshort{ACK} duplicado, con el mismo número de acuse de recibo que el último segmento confirmado. Por tanto, no se confirma la llegada del segmento desordenado.
+
+    \item \ul{Llegada de un segmento que completa
+    una discontinuidad parcial o totalmente}
+
+    En este caso, el segmento recibido se encuentra al inicio de la discontinuidad. Si rellena el hueco entero, se dice que ha completado la discontinuidad totalmente, y si solo rellena una parte, se dice que la ha completado parcialmente. En ambos casos, se envía inmediatamente un \acrshort{ACK} con el número de secuencia del siguiente byte que se espera.
 \end{enumerate}
 
-En el control de flujo veremos alguna situación más que requiere envío de ACKs. 
+Por último, es importante destacar que en el control de flujo veremos alguna situación más que requiere envío de estos segmentos de confirmación \acrshort{ACK}, pero antes será necesario explicar cómo funciona este control.
 
-\subsubsection{Estimación de timeouts}
-Dichos timeouts deben adaptarse al \acrlong{RTT}. Este no es un valor fijo pues hay que tener en cuenta el tiempo de transmisión (tiempo que tarda en enviarse un paquete, que depende de la tarjeta), tiempo de propagación (tiempo que tarda desde que se empieza a enviarse el paquete hasta que se empieza a recibir, que depende de la distancia y de la red), tiempo de procesado en un router (depende de la carga de la red). Y todo esto es solo el tiempo de ida, a lo que hay que sumarle el tiempo de vuelta, que es similar. \\
+\subsubsection{Estimación de ``timeouts''}
 
-Como enviamos un paquete y recibimos un ACK, podemos medir el \acrshort{RTT}. A esto lo llamamos $RTT_{medido}$. 
+Como mencionamos anteriormente, la estimación de estos ``timeouts'' es vital para, por un lado, no reenviar paquetes que llegasen bien pero, por otro lado, detectar rápidamente los errores. Estos temporizadores se basan en el cáclulo del \acrshort{RTT}.
+
+\begin{definicion}[\acrshort{RTT}]
+    El \acrfull{RTT} es el tiempo que pasa desde que un emisor envía un segmento hasta que recibe el \acrshort{ACK} de confirmación de dicho segmento.
+\end{definicion}
+
+Este valor no es fijo, ya que depende de muchos factores. Este tiempo incluye:
+\begin{itemize}
+    \item Tiempo de transmisión $T_t$: Tiempo que tarda en enviarse un segmento, que depende de la tarjeta.
+    \item Tiempo de propagación $T_p$: Tiempo que tarda desde que se empieza a enviarse el paquete hasta que se empieza a recibir, que depende de la distancia y de la red.
+    \item Tiempo de procesado en cada uno de los routers $T_r$: Depende de la carga de la red.
+    \item Además de esos tiempos, han de incluirse también los tiempos de vuelta, que son similares a los anteriores, aunque posiblemente algo menores pues el segmento de confirmación tiene un tamaño menor (solamente lleva la cabecera \acrshort{TCP}).
+\end{itemize}
+
+Como vemos, calcularlo de forma precisa de forma teórica no es sencillo, pero en la práctica se puede medir de forma sencilla calculando la diferencia de tiempos mencionada. Este valor es el que denominamos $\rtt_{\text{medido}}$. Para calcular el ``timeout'' de un paquete, hemos de predecir lo que va a valer su \acrshort{RTT}. Esta predicción se basa en el valor anterior que habíamos supuesto, y el último valor medido. Para ello, se emplea un filtro que suaviza la media de los valores, y se calcula de la siguiente forma:
 \begin{equation*}
-    RTT_{nuevo} = \alpha\cdot RTT_{viejo} + (1-\alpha)\cdot RTT_{medido}, \ \alpha \in [0,1]
-\end{equation*}
-Este es un RTT filtrado, es una media suavizada. 
-\begin{equation*}
-    Desviacion_{nueva} = (1-x)\cdot Desviacion_{vieja} + x\cdot |RTT_{medido}-RTT_{nuevo}|, \ x \in [0,1]
-\end{equation*}
-Esta es la desviación instantánea respecto a la media, que se utiliza para procurar cubrir todos los casos. 
-\begin{equation*}
-    Timeout = RTT_{nuevo} + 4\cdot Desviacion_{nueva}
+    \rtt_{\text{nuevo}} = \alpha \cdot \rtt_{\text{anterior}} + (1-\alpha) \cdot \rtt_{\text{medido}}
+    \qquad \alpha \in [0,1]
 \end{equation*}
 
-Tenemos un problema con los ACKs repetidos, pero esto se soluciona muy fácilmente (algoritmo de Karn). Se actualiza el RTT solo para los ACKs no ambiguos, pero si hay que retransmitir algún segmento, se duplica el timeout. 
+Este valor, que de nuevo insistimos en que es una predicción, se utiliza para calcular el ``timeout'' de un segmento. Además, y debido a cálculos probabilísticos en los que no entraremos en detalle, se calcula también la desviación del \acrshort{RTT} respecto a la media, que se utiliza para procurar cubrir todos los casos. Esta desviación se calcula de la siguiente forma:
+\begin{equation*}
+    \text{Desviación}_{\text{nueva}} = (1-x) \cdot \text{Desviación}_{\text{anterior}} + x \cdot \left|\rtt_{\text{medido}} - \rtt_{\text{nuevo}}\right|
+    \qquad x \in [0,1]
+\end{equation*}
+
+Por tanto, usando estos valores, el ``timeout'' se calcula como:
+\begin{equation*}
+    \text{Timeout}_{\text{nuevo}} = \rtt_{\text{nuevo}} + 4 \cdot \text{Desviación}_{\text{nueva}}
+\end{equation*}
+
+No obstante, este cálculo no es tan sencillo, ya que los \acrshort{ACK}s repetidos generan ambigüedades de intercambian, pues conocemos el instante de llegada del \acrshort{ACK} pero desconocemos si se trata del primer envío del segmento o de envíos posteriores. Esto lo soluciona el Algoritmo de Karn, ya que propone actualizar tan solo el \acrshort{RTT} para los \acrshort{ACK}s no ambiguos.\\
+
+No obstante, esto de nuevo supone un problema (algo también considerado por este algoritmo), ya que si todos los \acrshort{ACK} se retrasan (por ejemplo, debido a una mayor congestión en la red), el \acrshort{RTT} nunca se actualizaría y, por tanto, tampoco el correspondiente ``timeout'', por lo que siempre se produciría reenvío de paquetes. Para evitar esto, cuando expira un ``timeout'', no sólo se reenvía el segmento (como hemos comentado), sino que además el timeout se incrementa de forma proporcional al valor anterior (normalmente al doble). De esta forma, para los segmentos que han de reenviarse:
+\begin{equation*}
+    \text{Timeout}_{\text{nuevo}} = \gamma \cdot \text{Timeout}_{\text{anterior}},\qquad \gamma\in \bb{R},\ \gamma > 1
+\end{equation*}
+
+En la práctica, generalmente se toma $\gamma = 2$. Este algoritmo ha probado ser extremadamente efectivo en el balance entre rendimiento y eficiencia en redes en la que hay alta pérdida de paquetes.
 
 \subsection{Control de flujo}
-Es un mecanismo de atrás hacia delante: el receptor le dice al emisor que envíe más o menos datos. Los paquetes que lleguen cuando el buffer está lleno se descartan, lo que supone sobrecargar inútilmente la red. Nuestro objetivo es evitar esto. Es un sistema crediticio, el receptor informa al emisor sobre los bytes autorizados a emitir sin esperar respuesta. \\
 
-Se utiliza el campo de la cabecera ventana, que tiene 16 bits, por lo que esto limita el tamaño de la ventana. 
+El protocolo \acrshort{TCP} también se encarga de controlar el flujo, que consiste en evitar que el emisor sature al receptor con el envío de demasiados datos o a una velocidad demasiado alta, de forma que al receptor no le dé tiempo a procesarlos. Cuando esto sucede y llegan segmentos estando el buffer del receptor lleno, estos segmentos se descartarán sin haber sido confirmados, lo que habrá supuesto un consumo inútil de la red, sobrecargándola.
+De esta forma, el flujo tan solo depende del emisor y del receptor, no de la red; aunque si no se controla bien, puede tener consecuencias negativas en esta última.\\
+
+Para controlar el flujo, el protocolo \acrshort{TCP} emplea un mecanismo de atrás hacia delante: el receptor es quien le informa al emisor cuántos bytes puede enviar. Para ello, se emplea el campo de la cabecera \textit{ventana} (16 bits), por lo que el máximo de bytes que se pueden enviar es $2^{16} - 1 = 65535$ bytes. Se trata por tanto de un sistema crediticio.\\
+
+No obstante, el emisor ha de tener en cuenta que no tiene a su disponibilidad todos los bytes ofertados, puesto que hay bytes que ya ha enviado pero que no han sido confirmados. Por tanto, la ventana útil para el emisor (los bytes que puede enviar) se calcula como:
 \begin{equation*}
-    ventana \ util \ emisor = ventana \ ofertada \ receptor - bytes \ en \ transito.
+    \text{Ventana útil emisor} = \text{Ventana ofertada receptor} - \text{Bytes en tránsito}
 \end{equation*}
-Es importante que tengamos en cuenta los bytes que ya se han mandado pero de los cuáles no hemos recibido confirmación.\\
 
-Cuando la ventana está llena, el emisor se bloquea hasta recibir un nuevo ACK que confirme que se ha liberado espacio de la ventana. Aquí está la situación que comentábamos antes de la necesidad de envío de ACKs fuera del control de errores.\\
-
-Este ACK es importante, dado que si se pierde el emisor se queda bloqueado. Para evitar esta situación se usa un temporizador de persistencia. Cuando expira dicho temporizador se envía 1 byte para que se fuerce el posible reenvío del ACK. \\
-
-Un problema que puede surgir es el Síndrome de la ventana tonta, que sucede cuando por alguna razón se tiene que mandar un segmento corto, a partir de ahí, lo más probable es que la ventana útil sea similar al tamaño de dicho segmento. Esto hace que se sature la red con muchos segmentos cortos. 
-
-Se puede hacer una posible mejora, usar la ventana optimista, no tomamos la ventana útil ni la ofertada, sino una cosa intermedia. \\ 
-
-Hay dos medios que nos permiten saltarnos el orden:
+Cuando el buffer del receptor se llene, este informará al emisor de que su ventana ofrecida es nula y, por tanto, este se quedará bloqueado y no podrá enviar más datos. Una vez la capa de aplicación lea datos del buffer receptor, liberando así espacio en el buffer, el receptor ha de informar al emisor de que su ventana ofertada ha aumentado, de forma que este pueda desbloquearse y seguir enviando datos. Esto se consigue con una casuística más de los \acrshort{ACK} que se envían, que introdujimos en el apartado correspondiente en su momento.
 \begin{itemize}
-    \item El bit U (urgente) con el campo puntero.
-    \item Solicitar entrega inmediata a la aplicación con el bit P (push).
+    \item \ul{Si el buffer se encontraba lleno y se ha liberado espacio}
+    
+    Este es el caso descrito, en el que el buffer se encontraba lleno (por lo que la ventana ofertada era nula y, por tanto, el emisor estaba bloqueado), y en cierto momento la aplicación lee del buffer, liberando espacio. En este momento, el receptor envía un \acrshort{ACK} con la nueva ventana ofertada, (que será mayor que cero), y el emisor se desbloqueará y podrá seguir enviando datos.
+\end{itemize}
+
+Este segmento \acrshort{ACK} es de vital importancia, puesto que si se pierde, el emisor permanecería bloqueado. Para evitar esta situación, se emplea el denominado \emph{temporizador de persistencia}, que consiste en un temporizador que se inicia tras quedar bloqueado y, cuando expira, envía un byte para forzar el posible reenvío del \acrshort{ACK}.
+
+\subsubsection{Síndrome de la ventana tonta}
+
+Un posible problema es que la aplicación lea de forma lenta y progresivamente del buffer. Esto provocaría que, cada vez que la aplicación leyese, se enviase un \acrshort{ACK} con la ventana ofertada, aunque esta sería muy pequeña por haber leído la aplicación pocos datos. Si esto sucede de forma continuada, la ventana estaría continuamente llenándose y liberando un poco de hueco (de ahí el nombre de ``tonta'') y, como principal problema, que se enviasen muchos segmentos distintos pero de un tamaño muy pequeño (la ventana ofertada en cada caso). Esto provocaría mayor tráfico en la red, algo que buscamos evitar.
+
+Para solucionar esto, hay varias opciones que se pueden implementar:
+\begin{itemize}
+    \item El receptor podría ignorar los \acrshort{ACK} que ofrezcan una ventana muy pequeña, y esperar a que la ventana ofertada sea mayor.
+    \item El emisor podría enviar estos \acrshort{ACK} tan solo cuando la ventana ofertada sea mayor que un cierto umbral.
+    \item Se puede usar también la denominada ``ventana optimista'', que consiste en que el emisor tome un valor ligeramente mayor que la ventana útil, pero no tanto como la ventana ofertada. De esta forma, se mitiga el problema de la ventana tonta.
+\end{itemize}
+
+Por último, y como aspectos adicionales sobre el control del flujo, es importante destacar que hay dos medios que nos permiten no realizar entregas ordenadas de los datos a la capa de aplicación:
+\begin{itemize}
+    \item Emplear el flag de Urgente de la cabecera \acrshort{TCP}, junto con el puntero de datos urgentes.
+    \item Emplear el flag de Push, que indica que los datos han de ser entregados a la capa de aplicación inmediatamente.
 \end{itemize}
 
 \subsection{Control de congestión}
-La velocidad de TCP depende en gran parte de esto. Se manifiesta en pérdidas y/o retrasos de ACKs. Es un problema diferente al control de flujo, involucra la red y los sistemas finales. \\
 
-Tiene una naturaleza adelante-atrás: es el emisor el que decide cuánto se transmite. Por esto, no es necesario ningún campo en la cabecera TCP. 
+La última funcionalidad del protocolo \acrshort{TCP} es el control de la congestión, que surge por la saturación de la red. A diferencia del flujo, que era un problema tan solo del emisor y del receptor, la congestión es un problema de la red que se debe a la insuficiencia de recursos, como a un bajo ancho de banda, descartado de datagramas en los nodos intermedios por no caber en sus buffers\dots Por tanto, y a diferencia del flujo, también involucra al resto de la red. Esta se manifiesta en las pérdidas y/o retrasos de los \acrshort{ACK}s.\\
 
-Lo que se hace es en la fuente limitar de forma adaptable el tráfico generado: reduciendo la velocidad de emisión ante congestiones e incrementándola si todo va bien. \\
+Controlar este problema es de vital importancia, pues la velocidad del protocolo \acrshort{TCP} depende en gran medida de ello. Para ello, se emplea un mecanismo de naturaleza adelante-atrás, en el que el emisor es quien limita la cantidad de tráfico que envía adaptándose así a la situación de la red.\\
 
-Primero vamos a explicar el funcionamiento del control de congestión, y luego pasaremos a juntarlo con el control de flujo, dado que están directamente relacionados.
+Para la explicación de este control, supondremos en primer lugar que el flujo no produce limitaciones ninguna, y finalmente veremos cómo se combinan ambos controles, dado que estos están directamente relacionados.
 
+\subsubsection{Funcionamiento del control de congestión}
+
+Como hemos descrito, es el emisor el que decidirá cuantos Bytes enviar. Estos vendrán limitados por la denominada \emph{ventana de congestión} (\acrfull{CW}), que es el número de Bytes máximo que el emisor puede enviar. El control de la congestión se basa por tanto en la variación de esta ventana para adaptarse a la situación de la red.
+\begin{observacion}
+    Aunque esta en realidad mide la cantidad de Bytes, en los ejercicios de la asignatura medirá la cantidad de segmentos que se pueden enviar, y supondremos que todos los segmentos tienen el mismo tamaño.
+\end{observacion}
+
+Para el cálculo de esta ventana se emplearán dos parámetros:
+\begin{itemize}
+    \item \ul{Ventana Inicial}: Es el valor que se le asigna a la ventana de congestión al inicio de la conexión. Este valor depende del sistema operativo, aunque ser suele ser el correspondiente para que se puedan enviar dos segmentos consecutivos sin tener que esperar los $\unit[500]{ms}$ para el envío del \acrshort{ACK}.
+    \item \ul{Umbral}: Valor límite de la ventana de congestión que provocará que la congestión se trate de forma distinta (como se desorrallará más adelante). Normalmente, su valor al inicio de la conexión está fijado por cada versión del protocolo \acrshort{TCP}, aunque una vez iniciada se va modificando de forma que se adapte a la situación de la red.
+\end{itemize}
+
+Una vez descrita la terminología necesaria, procedemos a explicar el funcionamiento del control de congestión. Tras el establecimiento de la conexión \acrshort{TCP}, el valor de la ventana de congestión se establece en el valor de la ventana inicial:
+\begin{equation*}
+    \cw = \text{Ventana Inicial}
+\end{equation*}
+
+Tras este momento, el control de congestión se divide en dos fases destinadas a evitar que ocurra un ``timeout'', junto con las acciones específicas a tomar en el momento en el que este se produce.
 \begin{description}
-    \item [Funcionamiento del control de congestión:]~\\
-Hablaremos de varios valores: ventana de congestión, ventana inicial y umbral. Aunque realmente lo que mide es la cantidad de bytes hablaremos de cantidad de segmentos. 
+    \item [Inicio lento:] $\cw < \text{Umbral}$
+    
+    En este caso, la ventana de congestión será pequeña, por lo que se busca ampliarla para poder realizar envíos mayores. Por ello, por cada segmento confirmado, aumentará en una unidad la ventana de congestión. Como si todo va bien cada \acrshort{ACK} confirma dos segmentos, tenemos que la ventana de congestión se aumentará en dos unidades por cada \acrshort{ACK} recibido. De hecho, si todo va bien, la ventana de congestión se duplicará en cada \acrshort{RTT}, pues se al valor que tenía se le sumará el número de segmentos confirmados, que es el mismo valor que tenía.
+    \begin{align*}
+        \cw_{\text{nueva}} &= \cw_{\text{antigua}} + \text{nº segmentos confirmados} \\
+            &\AstIg \cw_{\text{antigua}} + \cw_{\text{antigua}}\\
+            &= 2 \cdot \cw_{\text{antigua}}
+    \end{align*}
+    donde en $(\ast)$ hemos supuesto que todo va bien y no hay pérdidas de segmentos. De esta forma, el crecimiento de la ventana de congestión será exponencial, hasta que lleguemos al valor umbral y pasemos a la siguiente fase.
 
-En primer lugar se hace el establecimiento de conexión (siempre en TCP). Ahora bien, tras esto, vamos a tener dos fases:
-\begin{description}
-    \item [Inicio lento:] Al principio la ventana de congestión está puesta en el valor que estipula la ventana inicial (depende del sistema operativo, suele ser 2 para no tener que esperar los \unit{500}{ms}). Se mandan esa cantidad de paquetes, y se espera los ACKs. \\
+    \item [Prevención de congestión:] En esta fase, buscamos que la ventana siga aumentando pero de una forma limitada, pues buscamos evitar la congestión. Para ello, por cada segmento confirmado, la ventana de congestión se modifica como sigue:
+    \begin{equation*}
+        \cw_{\text{nueva}} = \cw_{\text{antigua}} + \frac{1}{\cw_{\text{antigua}}}
+    \end{equation*}
 
-        Después de cada ACK recibido se le suma a la ventana de congestión anterior la cantidad de paquetes confirmados en dicho ACK. Es decir, si todo va bien, en cada ACK se aumentará la ventana de congestión en 2. Pero si nos damos cuenta, cada \acrshort{RTT} la ventana duplicará su tamaño. Por tanto, la velocidad aumenta exponencialmente.
-        \begin{equation*}
-            CW = CW + n^o \ datos \ confirmados
-        \end{equation*}
-        Siempre debemos tener en cuenta que el número de segmentos que podemos enviar es el que nos permite la ventana de congestión menos los segmentos que hay ya en tránsito (al igual que en el control de flujo). 
-        Esto va ocurriendo hasta que llegamos a un umbral, y pasamos a la siguiente fase.
-    \item [Prevención de congestión:] En esta fase, después de cada confirmación se aumenta la ventana de la siguiente forma:
-        \begin{equation*}
-            CW = CW + \frac{1}{CW}
-        \end{equation*}
-        Entonces, cuando pasa un \acrshort{RTT} aumenta en 1 la ventana de congestión, es decir la velocidad aumenta linealmente. 
-    \item [Ocurre un timeout:] esto es por que ha habido algún error, y se asume que es por congestión, por lo que volvemos al valor de la ventana inicial y el umbral se establece en la mitad del valor de la ventana de congestión. 
-        \begin{equation*}
-            \text{umbral} = \frac{CW}{2}, \qquad CW = CW_{inicial}
-        \end{equation*}
-        En este caso, la ventana de congestión se va a ir duplicando de nuevo, pero ahora de forma más lenta.
+    De esta forma, tras un \acrshort{RTT}, la ventana de congestión aumentará en una unidad. Este crecimiento es por tanto lineal.
+
+
+    \item [Ocurre un ``timeout'':] En el momento en el que ocurra un ``timeout'', es un posible indicador de que la red está congestionada, por lo que hemos de enviar menos segmentos. Además, en ese caso hemos de reducir el umbral, para que se controle la congestión desde antes. Por tanto, las acciones a tomar son:
+    \begin{equation*}
+        \text{umbral} = \frac{\cw_{\text{antigua}}}{2}, \qquad \cw_{\text{nueva}} = \text{Ventana Inicial}
+    \end{equation*}
+
+    De esta forma, volveremos a la fase de Inicio Lento, pero ahora con un umbral menor.
 \end{description}
 
-    \item [Funcionamiento del control de flujo y congestión:] habiendo explicado ambos funcionamientos por separado, solo nos queda juntarlo. En realidad no solo vamos a tener una de las dos limitaciones aisladas, sino que las tenemos las dos a la vez, por tanto los bytes permitidos a enviar son el mínimo de las dos ventanas, la de congestión y la del receptor.
+\subsubsection{Control simultáneo de Flujo y Congestión}
+    Habiendo explicado ambos controles por separado, es directo razonar cuál será la cantidad total que el emisor podrá enviar. Ya que vamos a tener ambas limitaciones (flujo y congestión) de forma simultánea, esta será:
+    \begin{equation*}
+        \text{Ventana útil} = \min\{\text{Ventana de congestión}, \text{Ventana Ofertada por el Receptor}\} - \text{Bytes en tránsito}
+    \end{equation*}
+    
+    
+    
+    solo nos queda juntarlo. En realidad no solo vamos a tener una de las dos limitaciones aisladas, sino que las tenemos las dos a la vez, por tanto los bytes permitidos a enviar son el mínimo de las dos ventanas, la de congestión y la del receptor.
         \begin{equation*}
             Ventana \ util = \min\{VentanaCongestion, VentanaReceptor\}
         \end{equation*}
-\end{description}
 
-\section{Extensiones TCP}
-TCP se define con múltiples ``sabores'' o \textit{flavours} en inglés, que no afectan a la interoperabilidad entre los extremos. 
+\subsection{Extensiones \acrshort{TCP}}
+
+EL protocolo \acrshort{TCP} se define con múltiples ``sabores'' o \textit{flavours} en inglés, que son distintas versiones o extensiones no afectan a la interoperabilidad entre los extremos.  Algunas de ellas son:
 \begin{itemize}
-    \item TCP Tahoe: es el que hemos estudiado.
-    \item TCP Reno: es la siguiente versión a TCP Tahoe. Distingue entre los timeout, que opera igual que Tahoe, y ACKs duplicados, que pone a la mitad la ventana de congestión y sigue en prevención de congestión. 
-    \item TCP NewReno: la versión anterior tiene un inconveniente. Si se pierden muchos paquetes, en cada uno se reduce la ventana a la mitad, cuando realmente esto no es necesario porque probablemente reduciendo una vez hubiera sido diferente. Esta nueva versión intenta ponerle solución a esto con ACKs parciales. 
-    \item TCP Vegas: si el \acrshort{RTT} aumenta se disminuye la ventana, y si el \acrshort{RTT} disminuye se aumenta la ventana de congestión.
-    \item TCP Cubic: se usa en cualquier versión de Linux con kernel mayor que la 2.6.19. La ventana de congestión depende de los ACKs y del \acrshort{RTT}. 
-    \item TCP Westwood: hay que tener en cuenta que, si bien en redes cableadas suponer que los errores siempre son por congestión es un buen enfoque; en redes inalámbricas no es ni de cerca el mejor, pues el 10\% de los errores son por el medio. Esta versión tiene en cuenta esto, y está pensada para redes inalámbricas.
+    \item \acrshort{TCP} Tahoe: es la versión que se ha estudiado en la asignatura.
+    \item \acrshort{TCP} Reno: es la siguiente versión a \acrshort{TCP} Tahoe. Para el control de la congestión, distingue entre los timeout (para los que opera igual que Tahoe), y los \acrshort{ACK}s duplicados (para los que tan solo reduce a la mitad la ventana de congestión pero sigue en prevención de congestión). 
+    \item \acrshort{TCP} NewReno: la versión anterior tenía un inconveniente: si se perdían muchos paquetes, en cada uno se reduce la ventana a la mitad, cuando realmente esto no es necesario porque probablemente reduciendo una vez hubiera se podría solucionar. Esta nueva versión intenta ponerle solución a esto empleando para ello \acrshort{ACK}s parciales. 
+    \item \acrshort{TCP} Vegas: Respecto a la congestión, si el \acrshort{RTT} aumenta se disminuye la ventana de congestión, y si este disminuye se hace el proceso contrario.
+    \item \acrshort{TCP} Cubic: se usa en cualquier versión de Linux con kernel mayor que la 2.6.19. La ventana de congestión depende de los \acrshort{ACK}s y del \acrshort{RTT}. 
+    \item \acrshort{TCP} Westwood: hay que tener en cuenta que, si bien en redes cableadas suponer que los errores siempre son por congestión es un buen enfoque; en redes inalámbricas no es ni de cerca el mejor, pues el 10\% de los errores son por el medio. Esta versión tiene en cuenta esto, y está pensada para redes inalámbricas.
 \end{itemize}
-
