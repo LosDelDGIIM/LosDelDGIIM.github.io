@@ -16,7 +16,46 @@
 \end{ejercicio}
 
 \begin{ejercicio}
-    Un mensaje de 64 kB se transmite a lo largo de dos saltos de una red. Ésta limita la longitud máxima de los paquetes a 2 kB y cada paquete tiene una cabecera de 32 bytes. Las líneas de transmisión de la red no presentan errores y tienen una capacidad de 50 Mbps. Cada salto corresponde a una distancia de 1000 km. ¿Qué tiempo se emplea en la transmisión del mensaje mediante datagramas?
+    Un mensaje de $\unit[64]{kB}$ se transmite a lo largo de dos saltos de una red. Ésta limita la longitud máxima de los paquetes a $\unit[2]{kB}$ y cada paquete tiene una cabecera de $\unit[32]{B}$. Las líneas de transmisión de la red no presentan errores y tienen una capacidad de $\unit[50]{Mbps}$. Cada salto corresponde a una distancia de $\unit[1000]{km}$. ¿Qué tiempo se emplea en la transmisión del mensaje mediante datagramas?\\
+
+    Como las cabeceras son de $\unit[32]{B}$ y el \acrshort{MTU} es de $\unit[2]{kB}$, cada paquete podrá enviar, como máximo:
+    \begin{equation*}
+        \unit[2]{kB} - \unit[32]{B} = \unit[2028]{B} - \unit[32]{B} = \unit[1996]{B}
+    \end{equation*}
+
+    Además, y aunque no se especifica en el enunciado, se asume\footnote{En el caso de no realizar esta asunción, sería similar solo que trabajando con el valor anteriormente calculado.} que estos se envían empleando el protocolo \acrshort{IP} y que la cabecera es mayor debido al uso de campos opcionales. Como el campo de desplazamiento de la cabecera se mide en múltiplos de $\unit[8]{B}$, el tamaño de los datos ha de ser múltiplo de $\unit[8]{B}$, por lo que como máximo se podrán enviar $\unit[1992]{B}$ de datos (que provocará que el desplazamiento aumente en $249$ unidades en cada paquete). Por tanto, en cada paquete se enviarán $\unit[1992]{B}$ de datos y $\unit[32]{B}$ de cabecera.\\
+
+    Veamos cuántos paquetes se envían:
+    \begin{equation*}
+        \unit[64]{kB} = 32\cdot \unit[1992]{B} + \unit[1792]{B}
+    \end{equation*}
+    Por tanto, se envían $33$ paquetes; el último de ellos con $\unit[1792]{B}$ de datos y $\unit[32]{B}$ de cabecera.\\
+
+    Busquemos por tanto ahora el tiempo. Para ello, primero calculamos el tiempo de transmisión de un paquete:
+    \begin{equation*}
+        T_t = \frac{\unit[L]{B} + \unit[32]{B}}{\unit[50]{Mbps}} = \begin{cases}
+            \unit[0.3238]{ms} & \text{para los primeros $32$ paquetes} \\
+            \unit[0.2918]{ms} & \text{para el último paquete}
+        \end{cases}
+    \end{equation*}
+
+    Veamos ahora el tiempo de propagación entre dos nodos, donde suponemos que la red es cableada y, por tanto, la velocidad de propagación es de $\nicefrac{2}{3}\cdot c=\unitfrac[2\cdot 10^5]{km}{s}$:
+    \begin{equation*}
+        T_p = \frac{\unit[1000]{km}}{\unitfrac[2\cdot 10^5]{km}{s}} = \unit[5]{ms}
+    \end{equation*}
+
+    Calculemos ahora el tiempo total que tarda en llegar tan sólo el primer paquete al segundo nodo (recorrido completo). Este será\footnote{Como mínimo, pues consideramos despreciable tiempos como el de procesamiento.}:
+    \begin{equation*}
+        T_{\text{total}}^1 = 2T_t + 2T_p
+    \end{equation*}
+
+    Una vez llegado este, cada paquete más tan sólo supondrá el retardo provocado por la transmisión, por lo que el tiempo total que tardan en llegar los $33$ paquetes será, como mínimo:
+    \begin{align*}
+        T_{\text{total}} &= T_{\text{total}}^1 + 31T_t + T_t
+        = 33T_t + 2T_p + T_t
+        =\\&= 33\cdot \unit[0.3238]{ms} + 2\cdot \unit[5]{ms} + \unit[0.2918]{ms}
+        = \unit[20.9772]{ms}
+    \end{align*}
 \end{ejercicio}
 
 \begin{ejercicio}
