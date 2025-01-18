@@ -102,7 +102,7 @@
         begin
            while true do begin
               select 
-                 when ocupadas >= 2 do
+                 when ocupadas >= 2 do receive(peticion, Consumidor)
                     dato := buffer[primera_ocupada];
                     primera_ocupada := (primera_ocupada + 1) mod 4;
                     ocupadas := ocupadas - 1;
@@ -195,7 +195,7 @@
         \end{minted}
     \end{multicols}
     \end{figure}
-    Ahora, desarrollamos el código del proceso Buffer, donde \verb|out[i]| indica la siguiente posición a leer del consumidor \verb|i|-ésimo. Por tanto, si tras consumir un valor del buffer vemos que 
+    Ahora, desarrollamos el código del proceso Buffer, donde \verb|out[i]| indica la siguiente posición a leer del consumidor \verb|i|-ésimo y \verb|nElems[i]| indica la cantidad de datos que quedan por leer al consumidor \verb|i|-ésimo. 
     \begin{minted}{pascal}
         process Buffer;
         var buffer : array[0..B-1] of integer;
@@ -218,7 +218,7 @@
                  for i := 0 to 2
                     when ocupados > 0 and nElems[i] > 0 receive(peticion, Consumidor[i]) do
                        dato := buffer[out[i]];
-                       out[i] := out[i] + 1;
+                       out[i] := out[i] + 1 mod B;
 
                        { Índices de los otros consumidores }
                        j := (i+1) mod 3;
@@ -327,7 +327,7 @@
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:rel3_5}
-    Considerar un conjunto de \verb|N| procesos, \verb|P[i]|, ($i = 0, \ldots, N-1$) que se pasan mensajes cada uno al siguiente (y el primero al último), en forma de anillo. Cada proceso tiene un valor local almacenado en su variable local \verb|mi_valor|. Deseamos calcular la suma de los valores locales almacenados por los procesos de acuerdo aon el algoritmo que se expone a continuación.
+    Considerar un conjunto de \verb|N| procesos, \verb|P[i]|, ($i = 0, \ldots, N-1$) que se pasan mensajes cada uno al siguiente (y el primero al último), en forma de anillo. Cada proceso tiene un valor local almacenado en su variable local \verb|mi_valor|. Deseamos calcular la suma de los valores locales almacenados por los procesos de acuerdo con el algoritmo que se expone a continuación.
     \begin{figure}[H]
         \centering
 
@@ -336,10 +336,10 @@
             
         \begin{tikzpicture}[align=center]
             % Paso 1
-            \node[draw, rectangle] (a1) at (0, 0) {mi\_valor = 1\\ suma = 1};
-            \node[draw, rectangle, right=of a1] (b1) {mi\_valor = 2\\ suma = 2};
-            \node[draw, rectangle, below=of b1] (c1) {mi\_valor = 3\\ suma = 3};
-            \node[draw, rectangle, left=of c1] (d1) {mi\_valor = 4\\ suma = 4};
+            \node[draw, rectangle] (a1) at (0, 0) {mi\_valor = 0\\ suma = 0};
+            \node[draw, rectangle, right=of a1] (b1) {mi\_valor = 1\\ suma = 1};
+            \node[draw, rectangle, below=of b1] (c1) {mi\_valor = 2\\ suma = 2};
+            \node[draw, rectangle, left=of c1] (d1) {mi\_valor = 3\\ suma = 3};
 
             \draw[-Stealth] (a1) -- (b1) node[midway, above] {0};
             \draw[-Stealth] (b1) -- (c1) node[midway, right] {1};
@@ -399,7 +399,21 @@
               ...
            end
         end
-
+    \end{minted}
+    La solución la podemos encontrar en el siguiente código:
+    \begin{minted}{pascal}
+        process P[ i : 0..N-1 ];
+        var mi_valor : integer := ...; {valor aleatorio, igual a i en la figura}
+            suma : integer := mi_valor;
+            siguiente : 0..N-1 := (i+1) mod N;
+            anterior : 0..N-1 := (i-1) mod N;
+        begin
+           for j := 0 to N-1 do begin
+              send(mi_valor, siguiente);
+              recv(mi_valor, anterior);
+              suma += mi_valor;
+           end
+        end
     \end{minted}
 \end{ejercicio}
 
