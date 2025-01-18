@@ -120,7 +120,7 @@ Como hemos comentado anteriormente, en los multicomputadores no dispondremos de 
 
 Tendremos, por tanto, dos operaciones de comunicación principales para trabajar con los mensajes: las funciones \verb|send| y \verb|receive|.\\
 
-El significado (o semántica) de dichas operaciones puede ser diferentes, es decir, el resultado de su ejecución puede variar dependiendo de su implementación. Sin embargo, podemos clasificar el tipo de operaciones \verb|send| y \verb|receive| que nos podemos encontrar en relación a si estas cumplen o no la propiedad de seguridad y según el modo de comunicación de las mismas:
+El significado (o semántica) de dichas operaciones puede ser diferente, es decir, el resultado de su ejecución puede variar dependiendo de su implementación. Sin embargo, podemos clasificar el tipo de operaciones \verb|send| y \verb|receive| que nos podemos encontrar en relación a si estas cumplen o no la propiedad de seguridad y según el modo de comunicación de las mismas:
 
 \begin{description}
     \item [Propiedad de seguridad.]~\\
@@ -129,6 +129,10 @@ El significado (o semántica) de dichas operaciones puede ser diferentes, es dec
         Sin embargo, una operación \verb|send| que no cumpla la propiedad de seguridad (sea insegura) podría ocasionar que el valor recibido por el otro proceso no coincida con el valor de los datos antes de la llamada. Por ejemplo, como resultado de modificar los datos tras realizar dicha llamada pero antes de que el sistema comience a transmitir el valor de dichos datos.
 
         Además, decimos que la propiedad de seguridad en el paso de mensajes se cumple en un programa con la operación \verb|receive| si tras la ejecución de esta disponemos instantáneamente de los datos a recibir en el mensaje asociado. Puede suceder que haya implementaciones de la operación \verb|receive| que no bloqueen al proceso hasta recibir los datos, con lo que hasta que el mensaje no sea recibido, no podremos usar los datos que esperamos recibir. Esta se trata de una operación \verb|receive| insegura.
+
+        Normalmente, aquellas implementaciones que usen alguna instrucción (\verb|send| o \verb|receive|, o ambas) insegura irán acompañadas de instrucciones capaces de determinar cuando es posible utilizar (modificar en el caso de \verb|send| y consultar en el caso de \verb|receive|) los datos involucrados con dicha operación insegura, con el objetivo de utilizar estos datos de forma segura\footnote{La utilización de instrucciones inseguras puede llegar a ser tan seguro como la utilización de instrucciones seguras, con la diferencia de que en las primeras es responsabilidad del programador el buen uso de las instrucciones.}.
+
+        La razón de existencia de las instrucciones de comunicación inseguras es priorizar eficiencia, con la contrapartida de que el programador debe ser cuidadoso a la hora de usar dichas instrucciones.
     \item [Modo de comunicación de las operaciones con paso de mensajes.]~\\
         Podemos encontrarnos con:
         \begin{itemize}
@@ -138,7 +142,7 @@ El significado (o semántica) de dichas operaciones puede ser diferentes, es dec
 \end{description}
 
 \subsection{Operaciones bloqueantes}
-La semántica de este tipo de operaciones de paso de mensajes quiere decir que la operación \verb|send| solo volverá (terminará su ejecución) cuando se garantice la propiedad de seguridad anteriormente vista. Es decir, la operación \verb|send| terminará cuando se haya transmitido en mensaje, con lo que la alteración de alguno de los valores que intervienen en el mensaje no modificará a su vez su valor dentro del mensaje. Cuando la operación \verb|send| termine, no podemos asegurar que el receptor haya recibido el mensaje, sino solo que este se ha mandado de forma segura.\\
+La semántica de este tipo de operaciones de paso de mensajes quiere decir que la operación \verb|send| solo volverá (terminará su ejecución) cuando se garantice la propiedad de seguridad anteriormente vista. Es decir, la operación \verb|send| terminará cuando se haya transmitido el mensaje, con lo que la alteración de alguno de los valores que intervienen en el mensaje no modificará a su vez su valor dentro del mensaje. Cuando la operación \verb|send| termine, no podemos asegurar que el receptor haya recibido el mensaje, sino solo que este se ha mandado de forma segura.\\
 
 Encontramos diferentes tipos de operaciones bloqueantes, en relación a su modo de comunicación (si hay un buffer intermedio o si no) y a si hay un hardware especializado o si no:
 \begin{table}[H]
@@ -253,7 +257,7 @@ Por otra parte, la vuelta inmediata de la operación \verb|receive| dependerá d
 \subsubsection{Paso de mensajes con buffer}
 Ahora, cuando se llame a la operación \verb|receive|, no habrá interrupcción del proceso, pero se comenzará con la transferencia de los datos del mensaje a quien aplica esta operación desde un buffer de recepción interno del sistema al área de memoria donde se espera recibirlos.
 
-Como consecuencia, se reduce el tiempo de espera en el proceso receptor, aunque el acceso a los datos durante la copia de los mismos es insegura.
+Como consecuencia, se reduce el tiempo de espera en el proceso receptor durante el cual un acceso a dichos datos es inseguro.
 
 \section{Diseño de programas distribuidos}
 A continuación, veremos los roles predominantes que tienen los procesos en los sistemas distribuidos, así como una nueva sentencia de programación necesaria para estos sistemas.
@@ -275,7 +279,7 @@ En un sistema distribuido, es normal asociar ``roles'' a los procesos que interv
 Como motivación a las instrucciones de órdenes con guarda, planteamos el \textit{problema del museo} en el siguiente ejemplo:
 \begin{ejemplo}
     En un museo, contamos con dos puertas giratorias, ambas controladas por sensores infrarrojos que tienen la finalidad de avisar a un controlador cuando detectan el paso de personas, para controlar la entrada al museo. De esta forma, el código de los procesos que son responsables de las puertas puede ser similar al de la Figura~\ref{fig:cod_museo}.\\
-    \begin{figure}
+    \begin{figure}[H]
         \centering
         \setlength{\columnsep}{1cm}
         \begin{multicols}{2}
@@ -345,7 +349,7 @@ De esta forma, cuando el proceso que está ejecutando el programa se encuentra c
 
 \begin{ejemplo}
     Recuperando el ejemplo del problema del museo, podemos hacer uso de una órden con guarda para resolver el problema de que no sabíamos cómo programar el proceso $P_3$ que actúa de controlador del museo. Haciendo uso de las órdenes con guarda, el código del mismo queda como el de la Figura~\ref{fig:cod_museo_guarda}.
-    \begin{figure}[H]
+    \begin{figure}
         \centering
         \begin{minted}{pascal}
             P3;
@@ -373,19 +377,18 @@ De esta forma, cuando el proceso que está ejecutando el programa se encuentra c
 Tras ver en la Sección~\ref{sec:ordenes_guarda} las órdenes con guarda, procedemos ahora a definir y explicar el comportamiento de la espera selectiva, un tipo de orden con guarda que poseen ciertos lenguajes de programación de sistemas distribuidos con señales síncronas, con el fin de solucionar el problema de la recepción de múltiples mensajes.
 
 \subsection{Definición de sentencia de espera selectiva o \texttt{select}}
-Una sentencia de espera activa comienza con la palabra reservada \verb|select| y termina con la palabra reservada \verb|end|, de forma que entre estas dos palabras cuenta con varias alternativas u órdenes con guarda.
-
-Una orden con guarda comienza con la palabra reservada \verb|when|, y en ella podemos encontrar dos partes bien diferenciadas:
+Una sentencia de espera selectiva comienza con la palabra reservada \verb|select| y termina con la palabra reservada \verb|end|, de forma que entre estas dos palabras cuenta con varias alternativas u órdenes con guarda. Una orden con guarda comienza con la palabra reservada \verb|when|, y en ella podemos encontrar dos partes bien diferenciadas:
 \begin{itemize}
     \item La guarda, conformada por una condición booleana y una instrucción \verb|receive|. Se sitúan inmediatamente después del \verb|when|.
     \item Un bloque de código, que se sitúa tras la palabra reservada \verb|do|, situada esta tras la guarda.
 \end{itemize}
 En el caso de la espera selectiva, encontramos tres alternativas para la guarda:
 \begin{itemize}
-    \item Que sea una condición booleana.
     \item Que sea una condición booleana y una instrucción \verb|receive|. 
 
         De esta forma, si la condición booleana es evaluada como \verb|false|, la instrucción \verb|receive| no llegará a ejecutarse.
+    \item Que sea una condición booleana.
+
         Este tipo de guardas son frecuentemente llamadas ``guardas sin sentencias de entrada''.
     \item Que sea una instrucción \verb|receive|. 
 
@@ -408,11 +411,11 @@ Puediendo omitir en cada guarda la condición booleana o la instrucción \verb|r
 La razón por la que solo permitimos instrucciones \verb|receive| en las guardas y no instrucciones \verb|send| es debido a que no queremos que la evaluación de las alternativas de la instrucción \verb|select| cambie el estado del proceso, así como evitar situaciones de bloqueos, las cuales son más frecuentes con el uso de instrucciones \verb|send|.
 
 \subsection{Comportamiento de la espera selectiva}
-Cuando un proceso se encuentra ejecutando su código y se encuentra con una espera selectiva o sentencia \verb|select|, lo que hace es evaluar primero todas las guardas, con el fin de clasificar a los guardas de las órdenes con guarda en tres tipos (estos tipos son dinámicos, de forma que una orden con guarda puede tener un tipo en una ejecución de la sentencia \verb|select| y que tenga un tipo distinto en la siguiente ejecución de la misma sentencia):
+Cuando un proceso se encuentra ejecutando su código y se encuentra con una espera selectiva o sentencia \verb|select|, lo que hace es evaluar primero todas las guardas, con el fin de clasificarlas en tres tipos (estos tipos son dinámicos, de forma que una orden con guarda puede tener un tipo en una ejecución de la sentencia \verb|select| y que tenga un tipo distinto en la siguiente ejecución de la misma sentencia):
 \begin{description}
     \item [Guardas ejecutables.] Una guarda es ejecutable si su condición es evaluada como cierta y además el proceso cuyo nombre se indica en la instrucción \verb|receive| ya terminó de enviar el mensaje (es decir, el mensaje está ``listo'' para ser recibido).
 
-        Si la guarda no tiene instrucción \verb|receive|, bastará con que su condición booleana sea evaluada como cierta\footnote{Podemos pensar que el razonamiento anterior es cierto por vacuidad.}. En caso de no disponer de condición booleana, entendemos que tiene la condición \verb|true|.
+        Si la guarda no tiene instrucción \verb|receive|, bastará con que su condición booleana sea evaluada como cierta\footnote{Podemos pensar que el razonamiento anterior es cierto por vacuidad.}. En caso de no disponer de condición booleana pero sí de instrucción \verb|receive|, entendemos que tiene la condición \verb|true|.
     \item [Guardas potencialmente ejecutables.] Decimos que una guarda es potencialmente ejecutable cuando su condición booleana es evaluada como cierta pero todavía el mensaje no ha sido enviado (es decir, si la ejecución de la instrucción \verb|receive| provoque que el proceso receptor se bloquee esperando la correspondiente instrucción \verb|send|).
 
         Si una guarda no tiene instrucción \verb|receive| no puede ser potencialmente ejecutable. En caso de no tener condición booleana, se entiende que su condición es \verb|true|.
@@ -504,13 +507,13 @@ Destacamos ciertas consecuencias de este comportamiento de la instrucción:
 Puede suceder que tengamos un proceso servidor que dé servicio a miles de clientes de forma que la acción a realizar por parte del servidor sea idéntica en muchos de esos clientes (como por ejemplo en el caso del problema de productores/consumidores con múltiples productores y múltiples consumidores).\\
 
 En dicho caso, no será necesario programar miles de órdenes con guarda, sino sólamente una, que dependerá de un índice, cuyo rango de variación estará acotado. De esta forma, introducimos la sintaxis:
-\begin{minted}{pascal}
+\begin{minted}[numbers=none]{pascal}
        for indice := inicial to final
           when condicion(indice) receive(variable(indice), fuente(indice)) do
              sentencias(indice)
 \end{minted}
-como una orden con guarda válida, de forma que esta se sustituirá por $final-inicial$ órdenes con guarda, de la forma:
-\begin{minted}{pascal}
+como una orden con guarda válida, de forma que esta se sustituirá por $final-inicial+1$ órdenes con guarda, de la forma:
+\begin{minted}[numbers=none]{pascal}
     when condicion(inicial) receive(variable(inicial), fuente(inicial)) do
        sentencias(inicial)
     when condicion(inicial+1) receive(variable(inicial+1), fuente(inicial+1)) do
@@ -555,7 +558,7 @@ como una orden con guarda válida, de forma que esta se sustituirá por $final-i
 
 \subsection{\texttt{select} con sentencia \texttt{else}}
 Al igual que en la operación \verb|switch| (de \verb|C++| o Java) contamos con la palabra reservada \verb|default| para no dejarnos ningún caso, en las sentencias \verb|select| podemos hacer uso de la palabra reservada \verb|else| para que, en el caso de que todas las guardas sean no ejecutables una vez que el proceso alcanza la sentencia \verb|select|, que esta no termine con error, sino que ejecute el bloque de código asociado a la palabra \verb|else|, de forma que introducimos la sintaxis:
-\begin{minted}{pascal}
+\begin{minted}[numbers=none]{pascal}
     else
        sentencias;
 \end{minted}
@@ -563,7 +566,7 @@ como una operación con guarda válida más, la cual será ejecutada si el resto
 
 \begin{ejemplo}
     Recuperando el ejemplo anterior del proceso servidor que reúne la suma de $n$ procesos, mostramos ahora el código completo del proceso servidor, en la Figura~\ref{fig:cod_ejm_select}, al disponer ya de la sentencia \verb|else|.
-    \begin{figure}
+    \begin{figure}[H]
         \centering
         \begin{minted}{pascal}
             Process Servidor;
