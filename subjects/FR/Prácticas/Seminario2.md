@@ -14,42 +14,53 @@ Este seminario trata de la detección y solución de errores de red típicos en 
 ## Herramientas de diagnóstico de fallos
 Para comenzar el seminario, haremos primero un resumen de las herramientas de las que disponemos como administrador de redes para identificar y resolver proeblemas.
 
-#### ping
-- Es la herramienta más conocida.
-- Usa dos paquetes de tipo ICMP, uno de tipo 8 (*Echo Request*) y otro de tipo 0 (*Echo Reply*).
+### Ping
+Esta es la herramienta más conocida.
+- Usa dos paquetes ICMP, uno de tipo 8 (*Echo Request*) y otro de tipo 0 (*Echo Reply*).
+- El equipo origen envía un mensaje *Echo Request* al equipo destino. Si este está disponible, le resonde con un mensaje *Echo Reply*.
+- Una vez que vuelva el mensaje al origen, se muestra por pantalla el número de secuencia, el campo TTL (*Time To Live*) y el cálculo RTT (el tiempo que el paquete tarda en salir del emisor, llegar al destino y volver). Todos estos conceptos se verán en detalle en teoría.
+- Al finalizar el ping, este muestra una estadística de los paquetes transmitidos, los paquetes recibidos correctamente, el porcentaje de paquetes que se ha perdido y datos sobre el RTT.
 
-El equipo origen envía un mensaje *Echo Request* al equipo destino. Si este está disponible, le resonde con un mensaje *Echo Reply*. Una vez que vuelva el mensaje al origen, se muestra por pantalla el número de secuencia, el campo TTL (*Time To Live*) y el cálculo RTT (el tiempo que el paquete tarda en salir del emisor, llegar al destino y volver).  
-Al finalizar el ping, este muestra una estadística de los paquetes transmitidos, los paquetes recibidos correctamente, el porcentaje de paquetes que se ha perdido y el RTT.
-
-- `ping -R`: Muestra la ruta de ida (del *Echo Request*) y la ruta de vuelta (del *Echo Reply*). El RTT que muestra es el total de idea y vuelta.
+Algunas variantes son:
+- `ping -R`: Muestra la ruta de ida (del *Echo Request*) y la ruta de vuelta (del *Echo Reply*). El RTT que muestra es el total de ida y vuelta.
 - `ping -n`: Muestra las direcciones IP en lugar de los nombres de dominio.
   
-En ocasiones podemos pensar que en nuestro hogar el router no funciona, ya que no tenemos acceso a internet. Sin embargo, podemos ejecutar `ping 8.8.8.8` (se trata de un DNS de Google), para comprobar que efectivamente no tenemos internet (en caso de que dicho `ping` no se realice bien) o si lo que pasa es que nuestro servidor DNS (se verá en teoría) se ha caído y no nos puede traducir urls a direcciones IP.  
+Por ejemplo, en ocasiones podemos pensar que en nuestro hogar el router no funciona, ya que no tenemos acceso a internet. Sin embargo, puede tratarse en realidad de que nuestro servidor DNS local se ha caído. Para comprobarlo, podemos ejecutar `ping 8.8.8.8` (se trata de un DNS de Google) y, si no obtenemos respuesta, entonces efectivamente no tenemos acceso a internet. 
   
-#### nslookup
+### Nslookup
 Nos permite obtener la IP asociada a una url haciendo un acceso a nuestro servidor DNS: `nslookup url`.
 
-#### traceroute
-O `tracert` en Windows, muestra salto a salto el flujo de tráfico que hace un paquete UDP (el que usa `traceroute`) desde un emisor a un receptor, trazando la ruta hasta llegar al destino. Así, se puede conocer qué punto de la red está fallando.  
-Se obtienen estadísticas de RTT o de latencia de red. También indica cada uno de los nodos por los que pasa el paquete hasta llegar a su destino.  
+## Traceroute
+O `tracert` en Windows, muestra salto a salto el flujo de tráfico que hace un paquete UDP (es el usado por defecto por `traceroute`) desde un emisor a un receptor, trazando la ruta hasta llegar al destino. Así, se puede conocer qué punto de la red está fallando. 
+Se obtienen estadísticas de RTT o de latencia de red en cada uno de los nodos. También indica cada uno de los nodos por los que pasa el paquete hasta llegar a su destino.  
   
 Se envía un paquete al destino con `TTL=1` (determina cuántos saltos puede realizar el paquete antes de devolver al emisor un paquete ICMP de tiempo excedido) y los siguientes paquetes a enviar incrementan el TTL en 1 tras recibir el mensaje ICMP de tiempo excedido anterior.
-- `traceroute -I`: Usa ICMP para las pruebas (como ping).
-- `traceroute -T`: Usa TCP SYN para las pruebas.
 
-#### netsat
+Algunas alternativas son:
+- `traceroute -I`: Usa paquetes ICMP para las pruebas (como `ping`) en vez de UDP.
+- `traceroute -T`: Usa paquetes TCP con el flag SYN activado para las pruebas, en vez de UDP.
+
+### Tcpdump
+Herramiento de captura de paquetes que se utiliza para solucionar problemas de conectividad de red (parecido a `wireshark`), solo que más liviano y se ejecuta en la línea de comandos.
+- `tcpdump -D`: Muestra todas las interfaces disponibles.
+- `tcpdump -n -i [nombre-interfaz]`: Captura paquetes IP en dicha interfaz y muestra la información (direccion IP, puertos) en formato numérico.
+
+### Wireshark
+Software open-source de monitorización y análisis de tráfico de red, que suele usarse como analizador de protocolos. Sirve como una herramienta didáctica para el estudio de las comunicaciones y para la resolución de problemas de red.  
+Se pueden visualizar los campos de cada una de las cabeceras y capas que componen los paquetes monitorizados, proporcionando un gran abanico de posibilidades al administrador de redes a la hora de abordar ciertas tareas de análisis de tráfico.
+
+### Netsat
 Muestra todos los puertos y conexiones abiertas en una máquina.  
-Si la dirección de origen en un puerto de escucha es 0.0.0.0, está escuchando en todas las interfaces disponibles.  
-Sin embargo, si hay una IP, entonces el puerto está abierto sólo en una interfaz específica.  
+- Si la dirección de origen en un puerto de escucha es 0.0.0.0, está escuchando en todas las interfaces disponibles. Sin embargo, si hay una IP, entonces el puerto está abierto sólo en una interfaz específica.  
   
-Al ejecutarla en terminal, se muestran direcciones IP de origen y destino, así como puertos de origen y destino.  
-Los campos Recv-Q y Send-Q muestran el número de bytes pendientes de reconocimiento.  
-El campo PID/Nombre del programa muestra el PID del proceso y el nombre del proceso responsable del puerto o conexión de escucha.  
-  
+Al ejecutarla en terminal, se muestran direcciones IP de origen y destino, así como puertos de origen y destino.  Los campos `Recv-Q` y `Send-Q` muestran el número de bytes pendientes de reconocimiento.  
+El campo PID/Nombre del programa muestra el PID del proceso y el nombre del proceso responsable del puerto o conexión de escucha.
+
+Algunas variantes son:
 - `netstat -tln`: Muestra los puertos que usan TCP en modo escucha con el puerto en formato número. La opción `u` (en lugar de `t`) lista los puertos que usan el protocolo UDP.
 - `netstat -tn`: Muestra los puertos que usan TCP con conexiones establecidas con el puerto en formato número.  
   
-Para mostrar la utilidad de `netstat`, podemos hacer uso de `netcat` o `nc`, que permite abrir puertos TCP/UDP en un host y realizar el trastreo del tráfico en esos puertos: 
+Para mostrar la utilidad de `netstat`, podemos hacer uso de `netcat` o `nc`, que permite abrir puertos TCP/UDP en un host y realizar el rastreo del tráfico en esos puertos: 
 ```
 nc -l 12345
 netstat -tln
@@ -57,15 +68,6 @@ netstat -tln
 nc localhost 12345
 netstat -tn
 ```
-
-#### tcpdump
-Herramiento de captura de paquetes que se utiliza para solucionar problemas de conectividad de red (parecido a `wiresharck`), solo que más liviano y se ejecuta en la línea de comandos.
-- `tcpdump -D`: Muestra todas las interfaces disponibles.
-- `tcpdump -n -i [nombre-interfaz]`: Captura paquetes IP en dicha interfaz y muestra la información (direccion IP, puertos) en formato numérico.
-
-#### wireshark
-Software open-source de monitorización y análisis de tráfico de red, que suele usarse como analizador de protocolos. Sirve como una herramienta didáctica para el estudio de las comunicaciones y para la resolución de problemas de red.  
-Se pueden visualizar los campos de cada una de ls cabeceras y capas que componen los paquetes monitorizados, proporcionando un gran abanico de posibilidades al administrador de redes a la hora de abordar ciertas tareas de análisis de tráfico.
 
 ## Descripción de laboratorio virtual
 En esta ocasión, dispondremos de un laboratorio virtual que el estudiante habrá podido desgargar en el siguiente [enlace](https://drive.google.com/file/d/1kVpxTiKHUy3HXYeGowSMZNL16-e8HdBo/view?usp=drive_link).  
@@ -86,7 +88,7 @@ Los usuarios de los PCs son `administrador` de contraseña `finisterre` y en los
   
 Una vez descrita y entendida la topología de nuestra red, procedemos a comprobar su buen funcionamiento y, en caso de no funcionar correctamente, tratar de localizar y solventar los problemas que esta pueda tener.
 
-## Experienza del seminario
+## Experiencia del seminario
 A continuación, describimos la experiencia que tuvo el grupo A2 en este seminario, tratando de identificar y solventar los errores que presentaba la red:  
   
 ### Identificación y resolución de error 1
