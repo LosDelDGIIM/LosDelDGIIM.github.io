@@ -65,7 +65,7 @@ La comunicación por conmutación de circuitos implica tres fases:
 \end{itemize}
 
 \subsection{Conmutación de paquetes}
-En la actualidad, no se envía una señal analógica; sino que, como sabemos, se envía el \acrshort{SDU} junto con la cabecera. En la capa de red, vimos que el \acrshort{SDU} se denomina \emph{datagrama}, y veremos que este se ha de fragmentar en distontos bloques, a los que denominaremos \emph{paquetes}. Por tanto, los paquetes son cada uno de los bloques de un datagrama, y es lo que se envía como tal por la red.
+En la actualidad, no se envía una señal analógica; sino que, como sabemos, se envía el \acrshort{SDU} junto con la cabecera. El \acrshort{SDU} se ha de fragmentar en distintos bloques, a los que denominaremos \emph{paquetes} o \emph{fragmentos}. Por tanto, los paquetes son cada uno de los bloques del \acrshort{SDU} de la capa de red y, tras añadirle a cada uno su correspondiente cabecera, es lo que se envía como tal por la red.
 \begin{observacion}
     En general, cuando se quiera hacer referencia a un conjunto de datos que se envía por la red, sin especificar en qué capa nos encontramos, o sin ser más precisos, también usaremos el término de \emph{paquete}.
 \end{observacion}
@@ -88,7 +88,7 @@ Como el medio es común, los nodo de interconexión necesitan colas para poder g
 A la hora de esta conmutación, se hace el mejor esfuerzo, pero si algo falla la capa de red no se encarga de gestionar el fallo.
 
 Un protocolo que lleve a cabo esta conmutación es \acrshort{IP}, que desarrollaremos más adelante.
-Este es el tipo de conmutación que se usa mayoritariamente en la actualidad, y es en el que nos centraremos en la asignatura.
+Este es el tipo de conmutación que se usa mayoritariamente en la actualidad, y es en la que nos centraremos en la asignatura.
 
 \subsection{Conmutación con circuitos virtuales}
 
@@ -126,7 +126,7 @@ En la actualidad la limitación de direcciones se empieza a notar, por lo que ha
         \item No hay control de errores ni de flujos. Los errores que se produzcan tienen que arreglarlos una capa superior si se precisa.
     \end{itemize}
     \item Gestiona la fragmentación para adaptarse al \acrshort{MTU} de cada tarjeta de red, como veremos. A la unidad de datos completa se le llama datagrama y a los fragmentos paquetes. 
-    \item Es un protocolo de máximo esfuerzo, los datagramas se pueden perder, duplicar, retrasar, llegar desordenados\ldots
+    \item Es un protocolo de máximo esfuerzo. Los datagramas se pueden perder, duplicar, retrasar, llegar desordenados\ldots
 \end{itemize}
 
 \subsection{Direccionamiento}
@@ -137,7 +137,7 @@ Una dirección \acrshort{IP} consta de 32 bits y la nomenclatura usada es: \verb
 
 Para saber qué parte de la dirección IP identifica el equipo y cuál la red, se emplea la máscara de red.
 \begin{definicion}[Máscara de red]
-    Es un conjunto de $32$ bits (al igual que una dirección IP) que se usa para identificar qué parte de la dirección IP identifica la red y cuál el equipo.Contiene los primeros $n$ bits consecutivos a $1$, y el resto a $0$.
+    Es un conjunto de $32$ bits (al igual que una dirección IP) que se usa para identificar qué parte de la dirección IP identifica la red y cuál el equipo. Contiene los primeros $n$ bits consecutivos a $1$, y el resto a $0$.
 \end{definicion}
 \textbf{¿Cómo se usa la máscara?}\
 
@@ -170,6 +170,13 @@ Internet usa direccionamiento jerárquico basado en clases. Cada clase contiene 
     \item Clase D $\rightarrow$ \verb|1110xx|\ldots\verb|x| $\Longrightarrow$ \verb|224.0.0.0 - 239.255.255.255|. No se usa para identificar equipos ni redes sino para multidifusión (\textit{multicast}). Cada dirección identifica a todo un grupo de equipos. Para gestionar esto existe el protocolo \acrshort{IGMP} para suscribirse a grupos.
     \item Clase E $\rightarrow$ \verb|1111xx|\ldots\verb|x| $\Longrightarrow $ \verb|240.0.0.0 - 255.255.255.255|. Es el rango experimental; es decir, las direcciones que se dejan para hacer pruebas. 
 \end{itemize}
+
+\begin{observacion}
+    Como utilidad, en los sistemas operativos Linux se ofrece el comando \verb|ipcalc|, que podrá ser de utilidad en los ejercicios prácticos. Dada una dirección IP y una máscara de red, nos devolverá la dirección de la red, la dirección de difusión, el rango de direcciones posibles, etc.
+\end{observacion}
+\begin{observacion}
+    En Linux, podemos emplear el comando \verb|ifconfig| para ver la configuración de red de nuestro equipo. En la salida, veremos para cada una de las interfaces de red la dirección IP, la máscara de red, la dirección de difusión, etc.
+\end{observacion}
 
 \subsubsection{Direcciones reservadas}
 Además de las restricciones de cada clase, hay determinadas direcciones que están reservadas y no se pueden asignar a ningún equipo. Algunas de estas direcciones son:
@@ -220,19 +227,13 @@ Si usamos solo el direccionamiento con clases estaríamos desperdiciando muchís
 
 Como vemos el funcionamiento es igual que en el direccionamiento con clase, pero reduce significativamente (aunque no elimina) el desperdicio de direcciones. A nivel práctico red, subred y superred no se diferencian, y nos referimos a todas ellas como redes.
 
-
-%Vamos a ver un par de ejemplos de asignaciones de direcciones en subredes y superredes. 
-% // TODO: hacer el dibujo del circulo (/27) pag 11 de los apuntes
-% // TODO: hacer el ejemplo del /22 (700 equipos)
-
-
 \subsubsection{Direcciones privadas}
 
 Como hemos venido mencionando en distintas ocasiones, la escasez de direcciones es un gran problema presente en \acrshort{IPv4}, ya que tan solo hay $2^{32}$ direcciones posibles, las cuales ya se agotaron en Noviembre de 2019. Aunque se vayan recopilando direcciones de sitios obsoletos, empresas desaparecidas, etc. el problema sigue existiendo.\\
 
 Hay varias soluciones posibles para solventarlo.
 \begin{itemize}
-    \item Direccionamiento sin clase: es una solucion que reduce el desperdicio de direcciones, peero aun así tiene la limitación de $2^{32}$ direcciones.
+    \item Direccionamiento sin clase: es una solucion que reduce el desperdicio de direcciones, pero aun así tiene la limitación de $2^{32}$ direcciones.
     \item \acrshort{IPv6}, el cual usa 128 bits para las direcciones. La notación utilizada es\
 
         \verb|FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF|, en el que cada dígito es un número hexadecimal.
@@ -268,7 +269,7 @@ Al encontramos en la capa de red, el \acrshort{PDU} contiene la cabecera IP\foot
 
 El concepto de puerto lo veremos más adelante y desarrollaremos a fondo en la Capa de Transporte. Por el momento, tan solo es necesario saber que es un número que se asigna a cada proceso que se comunica en la red, y que se usa para saber a qué proceso enviar la respuesta.\\
 
-Para posibilitar la traducción, se usa una tabla de direcciones a modo de ``diccionario'', tal y como introducimos a continuación.
+Para posibilitar la traducción, se usa una tabla de traducciones a modo de ``diccionario'', tal y como introducimos a continuación.
 \begin{definicion}[Tabla de traducciones]
     La Tabla de Traducciones es una tabla que se guarda en la memoria de todo router que haga \acrshort{NAT}.
     Por cada traducción que deba hacerse, se guarda una entrada en la tabla que relaciona la dirección IP y puerto originales con la dirección IP y puerto traducidos.
@@ -279,9 +280,7 @@ Para posibilitar la traducción, se usa una tabla de direcciones a modo de ``dic
 \end{definicion}
 
 \begin{definicion}[\textit{Masquerading}]
-    Proceso de enmascaramiento que hace el router al traducir la dirección privada del equipo en su dirección pública.
-
-    Se ``enmascara'' la dirección privada, de forma que el servidor no sabe a qué equipo de la red privada está respondiendo.
+    Proceso de enmascaramiento que hace el router al traducir la dirección privada del equipo en su dirección pública. Se ``enmascara'' la dirección privada, de forma que el servidor no sabe a qué equipo de la red privada está respondiendo.
 \end{definicion}
 
 \begin{observacion}
@@ -361,7 +360,7 @@ Planteemos un primer ejemplo de \acrshort{SNAT}, que nos ayudará a comprender c
             \item {IPdest}:{dport}: \verb|66.66.66.66:80|.
         \end{itemize}
 
-        La tabla de traducciones del router quedaria (donde notamos con ``$'$'' la traducida):
+        La tabla de traducciones del router quedaría (donde notamos con ``$'$'' la traducida):
         \begin{table}[H]
             \centering
             \begin{tabular}{|c|c||c|c|}
@@ -634,6 +633,7 @@ Por tanto, una vez que tenemos la entrada asignada a la dirección IP de destino
         \caption{Situación para el ejemplo de la página~\pageref{ejemplo:tabla_encaminamiento}.}
         \label{fig:ejemplo_tabla_encaminamiento}
     \end{figure}
+
     \begin{table}
         \centering
         \begin{tabular}{|c|c|c|c|}
@@ -652,13 +652,13 @@ Por tanto, una vez que tenemos la entrada asignada a la dirección IP de destino
     Supongamos que a R6 le llega un paquete con destino L1 (dirección IP de destino \verb|192.168.0.1|). Tras hacer el \verb|AND| con cada una de las máscaras, vemos que las 4 entradas son válidas para dicha dirección IP\@. No obstante, la máscara más restrictiva es \verb|/27|, por lo que se elegirá dicha entrada y, por tanto, reenviará el paquete por la interfaz de red de R6 que pertenece a dicha red de destino. Esto permite que el camino se haga directo, con menos saltos.
 \end{ejemplo}
 
-En la mayoría de los casos, se buscará minimizar las tablas de encaminamiento agrupando las redes con las que se trabaja, permitiendo así que el encaminamiento sea más eficiente. Lo ideal es tener una entrada por cada interfaz del dispositivo, ya que así por cada dirección IP de destino sabremos qué interfaz usar. Además, a menudo tenemos que compartir las tablas de encaminamiento (como veremos en algunos de los siguientes protocolos), y para ello lo mejor es que sean lo más compactas posible.
+En la mayoría de los casos, se buscará minimizar las tablas de encaminamiento agrupando las redes con las que se trabaja, permitiendo así que el encaminamiento sea más eficiente. Como mínimo tendremos una entrada por cada interfaz del dispositivo. Además, a menudo tenemos que compartir las tablas de encaminamiento (como veremos en algunos de los siguientes protocolos), y para ello lo mejor es que sean lo más compactas posible.
 
 \subsection{Protocolos de intercambio de información de encaminamiento}
 
 Para facilitar la administración y aumentar la escalabilidad, Internet se jerarquiza en \acrfull{AS}, que son redes muy grandes (en la mayoría de los casos, abarcan todo un país) gestionadas por una única autoridad.
 \begin{observacion}
-Cada \acrshort{AS} tiene un número único de $32$ bits que lo identifica. Por ejemplo, La red Iris tiene el número \verb|AS766|.
+Cada \acrshort{AS} tiene un número único de $32$ bits que lo identifica. Por ejemplo, La Red Iris tiene el número \verb|AS766|.
 \end{observacion}
 
 De esta forma, cada \acrshort{AS} informará al resto de los demás \acrshort{AS} sobre las redes que tienen, de forma que compartirán su información de encaminamiento. Hay dos niveles de intercambio de tablas de encaminamiento:
@@ -707,7 +707,7 @@ Toda esta información se comparte por la dirección multicast \verb|224.0.0.9|,
 
 Un problema que puede surgir al emplear \acrshort{RIP} es la convergencia lenta, ya que las malas noticias tardan en propagarse. Puede ocurrir que algún camino se rompa y, dada la naturaleza del protocolo, esta información tarda en notificarse.
 
-Este se maximiza en el conocido ``problema de la cuenta al infinito'', que se muestra en la Figura~\ref{fig:rip}. En dicha figura, podemos ver que, inicialmente, R1 tenía acceso a la red 1, aunque posteriormente dicho camino se rompe y R1 es notificado de que ha perdido acceso a dicha red. No obstante, R2, que aún no ha sido notificado de que ya no puede llegar a dicha red, al comparte a R1 su tabla de encaminamiento le informa de que él si sabe llegar a la red 1, por lo que R1 lo aprende (aumentando en una unidad el coste), y así sucesivamente. Cuando R2 reciba la información del corte, aprenderá el camino por R1, y así sucesivamente. Esto podría llegar a repetirse indefinidamente (de ahí del nombre) hasta $16$ (ya que ese es el límite para \acrshort{RIP} en el que se asume que no se sabe llegar a dicha red), sin que ninguno en realidad supiese llegar a dicha red. Veamos algunas posibles soluciones:
+Este se maximiza en el conocido ``problema de la cuenta al infinito'', que se muestra en la Figura~\ref{fig:rip}. En dicha figura podemos ver que, inicialmente, R1 tenía acceso a la red 1, aunque posteriormente dicho camino se rompe y R1 es notificado de que ha perdido acceso a dicha red. No obstante, R2, que aún no ha sido notificado de que ya no puede llegar a dicha red, al compartir a R1 su tabla de encaminamiento le informa de que él sí sabe llegar a la red 1, por lo que R1 lo aprende (aumentando en una unidad el coste), y así sucesivamente. Cuando R2 reciba la información del corte, aprenderá el camino por R1, y así sucesivamente. Esto podría llegar a repetirse indefinidamente (de ahí del nombre) hasta $16$ (ya que ese es el límite para \acrshort{RIP} en el que se asume que no se sabe llegar a dicha red), sin que ninguno en realidad supiese llegar a dicha red. Veamos algunas posibles soluciones:
 \begin{description}
     \item [Split horizon:] Se basa en que a un router se le prohíbe compartir una ruta por la misma interfaz por la que la aprendió en primer lugar.
     
@@ -807,7 +807,7 @@ Notemos que, en la cabecera \acrshort{IP} vista en la sección anterior, los cam
 Algunas observaciones importantes son:
 \begin{itemize}
     \item Si hay algún error y no llegan todos los fragmentos de un datagrama se descarta todo y debe ser una capa superior la que se encargue de arreglar el problema.
-    \item Un datagrama solo se fragmentará cuando vaya a pasar por una tarjeta de red con un \acrshort{MTU} menor que el del paquete. Esta fragmentación se hará cuando sea necesaria, y puede ser en cualquier nodo del encaminamiento.
+    \item Un datagrama solo se fragmentará cuando vaya a pasar por una tarjeta de red con un \acrshort{MTU} menor que el tamaño del paquete. Esta fragmentación se hará cuando sea necesaria, y puede ser en cualquier nodo del encaminamiento.
     \item Los datagramas tan solo se podrán ensamblar en el destino, ya que distintos fragmentos podrán seguir caminos distintos, dependiendo del encaminamiento.
 \end{itemize}
 
@@ -842,7 +842,10 @@ Algunas observaciones importantes son:
         \label{fig:fragmentacion}
     \end{figure}
 
-    Supongamos que queremos enviar un datagrama con $\unit[4180]{B}$ de datos desde la red A a la red B, según el diagrama de la Figura~\ref{fig:fragmentacion}. Supongamos que su identificador es $X$. Veamos si se produce fragmentación, y en qué paquetes se fragmenta.\\
+    Supongamos que queremos enviar un datagrama con $\unit[4180]{B}$ de datos desde la red A a la red B, según el diagrama de la Figura~\ref{fig:fragmentacion}. Supongamos que su identificador es $X$. Veamos si se produce fragmentación, y en qué paquetes se fragmenta.
+    \begin{observacion}
+        Recordemos que el campo de \emph{Fragmentación} mide en unidades de $\unit[8]{B}$, por lo que si un paquete se fragmenta, el tamaño de los fragmentos ha de ser múltiplo de $\unit[8]{B}$. No obstante, por simplificación en el ejemplo, supondremos que se mide en unidades de $\unit[1]{B}$ (aunque, reiteramos, no es lo que ocurriría en la realidad).
+    \end{observacion}
 
     Como la cabecera ocupa $20$ Bytes, el tamaño a enviar es de $\unit[4200]{B}$. Este no se podrá enviar por la red que une R1 y R2, pues su \acrshort{MTU} es de $\unit[1500]{B}$. Por tanto, se fragmentará en R1. Veamos cada uno de los paquetes, teniendo en cuenta que de los $\unit[1500]{B}$ de límite, $20$ han de ser para la cabecera:
     \begin{enumerate}
@@ -1083,7 +1086,7 @@ Como aspectos relevantes, además de informar de errores nos permite conocer la 
 
 \section{Autoconfiguración de la capa de red (\acrshort{DHCP})}
 
-El \acrfull{DHCP} es un protocolo para configurar de forma automática la capa de red. Este protocolo se encarga de asignar direcciones IP, máscaras, pasarelas por defecto e IP del servidor \acrshort{DNS}. Su funcionalidad es a nivel de red, aunque se implementa en capa de aplicación y se encapsula en \acrshort{UDP}. \\
+El \acrfull{DHCP} es un protocolo para configurar de forma automática la capa de red. Este protocolo se encarga de asignar direcciones IP, máscaras, pasarelas por defecto e IP del servidor \acrshort{DNS}. Su funcionalidad es a nivel de red, aunque se implementa en capa de aplicación y se encapsula en \acrshort{UDP} (puerto 67 para el servidor, 68 para el cliente).\\
 
 Contamos con un cliente, que inicialmente no tiene dirección IP asignada (emplearemos la \verb|0.0.0.0|), y un servidor \acrshort{DHCP}, el cual se encargará de asignársela. Se trata de un protocolo de \textit{leasing} (alquiler), ya que la dirección IP que se asigna al cliente es válida durante un tiempo.\\
 
