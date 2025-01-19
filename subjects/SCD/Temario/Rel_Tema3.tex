@@ -400,18 +400,25 @@
            end
         end
     \end{minted}
-    La solución la podemos encontrar en el siguiente código:
+    La solución la podemos encontrar en el siguiente código, donde debemos tener cuidado de que no todos los procesos primero envíen y luego reciban, ya que esto puede dar lugar a una situación de interbloqueo por usar envíos y recepciones síncronas. Para ello, obligamos a que al menos un proceso primero reciba y luego envíe, o viceversa:
     \begin{minted}{pascal}
         process P[ i : 0..N-1 ];
         var mi_valor : integer := ...; {valor aleatorio, igual a i en la figura}
             suma : integer := mi_valor;
             siguiente : 0..N-1 := (i+1) mod N;
             anterior : 0..N-1 := (i-1) mod N;
+            recibido : integer;
         begin
            for j := 0 to N-1 do begin
-              send(mi_valor, siguiente);
-              recv(mi_valor, anterior);
-              suma += mi_valor;
+              if i == 0 then begin
+                 send(mi_valor, siguiente);
+                 recv(recibido, anterior);
+              else
+                 recv(recibido, anterior);
+                 send(mi_valor, siguiente);
+              end
+              mi_valor := recibido;
+              suma += recibido;
            end
         end
     \end{minted}
@@ -428,13 +435,20 @@
 
     \begin{figure}[H]
         \centering
-        \setlength{\columnsep}{1cm}
-        \begin{multicols}{2}
             \begin{minted}{pascal}
                 process Estanquero;
+                var ing1, ing2 : ingredientes;
                 begin
                    while true do begin
-                      ... 
+                      ing1, ing2 := generaIngredientes();
+
+                      select
+                         for i:=0 to 2
+                            when genera_ingredientes(ing1, ing2) receive(peticion, Fumador[i])
+                            do
+                               send(ing1, ing2, Fumador[i])
+                            end
+                      end select
                    end
                 end
             \end{minted}
@@ -442,11 +456,12 @@
                 process Fumador[ i : 0..2 ];
                 begin
                    while true do begin
-                      ...
+                      send(peticion, Estanquero);
+                      recv(ingredientes, Estanquero);
+                      fumar(ingredientes);
                    end
                 end
             \end{minted}
-        \end{multicols}
         \caption{Código para el Ejercicio~\ref{ej:rel3_6}.}
         \label{fig:cod_6}
     \end{figure}
@@ -487,7 +502,83 @@
         \caption{Código para el Ejercicio~\ref{ej:rel3_7}.}
         \label{fig:cod_7}
     \end{figure}
-    Describir en pseudocódigo el comportamiento del proceso controlador, utilizando una orden de espera selectiva que permita implementar la sincronización requerida entre los procesos. Es posible utilizar una sentencia del tipo \verb|select for i=... to ...| para especificar diferentes ramas de una sentencia selectiva que comparten el mismo código dependiente del valor de un índice \verb|i|.
+    Describir en pseudocódigo el comportamiento del proceso controlador, utilizando una orden de espera selectiva que permita implementar la sincronización requerida entre los procesos. Es posible utilizar una sentencia del tipo \verb|select for i=... to ...| para especificar diferentes ramas de una sentencia selectiva que comparten el mismo código dependiente del valor de un índice \verb|i|.\\
+
+    La solución que planteamos es la siguiente, donde tenemos en cuenta las peticiones de obtención y liberación del recurso que llevan al recurso a ser usado por 13 procesos al mismo tiempo. En dicho caso, guardamos la petición hasta que haya cualquiera otra petición (que puede ser del mismo tipo o distinto).
+    \begin{minted}{pascal}
+        process Controlador
+        var contador : integer := 0;
+            permiso : integer := 0;
+            solicitud_pendiente : boolean := false;
+            id_sol_pendiente : 0..n;
+            liberacion_pendiente : boolean := false;
+            id_lib_pendiente : 0..n;
+        begin
+           while true do begin
+              select 
+                 for i:= 0 to n
+                    { Para peticiones sin riesgo }
+                    when contador <> 12 receive(pet_usar, Cli[i]) do
+
+                       { Si había un proceso esperando liberar el recurso }
+                       if liberacion_pendiente then
+                       begin
+                          send(permiso, id_lib_pendiente);
+                          liberacion_pendiente := false;
+                       else
+                          contador := contador + 1;
+                       end
+
+                       send(permiso, Cli[i]);
+                    end
+
+                    { Para peticiones con riesgo }
+                    when contador == 12 receive(pet_usar, Cli[i]) do
+                       { Si el nº 13 estaba esperando }
+                       if solicitud_pendiente then 
+                       begin
+                          contador := contador + 2;
+                          send(permiso, id_sol_pendiente);
+                          send(permiso, Cli[i]);
+                          solicitud_pendiente := false;
+                       else     { Si no }
+                          solicitud_pendiente := true;
+                          id_sol_pendiente := i;
+                       end
+                    end
+
+                    { Para liberaciones sin riesgo }
+                    when contador <> 14 receive(pet_liberar, Cli[i]) do
+
+                       { Si había un proceso esperando obtener el recurso }
+                       if solicitud_pendiente then
+                       begin
+                          send(permiso, id_sol_pendiente);
+                          solicitud_pendiente := false;
+                       else
+                          contador := contador - 1;
+                       end
+
+                       send(permiso, Cli[i]);
+                    end
+
+                    { Para liberaciones con riesgo }
+                    when contador == 14 receive(pet_liberar, Cli[i]) do
+                       if liberacion_pendiente then
+                       begin
+                          contador := contador - 2;
+                          send(permiso, id_lib_pendiente);
+                          send(permiso, Cli[i]);
+                          liberacion_pendiente := false;
+                       else
+                          liberacion_pendiente := true;
+                          id_lib_pendiente := i;
+                       end
+                    end
+              end select
+           end
+        end
+    \end{minted}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:rel3_8}
@@ -501,8 +592,6 @@
     Cuando un productor envía un digito que no se puede aceptar por el imprersor, el productor quedará bloqueado esperando completar el \verb|s_send|. El pseudocódigo de los procesos productores (\verb|Productor|) se muestra a continuación , asumiendo que se usan operaciones bloqueantes no buferizadas (síncronas):
     \begin{figure}[H]
         \centering
-        \setlength{\columnsep}{1cm}
-        \begin{multicols}{2}
             \begin{minted}{pascal}
                 process Productor[ i : 0,1,2 ];
                 begin
@@ -511,30 +600,48 @@
                    end
                 end
             \end{minted}
-            \begin{minted}{pascal}
-                process Impresor;
-                var ...
-                begin
-                   while true do begin
-                      select
-                         ...
-                      end
-                   end
-                end
-            \end{minted}
-        \end{multicols}
         \caption{Código para el Ejercicio~\ref{ej:rel3_8}.}
         \label{fig:cod_8}
     \end{figure}
-    Escribir en pseudocódigo el código del proceso \verb|Impresor|, utilizando para ello un bucle infinito con una orden de espera selectiva \verb|select| que permita implementar la sincronización requerida entre los procesos, según el esquema anterior.
+    Escribir en pseudocódigo el código del proceso \verb|Impresor|, utilizando para ello un bucle infinito con una orden de espera selectiva \verb|select| que permita implementar la sincronización requerida entre los procesos, según el esquema anterior.\\
+
+    El código solicitado es el siguiente, donde \verb|ult0| indica:
+    \begin{itemize}
+        \item \verb|true| si el último dígito 0 o 1 recibido fue un 0.
+        \item \verb|false| si el último dígito 0 o 1 recibido fue un 1.
+    \end{itemize}
+    Además, notemos que el ejercicio no impone restricciones sobre cuando se pueden recibir dígitos 2.
+    \begin{minted}{pascal}
+        process Impresor
+        var cant0, cant1, cant2 : integer := 0, 0, 0;
+            ult0 : boolean := true;
+            n : 0..2;
+        begin
+           while true do begin
+              select
+                 when (cant0 < 2*cant2-1 and not ult0) receive(n, Productor[0]) do
+                    cant0 := cant0 + 1;
+                    ult0 := true;
+                 end
+
+                 when (cant1 < 2*cant2-1 and ult0) receive(n, Productor[1]) do
+                    cant1 := cant1 + 1;
+                    ult0 := false;
+                 end
+
+                 when receive(n, Productor[2]) do
+                    cant2 := cant2 + 1;
+                 end
+              end
+           end
+        end
+    \end{minted}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:rel3_9}
-   En un sistema distribuido hay un vector de \verb|n| procesos iguales que envían con send (en un bucle infinito) valores enteros a un proceso receptor, que los imprime. Si en algún momento no hay ningún mensaje pendiente de recibir en el receptor, este proceso debe de imprimir ``no hay mensajes, duermo''; después de bloquearse durante 10 segundos (con \verb|sleep_for(10)|), antes de volver a comprobar si hay mensajes (esto podría hacerse para ahorrar energía, ya que el procesamiento de mensajes se hace en ráfagas separadas por 10 segundos). Este problema no se puede solucionar usando \verb|receive| o \verb|i_receive|. Indica a que se debe esto. Sin embargo, sí se puede hacer con select. Diseña una solución a este problema con \verb|select|:
+   En un sistema distribuido hay un vector de \verb|n| procesos iguales que envían con send (en un bucle infinito) valores enteros a un proceso receptor, que los imprime. Si en algún momento no hay ningún mensaje pendiente de recibir en el receptor, este proceso debe de imprimir ``no hay mensajes, duermo''; después de bloquearse durante 10 segundos (con \verb|sleep_for(10)|), antes de volver a comprobar si hay mensajes (esto podría hacerse para ahorrar energía, ya que el procesamiento de mensajes se hace en ráfagas separadas por 10 segundos). Este problema no se puede solucionar usando \verb|receive| o \verb|i_receive|. Indica a que se debe esto. Sin embargo, sí se puede hacer con \verb|select|. Diseña una solución a este problema con \verb|select|:
     \begin{figure}[H]
        \centering
-       \setlength{\columnsep}{1cm}
-       \begin{multicols}{2}
            \begin{minted}{pascal}
                process Emisor[ i : 1..n ];
                var dato : integer;
@@ -545,19 +652,33 @@
                   end
                end
            \end{minted}
-           \begin{minted}{pascal}
-               process Receptor();
-               var dato : integer;
-               begin
-                  while true do begin
-                     ...
-                  end
-               end
-           \end{minted}
-       \end{multicols}
        \caption{Código para el Ejercicio~\ref{ej:rel3_9}.}
        \label{fig:cod_9}
    \end{figure}
+   El problema no puede resolverse con instrucciones \verb|receive| o \verb|i_receive| porque:
+   \begin{itemize}
+       \item En el caso de la instrucción \verb|receive|, si no hay mensajes pendientes, el proeso se bloquearía hasta recepcionar el primero, pero este no es el comportamiento deseado.
+       \item En el caso de la instrucción \verb|i_receive|, comenzaría instantáneamente la recepción del mensaje, pero el proceso volvería inmediatamente antes de recibirlo, por lo que no sabríamos si hay o no un mensaje pendiente.
+   \end{itemize}
+   Sin embargo, podemos hacer uso de las sentencias \verb|else| de las instrucciones \verb|select|, de forma que una instrucción se ejecute cuando todas las guardas no son ejecutables:
+   \begin{minted}[escapeinside=\#\#]{pascal}
+       process Receptor
+       var dato : integer;
+       begin
+          while true do begin
+             select
+                for i:= 1 to n
+                   when receive(dato, Emisor[i]) do
+                      imprime(dato);
+                   end
+                else begin
+                   imprime(#"#No hay mensajes, duermo#"#);
+                   sleep_for(10);
+                end
+             end select
+          end
+       end
+   \end{minted}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:rel3_10}
@@ -575,7 +696,7 @@
             begin
                { calcular ganador }
                ...
-               print #"#El primer envio lo ha realizado: #"#, ganador;
+               print #"#El primer envio #lo# ha realizado: #"#, ganador;
             end
         \end{minted}
         \caption{Código para el Ejercicio~\ref{ej:rel3_10}.}
@@ -585,7 +706,25 @@
     \begin{enumerate}[label=(\alph*)]
         \item el proceso receptor usa exclusivamente recepción mediante una o varias llamadas a \verb|receive|.
         \item el proceso receptor usa exclusivamente recepción mediante una o varias llamadas a \verb|i_receive|.
-        \item el proceso receptor usa exclusivamente recepcíon mediante una o varias instrucciones \verb|select|.
+        \item el proceso receptor usa exclusivamente recepción mediante una o varias instrucciones \verb|select|.
+    \end{enumerate}
+    Distinguimos casos:
+    \begin{enumerate}[label=(\alph*)]
+        \item No es posible, ya que si estamos pensando en usar una única instrucción \verb|receive| de forma que el proceso ganador sea aquel que realice una cita con esta instrucción, entonces no nos quedaríamos con el proceso emisor que inició el envío en primer lugar, sino con el emisor del mensaje que primero llegó en el receptor.
+        \item Tampoco es posible, porque ahora mantenemos el problema anterior pero además el orden en el que se reciben los mensajes en el receptor no tiene por qué coincidir con el orden con el que se realizan las instrucciones \verb|i_receive|.
+        \item Sí que es posible, ya que en caso de que haya más de un mensaje iniciado y preparado para ser recibido, la orden \verb|select| escogerá aquel mensaje cuyo emisor comenzó antes la operación de envío:
+            \begin{minted}[escapeinside=\#\#]{pascal}
+                process Receptor
+                var ganador : integer;
+                begin
+                   select
+                      for i := 1 to N; when receive(ganador, Emisor[i]) do
+                         null;
+                      end
+                   end select
+                   print #"#El primer envio #lo# ha realizado: #"#, ganador;
+                end
+            \end{minted}
     \end{enumerate}
 \end{ejercicio}
 
@@ -597,21 +736,169 @@
         \item Describe razonadamente si es o no posible hacer esto usando exclusivamente \verb|s_send| para los envíos. En caso afirmativo, escribe una solución.
         \item Escribe una solución usando \verb|send| y \verb|receive|.
     \end{itemize}
+    Distinguimos casos:
+    \begin{itemize}
+        \item En el primer caso, es imposible implementar esta funcionalidad usando operaciones \verb|s_send| de envío síncrono, ya que todos los procesos ejecutarían dicha instrucción, llevando a un interbloqueo de todos los procesos, situación que se pone de manifiesto de forma simple si simplemente consideramos dos procesos:
+            \begin{figure}[H]
+                \setlength{\columnsep}{1cm}
+                \begin{multicols}{2}
+                    \begin{minted}{pascal}
+                       process P1;    
+                       var n1 : integer := 1;
+                       begin
+                          send(n1, P2);
+                       end
+                    \end{minted}
+                    \begin{minted}{pascal}
+                       process P2;    
+                       var n2 : integer := 2;
+                       begin
+                          send(n2, P1);
+                       end
+                    \end{minted}
+                \end{multicols}
+                \caption{Situación típica de interbloqueo.}
+            \end{figure}
+        \item Con instrucciones \verb|send| y \verb|receive| sí que se puede resolver de forma sencilla:
+            \begin{minted}{pascal}
+                process P[ i : 0..N ];
+                var n : char;
+                begin
+                   { Enviamos todos los caracteres }
+                   for j := 0 to N do
+                      if i <> j then begin
+                         n := Producir();
+                         send(n, P[j]);
+                      end
+                   end do
+                   { Recibimos todos los caracteres }
+                   for j := 0 to N do
+                      if i <> j then begin
+                         receive(n, P[j]);
+                         print(n);
+                      end
+                   end do
+                end
+            \end{minted}
+    \end{itemize}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:rel3_12}
-    Escribe una nueva solución al Ejercicio~\ref{ej:rel3_11} en la cual se garantize que el orden en el que se imprimen los caracteres es el mismo orden en el que se inician los envíos de dichos caracteres (pista: usa \verb|select| para recibir).
+    Escribe una nueva solución al Ejercicio~\ref{ej:rel3_11} en la cual se garantize que el orden en el que se imprimen los caracteres es el mismo orden en el que se inician los envíos de dichos caracteres (pista: usa \verb|select| para recibir).\\
+
+    Como bien indica la pista, basta con usar una instrucción \verb|select| para realizar la recepción de los caracteres:
+            \begin{minted}{pascal}
+                process P[ i : 0..N ];
+                var n : char;
+                begin
+                   { Enviamos todos los caracteres }
+                   for j := 0 to N do
+                      if i <> j then begin
+                         n := Producir();
+                         send(n, P[j]);
+                      end
+                   end do
+
+                   { Recibimos todos los caracteres }
+                   for j := 1 to N do
+                      select
+                         for k := 0 to N
+                            when k <> i receive(n, P[k])
+                               print(n);
+                            end
+                      end select
+                   end do
+            \end{minted}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:rel3_13}
-    Supongamos de nuevo el problema anterior en el cual todos los procesos envían a todos. Ahora cada item de datos a producir y transmitir es un bloque de bytes con muchos valores (por ejemplo, es una imagen que puede tener varios megabytes de tamaño). Se dispone del tipo de datos \verb|TipoBloque| para ello, y el procedimiento \verb|ProducirBloque|, de forma que si b es una variable de tipo \verb|TipoBloque|, entonces la llamada a \verb|ProducirBloque(b)| produce y escribe una secuencia de bytes en \verb|b|. En lugar de imprimir los datos, se deben consumir con una llamada a \verb|ConsumirBloque(b)|.\\
+    Supongamos de nuevo el problema anterior en el cual todos los procesos envían a todos. Ahora cada item de datos a producir y transmitir es un bloque de bytes con muchos valores (por ejemplo, es una imagen que puede tener varios megabytes de tamaño). Se dispone del tipo de datos \verb|TipoBloque| para ello, y el procedimiento \verb|ProducirBloque|, de forma que si b es una variable de tipo \verb|TipoBloque|, entonces la llamada a \verb|ProducirBloque(b)| produce y escribe una secuencia de bytes en \verb|b|. En lugar de imprimir los datos, se deben consumir con una llamada a \verb|ConsumirBloque(b)|.
 
-    Cada proceso se ejecuta en un ordenador, y se garantiza que hay la suficiente memoria en ese ordenador como para contener simultáneamente, al menos, hasta N bloques. Sin embargo, el sistema de paso de mensajes (SPM) podría no tener memoria suficiente como para contener los ${(N-1)}^{2}$ mensajes en tránsito simultáneos que podría llegar a haber en un momento dado con la solución anterior.\\
+    Cada proceso se ejecuta en un ordenador, y se garantiza que hay la suficiente memoria en ese ordenador como para contener simultáneamente, al menos, hasta N bloques. Sin embargo, el sistema de paso de mensajes (SPM) podría no tener memoria suficiente como para contener los ${(N-1)}^{2}$ mensajes en tránsito simultáneos que podría llegar a haber en un momento dado con la solución anterior.
 
-    En estas condiciones, si el SPM agota la memoria, debe retrasar los \verb|send| dejando bloqueados los procesos y, en esas circunstancias, se podría producir interbloqueo. Para evitarlo, se pueden usar operaciones inseguras de envío, \verb|i_send|. Escribe dicha solución, usando como orden de recepción el mismo que en el problema anterior.
+    En estas condiciones, si el SPM agota la memoria, debe retrasar los \verb|send| dejando bloqueados los procesos y, en esas circunstancias, se podría producir interbloqueo. Para evitarlo, se pueden usar operaciones inseguras de envío, \verb|i_send|. Escribe dicha solución, usando como orden de recepción el mismo que en el problema anterior.\\
+
+    \noindent
+    Para resolver el problema, utilizaremos un array de $N-1$ bloques a enviar (como vamos a usar la operación \verb|i_send| es un envío inseguro, luego optamos por no modificar los los bloques tras enviarlos) y de un bloque para recibir. Además, antes de terminar un proceso tendremos que esperar a que este proceso ha terminado el envío de todos sus bloques:
+    \begin{minted}{pascal}
+        process P[ i : 0..N ];
+        var bloque : array[0..N] of TipoBloque;
+            estado : array[0..N] of Estado;
+        begin
+           { 1. Realizamos todos los envíos }
+           for j := 0 to N do
+              if i <> j then begin
+                 ProducirBloque(bloque[j]);
+                 i_send(bloque[j], P[j], estado[j]);
+              end
+           end
+
+           { 2. Procesamos las recepciones }
+           for j := 0 to N
+              if i <> j then begin
+                 receive(bloque[i], P[j]);
+                 ConsumirBloque(bloque[i]);
+              end
+           end
+
+           { 3. Esperamos en caso de que no se hayan realizado }
+           { todos los envíos antes de terminar }
+           for j := 0 to N
+              if i <> j then begin
+                 wait_send(estado[j]);
+              end
+           end
+        end
+    \end{minted}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:rel3_14}
-    En los tres problemas anteriores, cada proceso va esperando a recibir un item de datos de cada uno de los otros procesos, consume dicho item, y después pasa a recibir del siguiente emisor (en distintos órdenes). Esto implica que un envío ya iniciado, pero pendiente, no puede completarse hasta que el receptor no haya consumido los anteriores bloques, es decir, se podría estar consumiendo mucha memoria en el SPM por mensajes en tránsito pendientes cuya recepción se ve retrasada. Escribe una solución en la cual cada proceso inicia sus envíos y recepciones y después espera a que se completen todas las recepciones antes de iniciar el primer consumo de un bloque recibido. De esta forma todos los mensajes pueden transferirse potencialmente de forma simultánea. Se debe intentar que la transimisión y las producción de bloques sean lo más simultáneas posible. Suponer que cada proceso puede almacenar como mínimo $2\cdot N$ bloques en su memoria local, y que el orden de recepción o de consumo de los bloques es indiferente.
+    En los tres problemas anteriores, cada proceso va esperando a recibir un item de datos de cada uno de los otros procesos, consume dicho item, y después pasa a recibir del siguiente emisor (en distintos órdenes). Esto implica que un envío ya iniciado, pero pendiente, no puede completarse hasta que el receptor no haya consumido los anteriores bloques, es decir, se podría estar consumiendo mucha memoria en el SPM por mensajes en tránsito pendientes cuya recepción se ve retrasada. Escribe una solución en la cual cada proceso inicia sus envíos y recepciones y después espera a que se completen todas las recepciones antes de iniciar el primer consumo de un bloque recibido. De esta forma todos los mensajes pueden transferirse potencialmente de forma simultánea. Se debe intentar que la transimisión y las producción de bloques sean lo más simultáneas posible. Suponer que cada proceso puede almacenar como mínimo $2\cdot N$ bloques en su memoria local, y que el orden de recepción o de consumo de los bloques es indiferente.\\
+
+    La solución a este último problema es similar a la del Ejercicio~\ref{ej:rel3_13}, pero en este caso debemos usar la instrucción \verb|i_receive| para recibir, así como un array entero de bloques para realizar dicha recepción. El código sería el siguiente:
+    \begin{minted}{pascal}
+        process P[ i : 0..N ];
+        var bloque_env : array[0..N] of TipoBloque;
+            bloque_rec : array[0..N] of TipoBloque;
+            estado_env : array[0..N] of Estado;
+            estado_rec : array[0..N] of Estado;
+        begin
+           { Inicializamos las recepciones }
+           for j := 0 to N do
+              if j <> i then begin
+                 i_receive(bloque_rec[j], P[j], estado_rec[j]);
+              end
+           end
+
+           { Inicializamos los envíos }
+           for j := 0 to N do
+              if j <> i then begin
+                 ProducirBloque(j);
+                 i_send(bloque_env[j], P[j], estado_env[j]);
+              end
+           end
+
+           { Esperar a que terminen todas las recepciones }
+           for j := 0 to N do
+              if j <> i then begin
+                 wait_recv(estado_rec[j]);
+              end
+           end
+
+           { Procesar todos los bloques }
+           for j := 0 to N do
+              if j <> i then begin
+                 ConsumirBloque(bloque[j]);
+              end
+           end
+
+           { Esperar a que terminen todos los envíos antes de terminar el proceso }
+           for j := 0 to N do
+              if j <> i then begin
+                 wait_send(estado_env[j]);
+              end
+           end
+        end
+    \end{minted}
 \end{ejercicio}
 
