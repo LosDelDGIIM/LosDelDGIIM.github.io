@@ -7,7 +7,7 @@ Como motivación para justificar la existencia de la programación distribuida, 
 
 Para Von Neumann, un computador clásico asume que las instrucciones de un programa son enviadas desde una unidad de memoria central hasta la Unidad de Central de Procesamiento (o CPU), a través de un bus de interconexión entre estos dos elementos. Nos encontramos con el problema de que las instrucciones que realizan operaciones sobre datos en memoria utilizan este mismo bus para modificar o consultar datos de la misma, con lo que usamos el mismo bus para dos fines distintos: leer instrucciones a ejecutar y ejecutar instrucciones relativas a operaciones en memoria.\\
 
-Resulta que si queremos una mayor velocidad en la ejecución de las instrucciones por parte de una CPU, este sobreúso del bus limita el rendimiento de la computación, con lo que resulta en un cuello de botella en la aceleración de los sistemas secuenciales.\\
+Resulta que si queremos una mayor velocidad en la ejecución de las instrucciones por parte de una CPU, este sobreuso del bus limita el rendimiento de la computación, con lo que resulta en un cuello de botella en la aceleración de los sistemas secuenciales.\\
 
 Si consideramos ahora la programación paralela, ya no tendremos un solo flujo de ``trozos de programa''  que se envían desde la memoria a la CPU para su ejecución, sino múltiples flujos de los mismos de forma que cada flujo acabe en un procesador distinto para su ejecución al mismo tiempo.
 
@@ -60,7 +60,7 @@ Además, el hardware necesario para que los diferentes procesadores accedan a un
 \subsubsection{Multicomputadores}
 Un multicomputador es un sistema con múltiples procesadores de forma que cada uno de ellos tiene una memoria principal independiente, con lo que no existirá una memoria común a todos ellos, sino un sistema de interconexión entre todos los procesadores, que nos permita el paso de mensajes entre estos.\\
 
-Soluciona el problema de escalabilidad de los multiprocesadores, ya que si queremos introducir más procesadores al sistema, será necesario con introducir el procesador junto con su memoria principal y conectarlo al sistema de interconexión.\\
+Soluciona el problema de escalabilidad de los multiprocesadores, ya que si queremos introducir más procesadores al sistema, bastará con introducir el procesador junto con su memoria principal y conectarlo al sistema de interconexión.\\
 
 Sin embargo, ya no disponemos de herramientas para la sincronización entre los distintos procesadores (que es de lo que trataba el Capítulo anterior), sino que tendremos que idear nuevas estrategias de sincronización basadas en paso de mensajes, lo que hace a la programación de multicomputadores más difícil que la de multiprocesadores, cuya sincronización se resuelve con el uso de monitores.\\
 
@@ -87,7 +87,7 @@ Tras la compilación y antes de la ejecución de los programas SPMD, dispondremo
     Como un primer ejemplo muy primitivo de programación en SPMD, podemos pensar que trabajamos con 3 procesadores, de forma que a cada uno asignemos una de las siguientes identidades: cliente, trabajador 1 o trabajador 2.
     \begin{itemize}
         \item El valor de las variables \verb|a|, \verb|b| y \verb|c| definidas en el cliente puede ser leído por un trabajador, pero no modificado.
-        \item Las variables \verb|d|, \verb|e| y \verb|f| de los trabajadores pueden ser leídas y cambiadas por el cliente.
+        \item Las variables \verb|d|, \verb|e| y \verb|f| de los trabajadores pueden ser leídas y modificadas por el cliente.
     \end{itemize}
     El cliente puede acceder a las variables de los trabajadores, distinguiendo entre el trabajador 1 y el 2 con un índice entre llaves. La función \verb|rank| devuelve para cada procesador su índice asociado. Todos los procesos se sincronizan en la marca \verb|spmd|, de forma que el código que se encuentra dentro de este tipo de bloque es ejecutado en todos los nodos (procesadores).
 
@@ -115,7 +115,7 @@ Tras la compilación y antes de la ejecución de los programas SPMD, dispondremo
     \end{table}
 \end{ejemplo}
 
-\section{Semántica de las operaciones de paso de mensajes} % repasar esto
+\section{Semántica de las operaciones de paso de mensajes}
 Como hemos comentado anteriormente, en los multicomputadores no dispondremos de una memoria común a todos los procesadores, pero sí de un sistema de interconexión de todos los procesadores que nos permita comunicarlos mediante mensajes con el fin de sincronizarlos.\\
 
 Tendremos, por tanto, dos operaciones de comunicación principales para trabajar con los mensajes: las funciones \verb|send| y \verb|receive|.\\
@@ -124,9 +124,9 @@ El significado (o semántica) de dichas operaciones puede ser diferente, es deci
 
 \begin{description}
     \item [Propiedad de seguridad.]~\\
-        Decimos que la propiedad de seguridad en el paso de mensajes se cumple en un programa con la operación \verb|send| cuando la ejecución de esta garantiza que el valor recibido por el destinatario sea el valor que tenían los datos antes de la llamada.
+        Decimos que la propiedad de seguridad en el paso de mensajes se cumple en un programa con la operación \verb|send| cuándo la ejecución de esta garantiza que el valor recibido por el destinatario sea el valor que tenían los datos antes de la llamada.
 
-        Sin embargo, una operación \verb|send| que no cumpla la propiedad de seguridad (sea insegura) podría ocasionar que el valor recibido por el otro proceso no coincida con el valor de los datos antes de la llamada. Por ejemplo, como resultado de modificar los datos tras realizar dicha llamada pero antes de que el sistema comience a transmitir el valor de dichos datos.
+        Por tanto, una operación \verb|send| que no cumpla la propiedad de seguridad (sea insegura) podría ocasionar que el valor recibido por el otro proceso no coincida con el valor de los datos antes de la llamada. Por ejemplo, como resultado de modificar los datos tras realizar dicha llamada pero antes de que el sistema comience a transmitir el valor de dichos datos.
 
         Además, decimos que la propiedad de seguridad en el paso de mensajes se cumple en un programa con la operación \verb|receive| si tras la ejecución de esta disponemos instantáneamente de los datos a recibir en el mensaje asociado. Puede suceder que haya implementaciones de la operación \verb|receive| que no bloqueen al proceso hasta recibir los datos, con lo que hasta que el mensaje no sea recibido, no podremos usar los datos que esperamos recibir. Esta se trata de una operación \verb|receive| insegura.
 
@@ -144,7 +144,8 @@ El significado (o semántica) de dichas operaciones puede ser diferente, es deci
 \subsection{Operaciones bloqueantes}
 La semántica de este tipo de operaciones de paso de mensajes quiere decir que la operación \verb|send| solo volverá (terminará su ejecución) cuando se garantice la propiedad de seguridad anteriormente vista. Es decir, la operación \verb|send| terminará cuando se haya transmitido el mensaje, con lo que la alteración de alguno de los valores que intervienen en el mensaje no modificará a su vez su valor dentro del mensaje. Cuando la operación \verb|send| termine, no podemos asegurar que el receptor haya recibido el mensaje, sino solo que este se ha mandado de forma segura.\\
 
-Encontramos diferentes tipos de operaciones bloqueantes, en relación a su modo de comunicación (si hay un buffer intermedio o si no) y a si hay un hardware especializado o si no:
+Encontramos diferentes tipos de operaciones bloqueantes, en relación a su modo de comunicación (si hay un buffer intermedio o si no) y a si hay un hardware especializado o si no.
+En la siguiente tabla se muestran resumidos, y los desarrollaremos a continuación:
 \begin{table}[H]
 \centering
 \begin{tabular}{|c|c|c|c|}
@@ -203,7 +204,7 @@ Donde \verb|P0| debe esperar a que \verb|P1| realice el \verb|receive| asociado 
 \subsubsection{Paso de mensajes con buffer}
 En este tipo de paso de mensajes, la operación \verb|receive| posee la misma semántica que en el caso anterior, ya que no es lógico que esta termine cuando todavía el otro proceso no ha ejecutado el \verb|send| correspondiente, con lo que hay que esperar a que ejecute dicha función y que además se reciba el mensaje completamente.\\
 
-Lo que cambia, por tanto, en este tipo de mensajes es la operación \verb|send|. Como el medio de comunicación entre los procesos no es ahora un enlace directo si no una cola de mensajes gracias al buffer intermedio, esta operación \verb|send| no debe ya esperar a la ejecución de la instrucción \verb|receive| en el receptor, sino solo de la copia del mensaje enviado en el buffer intermedio.
+Lo que cambia, por tanto, en este tipo de mensajes es la operación \verb|send|. Como el medio de comunicación entre los procesos no es ahora un enlace directo sino una cola de mensajes gracias al buffer intermedio, esta operación \verb|send| no debe ya esperar a la ejecución de la instrucción \verb|receive| en el receptor, sino que tan solo debe esperar a la realización de la copia del mensaje enviado en el buffer intermedio.
 
 En el caso en el que dicho buffer se encuentre lleno, se deberá esperar a que se libere un mensaje, con lo que en dicho caso, la situación es totalmente análoga al mecanismo de citas.\\
 
@@ -247,12 +248,12 @@ De esta forma, una vez iniciada la comunicación entre los procesos, el programa
 En resumen, la operación \verb|send| volverá inmediatamente, de forma que solo indique al sistema en cuestión que ha de realizar una transmisión de un determinado mensaje a otro procesador. Tras la ejecución de \verb|send| y mientras que el mensaje no sea transmitido, habrá un periodo de ``inseguridad'' durante el cual los datos del mensaje no deben ser modificados, si queremos que se cumpla la propiedad de seguridad de los mismos.\\
 
 Por otra parte, la vuelta inmediata de la operación \verb|receive| dependerá de si contamos o no con hardware especializado:
-\begin{description}
-    \item [Si existe hardware especializado.]~\\
+\begin{itemize}
+    \item \ul{Si existe hardware especializado}~\\
         El proceso receptor no se bloqueará al llamar a la operación \verb|receive|, aunque no se hayan terminado de transmitir los datos al receptor, con lo que tendremos un periodo de tiempo en el que acceder a ciertos datos serán unas instrucciones inseguras, con lo que debemos contar con operaciones de comprobación que nos indiquen cuándo es seguro acceder a los datos que están siendo transmitidos.
-    \item [Si no existe hardware especializado.]~\\
+    \item \ul{Si no existe hardware especializado}~\\
         El proceso receptor se ha de suspender al llamar a la operación \verb|receive|, desde que el sistema esté preparado para recibir los datos hasta el final de la transmisión de los mismos, para que se pueda garantizar la semántica segura de las operaciones de paso de mensajes.
-\end{description}
+\end{itemize}
 
 \subsubsection{Paso de mensajes con buffer}
 Ahora, cuando se llame a la operación \verb|receive|, no habrá interrupcción del proceso, pero se comenzará con la transferencia de los datos del mensaje a quien aplica esta operación desde un buffer de recepción interno del sistema al área de memoria donde se espera recibirlos.
@@ -263,7 +264,7 @@ Como consecuencia, se reduce el tiempo de espera en el proceso receptor durante 
 A continuación, veremos los roles predominantes que tienen los procesos en los sistemas distribuidos, así como una nueva sentencia de programación necesaria para estos sistemas.
 
 \subsection{Tipos de procesos}
-En un sistema distribuido, es normal asociar ``roles'' a los procesos que intervienen en la ejecución del sistema, con la finalidad de explicar su existencia o compartamiento. Distinguimos 4 roles principales:
+En un sistema distribuido, es normal asociar ``roles'' a los procesos que intervienen en la ejecución del sistema, con la finalidad de explicar su existencia o comportamiento. Distinguimos 4 roles principales:
 \begin{description}
     \item [Filtros.] Son procesos transformadores de datos: Operan sobre un flujo de datos entrante de forma que para cada dato de entrada (o conjunto de datos de entrada) es capaz de emitir un dato en el flujo de datos de salida.
 
@@ -416,7 +417,7 @@ Cuando un proceso se encuentra ejecutando su código y se encuentra con una espe
     \item [Guardas ejecutables.] Una guarda es ejecutable si su condición es evaluada como cierta y además el proceso cuyo nombre se indica en la instrucción \verb|receive| ya terminó de enviar el mensaje (es decir, el mensaje está ``listo'' para ser recibido).
 
         Si la guarda no tiene instrucción \verb|receive|, bastará con que su condición booleana sea evaluada como cierta\footnote{Podemos pensar que el razonamiento anterior es cierto por vacuidad.}. En caso de no disponer de condición booleana pero sí de instrucción \verb|receive|, entendemos que tiene la condición \verb|true|.
-    \item [Guardas potencialmente ejecutables.] Decimos que una guarda es potencialmente ejecutable cuando su condición booleana es evaluada como cierta pero todavía el mensaje no ha sido enviado (es decir, si la ejecución de la instrucción \verb|receive| provoque que el proceso receptor se bloquee esperando la correspondiente instrucción \verb|send|).
+    \item [Guardas potencialmente ejecutables.] Decimos que una guarda es potencialmente ejecutable cuando su condición booleana es evaluada como cierta pero todavía el mensaje no ha sido enviado (es decir, que la ejecución de la instrucción \verb|receive| provoque que el proceso receptor se bloquee esperando la correspondiente instrucción \verb|send|).
 
         Si una guarda no tiene instrucción \verb|receive| no puede ser potencialmente ejecutable. En caso de no tener condición booleana, se entiende que su condición es \verb|true|.
     \item [Guardas no ejecutables.] Una guarda se dice que es no ejecutable si su condición booleana es evaluada como falsa.
