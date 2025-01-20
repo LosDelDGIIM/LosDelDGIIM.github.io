@@ -510,74 +510,38 @@
     La solución que planteamos es la siguiente, donde tenemos en cuenta las peticiones de obtención y liberación del recurso que llevan al recurso a ser usado por 13 procesos al mismo tiempo. En dicho caso, guardamos la petición hasta que haya cualquiera otra petición (que puede ser del mismo tipo o distinto).
     \begin{minted}{pascal}
         process Controlador
-        var contador : integer := 0;
-            permiso : integer := 0;
-            solicitud_pendiente : boolean := false;
-            id_sol_pendiente : 0..n;
-            liberacion_pendiente : boolean := false;
-            id_lib_pendiente : 0..n;
+        var usando : integer := 0;
+            esperando : integer := 0;
+            cola : array[0..n-13] of 0..n;
+            ultimo : integer := 0;
+            siguiente : integer := 0;
+            permiso : integer := 1;
+            peticion : integer := ...;
         begin
            while true do begin
               select 
-                 for i:= 0 to n
-                    { Para peticiones sin riesgo }
-                    when contador <> 12 receive(pet_usar, Cli[i]) do
+                 for i := 0 to n-1
+                     when receive(peticion,Cli[i]) do
+                        if peticion == +1 then begin
+                           if usando == 13 then begin
+                              cola[ultimo] := i;
+                              ultimo := (ultimo + 1) mod (n-13);
+                              esperando := esperando + 1;
+                           else
+                              usando := usando + 1;
+                              send(permiso, Cli[i]);
+                           end
+                        else if peticion == -1 then begin
+                           usando := usando - 1;
+                           send(permiso, Cli[i]);
 
-                       { Si había un proceso esperando liberar el recurso }
-                       if liberacion_pendiente then
-                       begin
-                          send(permiso, id_lib_pendiente);
-                          liberacion_pendiente := false;
-                       else
-                          contador := contador + 1;
-                       end
-
-                       send(permiso, Cli[i]);
-                    end
-
-                    { Para peticiones con riesgo }
-                    when contador == 12 receive(pet_usar, Cli[i]) do
-                       { Si el nº 13 estaba esperando }
-                       if solicitud_pendiente then 
-                       begin
-                          contador := contador + 2;
-                          send(permiso, id_sol_pendiente);
-                          send(permiso, Cli[i]);
-                          solicitud_pendiente := false;
-                       else     { Si no }
-                          solicitud_pendiente := true;
-                          id_sol_pendiente := i;
-                       end
-                    end
-
-                    { Para liberaciones sin riesgo }
-                    when contador <> 14 receive(pet_liberar, Cli[i]) do
-
-                       { Si había un proceso esperando obtener el recurso }
-                       if solicitud_pendiente then
-                       begin
-                          send(permiso, id_sol_pendiente);
-                          solicitud_pendiente := false;
-                       else
-                          contador := contador - 1;
-                       end
-
-                       send(permiso, Cli[i]);
-                    end
-
-                    { Para liberaciones con riesgo }
-                    when contador == 14 receive(pet_liberar, Cli[i]) do
-                       if liberacion_pendiente then
-                       begin
-                          contador := contador - 2;
-                          send(permiso, id_lib_pendiente);
-                          send(permiso, Cli[i]);
-                          liberacion_pendiente := false;
-                       else
-                          liberacion_pendiente := true;
-                          id_lib_pendiente := i;
-                       end
-                    end
+                           if esperando > 0 then begin
+                              esperando := esperando - 1;
+                              send(permiso, Cli[cola[siguiente]]);
+                              siguiente := (siguiente + 1) mod (n-13);
+                              usando := usando + 1;
+                           end
+                        end
               end select
            end
         end
