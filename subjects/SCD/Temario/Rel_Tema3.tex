@@ -285,20 +285,22 @@
         \begin{multicols}{2}
             \begin{minted}{pascal}
                 process Salvaje[ i : 0..2 ];
+                var peticion : integer := 0;
                 begin
                    while true do begin
                       s_send(peticion, Olla);
-                      s_receive(confirmacion, Olla);
                       Comer();
                    end
                 end
             \end{minted}
             \begin{minted}{pascal}
                 process Cocinero;
+                var confirmacion : integer := 0;
                 begin
                    while true do begin
-                      s_send(rellenar, Olla);
-                      s_receive(confirmacion, Olla);
+                      receive(peticion, Olla);
+                      Rellenar();
+                      send(confirmacion, Olla);
                    end
                 end
             \end{minted}
@@ -308,17 +310,18 @@
     \begin{minted}{pascal}
         process Olla;
         var misioneros : integer := 0;
+            peticion : integer := 0;
         begin
            while true do begin
               select 
-                 when misioneros = 0 receive(valor, Cocinero) do
+                 when misioneros = 0 do
+                    send(peticion, Cocinero);
+                    receive(confirmacion, Cocinero);
                     misioneros := M;
-                    s_send(valor, Cocinero);
                  end
                  for i := 0 to 2 
-                    when misioneros > 0 receive(valor, Salvaje[i]) do
+                    when misioneros > 0 receive(pet, Salvaje[i]) do
                        misioneros := misioneros - 1;
-                       s_send(valor, Salvaje[i]);
                     end
               end
            end
