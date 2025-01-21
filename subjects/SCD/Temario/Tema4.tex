@@ -1,6 +1,6 @@
 \chapter{Sistemas de Tiempo Real}
 
-Un Sistema de Tiempo Real (STR) es aquel en el que la respuesta correcta a un cálculo realizado por el programa no sólo depende de que efectivamente haga lo que tenga que hacer, sino también de cuándo esté disponible dicho resultado. A lo largo de este Capítulo, usaremos el término ``tarea'' para referirnos un proceso que interviene en nuestro sistema.\\
+Un Sistema de Tiempo Real (STR) es aquel en el que la respuesta correcta a un cálculo realizado por el programa no sólo depende de que efectivamente haga lo que tenga que hacer, sino también de cuándo esté disponible dicho resultado. A lo largo de este Capítulo, usaremos el término ``tarea'' para referirnos a un proceso que interviene en nuestro sistema.\\
 
 En el ámbito de los sistemas operativos, el estándar POSIX define a un sistema operativo de tiempo real como aquel que tiene la capacidad para suministrar un nivel de servicio requerido en un tiempo limitado y especificado de antemano. Es decir un sistema de este tipo debe permitir satisfacer plazos de entrega prefijados a todos sus procesos que estén etiquetados como de tiempo real.
 
@@ -12,9 +12,9 @@ tiempo real y que nos pueden ayudar a identificarlos correctamente:
     \item \textbf{Determinismo:} es una cualidad clave en los sistemas de tiempo real. Es la capacidad de determinar con una alta probabilidad, cuánto es el tiempo que tarda una tarea en iniciarse. Esto es importante porque los sistemas de tiempo real necesitan que ciertas tareas se ejecuten antes de que otras se puedan iniciar. Este dato es importante saberlo porque casi todas las peticiones de interrupción se generan por estímulos que provienen del entorno del sistema, así que resulta muy importante para poder determinar el tiempo que el sistema tardará en dar el servicio.
     \item \textbf{Responsividad}: esta propiedad tiene que ver con el tiempo que tarda una tarea en ejecutarse una vez que la interrupción ha sido atendida. Los aspectos a los que se enfoca son:
         \begin{itemize}
-            \item la cantidad de tiempo que se lleva el iniciar la ejecución de una interrupción.
-            \item la cantidad de tiempo que se necesita para realizar la tarea que solicitó la interrupción.
-            \item los efectos de interrupciones anidadas.
+            \item La cantidad de tiempo que se lleva el iniciar la ejecución de una interrupción.
+            \item La cantidad de tiempo que se necesita para realizar la tarea que solicitó la interrupción.
+            \item Los efectos de interrupciones anidadas.
         \end{itemize}
     \item \textbf{Confiabilidad}: es otra característica clave en un sistema de tiempo real. El sistema no debe sólo estar libre de fallas sino, más aún, la calidad del servicio que presta no debe degradarse más allá de un límite determinado. El sistema debe de seguir en funcionamiento a pesar de catástrofes, o fallas mecánicas. Usualmente una degradación en el servicio en un sistema de tiempo real lleva consecuencias catastróficas.
 \end{itemize}
@@ -40,7 +40,7 @@ Podemos clasificar a los STR en función de su criticidad, distinguiendo entre:
 \section{Consideraciones sobre el Tiempo}
 Como vamos a estar interesados a lo largo del Capítulo sobre plazos temporales que han de cumplir las tareas, es momento ahora de determinar de forma concreta qué es el tiempo. En la actualidad, contamos con lenguajes de programación de alto nivel y sistemas operativos que son capaces de proporcionarnos relojes de tiempo real que son capaces de medirnos el tiempo con precisión. Sin embargo, hay que tener en cuenta los distintos tipos de tiempos que podemos encontrarnos:
 \begin{itemize}
-    \item Medidas de tiempo absolutos.
+    \item Medidas de tiempo absoluto.
     \item Medidas de tiempo por intervalos o tiempo relativo.
 \end{itemize}
 
@@ -76,7 +76,7 @@ A esta cantidad de error cometido a la hora de determinar intervalos de tiempo f
 Evitar la deriva acumulativa es tan sencillo como usar la operación \verb|sleep_until(x)| en lugar de \verb|sleep_for(x)|, ya que aunque cometamos ciertas derivas locales en cada bloqueo del proceso, estas no se acumularán, al desbloquear el proceso en tiempos absolutos y no relativos.
 
 \section{Modelo simple de tareas}
-Con vistas a analizar de forma comprensible el comportamiento de un conjunto de tareas durante su ejecución dentro de un sistema de tiempo real, es necesario imponer algunas restrucciones a su estructura e interacciones con el resto de tareas del programa.\\
+Con vistas a analizar de forma comprensible el comportamiento de un conjunto de tareas durante su ejecución dentro de un sistema de tiempo real, es necesario imponer algunas restricciones a su estructura e interacciones con el resto de tareas del programa.\\
 
 Comenzaremos introduciendo el \textit{modelo simple de tareas}, que introduce ciertas restricciones sobre el tipo de tareas que consideramos, permitiendo comenzar con un estudio inicial de los STR para luego relajar este modelo. Antes de introducir las características del modelo, es necesario distinguir qué tipo de tareas hay en los STR\@.
 
@@ -84,7 +84,7 @@ Comenzaremos introduciendo el \textit{modelo simple de tareas}, que introduce ci
 Antes de ver los distintos tipos de tareas de tiempo real que pueden aparecer en un sistema, es necesario introducir ciertos conceptos básicos sobre la ejecución de tares dentro de un STR\@:
 \begin{itemize}
     \item La \textbf{activación} de una tarea es un instante de tiempo desde el cual será necesario que se complete (comience y termine de ejecutar) dicha tarea antes de un determinado tiempo máximo.
-    \item El \textbf{tiempo de respuesta máximo} es el tiempo máximo de respuesta que tiene la tarea para ejecutarse desde su última activación.
+    \item El \textbf{tiempo de respuesta máximo} (o \emph{deadline}) es el tiempo máximo de respuesta que tiene la tarea para ejecutarse desde su última activación.
 \end{itemize}
 De forma general, supondremos que los tiempos de respuesta máximos son menores que el tiempo que transcurre entre dos activaciones distintas de la tarea.\\
 
@@ -105,7 +105,7 @@ Las restricciones a considerar serán las siguientes:
 \begin{itemize}
     \item Consideramos un programa de tiempo real como un conjunto fijo de tareas (el número de tareas es constante durante toda la ejecución del programa) que se ejecutan compartiendo el tiempo de un solo procesador de forma concurrente.
     \item Consideraremos que todas las tareas del sistema son periódicas con periodos conocidos e independientes entre sí. No permitiremos el uso de semáforos u objetos compartidos de forma que una tarea pueda bloquear a otra.
-    \item Todas las tareas poseen un tiempo de respuesta máximo o \textit{deadline}, que se considera igual a su periodo. De esta forma, una tarea está obligada a terminar completamente su ejecución antes de la siguiente activación.
+    \item Todas las tareas poseen un tiempo de respuesta máximo que se considera igual a su periodo. De esta forma, una tarea está obligada a terminar completamente su ejecución antes de la siguiente activación.
     \item Las sobrecargas o retrasos que pueda experimentar el sistema (por ejemplo, debido a cambios de contexto) son ignorados. De esta forma, suponemos que nada impide a una tarea ejecutable obtener el procesador si en algún momento es la más prioritaria.
     \item Los eventos no son almacenados: si no se atienden dentro de su \textit{deadline} se pierden.
     \item El tiempo máximo de cómputo de cada tarea es conocido a priori.
@@ -119,7 +119,7 @@ Una tarea de tiempo real $\tau_i$ puede ser caracterizada mediante un conunto es
     \item [Instante o tiempo de activación de la tarea ($t_a$).] Instante en el que la tarea está lista para su ejecución.
     \item [Instante o tiempo de comienzo ($t_s$).] Instante en el que la tarea comienza a ejecutarse tras su instante de activación.
     \item [Instante o tiempo de finalización ($t_f$).] Instante en el que la tarea finaliza su ejecución.
-    \item [Instante o tiempo límite, \textit{absolute deadllne} ($t_i$, $d$).] Instante de tiempo límite para la $i$-ésima activación de la tarea.
+    \item [Instante o tiempo límite, \textit{absolute deadline} ($t_l$, $d$).] Instante de tiempo límite para la $i$-ésima activación de la tarea.
     \item [Periodo de ejecución ($T$).] Su significado depende del tipo de la tarea.
     \item [Latencia ($J$).] Intervalo de tiempo desde que se activa la tarea hasta que se ejecuta: $J = t_s-t_a$.
     \item [Tiempo de cómputo ($c$).] Tiempo de cómputo de la tarea.
@@ -128,14 +128,14 @@ Una tarea de tiempo real $\tau_i$ puede ser caracterizada mediante un conunto es
     \item [Tiempo de respuesta ($R$).] Tiempo que ha necesitado la tarea para completarse desde su activación: $R = J + e$.
     \item [Plazo de respuesta máximo, \textit{relative deadline} ($D$).] Máximo tiempo de respuesta válido para una tarea.
     \item [Desplazamiento o fase ($\Phi$).] Primer instante de activación de la tarea.
-    \item [Fluctuación relativa o \textit{relative jitter} ($RJ$).] Máxima desviación en el tiempo de comienzo entre dos activaciones sucesivas de una tarea.
+    \item [Fluctuación relativa o \textit{jitter} ($RJ$).] Máxima desviación en el tiempo de comienzo entre dos activaciones sucesivas de una tarea.
     \item [Fluctuación absoluta ($AJ$).] Máxima desviación en el tiempo de comienzo de todas las activaciones de una tarea.
     \item [Retraso o exceso, \textit{lateness} ($L$).] Retraso de la finalización de la tarea respecto de su tiempo límite: $L = \max\{0, t_f-t_l\}$.
     \item [Holgura ($H$).] Tiempo máximo que una tarea puede permanecer activa sin entrar a ejecución dentro del plazo de respuesta máximo: $H = D-c$.
 \end{description}
 
 \section{Planificación de tareas periódicas con asignación de prioridades}
-El principal problema a resolver en este Capítulo será el de la planificación de actividades, en el que buscamos asignar recursos y tiempo a actividades, con el fin de maximizar una función objetivo. En nuestro caso, el principal recurso a asignar es el tiempo del procesador. Será también de nuestro interés determinar a-priori si una tarea es capaz de completar su ejecución antes de que se alcane su tiempo límite.\\
+El principal problema a resolver en este Capítulo será el de la planificación de actividades, en el que buscamos asignar recursos y tiempo a actividades, con el fin de maximizar una función objetivo. En nuestro caso, el principal recurso a asignar es el tiempo del procesador. Será también de nuestro interés determinar a-priori si una tarea es capaz de completar su ejecución antes de que se alcance su tiempo límite.\\
 
 Para determinar la planificabilidad de un conjunto de tareas (si es posible una organización de todas ellas de forma que ninguna incumpla su \textit{deadline}), es necesario utilizar un \textit{esquema de planificación de tareas}, el cual ha de contener:
 \begin{itemize}
@@ -147,9 +147,9 @@ Podemos encontrarnos con distintos esquemas de planificación de tareas de STR\@
     \item Hablaremos de sistemas de planificación \textbf{estáticos} cuando el orden de planificación de las tareas sea fijo y puede ser determinado a-priori.
     \item Por otra parte, hablaremos de sistemas de planificación \textbf{dinámicos} cuando la prioridad de las tareas varíe a lo largo de la ejecución del programa.
 \end{itemize}
-Supondremos siempre un esquema de planificación expulsivo basado en prioridades. Es decir, a cada tarea le asignaremos una prioridad, de forma que siempre que haya una tarea lista para ejecutar con prioridad mayor a la tarea que se está ejecutanndo actualmente en el procesador, esta será desplazada por la tarea de mayor prioridad.
+Supondremos siempre un esquema de planificación expulsivo basado en prioridades. Es decir, a cada tarea le asignaremos una prioridad, de forma que siempre que haya una tarea lista para ejecutar con prioridad mayor a la tarea que se está ejecutando actualmente en el procesador, esta será desplazada por la tarea de mayor prioridad.
 
-De esta prioridad, el problema de la planificación se reduce a saber asociar a cada tarea una prioridad distinta. La prioridad es un número positivo, que por convención se consideran mayores aquellas prioridades con menor valor.
+De esta forma, el problema de la planificación se reduce a saber asociar a cada tarea una prioridad distinta. La prioridad es un número positivo y, por convención, se consideran mayores aquellas prioridades con menor valor.
 
 \subsection{Algoritmo de cadencia monótona (Rate Monotonic Scheduling)}
 Aquí nos centraremos en un esquema de planificación estático para tareas periódicas, en el que la prioridad de una tarea de tiempo real sólo dependerá de su periodo. Es decir, se asignarán inicialmente las prioridades a las tareas de la aplicación en el orden dado por su menor frecuencia de activación. Las tareas con periodos de activación más cortos van a ser las más prioritarias, independientemente de su criticidad respecto de la aplicación a la que pertenecen. Matemáticamente, podemos decir que dichas prioridades se asignan mediante una función monótona de la cadencia temporal de los procesos periódicos: $T_i<T_j\Longrightarrow P_i > P_j$.\\
