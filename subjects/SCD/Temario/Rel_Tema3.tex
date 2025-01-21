@@ -4,8 +4,6 @@
     En un sistema distribuido, 6 procesos clientes necesitan sincronizarse de forma específica para realizar cierta tarea, de forma que dicha tarea sólo podrá ser realizada cuando tres procesos estén preparados para realizarla. Para ello, envían peticiones a un proceso controlador del recurso y esperan respuesta para poder realizar la tarea específica. El proceso controlador se encarga de asegurar la sincronización adecuada. Para ello, recibe y cuenta las peticiones que le llegan de los procesos, las dos primeras no son respondidas y producen la suspensión del proceso que envía la petición (debido a que se bloquea esperando respuesta) pero la tercera petición produce el desbloqueo de los tres procesos pendientes de respuesta. A continuación, una vez desbloqueados los tres procesos que han pedido (al recibir respuesta), inicializa la cuenta y procede cíclicamente de la misma forma sobre otras peticiones. El código de los procesos clientes aparece aquí abajo. Los clientes usan envío asíncrono seguro para realizar su petición, y esperan con una recepción síncrona antes de realizar la tarea:
     \begin{figure}[H]
         \centering
-        \setlength{\columnsep}{1cm}
-        \begin{multicols}{2}
             \begin{minted}{pascal}
                 process Cliente[ i : 0..5 ];
                 begin
@@ -16,15 +14,6 @@
                    end
                 end
             \end{minted}
-            \begin{minted}{pascal}
-                process Controlador;
-                begin
-                   while true do begin
-                      ...
-                   end
-                end
-            \end{minted}
-        \end{multicols}
         \caption{Código para el Ejercicio~\ref{ej:rel3_1}.}
         \label{fig:cod_1}
     \end{figure}
@@ -106,7 +95,7 @@
                     dato := buffer[primera_ocupada];
                     primera_ocupada := (primera_ocupada + 1) mod 4;
                     ocupadas := ocupadas - 1;
-                    send(dato, Consumidor;)
+                    send(dato, Consumidor);
                  end
                  for i := 0 to 2
                     when ocupadas < 4 and i <> ult_productor receive(dato, Productor[i])
@@ -216,7 +205,7 @@
                        nElems[i] := nElems[i] + 1;
                  end
                  for i := 0 to 2
-                    when ocupados > 0 and nElems[i] > 0 receive(peticion, Consumidor[i]) do
+                    when nElems[i] > 0 receive(peticion, Consumidor[i]) do
                        dato := buffer[out[i]];
                        out[i] := out[i] + 1 mod B;
 
@@ -288,7 +277,6 @@
                 begin
                    while true do begin
                       s_send(peticion, Olla);
-                      s_receive(confirmacion, Olla);
                       Comer();
                    end
                 end
@@ -297,8 +285,8 @@
                 process Cocinero;
                 begin
                    while true do begin
-                      s_receive(peticion, Olla);
-                      s_send(rellenar, Olla);
+                      receive(peticion, Olla);
+                      send(rellenar, Olla);
                    end
                 end
             \end{minted}
@@ -312,14 +300,13 @@
            while true do begin
               select 
                  when misioneros = 0 do
-                    s_send(valor, Cocinero);
-                    s_receive(valor, Cocinero);
+                    send(valor, Cocinero);
+                    receive(valor, Cocinero);
                     misioneros := M;
                  end
                  for i := 0 to 2 
                     when misioneros > 0 receive(valor, Salvaje[i]) do
                        misioneros := misioneros - 1;
-                       s_send(valor, Salvaje[i]);
                     end
               end
            end
@@ -438,16 +425,17 @@
         \centering
             \begin{minted}{pascal}
                 process Estanquero;
-                var ing1, ing2 : ingredientes;
+                var ing : array[0..1] of ingredientes;
                 begin
                    while true do begin
-                      ing1, ing2 := generaIngredientes();
+                      { Genera dos ingredientes distintos }
+                      ing := generaIngredientes();
 
                       select
                          for i:=0 to 2
-                            when genera_ingredientes(ing1, ing2) receive(peticion, Fumador[i])
-                            do
-                               send(ing1, ing2, Fumador[i])
+                            when genera_ingredientes(ing) do
+                               send(ing, Fumador[i]);
+                               receive(confirmacion, Fumador[i]);
                             end
                       end select
                    end
@@ -455,10 +443,11 @@
             \end{minted}
             \begin{minted}{pascal}
                 process Fumador[ i : 0..2 ];
+                var ingredientes : array[0..1] of ingredientes;
                 begin
                    while true do begin
-                      send(peticion, Estanquero);
                       recv(ingredientes, Estanquero);
+                      send(confirmacion, Estanquero);
                       fumar(ingredientes);
                    end
                 end
@@ -472,8 +461,6 @@
     En un sistema distribuido, un gran número de procesos clientes usa frecuentemente un determinado recurso y se desea que puedan usarlo simultáneamente el máximo número de procesos. Para ello, los clientes envían peticiones a un proceso controlador para usar el recurso y esperan respuesta para poder usarlo (véase el código de los procesos clientes). Cuando un cliente termina de usar el recurso, envía una solicitud para dejar de usarlo y espera respuesta del Controlador. El proceso controlador se encarga de asegurar la sincronización adecuada imponiendo una única restricción por razones supersticiosas: nunca habrá 13 procesos exactamente usando el recurso al mismo tiempo.
     \begin{figure}[H]
         \centering
-        \setlength{\columnsep}{1cm}
-        \begin{multicols}{2}
             \begin{minted}{pascal}
                 process Cli[ i : 0..n ];
                 var pet_usar : integer := +1;
@@ -489,17 +476,6 @@
                    end
                 end
             \end{minted}
-            \begin{minted}{pascal}
-                process Controlador;
-                begin
-                   while true do begin
-                      select
-                         ...
-                      end
-                   end
-                end
-            \end{minted}
-        \end{multicols}
         \caption{Código para el Ejercicio~\ref{ej:rel3_7}.}
         \label{fig:cod_7}
     \end{figure}
@@ -509,77 +485,36 @@
     \begin{minted}{pascal}
         process Controlador
         var contador : integer := 0;
-            permiso : integer := 0;
-            solicitud_pendiente : boolean := false;
-            id_sol_pendiente : 0..n;
-            liberacion_pendiente : boolean := false;
-            id_lib_pendiente : 0..n;
+            pendiente : integer := 0;
+            id_pendiente : integer;
+            peticion : integer;
+            permiso : integer := 100;
         begin
            while true do begin
               select 
                  for i:= 0 to n
-                    { Para peticiones sin riesgo }
-                    when contador <> 12 receive(pet_usar, Cli[i]) do
-
-                       { Si había un proceso esperando liberar el recurso }
-                       if liberacion_pendiente then
-                       begin
-                          send(permiso, id_lib_pendiente);
-                          liberacion_pendiente := false;
-                       else
-                          contador := contador + 1;
-                       end
-
-                       send(permiso, Cli[i]);
-                    end
-
-                    { Para peticiones con riesgo }
-                    when contador == 12 receive(pet_usar, Cli[i]) do
-                       { Si el nº 13 estaba esperando }
-                       if solicitud_pendiente then 
-                       begin
-                          contador := contador + 2;
-                          send(permiso, id_sol_pendiente);
+                    when receive(peticion, Cli[i]) do
+                       { Si no nos sirve el estado al que llega }
+                       if contador + pendiente + peticion = 13 then begin
+                          { Sabemos que pendiente = 0 }
+                          pendiente := peticion;
+                          id_pendiente := i;
+                       else { Si no, se procesa la petición }
+                          contador := contador + pendiente + peticion;
                           send(permiso, Cli[i]);
-                          solicitud_pendiente := false;
-                       else     { Si no }
-                          solicitud_pendiente := true;
-                          id_sol_pendiente := i;
-                       end
-                    end
 
-                    { Para liberaciones sin riesgo }
-                    when contador <> 14 receive(pet_liberar, Cli[i]) do
-
-                       { Si había un proceso esperando obtener el recurso }
-                       if solicitud_pendiente then
-                       begin
-                          send(permiso, id_sol_pendiente);
-                          solicitud_pendiente := false;
-                       else
-                          contador := contador - 1;
-                       end
-
-                       send(permiso, Cli[i]);
-                    end
-
-                    { Para liberaciones con riesgo }
-                    when contador == 14 receive(pet_liberar, Cli[i]) do
-                       if liberacion_pendiente then
-                       begin
-                          contador := contador - 2;
-                          send(permiso, id_lib_pendiente);
-                          send(permiso, Cli[i]);
-                          liberacion_pendiente := false;
-                       else
-                          liberacion_pendiente := true;
-                          id_lib_pendiente := i;
+                          { Si había una pendiente también se acepta }
+                          if pendiente <> 0 then begin
+                             send(permiso, Cli[id_pendiente]);
+                             pendiente := 0;
+                          end
                        end
                     end
               end select
            end
         end
     \end{minted}
+    
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:rel3_8}
@@ -634,6 +569,8 @@
                     cant2 := cant2 + 1;
                  end
               end
+
+              imprime(n);
            end
         end
     \end{minted}
@@ -745,16 +682,18 @@
                 \begin{multicols}{2}
                     \begin{minted}{pascal}
                        process P1;    
-                       var n1 : integer := 1;
+                       var n1, n2 : integer := 1;
                        begin
                           send(n1, P2);
+                          receive(n2, P2);
                        end
                     \end{minted}
                     \begin{minted}{pascal}
                        process P2;    
-                       var n2 : integer := 2;
+                       var n1, n2 : integer := 2;
                        begin
                           send(n2, P1);
+                          receive(n1, P1);
                        end
                     \end{minted}
                 \end{multicols}
@@ -903,3 +842,18 @@
     \end{minted}
 \end{ejercicio}
 
+\subsection{Ejercicios adicionales (fuera de la relación)}
+\begin{ejercicio}
+    Un tren tiene $N$ asientos libres y los pasajeros suben al tren de 1 en 1 ocupando un único asiento. Si se. ocupan todos los asientos libres o bien si durante 30 minutos no ocupa su plaza ningún nuevo pasajero, entonces el tren realiza l viaje, tras el cual vuelven a quedar $N$ asientos libres. Para realizar 1 viaje, el tren ha de tener ocupado al menos 1 asiento. Si el tren tuviera todos sus asientos libres, se quedará esperando indefinidamente en la estación a que eventualmente se suba 1 pasajero y ocupe su asiento.
+
+    Suponer las siguientes condiciones para poder simular la actuación del tren como un proceso concurrente (\verb|Tren|), así como la de los pasajeros (\verb|Pasajero[i]|), que se sincronizarán con el Tren mediante un mecanismo de sincronización de citas:
+    \begin{enumerate}
+        \item Hay un número ilimitado de pasajeros y cada uno de ellos realiza 1 solo viaje, además se ha de suponer que el proceso \verb|Pasajero[i]| termina su actuación cuando concluye el viaje actual del tren en el que se ha subido.
+        \item El tren está realizando viajes continuamente, para lo cual supondremos que su ruta es circular con solo 2 estaciones.
+    \end{enumerate}
+    Se pide resolver el problema para 1 y 2. trenes. En el último caso, si un pasajero intenta subir a uno de los trenes y no puede, esperará 1 minuto; tras esta espera, lo intentará en el segundo tren y si tampoco pudiera subir al segundo, transcurrido el mismo plazo de tiempo, lo volvería a intentar con el primero, repitiendo este comportamiento cíclico hasta que con­siga realizar el viaje en uno de los 2 trenes.
+\end{ejercicio}
+
+% \begin{ejercicio}
+%     Se tienen $N$ procesos cliente que interactúan con el proceso servidor que simula la actuación de 1 cajero automático. Los procesos cliente obtienen dinero del cajero realizando la operación retirar (num_cliente, cantidad) que obliga a la identificación para poder soli­citar una cantidad de dinero al cajero, quien responde entregando la cantidad solicitada si el cliente tiene suficiente saldo en su cuenta y aún queda efectivo en el cajero. En caso contrario, el cajero responde denegando la petición al cliente. Para ingresar dinero en el cajero, se implementará la aceptación de la operación ingresar(num_cliente, cantidad), con la que los procesos solo tienen que identificarse e indicar la cantidad que van a ingresar. Suponemos que cada número de cliente corresponderá con el denominado código cuenta­ cliente, es decir, este número tiene asignada 1 sola cuenta bancaria.
+% \end{ejercicio}
