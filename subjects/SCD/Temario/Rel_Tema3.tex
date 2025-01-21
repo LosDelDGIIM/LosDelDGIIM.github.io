@@ -520,7 +520,7 @@
 \begin{ejercicio}\label{ej:rel3_8}
     En un sistema distribuido, tres procesos \verb|Productor| se comunican con un proceso \verb|Impresor| que se encarga de ir imprimiendo en pantalla una cadena con los datos generados por los procesos productores. Cada proceso productor (\verb|Productor[i]|, con $i=0,1,2$) genera continuamente el correspondiente entero \verb|i|, y lo envía al proceso Impresor.
 
-    El proceso Impresor se encarga de ir recibiendo los datos generados por los productores y los imprime por pantalla (usando el procedimiento \verb|imprime(entero)|) generando una cadena dígitos en la salida. No obstante, los procesos se han de sincronizar adecuadamente para que la impresión por pantalla cumpla las siguientes restricciones:
+    El proceso Impresor se encarga de ir recibiendo los datos generados por los productores y los imprime por pantalla (usando el procedimiento \verb|imprime(entero)|) generando una cadena de dígitos en la salida. No obstante, los procesos se han de sincronizar adecuadamente para que la impresión por pantalla cumpla las siguientes restricciones:
     \begin{itemize}
         \item Los dígitos 0 y 1 deben aceptarse por el impresor de forma alterna. Es decir, si se acepta un 0 no podrá volver a aceptarse un 0 hasta que se haya aceptado un 1, y viceversa, si se acepta un 1 no podrá volver a aceptarse un 1 hasta que se haya aceptado un 0.
         \item El número total de dígitos 0 o 1 aceptados en un instante no puede superar el doble de número de digitos 2 ya aceptados en dicho instante.
@@ -577,7 +577,7 @@
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:rel3_9}
-   En un sistema distribuido hay un vector de \verb|n| procesos iguales que envían con send (en un bucle infinito) valores enteros a un proceso receptor, que los imprime. Si en algún momento no hay ningún mensaje pendiente de recibir en el receptor, este proceso debe de imprimir ``no hay mensajes, duermo''; después de bloquearse durante 10 segundos (con \verb|sleep_for(10)|), antes de volver a comprobar si hay mensajes (esto podría hacerse para ahorrar energía, ya que el procesamiento de mensajes se hace en ráfagas separadas por 10 segundos). Este problema no se puede solucionar usando \verb|receive| o \verb|i_receive|. Indica a que se debe esto. Sin embargo, sí se puede hacer con \verb|select|. Diseña una solución a este problema con \verb|select|:
+   En un sistema distribuido hay un vector de \verb|n| procesos iguales que envían con \verb|send| (en un bucle infinito) valores enteros a un proceso receptor, que los imprime. Si en algún momento no hay ningún mensaje pendiente de recibir en el receptor, este proceso debe de imprimir ``no hay mensajes, duermo''; después de bloquearse durante 10 segundos (con \verb|sleep_for(10)|), antes de volver a comprobar si hay mensajes (esto podría hacerse para ahorrar energía, ya que el procesamiento de mensajes se hace en ráfagas separadas por 10 segundos). Este problema no se puede solucionar usando \verb|receive| o \verb|i_receive|. Indica a que se debe esto. Sin embargo, sí se puede hacer con \verb|select|. Diseña una solución a este problema con \verb|select|:
     \begin{figure}[H]
        \centering
            \begin{minted}{pascal}
@@ -595,7 +595,7 @@
    \end{figure}
    El problema no puede resolverse con instrucciones \verb|receive| o \verb|i_receive| porque:
    \begin{itemize}
-       \item En el caso de la instrucción \verb|receive|, si no hay mensajes pendientes, el proeso se bloquearía hasta recepcionar el primero, pero este no es el comportamiento deseado.
+       \item En el caso de la instrucción \verb|receive|, si no hay mensajes pendientes, el proceso se bloquearía hasta recibir el primero, pero este no es el comportamiento deseado.
        \item En el caso de la instrucción \verb|i_receive|, comenzaría instantáneamente la recepción del mensaje, pero el proceso volvería inmediatamente antes de recibirlo, por lo que no sabríamos si hay o no un mensaje pendiente.
    \end{itemize}
    Sin embargo, podemos hacer uso de las sentencias \verb|else| de las instrucciones \verb|select|, de forma que una instrucción se ejecute cuando todas las guardas no son ejecutables:
@@ -667,8 +667,7 @@
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:rel3_11}
-    Supongamos que tenemos \verb|N| procesos concurrentes semejantes:
-
+    Supongamos que tenemos \verb|N| procesos concurrentes semejantes.
     Cada proceso produce \verb|N-1| caracteres (con \verb|N-1| llamadas a la función \verb|ProduceCaracter|) y envía cada carácter a los otros \verb|N-1| procesos. Además, cada proceso debe imprimir todos los caracteres recibidos de los otros procesos (el orden en el que se escriben es indiferente).
     \begin{itemize}
         \item Describe razonadamente si es o no posible hacer esto usando exclusivamente \verb|s_send| para los envíos. En caso afirmativo, escribe una solución.
@@ -759,7 +758,7 @@
     En estas condiciones, si el SPM agota la memoria, debe retrasar los \verb|send| dejando bloqueados los procesos y, en esas circunstancias, se podría producir interbloqueo. Para evitarlo, se pueden usar operaciones inseguras de envío, \verb|i_send|. Escribe dicha solución, usando como orden de recepción el mismo que en el problema anterior.\\
 
     \noindent
-    Para resolver el problema, utilizaremos un array de $N-1$ bloques a enviar (como vamos a usar la operación \verb|i_send| es un envío inseguro, luego optamos por no modificar los los bloques tras enviarlos) y de un bloque para recibir. Además, antes de terminar un proceso tendremos que esperar a que este proceso ha terminado el envío de todos sus bloques:
+    Para resolver el problema, utilizaremos un array de $N-1$ bloques a enviar (como vamos a usar la operación \verb|i_send| es un envío inseguro, luego optamos por no modificar los los bloques tras enviarlos) y de un bloque para recibir. Además, antes de terminar un proceso tendremos que esperar a que este proceso haya terminado el envío de todos sus bloques:
     \begin{minted}{pascal}
         process P[ i : 0..N ];
         var bloque : array[0..N] of TipoBloque;
@@ -828,7 +827,7 @@
            { Procesar todos los bloques }
            for j := 0 to N do
               if j <> i then begin
-                 ConsumirBloque(bloque[j]);
+                 ConsumirBloque(bloque_recv[j]);
               end
            end
 
@@ -841,19 +840,3 @@
         end
     \end{minted}
 \end{ejercicio}
-
-\subsection{Ejercicios adicionales (fuera de la relación)}
-\begin{ejercicio}
-    Un tren tiene $N$ asientos libres y los pasajeros suben al tren de 1 en 1 ocupando un único asiento. Si se. ocupan todos los asientos libres o bien si durante 30 minutos no ocupa su plaza ningún nuevo pasajero, entonces el tren realiza l viaje, tras el cual vuelven a quedar $N$ asientos libres. Para realizar 1 viaje, el tren ha de tener ocupado al menos 1 asiento. Si el tren tuviera todos sus asientos libres, se quedará esperando indefinidamente en la estación a que eventualmente se suba 1 pasajero y ocupe su asiento.
-
-    Suponer las siguientes condiciones para poder simular la actuación del tren como un proceso concurrente (\verb|Tren|), así como la de los pasajeros (\verb|Pasajero[i]|), que se sincronizarán con el Tren mediante un mecanismo de sincronización de citas:
-    \begin{enumerate}
-        \item Hay un número ilimitado de pasajeros y cada uno de ellos realiza 1 solo viaje, además se ha de suponer que el proceso \verb|Pasajero[i]| termina su actuación cuando concluye el viaje actual del tren en el que se ha subido.
-        \item El tren está realizando viajes continuamente, para lo cual supondremos que su ruta es circular con solo 2 estaciones.
-    \end{enumerate}
-    Se pide resolver el problema para 1 y 2. trenes. En el último caso, si un pasajero intenta subir a uno de los trenes y no puede, esperará 1 minuto; tras esta espera, lo intentará en el segundo tren y si tampoco pudiera subir al segundo, transcurrido el mismo plazo de tiempo, lo volvería a intentar con el primero, repitiendo este comportamiento cíclico hasta que con­siga realizar el viaje en uno de los 2 trenes.
-\end{ejercicio}
-
-% \begin{ejercicio}
-%     Se tienen $N$ procesos cliente que interactúan con el proceso servidor que simula la actuación de 1 cajero automático. Los procesos cliente obtienen dinero del cajero realizando la operación retirar (num_cliente, cantidad) que obliga a la identificación para poder soli­citar una cantidad de dinero al cajero, quien responde entregando la cantidad solicitada si el cliente tiene suficiente saldo en su cuenta y aún queda efectivo en el cajero. En caso contrario, el cajero responde denegando la petición al cliente. Para ingresar dinero en el cajero, se implementará la aceptación de la operación ingresar(num_cliente, cantidad), con la que los procesos solo tienen que identificarse e indicar la cantidad que van a ingresar. Suponemos que cada número de cliente corresponderá con el denominado código cuenta­ cliente, es decir, este número tiene asignada 1 sola cuenta bancaria.
-% \end{ejercicio}
