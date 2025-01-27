@@ -1,5 +1,26 @@
 \chapter{Sistemas de Tiempo Real}
 
+\begin{comment}
+        \begin{tikzpicture}[scale=0.8]
+            % Eje de abscisas
+            \draw[-Stealth] (0, 0) -- (18, 0) node[right] {};
+            \foreach \x in {0, 2, 4, 6, 8, 10, 12, 14, 16} {
+                \draw (\x, 0) -- (\x, -0.2) node[below] {\x};
+            }
+
+            % Eje de ordenadas
+            \draw[-Stealth] (0, 0) -- (0, 8.5) node[above] {};
+            \draw (0, 2) -- (-0.2, 2) node[left] {$\tau_4$};
+            \draw (0, 4) -- (-0.2, 4) node[left] {$\tau_3$};
+            \draw (0, 6) -- (-0.2, 6) node[left] {$\tau_2$};
+            \draw (0, 8) -- (-0.2, 8) node[left] {$\tau_1$};
+
+            \draw[thick, gray] (0, 2) -- (2, 2);
+
+            \fill (1, 2) circle (2pt) node[above] {\verb|P(s1)|};
+        \end{tikzpicture}       
+\end{comment}
+
 Un Sistema de Tiempo Real (STR) es aquel en el que la respuesta correcta a un cálculo realizado por el programa no sólo depende de que efectivamente haga lo que tenga que hacer, sino también de cuándo esté disponible dicho resultado. A lo largo de este Capítulo, usaremos el término ``tarea'' para referirnos a un proceso que interviene en nuestro sistema.\\
 
 En el ámbito de los sistemas operativos, el estándar POSIX define a un sistema operativo de tiempo real como aquel que tiene la capacidad para suministrar un nivel de servicio requerido en un tiempo limitado y especificado de antemano. Es decir un sistema de este tipo debe permitir satisfacer plazos de entrega prefijados a todos sus procesos que estén etiquetados como de tiempo real.
@@ -134,12 +155,174 @@ Una tarea de tiempo real $\tau_i$ puede ser caracterizada mediante un conunto es
     \item [Holgura ($H$).] Tiempo máximo que una tarea puede permanecer activa sin entrar a ejecución dentro del plazo de respuesta máximo: $H = D-c$.
 \end{description}
 
-\section{Planificación de tareas periódicas con asignación de prioridades}
-El principal problema a resolver en este Capítulo será el de la planificación de actividades, en el que buscamos asignar recursos y tiempo a actividades, con el fin de maximizar una función objetivo. En nuestro caso, el principal recurso a asignar es el tiempo del procesador. Será también de nuestro interés determinar a-priori si una tarea es capaz de completar su ejecución antes de que se alcance su tiempo límite.\\
+\section{El problema de la planificación}
+El principal problema a resolver en este Capítulo será el de la planificación de actividades, en el que buscamos asignar recursos y tiempo a actividades, con el fin de maximizar una función objetivo. En nuestro caso, el principal recurso a asignar es el tiempo del procesador. Será también de nuestro interés determinar a-priori si una tarea es capaz de completar su ejecución antes de que se alcance su tiempo límite.
+
+\subsection{Ejecutivo cíclico}
+Podemos resolver el problema de la planificación de forma sencilla mediante el uso de un \textbf{ejecutivo cíclico}, un método de planificación fija de tareas que resuelve de forma sencilla el problema de la planificación de las mismas.
+
+La planificación cíclica de las tareas se basa en una estructura fija de activación de las tareas periódicas. Hablaremos del \textbf{plan principal} de las tareas, que es un ciclo con duración un \textbf{hiperperiodo}. Un hiperperiodo de varias tareas $\tau_1$, $\tau_2$, \ldots, $\tau_n$ viene dado por el mínimo común múltiplo de sus periodos (considerando que la unidad que cuenta el tiempo es entera):
+\begin{equation*}
+    T_M = mcm(T_1, T_2, \ldots, T_n)
+\end{equation*}
+El ejecutivo cíclico consiste en definir cómo el plan principal, que indica cómo se ejecutan las tareas dentro de un hiperperiodo. Para ello, lo descompondremos en ciclos secundarios de igual duración, $T_S$. De esta forma:
+\begin{itemize}
+    \item Lo que hacemos es establecer un plan principal explícito de las tareas sin acceso concurrente al procesador, estableciendo de una vez cómo se entrelazan las tareas en cualquier ejecución del programa, pero pudiendo variar dentro de cada ciclo secundario.
+    \item Cada tarea se tendrá que ejecutar completamente una sola vez dentro de cada repetición de su periodo.
+    \item Si una tarea se inicia dentro de un ciclo secundarios, esta debe terminar su ejecución dentro de dicho ciclo.
+\end{itemize}
+\subsubsection{Ciclo secundario}
+Dadas $n$ tareas, sabemos calcular ya su hiperperiodo, pero el valor del periodo secundario no es fijo, sino que podemos elegir el que queramos. Sin embargo, este ha de cumplir ciertas restricciones para ser un buen ciclo secundario:
+\begin{itemize}
+    \item Como hemos dicho antes, el ciclo secundario divide el hiperperiodo en varias partes iguales, por lo que $T_S$ ha de ser un divisor de $T_M$.
+    \item Como cada tarea debe terminar antes de que finalice un ciclo secundario si comienza en el mismo y todas las tareas han de ejecutarse, el tiempo de cómputo de la tarea de mayor duración debe poder contenerse dentro de un ciclo secundario:
+        \begin{equation*}
+            \max\{C_1,C_2,\ldots,C_n\} \leq T_S
+        \end{equation*}
+    \item Como cada tarea ha de poder ejecutarse completamente una sola vez dentro de cada repetición de su periodo, la duración del ciclo secundario no podrá superar el menor periodo de las tareas:
+        \begin{equation*}
+            T_S \leq \min\{T_1,T_2,\ldots,T_n\}
+        \end{equation*}
+        De esta forma, cualquier tiempo que cumpla que sea divisor de $T_M$ y que:
+        \begin{equation*}
+            \max\{C_1,C_2,\ldots,C_n\} \leq T_S \leq \min\{T_1,T_2,\ldots,T_n\}
+        \end{equation*}
+        Es un candidato a ser considerado como duración del periodo secundario.
+\end{itemize}
+
+\begin{ejemplo}
+    Si disponemos de las siguientes 5 tareas a planificar:
+    \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|}
+        \hline
+        $\tau_i$ & $T_i$ & $C_i$ \\
+        \hline
+        $A$ & 25 & 10 \\
+        \hline
+        $B$ & 25 & 8 \\
+        \hline
+        $C$ & 50 & 5 \\
+        \hline
+        $D$ & 50 & 4 \\
+        \hline
+        $E$ & 100 & 2 \\
+        \hline
+    \end{tabular}
+    \end{table}
+    Podemos tratar de crear un ejecutivo cíclico que resuelva el problema de la planificación de dichas tareas. Para ello, calculamos el hiperperiodo de todas ellas:
+    \begin{equation*}
+        T_M = mcm(25, 50, 100) = 100
+    \end{equation*}
+    Posteriormente, elegimos la duración del ciclo secundario, que ha de ser divisor de 100 y ha de cumplir que:
+    \begin{equation*}
+        \max\{2,4,5,8,10\} = 10 \leq T_S \leq 25 = \min\{25,50,100\}
+    \end{equation*}
+    Por tanto, nuestro conjunto de candidatos a ser ciclo secundario es $\{10, 15, 20, 25\}$. Elegimos $T_S = 25$, por lo que tendremos que crear un plan principal dividido en 4 ciclos secundarios de duración 25.\\
+
+    Para repartir las tareas entre estos ciclos secundarios, como las tareas $A$ y $B$ tienen periodos de 25, estas deberán ejecutarse en todos los ciclos secundarios. Una vez resueltas las tareas $A$ y $B$, como $C$ y $D$ tienen periodo 50, han de ejecutarse cada 2 ciclos secundarios, por lo que (por ejemplo, y porque los tiempos de cómputo nos lo permiten) podemos ejecutar la tarea $C$ en el primer y tercer ciclo y la tarea $D$ en el segundo y cuarto ciclo. Finalmente, introducimos la tarea $E$ una vez en algún lugar del plan principal. Por tener $C =2$, nos da una gran flexibilidad para ejecutarla, pudiendo ponerla por ejemplo en el segundo ciclo secundario. El ejecutivo cíclico podemos observarlo en la Figura~\ref{fig:plan_principal_1}.
+
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}
+          % Primera fila de rectángulos
+          \draw[fill=gray!10] (0, 0) rectangle ++(1.5, 1) node[midway] {A};
+          \draw[fill=gray!10] (1.5, 0) rectangle ++(1.2, 1) node[midway] {B};
+          \draw[fill=gray!10] (2.7, 0) rectangle ++(0.75, 1) node[midway] {C};
+
+          % Espacio entre primera y segunda fila
+          % \coordinate (row1end) at (3.45, 0);
+
+          % Segunda fila de rectángulos
+          \draw[fill=gray!10] (3.75, 0) rectangle ++(1.5, 1) node[midway] {A};
+          \draw[fill=gray!10] (5.25, 0) rectangle ++(1.2, 1) node[midway] {B};
+          \draw[fill=gray!10] (6.45, 0) rectangle ++(0.6, 1) node[midway] {D};
+          \draw[fill=gray!10] (7.05, 0) rectangle ++(0.3, 1) node[midway] {E};
+
+          % Espacio entre segunda y tercera fila
+          % \coordinate (row2end) at (9.05, 0);
+
+          % Tercera fila de rectángulos
+          \draw[fill=gray!10] (7.5, 0) rectangle ++(1.5, 1) node[midway] {A};
+          \draw[fill=gray!10] (9, 0) rectangle ++(1.2, 1) node[midway] {B};
+          \draw[fill=gray!10] (10.2, 0) rectangle ++(0.75, 1) node[midway] {C};
+
+          % Espacio entre tercera y cuarta fila
+          % \coordinate (row3end) at (14, 0);
+
+          % Cuarta fila de rectángulos
+          \draw[fill=gray!10] (11.25, 0) rectangle ++(1.5, 1) node[midway] {A};
+          \draw[fill=gray!10] (12.75, 0) rectangle ++(1.2, 1) node[midway] {B};
+          \draw[fill=gray!10] (13.95, 0) rectangle ++(0.6, 1) node[midway] {D};
+
+          % Eje horizontal con marcas
+          \draw[-Stealth] (0, -0.5) -- (15, -0.5) node[right] {};
+             \draw (0, -0.6) -- (0, -0.6) node[below] {0};
+             \draw (3.75, -0.6) -- (3.75, -0.6) node[below] {25};
+             \draw (7.5, -0.6) -- (7.5, -0.6) node[below] {50};
+             \draw (11.25, -0.6) -- (11.25, -0.6) node[below] {75};
+             \draw (15, -0.6) -- (15, -0.6) node[below] {100};
+        \end{tikzpicture}
+        \caption{Plan principal de planificación de las tareas.}
+        \label{fig:plan_principal_1}
+    \end{figure}
+
+\end{ejemplo}
+
+\subsubsection{Propiedades}
+Algunas propiedades del ejecutivo cíclico son:
+\begin{itemize}
+    \item No hay concurrencia en la ejecución: cada ciclo secundario es una secuencia de llamadas a procedimientos, por lo que no se necesita un núcleo de ejecución multitarea o un sistema operativo de tiempo real.
+    \item Los procedimientos acceden de forma secuencial a los datos que puedieran compartirse entre las tareas, por lo que no se necesitan mecanismos de exclusión mutua.
+    \item No hace falta analizar el comportamiento temporal del programa, ya que los plazos se cumplirán siempre por la forma en la que hemos construido el plan principal.
+\end{itemize}
+\subsubsection{Implementación}
+Una ventaja de los ejecutivos cíclicos es que una vez diseñados son fáciles de implementar en cualquier lenguaje de programación, tal y como vemos en la Figura~\ref{cod:ejecutivo}, donde hemos implementado el ejecutivo del ejemplo superior en C++.
+    \begin{figure}[H]
+    \centering
+    \begin{minted}{c++}
+        void Ejecutivo(){
+           const milliseconds tmp_secundario(25);
+           const int nciclos = 4,  // nº de ciclos secundarios
+             siguiente_instante = clock::now();  
+           int frame = 0;   // nº del siguiente ciclo secundario
+
+           while(true){
+              for(frame = 1; frame <= nciclos; frame++){
+                 switch(frame){
+                    case 0: A(); B(); C(); break;
+                    case 1: A(); B(); D(); E(); break;
+                    case 2: A(); B(); C(); break;
+                    case 3: A(); B(); D(); break;
+                 }
+
+                 siguiente_instante += tmp_secundario;
+                 sleep_until(siguiente_instante);
+              }
+           }
+        }
+    \end{minted}
+    \caption{Implementación del ejecutivo cíclico.}
+    \label{cod:ejecutivo}
+    \end{figure}
+\subsubsection{Problemas}
+Pese a la sencillez del ejecutivo cíclico, este presenta numerosos problemas:
+\begin{itemize}
+    \item Presenta dificultades para incorporar tareas con periodos largos.
+    \item Las tareas esporádicas son difíciles de tratar.
+    \item El plan cíclico del proyecto es difícil de construir si los periodos son de diferentes órdenes de magnitud y el número de ciclos secundarios se hace grande.
+    \item Es poco flexible y difícil de mantener, ya que cada vez que una tarea cambia hay que rehacer la planificación entera.
+\end{itemize}
+Por tanto, la solución de la planificación de tareas mediante ejecutivo cíclico es insatisfactoria, por no permitirnos una flexibilidad a la hora de considerar tareas o realizar modificaciones sobre el mismo.\\
+
+De esta forma, buscamos sistemas que resuelvan el problema de la planificación de forma distinta, sistemas que funcionan como los que antes comentamos: que sean capaces de asignar prioridades a tareas y que la planificación en CPU dependa exclusivamente de dichas prioridades.
+
+\subsection{Algoritmos de planificación de tareas}
+Si consideramos otro enfoque de vista en la planificación de tareas de forma que no busquemos determinar cuándo han de ejecutarse las tareas, sino establecer criterios a las tareas para determinar cuándo pueden ejecutarse (como la asignación de una prioridad a cada tarea), nos encontramos ante la \textit{planificación con prioridades}, que es la que triunfa dentro de los sistemas de tiempo real, ya que consigue resolver los problemas de un ejecutivo cíclico.\\
 
 Para determinar la planificabilidad de un conjunto de tareas (si es posible una organización de todas ellas de forma que ninguna incumpla su \textit{deadline}), es necesario utilizar un \textit{esquema de planificación de tareas}, el cual ha de contener:
 \begin{itemize}
-    \item Un algoritmo apra ordenar el acceso de las tareas a los recursos del sistema.
+    \item Un algoritmo para ordenar el acceso de las tareas a los recursos del sistema.
     \item Una forma de predecir el comportamiento del sistema en el peor de los casos, para determinar si dicho conjunto de tareas es planificable en todos los casos.
 \end{itemize}
 Podemos encontrarnos con distintos esquemas de planificación de tareas de STR\@:
@@ -151,8 +334,774 @@ Supondremos siempre un esquema de planificación expulsivo basado en prioridades
 
 De esta forma, el problema de la planificación se reduce a saber asociar a cada tarea una prioridad distinta. La prioridad es un número positivo y, por convención, se consideran mayores aquellas prioridades con menor valor.
 
-\subsection{Algoritmo de cadencia monótona (Rate Monotonic Scheduling)}
-Aquí nos centraremos en un esquema de planificación estático para tareas periódicas, en el que la prioridad de una tarea de tiempo real sólo dependerá de su periodo. Es decir, se asignarán inicialmente las prioridades a las tareas de la aplicación en el orden dado por su menor frecuencia de activación. Las tareas con periodos de activación más cortos van a ser las más prioritarias, independientemente de su criticidad respecto de la aplicación a la que pertenecen. Matemáticamente, podemos decir que dichas prioridades se asignan mediante una función monótona de la cadencia temporal de los procesos periódicos: $T_i<T_j\Longrightarrow P_i > P_j$.\\
+\subsubsection{Prioridades asignadas de forma estática}
+Dentro de los sistemas estáticos de prioridades podemos encontrarnos con dos algoritmos a destacar:
+\begin{description}
+    \item [Cadencia monótona, Rate Monotonic Scheduling (RMS).]~\\ Asigna las prioridades de forma directamente proporcional a los periodos de las tareas, de forma que a las tareas con menor periodo les asigna un valor de prioridad más bajo (es decir, una mayor prioridad).
+    \item [Plazo de respuesta monótono, Deadline Monotonic Scheduling (DMS).]~\\ Asigna las prioridades de forma directamente proporcional a los \textit{deadlines} de las tareas.
+\end{description}
+De esta forma, si consideramos el modelo simple de tareas, el comportamiento de RMS es idéntico al de DMS, por ser $D = T$.
 
-Estos apuntes no están terminados.
+\subsubsection{Prioridades asignadas de forma dinámica}
+Podemos considerar también algoritmos dinámicos de asignación de prioridades, de forma que las prioridades de las tareas cambien durante la ejecución del sistema, algoritmos como:
+\begin{description}
+    \item [Earliest Deadline First (EDF).]~\\ Asigna la mayor prioridad a la tarea con el \textit{deadline} más próximo.
+    \item [Least Laxity First (LLF).]~\\ Asigna la mayor prioridad a la tarea con menor holgura.
+\end{description}
 
+\subsection{Criterios de planificabilidad de tareas}
+A continuación, nos centraremos en cómo determinar antes de la ejecución del algoritmo si un conjunto de $n$ tareas es planificable o no. Para ello, supondremos una ejecución WCET (\textit{worst case execution time}) y dispondremos de criterios que nos permitan predeterminar el comportamiento del algoritmos frente a dicho conjunto de tareas sin tener que determinar las prioridades para cada tarea.
+
+\begin{definicion}[Factor de utilización]
+    Dadas $n$ tareas $\tau_1$, $\tau_2$, \ldots, $\tau_n$, de forma que de cada una conocemos su tiempo máximo de cómputo ($C_i$) y su periodo ($T_i$), se define el tiempo máximo de utilización de la CPU por parte de dichas $n$ tareas como:
+    \begin{equation*}
+        U = \sum_{i=1}^{n} \dfrac{C_i}{T_i}
+    \end{equation*}
+\end{definicion}
+Una vez definido el factor de utilización de la CPU por parte de un conjunto de tareas a planificar, mostramos un primer test ideado por Liu y Layland, que nos marca una condición suficiente para que un conjunto de $n$ tareas sea planificable por el algoritmo RMS:
+\begin{teo}[Test I de Liu y Layland]
+    Dadas $n$ tareas de las que conocemos sus atributos temporales y que suponemos que se planifican por el algoritmo RMS, este conjunto de tareas será planificable para cualesquiera desfases iniciales si el factor de utilización de la CPU por parte de dichas tareas no supera la constante de utilización máxima prefijada:
+    \begin{equation*}
+        U \leq U_0(n) = n\cdot \left(2^{\frac{1}{n}} - 1\right)
+    \end{equation*}
+\end{teo}
+Notemos que se trata de una condición suficiente, por lo que si un conjunto de $n$ tareas cumple que $U\leq U_0(n)$ entonces podemos garantizar que será planificable por RMS, pero si $U>U_0(n)$ no podemos asegurar nada. En esta situación, será necesario realizar un diagrama de Gantt donde simulemos una planificación de las tareas por RMS\@. Dicho digrama solo será necesario realizarlo con longitud un hiperperiodo, de forma que todos los desfases iniciales sean 0. Además, en la Tabla~\ref{tab:u0n} mostramos los diferentes valores que puede tomar la constante $U_0(n)$ en función de $n$.
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|}
+    \hline
+    n & \% utilización \\
+    \hline
+    1 & 100\% \\
+    2 & 82.85\% \\
+    3 & 78\% \\
+    4 & 75.7\% \\
+    \vdots & \vdots \\
+    $\infty$ & 69.3\% \\
+    \hline
+\end{tabular}
+\caption{Valores de $U_0(n)$.}
+\label{tab:u0n}
+\end{table}
+
+Como podemos ver, siempre que un conjunto de tareas no supere la constante de $0.693 = \ln(2)$, el conjunto de tareas será planificble por RMS\@. Notemos que esta condición significa que el conjunto de tareas desperdicia más del $30\%$ del uso de la CPU, por lo que no se trata de un buen criterio para comprobar si un conjunto de tareas no es planificable por RMS, ya que puede haber conjuntos de tareas con factores de utilización mayores a $U_0(n)$ que sí sean planificables por RMS pero que el test de Liu y Layland falle, como mostramos en los siguientes ejemplos.
+
+\begin{ejemplo}
+    Dadas las tareas $\tau_1$, $\tau_2$ y $\tau_3$ cuyos atributos temporales podemos observar en la siguiente tabla (considerando que $D_i = T_i$ en cada caso):
+    \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|}
+        \hline
+        & $C$ & $T$ \\
+        \hline
+        $\tau_1$ & 4 & 16 \\
+        \hline
+        $\tau_2$ & 5 & 40 \\
+        \hline
+        $\tau_3$ & 32 & 80 \\
+        \hline
+    \end{tabular}
+    \end{table}
+    Si calculamos el factor de utilización de la CPU para dichas tareas, tenemos que:
+    \begin{equation*}
+        U = \sum_{i=1}^{3}\dfrac{C_i}{T_i} = \dfrac{4}{16} + \dfrac{5}{40} + \dfrac{32}{80} = 0.775 \leq 0.779 = 3\cdot \left(2^{\frac{1}{3}}-1\right) = U_0(3)
+    \end{equation*}
+    Por tanto, si aplicamos el primer test de Liu y Layland, tenemos que las tres tareas son planificables por RMS\@.
+\end{ejemplo}
+
+\begin{ejemplo}
+    Si ahora consideramos las tares $\tau_1$, $\tau_2$ y $\tau_3$ con los siguientes atributos temporales:
+    \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|}
+        \hline
+        & $C$ & $T$ \\
+        \hline
+        $\tau_1$ & 10 & 40 \\
+        \hline
+        $\tau_2$ & 20 & 60 \\
+        \hline
+        $\tau_3$ & 20 & 80 \\
+        \hline
+    \end{tabular}
+    \end{table}
+    \noindent
+    Si calculamos el factor de utilización de la CPU y comprobamos el test de Liu y Layland:
+    \begin{equation*}
+        U = \sum_{i=1}^{3}\dfrac{C_i}{T_i} = \dfrac{1}{4} + \dfrac{1}{3} + \dfrac{1}{4} = 0.83 > 0.779 = U_0(3)
+    \end{equation*}
+    El test no nos dice nada, por lo que tenemos que crear el cronograma para una duración de:
+    \begin{equation*}
+        mcm(40,60,80) = 240
+    \end{equation*}
+    Y observar el comportamiento de las tareas con un desfase inicial de 0:
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[scale=0.6]
+            % Eje de abscisas
+            \draw[-Stealth] (0, 0) -- (25, 0) node[right] {};
+
+            \foreach \x in {0, 2, ..., 22} {
+                \pgfmathtruncatemacro{\xa}{\x + 1}
+                \pgfmathtruncatemacro{\label}{\xa * 10}
+                \draw (\x, 0) -- (\x, -0.2) node[below] {};
+                \draw (\xa, 0) -- (\xa, -0.2) node[below] {\label};
+            }
+            \draw (24, 0) -- (24, -0.2) node[below] {};
+
+            % Eje de ordenadas
+            \draw[-Stealth] (0, 0) -- (0, 6.5) node[above] {};
+            \draw (0, 2) -- (-0.2, 2) node[left] {$\tau_1$};
+            \draw (0, 4) -- (-0.2, 4) node[left] {$\tau_2$};
+            \draw (0, 6) -- (-0.2, 6) node[left] {$\tau_3$};
+
+            \draw[thick, gray] (0, 2) -- (1, 2);
+            \draw[thick, gray] (4, 2) -- (5, 2);
+            \draw[thick, gray] (8, 2) -- (9, 2);
+            \draw[thick, gray] (12, 2) -- (13, 2);
+            \draw[thick, gray] (16, 2) -- (17, 2);
+            \draw[thick, gray] (20, 2) -- (21, 2);
+
+            \draw[thick, gray] (1, 4) -- (3, 4);
+            \draw[thick, gray] (6, 4) -- (8, 4);
+            \draw[thick, gray] (13, 4) -- (15, 4);
+            \draw[thick, gray] (18, 4) -- (20, 4);
+
+            \draw[thick, gray] (3, 6) -- (4, 6);
+            \draw[thick, gray] (5, 6) -- (6, 6);
+            \draw[thick, gray] (9, 6) -- (11, 6);
+            \draw[thick, gray] (17, 6) -- (18, 6);
+            \draw[thick, gray] (21, 6) -- (22, 6);
+
+            % deadline de t1
+            \fill (4, 2) circle (2pt);
+            \fill (8, 2) circle (2pt);
+            \fill (12, 2) circle (2pt);
+            \fill (16, 2) circle (2pt);
+            \fill (20, 2) circle (2pt);
+            \fill (24, 2) circle (2pt);
+
+            % deadline de t2
+            \fill (6, 4) circle (2pt);
+            \fill (12, 4) circle (2pt);
+            \fill (18, 4) circle (2pt);
+            \fill (24, 4) circle (2pt);
+
+            % deadline de t3
+            \fill (8, 6) circle (2pt);
+            \fill (16, 6) circle (2pt);
+            \fill (24, 6) circle (2pt);
+        \end{tikzpicture}       
+        \caption{Diagrama de Gantt para las tareas por RMS\@.}
+        \label{fig:gantt_ejm}
+    \end{figure}
+    En la Figura~\ref{fig:gantt_ejm} podemos ver la ejecución de las tareas por RMS, donde hemos hecho visibles los \textit{deadlines} de cada tarea, mediante puntos. Como todos los \textit{deadline} se cumplen, el conjunto de tareas es planificable por RMS, a pesar de que el test de Liu y Layland no nos aportara información sobre este caso.
+\end{ejemplo}~\\
+
+Una vez vista una condición suficiente para la planificabilidad en RMS, mostramos otro resultado, también de Liu y Layland, que nos da una condición necesaria y suficiente para que un conjunto de tareas sea planificable por EDF:
+
+\begin{teo}[Test II de Liu y Layland]
+    Dadas $n$ tareas de las que conocemos sus atributos temporales y que suponemos que se planifican por el algoritmo EDF, este conjunto de tareas será planificable si y solo si el factor de utilización de la CPU por parte de dicho conjunto no supera el 100\% de la CPU\@. Es decir:
+    \begin{equation*}
+        U \leq 1
+    \end{equation*}
+\end{teo}
+
+Recordemos que el algoritmo de planificación EDF era un algoritmo dinámico, por lo que la prioridad de las tareas varía a lo largo de la ejecución del mismo. Es por esto, que siempre que un algoritmo sea planificable por un algoritmo de planificación estática (como lo es RMS), entonces lo será por un algoritmo de planificación dinámica (como por ejemplo EDF). De esta forma, podemos utilizar el Test II de Liu y Layland para afirmar que si el factor de utilización por parte de un conjunto de tareas es superior a 1, entonces dicho conjunto de tareas no podrá ser planificable por EDF ni por RMS\@.
+
+\begin{ejemplo}
+    Consideramos las tareas $\tau_1$ y $\tau_2$, cuyos atributos temporales podemos observar en la siguiente tabla:
+    \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|}
+        \hline
+        & C & T \\
+        \hline
+        $\tau_1$ & 2 & 5 \\
+        \hline
+        $\tau_2$ & 4 & 7 \\
+        \hline
+    \end{tabular}
+    \end{table}
+    Si calculamos el factor de utilización de la CPU:
+    \begin{equation*}
+        U = \sum_{i=1}^{2} \dfrac{C_i}{T_i} = \dfrac{2}{5} + \dfrac{4}{7} = 0.971 > 0.82 = U_0(2)
+    \end{equation*}
+    Vemos que no pasa el primer test de Liu y Layland, por lo que no sabemos en un principio si el conjunto de tareas es o no planificable por RMS\@. Sin embargo, como $U\leq 1$, tenemos garantizada la planificabilidad por EDF\@. En la Figura~\ref{fig:gantt_edf_rms} mostramos los casos de ejecución del conjunto de tareas por EDF y RMS, para observar las diferencias de los algoritmos.
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[scale=0.5]
+            % Eje de abscisas
+            \draw[-Stealth] (0, 0) -- (23, 0) node[right] {};
+            \foreach \x in {0,1,...,22} {
+                \draw (\x, 0) -- (\x, -0.2) node[below] {\x};
+            }
+
+            % Eje de ordenadas
+            \draw[-Stealth] (0, 0) -- (0, 5.5) node[above] {};
+            \draw (0, 2) -- (-0.2, 2) node[left] {$\tau_1$};
+            \draw (0, 4) -- (-0.2, 4) node[left] {$\tau_2$};
+
+            \draw[thick, gray] (0, 4) -- (2, 4);
+            \draw[thick, gray] (6, 4) -- (8, 4);
+            \draw[thick, gray] (12, 4) -- (14, 4);
+            \draw[thick, gray] (15, 4) -- (17, 4);
+
+            \draw[thick, gray] (2, 2) -- (6, 2);
+            \draw[thick, gray] (8, 2) -- (12, 2);
+            \draw[thick, gray] (14, 2) -- (15, 2);
+            \draw[thick, gray] (17, 2) -- (20, 2);
+
+            \fill (7, 2) circle (2pt);
+            \fill (14, 2) circle (2pt);
+            \fill (21, 2) circle (2pt);
+
+            \fill (5, 4) circle (2pt);
+            \fill (10, 4) circle (2pt);
+            \fill (15, 4) circle (2pt);
+            \fill (20, 4) circle (2pt);
+        \end{tikzpicture}       
+        \begin{tikzpicture}[scale=0.5]
+            % Eje de abscisas
+            \draw[-Stealth] (0, 0) -- (23, 0) node[right] {};
+            \foreach \x in {0,1,...,22} {
+                \draw (\x, 0) -- (\x, -0.2) node[below] {\x};
+            }
+
+            % Eje de ordenadas
+            \draw[-Stealth] (0, 0) -- (0, 5.5) node[above] {};
+            \draw (0, 2) -- (-0.2, 2) node[left] {$\tau_1$};
+            \draw (0, 4) -- (-0.2, 4) node[left] {$\tau_2$};
+
+            \draw[thick, gray] (0, 4) -- (2, 4);
+            \draw[thick, gray] (5, 4) -- (7, 4);
+            \draw[thick, gray] (10, 4) -- (12, 4);
+            \draw[thick, gray] (15, 4) -- (17, 4);
+
+            \draw[thick, gray] (2, 2) -- (5, 2);
+            \draw[thick, red] (7, 2) -- (8, 2);
+            \draw[thick, gray] (8, 2) -- (10, 2);
+            \draw[thick, gray] (12, 2) -- (14, 2);
+            \draw[thick, gray] (14, 2) -- (15, 2);
+            \draw[thick, gray] (17, 2) -- (20, 2);
+
+            \fill (7, 2) circle (2pt);
+            \fill (14, 2) circle (2pt);
+            \fill (21, 2) circle (2pt);
+
+            \fill (5, 4) circle (2pt);
+            \fill (10, 4) circle (2pt);
+            \fill (15, 4) circle (2pt);
+            \fill (20, 4) circle (2pt);
+        \end{tikzpicture}       
+        \caption{Ejecución del conjunto de tareas por EDF y RMS\@.}
+        \label{fig:gantt_edf_rms}
+    \end{figure}
+    Aunque para comprobar la planificabilidad de $\tau_1$ y $\tau_2$ tendríamos que haber hecho el diagrama hasta $mcm(5,7)=35$, con hacer el diagrama hasta 22 podemos observar ya ciertas diferencias en la ejecución de los algoritmos. En primer lugar, observamos que con EDF (primera figura) no incumplimos ningún \textit{deadline}, mientras que en la segunda figura (RMS) sí que incumplimos el primer \textit{deadline}, al tener que terminar de ejecutarse la primera activación de $\tau_1$ tras $t=7$.
+\end{ejemplo}~\\
+
+Hemos visto que la planificabilidad con algoritmos dinámicos parece ser más predecible que con los algoritmos estáticos, así como que los algoritmos dinámicos nos permiten una mayor flexibiilidad, ya que siempre que un conjunto de tareas sea planificable por algoritmos estáticos, lo será por algoritmos dinámicos. Sin embargo, los algoritmos estáticos tienen ventajas frente a los dinámicos, tal y como mostramos a continuación:
+\begin{itemize}
+    \item Los esquemas estáticos son más sencillos y eficientes de implementar.
+    \item Los esquemas dinámicos introducen una mayor sobrecarga al sistema.
+    \item Los esquemas estáticos permiten incorporar otros factores que influyen en la planificación de un conjunto de tareas cuando sus prioridades no están asociadas a un tiempo límite.
+    \item Durante sobrecarga transitoria, un esquema de planificación estático normalmente resulta ser predicible. Lo cual no ocurre necesariamente si se utiliza un esquema dinámico.
+\end{itemize}
+
+\section{Modelo general de tareas}
+El modelo simple ha de ser extendido para poder incluir los requisitos de planificación de las tareas esporádicas y aperiódicas, así como los bloqueos que sufren las tareas cuando intentan obtener recursos compartidos a los que acceden en exclusión mutua. Ya que en el modelo simple de tareas se considera a éstas totalmente independientes durante toda su ejecución.\\
+
+Ahora, consideraremos las siguientes restricciones sobre las tareas:
+\begin{itemize}
+    \item Veremos a un programa como un conjunto fijo de tareas que comparten el tiempo de un procesador, pero pueden aparecer tareas aperiódicas o esporádicas.
+    \item Las tareas pueden bloquearse por acceder a recursos compartidos.
+    \item Las tareas tienen un plazo de respuesta máximo que, en general, no coincide con su periodo.
+    \item Los retrasos debidos al sistema son ignorados.
+\end{itemize}
+
+\section{Inversión de prioridad}
+Al considerar el modelo general de tareas nos encontramos con un primer problema, resultado de permitir que las tareas puedan interaccionar entre sí al acceder a recursos compartidos.
+
+El problema que surge si una tarea permanece bloqueada esperando a que otra menos prioritaria termine de ejecutar una sección de su código, es que deja de cumplirse una de las condiciones más importantes del modelo simple de tareas: cuando una tarea tiene prioridad suficiente para ejecutarse, ha de hacerlo. Según el modelo simple, en ningún caso podría verse bloqueada una tarea, o suspendida su ejecución durante algún tiempo, ya que esto influiría en la planificación del resto de las tareas y podría llegar a ocasionar la pérdida de sus tiempos límite. Por tanto, no sería de aplicación el análisis de planificabilidad basado en el Test de Liu y Layland, para el modelo simple de tareas, sin cuantificar cómo se vería afectada la desigualdad del test con el eventual bloqueo de las tareas al acceder a recursos comunes.\\
+
+Podría suceder, incluso, que la espera de la tarea más prioritaria llegase a ser arbitrariamente larga si se ejecutan continuamente tareas menos prioritarias mientras que ésta se mantiene bloqueada. En ese caso, se produciría lo que se denomina una \textit{inversión de prioridad} que invalidaría cualquier previsión acerca de la planificabilidad de un conjunto de tareas. La inversión de prioridad no puede ser eliminada completamente si se utilizan objetos protegidos en los programas de tiempo real, pero los efectos adversos sobre la planificación de las tareas más prioritarias pueden ser minimizados, haciendo que el bloqueo derivado del acceso a dichos objetos sea siempre un tiempo acotado y medible en cualquier ejecución de la aplicación.
+
+\begin{ejemplo}
+    A continuación podemos observar un claro ejemplo de inversión de prioridad (el cual usaremos a lo largo de los métodos para remediarla), que sucede sobre el conjunto de tareas de la Tabla~\ref{tab:tareas_ejm}, donde la tarea $\tau_1$ comparte una sección crítica con las tareas $\tau_4$ (comparte \verb|s1|) y $\tau_2$ (comparte \verb|s2|).
+    \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        & $C_i$ & $P_i$ & $\Phi_i$ \\
+        \hline
+        $\tau_1$ & 5 & 1 & 4 \\
+        \hline
+        $\tau_2$ & 4 & 2 & 2 \\
+        \hline
+        $\tau_3$ & 2 & 3 & 2 \\
+        \hline
+        $\tau_4$ & 6 & 4 & 0 \\
+        \hline
+    \end{tabular}
+    \caption{Conjunto de tareas para el ejemplo.}
+    \label{tab:tareas_ejm}
+    \end{table}
+    Entre $t=0$ y $t=2$ la única tarea activa es $\tau_4$, que adquiere acceso a la sección crítica \verb|s1|. En $t=2$ se activan tanto $\tau_3$ como $\tau_2$, pasando a ejecución $\tau_2$ por ser la más prioritaria (y quitándole la CPU a $\tau_4$), donde adquiere su sección crítica, \verb|s2|. En $t=4$ se activa $\tau_1$, quien adquiere la CPU por ser la tarea más prioritaria.
+
+    En el instante en el que $\tau_1$ se disponga a adquirir acceso a la sección crítica \verb|s1|, se verá bloqueada, ya que estaba siendo usada por $\tau_4$. Entrará ahora en la CPU $\tau_2$, quien terminará de usar su sección crítica. Como $\tau_1$ está bloqueada hasta que $\tau_4$ libere la sección crítica \verb|s1|, entrará en CPU $\tau_3$, que ejecutará su código. Finalmente, entrará en sección crítica $\tau_4$, que ejecutará la sección crítica hasta liberarla, momento en el cual $\tau_1$ se quedará con la CPU, hasta terminar su ejecución y devolverla a $\tau_4$, quien también terminará su ejecución.\\
+
+
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[scale=0.8]
+            % Eje de abscisas
+            \draw[-Stealth] (0, 0) -- (18, 0) node[right] {};
+            \foreach \x in {0, 2, 4, 6, 8, 10, 12, 14, 16} {
+                \draw (\x, 0) -- (\x, -0.2) node[below] {\x};
+            }
+
+            % Eje de ordenadas
+            \draw[-Stealth] (0, 0) -- (0, 8.5) node[above] {};
+            \draw (0, 2) -- (-0.2, 2) node[left] {$\tau_4$};
+            \draw (0, 4) -- (-0.2, 4) node[left] {$\tau_3$};
+            \draw (0, 6) -- (-0.2, 6) node[left] {$\tau_2$};
+            \draw (0, 8) -- (-0.2, 8) node[left] {$\tau_1$};
+
+            % Segmento entre (2,2) y (4,2)
+            \draw[thick, gray] (0, 2) -- (2, 2);
+            \draw[thick, gray] (2, 6) -- (4, 6);
+            \draw[thick, gray] (4, 8) -- (6, 8);
+            \draw[thick, gray] (6, 6) -- (8, 6);
+            \draw[thick, gray] (8, 4) -- (10, 4);
+            \draw[thick, gray] (10, 2) -- (13, 2);
+            \draw[thick, gray] (13, 8) -- (16, 8);
+            \draw[thick, gray] (16, 2) -- (17, 2);
+
+            \fill (1, 2) circle (2pt) node[above] {\verb|P(s1)|};
+            \fill (3, 6) circle (2pt) node[above] {\verb|P(s2)|};
+            \fill (6, 8) circle (2pt) node[above] {\verb|P(s1)|};
+            \fill (7, 6) circle (2pt) node[above] {\verb|V(s2)|};
+            \fill (13, 2) circle (2pt) node[above] {\verb|V(s1)|};
+            \fill (13, 8) circle (2pt) node[above left] {\verb|P(s1)|};
+            \fill (14, 8) circle (2pt) node[above] {\verb|P(s2)|};
+            \fill (15, 8) circle (2pt) node[below] {\verb|V(s2)|};
+            \fill (16, 8) circle (2pt) node[above right] {\verb|V(s1)|};
+        \end{tikzpicture}       
+        \caption{Ejecución de las tareas.}
+        \label{fig:inv_prioridad}
+    \end{figure}
+    En la Figura~\ref{fig:inv_prioridad} podemos observar el comportamiento de las tareas, donde observamos una inversión de prioridad, al ser la tareas $\tau_2$, $\tau_3$ y $\tau_4$ menos prioritarias que $\tau_1$ y estar ejecutándose entre $t=6$ y $t=13$ en la CPU, cuando la tarea que se debería estar ejecutando es $\tau_1$.
+\end{ejemplo}
+
+\noindent
+A continuación, veremos tres técnicas que permiten reducir el efecto de la inversión de prioridad (cada una mejora la anterior). Si bien estas técnicas son menos perjudiciales que no hacer nada al respecto, no consiguen solventar del todo el problema de la inversión de prioridad, pero son capaces de disminuir los retrasos introducidos por el problema de la inversión.
+
+\subsection{Sección crítica no expulsable}
+Es el protocolo más simple que puede imaginarse para intentar solventar el problema de la inversión de prioridad. Consiste en que durante el tiempo en el que una tarea hace uso de un recurso compartido, esta no puede ser expulsada de la CPU por una tarea de mayor prioridad. En este caso, la tarea de mayor prioridad ha de esperar a que la tarea de menor prioridad finalice la sección crítica, momento en el que podrá expulsarla de la CPU y comenzar a ejecutar su código.
+
+\begin{ejemplo}
+    Sobre el ejemplo anteriormente visto en el que presentábamos el problema de la inversión de prioridad podemos ahora establecer el protocolo de ``seccion crítica no expulsable'', para ver los efectos sobre el comportamiento de ejecución de las tareas que considerábamos anteriormente. Estos cambios pueden verse en la Figura~\ref{fig:sc_no_exp}.
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[scale=0.8]
+            % Eje de abscisas
+            \draw[-Stealth] (0, 0) -- (18, 0) node[right] {};
+            \foreach \x in {0, 2, 4, 6, 8, 10, 12, 14, 16} {
+                \draw (\x, 0) -- (\x, -0.2) node[below] {\x};
+            }
+
+            % Eje de ordenadas
+            \draw[-Stealth] (0, 0) -- (0, 8.5) node[above] {};
+            \draw (0, 2) -- (-0.2, 2) node[left] {$\tau_4$};
+            \draw (0, 4) -- (-0.2, 4) node[left] {$\tau_3$};
+            \draw (0, 6) -- (-0.2, 6) node[left] {$\tau_2$};
+            \draw (0, 8) -- (-0.2, 8) node[left] {$\tau_1$};
+
+            % Segmento entre (2,2) y (4,2)
+            \draw[thick, gray] (0, 2) -- (5, 2);
+            \draw[thick, gray] (5, 8) -- (10, 8);
+            \draw[thick, gray] (10, 6) -- (14, 6);
+            \draw[thick, gray] (14, 4) -- (16, 4);
+            \draw[thick, gray] (16, 2) -- (17, 2);
+
+            \fill (1, 2) circle (2pt) node[above] {\verb|P(s1)|};
+            \fill (5, 2) circle (2pt) node[above] {\verb|V(s1)|};
+            \fill (7, 8) circle (2pt) node[above left] {\verb|P(s1)|};
+            \fill (8, 8) circle (2pt) node[above] {\verb|P(s2)|};
+            \fill (9, 8) circle (2pt) node[below] {\verb|V(s2)|};
+            \fill (10, 8) circle (2pt) node[above right] {\verb|V(s1)|};
+            \fill (11, 6) circle (2pt) node[above] {\verb|P(s2)|};
+            \fill (13, 6) circle (2pt) node[above] {\verb|V(s2)|};
+        \end{tikzpicture}       
+        \caption{Ejecución de las tareas con sección crítica no expulsable.}
+        \label{fig:sc_no_exp}
+    \end{figure}
+    Ahora, en $t=2$ y $t=4$ la tarea $\tau_4$ no se ve desplazada de la CPU porque haya tareas más prioritarias, ya que se encuentra dentro de su sección crítica. En el momento en el que $\tau_4$ libere su sección crítica (sucede en $t=7$), entonces puede ser desplazada de la CPU por la tarea más prioritaria del momento, como lo es $\tau_1$. Tras esto, la ejecución de las tareas se realiza de forma normal gracias a las prioridades asignadas previamente.
+\end{ejemplo}
+
+\subsubsection{Tiempo de bloqueo}
+Resulta que con este protocolo podemos seguir aplicando el Test I de Liu y Layland para ver si un conjunto de tareas es o no planificable. Para ello, deberemos ver para cada una de las tareas que estemos considerando cual es el tiempo máximo de bloqueo debido a tareas menos prioritarias\footnote{Es decir, el tiempo extra de cómputo que se ha introducido a cada tarea por estar usando este protocolo.}. Este tiempo extra recibe el nombre de \textit{factor de bloqueo}, al que notaremos por $B_i$ para la tarea $i$-ésima. De esta forma, el nuevo tiempo máximo de cómputo que consideraremos para cada tarea será:
+\begin{equation*}
+    C_i' = C_i + B_i \qquad \forall i \in \{1,\ldots,n\}
+\end{equation*}
+El factor de bloqueo se va a calcular considerando el pero caso posible de planificación, es decir, el mayor bloqueo que una tarea prioritaria podría experimentar debido a que compartie alguna sección crítica con tareas menos prioritarias que ella.\\
+
+En el caso de la sección crítica no expulsable, como cada tarea solo puede ser bloqueada como máximo una vez por una tarea menos prioritaria que ella (este suceso solo puede darse si la tarea menos prioritaria se activa y adquiere la sección crítica antes de que se active la tarea más prioritaria, de forma que esta se active mientras la otra esté ejecutando la sección crítica), entonces el factor de bloqueo para la $i$-ésima tarea será la máxima duración de ejecución de una sección crítica que comparten la tarea $i$ y la tarea $j$, siendo la tarea $j$ de menor prioridad\footnote{Es decir, mayor número de prioridad.} que la tarea $i$.\\
+
+A continuación, para cada protocolo para evitar la aparición de la inversión de prioridad, calcularemos el factor de bloqueo en cada caso, con el fin de poder aplicar el test de Liu y Layland en cada caso, para comprobar la planificabilidad por RMS\@.
+
+\subsection{Herencia de prioridad}
+Este protocolo cambia de forma dinámica las prioridades de las tareas que consideramos, aunque estemos usando un protocolo de asignación estática de prioridades como lo es RMS\@. En este caso, si una tarea se dispone a ejecutar una sección crítica que está siendo ejecutada (y por tanto la tarea se tendría que bloquear) por otra tarea de menor prioridad, entonces la tarea de menor prioridad ``hereda'' la prioridad de la tarea que será bloqueada durante la ejecución de dicha sección crítica. Tras la ejecución de la sección crítica, la tarea de mayor prioridad que quedó bloqueada esperando la finalización de la sección crítica podrá adquirir el recurso, y la tarea que estaba ejecutando la sección crítica recuperará su prioridad original.
+
+\begin{ejemplo}
+    Recuperando el ejemplo anterior, si consideramos ahora el protocolo de herencia de prioridad sobre la ejecución de las tareas anteriores, obtenemos el comportamiento de la Figura~\ref{fig:herencia_prio}.
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[scale=0.8]
+            % Eje de abscisas
+            \draw[-Stealth] (0, 0) -- (18, 0) node[right] {};
+            \foreach \x in {0, 2, 4, 6, 8, 10, 12, 14, 16} {
+                \draw (\x, 0) -- (\x, -0.2) node[below] {\x};
+            }
+
+            % Eje de ordenadas
+            \draw[-Stealth] (0, 0) -- (0, 8.5) node[above] {};
+            \draw (0, 2) -- (-0.2, 2) node[left] {$\tau_4$};
+            \draw (0, 4) -- (-0.2, 4) node[left] {$\tau_3$};
+            \draw (0, 6) -- (-0.2, 6) node[left] {$\tau_2$};
+            \draw (0, 8) -- (-0.2, 8) node[left] {$\tau_1$};
+
+            % Segmento entre (2,2) y (4,2)
+            \draw[thick, gray] (0, 2) -- (2, 2);
+            \draw[thick, gray] (2, 6) -- (4, 6);
+            \draw[thick, gray] (4, 8) -- (6, 8);
+            \draw[thick, gray] (6, 2) -- (9, 2);
+            \draw[thick, gray] (9, 8) -- (10, 8);
+            \draw[thick, gray] (10, 6) -- (11, 6);
+            \draw[thick, gray] (11, 8) -- (13, 8);
+            \draw[thick, gray] (13, 6) -- (14, 6);
+            \draw[thick, gray] (14, 4) -- (16, 4);
+            \draw[thick, gray] (16, 2) -- (17, 2);
+
+            \fill (1, 2) circle (2pt) node[above] {\verb|P(s1)|};
+            \fill (3, 6) circle (2pt) node[above] {\verb|P(s2)|};
+            \fill (6, 8) circle (2pt) node[above] {\verb|P(s1)|};
+            \fill (9, 2) circle (2pt) node[above] {\verb|V(s1)|};
+            \fill (9, 8) circle (2pt) node[above] {\verb|P(s1)|};
+            \fill (10, 8) circle (2pt) node[below] {\verb|P(s2)|};
+            \fill (11, 6) circle (2pt) node[above] {\verb|V(s2)|};
+            \fill (11, 8) circle (2pt) node[above] {\verb|P(s2)|};
+            \fill (12, 8) circle (2pt) node[below] {\verb|V(s2)|};
+            \fill (13, 8) circle (2pt) node[above] {\verb|V(s1)|};
+        \end{tikzpicture}       
+        \caption{Ejecución de las tareas con herencia de prioridad.}
+        \label{fig:herencia_prio}
+    \end{figure}
+    El comportamiento hasta $t=6$ es el mismo que teníamos sin ningún protocolo para evitar la inversión de prioridad. Sin embargo, cuando $\tau_1$ intente ejecutar \verb|P(s1)|, la tarea $\tau_4$ heredará la prioridad de $\tau_1$ y se ejecutará con prioridad 1 mientras que tenga la sección crítica \verb|s1| en uso (tras su liberación, volverá a prioridad 4). Un comportamiento similar sucede en $t=10$ cuando $\tau_1$ intenta ejecutar \verb|P(s2)|: $\tau_2$ hereda la prioridad de $\tau_1$ mientras que ejecute la sección crítica \verb|s2|. Una vez que $\tau_1$ disponga de todas las secciones críticas a su disposición, será capaz de completar su ejecución y el resto de las tareas entrarán en la CPU en el orden que indica la prioridad de cada una.
+\end{ejemplo}
+
+El ejemplo superior además de darnos un caso particular de ejecución de un conjunto de tareas usando el algoritmo de herencia de prioridad nos muestra algo más, y es que con este protocolo las tareas pueden sufrir ahora dos tipos de bloqueos:
+\begin{itemize}
+    \item Bloqueos directos, como el que sufre $\tau_1$ por tener que esperar a las secciones críticas \verb|s1| y \verb|s2| por parte de $\tau_4$ y $\tau_2$.
+    \item Bloques indirectos, como los que sufren $\tau_2$ y $\tau_3$, al quedar bloqueadas y ejecutarse $\tau_4$, ya que heredó la prioridad de $\tau_1$.
+\end{itemize}
+Estos tipos de bloqueos serán necesarios de entender a la hora de calcular el factor de bloqueo para este protocolo.\\
+
+Además, el protocolo de herencia de prioridad no evita ni el interbloqueo de las tareas en el acceso a recursos ni los bloqueos encadenados o transitivos.
+
+\subsubsection{Tiempo de bloqueo}
+Con este protocolo, una tarea solo puede verse bloqueada un número limitado de veces por otras menos prioritarias, de forma que:
+\begin{itemize}
+    \item Si una tarea tiene definidas en su código $M$ secciones críticas, entonces el número máximo de veces que puede verse bloqueada durante su ejecución es $M$.
+    \item Si hay solo $N<M$ tareas menos prioritarias que la que estamos considerando, entonces el número máximo de bloqueos que puede experimentar la tarea más prioritaria se reduce a $N$.
+\end{itemize}
+Para calcular el factor de bloqueo $B_i$ de una tarea $\tau_i$ hay que establecer qué secciones críticas pueden estar en ejecución por otras tareas menos prioritoarias cuando se active la primera y cuáles de estas pueden bloquearla. El factor de bloqueo para este protocolo suele ser difícil de calcular, por lo que aquí plantearemos una cota superior del tiempo de bloqueo, que se calculará de la siguiente forma (considerando que la tarea $i$ es más prioritaria que la $j$ si $i<j$):
+\begin{itemize}
+    \item En primer lugar, calculamos $B_i^l$, bloqueos debidos a tareas menos prioritarias que $i$.
+    \item Posteriormente, calculamos $B_i^s$, bloqueos debidos a todas las secciones críticas a las que accede la tarea $\tau_i$.
+\end{itemize}
+Finalmente, consideramos que el factor de bloqueo para la $i$-ésima tarea es:
+\begin{equation*}
+    B_i = \min\{B_i^l, B_i^s\}
+\end{equation*}
+
+\subsection{Techo de prioridad}
+El protocolo de herencia de prioridad tenía algunas contrapartidas, como por ejemplo que no está libre de interbloqueos o cadenas de bloqueos; así como que la estimación del tiempo que puede quedar bloqueada una tarea es difícil de calcular y puede ser muy pesimista en algunos casos.\\
+
+Es por esto que se plantean los protocolos de techo de prioridad, entre los que destacamos:
+\begin{itemize}
+    \item El protocolo original de techo de prioridad (OCPP).
+    \item El protocolo de techo de prioridad inmediato (ICPP).
+\end{itemize}
+Aunque el que trataremos ahora será el segundo, que es la mejor solución al problema de la inversión de prioridad, y es la que usa en Sistemas Operativos POSIX\@.\\
+
+Ahora, a cada sección crítica le asignamos una prioridad, a la que llamaremos \textit{techo de prioridad} de la sección crítica. Este valor será igual a la prioridad más grande de la tarea que en algún momento (durante la ejecución de su código) hace uso de esta sección crítica.
+
+Cuando una tarea quiera acceder a una sección crítica, solo podrá acceder a ella en caso de que esté libre y de que su prioridad sea estrictamente mayor que el techo de prioridad de cualquier otra sección crítica en uso.
+
+\begin{ejemplo}
+    Recuperando por última vez el ejemplo que venimos usando en todos los protocolos para evitar la inversión de prioridad, en la Figura~\ref{fig:techo_prio} podemos observar ahora el comportamiento de las tareas si usamos el protocolo de techo de prioridad.
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[scale=0.8]
+            % Eje de abscisas
+            \draw[-Stealth] (0, 0) -- (18, 0) node[right] {};
+            \foreach \x in {0, 2, 4, 6, 8, 10, 12, 14, 16} {
+                \draw (\x, 0) -- (\x, -0.2) node[below] {\x};
+            }
+
+            % Eje de ordenadas
+            \draw[-Stealth] (0, 0) -- (0, 8.5) node[above] {};
+            \draw (0, 2) -- (-0.2, 2) node[left] {$\tau_4$};
+            \draw (0, 4) -- (-0.2, 4) node[left] {$\tau_3$};
+            \draw (0, 6) -- (-0.2, 6) node[left] {$\tau_2$};
+            \draw (0, 8) -- (-0.2, 8) node[left] {$\tau_1$};
+
+            % Segmento entre (2,2) y (4,2)
+            \draw[thick, gray] (0, 2) -- (5, 2);
+            \draw[thick, gray] (5, 8) -- (10, 8);
+            \draw[thick, gray] (10, 6) -- (14, 6);
+            \draw[thick, gray] (14, 4) -- (16, 4);
+            \draw[thick, gray] (16, 2) -- (17, 2);
+
+            \fill (1, 2) circle (2pt) node[above] {\verb|P(s1)|};
+            \fill (5, 2) circle (2pt) node[above] {\verb|V(s1)|};
+            \fill (7, 8) circle (2pt) node[above left] {\verb|P(s1)|};
+            \fill (8, 8) circle (2pt) node[above] {\verb|P(s2)|};
+            \fill (9, 8) circle (2pt) node[below] {\verb|V(s2)|};
+            \fill (10, 8) circle (2pt) node[above] {\verb|V(s1)|};
+            \fill (11, 6) circle (2pt) node[above] {\verb|P(s2)|};
+            \fill (13, 6) circle (2pt) node[above] {\verb|V(s2)|};
+        \end{tikzpicture}       
+        \caption{Ejecución de las tareas con techo de prioridad.}
+        \label{fig:techo_prio}
+    \end{figure}
+    Ahora, debemos tener en cuenta que la sección crítica \verb|s1| tiene un techo de prioridad de 1 (ya que es usada por la tarea $\tau_1$) y que la sección crítica \verb|s2| también tiene el mismo techo de prioridad. En $t=2$ se activan las tareas $\tau_2$ y $\tau_3$, siendo $\tau_2$ la más prioritaria, por lo que intenta acceder a la CPU. Sin embargo, como la prioridad de $\tau_2$ (2) no es superior al techo de prioridad de \verb|s1| (1), $\tau_2$ se ve bloqueada. En $t=4$ se activa $\tau_1$, cuya prioridad no es mayor que el techo de prioridad de \verb|s1|, por lo que también se ve bloqueada hasta que termina \verb|s1|, momento en el que $\tau_1$ entra a ejecución y ya se sigue el orden correspondiente por prioridades de las tareas en el acceso a la CPU\@.
+\end{ejemplo}
+
+\subsubsection{Tiempo de bloqueo}
+Al igual que sucedía con el protocolo de sección crítica no expulsable, como cada tarea solo puede sufrir un único bloque inicial por una tarea de menor prioridad, entonces el factor de bloqueo para la tarea $i$-ésima será igual a la duración de la sección crítica más larga a la que accedan tareas de prioridad inferior y que posean un techo de prioridad mayor o igual que la prioridad de la tarea $i$.
+
+\section{Planificación de tareas aperiódicas}
+Otro problema al que nos enfrentamos con el modelo general de tareas por el que no teníamos que preocuparnos con el modelo simple de tareas es la aparición de las tareas aperiódicas, tareas que ahora debemos tener en cuenta a la hora de planificar las tareas periódicas, tratando de darles servicio.
+
+En esta sección, veremos tres formas de introducir las tareas aperiódicas en juego para poder planificarlas junto a las tareas periódicas que ya sabemos planificar.
+
+\subsection{Servicio de procesamiento en segundo plano}
+Una primera forma simple de planificar tareas aperiódicas en un sistema de tiempo real junto con un conjunto de tareas periódicas que ya hemos planificado consiste en asignarle a dichas tareas aperiódicas las menores prioridades del sistema, de tal forma que la introducción de estas tareas no modifica la planificabilidad de las tareas periódicas que anteriormente considerábamos, ya que las tareas aperiódicas serán ejecutadas en los ``huecos libres'' que deja el procesador al ejecutar las tareas periódicas.
+
+\begin{ejemplo}
+    Consideramos las tareas periódicas $\tau_1$ y $\tau_2$, así como una tecera tarea aperiódica, $J$, podemos observar los atributos temporales de las tareas periódicas en la siguiente tabla:
+    \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        & $C$ & $T$ & $\Phi$ \\
+        \hline
+        $\tau_1$ & 1.5 & 3.5 & 2 \\
+        \hline
+        $\tau_2$ & 0.5 & 6.5 & 0 \\
+        \hline
+    \end{tabular}
+    \end{table}
+    Para este ejemplo, consideramos que $J$ solo se activa una única vez, en $t=2.8$, y que tiene un tiempo de cómputo máximo $C_J = 1.7$.
+
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[scale=0.8]
+            % Eje de abscisas
+            \draw[-Stealth] (0, 0) -- (17, 0) node[right] {};
+            \foreach \x in {0,1,...,16} {
+                \draw (\x, 0) -- (\x, -0.2) node[below] {\x};
+            }
+
+            % Eje de ordenadas
+            \draw[-Stealth] (0, 0) -- (0, 6.5) node[above] {};
+            \draw (0, 2) -- (-0.2, 2) node[left] {$\tau_2$};
+            \draw (0, 4) -- (-0.2, 4) node[left] {$\tau_1$};
+            \draw (0, 6) -- (-0.2, 6) node[left] {$J$};
+
+            \draw[thick, gray] (0, 2) -- (0.5, 2);
+            \draw[thick, gray] (7, 2) -- (7.5, 2);
+            \draw[thick, gray] (14, 2) -- (14.5, 2);
+            \draw[thick, gray] (2, 4) -- (3.5, 4);
+            \draw[thick, gray] (5.5, 4) -- (7, 4);
+            \draw[thick, gray] (9, 4) -- (10.5, 4);
+            \draw[thick, gray] (12.5, 4) -- (14, 4);
+            \draw[thick, gray] (3.5, 6) -- (5.2, 6);
+
+            \fill (6.5, 2) circle (2pt);
+            \fill (13, 2) circle (2pt);
+            \draw[fill] (2, 4) -- ++(2pt, 0) -- ++(-1pt, 3pt) -- cycle;
+            % \fill (2, 4) circle (2pt);
+            \fill (5.5, 4) circle (2pt);
+            \fill (9, 4) circle (2pt);
+            \fill (12.5, 4) circle (2pt);
+            \fill (16, 4) circle (2pt);
+            \draw[fill] (2.8, 6) -- ++(2pt, 0) -- ++(-1pt, 3pt) -- cycle;
+        \end{tikzpicture}
+        \caption{Planificación de tareas usando procesamiento en segundo plano.}
+        \label{fig:2o_plano}
+    \end{figure}
+
+    Como podemos ver en la Figura~\ref{fig:2o_plano}, la planificabilidad de las tareas $\tau_1$ y $\tau_2$ no se ve afectada por la introducción de la tarea $J$ si consideramos un procesamiento en segundo plano de tareas aperiódicas.
+\end{ejemplo}
+
+\subsection{Servicio de peticiones utilizando una tarea sondeante}
+En este caso, se añade una \textit{tarea sondeante} a las tareas periódicas de la aplicación (no tiene por qué ser una tarea más, sino puede ser lógica, por lo que no será necesario crear una tarea más). Se reservará un tamaño $C_s$ equivalente al mayor tiempo de ejecución de las tareas aperiódicas a considerar y un periodo $T_s$ para esta nueva tarea sondeante $\tau_s$. Sin embargo, la prioridad de esta nueva tarea no se asignará en relación a $T_s$, sino que se puede asignar la prioridad deseada.
+
+Con esta tarea sondeante, se puede aplicar el test de Liu y Layland para comprobar la planificabilidad del conjunto de tareas para RMS\@. Para ello, tendremos que considerar el factor de utilización $U$ del procesador por parte de las $n$ tareas periódicas, el factor de utilización por parte de la tarea sondeante y compararlo con la constante para $n+1$ tareas, buscando que:
+\begin{equation*}
+   U + \dfrac{C_s}{T_s} \leq U_0(n+1) = (n+1)\cdot \left(2^{\frac{1}{n+1}}-1\right)
+\end{equation*}
+
+\begin{ejemplo}
+    Ante el ejemplo anterior, consideramos ahora una resolución de la tarea aperiódica mediante una tarea sondeante $\tau_s$, cuyos parámetros temporales podemos observar en la siguiente tabla:
+    \begin{table}[H]
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        & $C$ & $T$ & $\Phi$ \\
+        \hline
+        $\tau_1$ & 1.5 & 3.5 & 2 \\
+        \hline
+        $\tau_2$ & 0.5 & 6.5 & 0 \\
+        \hline
+        $\tau_s$ & 1 & 3 & 0 \\
+        \hline
+    \end{tabular}
+    \end{table}
+    A esta tarea le asignaremos la mayor prioridad del sistema. Ante esta situación, mostraremos en la Figura~\ref{fig:tarea_sondeante} el caso de ejecución cosniderando las mismas condiciones que en el caso anterior, con una activación que $J$ en el instante $t=2.8$, que requiere un tiempo de cómputo de $1.7$.
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[scale=0.8]
+            % Eje de abscisas
+            \draw[-Stealth] (0, 0) -- (17, 0) node[right] {};
+            \foreach \x in {0,1,...,16} {
+                \draw (\x, 0) -- (\x, -0.2) node[below] {\x};
+            }
+
+            % Eje de ordenadas
+            \draw[-Stealth] (0, 0) -- (0, 6.5) node[above] {};
+            \draw (0, 2) -- (-0.2, 2) node[left] {$\tau_2$};
+            \draw (0, 4) -- (-0.2, 4) node[left] {$\tau_1$};
+            \draw (0, 6) -- (-0.2, 6) node[left] {$J$};
+
+            \draw[thick, gray] (0, 2) -- (0.5, 2);
+            \draw[thick, gray] (3, 6) -- (4, 6);
+            \draw[thick, gray] (6, 6) -- (6.7, 6);
+            \draw[thick, gray] (2, 4) -- (3, 4);
+            \draw[thick, gray] (4, 4) -- (4.5, 4);
+            \draw[thick, gray] (5.5, 4) -- (6, 4);
+            \draw[thick, gray] (6.7, 4) -- (7.7, 4);
+            \draw[thick, gray] (7.7, 2) -- (8.2, 2);
+            \draw[thick, gray] (9, 4) -- (10.5, 4);
+            \draw[thick, gray] (12.5, 4) -- (14, 4);
+            \draw[thick, gray] (14, 2) -- (14.5, 2);
+
+            \fill (6.5, 2) circle (2pt);
+            \fill (13, 2) circle (2pt);
+            \draw[fill] (2, 4) -- ++(2pt, 0) -- ++(-1pt, 3pt) -- cycle;
+            % \fill (2, 4) circle (2pt);
+            \fill (5.5, 4) circle (2pt);
+            \fill (9, 4) circle (2pt);
+            \fill (12.5, 4) circle (2pt);
+            \fill (16, 4) circle (2pt);
+            \draw[fill] (2.8, 6) -- ++(2pt, 0) -- ++(-1pt, 3pt) -- cycle;
+            \fill (0, 6) circle (2pt);
+            \fill (3, 6) circle (2pt);
+            \fill (6, 6) circle (2pt);
+            \fill (9, 6) circle (2pt);
+            \fill (12, 6) circle (2pt);
+            \fill (15, 6) circle (2pt);
+        \end{tikzpicture}
+        \caption{Planificación de tareas usando una tarea sondeante.}
+        \label{fig:tarea_sondeante}
+    \end{figure}
+    Como podemos ver, cuando no hay tareas aperiódicas que servir, la tarea sondeante no se ejecuta.
+\end{ejemplo}
+
+\subsection{Servicio de peticiones utilizando un servidor diferido}
+En este caso, se asigna un tamaño al servidor, $C_s$, que se gastará en atender peticiones aperiódicas y que se rellenará a su valor máximo en cada ciclo del servidor, $T_s$. En este caso, se le asignará una prioridad máxima a la tarea que funcione como servidor de tareas aperiódicas, por lo que la inmediatez al atender tareas aperiódicas es característico del servidor diferido.\\
+
+Los valores de $C_s$ y de $T_s$ se eligirán de manera que todas las tareas periódicas del sistema mantengan siempre sus tiempos límite.
+
+\begin{ejemplo}
+    Si consideramos por última vez el conjunto de tareas anterior con un servidor diferido con valores de $C_s$ y $T_s$ iguales a los de la tarea sondeante de la sección anterior, en este caso el comportamiento observado es el de la Figura~\ref{fig:serv_dif}.\\
+
+    Como podemos ver, desde que se inicia la tarea aperiódica en $t=2.8$ hasta el siguiente periodo del servidor diferido transcurren $0.2$ unidades de tiempo, durante las cuales el tiempo del servidor disminuye, pero vuelve a aumentar en $t=3$, por cumplirse un periodo del servidor.\\
+
+    Posteriormente, se gasta todo el tiempo del servidor en atender la tarea, habiendo completado un total de $1.2$ unidades de tiempo de la tarea, que en total son $1.7$, por lo que en el siguiente periodo del servidor diferido se deberán completar las $0.5$ unidades de tiempo restantes para completar la ejecución de la tarea $J$.
+    \begin{figure}[H]
+        \centering
+        \begin{tikzpicture}[scale=0.8]
+            % Eje de abscisas
+            \draw[-Stealth] (0, 0) -- (17, 0) node[right] {};
+            \foreach \x in {0,1,...,16} {
+                \draw (\x, 0) -- (\x, -0.2) node[below] {\x};
+            }
+
+            % Eje de ordenadas
+            \draw[-Stealth] (0, 0) -- (0, 8.5) node[above] {};
+            \draw (0, 4) -- (-0.2, 4) node[left] {$\tau_2$};
+            \draw (0, 6) -- (-0.2, 6) node[left] {$\tau_1$};
+            \draw (0, 8) -- (-0.2, 8) node[left] {$J$};
+            \draw (0, 1.5) -- (0, 1.5) node[left] {Tiempo};
+
+            \draw[thick, gray] (0, 4) -- (0.5, 4);
+            \draw[thick, gray] (2.8, 8) -- (4, 8);
+            \draw[thick, gray] (6, 8) -- (6.5, 8);
+            \draw[thick, gray] (2, 6) -- (2.8, 6);
+            \draw[thick, gray] (4, 6) -- (4.7, 6);
+            \draw[thick, gray] (5.5, 6) -- (6, 6);
+            \draw[thick, gray] (6.5, 6) -- (7.5, 6);
+            \draw[thick, gray] (7.5, 4) -- (8, 4);
+            \draw[thick, gray] (9, 6) -- (10.5, 6);
+            \draw[thick, gray] (12.5, 6) -- (14, 6);
+            \draw[thick, gray] (14, 4) -- (14.5, 4);
+
+            \draw[thick, black] (0, 1) -- (17, 1);
+            \draw[thick, black] (0, 2) -- (2.8, 2);
+            \draw[thick, black] (2.8, 2) -- (3, 1.8);
+            \draw[thick, black] (3, 1.8) -- (3, 2);
+            \draw[thick, black] (3, 2) -- (4, 1);
+            \draw[thick, black] (6, 1) -- (6, 2);
+            \draw[thick, black] (6, 2) -- (6.5, 1.5);
+            \draw[thick, black] (6.5, 1.5) -- (9, 1.5);
+            \draw[thick, black] (9, 1.5) -- (9, 2);
+            \draw[thick, black] (9, 2) -- (17, 2);
+
+            \fill (6.5, 4) circle (2pt);
+            \fill (13, 4) circle (2pt);
+            \draw[fill] (2, 6) -- ++(2pt, 0) -- ++(-1pt, 3pt) -- cycle;
+            % \fill (2, 4) circle (2pt);
+            \fill (5.5, 6) circle (2pt);
+            \fill (9, 6) circle (2pt);
+            \fill (12.5, 6) circle (2pt);
+            \fill (16, 6) circle (2pt);
+            \draw[fill] (2.8, 8) -- ++(2pt, 0) -- ++(-1pt, 3pt) -- cycle;
+            \fill (0, 8) circle (2pt);
+            \fill (3, 8) circle (2pt);
+            \fill (6, 8) circle (2pt);
+            \fill (9, 8) circle (2pt);
+            \fill (12, 8) circle (2pt);
+            \fill (15, 8) circle (2pt);
+        \end{tikzpicture}
+        \caption{Planificación de tareas usando un servidor diferido.}
+        \label{fig:serv_dif}
+    \end{figure}
+\end{ejemplo}
+
+\subsubsection{Análisis de planificabilidad}
+Si consideramos un conjunto de $n$ tareas periódicas $\tau_1$, $\tau_2$, \ldots, $\tau_n$ y un servidor diferido de tiempos $C_s$ y $T_s$, notando por $U_p$ al factor de utilización de la CPU por parte de las $n$ tareas periódicas y por $U_s$ al factor de utilización de la CPU por parte del servidor diferido:
+\begin{equation*}
+    U_p = \sum_{i=1}^{n} \dfrac{C_i}{T_i} \qquad \qquad  U_s = \dfrac{C_s}{T_s}
+\end{equation*}
+Entonces, el conjunto de tareas periódicas junto con el servidor diferido serán planificables si se cumple la desigualdad:
+\begin{equation*}
+    U_p \leq n \cdot \left({\left(\dfrac{U_s+2}{2U_s+1}\right)}^{\frac{1}{n}}-1\right)
+\end{equation*}
+Notemos que cuando $n\rightarrow\infty$ la desigualdad a comprobar resulta:
+\begin{equation*}
+    U_p \leq \ln\left(\dfrac{U_s+2}{2U_s+1}\right)
+\end{equation*}
