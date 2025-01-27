@@ -1,0 +1,521 @@
+\chapter{Caché}
+Las memorias caché son memorias pequeñas y rápidas basadas en 
+SRAM gestionadas automáticamente por el hardware. Su objetivo es retener bloques de memoria principal
+accedidos frecuentemente. La CPU busca los datos primero en caché, la estructura es la siguiente:
+\begin{center}
+    \includesvg[width=0.8\textwidth]{Imagenes/estruc_cpu}
+\end{center}
+El diseño moderno de una CPU es de la siguiente forma:
+\begin{center}
+    \includesvg[width=0.75\textwidth]{Imagenes/diseno_moderno}
+\end{center}
+Se caracteriza por ser \textit{superescalar} (capaz de realizar múltiples operaciones por ciclo de reloj) y de ejecución \textit{fuera de orden} (sin respetar necesariamente el orden del programa). Se divide principalmente en dos unidades:
+\begin{itemize}
+    \item \textbf{Unidad de Control de Instrucciones (ICU):} Encargada de leer las instrucciones desde la memoria, realizar predicción de saltos, y descomponerlas en operaciones primitivas (micro-operaciones).  
+    \item \textbf{Unidad de Ejecución (EU):} Responsable de ejecutar las operaciones utilizando unidades funcionales especializadas (aritmética, carga, almacenamiento, etc.), con soporte para ejecución especulativa y paralelismo.
+\end{itemize}
+
+Ambas unidades trabajan con memoria caché de alta velocidad para minimizar tiempos de acceso y optimizar el rendimiento del procesador.
+Como podemos imaginarnos, el aspecto real de una CPU es más complejo.
+\subsection{Organización general de Cache}
+Consideramos un sistema en el que cada dirección de memoria tiene $m$ bits que forman
+$2^m$ direcciones. Una caché para un sistema de estas características se organiza como un
+array de $2^c$ conjuntos de caché. Cada conjunto consiste en $E$ líneas de caché, cada linea
+consiste en un bloque de datos $B$ de $2^b$ bytes. Un bit de estado valido que indica si la linea contiene o
+no información válida y $t = m - (b + c)$ bits de etiqueta que identifican el bloque guardado en la linea de caché:
+\begin{center}
+    \includesvg[width=0.8\textwidth]{Imagenes/organizacion_cache}
+\end{center}
+Cuando el procesador ejecuta una instrucción de carga para leer una palabra de la dirección $A$ en la memoria principal, envía esa dirección a la caché. El proceso para determinar si la caché contiene una copia de la palabra solicitada es el siguiente:
+\begin{enumerate}
+ 
+\item La dirección $A$ se divide en tres campos: \textit{etiqueta}, \textit{indice conjunto} y \textit{offset}.
+\item Los bits de \textit{indice de conjunto} se utilizan para seleccionar el conjunto en la caché donde podría estar almacenada la palabra.
+\item Dentro del conjunto, los bits de \textit{etiqueta} identifican la línea que puede contener la palabra. Esto se confirma si el bit de validez está activado y los bits de \textit{etiqueta} coinciden.
+\item Finalmente, los bits de \textit{offset} especifican la posición exacta de la palabra dentro del bloque de datos.
+\end{enumerate}
+
+A continuación, se muestra la partición de la dirección en sus respectivos campos:
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+  \hline
+  \textbf{Etiqueta} ($t$ bits) & \textbf{Indice conjunto} ($c$ bits) & \textbf{offset} ($b$ bits) \\
+  \hline
+  $m-t-c$ & $c$ & $b$ \\
+  \hline
+\end{tabular}
+\end{center}
+Las cachés se dividen en diferentes grupos en función del numero de lineas por conjunto (E). Una caché con una única 
+linea por conjunto (E = 1) se conoce como una caché con correspondencia directa. Veamos un ejemplo de su funcionamiento, para ello,
+sea el tamaño del bloque $B = 8$ bytes, buscaremos en la primera linea el segundo entero guardado (4 bytes):
+\begin{center}
+    \includesvg[width=0.9\textwidth]{Imagenes/corresp_direct}
+\end{center}
+Si la etiqueta no coincide, se producirá un fallo.
+\begin{ejemplo}
+Veamos un ejemplo del funcionamiento de la caché en correspondiencia directa
+, para ello, consideraremos un direccionamiento de 4 bits, con 4 conjuntos, 2 
+bytes por bloque y cada palabra es un byte.
+De esta forma, tendremos un total de 16 direcciones posibles, las describimos en la siguiente tabla:
+    \begin{center}
+\begin{tabular}{p{2cm} p{2cm} p{2cm} p{2cm} p{2cm}}
+\hline
+\textbf{Dirección} & \textbf{Tag bits (t = 1)} & \textbf{Bits índice (s = 2)} & \textbf{Offset bits (b = 1)} & \textbf{Numero bloque} \\
+\hline
+0  & 0 & 00 & 0 &  0 \\
+1  & 0 & 00 & 1 &  0 \\
+2  & 0 & 01 & 0 &  1 \\
+3  & 0 & 01 & 1 &  1 \\
+4  & 0 & 10 & 0 &  2 \\
+5  & 0 & 10 & 1 &  2 \\
+6  & 0 & 11 & 0 &  3 \\
+7  & 0 & 11 & 1 &  3 \\
+8  & 1 & 00 & 0 &  4 \\
+9  & 1 & 00 & 1 &  4 \\
+10 & 1 & 01 & 0 &  5 \\
+11 & 1 & 01 & 1 &  5 \\
+12 & 1 & 10 & 0 &  6 \\
+13 & 1 & 10 & 1 &  6 \\
+14 & 1 & 11 & 0 &  7 \\
+15 & 1 & 11 & 1 &  7 \\
+\hline
+\end{tabular}
+\end{center}
+Ahora simulamos la caché en acción, en primer lugar está vacía (Se añade la columna Conjunto para facilitar la comprensión sin embargo en la caché sabemos que no hay tal cosa). Realizaremos la siguiente secuencia de lecturas:
+\begin{center}
+\begin{tabular}{cccc}
+    Conjunto & Valido & Etiqueta & Bloque \\
+    \hline
+    0 & 0 & & \\
+    1 & 0 & & \\
+    2 & 0 & & \\
+    3 & 0 & & \\
+\end{tabular}
+\end{center}
+\begin{enumerate}
+    \item Leer la palabra en la dirección 0: Como el bit de válido para el conjunto 0 es 0, esto es un \textit{cache-miss} por lo que la caché capta el bloque 0 de memoria principal (o de un nivel inferior de caché) y guarda el 
+        bloque en el conjunto 0. Tras esto la caché retorna m[0]. 
+\begin{center}
+\begin{tabular}{cccc}
+    Conjunto & Valido & Etiqueta & Bloque \\
+    \hline
+    0 & 1 & 0 & M[0-1] \\
+    1 & 0 & & \\
+    2 & 0 & & \\
+    3 & 0 & & \\
+\end{tabular}
+\end{center}
+\item Leer la palabra en la dirección 1: Esto es un \textit{hit}, por tanto la caché retorna el bloque 1 de la linea de caché, el estado de la caché no cambia.
+\item Leer la palabra en la dirección 13: Como el bit de válido para el conjunto 2 es 0, esto es otro \textit{cache-miss} por lo que la caché cata el bloque 6 de memoria principal y guarda el bloque en el conjunto 2. Tras esto la caché retorna m[13].
+\begin{center}
+\begin{tabular}{cccc}
+    Conjunto & Valido & Etiqueta & Bloque \\
+    \hline
+    0 & 1 & 0 & M[0-1] \\
+    1 & 0 & & \\
+    2 & 1 & 1 & M[12-13] \\
+    3 & 0 & & \\
+\end{tabular}
+\end{center}
+\item Leer la palabra en la dirección 8: Esto es un \textit{miss} ya que aunque el bit para la linea en el conjunto 0 es válido, la etiqueta (tag) no coincide, por lo que la caché carga el bloque 4 en el conjunto 0 sustituyendo el bloque
+    anterior. Tras esto la caché retorna m[8].
+        \begin{center}
+\begin{tabular}{cccc}
+    Conjunto & Valido & Etiqueta & Bloque \\
+    \hline
+    0 & 1 & 1 & M[8-9] \\
+    1 & 0 & & \\
+    2 & 1 & 1 & M[12-13] \\
+    3 & 0 & & \\
+\end{tabular}
+\end{center}
+\item Leer la palabra en la dirección 0: Esto es otro \textit{miss} ya que desafortunadamente, acabamos de reemplazar el bloque 0, por lo que la caché carga el bloque 0 en el conjunto 0 sustituyendo el bloque 4. Tras esto la caché retorna m[0].
+        \begin{center}
+\begin{tabular}{cccc}
+    Conjunto & Valido & Etiqueta & Bloque \\
+    \hline
+    0 & 1 & 1 & M[0-1] \\
+    1 & 0 & & \\
+    2 & 1 & 1 & M[12-13] \\
+    3 & 0 & & \\
+\end{tabular}
+\end{center}
+\end{enumerate}
+\end{ejemplo}
+\subsection{Escrituras}
+Como ya hemos visto, las operaciones de lectura son directas, en el caso de la escritura, supongamos
+que una palabra $w$ ya está en caché (\textit{write hit}), tras actualizarla, qué pasa con la copia de $w$ en el 
+siguiente nivel de la jerarquía? Existen dos alternativas:
+\begin{itemize}
+    \item \textbf{Write through:} Se actualiza el bloque inferior inmediatamente, este enfoque es simple pero tiene 
+        la desventaja de causar un trafico en el bus tras cada escritura.
+    \item \textbf{Write back:} Aplaza la actualización lo máximo posible actualizando el bloque en el nivel inferior solo cuando
+        sale de la caché por reemplazo. Por la localidad, se puede reducir significativamente el tráfico del bus pero tiene la desventaja de
+        que introduce una complejidad adicional, ya que se debe mantener un bit adicional (dirty bit) para cada linea de caché que indica si 
+        el bloque ha sido o no modificado.
+\end{itemize}
+En el caso de que la palabra no esté en caché (\textit{write miss}), se puede optar por dos estrategias:
+\begin{itemize}
+    \item \textbf{Write allocate:} Se carga el bloque completo desde el siguiente nivel de la 
+        jerarquía a la caché y se actualiza la linea, con este enfoque se trata de aprovechar 
+        la localidad espacial de las escrituras pero tiene la desventaja de que cada \textit{miss}
+        implica una transferencia desde el nivel inferior.
+    \item \textbf{No write allocate:} Se actualiza el bloque en el siguiente nivel de la jerarquía sin cargarlo en caché, 
+        este enfoque es más rápido pero tiene la desventaja de que no se aprovecha la localidad espacial.
+\end{itemize}
+Estas estrategias se suelen combinar en los pares \textit{Write through + No write allocate} y \textit{Write back + Write allocate}.
+Cuando intentemos programar un programa \textit{cache-friendly} asumiremos que se sigue el modelo \textit{write back + write allocate} ya 
+que los detalles varían de un sistema a otro y no son públicos, sin embargo es la estrategia más común.
+\subsection{Por qué indexar los bits intermedios}
+Es posible que surja la pregunta de por qué se indexan los conjuntos con los bits intermedios en lugar de los bits más significativos,
+la respuesta es que si se indexan con los bits más significativos, los bloques que esten contiguos en memoria serán asignados al mismo conjunto, 
+esto puede ser un problema si se accede a bloques consecutivos ya que se producirán \textit{misses} en la caché. Para verlo mejor, consideremos
+una caché con 4 conjuntos (00, 01, 02, 03) y una memoria de 64 Bytes, es decir, 6 bits para direcciones:
+\begin{center}
+    \includesvg[width=0.9\textwidth]{Imagenes/indexacion_cache_bits}
+\end{center}
+En el caso de indexación por bits intermedios, las direcciones son de la forma: TT\underline{SS}BB y en el caso de indexación por bits más significativos
+\underline{SS}TTBB.
+Veamos un ejemplo de un acceso en una cache de datos L1 de un intel core i7:
+\begin{center}
+    \begin{minipage}{0.6\textwidth}
+        \includesvg[width=\textwidth]{Imagenes/jerarquia_i7}
+    \end{minipage}
+    \begin{minipage}{0.3\textwidth}
+        \begin{itemize}
+            \item \textbf{Cache L1:} 32KB, 8 vías, Acceso 4 ciclos.
+            \item \textbf{Caché unificada L2:} 256KB, 8 vías, Acceso 10 ciclos.
+            \item \textbf{Caché unificada L3:} 8MB, 16 vías, Acceso 40-75 ciclos.
+            \item \textbf{Tamaño de bloque}: 64 Bytes.
+        \end{itemize}
+    \end{minipage}
+\end{center}
+Como hemos dicho que el acceso será a L1, tenemos 32KB en 8 vias, con 64 Bytes por bloque y 47 bits de dirección.
+\begin{itemize}
+    \item B = 64 Bytes, por tanto necesitamos $log_2(64) = 6$ bits para el offset.
+    \item V = 8 vias, por tanto necesitamos $log_2(8) = 3$ bits para el indice.
+    \item Tamaño total = 32KB, como Tamaño = C $\times$ V $\times$ B, despejando se tiene $C = \frac{2^{15}}{2^9} = 2^6$, por tanto necesitamos 6 bits para el indice de conjunto c.
+\end{itemize}
+En este caso, 
+dada ahora la dirección de pila \texttt{0x0000 7f72 62a1 e010} la descomponemos de la siguente manera:
+\begin{itemize}
+    \item Usamos 6 bits para el desplazamiento (b) y 6 para el indice de conjunto (c), es decir, 12 bits en total, de nuestra dirección en hexadecimal
+        esto correponde a los 3 bits menos significativos de la dirección ya que como bien sabemos, cuatro bits en binario se correponden a un digito en hexadecimal.
+    \item Usamos ahora que el tamaño de etiqueta es 47 - 12 = 35 bits, por tanto, los 35 siguientes bits serán la etiqueta.
+    \item Teniendo en cuenta un bit de valido, la etiqueta será por tanto: \texttt{0x7f 7262 a1e0}
+\end{itemize}
+Veamos un ejemplo más para comprender perfectamente los conceptos:
+\begin{ejemplo}
+    Sea un procesador cuya jerarquía de memoria se distribuye en 1GB de memoria principal, 64B de tamaño de bloque y la caché:
+    \begin{itemize}
+        \item L1: 32KB de 8 vías
+        \item L2: 128 KB de 8 vías
+        \item L3: 16MB de 16 vías
+    \end{itemize}
+    Veamos cómo podemos calcular el tamaño de cada campo y el total ocupado por la etiqueta (por ejemplo):
+    \\ \\ 
+    En primer lugar, nos fijamos en que la memoria principal ocupa $1GB = 2^{30}B$, es decir, se tienen 30 bits de dirección,
+    como el tamaño de bloque es $64B = 2^6B$, se necesitan 6 bits para el offset, en el caso en particular de L3, tenemos 16MB = $2^{24}B$ 
+    y $16 = 2^4$ vías, es decir, el campo de vías necesitará 4 bits. A partir de esta información ya podemos calcular lo que queremos:
+    \begin{itemize}
+        \item El campo de conjunto tendrá $24 - 6 - 4 = 14$ bits.
+        \item El campo de etiqueta tendrá $30 - 14 - 6 = 10$ bits.
+        \item El tamaño total que ocupan las etiquetas en L3 será el número de bits para el campo de etiqueta, multiplicado por el número 
+            de lineas por conjunto y el número de conjuntos, es decir: $10 \times 16 \times 2^{14} \approx 2.5MB$.
+    \end{itemize}
+\end{ejemplo}
+
+\section{Políticas de Colocación}
+\subsection{Correspondencia Directa}
+El bloque \( i \) de la memoria principal (MP) se asigna a la línea \( i \mod 2^l \) de la caché. 
+Es decir, la caché está compuesta únicamente por lineas, esto supone que cada linea de caché contenga
+un bit de validez, los bits de etiqueta y el contenido del bloque. Respecto a la memoria principal, contiene la etiqueta, 
+la linea correspondiente y el offset.
+\[
+\text{Bloque i de MP} \implies \text{línea } i \mod 2^l \text{ de caché}.
+\]
+\textbf{Ejemplo:} Veamos una representación de una linea de caché junto con memoria principal:
+\begin{center}
+    \includesvg[width=0.5\textwidth]{Imagenes/correspondencia_directa}
+\end{center}
+Supongamos por tanto por ejemplo (ignorando bit de válido) que tenemos una caché de 128KB $\rightarrow$ 16 bits, con un tamaño de bloque de 64B $\rightarrow$ 6 bits, entonces
+tendremos $2^10$ lineas, es decir, necesitamos 10 bits para la linea y el resto del tamaño es para el campo de etiqueta.
+Esto trae como ventaja la simplicidad y el bajo coste, sin embargo, si dos o mas bloques, utilizados alternativamente, corresponden al mismo marco de bloque, se producirán fallos de caché.
+
+\subsection{Correspondencia Totalmente Asociativa}
+El bloque \( i \) de la memoria principal puede residir en cualquier línea de la caché. En este caso, no hay un índice de conjunto, y todas las líneas son comparadas simultáneamente para verificar si el bloque está presente.
+
+\[
+\text{Bloque i de MP} \implies \text{cualquier línea de la caché}.
+\]
+
+\textbf{Ejemplo:} Veamos una representación como en el caso anterior:
+\begin{center}
+    \includesvg[width=0.5\textwidth]{Imagenes/totalmente_asociativa}
+\end{center}
+Si la dirección de la memoria principal tiene \( m = 18 \) bits, la etiqueta es la concatenación de los \( m-b \) bits más significativos de la dirección de la memoria.
+Con este enfoque se tiene una mayor flexibilidad ya que permite cualquier combinación de bloques de memoria principal en la caché y elimina en gran medida los conflictos entre bloques, sin embargo,
+es costosa y compleja de implementar.
+
+\subsection{Correspondencia Asociativa por Conjuntos}
+La caché se divide en \( 2^c \) conjuntos disjuntos, con \( 2^v \) marcos de bloque por conjunto. El bloque \( i \) de la memoria principal se asigna al conjunto \( i \mod 2^c \), pero dentro del conjunto, el bloque puede residir en cualquier marco de bloque.
+
+\[
+\text{Bloque i de MP} \implies \text{conjunto } i \mod 2^c \text{ de caché}.
+\]
+
+\textbf{Ejemplo:} Si \( c = 6 \), \( b = 4 \), la dirección se divide en una etiqueta de \( m - (c+b) = 8 \) bits, que identifica el bloque en la caché. El acceso se realiza en dos fases: primero se selecciona el conjunto, y luego se realiza una búsqueda asociativa dentro del conjunto.
+En este caso se pretende reducir el coste de la totalmente asociativa manteniendo un rendimiento similar, es por ello que es la técnica más utilizada. Los resultados experimentales demuestran que un tamaño de conjunto de 2 a 16 marcos de bloque funciona casi tan bien como una correspondencia
+totalmente asociativa con un incremento de coste pequeño respecto de la correspondencia directa.
+
+\subsection{Política de reemplazo}
+Si se produce una fallo en la lectura hay que traer un nuevo bloque, en caso de que la caché esté llena, deberemos decidir
+cual de los bloques quitamos, este problema no existe para correspondencia directa, sin embargo, para el resto de organizaciones se tienen
+los siguientes algoritmos de reemplazo:
+\begin{itemize}
+    \item \textbf{FIFO:} (First in First out) De todos los bloques existentes en la caché se reemplaza el primero que se introdujo.
+    \item \textbf{LRU}: (Least Recently Used) De todos los bloques existentes en la caché se reemplaza el que se ha usado menos recientemente.
+    \item \textbf{RAND}: Se escoje al azar.
+\end{itemize}
+El más usado es el LRU, sin embargo, notemos que para tener información sobre cual es el menos usado hace falta memoria adicicional.
+
+
+\subsection{Métricas para prestaciones de caché}
+Para medir el rendimiento de una caché, se usan las siguientes métricas:
+\begin{itemize}
+    \item \textbf{Miss rate (Tasa de fallo):} La fracción de referencias a memoria que resultan en un fallo de caché durante la ejecución
+        de un programa, se calcula como $\frac{\text{fallos}}{\text{referencias}}$. Notemos que la tasa de acierto (hit rate) es $1 - \text{miss rate}$.
+    \item \textbf{Hit time (Tiempo en acierto):} Es el tiempo necesario para entregar una línea de caché al procesador, incluye el tiempo
+        para determinar si la línea está en caché. 4 ciclos para L1 10 para L2.
+    \item \textbf{Miss penalty (Penalización por fallo):} Tiempo adicional necesario por causa de un fallo. Entre 50 y 200 ciclos de reloj.
+\end{itemize}
+La optimización del coste y rendimiento de las memorias caché es un ejercicio delicado que requiere de notables simulaciones y benchmarks.
+Notemos que hay una enorme diferencia entre un acierto y un fallo, alrededor de incluso 100 veces más lento si consideramos L1 y memoria principal. Destacamos
+que usamos la tasa de fallo en lugar de la de acierto ya que puede resultar confuso que una tasa de acierto del $99\%$ sea el doble de buena que del $97\%$.
+\subsection{Jerarquía de memoria}
+Usaremos $i$ para denotar el nivel dentro de la jerarquía, en estas condiciones, podemos caracterizar los dispositivos de almacenamiento por su:
+\begin{itemize}
+    \item Tiempo de acceso ($t_i$): Tiempo desde que se inicia una lectura hasta que llega la palabra deseada.
+    \item Tamaño de la memoria ($s_i$): Número de palabras, bytes, sectores, etc que se pueden almacenar en el dispositivo de memoria.
+    \item Coste por bit o por byte ($c_i$).
+    \item Ancho de banda ($b_i$): Velocidad a la que se transfiere la información desde un dispositivo.
+    \item Unidad de transferencia ($x_i$): Tamaño de la unidad de información que se transfiere entre el nivel $i$ y el $i+1$.
+\end{itemize}
+Con las anteriores definiciones, podemos establecer los siguientes órdenes:
+\begin{align*}
+    t_i < t_{i+1} \quad s_i < s_{i+1} \quad c_i > c_{i+1} \quad b_i > b_{i+1} \quad x_i < x_{i+1}
+\end{align*}
+Además se verifica lo que llamaremos \textbf{Propiedad de inclusión:}
+\begin{itemize}
+    \item $M_1 \subset M_2 \subset M_3 \subset \cdots \subset M_n$.
+    \item Si una palabra se encuentra en $M_i$ entonces en los niveles siguientes podemos encontrar copias de esa palabra.
+    \item Si una palabra está almacenada en $M_i$ puede no estarlo en $M_{i-1}$, en ese caso, tampo puede estar en $M_{i-2}$, etc.
+\end{itemize}
+\subsection{Modelo de evaluación de la jerarquía}
+C.K. Chow propuso en 1974 un modelo que asume que las caches son inclusivas $\sum_{i=1}^{j} a_i = A_j$ y que el compilador no usa registros $(A_0 = 0)$.
+En este modelo se propone el concepto de \textit{Hit ratio} (tasa de aciertos ($A_i$)), este hace referencia al porcentaje de información buscada
+que está en el nivel $i$, en una jerarquía con $n$ niveles, $A_0 = 0$ y $A_n = 1$. $A_i$ depende de la capacidad del nivel, la granularidad de la transferencia de información
+y de la estrategia de administración de memoria tomada.
+Análogamente, se define el \textit{Miss ratio} (tasa de fallos ($F_i$)), como el porcentaje de información buscada que no está en el nivel $i$, se tiene que $F_i = 1 - A_i$.
+\\ \\
+Para cada nivel $i$, la tasa de aciertos especifica de ese nivel $(a_i)$ se define como la frecuencia de accesos de primer éxito al nivel $i$. La probabilidad de 
+acceder con éxito a una información en el nivel $i$ y que esa información no se encuentre en los niveles superiores, se verifica $\sum_{i=1}^{n} a_i = 1$.
+Como ya mencionamos, el objetivo al diseñar una memoria con $n$ niveles es obtener un rendimiento cercano al nivel más rápido, pero con un coste similar al nivel más lento.
+Para medir el rendimiento de la jerarquía, se utilizan varias métricas:
+\begin{itemize}
+    \item El \textbf{tiempo medio} de acceso ponderado, que se calcula como:
+        \begin{equation*}
+            \overline{T} = \sum_{i=1}^n a_i T_i \quad \text{ ó }\quad \overline{T} = \sum_{i=1}^n F_{i-1} t_i 
+        \end{equation*}
+Donde se usa el tiempo $T_i$ que es el tiempo de acceso efectivo al nivel $i-$ésimo:
+\begin{equation*}
+    T_i = \sum_{j=1}^{i} t_j 
+\end{equation*}
+Para cada nivel, donde $t_j$ es el tiempo de acceso especifico del nivel j.
+    \item El \textbf{Coste por bit} que se calcula como:
+\begin{equation*}
+    c(n) = \frac{\sum_{i=1}^{n} c_i \cdot s_i}{\sum_{i=1}^{n} s_i} + c_0
+\end{equation*}
+Donde el numerador representa el coste total, el denominador el tamaño total y $c_0$ el coste de interconexión.
+\end{itemize}
+\begin{ejemplo}
+    Veamos un ejemplo sobre un modelo con dos niveles (caché y memoria principal):
+    \begin{itemize}
+        \item $t_1 = t_c$ Tiempo de acceso a la memoria caché.
+        \item $a_1 = A_1 = A$ Tasa de aciertos en la caché.
+        \item $t_2 = t_m$ Tiempo de acceso a la memoria principal.
+        \item Entonces el tiempo medio de acceso $\overline{T}$:
+            \begin{equation*}
+                \overline{T} = At_c + (1-A)(t_c + t_m)
+            \end{equation*}
+        Ya que si hay un acierto en la caché, el tiempo de acceso es $t_c$, si no, el tiempo de acceso es $t_c + t_m$ porque se accede a la caché y luego a la memoria principal.
+    \item Definiendo $\gamma$ como la razón entre los tiempos de acceso a la MP y a la caché:
+        \begin{equation*}
+            \gamma = \frac{t_m}{t_c}
+        \end{equation*}
+    \end{itemize}
+\end{ejemplo}
+En general la eficiencia de un sistema que utiliza memoria caché es:
+\begin{equation*}
+    E = \frac{t_c}{\overline{T}} = \frac{t_c}{At_c + (1-A)(t_c + t_m)} = \frac{1}{A + (1-A)(\gamma +1)} = \frac{1}{1 + \gamma(1-A)}
+\end{equation*}
+\begin{itemize}
+    \item La efiencia resulta máxima cuando $A = 1$.
+    \item La eficiencia es mayor cuanto menor sea $\gamma$ y mayor sea $A$.
+\end{itemize}
+\begin{ejemplo}
+    Consideramos un sistema cuyo tiempo de acceso a la caché es de 15ns, a la memoria principal de 100ns y la tasa de aciertos en la caché es del 90\%.
+    \begin{equation*}
+        \overline{T} = 0.9 \cdot 15 + 0.1 \cdot (15 + 100) = 25ns \quad E = \frac{15}{25} = 0.6
+    \end{equation*}
+\end{ejemplo}
+\subsection{Caché separada o unificada}
+Como se pudo ver en la jerarquía de un Intel Core i7, la caché L1 es separada, es decir, hay una caché para instrucciones y otra para datos.
+\begin{itemize}
+    \item \textbf{Caché de datos:} La localidad de los datos no es tan buena como la de las instrucciones por lo que es menor eficiente, además es más compleja ya
+        que se puede escribir, modificando los datos. En muchos sistemas, no hay caché de datos.
+    \item \textbf{Caché instrucciones:} Es fácil que bucles y pequeñas subrutinas entren totalmente en caché, permitiendo su ejecución sin necesidad de acceder a memoria principal, además es de solo lectura pro lo que 
+        es más sencilla y rápida.
+\end{itemize}
+De esta manera, podemos emitir direcciones de instrucción y datos a la vez, doblando el ancho de banda entre caché y procesador, además, se puede optimizar cada caché por separado.
+Cuando comparamos la frecuencia de fallos de una caché de instrucciones, de datos y unificada, se tiene que la de instrucciones es la que menos fallos tiene y por consiguiente, la unificada es la siguinte.
+\subsection{Impacto del tamaño}
+Por un lado, una caché mas grande tenderá a incrementar la tasa de acierto, sin embargo, es más complejo hacer que una memoria más grande vaya rapido, por lo que el tiempo de acceso será mayor.
+En cuanto al tamaño de bloque, un bloque más grande incrementará la tasa de acierto ya que se aprovecha mejor la localidad espacial, sin embargo, si el bloque es muy grande, se perderá la localidad temporal.
+\subsection{La montaña de memoria}
+El ratio con el que un programa lee datos de la memoria del sistema se llama rendimiento de lectura (bandwidth), se mide en bytes por segundo,
+normalmente se expresa en MB/s. Si escribiesemos un programa que realizase una secuencia de lecturas en un bucle, podríamos obtener información 
+acerca del rendimiento del sistema en esa secuencia particular. Presentamos el siguiente código:
+\begin{center}
+    \begin{minted}{C}
+/* Declaración del array global que vamos a recorrer */
+long data[MAXELEMS];
+
+/*
+ * test - Itera sobre los primeros "elems" elementos del array "data"
+ * con un salto (stride) de "stride", utilizando desenrollado de bucle 4 x 4.
+ */
+int test(int elems, int stride) {
+    long i, sx2 = stride * 2, sx3 = stride * 3, sx4 = stride * 4;
+    long acc0 = 0, acc1 = 0, acc2 = 0, acc3 = 0;
+    long length = elems;
+    long limit = length - sx4;
+
+    /* Combinar 4 elementos a la vez */
+    for (i = 0; i < limit; i += sx4) {
+        acc0 = acc0 + data[i];
+        acc1 = acc1 + data[i + stride];
+        acc2 = acc2 + data[i + sx2];
+        acc3 = acc3 + data[i + sx3];
+    }
+
+    /* Procesar cualquier elemento restante */
+    for (; i < length; i++) {
+        acc0 = acc0 + data[i];
+    }
+
+    return ((acc0 + acc1) + (acc2 + acc3));
+}
+    \end{minted}
+\end{center}
+La función test genera la secuencia de lectura deseada, el bucle está desenrollado en 4 iteraciones, para incrementar el paralelismo.
+Podríamos programar una función que corra el codigo anterior (con un calentamiento para obtener resultados precisos) y obtendríamos el ancho de banda.
+Usando que tenemos como parámetros el tamaño de los elementos y el salto, podemos obtener el ancho de banda en función de estos dos parámetros, obteniendo
+una gráfica en 3D cuyo aspecto es similar a una montaña, de ahí el nombre.
+\begin{center}
+    \includesvg[width=0.8\textwidth]{Imagenes/monta_memoria_5600H}
+\end{center}
+En este caso, se ha generado la gráfica para un sistema con una CPU Ryzen 5 5600H, como se puede ver, existen varias crestas de localidad temporal mientras 
+que encontramos curvas para la localidad espacial.
+\section{Código amigable con caché}
+Ya hemos introducido el término de localidad anteriormente, ahora que hemos visto la caché con mayor detenimiento, seremos más precisos,
+como dijimos, los programas con mejor localidad tenderán a provocar menos misses, lo que resulta en una mayor eficiencia, es por ello, que como 
+programadores, deberemos tratar de escribir código \textit{caché friendly}, con este fin, introducimos los principios que seguiremos:
+\begin{itemize}
+    \item \textbf{Hacer que el caso común común vaya más rápido:} Los programas normalmente usan la mayoría del tiempo en algunas funciones esenciales,
+        estas funciones a su vez, usan el tiempo en bucles, nos centraremos en optimizar estos bucles.
+    \item \textbf{Minimar los fallos en los bucles internos:} Buscaremos referencias repetidas a variables para buscar localidad temporal y 
+        patrones de referencia de salto 1 para buscar localidad espacial.
+\end{itemize}
+Para ver cómo funciona esto, veamos un ejemplo de código:
+\begin{ejemplo}
+    Calcularemos el centro de masas de 1024 algas en un array de 32x32 posiciones, donde cada una de ellas es un struct posición con dos enteros para indicar
+    la coordenada x e y. El resto de variables auxiliares para calcular esto se guardarán en registros. Para este caso, consideramos una caché cuyas características son:   
+    \begin{itemize}
+        \item \textbf{Tamaño:} 2KB
+        \item \textbf{Tamaño bloque:} 32B
+        \item \textbf{Política}: correspondencia directa
+    \end{itemize}
+    De estas características se obtiene que:
+    \begin{itemize}
+        \item Cada struct ocupa 8B
+        \item Cada bloque tiene 4 structs
+        \item Cada fila son 32 structs de 8B, es decir 256B
+        \item Cada caché contiene $2^{11} / 2^5 = 64$ bloques, es decir, 8 filas.
+    \end{itemize}
+    Presentamos cuatro versiones para resolver el código anterior:
+
+    \begin{figure}[H]
+        \centering
+        \begin{minipage}{0.4\textwidth}
+            \begin{minted}{C}
+    for (j=0; j<32; j++)
+        for (i=0; i<32; i++)
+            total_x += grid[i][j].x;
+    for (j=0; j<32; j++) {
+        for (i=0; i<32; i++) {
+            total_y += grid[i][j].y;
+            \end{minted}
+            \caption{Versión 1}
+        \end{minipage}
+        \hspace{1cm}
+        \begin{minipage}{0.4\textwidth}
+            \begin{minted}{C}
+    for (i=0; i<32; i++)
+        for (j=0; j<32; j++)
+            total_x += grid[i][j].x;
+    for (i=0; i<32; i++) {
+        for (j=0; j<32; j++) {
+            total_y += grid[i][j].y;
+            \end{minted}
+            \caption{Versión 2}
+        \end{minipage}
+    \end{figure}
+
+    \begin{figure}[H]
+        \centering
+        \begin{minipage}{0.4\textwidth}
+            \begin{minted}{C}
+    for (j=0; j<32; j++)
+        for (i=0; i<32; i++)
+            total_x += grid[i][j].x;
+            total_y += grid[i][j].y;
+            \end{minted}
+            \caption{Versión 3}
+        \end{minipage}
+        \hspace{1cm}
+        \begin{minipage}{0.4\textwidth}
+            \begin{minted}{C}
+    for (i=0; i<32; i++)
+        for (j=0; j<32; j++)
+            total_x += grid[i][j].x;
+            total_y += grid[i][j].y;
+            \end{minted}
+            \caption{Versión 4}
+        \end{minipage}
+    \end{figure}
+    Para cada una de las versiones:
+    \begin{itemize}
+        \item \textbf{Versión 1:} Se desaprovecha la localidad espacial entre x e y. Además se accede a cada elemento en saltos de 32 elementos luego también se desaprovecha la localidad
+            espacial para elementos del array (stride 1). Como resultado, se produce un promedio de 1 fallo por acceso.
+        \item \textbf{Versión 2:} Se desaprovecha la localidad espacial entre x e y. En este caso si se aprovecha el stride 1 para cada elemento. Como resultado, se produce un promedio de 0.25 fallos por iteración.
+        \item \textbf{Versión 3:} Se aprovecha la localidad espacial entre x e y. Se accede a cada elemento en saltos de 32 elementos, por lo que se desaprovecha la localidad espacial para elementos del array. Como resultado, se produce un promedio de 0.5 fallo por acceso.
+        \item \textbf{Versión 4:} Se aprovecha la localidad espacial entre x e y, además se accede secuencialmente a cada elemento. Como resultado, se produce un promedio de 0.125 fallos por acceso.
+    \end{itemize}
+    En pruebas realizadas en la misma CPU de la montaña se ha obtenido una diferencia en rendimiento de 3x entre la versión 1 y la 4, esta diferencia sería incluso más grande si el salto fuese mayor a 32.
+\end{ejemplo}
+
+
+
+

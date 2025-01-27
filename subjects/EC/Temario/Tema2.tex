@@ -1,0 +1,748 @@
+\chapter{Unidad de Control}
+\section{Introducción}
+Recordamos que un computador con arquitectura Von Neumann consta de
+tres bloques fundamentales, la CPU o procesador, la memoria principal y las unidades de entrada/salida.
+Todos estos estan unidos mediante buses (de datos, direcciones y control).
+En este tema nos centraremos en la CPU (Central Processing Unit), podemos entenderla como una unidad constituida por
+\begin{itemize}
+	\item Unidad de procesamiento o camino de datos (datapath)
+	\item Unidad de control
+\end{itemize}
+La unidad de procesamiento comprende elementos hardware como:
+\begin{itemize}
+	\item Unidades funcionales (ALU, desplazador, multiplicador, etc.)
+	\item Registros:
+	      \begin{itemize}
+		      \item Registros de propósito general (General Purpose Registers)
+		      \item Registro de estado (flag registers)
+		      \item Program Counter (PC)
+		      \item Registro de Instrucción (IR)
+		      \item Registro de dato de memoria (MDR / MBR)
+		      \item Registro de dirección de memoria (MAR)
+	      \end{itemize}
+	\item Multiplexores
+	\item Buses internos
+	\item ...
+\end{itemize}
+
+La unidad de control (UC) interpreta y controla la ejecución de las instrucciones leídas de la memoria principal, en dos fases:
+\begin{itemize}
+	\item \textbf{Secuenciamiento de las instrucciones:}
+	      \\ \\ El PC almacena la dirección de la siguiente instrucción en memoria, al comienzo del ciclo de instrucción, la UC coloca el valor de PC en el bus de direcciones para acceder a la memoria
+	      , tras esto, la UC activa una señal de lectura de memoria para acceder a la dirección especificada por el PC. Esta instrucción se transfiere desde la memoria hasta el registro de instrucción IR y se incrementa el PC en función del tamaño de las instrucciones (viene dado por la arquitectura)
+	      $ IR \leftarrow M[PC]$. Este paso puede repetirse varias veces si la instrucción consta de varias palabras.
+	\item \textbf{Ejecución|Interpretación de las instrucciones en IR:}
+	      La UC utiliza un decodificador de instrucciones que convierte los bits de la instrucción en señales de control específicas. La instrucción contiene
+	      campos específicos que indican la operación (e.g ADD, LOAD, JUMP) y sus operandos. Estos son separados y analizados por el decodificador.
+	      Una vez decodificado, se generan y mandan señales para ejecutar la instrucción y para enviar los resultados a su destino.
+\end{itemize}
+
+Este proceso además puede superponerse en el llamado \textit{pipeline} permitiendo que se ejecuten varias instrucciones simultáneamente. En cada ciclo de reloj,
+una instrucción distinta puede estar en cada fase, mejorando la eficiencia.
+\begin{ejemplo}
+	Veamos como se ejecutan las instrucciones LOAD y SUM en un estilo RISC-V simple:
+	\begin{equation*}
+		Load \quad R5, X(R7)
+	\end{equation*}
+	Involucra las siguientes acciones:
+	\begin{itemize}
+		\item Leer la instrucción de memoria.
+		\item Incrementar el PC.
+		\item Decodificar la instrucción para determinar la operación a ejecutar.
+		\item Leer el registro R7.
+		\item Sumar la dirección X al contenido de R7.
+		\item Usar la suma como la dirección efectiva para el source de la operación, y leer los contenidos de
+		      esa dirección en la memoria.
+		\item Cargar los contenidos recibidos en el registro destino R5.
+	\end{itemize}
+	Dependiendo de cómo se organice el hardware, algunas de estas operaciones pueden realizarse al mismo tiempo. Dividiremos el proceso en 5 etapas ya que esta forma es la más comun en procesadores de estilo RISC-V.
+	En el caso anterior, podemos dividir el proceso en las siguientes etapas:
+	\begin{enumerate}
+		\item Leer la instrucción e incrementar el PC.
+		\item Decodificar la instrucción y leer los contenidos del registro R7 en el archivo de registros.
+		\item Calcular la dirección efectiva.
+		\item Leer el source de la operación de la memoria.
+		\item Escribir el resultado en el registro destino R5.
+	\end{enumerate}
+	Las instrucciones que conllevan una operación aritmético-logica pueden ejecutarse usando pasos similares. Respecto a LOAD difieren
+	que no se requieren operaciones de acceso a memoria. Por ejemplo la instrucción ADD R3,R4,R5 requiere de los pasos:
+	\begin{enumerate}
+		\item Leer la instrucción e incrementar el PC.
+		\item Decodificar la instrucción y leer los contenidos de los registros origen R4 y R5.
+		\item Realizar la operación aritmético-lógica.
+		\item nop (No action)
+		\item Escribir el resultado en el registro destino R3.
+	\end{enumerate}
+	Como podemos ver, se puede completar en 4 pasos, sin embargo, se obtienen ventajas si usamos las mismas etapas de procesamiento en la mayoria de instrucciones.
+\end{ejemplo}
+\subsection{Unidad de procesamiento con un bus}
+Veamos una representación de una unidad de procesamiento simple en la que los registros y la ALU se interconectan mediante un único bus común. No deberemos confundir este bus con
+el que conecta el procesador con la memoria y los dispositivos de E/S, ya que es un bus interno del procesador.
+\begin{center}
+    \includesvg[width=0.6\textwidth]{Imagenes/single-bus.svg}
+\end{center}
+Como podemos ver, los elementos se interconectan mediante el bus común. El 
+\textit{Memory Data Register} (MDR) tiene dos entradas y dos salidas, esto es,
+los datos pueden ser cargados en MDR desde el bus de memoria o desde el bus interno del 
+procesador, los datos guardados en MDR pueden ser colocados en ambos buses. El
+\textit{Memory Address Register} (MAR) está conectado para la entrada al bus interno y su salida al bus externo.
+El uso y número de registros varían según el procesador. Los registros 
+Y, Z y TEMP son registros transparentes para el programador, en el sentido de 
+que no son referenciados explícitamente mediante ninguna instrucción, son usados por el procesador 
+para el almacenamiento temporal de datos.
+El multiplexor MUX selecciona la entrada A de la ALU, la constante 4 se usa para incrementar el PC.
+La UC genera señales internas y externas.
+\\ \\ Salvo algunas pocas excepciones, uan instrucción se puede ejecutar mediante una o más de las operaciones siguientes:
+\begin{itemize}
+    \item Transferencia de una palabra desde un registro de procesador a otro o a la ALU.
+    \item Realizar una operación aritmético-lógica y almacenar el resultado en un registro.
+    \item Cargar los contenidos de una ubicación de memoria y cargarlos en un registro del procesador.
+    \item Almacenar una palabra de datos desde un registro de un procesador a una ubicación de memoria.
+\end{itemize}
+Para transferir datos de un registro a otro, cada registro usa dos señales de control
+\begin{itemize}
+    \item \textbf{Load:} Para cargar datos en paralelo
+    \item \textbf{Enable:} Habilitación de salida (tri-state buffer)
+\end{itemize}
+Recordamos que un buffer tri-estado es un dispositivo que puede ser activado o desactivado, para permitir o no el paso, y además
+tiene otro estado (alta impedancia) que lo desconecta del buffer, permitiendo que otros dispositivos conectados al bus puedan
+utilizarlo sin interferencias.
+\\ \\ Todas las operaciones en el procesador ocurren en periodos de tiempo definidos por el reloj del procesador. Para realizar operaciones 
+aritmético-lógicas se usa la ALU, que es un circuito combinacional sin memoria interna, se encarga de realizar operaciones sobre los dos operandos proporcionados a 
+sus entradas A y B. El resultado se almacena temporalmente en el registro Z.
+\begin{ejemplo}
+   Por ejemplo, para sumar los contenidos de $R1$ a $R2$ y guardar el resultado en $R3$ se sigue la secuencia de operaciones: 
+   \begin{enumerate}
+       \item Enable $R1$, Load $Y$
+        \item Enable $R2$, SELECT Y, Add, Load $Z$
+        \item Enable $Z$, Load $R3$
+   \end{enumerate}
+\end{ejemplo}
+Las señales cuyos nombres se dan en cada paso son activadas durante la duración
+del ciclo de reloj correspondiente a ese paso, todas las demas señales están desconectadas. Por tanto, en el paso
+1, el output de $R1$ y el input de $Y$ se activan, provocando que los contenidos de $R1$ se carguen mediante el bus a $Y$.
+En el paso 2, la señal de SELECT del multiplexor se activa, provocando que lso contenidos de $Y$ se carguen en $A$ de la ALU, al mismo tiempo,
+los contenidos de $R2$ son cargados en el bus y por tanto, en $B$. La operación realizada por la ALU depende de la señal que se le pasa a sus lineas de control.
+En este caso, la linea de Add se pone a 1, por lo que la salida de la ALU es la suma de $A$ y $B$, que se carga en $Z$. En el paso 3, los contenidos de $Z$ 
+se transfieren al registro de destino $R3$. Notemos que esta última transferencia no se puede llevar a cabo durante el paso 2 ya que solo se puede conectar un registro de salida al bus
+en cada ciclo de reloj.
+\\ \\
+Para simplificar la explicación, hemos asumido que la ALU tiene una señal dedicada para cada operación aritmético-lógica, sin embargo, en la práctica, es probable que se encuentre algún tipo de codificación
+, por ejemplo, para realizar 8 operaciones distintas, bastan 3 señales de control.
+\subsubsection{Cargar palabras de memoria}
+Para cargar una palabra de memoria, el procesador tiene que especificar la dirección donde se encuentra la información y solicitar una operación de lectura (Read). Para ello, el procesador transfiere
+la dirección al MAR, cuya salida se conecta al bus de direcciones, al mismo tiempo, el procesador usa las lineas de control del bus de memoria para indicar que necesita realizar una operación de lectura,
+el dato leído se almacena entonces en el MDR (que contiene dos entradas y dos salidas).
+\\ \\ 
+Durante las operaciones de lectura y escritura, la temporización interna de las operaciones del procesador debe ser coordinada con la de memoria, el procesador completa una transferencia interna en un ciclo de reloj, sin embargo,
+la velocidad de operación para la lectura puede requerir varios ciclos de reloj, es por ello, que el procesador debe esperar la activación de la señal de finalización de ciclo de memoria.
+\begin{ejemplo}
+    Veamos el proceso para \texttt{Load(R1) $\rightarrow$ R2}:
+   \begin{enumerate}
+       \item Enable $R1$, Load MAR
+    \item Comenzar lectura de memoria
+    \item Esperar fin de ciclo de memoria, Load MDR desde memoria.
+    \item Enable MDR hacia bus interno, Load $R2$
+   \end{enumerate}
+\end{ejemplo}
+Por simplicidad, asumimos que el output de \texttt{MAR} esta activado todo el tiempo, es por ello
+que los contenidos de \texttt{MAR} están siempre visibles en las lineas de dirección del bus de memoria.
+Este es el caso cuando el procesador es el maestro del bus, cuando una nueva dirección es cargada en el MAR,
+aparecerá en el bus de memoria en el comienzo del siguiente ciclo de reloj, una señal de lectura es activada al mismo tiempo
+que MAR es cargado, esta señal causará que se mande un comando de lectura, MR, en el bus.
+\subsubsection{Ejecución instrucción completa}
+Veamos ahora la secuencia de instrucciones elementales que hacen falta para ejecutar una instrucción.
+\begin{ejemplo}
+    Consideramos la instrucción \texttt{Add (R3), R1}. Para ejecuta esta instrucción se siguen los siguientes pasos:
+    \begin{enumerate}
+        \item Enable PC, Load MAR, Select 4, Sumar, Enable Z
+        \item Comenzar lectura, Enable Z, Load PC
+        \item Esperar fin de ciclo de memoria, Load MDR desde memoria
+        \item Enable MDR hacia bus interno, Load IR
+    \end{enumerate}
+    Hasta aquí se estan ejecutando aquellas instrucciones para la captación, para la ejecución:
+    \begin{enumerate}
+        \item Decodificar instrucción
+        \item Enable R3, Load MAR
+        \item Comenzar lectura, Enable R1, Load Y
+        \item Esperar fin de ciclo de memoria, Load MDR desde memoria
+        \item Enable MDR hacia bus interno, Select Y, Sumar, Load Z
+        \item Enable Z, Load R1, Saltar a captación
+    \end{enumerate}
+\end{ejemplo}
+\subsubsection{Ejecución de una instrucción de salto}
+Si queremos ejecutar una instrucción de salto cualquiera (jmp [Address]) se realizan los pasos siguientes: 
+\begin{enumerate}
+    \item Enable PC, Load MAR, Select 4, Sumar, Enable Z
+    \item Comenzar lectura, Enable Z, Load PC, Load Y
+    \item Esperar fin de ciclo de memoria, Load MDR desde memoria
+    \item Enable MDR hacia bus interno, Load IR
+    \item Decodificar instrucción
+    \item Enable Campo desplazamiento en IR, Sumar, Load Z
+    \item Enable Z, Load PC, Saltar a captación
+\end{enumerate}
+Notemos que, en caso de que haya que checkear el estatus de los codigos de condición antes de saltar,
+la instrucción 6 sería reemplazada añadiendo un \texttt{if N = 0 the End} indicando que el procesador volvería al paso 1.
+\subsection{Unidad de procesamiento múltiples buses}
+Hemos usado la estructura con un único bus hasta ahora para ilustrar las ideas básicas, como resultado, las secuencias
+de pasos que hemos descrito son largas ya que una única unidad de datos puede ser trasferida en cada ciclo de reloj, para 
+reducir el número de pasos, la mayoría de procesadores actuales implementan múltiple caminos internos que permiten 
+transferencias en paralelo.
+\begin{center}
+    \includesvg[width=0.7\textwidth]{Imagenes/buses_multiples}
+\end{center}
+Donde podemos observar una estructura de tres buses usada para conectar los registros y la ALU con el procesador. 
+Todos los registros de propósito general se combinan en un único bloque denominado banco de registros.
+El banco de registros mostrado tiene tres puertos: dos de salida y uno de entrada. Esto permite acceder simultáneamente al contenido 
+de dos registros diferentes, cuyos datos se colocan en los buses A y B. Al mismo tiempo, el tercer puerto permite cargar datos desde el 
+bus C a un tercer registro durante el mismo ciclo de reloj. 
+
+Los buses A y B transportan los operandos fuente a las entradas de la ALU, donde se realiza una operación aritmética o lógica. El 
+resultado se transfiere al destino a través del bus C. En caso necesario, la ALU puede pasar directamente uno de los operandos de 
+entrada al bus C, mediante las operaciones de control \texttt{R=A} o \texttt{R=B}. Esta disposición elimina la necesidad de los 
+registros intermedios Y y Z presentes en diseños más simples.
+
+Además, la figura introduce una unidad de \textit{incrementador}, que se utiliza para incrementar el contador de programa (\texttt{PC}) 
+en 4. Esto elimina la necesidad de usar la ALU principal para dicha operación, como se hacía en estructuras más simples. Sin embargo, 
+la constante 4 en el multiplexor de entrada de la ALU sigue siendo útil, permitiendo incrementar otras direcciones, como en las 
+instrucciones \texttt{LoadMultiple} y \texttt{StoreMultiple}.
+
+\subsubsection*{Ejecución de una instrucción completa}
+A continuación, se describe el flujo de ejecución de una instrucción representativa, como por ejemplo: \texttt{R6 = R4 + R5}.
+\begin{enumerate}
+    \item \texttt{Enable PC}, \texttt{R=B}, \texttt{Load MAR}.
+    \item Comenzar lectura e incrementar \texttt{PC}.
+    \item Esperar el fin del ciclo de memoria, Load \texttt{MDR} desde la memoria.
+    \item \texttt{Enable MDR hacia B}, \texttt{R=B}, \texttt{Load IR}.
+    \item Decodificar instrucción.
+    \item \texttt{Enable R4 hacia A}, \texttt{Enable R5 hacia B}, seleccionar \texttt{A}, sumar, Load \texttt{R6}, Saltar a captación.
+\end{enumerate}
+
+De esta manera, la estructura de múltiples buses permite ejecutar instrucciones de manera más eficiente al reducir el número de ciclos 
+necesarios y facilitar operaciones paralelas.
+\section{Unidades de control cableadas y microprogramadas}
+Para ejecutar instrucciones, el procesador debe tener algún mecanismo
+para poder generar las señales de control necesarias, para solventar este problema 
+existen varias soluciones, en general podemos distinguir dos categorías:
+\begin{itemize}
+    \item Control cableado: (hardwired control) Se emplean métodos de diseño de circuitos digitales secuenciales a partir de diagramas de estado.
+        El circuito final se obtiene conectando componentes básicos como puertas y biestables, aunque más a menudo se usan PLA (P)rogrammable (L)ogic (A)rrays.
+    \item Control microprogramado: Todas las señales que se pueden activar simultáneamente se agrupan para formar palabras de control, que se almacenan en una memoria 
+        de control (normalmente ROM). Una instrucción de lenguaje máquina se transforma sistemáticamente en un programa (microprograma) almacenado en la memoria de control.
+        Con este enfoque se logra mayor facilidad de diseño para instrucciones complejas por lo que es el método estándar en la mayoría de los CISC.
+\end{itemize}
+%TODO: Si no está ya hecho mostrar al lector que con esto se puede entender aquello de que los CISC ejecutan internamente RISC para poder paralelizar ciertas opearciones
+\subsection{Diseño UC cableada}
+Se diseña mediante puertas lógicas y biestables siguiendo uno de los métodos clásicos de diseño de sistemas digitales secuenciales que ya se vieron en TOC.
+\begin{itemize}
+    \item El diseño es laborioso y difícil de modificar debido a la complejidad de los circuitos
+    \item Suele ser más rapida que una UC microprogramada
+    \item Se utilizan PLA para llevar a cabo la implementación
+\end{itemize}
+Con las nuevas técnicas de diseño y la tendencia a usar RISC ha tomado nuevo auge este planteamiento.
+\subsubsection*{Técnicas de diseñó por computador (CAD) para circuitos VLSI (compiladores de silicio)}
+Resuelven automáticamente la mayor parte de las dificultades de diseño de lógica cableada. Generan
+directamente las máscaras de fabricación de de circuitos VLSI a partir de descriptores del comportamiento funcional
+del circuito en un lenguaje de alto nivel.
+\subsubsection*{Organización de UC basada en PLA}
+Los biestables de la PLA contienen la información relativa al estado en que se encuentra el sistema. La PLA utiliza esta información
+de estado, junto con las entradas externas para generar el siguiente estado.
+\begin{center}
+    \begin{minipage}{0.3\textwidth}
+        \begin{itemize}
+            \item Minimiza el esfuerzo de diseño.
+            \item Mayor flexibilidad y fiabilidad.
+            \item Ahorro de espacio y potencia.
+        \end{itemize}
+    \end{minipage}
+    \quad
+    \begin{minipage}{0.5\textwidth}
+        \includesvg[width=\textwidth]{Imagenes/pla}
+    \end{minipage}
+\end{center}
+\begin{ejemplo}
+    Veamos una implementación de una unidad de control cableada sencilla (ODE), para ello, seguimos los siguientes
+    pasos:
+    \begin{enumerate}
+        \item \textbf{Definir una máquina de estados finitos:} Dado el diagrama de flujo de la UC de ODE, detallamos este como un conjunto de estados finitos y transiciones entre ellos.
+        \item \textbf{Describir dicha máquina en un lenguaje de alto nivel:} El lenguaje concreto depende del programa que utilicemos para "compilar" la descripción de la máquina.
+            Estos lenguajes tienen sentencias para definir entradas y salidas y estados y transiciones condicionales e incondicionales entre estados (como un \textit{autómata (MC)})
+        \item \textbf{Generar la tabla de verdad para la PLA:} Según la descripción que hayamos hecho de la máquina de estados, podemos usar un programa que use el modelo Mealy (salidas dependen de entradas y estado presente) o un modelo Moore (salidas dependen exclusivamente del estado actual).
+        \item \textbf{Minimizar la tabla de verdad:} Mediante un programa que utilice algoritmos heurísticos rápidos.
+    \item \textbf{Diseñar físicamente la PLA partiendo de la tabla de verdad:} Se puede hacer automáticamente (Mediante un programa especial para diseño de layouts de PLA) o semiautomáticamente 
+        (Diseñando un programa de CAD de circuitos VLSI cada una de las celdas que, repetidas convenientemente, forman un PLA o dando una especificación de cómo han de colocarse (tabla de verdad minimizada)).
+    \end{enumerate}
+\end{ejemplo}
+\subsection{Unidad de control microprogramada}
+La idea básica es emplear una memoria (de control) para almacenar las señales de control de los períodos de cada instrucción. Comenzamos introduciendo 
+algunos términos comunes en el diseño de UC microprogramadas:
+\begin{itemize}
+    \item \textbf{Palabra de control:} Es una palabra cuyos bits individuales reepresentan las señales de control que deben activarse en un ciclo de reloj.
+    \item \textbf{Microinstrucción:} Es una palabra de control que se almacena en la memoria de control.
+    \item \textbf{Microprograma:} Es una secuencia de microinstrucciones que se ejecutan para llevar a cabo una 
+        (macro) instrucción de lenguaje máquina.
+    \item \textbf{Ejecución de un microprograma:} Es la lectura en cada pulso de reloj de una de las microinstrucciones que lo forman, enviando las señales leídas a la unidad
+        de proceso como señales de control.
+    \item \textbf{Microcódigo:} Es el conjunto de los microprogramas de una máquina.
+\end{itemize}
+\subsubsection*{Ventajas de la microprogramación}
+\begin{itemize}
+    \item Simplicidad conceptual: La información de control reside en una memoria.
+    \item Se pueden incluir, sin dificultades, instrucciones complejas, de muchos ciclos de duración. El único límite es el tamaño de la memoria de control.
+    \item Las correcciones, modificaciones y ampliaciones son mucho más fáciles de hacer que en la alternativa cableada. No hay que rediseñar el hardware, únicamente cambiar el contenido de algunas posiciones de la memoria de control.
+    \item Permite construir computadores con varios juegos de instrucciones, cambiando el contenido de la memoria de control (si es RAM permite emular otros computadores).
+\end{itemize}
+Como ya dijimos, este enfoque tiene como contrapartida una mayor lentitud frente a la cableada, debido a una menor capacidad de expresar paralelismo de las microinstrucciones.
+\section{Control microprogramado}
+
+\subsection{Formato de las microinstrucciones}
+
+Las señales de control que gobiernan un mismo elemento del \textit{datapath} se suelen agrupar en campos, por ejemplo: las señales triestado que controlan un bus, las señales de operación de la ALU, memoria, etc. Existen dos enfoques:
+
+\begin{itemize}
+    \item \textbf{Formato no codificado:} Hay un bit para cada señal de control de un campo.
+        \begin{center}
+            \includesvg[width=0.6\textwidth]{Imagenes/formato_no_codificado}
+        \end{center}
+    \item \textbf{Formato codificado:} Con el objetivo de acortar el tamaño de las microinstrucciones, se codifican todos o algunos de sus campos. Esto, sin embargo, implica la necesidad de incluir decodificadores para extraer la información real.
+        \begin{center}
+            \includesvg[width=0.6\textwidth]{Imagenes/formato_codificado}
+        \end{center}
+\end{itemize}
+
+Cuando pocas señales de control están activas en cada ciclo, o existen con frecuencia señales mutuamente excluyentes, es posible acortar la longitud de las microinstrucciones solapando campos. Sin embargo, esto introduce un retardo debido al uso de un demultiplexor y hace incompatibles las operaciones con campos solapados.
+El nivel de abstracción de un microprograma depende de la cantidad de codificación de las señales de control y del paralelismo presente en el formato de las microinstrucciones. Distinguimos dos estilos principales:
+
+\begin{itemize}
+    \item \textbf{Microprogramación vertical:} 
+        \begin{itemize}
+            \item Está altamente codificada y puede parecerse a una macroinstrucción simple, que incluye un único campo de control y uno o dos campos para especificar operandos.
+            \item Cada microinstrucción especifica una única operación sobre el \textit{datapath} y, al decodificarse, activa múltiples señales de control.
+            \item Las bifurcaciones se manejan mediante microinstrucciones separadas que contienen códigos de salto.
+        \end{itemize}
+        Este estilo es más natural para quienes están familiarizados con la programación en ensamblador y es similar a la programación en un conjunto de instrucciones RISC.
+
+    \item \textbf{Microprogramación horizontal:}
+        \begin{itemize}
+            \item Puede estar completamente sin codificar, asignando un bit separado a cada señal de control.
+            \item Habitualmente utiliza varios campos de control, cada uno codificando opciones mutuamente excluyentes.
+            \item Las bifurcaciones son más complejas, ya que cada microinstrucción puede tener condiciones de salto y direcciones explícitas.
+        \end{itemize}
+        Aunque es menos familiar para los programadores tradicionales, permite explotar el paralelismo, lo que la hace eficiente y similar a la programación en procesadores VLIW.
+\end{itemize}
+
+\subsection{Nanoprogramación}
+
+La combinación de microinstrucciones verticales y horizontales en un esquema de dos niveles se denomina \textbf{nanoprogramación}. Su objetivo principal es reducir el tamaño de la memoria de control.
+
+\begin{center}
+    \includesvg[width=0.75\textwidth]{Imagenes/nanoprogramacion}
+\end{center}
+
+A la izquierda, el microprograma original contiene $n$ instrucciones de $w$ bits, ocupando un total de $n \cdot w$ bits. Si de estas $n$ instrucciones, $m$ son únicas, se reemplaza cada microinstrucción por su dirección en la nanomemoria (tamaño: $n \cdot \log_2 m$). Esta se conecta a un nanoprograma con las $m$ instrucciones únicas ($m \cdot w$ bits), logrando un ahorro de memoria de $n \cdot w - n \cdot \log_2 m + m \cdot w$ bits.
+
+\begin{ejemplo}
+    Consideremos una memoria de control de $14 \times 8$ bits con 5 microinstrucciones únicas:
+    \begin{center}
+        \includesvg[width=0.75\textwidth]{Imagenes/nanoprogramacion_ej1}
+    \end{center}
+    El ahorro de memoria sería:
+    \[
+    112 - (14 \cdot 3) - (5 \cdot 8) = 30 \text{ bits}, \text{ es decir, un } 27\%.
+    \]
+    Considerando un caso real, como la unidad de control del Motorola 68000, con 640 microinstrucciones (280 únicas) y longitud de instrucción de 70 bits:
+    \[
+    \lceil\log_2(280)\rceil = \lceil 8.129\rceil = 9.
+    \]
+    El ahorro total sería:
+    \[
+    44800 - 25360 = 19440 \text{ bits, es decir, un } 43\%.
+    \]
+\end{ejemplo}
+
+\subsection{Secuenciamiento de microinstrucciones}
+Si cada instrucción de lenguaje máquina se traduce en un microprograma, la secuencia de microinstrucciones que lo componen se puede organizar de dos maneras:
+\subsubsection*{Secuenciamiento de microinstrucciones explícito:}
+
+En este método, cada microinstrucción contiene información explícita sobre la dirección de la siguiente microinstrucción a ejecutar. Esto se logra típicamente incluyendo un campo de "dirección siguiente" dentro de cada microinstrucción.
+
+\begin{itemize}
+    \item \textbf{Funcionamiento:} La unidad de control lee la microinstrucción actual, ejecuta las operaciones especificadas por sus campos de control y luego utiliza el campo de "dirección siguiente" para determinar la dirección de la siguiente microinstrucción que debe leer de la memoria de control.
+    \item \textbf{Ventajas:}
+        \begin{itemize}
+            \item \textbf{Flexibilidad:} Permite un control muy preciso sobre el flujo del microprograma, incluyendo saltos condicionales y bucles complejos. Las microinstrucciones no necesitan estar almacenadas en ubicaciones consecutivas de la memoria.
+            \item \textbf{Implementación de bifurcaciones complejas:} Facilita la implementación de bifurcaciones condicionales basadas en múltiples condiciones o en valores almacenados en registros.
+        \end{itemize}
+    \item \textbf{Desventajas:}
+        \begin{itemize}
+            \item \textbf{Mayor tamaño de microinstrucción:} Requiere más bits por microinstrucción para almacenar la dirección siguiente, lo que aumenta el tamaño de la memoria de control.
+            \item \textbf{Complejidad del hardware de control:} El hardware de control debe ser capaz de extraer y utilizar la información de la dirección siguiente de cada microinstrucción.
+        \end{itemize}
+\end{itemize}
+\begin{center}
+    \includesvg[width=0.6\textwidth]{Imagenes/secuenciamiento_explicito}
+\end{center}
+
+\subsubsection*{Secuenciamiento de microinstrucciones implícito:}
+
+En este enfoque, la dirección de la siguiente microinstrucción se determina de forma implícita, generalmente incrementando un contador de microprograma ($\mu$PC). Las microinstrucciones se almacenan en ubicaciones consecutivas de la memoria de control.
+
+\begin{itemize}
+    \item \textbf{Funcionamiento:} Después de ejecutar una microinstrucción, el $\mu$PC se incrementa automáticamente para apuntar a la siguiente ubicación en la memoria de control. Este método asume que la secuencia de microinstrucciones es lineal y consecutiva.
+    \item \textbf{Manejo de bifurcaciones:} Para implementar bifurcaciones (saltos), se utilizan microinstrucciones especiales de "salto" que modifican el valor del $\mu$PC con una nueva dirección. A menudo se combina con un multiplexor para seleccionar la siguiente dirección entre el $\mu$PC incrementado y la dirección de salto.
+    \item \textbf{Ventajas:}
+        \begin{itemize}
+            \item \textbf{Menor tamaño de microinstrucción:} No necesita un campo explícito para la dirección siguiente, lo que reduce el tamaño de la memoria de control.
+            \item \textbf{Hardware de control más simple:} El hardware necesario para el secuenciamiento es más sencillo, ya que principalmente implica un contador y un multiplexor.
+        \end{itemize}
+    \item \textbf{Desventajas:}
+        \begin{itemize}
+            \item \textbf{Menor flexibilidad:} Las secuencias de microinstrucciones deben ser principalmente lineales. Las bifurcaciones complejas requieren más microinstrucciones y lógica de control.
+            \item \textbf{Limitaciones en la organización de la memoria de control:} Las microinstrucciones pertenecientes a un mismo microprograma deben almacenarse en posiciones consecutivas, lo que puede dificultar la optimización del uso de la memoria.
+        \end{itemize}
+\end{itemize}
+\begin{center}
+    \includesvg[width=0.6\textwidth]{Imagenes/secuenciamiento_implicito}
+\end{center}
+\subsubsection*{Microbifurcaciones condicionales}
+Las instrucciones máquina de bifurcación condicional presentan dos cronogramas alternativos, diferentes a partir del punto en el que se hace la comprobación de la condición de bifurcación. Los microprogramas correspondientes han de presentar una microbifurcacion condicional 
+para seleccionar la rama deseada. Es necesario que la microinstrucción de bifurcación pueda elegir entre dos direcciones para poder seguir por uno de los dos caminos alternativos.
+%TODO: Terminar (Usar svg anteriores para esta seccion)
+
+\subsubsection*{Microbucles}
+Se da cuando una instrucción de lenguaje máquina contiene operaciones repetidas, e.g (desplazamiento múltiple, multiplicación, división, cadenas), es decir, 
+se tiene la necesidad de tener microbucles para ejecutar de forma eficiente este tipo de operaciones. Para implementar un microbucle,
+se puede utilizar la bifucación condicional más un contador con autodecremento, cuando el contador llega a 0, se bifurca, este contador debe poder inicializarse desde una microinstrucción.
+\subsubsection*{Microsubrutinas}
+Las instrucciones máquina tienen con frecuencia partes de su ejecución en común, es decir, se puede evitar la redundancia de código mediante la implementación de microsubrutinas,
+la llamada a microsubrutinas sin embargo exige un almacenamiento para guardar la dirección de retorno, la solución habitual es usar una pila de direcciones de retorno.
+
+
+\subsection{Control residual}
+Hasta ahora, todas las señales de control necesarias para manipular la microarquitectura estaban codificadas en campos de la microinstrucción actual, a esto se le llama \textbf{Control inmediato}. Sin embargo, en ciertos casos puede ser útil que una microinstrucción pueda almacenar señales de control en un registro, conocido como \textbf{registro de control residual}, para usarlas en ciclos posteriores. Esto se llama \textbf{Control residual}.
+
+El objetivo principal del control residual es optimizar el tamaño del microprograma al reducir la redundancia de información de control que, de otra forma, debería codificarse en múltiples microinstrucciones sucesivas. Sus usos más comunes son:
+
+\begin{itemize}
+    \item En microsubrutinas o conjuntos compartidos de microinstrucciones.
+    \item En situaciones donde parte de la información de control permanece invariable durante muchas microinstrucciones.
+\end{itemize}
+
+\begin{ejemplo}
+    Veamos un ejemplo de control residual en microsubrutinas o conjuntos compartidos de microinstrucciones. Supongamos un procesador con dos instrucciones máquina para realizar las operaciones \texttt{AND} y \texttt{OR} entre dos cadenas de bytes. En lugar de tener microinstrucciones específicas para cada una de estas operaciones, se puede usar una microsubrutina o un conjunto común de microinstrucciones que aproveche un registro de control residual para almacenar las señales de control de la operación deseada.
+
+    En este caso, la ALU está controlada por 3 bits, con la siguiente codificación:
+    \begin{itemize}
+        \item 000: Suma
+        \item 001: Resta
+        \item 010: AND
+        \item 011: OR
+        \item 100: XOR
+        \item 101: NOR
+        \item 110: Pasar entrada izquierda
+        \item 111: No utilizada
+    \end{itemize}
+    Para las instrucciones \texttt{AND} y \texttt{OR}, utilizaremos el valor 111 en la microinstrucción común para especificar que las señales de control de la ALU no proceden del campo de microinstrucción, sino del registro de control residual. Esto permite reutilizar el microcódigo común para ambas operaciones.
+\end{ejemplo}
+
+\paragraph{Carga del registro de control residual.} 
+Para cargar información en el registro de control residual, se requiere un mecanismo específico. Este puede ser una microinstrucción especial (como la microinstrucción de llamada a microsubrutina) que contenga:
+\begin{itemize}
+    \item Un campo que indique el valor a almacenar en el registro.
+    \item Un bit que especifique que se desea cargar información en el registro de control residual.
+\end{itemize}
+
+Una vez cargado, el registro de control residual puede ser utilizado por microinstrucciones comunes para especificar señales de control necesarias en operaciones posteriores. Esto reduce significativamente el número de microinstrucciones necesarias y, en algunos casos, la anchura de estas.
+
+\paragraph{Generalización del concepto.} 
+El control residual no se limita a operaciones en la ALU. Su concepto puede aplicarse a otros elementos de control en el procesador, como:
+\begin{itemize}
+    \item Selección de registros destino.
+    \item Control de operaciones de memoria.
+    \item Determinación de direcciones o condiciones de salto.
+\end{itemize}
+
+Además, cuando parte de la información de control permanece invariable durante un período prolongado, el registro de control residual también puede denominarse \textbf{registro de configuración} (\textit{setup register}). Este enfoque permite reducir tanto el número de microinstrucciones como su anchura, optimizando el diseño y la implementación del microprograma.
+cargar información en el registro de control residual, por ejemplo, una microinstrucción especial (puede ser la microinstrucción de llamada a microsubrutina) con un campo que indique el valor a almacenar y un bit que indique que se desea almacenar información en el registro.
+\subsection{Camino de datos}
+%TODO: Imagen
+\subsubsection{Temporización}
+Un ciclo básico de la UC consiste en una secuencia de 4 subciclos controlada por un reloj de 4 fases:
+\begin{itemize}
+    \item Se lee de la memoria de control la siguente microinstrucción a ejecutar y se carga en el registro de microinstrucción.
+    \item Los contenidos de uno o dos registros pasan de los buses A y B y se cargan en los buffers.
+    \item Las entradas de la ALU están estabilizadas. Se da tiempo a la ALU y al desplazador a que produzcan una salida estable y se carga MAR si es necesario.
+    \item La salida del desplazador está estabilizada. Se almacena el bus $C$ en un registro y en MBR si es necesario.
+\end{itemize}
+Veamos uno de los registros de 16 bits con más detalle
+\begin{center}
+    \includesvg[width=0.7\textwidth]{Imagenes/datapath}
+\end{center}
+Donde en REL se carga del bus C, y en SAL 1 y 2 se tiene la salida a los buses A y B. Veamos ahora las señales y buses de 
+MAR y MBR con más detalle:
+\begin{center}
+    \includesvg[width=0.7\textwidth]{Imagenes/detalle_mar_mbr}
+\end{center}
+Donde cada entrada de control supone la escritura sobre MAR o MBR, la señal RD se encarga de la lectura de la memoria y escritura en MBR del dato leido, en cuanto a WR, 
+se encarga de la lectura de MBR y escritura en memoria del dato leido, ambas van a la memoria.
+\subsection{Diseño Horizontal}
+En el caso del diseño horizontal de la unidad de control, se necesitan las siguientes señales de control:
+\begin{itemize}
+    \item 16 señales para cargar el bus A desde registros.
+    \item 16 señales para cargar el bus B desde registros.
+    \item 16 señales para cargar registros desde el bus C.
+    \item 2 señales para controlar los buffers A y B.
+    \item 2 señales para controlar la función de la ALU.
+    \item 2 señales para controlar el desplazador.
+    \item 4 señales para controlar MAR y MBR.
+    \item 2 señales para lectura/escritura en memoria.
+    \item 1 señal para controlar el multiplexor MUXA.
+\end{itemize}
+Es decir, un total de 61 señales.
+\subsubsection*{Optimización de Señales}
+Para reducir las señales necesarias, se pueden aplicar las siguientes técnicas:
+\begin{itemize}
+    \item Codificación de señales de registros: Reducción de 48 a 12 bits.
+    \item Eliminación de los 2 bits para carga de los buffers A y B: Como siempre se cargan en el mismo momento del ciclo máquina, se pueden activar en el segundo subciclo de reloj, reducción de 2 bits a 0.
+    \item Simplificación de MAR y MBR: Reduciendo el número de señales que controlan MAR y MBR (LEC puede usarse para cargar MBR desde la memoria y ESC para darle salida). Reducción de 4 bits a 2.
+\end{itemize}
+Sin embargo es necesario añadir otras señales, por ejemplo nos puede interesar generar N y Z sin almacenar el resultado, o almacenarlo solo en MBR. Necesitamos un bit adicional PERC (permiso de C) para que se almacene el bus C en un registro (PERC = 1) o no (PERC = 0).
+Con estas modificaciones, nos quedan 22 bits de control. De esta forma, el formato de una microinstrucción queda de la forma siguiente (32 bits):
+\begin{itemize}
+    \item 22 bits de control.
+    \item 2 bits de condición de salto.
+    \item 8 bits de dirección.
+\end{itemize}
+
+\begin{center}
+    \includesvg[width=0.8\textwidth]{Imagenes/formato_microinstruccion}
+\end{center}
+Cada uno de los campos anteriores tiene la siguiente codificación:
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{MUXA} & \textbf{COND} & \textbf{ALU} & \textbf{DESP} \\ \hline
+\begin{tabular}[t]{@{}l@{}}
+0 = Buffer de A \\ 
+1 = MBR
+\end{tabular} & 
+\begin{tabular}[t]{@{}l@{}}
+0 = No salta \\ 
+1 = Salta si N = 1 \\ 
+2 = Salta si Z = 1 \\ 
+3 = Salta siempre
+\end{tabular} & 
+\begin{tabular}[t]{@{}l@{}}
+0 = A + B \\ 
+1 = A \& B \\ 
+2 = A \\ 
+3 = No A
+\end{tabular} & 
+\begin{tabular}[t]{@{}l@{}}
+0 = No desplaza \\ 
+1 = Desplaza 1 bit derecha. \\ 
+2 = Desplaza 1 bit izquierda. \\ 
+3 = (no utilizado)
+\end{tabular} \\ 
+\hline
+\multicolumn{4}{|c|}{\textbf{Otras Señales}} \\ \hline
+\multicolumn{4}{|p{12cm}|}{
+\begin{tabular}[t]{@{}l@{}}
+\textbf{A, B, C:} Selección de uno de los 16 registros \\ 
+\textbf{DIR:} Dirección de salto en memoria de control \\ 
+\textbf{MBR, MAR, RD, WR, PERC:} 0 = No, 1 = Sí
+\end{tabular}} \\ 
+\hline
+\end{tabular}
+\end{center}
+En cuanto a la unidad de control:
+\begin{itemize}
+    \item \textbf{Memoria de control:} 256 palabras de 32 bits = 8192 bits.
+    \item La unidad de incremento calcula microPC + 1
+    \item Un ciclo de memoria principal dura dos microinstrucciones 
+        \begin{itemize}
+            \item Las dos señales que controlan la memoria, RD y WR están activas mientras estén presentes en el microIR.
+                \item Si una microinstrucción comienza una lectura de memoria poniendo RD = 1, también debe ser RD = 1 en la siguiente microinstrucción.
+        \end{itemize}
+    \item La elección de la siguiente microinstrucción la realiza la lógica de microsecuenciamiento durante el subciclo 4 (cuando N y Z son válidos), a partir de N, Z y los dos bits COND (I = Izdo., D = dcho.):
+        \begin{itemize}
+            \item MUXM = $\overline{I} D N + I \overline{D} Z + I D = D N + I Z + I D$
+        \end{itemize}
+\end{itemize}
+La arquitectura de la unidad de control es la siguiente:
+\begin{itemize}
+    \item Memoria principal: 4096 palabras de 16 bits.
+    \item 3 registros visibles por el programador de lenguaje máquina:
+        \begin{itemize}
+            \item PC: contador de programa.
+            \item SP: puntero de pila.
+            \item AC: acumulador.
+        \end{itemize}
+    \item 3 modos de direccionamiento: 
+        \begin{itemize}
+            \item Directo: los 12 bits menos significativos son una dirección de memoria.
+            \item Indirecto: AC contiene una dirección de memoria.
+            \item Local: los 12 bits menos significativos son un desplazamiento que se suma al puntero de pila.
+        \end{itemize}
+    \item La pila crece hacia direcciones de memoria menores.
+    \item La E/S es mapeada en memoria, por lo que no hay instrucciones de E/S específicas.
+    \item El registro AMASK (0FFF) se utiliza para obtener el campo dirección en las instrucciones de direccionamiento directo y local.
+    \item El registro SMASK (00FF) se utiliza para obtener el incremento/decremento del puntero de pila en las instrucciones INSP y DESP.
+\end{itemize}
+Veamos un repertorio de 23 instrucciones máquina:
+\definecolor{lightgreen}{HTML}{D5E8D4}
+\begin{table}[ht!]
+\centering
+\setlength{\arrayrulewidth}{0.5mm}
+\arrayrulecolor[HTML]{82B366} % Opcional, para cambiar el color de las líneas de la tabla
+\begin{tabular}{|l|l|p{3.3cm}|p{5cm}}
+\hline
+\rowcolor[HTML]{D5E8D4} \textbf{Binario} & \textbf{Alias} & \textbf{Instrucción} & \textbf{Significado} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 0001xxxxxxxxxxxx & LODD  & Carga directa             & \texttt{ac := m[x]} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 0010xxxxxxxxxxxx & STOD  & Almacenamiento directo   & \texttt{m[x] := ac} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 000100xxxxxxxxxx & ADDD  & Suma directa             & \texttt{ac := ac + m[x]} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 000101xxxxxxxxxx & SUBD  & Resta directa            & \texttt{ac := ac - m[x]} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 0100xxxxxxxxxxxx & JPOS  & Salto si positivo        & \texttt{if ac $\geq$ 0 then pc := x} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 0101xxxxxxxxxxxx & JZER  & Salto si cero            & \texttt{if ac = 0 then pc := x} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 0110xxxxxxxxxxxx & JUMP  & Salto incondicional      & \texttt{pc := x} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 0111xxxxxxxxxxxx & LOCO  & Carga de constante       & \texttt{ac := x (0 $\leq$ x $\leq$ 4095 )} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1000xxxxxxxxxxxx & LODL  & Carga local              & \texttt{ac := m[sp + x]} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1001xxxxxxxxxxxx & STOL  & Almacenamiento local     & \texttt{m[sp + x] := ac} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1010xxxxxxxxxxxx & ADDL  & Suma local               & \texttt{ac := ac + m[sp + x]} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1011xxxxxxxxxxxx & SUBL  & Resta local              & \texttt{ac := ac - m[sp + x]} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1100xxxxxxxxxxxx & JNEG  & Salto si negativo        & \texttt{if ac < 0 then pc := x} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1101xxxxxxxxxxxx & JNZE  & Salto si no cero         & \texttt{if ac $\neq $0 then pc := x} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1110xxxxxxxxxxxx & CALL  & Llamada a subrutina      & \texttt{sp := sp - 1;m[sp] := pc;pc := x} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1111000000000000 & PSHI  & Apilamiento indirecto    & \texttt{sp := sp - 1;m[sp] := m[ac]} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1111000100000000 & POPI  & Desapilamiento indirecto & \texttt{m[ac] := m[sp]; sp := sp + 1} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1111001000000000 & PUSH  & Apilamiento              & \texttt{sp := sp - 1; m[sp] := ac} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1111001100000000 & POP   & Desapilamiento           & \texttt{ac := m[sp]; sp := sp + 1} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1111010000000000 & RETN  & Retorno de subrutina     & \texttt{pc := m[sp]; sp := sp + 1} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1111010100000000 & SWAP  & Intercambio de AC y SP   & \texttt{tmp := ac; ac := sp; sp := tmp} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 11111110yyyyyyyy & INSP  & Incremento de SP         & \texttt{sp := sp + y (0 $\leq$ y $\leq$255)} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 11111110yyyyyyyy & DESP  & Decremento de SP         & \texttt{sp := sp - y (0 $\leq$ y $\leq$255)} \\
+\hline
+\end{tabular}
+\end{table}
+\subsubsection*{Lenguaje microprogramar en alto nivel}
+Los microprogramas se pueden escribir:
+\begin{itemize}
+    \item En binario: 32 bits por microinstrucción.
+    \item Nombrando cada campo distinto de 0 y su valor (1 microinstrucción por linea).
+    \item Con instrucciones de alto nivel tipo PASCAL.
+\end{itemize}
+\begin{ejemplo}
+    Veamos varios ejemplos de microinstrucciones en alto nivel:
+    \begin{center}
+\begin{minipage}{0.45\textwidth}
+    \begin{itemize}
+        \item Funciones de la ALU:
+        \begin{itemize}
+            \item \texttt{ac:=a+ac;}
+            \item \texttt{a:=band(ir, smask);}
+            \item \texttt{ac:=a;}
+            \item \texttt{a:=inv(a);}
+        \end{itemize}
+        \item Saltos incondicionales:
+            \begin{itemize}
+                \item \texttt{goto 27}
+            \end{itemize}
+    \end{itemize}
+
+\end{minipage}
+\begin{minipage}{0.45\textwidth}
+    \begin{itemize}
+        \item Saltos condicionales:
+        \begin{itemize}
+            \item \texttt{if n then goto 27;}
+            \item \texttt{if z then goto 27;}
+        \end{itemize}
+        \item Desplazamiento:
+            \begin{itemize}
+                \item \texttt{tir:=lshift(tir+tir);}
+                \item \texttt{a:=rshift(a);}
+            \end{itemize}
+        \item Examen de un registro sin almacenamiento:
+            \begin{itemize}
+                \item \texttt{alu:=tir; if n then goto 27;}
+            \end{itemize}
+    \end{itemize}
+\end{minipage}
+\end{center}
+\end{ejemplo}
+La decodificación de las instrucciones se realiza examinando IR bit a bit, esto conlleva una proporción considerable de tiempo, veamos otro enfoque:
+\subsection{Diseño Vertical}
+Cada microinstrucción contiene ahora 3 campos de 4 bits:
+\begin{itemize}
+    \item OP: Codigo de operación de la ALU.
+    \item $R_1$ y $R_2$: Dos registros (Dirección en caso de salto)
+\end{itemize}
+
+\definecolor{lightgreen}{HTML}{D5E8D4}
+\begin{table}[ht!]
+\centering
+\setlength{\arrayrulewidth}{0.5mm}
+\arrayrulecolor[HTML]{82B366} 
+\begin{tabular}{|l|l|l|l|}
+\hline
+\rowcolor[HTML]{D5E8D4} \textbf{Binario} & \textbf{Nemotécnico} & \textbf{Instrucción} & \textbf{Significado} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 0000 & ADD & Suma & \texttt{r1 := r1 + r2} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 0001 & AND & AND bit a bit & \texttt{r1 := r1 \& r2} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 0010 & MOV & Mueve reg. a reg. & \texttt{r1 := r2} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 0011 & NEG & Complementa & \texttt{r1 := inv(r2)} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 0100 & SHL & Desplaza a la izda. & \texttt{r1 := lshift(r2)} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 0101 & SHR & Desplaza a la dcha. & \texttt{r1 := rshift(r2)} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 0110 & MOV\_MBR & Mueve MBR a registro & \texttt{r1 := MBR} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 0111 & TST & Examina registro & \texttt{(n,z) = (r2 < 0, r2 = 0)} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1000 & LD\_1 & Comienza lectura & \texttt{MAR := r1; RD} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1001 & ST\_1 & Comienza escritura & \texttt{MAR := r1; MBR := r2; WR} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1010 & LD\_2 & Termina lectura & \texttt{RD} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1011 & ST\_2 & Termina escritura & \texttt{WR} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1100 & - & (no usado) &  \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1101 & BN & Salta si N = 1 & \texttt{if n then goto dir} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1110 & BZ & Salta si Z = 1 & \texttt{if z then goto dir} \\
+\hline
+\rowcolor[HTML]{D5E8D4} 1111 & JMP & Salta siempre & \texttt{goto dir} \\
+\hline
+\end{tabular}
+\end{table}
+Por ejemplo un programa pudiera tener 160 microinstrucciones de 12 bits, es decir 1920 bits, al tener menos memoria de control, la UC es más lenta. 

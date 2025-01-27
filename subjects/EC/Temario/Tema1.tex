@@ -1,0 +1,1133 @@
+\chapter{Ensamblador}
+\section{Historia}
+La linea de procesadores Intel, comúnmente conocida como \textit{x86}
+ha seguido un largo proceso de evolución, manteniendo compatibilidad
+hasta 8086, introducido en 1978. La familia de procesadores x86 ha seguido una evolución hasta
+el día de hoy:
+\begin{itemize}
+	\item 8086 (1978) $\rightarrow$ 29K transistores, 16 bits, 5 MHz. \quad [Intel 16-bit, IBM PC]
+	\item 386 (1985) $\rightarrow$ 275K transistores, 32 bits, 16 MHz. \quad [Intel 32-bit]
+	\item Pentium 4E (2004) $\rightarrow$ 125M transistores, 64 bits, 3.4 GHz. \quad [Intel 64-bit, Hyperthreading, Implementación de x86-64 de AMD]
+	\item Core i7 Haswell (2013) $\rightarrow$ 1.4G transistores, 64 bits, 3.9 Ghz \quad[Multicore, AVX2]
+	\item Core i9 Raptor Lake (2022) $ \rightarrow$ +30G transistores, 64 bits, 5.2 GHz \quad[DDR5, PCIe 5.0, AVX-512]
+\end{itemize}
+A lo largo de los años, muchas compañias han creado procesadores
+que se puedan comparar con los de Intel. Entre ellas, AMD ha sido
+la más destacada, cayendo ligeramente detrás de Intel en cuanto a rendimiento
+y ofreciendo un precio más competitivo. Sin embargo, en los últimos años, AMD ha
+sido capaz de ofrecer procesadores con un rendimiento similar o superior a los de Intel,
+concretamente, en 2024, Intel ha sufrido una gran decadencia por problemas de estabilidad
+en los ultimos lanzamientos.
+Nosotros nos centraremos en la arquitectura x86-64, que es la que se utiliza en el libro de
+clase, sin embargo, haremos pequeñas menciones a IA32, cuando sea conveniente.
+\section{Lenguaje C, ensamblador y máquina}
+Las computadoras modernas utilizan distintas capas de abstracción, ocultando la complejidad
+de la implementación. Dos de estas capas son realmente importantes para nosotros,
+el formato y comportamiento de las instrucciones de máquina, que viene determinado
+por la ISA (Instruction Set Architecture), esta define el formato de las instrucciones,
+y el resultado que cada una de estas tendrá sobre el estado de la máquina.
+La mayoria de ISAs, incluyendo x86-64, describen el comportamiento de un programa de
+forma secuencial, como si se ejecutase una instrucción tras otra, sin embargo, en realidad,
+el hardware de la CPU es mucho mas complejo, ejecutando instrucciones de forma paralelizada
+o en otro orden, sin embargo, esto se verá con mas detenimiento en la asignatura \textit{Arquitectura de Computadores}.
+La otra capa de abstracción ocurre sobre las direcciones de memoria, se nos presentan
+como \textit{virtual addresses}, proporcionando un modelo de memoria que aparenta ser
+un gran array de bytes, sin embargo, en realidad, la memoria se maneja de otra forma,
+como se ve en la asignatura \textit{Sistemas Operativos}.
+Recalcamos aunque no vayan a ser estudiadas en profundidad, que existen otras
+ISA, como ARM (utilizada en dispositivos móviles), RISC-V (Nueva ISA open-source),
+o la misma IA32. Aunque no se mencione más, se recomienda al lector la profundización
+sobre ARM, que actualmente está ampliando su uso en el mercado de portatiles. (Intel Ultra, M1, etc.)
+Recordamos que podemos clasificar en general las distintas ISAs en dos tipos:
+\begin{itemize}
+	\item \textbf{CISC} (Complex Instruction Set Computer): Conjunto de instrucciones complejas.
+	\item \textbf{RISC} (Reduced Instruction Set Computer): Conjunto de instrucciones reducidas.
+\end{itemize}
+Realmente la mayoría de ISAs actuales son híbridas, convirtiendo
+las instrucciones de CISC en instrucciones de RISC, para mejorar el rendimiento.
+\newline
+\newline
+El codigo x86-64 difiere en gran medida del código C, destacamos las siguientes
+partes del estado del procesador que normalmente no se ven en C:
+\begin{itemize}
+	\item \textbf{PC (Program Counter)}: Registra la dirección de la siguiente instrucción a ejecutar.
+	      Se denomina \textit{\%rip} en x86-64.
+	\item \textbf{Archivo de registros}: Contiene 16 registros etiquetados con valores de 64 bits.
+	      Pueden ser utilizados para almacenar valores temporales, punteros, etc.
+	\item \textbf{Codigos de condición}: Contienen información sobre la instrucción mas reciente.
+	      Se utilizan para realizar saltos condicionales.
+	\item \textbf{Pila}: Se utiliza para almacenar enteros o flotantes. Es un array direccionable por bytes.
+\end{itemize}
+Ahora, vamos a ver cómo se relaciona el código C con el código ensamblador. Para ello,
+habrá que tener en cuenta que el código generado por el compilador puede variar
+según el compilador, la versión, las optimizaciones, etc.
+\subsection{Proceso de compilación}
+Partimos de un número arbitrario de ficheros \textit{.c}, que contienen código C.
+Para compilarlos, se pueden utilizar distintos compiladores, nosotros usaremos
+\textit{gcc}:
+% codigo en bash:
+\begin{minted}{bash}
+    gcc -Og programa.c -o programa
+\end{minted}
+Cuando lo ejecutemos:
+\begin{center}
+	\begin{tikzpicture}[node distance=1.6cm]
+
+		% Styles within tikzpicture
+		\tikzstyle{process} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=green!30]
+		\tikzstyle{arrow} = [thick,->,>=stealth]
+
+		% Nodes
+		\node (source) [process, fill=green!60] {Source File};
+		\node (preprocessor) [process, below of=source] {Preprocessor};
+		\node (compiler) [process, below of=preprocessor] {Compiler};
+		\node (assembler) [process, below of=compiler] {Assembler};
+		\node (linker) [process, below of=assembler] {Linker};
+		\node (executable) [process, fill=green!60, below of=linker] {Executable};
+
+		% Arrows
+        \draw [-Stealth] (source) -- (preprocessor);
+        \draw [-Stealth](preprocessor) -- node[right]{Preprocessed File (.i file)} (compiler);
+        \draw [-Stealth](compiler) -- node[right]{Assembly code (.s file)} (assembler);
+        \draw [-Stealth](assembler) -- node[right]{Object code (.o file)} (linker);
+        \draw [-Stealth](linker) -- (executable);
+	\end{tikzpicture}
+\end{center}
+En este proceso, gcc primero preprocesa el código, generando un archivo \textit{.i}, que
+posteriormente compila, generando un archivo \textit{.s}, que se ensambla para generar
+\textit{.o}, finalmente, se enlazan los distintos archivos \textit{.o} para generar el ejecutable.
+Vamos a explicar un poco más detenidamente cada uno de los pasos:
+\begin{itemize}
+	\item \textbf{Preprocesador}: C proporciona ciertas herramientas del lenguaje mediante un preprocesador,
+	      que es el primer paso en la compilación. Los más utilizados son \textit{\#include}, para incluir el contenido de un archivo
+	      durante la compilación, y \textit{\#define}, para reemplazar un token por una secuencia arbitraria de texto
+	      o valores. Además, elimina los comentarios de un archivo fuente. En gcc, podemos generar el código preprocesado con el flag \textit{-E}.
+	\item \textbf{Compilación}: El compilador traduce el codigo preprocesado y genera código ensamblador, con gcc, podemos
+	      generar el código ensamblador con el flag \textit{-S}.
+	\item \textbf{Ensamblado}: El ensamblador traduce el código ensamblador a código de máquina, generando un archivo \textit{.o}.
+	      En gcc, podemos generar el código de máquina con el flag \textit{-c}.
+	\item \textbf{Enlazado}: El enlazador combina los distintos archivos \textit{.o} generados en un solo ejecutable. También se encarga de combinar
+	      las librerias que se hayan utilizado en el código. En gcc, podemos generar el ejecutable con el flag \textit{-o}.
+\end{itemize}
+
+
+\begin{ejemplo}
+	Veamos un ejemplo de cómo se relaciona el código C con el código ensamblador (solo se muestra la parte interesante):
+	\begin{center} % Centramos el contenido
+		\begin{minipage}{0.45\textwidth}
+			\begin{minted}[fontsize=\Large]{c}
+long plus(long x, long y);
+
+void sumStore(long x, long y,
+        long *dest) {
+    long t = plus(x, y);
+    *dest = t;
+}
+                \end{minted}
+		\end{minipage}
+		\begin{minipage}{0.45\textwidth}
+			\begin{minted}[fontsize=\Large]{asm}
+sumstore:
+    pushq %rbx
+    movq  %rdx, %rbx
+    call  plus
+    movq  %raw, (%rbx)
+    popq  %rbx
+    ret
+                \end{minted}
+		\end{minipage}
+	\end{center}
+\end{ejemplo}
+Si lo compilamos en nuestra propia máquina, encontraremos muchas directivas que comienzan por . (ignorar)
+\subsection{Representación Datos C, IA32, x86-64}
+A continuación, mostramos los distintos tamaños en Bytes para los tipos de dato mas comúnes en C. Así como
+su representación en Assembly. Debido a sus origenes como una arquitectura de 16 bits que expandió a 32 bits,
+Intel usa el termino \textit{word} para referirse a un dato de 16 bits, y \textit{doubleword} para referirse a
+una palabra de 32 bits. En x86-64, se ha añadido el termino \textit{quadword} para referirse a una palabra de 64 bits.
+\begin{center}
+	\begin{tabular}{|c|c|c|c|c|}
+		\hline
+		\textbf{Tipo de dato en C} & \textbf{Assembly sufijo} & \textbf{Normal 32 bits} & \textbf{IA32} & \textbf{x86-64} \\
+		\hline
+		\text{unsigned}            &                          & 4                       & 4             & 4               \\
+		\text{int}                 & l                        & 4                       & 4             & 4               \\
+		\text{long}                & q                        & 4                       & 4             & 8               \\
+		\text{char}                & b                        & 1                       & 1             & 1               \\
+		\text{short}               & w                        & 2                       & 2             & 2               \\
+		\text{float}               & s                        & 4                       & 4             & 4               \\
+		\text{double}              & l                        & 8                       & 8             & 8               \\
+		\text{long double}         &                          & 8                       & 10/12         & 16              \\
+		\text{char *}              &                          & 4                       & 4             & 8               \\
+		\hline
+	\end{tabular}
+\end{center}
+Los números de punto flotante se representan en el formato IEEE 754, ya visto en TOC. Se incluye
+un diagrama de la representación de un número de punto flotante en simple y doble precision:
+\begin{center}
+	\includesvg[width=0.8\textwidth]{Imagenes/IEEE}
+\end{center}
+También cabe mencionar que existe un tipo de dato cuyo tamaño es 80 bits (long double) sin embargo su uso está
+completamente desaconsejado debido a su portabilidad entre sistemas.
+\section{Registros, operandos y operaciones}
+\subsection{Registros}
+Un procesador x86-64 tiene 16 registros de propósito general, que almacenan valores de 64 bits.
+Estos registros se usan para almacenar valores temporales, punteros, etc. Sus nombres comienzan
+con $\%r$, sin embargo, siguen convenciones de nombres debido a su legado. El primer 8086 tenía
+8 registros de 16 bits, cada uno tenía un uso específico, de ahí su nombre, con la extensión a
+IA32, los registros se extendieron a 32 bits, y con x86-64, a 64 bits, incluyendo además 8
+nuevos registros, cuyos nombres van desde $\%r8$ hasta $\%r15$.
+
+\begin{center}
+	\includesvg[width=0.8\textwidth]{Imagenes/registers}
+\end{center}
+\subsection{Operandos}
+La mayoría de instrucciones tienen uno o más operandos que especifican el \textit{source} y el destino de la operación.
+En x86-64, los operandos pueden ser de tres tipos, (1) Inmediatos, (2) Registros, (3) Memoria. Veamos la sintaxis
+para cada uno de ellos junto con la operación que se realiza:
+\begin{center}
+	\begin{tabular}{|l|l|l|l|}
+		\hline
+		\textbf{Type} & \textbf{Form}               & \textbf{Operand value}                      & \textbf{Name}       \\
+		\hline
+		Immediate     & \$\textit{Imm}              & \textit{Imm}                                & Immediate           \\
+		Register      & $r_a$                       & $R[r_a]$                                    & Register            \\
+		Memory        & \textit{Imm}                & $M[\textit{Imm}]$                           & Absolute            \\
+		Memory        & $(r_a)$                     & $M[R[r_a]]$                                 & Indirect            \\
+		Memory        & $\textit{Imm}(r_b)$         & $M[\textit{Imm} + R[r_b]]$                  & Base + displacement \\
+		Memory        & $(r_b, r_i)$                & $M[R[r_b] + R[r_i]]$                        & Indexed             \\
+		Memory        & $\textit{Imm}(r_b, r_i)$    & $M[\textit{Imm} + R[r_b] + R[r_i]]$         & Indexed             \\
+		Memory        & $(r_i, s)$                  & $M[R[r_i] \cdot s]$                         & Scaled indexed      \\
+		Memory        & $\textit{Imm}(, r_i, s)$    & $M[\textit{Imm} + R[r_i] \cdot s]$          & Scaled indexed      \\
+		Memory        & $(r_b, r_i, s)$             & $M[R[r_b] + R[r_i] \cdot s]$                & Scaled indexed      \\
+		Memory        & $\textit{Imm}(r_b, r_i, s)$ & $M[\textit{Imm} + R[r_b] + R[r_i] \cdot s]$ & Scaled indexed      \\
+		\hline
+	\end{tabular}
+\end{center}
+Los tipos de datos inmediatos se usan para valores constantes. En AT\&T se representan con un signo de dolar, siguiendo la notación
+usual de C, por ejemplo \textit{\$0xFF} o \textit{\$323}. Los registros se representan con un signo de porcentaje, por ejemplo, $\%rax$.
+Como ya hemos visto, los registros son de 64 bits, sin embargo, se pueden realizar operaciones de 32 bits, 16 bits o 8 bits, más adelante veremos cómo.
+Los operandos de memoria se representan con paréntesis, por ejemplo, \textit{(\%rax)}, \textit{0x8(\%rax)}, etc. Podemos interpretarlo como una
+desreferenciación de un puntero, es decir, acceder al valor almacenado en la dirección de memoria que se indica.
+\begin{ejemplo}
+	Veamos un ejemplo de cómo se realiza un swap en x86-64:
+	\begin{center} % Centramos el contenido
+		\begin{minipage}{0.45\textwidth}
+			\begin{minted}[fontsize=\Large]{c}
+void swap(long *xp, long *yp) 
+{
+    long x = *xp;
+    *xp = *yp;
+    *yp = x;
+}
+                \end{minted}
+		\end{minipage}
+		\begin{minipage}{0.45\textwidth}
+			\begin{minted}[fontsize=\Large]{asm}
+swap:
+    movq (%rdi), %rax
+    movq (%rsi), %rdx
+    movq %rax, (%rsi)
+    movq %rdx, (%rdi)
+    ret
+                \end{minted}
+		\end{minipage}
+	\end{center}
+	Podemos ver que inicialmente, la disposición era $\% rdi \rightarrow xp$, $\% rsi \rightarrow yp$.
+	Posteriormente, se almacena el \textbf{contenido} de $\%rdi$ en el registro $\%rax$, y el contenido de $\%rsi$ en $\%rdx$.
+	Finalmente, se almacena el contenido de $\%rax$ en la dirección de memoria que apunta $\%rsi$, y el contenido de $\%rdx$ en la dirección de memoria que apunta $\%rdi$.
+	Veamos un ejemplo para entender mejor el funcionamiento de los registros, supongamos que tenemos los siguientes valores:
+	\begin{itemize}
+		\item \textbf{Registro }$\%$rdi: 0x120
+		\item \textbf{Registro }$\%$rsi: 0x130
+		\item \textbf{Memoria en 0x120: } 125
+		\item \textbf{Memoria en 0x130: } 450
+	\end{itemize}
+	Veamos ahora paso por paso el contenido de cada registro( $\rightarrow$ representa el contenido de la dirección de memoria):
+	\[
+		\begin{array}{|c|c|c|c|c|c|}
+			\hline
+			\textbf{Registro} & \textbf{Valor} & \textbf{movq}           & \textbf{movq}           & \textbf{movq}                                 & \textbf{movq}                         \\
+			                  &                & \textbf{(\%rdi), \%rax} & \textbf{(\%rsi), \%rdx} & \textbf{\%rax, (\%rsi)}                       & \textbf{\%rdx, (\%rdi)}               \\
+			\hline
+			\%rdi             & 0x120          & 0x120                   & 0x120                   & 0x120                         \rightarrow 125 & 0x120 \textcolor{red}{\rightarrow450} \\
+			\%rsi             & 0x130          & 0x130                   & 0x130                   & 0x130\textcolor{red}{\rightarrow125}          & 0x130 \rightarrow 125                 \\
+			\%rax             & -              & \textcolor{red}{125}    & 125                     & 125                                           & 125                                   \\
+			\%rdx             & -              & -                       & \textcolor{red}{450}    & 450                                           & 450                                   \\
+			\hline
+		\end{array}
+	\]
+	Es posible que el lector no entienda el por qué de las cuatro instrucciones en vez de tres como en C, esto se debe a que, como hemos visto antes, no se pueden realizar
+	operaciones de memoria a memoria, por lo que se necesita un registro para almacenar el valor de una de las direcciones de memoria.
+\end{ejemplo}
+\subsection{Operaciones}
+Veamos algunas de las operaciones más comunes en x86-64, notemos que algunas de ellas además pueden tener
+variantes indicando el tamaño de los operandos. Antes de ver las operaciones de forma general, recalcamos
+la instrucción \textbf{\textit{leaq}}:
+\subsubsection{leaq}
+La instrucción (\textit{load effective address}) se utiliza como variante de la instrucción \textit{movq},
+la instrucción lee de la memoria la dirección efectiva de un operando y la almacena en un registro, sin acceder a la memoria en sí.
+Por ejemplo \textit{leaq 0x8(\%rax), \%rdx} almacena en $\%rdx$ la dirección de memoria $\%rax + 0x8$. Esta instrucción es a menudo utilizada
+por los compiladores para optimizaciones.
+\begin{ejemplo}
+	Veamos una forma para multiplicar un numero por 12 usando leaq
+	\begin{center} % Centramos el contenido
+		\begin{minipage}{0.3\textwidth}
+			\begin{minted}[fontsize=\large]{c}
+void m12(long x) 
+{
+    return x*12;
+}
+                \end{minted}
+		\end{minipage}
+		\begin{minipage}{0.69\textwidth}
+			\begin{minted}[fontsize=\large]{asm}
+swap:
+    leaq (%rdi, %rdi, 2), %rax # t = x + 2x
+    salq 2, %rax             # return t<<2
+                \end{minted}
+		\end{minipage}
+	\end{center}
+\end{ejemplo}
+
+Veamos algunas de las operaciones del tipo aritmetico-lógicas
+\begin{center}
+    \begin{tabular}{|c|c|c|}
+    \hline
+    \textbf{Instrucción} & \textbf{Efecto}                       & \textbf{Descripción}     \\ \hline
+    \texttt{lea S, D}         & $D \leftarrow \&S$                   & Load effective address   \\ \hline
+    \texttt{inc D}            & $D \leftarrow D + 1$                 & Increment                \\ \hline
+    \texttt{dec D}            & $D \leftarrow D - 1$                 & Decrement                \\ \hline
+    \texttt{neg D}            & $D \leftarrow -D$                    & Negate                   \\ \hline
+    \texttt{not D}            & $D \leftarrow \sim D$                & Complement               \\ \hline
+    \texttt{add S, D}         & $D \leftarrow D + S$                 & Add                      \\ \hline
+    \texttt{sub S, D}         & $D \leftarrow D - S$                 & Subtract                 \\ \hline
+    \texttt{imul S, D}        & $D \leftarrow D * S$                 & Multiply                 \\ \hline
+    \texttt{xor S, D}         & $D \leftarrow D \oplus S$            & Exclusive-or             \\ \hline
+    \texttt{or S, D}          & $D \leftarrow D \vee S$              & Or                       \\ \hline
+    \texttt{and S, D}         & $D \leftarrow D \wedge S$            & And                      \\ \hline
+    \texttt{sal k, D}         & $D \leftarrow D \ll k$               & Left shift               \\ \hline
+    \texttt{shl k, D}         & $D \leftarrow D \ll k$               & Left shift (same as sal) \\ \hline
+    \texttt{sar k, D}         & $D \leftarrow D \gg_A k$             & Arithmetic right shift   \\ \hline
+    \texttt{shr k, D}         & $D \leftarrow D \gg_L k$             & Logical right shift      \\ \hline
+    \end{tabular}
+\end{center}
+
+Destacamos una característica peculiar de las operaciones de shift, en el caso de que hagamos un shift a la derecha sobre un
+registro de 32 bits \texttt{shr \$16 $\%$edx}, $\%$rdx se rellenará con 0 en los primeros 32 bits también, de esta forma si teniamos $\$-1$
+por ejemplo y realizamos \texttt{shr \$16 $\%$edx}, nos quedaremos con 0x0000 0000 0000 FFFF en vez de 0xFFFF FFFF 0000 FFFF.
+\subsubsection{Operaciones aritméticas especiales}
+Multiplicar dos enteros con/sin signo de 64 bits puede tener un resultado que necesite 128 bits para representarlo
+es para ello que se incluyen las siguientes instrucciones especiales:
+\begin{center}
+    \begin{tabular}{|c|c|c|}
+    \hline
+        \textbf{Instruction} & \textbf{Effect} & \textbf{Description} \\ \hline
+    \texttt{imulq S} & \texttt{R[\%rdx]:R[\%rax] ← S × R[\%rax]} & Signed full multiply \\ \hline
+    \texttt{mulq S} & \texttt{R[\%rdx]:R[\%rax] ← S × R[\%rax]} & Unsigned full multiply \\ \hline
+    \texttt{cqto} & \texttt{R[\%rdx]:R[\%rax] ← SignExtend(R[\%rax])} & Convert to oct word \\ \hline
+    \texttt{idivq S} & 
+    \begin{tabular}[t]{@{}l@{}}
+        \texttt{R[\%rdx] ← R[\%rdx]:R[\%rax] mod S;} \\ 
+        \texttt{R[\%rax] ← R[\%rdx]:R[\%rax] ÷ S}
+    \end{tabular} & Signed divide \\ \hline
+    \texttt{divq S} & 
+    \begin{tabular}[t]{@{}l@{}}
+        \texttt{R[\%rdx] ← R[\%rdx]:R[\%rax] mod S;} \\ 
+        \texttt{R[\%rax] ← R[\%rdx]:R[\%rax] ÷ S}
+    \end{tabular} & Unsigned divide \\ \hline
+    \end{tabular}
+\end{center}
+Además de esto, añadimos ciertas peculiaridades que nos pueden ser útiles en la práctica:
+
+\begin{itemize}
+    \item Las instrucciones \texttt{movzbl} y \texttt{movslq} (la \texttt{z} indica \textit{zero extension} y la \texttt{s} \textit{sign extension}) se utilizan para extender cantidades a registros. Lo remarcable es que, mientras que \texttt{movslq} mueve 32 bits a 64 bits con extensión de signo, \texttt{movzlq} no existe ya que al mover 32 bits a 64 bits (\texttt{movl}) ya se realiza una extensión de ceros.
+    \item Cuando se tiene el código desensamblado de un programa, podemos ver la dirección en hexadecimal, junto con varios pares de números en hexadecimal y a la derecha las instrucciones. Los pares de números en hexadecimal representan los bytes de la instrucción. Por ejemplo, si tenemos la línea siguiente:
+    \begin{center}
+        400544: \quad \texttt{e8 08 00 00 00} \quad \texttt{callq 400551 <f>}
+    \end{center}
+    Podremos ver que \texttt{e8} corresponde con la instrucción \texttt{callq} y los siguientes 4 bytes son la dirección a la que se llama. En este caso, \texttt{400544} + 8 = \texttt{400551}, como se puede ver en la instrucción a la derecha.
+\end{itemize}
+
+
+\section{Control}
+Hasta ahora hemos considerado como se comporta el código cuando se ejecuta de forma secuencial, sin embargo,
+algunas estructuras de $C$ como los bucles, las estructuras de control, etc. requieren de una ejecución condicional, esto es,
+la secuencia de instrucciones a ejecutar depende de una condición.
+En x86-64, veremos dos formas de implementar estas estructuras de control más adelante, primero, veamos
+los códigos de condición que se utilizan en x86-64:
+\subsection{Codigos de condición}
+Además de los registros de propósito general, la CPU mantiene un conjunto de bits de estado que se utilizan para
+describir atributos de la última operación aritmético-lógica realizada.
+Veamos los códigos de condición que vamos a usar:
+\begin{itemize}
+	\item \textbf{CF (Carry Flag)}: El flag de acarreo, se activa si hay un acarreo en la última operación. Se utiliza para detectar overflow en operaciones sin signo.
+	\item \textbf{ZF (Zero Flag)}: El flag de cero, se activa si el resultado de la última operación es cero.
+	\item \textbf{SF (Sign Flag)}: El flag de signo, se activa si el resultado de la última operación es negativo.
+	\item \textbf{OF (Overflow Flag)}: El flag de desbordamiento, se activa si hay un desbordamiento en la última operación en complemento a 2.
+\end{itemize}
+Estos códigos de condición se ajustan implicitamente por las operaciones aritméticas, de esta forma, \textit{leaq} no afecta a los códigos de condición.
+Además de ajustarse por las operaciones que ya conocemos, existen instrucciones que ajustan explicitamente los códigos de condición sin alterar los registros de propósito general.
+\begin{itemize}
+	\item El conjunto de instrucciones \textbf{\textit{Compare}} (cmp) ajustan los códigos de condición de acuerdo a las diferencias entre sus dos operandos. Debemos tener en cuenta que en $AT\&T$ la sintaxis
+	      es al revés: \textit{cmpq S1, S2} compara $S1$ con $S2$ mediante $S2- S1$.
+	\item El conjunto de instrucciones \textbf{\textit{Test}} (test) ajustan los códigos de condición de acuerdo a las operaciones lógicas entre sus dos operandos.
+	      Se realiza la operación $S1 \& S2$ y se ajustan los códigos de condición. Es común que se utilicen ambos operandos iguales, por ejemplo, para
+	      comprobar si un número es 0.
+\end{itemize}
+\subsubsection{Consultar códigos de condición}
+En vez de consultarlos directamente, se utilizan mediante tres formas:
+\begin{enumerate}
+	\item Se establece un único byte a 0 o 1 en función de una combinación de los códigos de condición.
+	\item Se utilizan para realizar saltos condicionales.
+	\item Se utilizan para transferir datos condicionalmente.
+\end{enumerate}
+Para la primera forma, se utilizan las instrucciones \textit{setcc} siguientes:
+\begin{center}
+	\begin{tabular}{|c|c|}
+		\hline
+		\textbf{Instruction} & \textbf{Effect}                                                          \\ \hline
+		\texttt{sete D}      & D $\leftarrow$ ZF (Equal / zero)                                         \\ \hline
+		\texttt{setne D}     & D $\leftarrow$ $\sim$ ZF (Not equal / not zero)                          \\ \hline
+		\texttt{sets D}      & D $\leftarrow$ SF (Negative)                                             \\ \hline
+		\texttt{setns D}     & D $\leftarrow$ $\sim$ SF (Nonnegative)                                   \\ \hline
+		\texttt{setg D}      & D $\leftarrow$ $\sim$ (SF $\oplus$ OF) \& $\sim$ ZF (Greater, signed >)  \\ \hline
+		\texttt{setge D}     & D $\leftarrow$ $\sim$ (SF $\oplus$ OF) (Greater or equal, signed $\geq$) \\ \hline
+		\texttt{setl D}      & D $\leftarrow$ SF $\oplus$ OF (Less, signed <)                           \\ \hline
+		\texttt{setle D}     & D $\leftarrow$ (SF $\oplus$ OF) $\lor$ ZF (Less or equal, signed $\leq$) \\ \hline
+		\texttt{seta D}      & D $\leftarrow$ $\sim$ CF \& $\sim$ ZF (Above, unsigned >)                \\ \hline
+		\texttt{setae D}     & D $\leftarrow$ $\sim$ CF (Above or equal, unsigned $\geq$)               \\ \hline
+		\texttt{setb D}      & D $\leftarrow$ CF (Below, unsigned <)                                    \\ \hline
+		\texttt{setbe D}     & D $\leftarrow$ CF $\lor$ ZF (Below or equal, unsigned $\leq$)            \\ \hline
+	\end{tabular}
+\end{center}
+\begin{ejemplo}
+	Veamos un ejemplo de su uso:
+	\begin{center}
+		\begin{minipage}{0.39\textwidth}
+			\begin{minted}[fontsize=\Large]{c}
+    long gt(long a, long b)
+    {
+        return a > b;
+    }
+            \end{minted}
+		\end{minipage}
+		\begin{minipage}{0.6\textwidth}
+			\begin{minted}[fontsize=\Large]{asm}
+    gt:
+        cmpq %rsi, %rdi
+        setg %al
+        movzbq %al, %rax
+        ret
+
+            \end{minted}
+		\end{minipage}
+	\end{center}
+	Donde movzbq es una instrucción que significa \textit{ Move with Zero-extend Byte to Long}.
+\end{ejemplo}
+
+Veamos ahora cómo se realizan los saltos condicionales.
+Estos provocan que la ejecución del programa pueda saltar a otra parte del código en función de los códigos de condición, es muy posible que
+en algún momento nos encontremos una instrucción en C de tipo goto, su uso está desaconsejado, sin embargo, por su similitud con el ensamblador,
+puede resultar útil en ciertas situaciones. Veamos una tabla con las instrucciones de salto condicional y después un ejemplo de uso.
+
+\begin{center}
+	\begin{tabular}{|c|c|c|}
+		\hline
+		\textbf{Instruction} & \textbf{Jump Condition}                 & \textbf{Description}         \\ \hline
+		jmp                  & Label                                   & Direct jump                  \\ \hline
+		jmp                  & *Operand                                & Indirect jump                \\ \hline
+		je                   & ZF                                      & Equal / zero                 \\ \hline
+		jne                  & $\sim$ZF                                & Not equal / not zero         \\ \hline
+		js                   & SF                                      & Negative                     \\ \hline
+		jns                  & $\sim$SF                                & Nonnegative                  \\ \hline
+        jg                   & $\sim$(SF \^{} OF) $\&$ $\sim$ZF & Greater (signed >)           \\ \hline
+        jge                  & $\sim$(SF \^{} OF)                  & Greater or equal (signed >=) \\ \hline
+        jl                   & SF \^{} OF                          & Less (signed <)              \\ \hline
+        jle                  & (SF \^{}  OF) $|$ ZF              & Less or equal (signed <=)    \\ \hline
+        ja                   & $\sim$CF $\&$ $\sim$ZF               & Above (unsigned >)           \\ \hline
+		jae                  & $\sim$CF                                & Above or equal (unsigned >=) \\ \hline
+		jb                   & CF                                      & Below (unsigned <)           \\ \hline
+		jbe                  & CF $|$ ZF                            & Below or equal (unsigned <=) \\ \hline
+	\end{tabular}
+\end{center}
+\begin{ejemplo}
+	Veamos ahora un ejemplo de cómo hacer por ejemplo un valor absoluto de una diferencia:
+	\begin{center}
+		\begin{minipage}{0.39\textwidth}
+			\begin{minted}[fontsize=\Large]{c}
+    long abs(long x, long y)
+    {
+        if (x > y)
+            return x - y;
+        else
+            return y - x;
+    }
+            \end{minted}
+		\end{minipage}
+		\begin{minipage}{0.6\textwidth}
+			\begin{minted}[fontsize=\Large]{asm}
+        abs:
+            cmpq %rsi, %rdi
+            jle .L1
+            movq    %rdi, %rax
+            subq    %rsi, %rax
+            ret
+        .L1:
+            movq %rsi, %rax
+            subq %rdi, %rax
+            ret
+			\end{minted}
+		\end{minipage}
+	\end{center}
+	Si tratamos de \href{https://godbolt.org/z/aj7f7os8d}{replicar} el ejemplo anterior, veremos que en general, el compilador no produce este código,
+	esto se debe a las optimizaciones que el compilador aplica, evitando en la medida de lo posible los saltos condicionales, ya que muchas veces,
+	es mejor calcular ambas ramas, a tener que predecir y calcular cual de las ramas hay que seguir.
+	Para obtener este mismo código, deberemos especificar la opción de compilación \textit{-fno-if-conversion}.
+\end{ejemplo}
+Nos detenemos brevemente en las optimizaciones mencionadas, lo que hace el compilador en vez de saltar ramas es asignar valores a las variables
+en función de un test: \texttt{let val = test ? x : y}. \textit{gcc} intenta utilizar este tipo de optimizaciones siempre que sea seguro.
+De esta forma, el código anterior se traduciría a:
+\begin{center}
+	\begin{minted}[fontsize=\Large]{asm}
+        abs:
+            movq %rdi, %rax # x
+            subq %rsi, %rax # x - y
+            movq %rsi, %rdx 
+            subq %rdi, %rdx # y - x
+            cmpq %rsi, %rdi # x : y
+            cmovle %rdx, %rax # si x <= y, rax = rdx
+    \end{minted}
+\end{center}
+Esto se verá como una optimización en la asignatura de \textit{Arquitectura de Computadores}, sin embargo, adelantamos
+que por ejemplo \texttt{ let val = test ? p : *q} no se puede optimizar de la misma forma, ya que pudiera tener efectos no deseables.
+Notemos además que este tipo de optimizaciones solo tienen sentido cuando los cálculos son sencillos, en cuyo caso es preferible calcular las
+dos ramas a predecir cual de ellas seguir. Es por este tipo de opciones que \textit{gcc} es posible que genere un código mas lento cuando se activan
+las optimizaciones \textit{-O3} ya que si la rama era muy predecible, la predicción de saltos es mas rápida que calcular las dos ramas.
+Tampoco se debe utilizar en casos donde una rama u otra tiene efectos colaterales, ya que eso pudiera cambiar el comportamiento del programa.
+\subsection{Bucles}
+La mayoría de lenguajes ofrecen varias formas de implementar bucles: \textit{ do-while, while, for, loop, etc.} En x86-64, no existen instrucciones
+similares, en su lugar, se combinan diferentes tests y saltos condicionales para implementar los bucles.
+\subsubsection{Bucles Do-While}
+En C, un bucle \textit{do-while} se implementa de la siguiente forma:
+\begin{center}
+	\begin{minipage}{0.45\textwidth}
+		\begin{minted}[fontsize=\Large]{c}
+long pcount(long x)
+{
+    long result = 0;
+    do
+    {
+        result += x & 0x1;
+        x >>= 1;
+    } while (x);
+    return result;
+}
+        \end{minted}
+		\descriptionlabel{Versión C}
+	\end{minipage}
+	\begin{minipage}{0.45\textwidth}
+		\begin{minted}[fontsize=\Large]{c}
+long pcount(long x)
+{
+    long result = 0;
+    loop:
+        result += x & 0x1;
+        x >>= 1;
+        if(x) goto loop;
+    return result;
+}
+        \end{minted}
+		\descriptionlabel{Versión goto}
+
+	\end{minipage}
+\end{center}
+En este ejemplo se ha hecho un clásico programa popcount que cuenta el número de bits a 1 en un número.
+El nombre \textit{popcount} viene de \textit{population count}, que es el nombre que se le da a esta operación.
+Como ya sabemos, el efecto del loop es ejecutar el cuerpo del bucle, evaluar la condición y si el resultado de la condición es distinto de 0,
+seguir ejecutando el bucle. Notemos que se ejecuta al menos una vez.
+\subsubsection{Bucles While}
+\begin{ejemplo}
+	Veamos ahora cómo se implementa un bucle \textit{while}:
+	\begin{center}
+		\begin{minipage}{0.45\textwidth}
+			\begin{minted}[fontsize=\Large]{c}
+long pcount(long x)
+{
+    long result = 0;
+    while(x) {
+        result += x & 0x1;
+        x >>= 1;
+    }
+
+    return result;
+}
+\end{minted}
+			\descriptionlabel{Versión C}
+		\end{minipage}
+		\begin{minipage}{0.45\textwidth}
+			\begin{minted}[fontsize=\Large]{c}
+
+long pcount(long x)
+{
+        long result = 0;
+        goto test;
+    loop:
+        result += x & 0x1;
+        x >>= 1;
+    test:
+        if (x) goto loop;
+        return result;
+}
+        \end{minted}
+			\descriptionlabel{Versión goto}
+
+		\end{minipage}
+	\end{center}
+\end{ejemplo}
+En general, while evalúa la condición antes de ejecutar el bucle, por lo que si la condición no se cumple, el bucle no se ejecuta.
+\subsubsection{Bucles For}
+Sabemos ya que en general un bucle \textit{for} se compone de tres partes, la inicialización, la condición y la actualización.
+No adjuntamos el código en C ya que es trivial sabiendo los anteriores, notemos que un bucle \textit{for} es equivalente a un bucle \textit{while} de la siguiente forma:
+\textit{for (init; test; update) body} es equivalente a \textit{init; while(test) {body; update;}}
+Por último, veamos las secuencias switch.
+\subsection{Secuencias Switch}
+Una secuencia switch proporciona una ramificación condicional múltiple basada en el valor de una expresión entera.
+Son muy útiles cuando trabajamos con tests que pueden tener una gran cantidad de resultados, haciendo el código más legible
+y eficiente. Este último punto puede sorprender, por ello, vamos a desarrollarlo.
+\\ \\
+Una \textit{tabla de salto} es una estructura de datos en forma de array donde $i$ es la dirección de un segmento de codigo que ejecuta la acción
+que el programa debería seguir cuando el valor de la expresión es $i$. La diferencia entre multiples \textit{if-else} y \textit{switch} radica en
+que el tiempo que se tarda en ejecutar un \textit{switch} es constante, mientras que en un \textit{if-else} es lineal en función del número de casos.
+
+\begin{center}
+	\begin{minipage}{0.45\textwidth}
+		\centering
+		\textbf{Código en C}
+
+		\begin{minted}[fontsize=\large]{c}
+
+void switch_eg(long x) {
+    switch (x) {
+        case 1:
+            printf("Code 1\n");
+            break;
+        case 2:
+            printf("Code 2\n");
+            break;
+        case 3:
+            printf("Code 3\n");
+            break;
+        default:
+            printf("Code 4\n");
+    }
+}
+
+    \end{minted}
+
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.45\textwidth}
+		\centering
+		\textbf{Assembly Code}
+
+		\begin{minted}[fontsize=\large]{asm}
+cmpq $3, %rdi
+ja .L4 # Si x > 3, Default
+jmp *.L1(,%rdi,8) # Dirección L1 + 8x 
+.L1:
+.L2:
+.L3:
+.L4 # Default
+        \end{minted}
+
+		\vspace{1em}
+		\textbf{Branch Table (Jump Table)}
+
+		\begin{tabular}{|c|c|}
+			\hline
+			\textbf{Índice} & \textbf{Dirección de Salto} \\
+			\hline
+			1               & Code Block 1                \\
+			\hline
+			2               & Code Block 2                \\
+			\hline
+			3               & Code Block 3                \\
+			\hline
+			Default         & Code Block 4                \\
+			\hline
+		\end{tabular}
+	\end{minipage}
+\end{center}
+Como podemos ver, la tabla de saltos comienza en este caso en .L1, para acceder
+a el resto de bloques de código, se suma 8 veces el valor de x, ya que cada dirección
+ocupa 8 bytes. Si x es mayor que 3, se salta a la dirección .L4, que es el bloque por defecto.
+Si por ejemplo en vez de hacer break, se quisiera hacer un fall through, obtendríamos algo
+del siguiente estilo:
+\begin{center}
+	\begin{minipage}{0.45\textwidth}
+		\begin{minted}[fontsize=\large]{c}
+long w = 1;
+switch(x) {
+    ...
+  case 2:
+    w = y/z;
+    /* Fall through */ 
+case 3:
+    w += z;
+    break;
+    ...
+}
+\end{minted}
+	\end{minipage}
+	\begin{minipage}{0.45\textwidth}
+		\begin{equation*}
+			\%rdi \rightarrow x \quad \%rsi \rightarrow y \quad \%rdx \rightarrow z
+		\end{equation*}
+		\begin{minted}[fontsize=\large]{asm}
+.L5: # Case 2
+    movq %rsi, %rax
+    cqto # Convert Quad To Oct
+    idivq %rdx 
+    jmp .L6
+.L9: # Case 3
+    movl $1, %eax
+.L6: # Merge
+    addq %rcx, %rax # w += z
+    ret 
+
+\end{minted}
+	\end{minipage}
+\end{center}
+
+\section{Procedimientos}
+Los procedimientos son una abstracción clave en el desarrollo de software, permiten dividir un programa en pequeñas partes
+donde cada una de ellas proporciona una funcionalidad concreta al proporcionarle una serie de argumentos.
+Pueden ser llamados desde cualquier parte del programa, lo que permite reutilizar el código y hacerlo más modular. Los procedimientos vienen
+de distintas formas en cada lenguaje: funciones, métodos, subrutinas, lambdas, etc, pero todos ellos comparten ciertos elementos comunes.
+\\ \\
+Existen muchos atributos que hay que manejar cuando se proporciona soporte en lenguaje ensamblador para procedimientos, para verlos, supongamos un proceso
+$P$ que llama a un procesor $Q$, que se ejecuta y tras esto vuelve a $P$, estas acciones incluyen:
+\begin{itemize}
+	\item \textbf{Pasar Control}: El PC tiene que fijarse en la dirección de comienzo de $Q$, y tras esto, cuando $Q$ termina, el PC tiene que volver a la dirección de la instrucción que sigue a la llamada.
+	\item \textbf{Parámetros}: $P$ tiene que pasar los parámetros a $Q$, y $Q$ tiene que devolver un valor a $P$.
+	\item \textbf{Reserva y Limpieza de Memoria}: $Q$ puede necesitar reservar memoria para sus propias variables, y tras la ejecución, limpiarla.
+\end{itemize}
+La implementación de estos procedimientos en x86-64 involucra una combinación de instrucciones especiales y convenciones de cómo usar los recursos de la máquina.
+Detrás de esto hay un gran esfuerzo por minimizar el overhead que involucra una llamada, esto provoca que al final, solo se ejecuta lo mínimo indispensable mencionado
+antes. Veamos ahora diferentes mecanismos paso por paso, comenzando por la pila:
+\subsection{Stack (Pila)}
+Es una región de memoría gestionada con aspectos de LIFO, es decir, el último elemento en entrar es el primero en salir, crece hacia direcciones inferiores, en x86-64
+el registro $\%rsp$ contiene la dirección mas baja de la pila. Los datos, pueden ser accedidos y extraidos de la pila usando las instrucciones \textit{pushq} y \textit{popq}.
+Por ejemplo para reservar espacio para datos sin valor inicial, se puede decrementar la pila la cantidad necesaria, análogamente, se puede liberar el espacio incrementando el stack pointer.
+En x86-64, cuando un procedimiento requiere más espacio de lo que puede guardar en registros, reserva espacio en el stack. A esta región se la llama \textit{procedure space} para las variables locales.
+En interés del espacio y la eficiencia, los procedimientos de x86-64 reservan solo el espacio necesario.
+
+\subsection{Pasando el Control}
+Pasar el control de una función $P$ a otra $Q$ requiere únicamente de poner el PC en la dirección de inicio de $Q$,
+sin embargo, cuando $Q$ termina, el PC tiene que tener alguna manera de saber dónde debe reanudar la ejecución de $P$, esta información se guarda en las máquinas
+x86-64 usando la instrucción call $Q$. Esta instrucción añade una dirección $A$ al stack y pone el PC en el comienzo de $Q$. La dirección $A$ se denomina \textit{return address} y se calcula como
+la instrucción que sigue inmediatamente a call. La instrucción contraria ret, elimina una dirección $A$ de la pila y pone el PC en $A$.
+(Notemos que estas instrucciones nos las encontraremos como callq y retq, donde el sufijo $q$ simplemente enfatiza que son versiones de x86-64 no de IA32).
+Veamos un esquema con la estructura general del stack:
+
+
+\begin{center}
+	\includesvg[width=0.6\textwidth]{Imagenes/stack}
+	\label {fig:stack}
+\end{center}
+\subsection{Pasando los datos}
+Además de pasar el control a un procedimiento cuando es invocado, y de vuelta cuando termina, las llamadas a procedimientos
+pueden involucrar pasar datos como argumentos, además un procedimiento puede devolver también un valor. En x86-64, la mayoria de
+este flujo de datos es llevada a cabo mediante registros, ya hemos visto numerosos ejemplos en los que $\%rdi$ y $\%rsi$ se pasan como
+parámetros y valores que se devuelven mediante $\%rax$. En x86-64, se pueden pasar hasta 6 argumentos mediante registros, que se usan en un orden
+específico con el nombre del registro en función del tamaño del dato que contiene.
+Cuando una función tiene más de 6 argumentos, los argumentos restantes se pasan en la pila tal que el argumento 7 se coloca abajo, el 8 encima, y así sucesivamente.
+\subsection{Gestionando datos locales}
+Hasta ahora, la mayoría de ejemplos que hemos visto no han requerido de variables locales, ya sea por optimización del compilador o por la sencillez del código,
+sin embargo, sabemos que muchas veces es necesario almacenar variables locales.
+Normalmente, en lenguajes basados en pila, o que soportan la recursión (e.g C, C++, Java, Rust, etc), las variables locales se almacenan en la pila.
+Esta pila, se reserva en marcos (allocated in frames), que son bloques de memoria que contienen las variables locales de un procedimiento, estos marcos de memoria
+se organizan tal que contienen información de retorno, almacenamiento local si es necesario y espacio temporal si es necesario, además hay un puntero de marco opcional:
+$\%rbp$. Veamos un ejemplo de cadena de llamadas a procedimientos:
+% \begin{center}
+% 	\begin{tikzpicture}[>=Stealth, scale=1.5]
+%
+% 		\matrix (m1) [matrix of nodes, nodes={draw, minimum size=1cm}, column sep=0cm] {
+% 			\node[fill=green!20] {\phantom{a}}; \\
+% 			\node[fill=green!20] {\phantom{a}}; \\
+% 			\node[fill=green!20] {\phantom{a}}; \\
+% 			\node[fill=green!20] {\phantom{a}}; \\
+% 		};
+%
+% 		\matrix (m2) [matrix of nodes, right=of m1, nodes={draw, minimum size=1cm}, column sep=0cm] {
+% 			\node[fill=green!20] {\phantom{a}}; \\
+% 			\node[fill=green!40] {fn A};                    \\
+% 			\node[fill=green!20] {\phantom{a}}; \\
+% 			\node[fill=green!20] {\phantom{a}}; \\
+% 		};
+%
+% 		\draw[->] (m1) -- (m2);
+%
+% 		\matrix (m3) [matrix of nodes, right=of m2, nodes={draw, minimum size=1cm}, column sep=0cm] {
+% 			\node[fill=green!20] {\phantom{a}}; \\
+% 			\node[fill=green!40] {fn A};                    \\
+% 			\node[fill=green!70] {fn B};                    \\
+% 			\node[fill=green!0] {\phantom{a}};  \\
+% 		};
+%
+% 		\draw[->] (m2) -- (m3);
+% 		\matrix (m4) [matrix of nodes, right=of m3, nodes={draw, minimum size=1cm}, column sep=0cm] {
+% 			\node[fill=green!20] {\phantom{a}}; \\
+% 			\node[fill=green!40] {fn A};                    \\
+% 			\node[fill=green!70] {fn B};                    \\
+% 			\node[fill=green!70] {fn B};                    \\
+% 		};
+%
+% 		\draw[->] (m3) -- (m4);
+%
+% 		\matrix (m5) [matrix of nodes, right=of m4, nodes={draw, minimum size=1cm}, column sep=0cm] {
+% 			\node[fill=green!20] {\phantom{a}}; \\
+% 			\node[fill=green!40] {fn A};                    \\
+% 			\node[fill=green!70] {fn B};                    \\
+% 			\node[fill=green!20] {\phantom{a}}; \\
+% 		};
+%
+% 		\draw[->] (m4) -- (m5);
+% 		\matrix (m6) [matrix of nodes, right=of m5, nodes={draw, minimum size=1cm}, column sep=0cm] {
+% 			\node[fill=green!20] {\phantom{a}}; \\
+% 			\node[fill=green!40] {fn A};                    \\
+% 			\node[fill=green!20] {\phantom{a}}; \\
+% 			\node[fill=green!20] {\phantom{a}}; \\
+% 		};
+%
+% 		% Flecha entre la cuarta y quinta tabla
+% 		\draw[->] (m5) -- (m6);
+% 	\end{tikzpicture}
+% \end{center}
+Donde en cada uno de los pasos, $\%rsp$ apunta en la función más abajo existente y $\%rbp$ apunta al marco de la función inmediata anterior.
+Los registros de programa actuan como un único recurso compartido por todos los procedimientos, aunque un solo procedimiento puede estar activo en un momento dado,
+tenemos que asegurarnos de que cuando un procedimiento (caller) llama otro procedimiento (callee), el callee no sobreescriba los registros del caller. Veamos un ejemplo de esto:
+\begin{center}
+	\begin{minipage}{0.45\textwidth}
+		\begin{minted}[fontsize=\large]{asm}
+funcA:
+    movq $15213, %rdx
+    call funcB
+    addq %rdx, %rax 
+    ret
+\end{minted}
+	\end{minipage}
+	\begin{minipage}{0.45\textwidth}
+		\begin{minted}[fontsize=\large]{asm}
+funcB: 
+    subq $18213, %rdx
+    ret 
+    \end{minted}
+
+	\end{minipage}
+\end{center}
+Como podemos ver, pudiera pasar que $\%rdx$ fuese sobreescrito en la función $funcB$, para evitar esto,
+existen convenciones para coordinar el uso de registros.
+Los registros $\%rbx, \%rbp, \%r12-\%r15$ se denominan \textit{callee-saved} ya que el callee debe guardar su valor si los modifica.
+Para este fin, el callee puede o bien no modificar los registros, o guardando su valor en la pila y restaurándolo antes de salir, a este espacio se le llama
+\textit{Saved Registers}, podemos verlo en el diagrama \ref{fig:stack}.
+El resto de registros, excepto $\%rsp$, se clasifican como \textit{Caller-saved}, lo que
+significa que pueden ser modificados por cualquier función, el nombre viene de un procedimiento $P$ que llama a un $Q$, como
+$Q$ puede modificar libremente estos registros, $P$ debe guardar su valor si los necesita.
+\subsection{Recursividad}
+Las convenciones que hemos visto hasta ahora son suficientes para permitir a los procedimientos de x86-64 llamarse a sí mismos.
+Cada llamada a procedimiento tiene su propio espacio en el stack, luego las variables locales de las múltiples llamadas no interfieren entre ellas.
+Veamos un ejemplo del código C y ensamblador generado para una función recursiva:
+\begin{center}
+	\begin{minipage}{0.45\textwidth}
+		\begin{minted}[fontsize=\large]{c}
+long pcount_r(unsigned long x) {
+    if (x == 0) {
+        return 0;
+    } else {
+        return (x & 1) 
+            + pcount_r(x >> 1);
+    }
+}
+\end{minted}
+	\end{minipage}
+	\begin{minipage}{0.45\textwidth}
+		\begin{minted}[fontsize=\large]{asm}
+pcount_r:
+    movl $0, %eax
+    testq %rdi, %rdi
+    je .L2
+    pushq %rbx 
+    movq %rdi, %rbx
+    andl $1, %ebx
+    shrq %rdi
+    call pcount_r
+    addq %rbx, %rax
+    popq %rbx
+  .L2
+    rep; ret # Para branch prediction 
+  \end{minted}
+	\end{minipage}
+\end{center}
+Veamos más detenidamente lo que está pasando:
+%Error 3
+% \begin{itemize}
+% 	\item Las primeras tres instrucciones sirven para saber cuando acaba la recursión, si x es 0, se devuelve 0.
+% 	\item El pushq está ya que se va a modificar $\%rbx$ y se necesita restaurar su valor al salir de la función.
+% 	\item Desde movq hasta shrq se calcula x $\&$ 1 y x >> 1.
+% 	\item x >> 1 se pasa como argumento a la función $pcount_r$ (llamada recursiva)
+% 	\item Se suma el resultado de la llamada recursiva con el valor de x \& 1.
+% \end{itemize}
+\section{Datos}
+% Marker [DE AQUI HACIA ABAJO TODO CORRECTO]
+\subsection{Arrays}
+Los arrays en C se usan para almacenar colecciones de datos escalares en variables más grandes, la implementación particular
+de C de los arrays es muy directa, una característica importante es que en C podemos manipular punteros a elementos de un array
+y realizar operaciones con ellos. Los compiladores son extremadamente buenos simplificando el cálculo de direcciones 
+usado cuando accedemos a un array, es por ello que la correspondencia entre C y ensamblador puede llegar a ser dificil de descifrar.
+\subsubsection{Principios Básicos}
+Sea $T$ un tipo de dato cualquiera, y $N$ una constante, consideramos la declaración $T A[N]$, entonces $A$ es un array de $N$ elementos.
+La declaración reserva una región contigua de memoria de $T \cdot N$ bytes e introduce un identificador $A$ que se usa como puntero
+al comienzo de esta región de memoria. Los elementos de este array se acceden mediante el uso de un índice entre 0 y N-1.
+\begin{ejemplo}
+    Consideramos \texttt{int arr[5]}, veamos los siguientes ejemplos:
+    \begin{center}
+        \includesvg[width=0.5\textwidth]{Imagenes/array}
+        \end{center}
+    \begin{itemize}
+        \item \texttt{arr[4]} (int) se refiere al quinto elemento del array (valor 3).
+        \item \texttt{arr} (int *) comienzo del array (posición arr)
+        \item \texttt{arr+1} (int *) comienzo del array + 1 (posición arr + 4) 
+        \item \texttt{\&arr[2]} (int *) dirección de val[2] (posición arr + 8)
+        \item \texttt{arr[5]} (int) fuera de los límites del array, \href{https://en.cppreference.com/w/c/language/behavior}{undefined behavior.}
+        \item \texttt{*(arr+1)} (int) valor de la dirección val + 1 (valor 5)
+    \end{itemize}
+\end{ejemplo}
+Destacamos que declaramos arrays inmediatamente después de otro, no está garantizado que estos se almacenen en memoria de forma contigua. Así como hemos podido ver en el ejemplo anterior,
+que C permite operaciones con los punteros, así, si $p$ es un puntero a un array de tipo $T$ y la dirección de memoria de $p$ es $x_p$, entonces la expresión $p + i$ tiene el valor \texttt{$x_p$ +  $T \cdot i$ = $i \cdot$ sizeof(T)}.
+Recordamos que los operadores $\& $ y $*$ permiten la generación y dereferenciación de punteros respectivamente.
+\begin{ejemplo}
+    Ejemplo de acceso a elementos de array:
+    \begin{center}
+        \begin{minipage}{0.45\textwidth}
+            \begin{minted}[fontsize=\large]{c}
+int get_num(int *arr, int i) 
+{
+    return arr[i];
+}
+        \end{minted}
+        \end{minipage}
+        \begin{minipage}{0.45\textwidth}
+        \begin{minted}[fontsize=\large]{asm}
+    get_num:
+        movslq  %esi, %rsi
+        movl (%rdi, %rsi, 4), %eax
+        ret
+            \end{minted}
+        \end{minipage}
+    \end{center}
+    Recordamos que \texttt{movslq} es una instrucción que significa \textit{Move with Sign-extend Long to Quad}, se utiliza ya que para hacer 
+    operaciones con la dirección de memoria, es necesario que los registros sean de 64 bits.
+\end{ejemplo}
+
+\subsubsection{Arrays Anidados}
+Los principios de los arrays multidimensionales son los mismos que los de los arrays unidimensionales, de esta manera, la declaración
+\texttt{T A[R][C]} declara un array de $R$ elementos, cada uno de los cuales es un array de $C$ elementos. En general, un array bidimensional de elementos de tipo T. De otra forma,
+podemos decir que tiene $R$ filas y $C$ columnas. Notemos que si el tamaño de $T$ es $K$ bytes, entonces el tamaño de $A$ es $ C \cdot R \cdot K$ bytes.
+La disposición de los elementos en memoria es por filas, \textit{(row-major-order)}:
+\begin{center}
+\includesvg[width=0.8\textwidth]{Imagenes/array2d.svg}
+\end{center}
+De esta forma, si tenemos un array \texttt{T A[R][C]} el elemento 
+\texttt{T[i][j]} está en la posición de memoria \texttt{$\&$A[i][j] = $x_A$ + L(C $\cdot i + j$)}.
+\begin{ejemplo}
+    Veamos un ejemplo en el que el flag --no-pie debe ser considerado
+    \begin{center}
+        \begin{minipage}{0.45\textwidth}
+            \begin{minted}[fontsize=\large]{c}
+    int *get_row(int index) 
+    {
+        return arr[index];
+    }
+            \end{minted}
+        \end{minipage}
+        \begin{minipage}{0.45\textwidth}
+            \begin{minted}[fontsize=\large]{c}
+#define ROWS 4
+// Zip_dig -> Array de 5 elementos
+zip_dig arr[ROWS] = {
+    {1, 2, 7, 4, 5},
+    {6, 7, 2, 9, 1},
+    {1, 9, 3, 1, 5},
+    {1, 7, 8, 9, 2}};
+            \end{minted}
+        \end{minipage}
+        \vspace{0.5cm}
+        \vspace{0.5cm}
+        \begin{minipage}{0.45\textwidth}
+            \begin{minted}[fontsize=\large]{asm}
+    get_num:
+        leaq (%rdi, %rdi, 4), %rdx
+        leaq arr(,%rdx, 4), %rax
+        ret
+            \end{minted}
+        \end{minipage}
+        \begin{minipage}{0.45\textwidth}
+            \begin{minted}[fontsize=\large]{asm}
+    get_num:
+        movslq %edi, %rdi
+        leaq arr(%rdi ,%rdi, 4), %rdx
+        leaq arr(%rip), %rax
+        leaq (%rax, %rdx, 4), %rax
+        ret
+        \end{minted}
+        \end{minipage}
+    \end{center}
+    A la izquierda, como se usa --no-pie que desactiva el \textit{Position Independent Code}, la dirección de memoria es conocida en tiempo de compilación, por lo que
+    se puede acceder directamente con $ 5 \cdot \text{index}$ por ser 5 elementos por fila y $4 \cdot \text{index}$ por ser un tipo de dato entero de 4 bytes.
+    En el segundo caso, el direccionamiento es relativo a contador de programa $\%rip$. Notemos que --no-pie resulta más eficiente sin embargo es más vulnerable a ataques de buffer overflow.
+\end{ejemplo}
+\subsubsection{Array Multinivel}
+De manera similar a los arrays bidimensionales, tenemos los arrays multinivel, que tienen la peculiaridad de que 
+se tiene un array de punteros a arrays, de esta forma, para acceder a un dato son necesarios dos accesos a memoria, uno para acceder al puntero y otro para acceder al dato.
+\begin{ejemplo}
+    Un ejemplo de array multinivel en C: 
+    \begin{center}
+        \begin{minted}{c}
+zip_dig cmu = {0, 5, 2, 7, 3};
+zip_dig mit = {1, 2, 3, 4, 5};
+zip_dig ucb = {9, 3, 7, 5, 1};
+
+# define UCOUNT 3
+int *univ[UCOUNT] = {cmu, mit, ucb};
+        \end{minted}
+    \end{center}
+\end{ejemplo}
+\subsection{Estructuras}
+C permite dos formas de definir tipos de datos compuestos: \textit{struct} que agrupan múltiples datos en un 
+solo objeto y \textit{union} que permiten que un objeto sea referenciado usando diferentes tipos de datos. Veamos en detalle las estructuras.
+\\ \\ 
+El struct en C crea un tipo de dato que agrupa múltiples variables que pueden ser de diferentes tipos en un solo objeto,
+los distintos elementos de la estructura se referencian mediante nombres, con la sintaxis \texttt{struct.field, struct->field}.
+El struct se parece a los arrays en el sentido de que se garantiza que los datos de un mismo struct están contiguos en memoria.
+Es el compilador el que mantiene información sobre cada estructura para indicar el offset de cada campo. El tamaño de los 
+structs es el tamaño de todos sus campos sumados, teniendo en cuenta que es posible que el compilador reserve espacio adicional tras un 
+tipo de dato para alinear la memoria.
+\begin{ejemplo}
+    Veamos un ejemplo de struct en C y cómo se distribuye su memoria:
+    \begin{center}
+        \begin{minipage}{0.45\textwidth}
+            \begin{minted}[fontsize=\large]{c}
+        struct rec {
+            int a[4];
+            size_t i;
+            struct rec *next;
+        }
+            \end{minted}
+        \end{minipage}
+        \begin{minipage}{0.48\textwidth}
+            \includesvg[width=0.8\textwidth]{Imagenes/struct}
+        \end{minipage}
+    \end{center}
+        Notemos que si en el struct el array de enteros fuese de tamaño 3, el tamaño del struct se mantendría en 32
+        B por el alineamiento de la memoria. El puntero $r$ indica el primer byte de la estructura, se accede
+        mediante el offset, que como hemos dicho lo determina el compilador en tiempo de compilación.
+        \begin{center}
+        \begin{minipage}{0.48\textwidth}
+            \begin{minted}[fontsize=\large]{c}
+    void set_i(struct rec *r, size_t val)
+    {
+        r->i = val;
+    }
+            \end{minted}
+        \end{minipage}
+        \begin{minipage}{0.45\textwidth}
+            \begin{minted}[fontsize=\large]{asm}
+        set_i:
+            movq %rsi, (%rdi, 16)
+            ret
+            \end{minted} 
+        \end{minipage}
+    \end{center}
+\end{ejemplo}
+Hemos introducido ya el alineamiento de los datos, detallamos los principios que rigen su funcionamiento:
+\begin{itemize}
+    \item Si el tipo de dato primitivo requiere $K$ bytes, la dirección debe ser múltiplo de $K$.
+    \item El alineamiento es requisito en algunas maquinas, en x86-64 es recomendado por motivos de eficiencia (Es ineficiente cargar o almacenar datos que cruzan fronteras de quad word y
+        la memoria virtual es delicada cuando un dato se extiende a 2 páginas).
+    \item En la mayoría de lenguajes compilados (C, C++, Rust, etc) es el compilador el que inserta huecos en la estructura para alinear los campos.
+    \item El alineamiento se hace:
+        \begin{itemize}
+            \item Para el struct, se toma el máximo valor miembro para alinear, esto se llama alineamiento externo.
+            \item Para los datos primitivos, se toma el tamaño del dato, es decir se añade padding antes del dato miembro si fuese necesario para que se encuentre en una posición múltiplo de su tamaño.
+        \end{itemize}
+\end{itemize}
+El compilador no reordena los datos con el fin de ahorrar espacio, sin embargo
+el programador debería considerar siempre cómo ordenar los datos para ocupar el menor espacio posible, esto es 
+especialmente importante ya que a diferencia de otras optimizaciones que el compilador hace por nosotros, esta no se puede hacer ya que rompería la coherencia y predictibilidad del código.
+\subsection{Uniones}
+Las uniones proporcionan una manera de circunvalar el sistema de tipos de C, permitiendo a un solo objeto ser referenciado por múltiples tipos. La sintaxis de la unión es idéntica a la de un struct, pero 
+sus semánticas son diferentes. En una unión, todos los campos comparten la misma dirección de memoria, lo que significa que si se modifica un campo, se modifica el resto, para hacer esto, el compilador reserva
+tamaño de acuerdo al elemento más grande.
+\begin{ejemplo}
+    Veamos un ejemplo de una unión en comparación con un struct:
+    \begin{center}
+        \begin{minipage}{0.45\textwidth}
+            \begin{minted}[fontsize=\large]{c}
+    union U1 {
+        char c;
+        int i[2];
+        double v;
+    } *up;
+    \end{minted}
+    \end{minipage}
+    \begin{minipage}{0.45\textwidth}
+        \begin{minted}[fontsize=\large]{c}
+    struct S1 {
+        char c;
+        int i[2];
+        double v;
+    } *sp;
+        \end{minted}
+    \end{minipage}
+\end{center} 
+Si compilamos ambos códigos en una máquina Linux en x86-64, el offset y tamaño total de las estructuras sería el siguiente:
+\begin{center}
+    \begin{tabular}{ccccc}
+        Tipo & c & i & v & Total Size \\ 
+        \hline 
+        U1 & 0 & 0 & 0 & 8 \\ 
+        S1 & 0 & 4 & 16 & 24 \\ 
+    \end{tabular}
+\end{center}
+Este gran poder conlleva una gran responsabilidad, ya que el programador debe ser consciente de que 
+si usa datos como \texttt{float} e \texttt{int} en la misma unión, 
+e intenta interpretar los bits del entero como si fuese un float,
+el resultado no será el esperado, ya que no tendremos el mismo efecto que el cast (float) sobre el entero.
+\end{ejemplo}
+Recordamos que las palabras se almacenan en memoria como un número N de bytes, en esta organización, el byte mas 
+significativo puede ser el que está en la dirección más baja (Big Endian) o en la dirección más alta (Little Endian).
+Esta diferencia puede causar problemas al intercambiar datos binarios entre máquinas, también mencionamos Middle endian, que son  
+aquellas arquitecturas que se pueden configurar de ambas maneras, aparece en ARM, sin embargo, la mayoría de las máquinas modernas son Little Endian.
+\\ \\ 
+Para finalizar este capítulo, presentamos un resumen de los tipos compuestos en C:
+\begin{itemize}
+    \item \textbf{Arrays}
+        \begin{itemize}
+            \item Reservan memoria contigua para almacenar elementos
+            \item Se usa aritmética de indexación para localizar elementos individuales
+            \item Puntero al primer elemento
+            \item No comprueban límites
+        \end{itemize}
+\item \textbf{Structs}
+    \begin{itemize}
+        \item Reserva de una sola región de memoria, los campos en el mismo orden declarado 
+        \item Se accede usando desplazamientos determinados por el compilador
+        \item Alineamiento interno y externo mediante relleno
+    \end{itemize}
+\item \textbf{Unions}
+    \begin{itemize}
+        \item Declaraciones superpuestas
+        \item Proveen de una manera para saltarse el sistema de tipos de C
+    \end{itemize}
+\end{itemize}

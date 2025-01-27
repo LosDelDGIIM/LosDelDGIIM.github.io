@@ -1,0 +1,310 @@
+\chapter{Segmentación de Cauce}
+\section{Concepto de Segmentación}
+La velocidad de ejecución de un programa depende de varios factores, una manera de incrementar
+la eficiencia es usar tecnologías de circuitos más rapidos para la memoria principal y el procesador. Otra posibilidad
+es ajustar el hardware para que más de una operación se pueda ejecutar al mismo tiempo, 
+de esta manera, el número de operaciones por segundo aumenta a pesar de que el tiempo necesario para ejecutar cada operación no 
+se modifica.
+
+Es a esto a lo que se le llama segmentación o \textit{pipelining}, la idea básica es muy simple, por ejemplo es muy 
+común encontrarla en cadenas de montaje de fábricas, en las que cada operario realiza una tarea concreta. En el caso de un 
+procesador, la idea será subdividir el procesador en n etapas, permitiendo el solapamiento en la ejecución de instrucciones:
+\begin{center}
+    \includesvg[width=0.7\textwidth]{Imagenes/segmentacion}
+\end{center}
+Donde cada registro entre las etapas se encarga de almacenar la información necesaria para la siguiente etapa. De esta manera, las instrucciones
+entran por un extremo del cauce son procesadas en distintas etapas y salen por el otro extremo. Cada instrucción individual sigue tardando un tiempo 
+$T$, pero hay varias instrucciones ejecutándose simultáneamente en distintas etapas.
+
+\begin{ejemplo}
+    Veamos un ejemplo de una segmentación de 5 etapas: (IF) Captación de instrucción, (ID) Decodificación de instrucción, (EX) Ejecución de instrucción, (MEM) Acceso a memoria y (WB) Escritura de resultados.
+    \begin{center}
+        \includesvg[width=0.6\textwidth]{Imagenes/pipeline-5}
+    \end{center}
+    Cada etapa del cauce debe completarse en un ciclo de reloj. En las fases de captación y memoría trataremos de tener un acceso a caché,
+    que permitira acceder en un ciclo de reloj, si hubiera un fallo de caché, el acceso a memoria principal tardará varios ciclos de reloj (Aproximadamente 10).
+    El periodo de reloj se ajusta de acuerdo a la etapa más larga del cauce.
+\end{ejemplo}
+
+\section{Aceleración}
+Para medir la aceleración que se consigue mediante la segmentación, podemos usar la simple fórmula:
+\begin{equation*}
+    \text{Aceleración} = \frac{\text{Tiempo sin segmentación}}{\text{Tiempo con segmentación}}
+\end{equation*}
+Notemos que en el caso ideal, si tenemos $k$ instrucciones y $n$ etapas, la aceleración ideal viene dada por:
+\begin{equation*}
+    \text{Aceleración ideal} = \frac{kT}{(n-1 + k) T/n} = \frac{nkT}{(n+k-1)T} \underset{k \rightarrow \infty}{=} n
+\end{equation*}
+Es decir, la aceleración ideal coincide con el número de etapas de segmentación.
+\begin{ejemplo}
+    Veamos un ejemplo con 4 etapas de segmentación y 4 instrucciones:
+    \begin{center}
+        \includesvg[width=0.4\textwidth]{Imagenes/segmentada_4}
+    \end{center}
+    En este caso, la aceleración es $ \frac{4T}{(4-1+4)T/4} = 16/7$
+\end{ejemplo}
+La segmentación aunque es buena, no es perfecta, y hay varios problemas que pueden provocar una disminución en la aceleración: 
+\begin{itemize}
+    \item Coste de segmentación.
+    \item Duración del ciclo de reloj impuesto por la etapa más larga.
+    \item Riesgos (hazards) que pueden bloquear el avance de instrucciones.
+\end{itemize}
+\section{Riesgos}
+Cualquier condición que cause una parada en el avance de las instrucciones se llama riesgo, existen varios tipos de riesgos,
+que como sabemos, obligan a modificar la forma en la que avanzan las instrucciones en el cauce y por tanto, disminuyen la aceleración. Para esta sección, supongamos las etapas 
+F (fetch), D (decode), E (execute), M (memory) y W (write-back) por simplicidad, aunque en los procesadores modernos encontramos unas pocas más (alrededor de 30).
+\subsection{Riesgos estructurales}
+Son aquellas situaciones en las que el hardware no puede proporcionar suficientes recursos para ejectuar varias instrucciones
+al mismo tiempo. Por ejemplo, si una instrucción necesita acceder a la memoria (etapa M) y otra necesita acceder a memoria para captar la instrucción (etapa F).
+La solución en este caso es atrasar la instrucción que provoca el riesgo:
+\begin{center}
+    \begin{minipage}{0.3\textwidth}
+        \begin{minted}{asm}
+    LW R4, 20(R1)
+    AND R7, R2, R5
+    OR R8, R6, R2
+    ADD R9, R2, R2
+        \end{minted}
+    \end{minipage}
+    \begin{minipage}{0.3\textwidth}
+        \includesvg[width=\textwidth]{Imagenes/riesgo_estructural}
+        
+    \end{minipage}
+    \begin{minipage}{0.35\textwidth}
+        \includesvg[width=\textwidth]{Imagenes/riesgo_estructural_sol}
+    \end{minipage}
+\end{center}
+Donde la instrucción ADD se retrasa una etapa para evitar el riesgo estructural entre $M$ de lw y $F$ de ADD.
+Otro caso es la ejecución de una operación con más de un ciclo en E.
+\begin{center}
+    \begin{minipage}{0.3\textwidth}
+        \begin{minted}{asm}
+    ADD RX, RX, RX
+    MUL RD, RS, RS
+    ADD RX, RX, RX
+    ADD RX, RX, RX
+    ADD RX, RX, RX
+        \end{minted}
+    \end{minipage}
+    \begin{minipage}{0.3\textwidth}
+        \includesvg[width=\textwidth]{Imagenes/riesgo_estruc_b}
+
+    \end{minipage}
+    \begin{minipage}{0.35\textwidth}
+        \includesvg[width=\textwidth]{Imagenes/riesgo_estruc_b2}
+    \end{minipage}
+\end{center}
+En este caso, las instrucciones se tienen que retrasar hasta que termine la ejecución de MUL ya que únicamente se ha supuesto una unidad de ejecución.
+Por último veamos un ejemplo en el que encontramos un fallo de caché.
+\begin{center}
+    \begin{minipage}{0.3\textwidth}
+        \begin{minted}{asm}
+    ADD RX, RX, RX
+    SUB RX, RX, RX
+    ADD RX, RX, RX
+    ADD RX, RX, RX
+    ADD RX, RX, RX
+        \end{minted}
+    \end{minipage}
+    \begin{minipage}{0.28\textwidth}
+        \includesvg[width=\textwidth]{Imagenes/riesgo_estruc_c}
+
+    \end{minipage}
+    \begin{minipage}{0.38\textwidth}
+        \includesvg[width=\textwidth]{Imagenes/riesgo_estruc_c2}
+    \end{minipage}
+\end{center}
+En este caso, lo que pasa es que hay un fallo de caché al buscar la instrucción SUB. Más adelante se profundizará en la caché sin embargo, 
+podemos explicarlo brevemente como que la caché mantiene una copia de las instrucciones siguientes a ejecutar, esto conlleva una velocidad de 
+ejecución en un ciclo sin retardo, sin embargo, si se produce un fallo de caché ya sea por un salto o por otra razón, la siguiente instrucción se 
+tendrá que buscar en memoria principal, lo que aproximadamente conlleva un gran retardo, en este caso por simplicidad se ha representado como tres 
+unidades de tiempo pero realmente podemos esperar alrededor de 10 ciclos de reloj.
+\\ \\ 
+Para evitar en la medida posible los fallos de caché, se implementa una cola de instrucciones (precaptación) que almacena las instrucciones siguientes a ejecutar,
+en el caso de saltos condicionales, se evalua la probabilida mayor (se verá en Arquitectura de Computadores), cuando el salto sea directo, no tendremos este problema ya que 
+sabremos con certeza la dirección de salto.
+\subsection{Riesgos por dependencias de datos}
+Son aquellos riesgos que se producen cuando una instrucción depende de los resultados de otra instrucción anterior. 
+\begin{center}
+    \begin{minipage}{0.3\textwidth}
+        \begin{minted}{asm}
+    SUB R2, R1, R3
+    AND R7, R2, R5
+    OR  R8, R6, R2
+    ADD R9, R2, R2
+        \end{minted}
+    \end{minipage}
+    \begin{minipage}{0.28\textwidth}
+        \includesvg[width=\textwidth]{Imagenes/riesgo_datos}
+
+    \end{minipage}
+    \begin{minipage}{0.4\textwidth}
+        \includesvg[width=\textwidth]{Imagenes/riesgo_datos_b}
+    \end{minipage}
+\end{center}
+En el anterior caso, hasta que no se haya completado SUB no se puede decodificar ninguna instrucción (si se puediese, se podría plantear reordenar las operaciones). Sin embargo, 
+si añadimos un bus entre las etapas D y E, podemos adelantar la ejecución ya que tras la etapa E ya estará actualizado el registro R2 y no será necesario esperar hasta W.
+\\ \\ 
+Estas dependencias de datos las descubre el hardware al decodificar
+las instrucciones, alternativamente, el compilador puede introducir instrucciones \texttt{nop}, 
+esto tiene como ventaja que el hardware es más simple y se pueden reordenar las instrucciones 
+para aprovechar todo el tiempo de ejecución, sin embargo, aumenta el tamaño del código.
+\subsection{Riesgos de control}
+Como hemos adelantado antes, las instrucciones de salto pueden provocar fallos de caché, veamos un ejemplo:
+\begin{center}
+    \begin{minted}{asm}
+        BR L1 
+        AND R2, R1, R4
+        SUB R5, R6, R7
+        OR R8, R1, R6
+    L1: 
+        ADD R6, R1, R4
+    \end{minted}
+\end{center}
+Hasta que no se completa la etapa de Memoria (M) de la instrucción de salto, no se conoce la dirección de 
+destino del salto incondicional, lo que provoca una pérdida de tres ciclos, ya que las instrucciones cargadas en ese tiempo deben descartarse.
+Para mitigar este impacto, es fundamental calcular la dirección de salto lo antes posible, por ejemplo, en la etapa de Decodificación. Esto permite 
+que el contador de programa se actualice antes y se reduzca la pérdida a solo un ciclo de reloj, mejorando el rendimiento del pipeline.
+\\ \\
+En cuanto a los saltos condicionales, deberemos tratar de predecir el salto, y calcular la condición de salto lo antes posible para disminuir la penalización.
+De manera similar a como hemos hecho antes, el comparador que evalúa la condición de salto se puede mover  a la etapa de decodificación. Para calcular la degradación 
+de las prestaciones se puede usar la siguiente fórmula (suponiendo que tenemos algún mecanismo hardware que permita descartar las instrucciones):
+\begin{equation*}
+    CPI = (1 - p_b) + p_b [ p_t (1 + b) + (1 - p_t) ] = 1 + p_b p_t b = 1 + p_e b
+\end{equation*}
+Donde:
+\begin{itemize}
+    \item $b$ Es el número de ciclos desperdicionados cuando se produce un salto.
+    \item $p_b$ Es la probabilidad de que se ejecute una instrucción de salto.
+    \item $p_t$ Es la probabilidad de que realmente se produzca un salto.
+    \item $p_e = p_b p_t$ Es la probabilidad de que se produzca un salto.
+    \item $CPI$ Es el número medio de ciclos por instrucción (1 si no hay saltos).
+\end{itemize}
+Si llamamos ahora $F_b$ a la fracción de máximas prestaciones:
+\begin{equation*}
+    F_b = \frac{1}{1 + p_e b}
+\end{equation*}
+Notemos que la degradación crece rápidamente si lo hace $p_e$
+
+\subsubsection{Salto retardado}
+Considerando un ejemplo simple de salto y suponiendo que podemos determinar la decisión de salto en la etapa
+de decodificación (al mismo tiempo que la siguiente instrucción es captada), la instrucción de salto puede 
+causar el descarte de la instrucción captada. Esto significa que, o bien se pierde un ciclo de reloj, o bien no hay penalización.
+En cualquiera de los dos casos, la instrucción siguiente siempre es captada. Veamos una manera de reducir esta penalización:
+\\ \\
+En lugar de descartar condicionalmente la instrucción, podemos reordenar la segmentación de tal manera que siempre se ejecute 
+una instrucción independientemente del salto. Es importante notar que esta instrucción no puede ser la 
+siguiente instrucción lógica. En su lugar, el compilador busca una instrucción adecuada para rellenar el hueco,
+una que deba ejecutarse independientemente de si se toma el salto o no. 
+Este enfoque se conoce como \textit{salto retardado}. Por ejemplo:
+
+\begin{center}
+    \begin{minipage}{0.35\textwidth}
+        \textbf{Antes}
+        \begin{minted}{asm}
+mov r1, #3
+jmp L1
+nop
+        \end{minted}
+    \end{minipage}
+    \begin{minipage}{0.35\textwidth}
+        \textbf{Después}
+        \begin{minted}{asm}
+jmp L1
+mov r1, #3
+        \end{minted}
+    \end{minipage}
+\end{center}
+
+De esta manera, se logra reducir o eliminar la penalización asociada al salto, dependiendo de
+si se encuentra una instrucción adecuada para rellenar el hueco del salto retardado. Esto sería para saltos condicionales, en el caso de 
+saltos incondicionales, podemos colocar la instrucción destino del salto tras la instrucción de salto.
+\subsubsection{Annulling branch}
+En este caso se ejecuta la instrucción siguiente al salto si este se produce, en caso contrario, la ignora, con este tipo
+de salto, el destino de un salto condicional se puede colocar tras el salto:
+\begin{center}
+    \begin{minipage}{0.35\textwidth}
+        \textbf{Antes}
+        \begin{minted}{asm}
+    bz else 
+    nop
+; codigo then 
+else:
+    mov r3, #100
+        \end{minted}
+    \end{minipage}
+    \begin{minipage}{0.35\textwidth}
+        \textbf{Después}
+        \begin{minted}{asm}
+    bz,a else # + 4
+    mov r3, #100
+; codigo then 
+else:
+    mov r3, #100
+        \end{minted}
+    \end{minipage}
+\end{center}
+
+\subsubsection{Predicción de salto}
+En los anteriores casos, hemos visto que tomando decisiones sobre el salto en el ciclo de decodificación, 
+podemos reducir la penalización asociada a los saltos. Aun así, la instrucción siguiente se capta y puede ser descartada, 
+la decisión de captar la isntrucción se toma en el primer ciclo, cuando el PC se incrementa, por tanto, para reducir aún más 
+la penalización, el procesador debe anticipar que la siguiente instrucción es un salto y predecir el resultado del mismo. Para esto,
+hay varios métodos (nuevamente, se verá en Arquitectura de Computadores), adelantamos dos tipos de predicción:
+\begin{itemize}
+    \item Predicción estática: Se asume que los saltos son siempre tomados o no tomados.
+    \item Predicción dinámica: Se basa en la historia de los saltos para predecir el resultado.
+\end{itemize}
+Dentro de la predicción dinámica, encontramos varios métodos, uno de ellos es el de dos bits, en el que se mantiene 
+un contador de dos bits, este se incrementa (con un máximo de 3) si el salto se toma, y se decrementa (con un mínimo de 0) si no se toma,
+la predicción se toma como tomado si el contador es mayor o igual a 2 y no tomado en caso contrario. 
+\section{Influencia en el repertorio de instrucciones}
+Debido a los riesgos anteriores, es deseable que un operando no necesite más de un acceso a memoria,
+así como que sólo puedan acceder a memoria instrucciones de carga y almacenamiento, comparamos 
+dos modos de direccionamiento:
+\begin{center}
+    \begin{minipage}{0.45\textwidth}
+    \begin{tabular}{cc}
+        \texttt{lw r4, (20(r1))} & \texttt{F D E M M W} \\
+        \texttt{and r7, r2, r5} & \texttt{\qquad F D E - M W} \\
+    \end{tabular}
+    \end{minipage}
+    \begin{minipage}{0.45\textwidth}
+        \begin{tabular}{cc}
+            \texttt{lw r3, 20(r1)} & \texttt{F D E M W} \\
+            \texttt{lw r4, (r3)} & \texttt{ \quad \ F D E M W} \\
+            \texttt{and r7, r2, r5} & \texttt{ \qquad \quad  \ F D E M W} \\
+        \end{tabular}
+    \end{minipage}
+\end{center}
+Que son de idéntida duración, sin embargo, el modo de direccionamiento simple permite un hardware más sencillo. 
+También deberemos tener cuidado con la ejecución de instrucciones antes del salto, ya que será deseable elegir una que 
+no modifique los códigos de condición.
+
+\section{Funcionamiento superescalar}
+El máximo rendimiento de un procesador segmentado es un instrucción por ciclo. Otro enfoque más agresivo 
+es equipar al procesador con múltiples unidades de ejecución (superescalar), cada una de las cuales puede estar segmentada, esto
+incrementa la capacidad del procesador de manejar varias instrucciones en paralelo. De esta forma, varias instrucciones 
+comienzan la ejecución en el mismo ciclo de reloj, pero en distintas unidades de ejecución. 
+\\ \\
+Esto incluye la necesidad de incluir varias unidades funcionales, sin embargo, obtenemos el rendimiento superior a una instrucción por ciclo,
+para esto es fundamental tener una conexión ancha con caché, una cola de instrucciones, una unidad llamada \textit{dispatch unit} (Se incluye 
+en la etapa D) que se encarga de tomar dos o mas instrucciones del frente de la cola, decodificarlas, y enviarlas a las unidades de ejecución correspondientes.
+Esto también supone que el efecto negativo de los riesgos es más pronunciado, sin embargo, el compilador puede reordenar las instrucciones para evitar estos riesgos, 
+además sucede que las instrucciones pueden emitirse en orden y finalizar de forma desordenada, esto conlleva múltiples problemas cuyas soluciones se verán en Arquitectura de Computadores.
+Una forma muy sencilla es por ejemplo, emitir la etapa de WB en orden aunque la ejecución sea desordenada.
+\\ \\ 
+Como ejemplo de todo lo visto en esta sección, el procesador Core i7 de Intel tiene 4 cores por chip, su etapa de segmentación es de 16 etapas, es superescalar y 
+se pueden ejecutar 4 instrucciones en paralelo. En cuanto a la caché, tiene 32KB en L1 para I y D, 256KB en L2 y 8MB en L3 que es compartida por los 4 cores.
+
+
+
+
+
+
+
+
+
+
+
+

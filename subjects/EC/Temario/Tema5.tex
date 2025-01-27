@@ -1,0 +1,387 @@
+\chapter{Jerarquía de memoria}
+\section{Abstracción de memoria}
+Hasta ahora, hemos visto un modelo simplificado del funcionamiento de un computador,
+considerando una CPU que ejecuta instrucciones y una memoria que guarda instrucciones 
+y datos para la CPU. Sin embargo, este modelo no refleja como los computadores modernos
+funcionan realmente.
+\\ \\ 
+En la práctica, sistema de memoria consiste en una jerarquia de dispositivos de almacenamiento
+con distintas capacidades, costes y velocidades. Estas jerarquias funcionan ya que los programas
+tienden a acceder al almacenamiento de cada nivel más frecuentemente que al de los niveles inferiores.
+Como programadores, debemos entender esta jerarquia de memoria ya que tiene un gran impacto en el 
+rendimiento de nuestros programas. 
+\subsection{Lectura y escritura}
+Llamamos escritura a la operación de transferir datos de CPU a memoria \textit{movq $\%$rax, 8($\%$rsp)}. Esto es, 
+la operación store. Por otro lado, decimos que una lectura es la operación que transfiere datos de memoria a CPU, 
+\textit{movq 8($\%$rsp), $\%$rax}. Esto es, la operación load.
+\\ \\ 
+Un \textbf{bus} es un conjunto de cables en paralelo que transportan direcciones, datos y señales de control. Tipicamente, 
+a un bus se conectan varios dispositivos. Los datos se transfieren entre procesador y DRAM sobre los buses, cada transferencia 
+de datos involucra una serie de pasos llamados transferencias de bus. Como ya hemos dicho, una transferencia de lectura transfiere datos de memoria a CPU, 
+mientras que una transferencia de escritura transfiere datos de CPU a memoria. Veamos una configuración de una computadora de ejemplo:
+\begin{center}
+    \includesvg[width=0.7\textwidth]{Imagenes/estruc_cpu}
+\end{center}
+Veamos ahora un ejemplo de cada tipo de transferencia, comenzamos con una transferencia de lectura \texttt{(movq A, $\%rax$)}:
+\begin{enumerate}
+    \item La CPU pone la dirección de A en el bus de sistema, el puente de E/S redirige la señal al bus de memoria.
+    \item La memoria principal recibe la dirección A del bus de memoria, recupera la palabra x, y la pone en el bus.
+    \item La CPU lee la palabra x del bus y la copia al registro $\%rax$
+\end{enumerate}
+En el caso de la escritura \texttt{(movq $\%rax$, A)}:
+\begin{enumerate}
+    \item La CPU pone la dirección de A en el bus de sistema, la memoria principal la recibe y espera a que llegue la palabra de datos  
+        corresponiente.
+    \item La CPU pone la palabra de datos en el bus. 
+    \item La memoria principal recibe la palabra del bus de memoria y la guarda en la dirección A.
+\end{enumerate}
+\section{RAM}
+\textit{Random Access Memory}, viene en dos variedades, estática
+y dinámica. Veremos detenidamente cada una de ellas, pero primero presentamos las siguientes
+definiciones:
+\begin{itemize}
+    \item \textbf{Tiempo de acceso:} Tiempo que se requiere para leer (o escribir) un dato (palabra) en la memoria, se mide en 
+        ciclos o en (nano|micro|pico) segundos.
+    \item \textbf{Ancho de banda:} Número de palabras a las que puede acceder el procesador ( o que se pueden transferir entre el procesador y la memoria) 
+        por unidad de tiempo, se mide en (Kilo|Mega|Giga) bytes por segundo.
+    \item \textbf{Métodos de acceso:}
+        \begin{itemize}
+            \item Aleatorio (RAM): Tiempo de acceso independiente de la posición a la que se accede, e.g SRAM, ROM.
+            \item Secuencial (SAM): Tiempo de acceso dependiente de la posición de los datos a los que se accede, e.g cinta magnética.
+            \item Directo (semialeatorio DASD - direct access storage device): Tiempo de acceso con componente aleatoria y secuencial, e.g disco duro.
+        \end{itemize}
+\end{itemize}
+Actualmente, muchos dispositivos tienen 2 o más métodos de acceso.
+La RAM tradicionalmente se empaqueta como un chip o va empotrada como parte
+de un chip procesador, su unidad básica de almacenamiento es normalmente una celda (1 bit/celda). Cuando juntamos múltiples chips de RAM 
+formamos una memoria. Como hemos dicho antes, la RAM viene en dos variedades, estática y dinámica.
+\subsection{SRAM}
+La memoria SRAM guarda cada bit en una celda de memoria biestable. Cada celda se implementa con 
+un circuito de 6  transistores con la capacidad de estar indefinidamente (si hay alimentación) en alguno de dos configuraciones
+de voltajes distintas o estados. Cualquier otro estado será inestable.
+\begin{center}
+    \begin{minipage}{0.4\textwidth}
+        Operación de lectura: 
+        \begin{itemize}
+            \item Se selecciona la celda poniendo WORD a 1 y se conectan Q y $\overline{Q}$ a BIT y $\overline{BIT}$ respectivamente.
+            \item $\overline{BIT}$ se pone a 0 si Q = 1 y a 1 si Q = 0. Es decir, se lee un 1
+            \item BIT se pone a 0 si Q = 0 y a 1 si Q = 1. Es decir, se lee un 0
+        \end{itemize}
+    \end{minipage}
+    \begin{minipage}{0.55\textwidth}
+        \includesvg[width=\textwidth]{Imagenes/sram_celdas}
+    \end{minipage}
+\end{center}
+\subsection{DRAM}
+La memoria DRAM guarda cada bit como una carga de un condensador, dispuesto de forma vertical.
+A diferencia de SRAM, la celula de memoria DRAM es muy sensible a cualquier perturbación, por lo que 
+si el voltaje del condensador no es refrescado, el bit se pierde. Distintas corrientes de fuga pueden causar que el bit se pierda
+en un periodo de 10 a 100 milisegundos, sin embargo, como el ciclo de reloj se mide en nanosegundos, no es un problema.
+Algunos sistemas usan codigos de error adicionales (pudiendo hacer que palabras de 64 bits se conviertan en palabras de 72 bits) para
+que si un bit se pierde, se pueda recuperar.
+En general, la DRAM es más lenta, más sensible a errores, y requiere actualizaciones, sin embargo, es más barata y menos densa 
+que la SRAM ya que esta última necesita más transistores por bit, lo que incrementa el coste y hace que consuma mas potencia.
+\begin{center}
+    \begin{minipage}{0.45\textwidth}
+        Operación de lectura: 
+        \begin{itemize}
+            \item La circuitería externa convierte a BIT en una línea de salida, seleccionándose la celda con WORD = 1 
+            \item Si C está cargado (=1)  se descarga a través de la línea BIT, es decir, se produce un pulso de corriente que es detectado por un amplificador de salida, por tanto aparece un 1 en la línea de datos de salida.
+            \item Si C está descargado (=0) no se produce pulso de corriente, por lo que aparece un 0 en la línea de datos de salida.
+        \end{itemize}
+    \end{minipage}
+    \begin{minipage}{0.53\textwidth}
+        \includesvg[width=\textwidth]{Imagenes/dram}
+    \end{minipage}
+\end{center}
+Debido a la capacidad elevada de los chips de memoria DRAM, las direcciones han de proporcionarse multiplexadas en el tiempo.
+%TODO:
+A modo de resumen:
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{lp{2cm}p{1.5cm}llll}
+        \hline
+        &Transistores por bit & Tiempo de acceso & Persistencia & Sensibilidad & Coste & Aplicaciones \\ \hline
+        SRAM & 6                   & 1×              & Sí           & No           & 1,000× & Memoria caché \\
+        DRAM & 1                   & 10×             & No           & Sí           & 1×     & Memoria principal, buffers\\
+        \hline
+    \end{tabular}
+    \caption{Comparación de SRAM y DRAM.}
+\end{table}
+
+
+\section{Configuración y diseño de memorias usando varios chips}
+\subsection{Ampliación de la memoria}
+Se nos presenta el problema de construir una memoria de $2^N$ palabras de $M$ bits a partir de chips de $2^n$ palabras de $m$ bits. Para ello, 
+veremos por separado como se amplía cada parte.
+\subsubsection{Incrementar el ancho de la palabra de $m$ a $k \cdot m= M$ bits}
+Para este fin, se utiliza la llamada técnica de \textit{bit-slicing}, esta técnica
+consiste en utilizar modulos de chips de menor tamaño de palabra, conectandolos de 
+tal forma que cada uno se encargue de procesar un "slice" de la palabra completa.
+\begin{center}
+    \includesvg[width=0.7\textwidth]{Imagenes/ancho_banda}
+\end{center}
+De esta forma, junto con lineas de control:
+\begin{itemize}
+    \item \textbf{CS:} (Chip select) Selección de chip
+    \item \textbf{WE:} (Write enable) Habilitación de escritura
+    \item \textbf{OE:} (Output enable) Habilitación de salida
+\end{itemize}
+\subsubsection{Incrementar el número de palabras de $2^n$ a $2^{n+k}=2^N$}
+En este caso necesitamos $2^k$ circuitos de $2^n$ palabras y un decodificador de $1$ entre $2^k$.
+\begin{center}
+    \includesvg[width=0.6\textwidth]{Imagenes/incrementar_palabras}
+\end{center}
+Las $k$ líneas de dirección de orden superior $(A_{n+k-1}:A_n)$ se conectan a las entradas de un decodificador de $k$
+a $2^k \Rightarrow$ cada configuración de los $n+k$ bits hace que se seleccione solamente el circuito RAM indicado por 
+los bits de dirección $(A_{n+k-1}:A_n)$. Las $2^k$ lineas de salida del decodificador se conectan a las entradas de selección  
+$CS$ de los $2^k$ circuitos. Las $n$ líneas de dirección de orden inferior se conectan en común a las líneas de dirección
+de los $2^k$ chips.
+\subsection{Incrementar simultáneamente el número de palabras y el ancho de palabra}
+En este caso basta con combinar las dos técnicas anteriores
+\begin{center}
+    \includesvg[width=0.7\textwidth]{Imagenes/ampliacion_doble}
+\end{center}
+\subsection{Módulos de memoria en línea}
+En los años 80, la memoria solía soldarse directamente en la placa base del ordenador. Pero a medida
+que aumentaron los requisitos de memoria, esta técnica resultó poco factible. Es por ello, que los chips de memoria
+DRAM se enpaquetan en módulos de memoria que se insertan en zócalos de la placa base. Los módulos de memoria
+actuales (SIMM, DIMM, SODIMM) los veremos en breves.
+De esta forma, obtenemos un método flexible para actualizar la memoria, ocupando menos espacio de la placa base.
+Normalmente sólo se ampliaba el bus de datos, no el de direcciones (no había necesidad de un decodificador).
+\subsubsection{SIMM}
+SIMM (Single Inline Memory Module) es un módulo de memoria  en el que 
+cada contacto de una cara está conectado con el alineado den la otra cara para formar un único contacto.
+En los 80 y 90, FPM DRAM y EDO DRAM eran los tipos de memoria más comunes.
+Venían en módulos de 30 pines (8 bits) y 72 pines (32 bits).
+\begin{itemize}
+    \item SIMM 30-pin: Tiene 12 líneas de dirección, lo que da un máximo de 24 bits de dirección. Con un ancho de palabra de 8 bits, la capacidad máxima es de 16 MB.
+    \item SIMM 72-pin: Tiene 12 líneas de dirección, lo que da un máximo de 24 bits de dirección. Con un ancho de palabra de 32 bits, la capacidad máxima es de 128 MB.
+\end{itemize}
+\subsubsection{DIMM}
+DIMM (Dual Inline Memory Module) es un módulo de memoria en el que los contactos opuestos están aislados electrónicamente para formar dos contactos separados. 
+Son los usados desde los 90 hasta hoy, (SDRAM, DDR, DDR2, DDR3, DDR4, DDR5).
+Con 64 bits de datos (72 bits con ECC), los pines han ido aumentando, de 168 a 288. Con 256GiB de capacidad máxima en 2024.
+\subsubsection{SODIMM}
+SO-DIMM (Small Outline DIMM) es una versión más pequeña de DIMM, usada en portátiles y otros dispositivos. Tiene menos tamaño y menos pines que un DIMM.
+Variando entre 100 hasta 260 pines
+\subsection{Localidad}
+A lo largo de los años, la brecha entre las velocidades de disco, DRAM y CPU se ha ensanchado, 
+la solución a este problema ha sido la \textbf{localidad}. Los programas (bien escritos) tienden 
+a exhibir buena localidad, esto es, tienden a referenciar segmentos de datos que están cerca unos de otros o incluso a referenciarlos 
+a ellos mismos en un futuro cercano. Esta propiedad, llamada \textbf{principio de localidad}, es un principio fundamental en el diseño y rendimiento 
+de las aplicaciones y sistemas. Normalmente se subdivide en localidad temporal y espacial:
+\begin{itemize}
+    \item \textbf{Localidad temporal:} Si un dato es referenciado, es probable que sea referenciado de nuevo en un futuro cercano.
+    \item \textbf{Localidad espacial:} Si un dato es referenciado, es probable que datos cercanos a él sean referenciados en un futuro cercano.
+\end{itemize}
+Este, junto con la caché, es probablemente uno de los conceptos de esta asignatura que más deberíamos tener en cuenta en el diseño de programas, ya que, 
+en general, los programas con buena localidad corren mucho más rápido que aquellos que no la tienen.
+\\ \\
+Los sistemas modernos, desde el hardware hasta los programas de aplicación, están diseñados para aprovechar
+la localidad. A nivel de hardware, el principio de localidad permite a los diseñadores 
+de computadoras acelerar el acceso a la memoria principal mediante 
+la introducción de memorias pequeñas y rápidas conocidas como cachés que mantienen bloques de las instrucciones y datos más recientemente 
+referenciados. A nivel de sistema operativo, el principio de localidad permite que el sistema utilice la memoria principal 
+como una caché de los fragmentos de la dirección virtual más recientemente referenciados. De manera similar, el sistema 
+operativo utiliza la memoria principal para almacenar en caché los bloques de disco más recientemente utilizados en el sistema de 
+archivos. 
+\begin{ejemplo}
+    Veamos algunos ejemplos de esto para consolidar el concepto:
+    \begin{center}
+        \begin{minipage}{0.4\textwidth}
+            \begin{minted}{c}
+int sum(int *a, int n) {
+    size_t i{0};
+    size_t j{0};
+    int sum{0};
+
+    for (i = 0; i < n; ++i) {
+        for (j = 0; j < n; ++j) {
+            sum += a[i][j];
+        }
+    }
+    return sum;
+}
+            \end{minted}
+        \end{minipage}
+        \begin{minipage}{0.4\textwidth}
+            \begin{minted}{c}
+    int sum(int *a, int n) {
+        size_t i{0};
+        size_t j{0};
+        int sum{0};
+
+        for (i = 0; i < n; ++i) {
+            for (j = 0; j < n; ++j) {
+                sum += a[j][i];
+            }
+        }
+        return sum;
+    }
+            \end{minted}
+        \end{minipage}
+    \end{center}
+\end{ejemplo}
+En ambos casos, tenemos buena localidad temporal para la variable sum, que es referenciada 
+cada iteración del bucle, sin embargo para el acceso a la matriz a, en el primer caso
+por la manera en la que se dispone en memoria (fila a fila), tenemos buena localidad espacial ya que accedemos, 
+a cada elemento de forma secuencial, a esto se le llama \textit{stride-1}
+, en el segundo caso, vamos dando saltos en memoria en cada iteración del bucle.
+\section{Jeraquía de memoria}
+Como ya hemos descrito anteriormente, el hardware y software tienen ciertas propiedades fundamentales y perdurables:
+\begin{itemize}
+    \item \textbf{Tecnología de almacenamiento:} Las tecnologías de almacenamiento rápidas cuestan más por byte, tienen menor capacidad y requieren 
+        más potencia $\equiv$ calor
+    \item \textbf{Localidad:} Los programas bien escritos tienden a exhibir buena localidad
+\end{itemize}
+Estas propiedades sugieren un enfoque para organizar sistemas de memoria y almacenamiento conocido 
+como \textbf{jerarquía de memoria} que es usado en todos las computadoras modernas.
+\begin{center}
+    \includesvg[width=0.7\textwidth]{Imagenes/jerarquia}
+\end{center}
+En general, los dispositivos de almacenamiento se vuelven más baratos, más lentos y tienen mayor capacidad a medida que nos movemos hacia abajo en la jerarquía.
+En el nivel mas alto (L0 o Registros) tenemos un pequeño número de registros de CPU a los que se puede acceder en un único ciclo de reloj, despues están 
+las cachés basadas en SRAM a las que se puede acceder en unos pocos ciclos de reloj, seguidas de la memoria principal basada en DRAM a la que se puede acceder en 
+cientos de ciclos de reloj, y finalmente los dispositivos de almacenamiento basados en tecnologías de almacenamiento más lentas y de mayor capacidad.
+\subsection{Caché}
+En general, una caché es un pequeño y rápido dispositivo de almacenamiento que actua como una zona de trabajo temporal para los objetos de datos guardados en un disp. de almacenamiento más lento y de mayor capacidad.
+La idea general de la jerarquia de memoria es que para cada $k$ el dispositivo de nivel $k$ actua como una caché para el dispositivo de nivel $k+1$. Esto funciona bien ya que debido a la localidad,
+lso programas suelen acceder a los datos a nivel $k$ más amenudo que a los datos a nivel $k + 1$. En consecuenica, tenemos un conjunto de almacenamiento que cuesta como el más barato y 
+proporciona un rendimiento como el más rápido.
+\begin{center}
+    \includesvg[width=0.7\textwidth]{Imagenes/equivalencia_cache_memoria}
+\end{center}
+Los datos son siempre copiados de un nivel a otro en tamaños de bloque denominados unidades de transferencia de caché. Notemos que aunque el tamaño entre 
+dos niveles es fijo, no tiene por qué ser el mismo entre otros dos niveles.
+\subsubsection{Hit y Miss}
+\begin{itemize}
+    \item \textbf{Hit:} Cuando un programa necesita un objeto $d$ del nivel $k + 1$, primero busca $d$ en uno de los bloques en el nivel $k$, si $d$ resulta
+    estar en $k$ (cacheado) entonces se produce lo que llamamos un \textit{hit}, el programa lee $d$ directamente de $k$ lo que por 
+    la naturaleza de la jerarquía es mucho más rápido que leerlo de $k + 1$.
+\item \textbf{Miss:} Por otro lado, si $d$ no está cacheado en $k$, entonces se produce un \textit{miss}, cuando esto ocurre, 
+    la caché de nivel $k$ capta un bloque de nivel $k + 1$ que contiene $d$ y lo guarda en $k$ para futuros accesos posiblemente
+    sobreescribiendo algún otro bloque. Este proceso se llama \textit{reemplazo}, al bloque que se sobreescribe se le llama \textbf{víctima}.
+    La decisión de qué bloque reemplazar es tomada por un \textit{política de reemplazo}. (LRU, FIFO, Round Robin, etc).
+\end{itemize}
+
+\subsection{Tipos de Fallos}
+\begin{itemize}
+    \item \textbf{Fallo en frío:}
+        Los fallos en frío ocurren cuando la caché está vacía, lo cual es típico al inicio de un programa o después de un reinicio. Como no hay datos previamente almacenados, cualquier referencia a un bloque provocará un fallo. 
+    \item \textbf{Fallo de capacidad:} Los fallos por capacidad ocurren cuando el tamaño de la caché es insuficiente para almacenar el conjutno activo de bloques referenciados, también conocido como el conjunto de trabajo.
+    \item \textbf{Fallo por conflicto:} Los fallos por conflicto ocurren cuando la caché es suficientemente grande para almacenar los datos referenciados, pero debido a restricciones de ubicación, varios bloques son mapeados al mismo lugar. Como resultado, los datos son reemplazados frecuentemente, provocando fallos repetitivos.
+        Por ejemplo, en una correspondencia directa, un bloque \(i\) del nivel \(k+1\) debe mapearse al bloque \((i \mod 4)\) en el nivel \(k\). Esto significa que los bloques 0, 4, 8, y 12 del nivel \(k+1\) se asignarían al bloque 0 del nivel \(k\), y una referencia a 0,8,0,8,0,8 provocaría fallos continuamente.
+\end{itemize}
+
+\section{Tecnologías de almacenamiento}
+Los discos son dispositivos de almacenamiento que guardan enormes cantidades de datos, en el orden de los miles de GB a diferencia de los miles de MB de la memoria principal.
+Sin embargo, los discos son mucho más lentos que la memoria principal, alrededor de cien mil veces más lentos. Distinguimos entre discos magnéticos y memorias flash.
+En los discos magnéticos, se accede a los datos electromecánicamente mientras que en una memoria flash se implementa el almacenamiento con una estructura 3D de celdas de memoria.
+\subsection{Geometría de un disco}
+Los discos consisten en platos con dos superficies (caras). Cada cara consisten en anillos concéntricos llamados pistas, cada pista consisten en sectores separados por espacios.
+\begin{center}
+    \includesvg[width=0.7\textwidth]{Imagenes/geometria_disc}
+\end{center}
+\subsection{Capacidad de un disco}
+El máximo número de bits que pueden ser guardados por un disco se conoce como su capacidad máxima
+o simplemente capacidad, viene expresada en unidades de GB o TB. La capacidad de un disco depende de varios factores:
+\begin{itemize}
+    \item \textbf{Densidad de grabación:} El número de bits que se pueden almacenar en una pista de una pulgada.
+    \item \textbf{Densidad de pistas (radial):} El número de pistas que se pueden comprimir en un tramo radial de una pulgada.
+    \item \textbf{Densidad superficial:} Producto de ambas densidades (grabación y radial).
+\end{itemize}
+\subsection{Funcionamiento de un disco}
+Si miramos desde un único plato, el disco lee y escribe bits guardados en la superficie magnética usando una cabeza de lectura/escritura conectada a un brazo actuador que la desplaza a lo largo de su eje radial permitiendo
+colocar el brazo sobre cualquier pista.
+\begin{center}
+    \includesvg[width=0.4\textwidth]{Imagenes/track}
+    \includesvg[width=0.4\textwidth]{Imagenes/varios_platos_disc}
+\end{center}
+Si miramos desde varios platos (derecha), los cabezales de lectura/escritura se mueven al unísono de cilindro a cilindro.
+\subsection{Tiempo de acceso}
+El tiempo de acceso a disco puede calcularse como la suma de tres componentes principales:
+\begin{equation*}
+T_{\text{acceso}} = T_{\text{prom. búsqueda}} + T_{\text{prom. rotación}} + T_{\text{prom. transferencia}}
+\end{equation*}
+
+\subsubsection*{Tiempo de Búsqueda (\(T_{\text{prom. búsqueda}}\))}
+\begin{itemize}
+    \item Es el tiempo necesario para mover los cabezales del disco hacia el cilindro que contiene el sector objetivo.
+    \item El tiempo promedio de búsqueda (\(T_{\text{prom. búsqueda}}\)) en discos modernos es típicamente de 3 a 9 ms.
+\end{itemize}
+
+\subsubsection*{Latencia Rotacional (\(T_{\text{prom. rotación}}\))}
+\begin{itemize}
+    \item Una vez que el cabezal está posicionado, se debe esperar a que el primer bit del sector pase bajo el cabezal.
+    \item El tiempo máximo de latencia rotacional es:
+    \begin{equation*}
+    T_{\text{máx. rotación}} = \frac{1}{\text{RPM}} \times \frac{60 \, \text{s}}{1 \, \text{min}}
+    \end{equation*}
+    \item El tiempo promedio de latencia rotacional es la mitad del máximo:
+    \begin{equation*}
+    T_{\text{prom. rotación}} = \frac{1}{2} \times T_{\text{máx. rotación}}
+    \end{equation*}
+    \item Ejemplo típico: para 7,200 RPM:
+    \begin{equation*}
+    T_{\text{prom. rotación}} = \frac{1}{2} \times \frac{1}{7,200} \times 60 \approx 4.17 \, \text{ms}
+    \end{equation*}
+\end{itemize}
+
+\subsubsection*{Tiempo de Transferencia (\(T_{\text{prom. transferencia}}\))}
+\begin{itemize}
+    \item Es el tiempo requerido para leer o escribir los bits del sector.
+    \item Se puede calcular aproximadamente como:
+    \begin{equation*}
+    T_{\text{prom. transferencia}} = \frac{1}{\text{RPM}} \times \frac{1}{\text{Prom. sectores/pista}} \times \frac{60 \, \text{s}}{1 \, \text{min}}
+    \end{equation*}
+\end{itemize}
+El tiempo total para acceder a un sector depende de la posición previa del cabezal y de la rotación actual del disco.
+Para optimizar el rendimiento, los sistemas operativos intentan minimizar el tiempo de búsqueda agrupando solicitudes cercanas. El primer bit de un sector es el más caro (lento), el resto sale 
+gratis.
+\subsection{Bus de E/S}
+Los dispositivos de entrada salida como las tarjetas gráficas, monitores, ratones, teclados, discos, etc, se conectan a la CPU a través de un bus de E/S, a diferencia del bus de sistema y memoria, que son 
+específicos de la CPU, los buses de E/S están diseñados para ser independientes de la CPU:
+%TODO: Foto diapositiva 74 (El proceso completo)
+\subsection{Memorias no volátiles}
+    Las memorias \textbf{SRAM} y \textbf{DRAM} son volátiles, es decir, pierden su contenido cuando se apagan.
+     Por el contrario, las memorias no volátiles retienen su información incluso cuando no tienen alimentación.
+\subsubsection*{Tipos de Memorias No Volátiles}
+\begin{itemize}
+    \item \textbf{Memoria de sólo lectura (ROM):}
+        Es programada durante su fabricación y no puede modificarse posteriormente.
+    \item \textbf{PROM (Programmable ROM):}
+        Programable por el usuario de manera irreversible.
+    \item \textbf{EPROM (Erasable PROM):}
+        Puede borrarse utilizando luz ultravioleta para reprogramarla.
+    \item \textbf{EEPROM (Electrically Erasable PROM):}
+        Permite el borrado y la reprogramación eléctrica.
+    \item \textbf{Memorias Flash:}
+    \begin{itemize}
+        \item Son un tipo de EEPROM con capacidad de borrado parcial por bloques.
+        \item Limitación: suelen desgastarse tras aproximadamente 100,000 ciclos de borrado.
+    \end{itemize}
+    \item \textbf{3D XPoint (Intel Optane) y Memorias No Volátiles Emergentes:}
+        Utilizan nuevos materiales para mejorar la velocidad y la durabilidad.
+\end{itemize}
+
+\subsubsection*{Aplicaciones de las Memorias No Volátiles}
+\begin{itemize}
+    \item Almacenamiento de programas de firmware en ROM, tales como:
+        BIOS, 
+        Controladoras de disco, 
+        Tarjetas de red, 
+        Aceleradores gráficos, 
+        Subsistemas de seguridad, 
+    \item \textbf{Discos de estado sólido (SSD):}
+        Reemplazan los discos duros tradicionales con mayor velocidad y fiabilidad.
+    \item \textbf{Cachés de disco:}
+        Mejoran el rendimiento del almacenamiento secundario.
+\end{itemize}
+\subsection{Discos de estado sólido}
+Un SSD tiene acceso secuencial significativamente más rápido que aleatorio
+, siendo las escrituras aleatorias especialmente lentas debido al tiempo 
+de borrado de bloques (~1 ms) y la 
+necesidad de copiar otras páginas útiles a un nuevo bloque 
+antes de modificar una página. La capa de traducción flash acumula pequeñas escrituras para optimizar el rendimiento. Ventajas: sin partes móviles, son más rápidos, resistentes y eficientes energéticamente. Desventajas: eventual desgaste mitigado por la lógica de nivelado de desgaste; por ejemplo, un Samsung 970 EVO Plus permite escribir 600 veces su capacidad antes de desgastarse. Aunque en 2019 eran 4 veces más caros por byte que discos giratorios, el costo sigue disminuyendo. Aplicaciones: MP3, smartphones, portátiles, y cada vez más comunes en servidores y PC de sobremesa.
+
