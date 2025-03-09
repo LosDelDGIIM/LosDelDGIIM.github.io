@@ -17,6 +17,7 @@ Consideraremos un conjunto finito de proposiciones atómicas, que serán para no
     \end{enumerate}
 \end{definicion}
 
+\section{Semántica}
 Una vez definida lo que es una proposición, pasamos a lo que nos interesa, asignar un valor de verdad o de falsedad a cada una de las proposiciones que nos encontremos. Para ello, consideraremos una aplicación del conjunto de las proposiciones en $\mathbb{Z}_2$, e interpretaremos el valor de $0$ como falso y el valor de $1$ como verdad.
 
 \begin{definicion}[Interpretación]
@@ -32,7 +33,7 @@ Una vez definida lo que es una proposición, pasamos a lo que nos interesa, asig
 \end{definicion}
 
 \begin{definicion}
-    Sea $\alpha$ y $\beta$ dos proposiciones de forma que $I(\alpha)=I(\beta)$ para cualquier interpretación $I$, entonces escribiremos que $\alpha\equiv\beta$.
+    Sea $\alpha$ y $\beta$ dos proposiciones de forma que $I(\alpha)=I(\beta)$ para cualquier interpretación $I$, entonces escribiremos que $\alpha\equiv\beta$ y podemos decir que $\alpha$ y $\beta$ son \underline{semánticamente equivalentes}.
 \end{definicion}
 
 \begin{definicion}
@@ -45,7 +46,6 @@ Una vez definida lo que es una proposición, pasamos a lo que nos interesa, asig
     \end{itemize}
 \end{definicion}
 
-\section{Semántica}
 \begin{definicion}[Consecuencia lógica]
     Sea $\Gamma\cup\{p\}$ un conjunto de proposiciones, decimos que $p$ es consecuencia lógica de $\Gamma$ (notado por $\Gamma\vDash p$), si dada una interpretación $I$, siempre que se tenga que $I(\gamma) = 1$ para cualquier $\gamma\in \Gamma$, entonces se tiene que $I(p)= 1$.
 \end{definicion}
@@ -172,6 +172,132 @@ Una vez definida lo que es una proposición, pasamos a lo que nos interesa, asig
                 \end{itemize}
             \item [$2) \Longrightarrow 1)$] Sea $I$ una interpretación de forma que $I(\gamma)=1$ para cualquier $\gamma\in \Gamma$, como $\Gamma\cup\{\lnot\alpha\}$ es inconsistente, deducimos que $I(\lnot\alpha) = 0$, luego $I(\alpha) = 1$.
         \end{description}
+    \end{proof}
+\end{prop}
+
+\subsection{Algoritmo de Davis \& Putnam}
+\begin{definicion}
+    Introducimos definiciones que nos serán útiles para llegar al algoritmo de Davis \& Putnam:
+    \begin{itemize}
+        \item Dada una proposición atómica $a$, entonces decimos que $a$ y $\lnot a$ son \underline{literales}.
+        \item Sea $a$ una proposición atómica, denotamos $a^c = \lnot a$ y ${(\lnot a)}^{c} = a$. Para un literal $l$, decimos que $l^c$ es su \underline{complemento}.
+        \item Sean $l_1,\ldots,l_n$ literales, entonces decimos que $l_1\lor \ldots \lor l_n$ es una \underline{cláusula}.
+        \item Sea $\alpha$ una proposición, decimos que está en \underline{forma normal conjuntiva} (abreviado como fnc) si $\alpha$ es de la forma $c_1\land \ldots \land c_n$, con $c_1,\ldots,c_n$ cláusulas.
+        \item A la cláusula sin literales (compuesta por la disyunción de 0 literales) la llamamos \underline{cláusula vacía}, y la denotamos por $\square$.
+    \end{itemize}
+\end{definicion}
+
+\begin{prop}
+    Sea $I$ una interpretación, entonces:
+    \begin{equation*}
+        I(\square) = 0
+    \end{equation*}
+    \begin{proof}
+        Como $\square\lor a = a$ para cualquier proposición atómica $a$, entonces:
+        \begin{equation*}
+            I(\square\lor a) = I(\square) + I(a) + I(\square)I(a) = I(a)
+        \end{equation*}
+        De donde deducimos:
+        \begin{equation*}
+            I(\square) + I(\square)I(a) = I(\square)(1 + I(a)) = 0
+        \end{equation*}
+        Luego $I(\square)=0$ o $I(a)=1$, pero como la proposición atómica $a$ era arbitraria (y sabemos que hay proposiciones atómicas que no son tautologías), deducimos que ha de ser $I(\square)=0$.
+    \end{proof}
+\end{prop}
+
+\begin{prop}
+    Toda proposición puede expresarse en una proposición semánticamente equivalente que se encuentre en forma normal conjuntiva.
+    \begin{proof}
+        Aunque no lo demostraremos, el lector puede hacerse una idea de que el enunciado es cierto, con ayuda de las siguientes reglas:
+        \begin{itemize}
+            \item $\lnot\lnot a\equiv a$ (regla de la doble negación)
+            \item $\lnot(a\lor b) \equiv \lnot a\land\lnot b$ y $\lnot(a\land b) \equiv \lnot a\lor \lnot b$ (reglas de De Morgan)
+            \item $a\to b \equiv \lnot a\lor b$ y $a \leftrightarrow b \equiv (a\to b) \land (b\to a)$
+            \item $a\lor (b\land c) \equiv (a\lor b) \land (a\lor c)$ (ley distributiva)
+        \end{itemize}
+    \end{proof}
+\end{prop}
+
+\begin{ejemplo}
+    Sea $\alpha = (a\to b)\to a$, buscamos una proposición semánticamente equivalente en forma normal conjuntiva. Para ello, primero quitamos $\to$ de la proposición:
+    \begin{equation*}
+        (a\to b)\to a \equiv \lnot(\lnot a\lor b) \lor a
+    \end{equation*}
+    Posteriormente, aplicamos la regla de De Morgan, así como la de la doble negación:
+    \begin{equation*}
+        \lnot(\lnot a\lor b) \lor a \equiv (\lnot\lnot a\land \lnot b) \lor a \equiv (a\land \lnot b)\lor a
+    \end{equation*}
+    Aplicando la ley distributiva ya llegamos a una proposición semánticamente equivalente en forma normal conjuntiva:
+    \begin{equation*}
+        (a \lor a) \land (a \lor \lnot b)
+    \end{equation*}
+    Sin embargo, como $a \lor a \equiv a$, podemos seguir simplificando, obteniendo que:
+    \begin{equation*}
+        a \land (a \lor \lnot b)
+    \end{equation*}
+    Pero como:
+    \begin{align*}
+        I(\alpha \land (\alpha\lor \beta)) &= I(\alpha)(I(\alpha)+I(\beta)+I(\alpha)I(\beta)) \\
+                                           &= I(\alpha)I(\alpha) + I(\alpha)I(\beta) + I(\alpha)I(\alpha)I(\beta) \\
+                                           &= I(\alpha) + I(\alpha) I(\beta) + I(\alpha)I(\beta) = I(\alpha)
+    \end{align*}
+    Llegamos finalmente a que:
+    \begin{equation*}
+        (a\to b)\to a \equiv a
+    \end{equation*}
+\end{ejemplo}
+
+\begin{prop}\label{prop:ej1}
+    Dado el conjunto de proposiciones $\{\psi_1,\ldots,\psi_n\}$, son equivalentes:
+    \begin{itemize}
+        \item $\{\psi_1,\ldots,\psi_n\}$ es inconsistente.
+        \item $\{\psi_1\land\ldots\land\psi_n\}$ es inconsistente.
+    \end{itemize}
+    \begin{proof}
+        Notemos que decir que $\{\psi_1\land \ldots \land \psi_n\}$ sea inconsistente significa que dada una interpretación $I$, entonces:
+        \begin{equation*}
+            I(\psi_1\land \ldots \land \psi_n) = \prod_{k=1}^{n}I(\psi_k) = 0
+        \end{equation*}
+        $\{\psi_1,\ldots,\psi_n\}$ será inconsistente si y solo si dada una interpretación $I$ hay alguna proposición $\psi_i$ de forma que $I(\psi_i)=0$, si y solo si $\prod_{k=1}^{n}I(\psi_k)=0$, lo que equivale con que $\{\psi_1\land\ldots\land\psi_n\}$ sea inconsistente.
+    \end{proof}
+\end{prop}
+
+\begin{prop}
+    Dado un conjunto de proposiciones $\Gamma$, si consideramos el conjunto $\Gamma'$ resultante de considerar para cada fórmula de $\Gamma$ su forma normal conjuntiva y luego tomar la unión de todas ellas, se tiene que $\Gamma$ es inconsistente si y solo si $\Gamma'$ es inconsistente.
+    \begin{proof}
+        Puede demostrarse fácilmente usando la Proposición~\ref{prop:ej1}.
+    \end{proof}
+\end{prop}
+
+El último resultado es de gran importancia, ya que recordemos que, si $\Gamma\cup\{\varphi\}$ es un conjunto de proposiciones, que $\Gamma\vDash\varphi$ es equivalente a probar que $\Gamma\cup\{\lnot\varphi\}$ es inconsistente, conjunto que puede transformarse en un conjunto de cláusulas $\Delta$ que será inconsistente si y solo si lo era $\Gamma\cup\{\lnot\varphi\}$.
+
+De esta forma, notemos que el estudio de que una proposición sea consecuencia lógica de otra se reduce a estudiar si un conjunto de cláusulas es o no inconsistente.
+
+\subsubsection{El algoritmo}
+El algoritmo de Davis y Putnam consiste en aplicar a un conjunto de cláusulas las reglas que a continuación se exponen, intentando siempre aplicar la primera en el orden en que vienen dadas. Cada conjunto de cláusulas que obtengamos al aplicar las reglas de esta forma será inconsistente si y solo si lo era el original del que proviene (en el caso de la última regla, el conjunto de partida es inconsistente si y solo si lo son los dos conjuntos que se generan después de aplicar la regla):
+\begin{description}
+    \item [Regla 1 (regla de las tautologías).] Quítense todas las fórmulas que sean tautologías, es decir, las que contengan un literal y su complementario.
+    \item [Regla 2 (regla de los literales).] Si hay una cláusula que es un literal $L$ en $\Delta$, obténgase $\Delta'$ a partir de $\Delta$ eliminando todas las cláusulas de $\Delta$ que contengan a $L$.
+        \begin{itemize}
+            \item Si $\Delta'$ es el conjunto vacío, entonces $\Delta$ no será inconsistente, ya que el vacío no lo es.
+            \item En otro caso, obténgase $\Delta''$ a partir de $\Delta'$ suprimiendo $L^c$ de $\Delta'$.
+
+                Notemos que si $L^c$ era una cláusula, entonces el resultado de suprimir $L^c$ es $\square$, la cláusula vacía, en cuyo caso, el conjunto $\{\square\}$ es inconsistente.
+        \end{itemize}
+    \item [Regla 3 (regla de los literales puros).] Si un literal $L$ aparece en algunas cláusulas y $L^c$ no aparece en ninguna, quítense todas las cláusulas conteniendo a $L$.
+    \item [Regla 4 (regla de la generalización).] Si una cláusula $C$ tiene todos sus literales en otra $C'$ (es decir $C\subseteq C'$), quítese $C'$.
+    \item [Regla 5 (regla de la subdivisión).] Si un literal $L$ y su complementario $L^c$ están presentes en el conjunto de cláusulas, construir dos nuevos conjuntos de cláusulas de la siguiente forma:
+        \begin{itemize}
+            \item El primero se obtiene quitando todas las cláusulas conteniendo a $L$ y borrando las ocurrencias de $L^c$.
+            \item El segundo se obtiene quitando todas las cláusulas conteniendo a $L^c$ y borrando las ocurrencias de $L$.
+        \end{itemize}
+        En este caso, el conjunto original es inconsistente si y solo si lo son los dos conjuntos resultado de aplicar esta regla.
+\end{description}
+
+\begin{prop}
+    Sea $\Delta$ un conjunto de cláusulas, $\Delta$ es inconsistente si y solo si lo son todos y cada uno de los conjuntos obtenidos tras aplicar las reglas del algoritmos de Davis y Putnam sobre $\Delta$.
+    \begin{proof}
+        Para ello, hemos de probar que el conjunto que obtenemos al aplicar cada regla sobre $\Delta$ es inconsistente si y solo si lo es $\Delta$:
     \end{proof}
 \end{prop}
 
