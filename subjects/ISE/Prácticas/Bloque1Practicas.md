@@ -254,4 +254,197 @@ Para probarlo antes:
 systemctl daemon-reload     (hay que recargar el demonio)
 mount -a                    (Va al fichero /etc/fstab y monta todo)
 
+# Sesión 3: Configuración de firewall + ssh
+## Firewall
+(cultura) en las iptables se implementa todo de gestión de paquetes de TCP/IP.
+Como es muy complejo ese nivel, se usa un front-end. En Rocky, firewall-cmd
 
+Para ver si está on o no:
+    firewall-cmd --state
+    systemctl status firewalld
+
+Para apagarlo lo único es parar el deminio
+    systemctl stop firewalld
+
+Para listar:
+    firewall-cmd --list-all
+
+Si no tenemos servicio habilitado, se descarga.
+Los servicios son alias a los puertos en los que se trabajan. Es lo mismo hablitar un puerto a un servicio.
+
+Se pueden crear alias propios, ya que están en un fichero de configuración de firewalld
+La lista de alias para los servicios:
+    firewall-cmd --get-services
+    
+Para añadir un servicio:    
+    firewall-cmd --add-service http
+    firewall-cmd --list-all
+    
+Si reiniciamos la máquina lo perdemos. Si queremos sque sean permanentes, lo salvamos con:
+    firewall-cmd --runtime-to-permanent
+    
+Otra forma es guardarlo en dico (443/tcp = https, puerto/protocolo = servicio, indicar siempre si es tcp o udp):
+    firewall-cmd --permanent --add-port 443/tcp
+Y luego cargarlo:
+    firewall-cmd --reload
+    
+Para borrar: (o --remove-service https)
+    firewall-cmd --remove-port 443/tcp
+Tampoco es permanente, nada es permanente.    
+
+## Repaso más en profundidad de firewall
+Lo que hacen los firewalls es filtrar paquetes TCP.
+Al levantar un fireall, lo normal es que todo se filtre.
+
+public (active): zona de trabajo
+Como la zona de windows de red (publica, privada, ...)
+Distintas reglas en funcion del tipo de red.
+
+Filtra siempre las conexiones entrantes, nunca las salientes.
+
+### Ejercicio
+Instalar Apache o Nginx
+Crear una página con nombres y apellidos
+Tiene que poder accederse desde el anfitrión
+
+
+Hay que usar nmap (herramienta de escaneo de puertos), aprender a usarla.
+Cada vez se ha hecho más compleja (ha ido evolucionando), si queremos que salga rápido, usar -top 100 (buscarla), que busca en los 100 puertos más habituales.
+Si buscamos como acelerar el proceso de escaneo en Google, sale.
+ 
+## SSH
+Aplicación de **terminal remoto seguro**.
+- Solución antigua telnet, todo en texto plano (login + sesión)
+
+Lo normal es:
+    ssh usuario@ip/nombreDominio
+Tanto el proceso de login como de sesión es seguro (está cifrado).
+ssh usa varias técnicas criptográficas.
+
+
+### Repaso rápido de criptografía / seguridad
+Algoritmos más comunes:
+
+##### Llave simétrica: Hay un secreto compartido.
+Computacionalmente es muy eficiente, los más usados en determinadas circunstancias.
+El algoritmo más usado es DES.
+
+Principal problema: el escalado.
+Lo mejor es tener llaves entre padres (en vez de una única llave), pero escala muy mal.
+
+Se inventaron por esto los de llave asimétrica.
+
+##### Llave asimétrica (clave pública - privada).
+Toda persona tiene dos llaves: una privada y otra pública.
+La pública se da a todo el mundo y la privada te la guardas.
+
+Probema: hace falta tener las publicas de la gente con la que quieras hablar.
+Sin embargo, al ser públicas, se pueden recuperar cuando sea necesario.
+
+El algoritmo es RSA.
+
+Son algoritmos muy costosos computacionalmente.
+
+##### Hash
+Un algoritmo: Hash SHAn (n tiene que ver con la clave).
+
+Un algoritmo de hash es bueno si:
+- Un cambio muy pequeño genera un hash totalmente distinto.
+- No es reversible.
+
+#### Identidad
+Se garantiza mediante la firma digital. Para ello hacen falta las funciones hash.
+Firma digital: coger una informacion, calcular su hash y cifrar con llave privada.
+
+Al enviársela a alguien:
+- Abre con llave pública la firma.
+- Compara los hash
+
+El destinatario sabe que el contenido no ha sido alterado y que procede del origen.
+
+##### Autoridades de certificación
+Autoridades que se dedican a decir que una cierta llave publica/privada corresponde a cierta persona.
+
+La web genera dos llaves: publica y privada
+La publica se envia al FNMT
+Se genera un papel con el que ir a un funcionario, que le dice al FNMT que todo esta bien y se recibe un certificado
+
+Un certificado contiene:
+- Datos personales
+- Información
+Está firmado con hash y llave privada del FNMT.
+
+Formato más usado: X509.
+
+Para saber que la firma es de la FNMT, hay una autoridad de certificacion que firma la llave publica de la FNMT. Así de forma recursiva hasta certificados raíces.
+Si se llega a una no conocida, hay un error de certificación.
+
+Hoy en día depende de la confianza. Dentro del software ya van ciertas llaves públicas en las que el fabricante confía.
+
+La cadena de certificación puede verse en los navegadores con:
+En el candado, ddar a mas informacion
+Buscar quien ha generado el certificado. Ver quien ha generado el certificado, ...
+Se detiene en la raiz: los que en la configuracion están configurados como raices: configuracion > certificados ...
+
+### Cómo funciona SSH: como usa llave publica / llave privada
+#### 1. Garantizar la confidencialidad de la comunicacion
+usuario -- servidor con ssh
+--> ssh login
+<-- el servidor envia llave publica
+--> Enviamos nuestra contraseña cifrada con su llave publica
+<-- Comprueba la passwd en la bbdd y devuelve si sí o no
+
+si nos intentamos concetar por ssh a la maquina, nos devuelve:si nos intentamos concetar por ssh a la maquina, nos devuelve:
+authenticity can't be established: el servidor devuelve una llave de publica cuyo algoritmo es SHA256 pero que no tiene certificado.
+
+Al usar siempre ssh client nos va a rear un subdirectorio oculto de nombre .ssh
+Tendremos un archivo 'know_hosts'. Mete en este archivo las llaves publicas de los ultimos servidores. La próxima vez que accedamos no pregutna, porque ya hemos confiado en él.
+
+#### Cifrados en comunicaciones
+<-- servidor manda llave publica
+--> genero un secreto (llave de sesion, solo para reducir coste computacion) y se lo mando con su llave publica
+Ambos tenemos el secreto, llave de sesion
+
+Llave asimetrica solo para identificacion e inicio de sesion. El resto se hace por secreto compartido, solo para reducir costes computacionales.
+
+#### 2. Como utiliza ssh la llave publica privada para acceder sin contraseña
+--> ssh login
+<-- el servidor tiene una bbdd con llaves publicas y va a buscar la llave publica del usuario solicitado. Va a pedir al usuario que firme algo con una clave, un challenge.
+--> Se lo devuelvo firmado con llave privada
+<-- descifra con clave publica y ve que el mensaje es correcto, devuelve OK.
+
+Vamos a ver donde almacena ssh las llaves publicas.
+    ssh-keygen
+la BBDD donde sshd almacena llaves es el directorio home de la cuenta a la que nos queremos conectar en .shh: /home/usuario/.shh/id_rsa
+Genera llaves publica-privada. Pide constraseña para cifrar la llave. Dar siempre contraseña.
+
+Para darle a un servidor nuestra llave publica y que no nos pida la contraseña:
+    ssh-copy-id usuario@ip
+Nos va a pedir la contraseña por ultima vez.
+En /home/usuario/.ssh en la maquina servidor nos genera un fichero que se llama autorished_keys. Podemos tener las llaves que queramos aquí. Es común en cuentas de administrador.
+Es equivalente a copiar y pegar en el fichero la llave publica.
+
+Ahora podemos ejecutar un comando remoto:
+ssh usuario@ip "comando"
+Sin necesidad de contraseñas
+
+Esto es la base de ansible (permite ejecutar scripts en remoto)
+- El lenguaje de script de ansible es python
+- Da utilidades sutiles que facilitan
+
+### Ejercicio
+Se recomienda clonar la base de forma completa.
+
+Garantizar acceso con ssh mediante llave publica (sin contraseña)
+
+Cambiar el puerto por defecto de ssh: se suele hacer por motivos de seguridad, es algo comun.
+Para ello, tenemos que ir a la configuracion de ssh: /etc/ssh
+
+Hay dos archivos de configuracion:
+- ssh_config: si suele estar, se instala con el cliente.
+- sshd_config: configuracion del demonio. Si no se instala el demonio no está.
+Tienen propiedades diferentes.
+
+En sshd:
+Como rocky corre el security extension system, hay que informarle del cmbio de puerto, hay que ejecutar el comando encima de Port n
+Además, tendremos que habilitar el firewall para permitir dicho puerto.
