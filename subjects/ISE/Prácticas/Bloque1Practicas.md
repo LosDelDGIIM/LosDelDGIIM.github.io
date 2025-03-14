@@ -1,257 +1,518 @@
-# Sesión 1
-Hipervisor ~ Software de virtualización
-Virtualbox realiza una virtualización de hardware completa: el SO que instala sobre el HW virtual no necesita adaptarse, como en la virtualización parcial.
+# Introducción
+
+En este documento, exploraremos la instalación de un software de máquinas virtuales (denominado aquí como **VMSW**), que crea una capa de abstracción sobre el hardware, permitiendo ejecutar varias máquinas virtuales simultáneamente en un mismo servidor. Este enfoque, conocido como **virtualización completa**, implica que el sistema operativo invitado no requiere modificaciones para operar sobre el hardware virtualizado, a diferencia de la virtualización parcial. Una alternativa moderna a esta tecnología es el uso de **contenedores** (como Docker), que comparten recursos del kernel del anfitrión con los contenedores, optimizando el uso de recursos pero sacrificando aislamiento completo.
+
+Nos centraremos en la instalación de **VirtualBox** como ejemplo de VMSW, un hipervisor de tipo 2 gratuito y de código abierto, aunque también mencionaremos alternativas como **VMware** y compararemos con hipervisores de tipo 1 como **Hyper-V**.
+
+### Diferencia entre Hyper-V y VirtualBox
+
+- **Hyper-V**: Hipervisor de tipo 1 desarrollado por Microsoft, integrado en Windows Professional y superiores. Opera directamente sobre el hardware sin depender de un sistema operativo anfitrión, lo que mejora el rendimiento, especialmente en entornos Windows. Es ideal para servidores y sistemas Microsoft, pero su compatibilidad está limitada a hardware soportado por Windows y no es tan flexible en entornos Linux o macOS.
+- **VirtualBox**: Hipervisor de tipo 2 de Oracle, ejecutado como una aplicación sobre un sistema operativo anfitrión (Windows, Linux, macOS). Su diseño lo hace más versátil y compatible con una amplia gama de sistemas invitados, incluyendo distribuciones Linux poco comunes. Sin embargo, al depender del anfitrión, puede tener un rendimiento inferior en escenarios de alta carga.
+
+**Ventajas de la virtualización** (aplicables a ambos):
+- Ejecución de plataformas distintas a la del anfitrión.
+- Mayor seguridad mediante aislamiento.
+- Uniformización de entornos para desarrollo o pruebas.
+- Amortización de recursos físicos al consolidar servidores.
+- Aprovisionamiento a demanda, base del **cloud computing**, donde los recursos pasan de ser activos fijos a servicios bajo demanda.
+
+**Desventajas**: En el modelo de servicio (cloud), si un proyecto falla, los costos no se amortizan como con activos físicos, y un servicio prolongado puede superar el costo de adquirir hardware.
+
+---
+
+## Realización
 
-Ventajas:
-- Plataformas distintas de la real.
-- Seguridad.
-- Uniformización.
-- Amortización de los activos de cómputo.
-- Aprovisionamiento a demanda: origen del cloud computing (posibilidad de solicitar capacidad de cómputo cuando se necesita y dejar de pagarla cuando no).
-    Los recursos de cómputo pasan de ser un activo (como en virtualización) a ser un servicio.
-    Contra: si el proyecto no va bien o no llega a ser exitoso, los activos se pierden. Los activos necesitan ser amortizados, los servicios no.
-    Hay que tener en cuenta que un servicio prolongado puede ser peor que el activo, porque es más caro contratar el servicio que comprar los activos necesarios.
+### Instalación de VirtualBox
+- **Enlace de descarga**: [VirtualBox Downloads](https://www.virtualbox.org/wiki/Downloads).
+- **Para Arch Linux**:
+ ```
+sudo pacman -S virtualbox
+```
 
-Servicios de infraestructura (redes, cómputo y sistema operativo), Infraestructure as a Service:
-- Servicios de networking.
-- Servicios de almacenamiento.
-- Servicios de servidores (creación de máquinas virtuales).
+### Alternativa: VMware
+- **Enlace**: [VMware Workstation y Fusion](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion)
+
+---
 
-Platform as a Service:
-- Ellos te proporcionan BBDD, su gestión, las licencias, ...
+# Instalación de Rocky Linux
 
-Software as a Service:
-- Office 360
+Utilizaremos el **VMSW** (por ejemplo, VirtualBox) para instalar **Rocky Linux** en modo mínimo, sin entorno gráfico, incluyendo el demonio **sshd**. La instalación será por defecto, pero crearemos una cuenta no root con privilegios administrativos. La máquina tendrá **dos tarjetas de red**, configuradas teniendo en cuenta:
 
-Function as a Service:
-- De APIs.
-- Lambda computing.
-Proporcionan APIs que facilitan la gestión.
-Inconveniente: Una vez desarrollada la solución usando una API de un proveedor, estás ligado a dicho proveedor.
+### Modos de red en VirtualBox
+- **Not Attached**: Simula una tarjeta sin conexión, como si no hubiera cable.
+- **NAT**: Ideal para navegación y descargas básicas; traduce direcciones de red del invitado al anfitrión.
+- **NAT Network**: Permite conexiones salientes en una red interna.
+- **Bridged Networking**: Conecta la VM directamente a la red física del anfitrión, útil para servidores o simulaciones.
+- **Internal Networking**: Crea una red aislada visible solo para las VMs seleccionadas.
+- **Host-Only Networking**: Conecta el anfitrión y las VMs sin acceso externo, usando una interfaz virtual.
+- **Cloud Networking**: Conecta la VM a una subred en un servicio en la nube.
+- **Generic Networking**: Modos avanzados con control de drivers específicos.
+
+Configuraremos una tarjeta en **NAT** (para acceso a internet) y otra en **Host-Only** con una **IP estática** (para comunicación entre el anfitrión y el invitado). También estableceremos un **hostname** (nombre legible para identificar la máquina).
 
+### Snapshot
+Tras la configuración, crearemos un **snapshot** de la VM, que guarda su estado actual (configuración, archivos y memoria si está en ejecución). Esto permite volver al estado inicial en cualquier momento. A diferencia de un **clon** (otra máquina independiente), el snapshot depende de la VM original.
 
-Tipos de cloud computing:
-- Privada: Alojadas en nuestras instructuras.
-- Públicas: Todo el mundo puede acceder.
-- Híbridas.
-
-
-## Tipos de networking
-Tipos de networking entra en examen: NAT, Host-only y bridge (ver documentación de virtualbox).
-
-Por qué usar dos tarjetas de red:
-
-- Con la tarjeta de red NAT: virtualbox emula el router ISP encargado de realizar NAT.
-Virtualbox hace esto porque por defecto no quiere dar acceso a IP públicas.
-Sin embargo, como resultado ni el host ni otras máquinas virtuales tienen acceso a esta máquina virtual.
-
-- Host-only: Permite comunicación host-vm y vm-vm.
-Se crean dos tarjetas virtuales: una para el anfitrión y otra para el host (192.168.56.1).
-
-- Bridged: hackea la tarjeta real del host a nivel de sistema operativo y se conecta con ella como si fuera la misma tarjeta.
-Todos los recursos de la tarjeta real están disponibles para la tarjeta virtual.
-Por motivos de seguridad, en la UGR no funciona porque ve dos IPs distintas con la misma MAC.
-Tiene implicaciones de seguridad: cualquier acceso de la VM lo ve el host y viceversa (imaginar en Amazon o etc).
-Útil para hacer pruebas en casa de conexión a máquina virtual de compañero.
-
-
-
-Instalar: vim, ifconfig, ...
-Ver posibilidad de crear snapshots
-
-# Sesión 2: Discos
-Comandos:
-- lsblk (list blocks) : representación gráfica de estructura de volúmenes
-
-
-Todos los dispositivos están en /dev:
-sda: disco sata a (el primero)
-    sda1: 1a partición
-sdb: disco sata a (el primero)
-....
-
-sdxi: i partición del x-éximo (en letras) disco
-
-sr0: CDROM
-
-## Particionado
-Motivo: Proteger un área concreta del disco
-
-Si decidimos poner / (root) en todo el disco sin particionar, puede haber un usuario k ocupe el 100% del disco, lo que pueda llegar a impedir el arranque del sistema. Para ello, reservamos una partición para el boot.
-    Si el resto del disco se llena, ese espacio estaría protegido. El arranque de linux se encuentra en /boot.
-    
-(Cultura) El primer sector de sda se llama MBR
-
-/dev  : dispositivos
-/boot : sistemas de arranque
-/etc  : configuración de SO y servicios (puntos de montaje, sudoers, config IP, apache)
-/home : directorios de usuarios
-/root : home de root
-/mnt  : punto de montaje por defecto (manual)
-/media: donde monta el demonio de gestor de medios de linux. Se recomienda no usar.
-/var  : (variable), se almacena información que puede cambiar de tamaño como consecuencia de uso. Variables del SO o de servicios.
-
-/var y /home crecen con el tiempo => hay que controlarlos.
-
-Una práctica común es llevar /var a una partición distinta.
-
-
-
-
-- diskfree -h : Información del espacio que queda en los volúmenes.
-tmpfs: sistemas de ficheros que linux monta en memoria, bufferes de acceso.
-
-## RAID (Redundant Array of Independent/Inexpensive (ahorrar costes, juntar discos) Disks)
-### RAID 0 (Striping)
-Striping) - Si tenemos varios discos, crea disco virtual con la suma de los tamaños
-striping: sectores contiguos se intentan colocar en distintos discos, para un acceso paralelo a discos en sectores contiguos. Se usaba antes para aumentar velocidad.
-- Problema: Si cae un disco cae todo el sistema. Muy sensible a errores físicos. Usado poco o nada.
-
-### RAID 1 (Espejo)
-Copiar toda la información en todos los discos que forman el espejo.
-Ventaja en la redundancia, para no perder datos.
-
-Cuando lee un bloque, lo lee en varios discos y los compara para encontrar errores.
-Hay versiones de RAID que permiten lectura en paralelo.
-
-Se suelen montar en buses distintos para evitar retrasos de escritura.
-
-### RAID 5 
-Mejora de RAID 1, que tiene mucho coste.
-
-Si tenemos varios discos, se usan todos menos uno en RAID 0 y en el último disco guardamos información de recuperación.
-Si uno de los discos muere, usando información de bloques de los otros discos y de la información de recuperación se puede calcular la información perdida.
-
-Las prestaciones se reducen mucho al pasar por dicha función.
-La caida de discos es muy común en centros grandes.
-
-Proporciona cierta robustez a cambio de eventuales pérdidas de prestaciones.
-Coste muy bueno (solo perdemos un disco).
-
-Sirve para: Logs del sistema, BBDD no crítica.
-
-
-- RAID Hardware: Hay una controladora de RAID: Un chip en la placa base.
-    Buenas prestaciones.
-    Transparente al SO: El SO ve un solo disco y no sabe que son varios en RAID.
-- RAID Software: Hay un SO driver para acceder a los discos virtuales RAID.
-    El driver se encarga de los cálculos necesarios para mantener los RAIDs.
-    El código se ejecuta en la CPU principal, bajan las prestaciones.
-    Visible a nivel del administrador (el administrador ve el RAID), puede romperlo de forma accidental.
-
-
-Instalar discos: config -> almacenamiento -> crear discos nuevos
-Crear un RAID:
-- mdadm
-
-(dnf provides [comando]: me dice qué paquete contiene el comando)
-A los RAIDs se les llama mdi (multidisk)
-
-mdadm --create /dev/md0 --level 1 --raid-devices=2 /dev/sdb /dev/sdc
-
-Si escribimos en el raid: echo 1 > /dev/md0, escribimos en ambos discos
-Si escribimos en sdb: echo 1 > /dev/sdb, rompemos el raid
-
-## LVM (Logical Volume Manager)
-Volúmenes lógicos, para evitar porblemas con particionados estáticos (una vez hecha una partición, no se puede expandir).
-
-- Physical Volume: Donde meter datos, particiones o discos
-- Volume Group: Cajón desastre
-- Logical Volume: 
-
-Cuando creamos un volumen lógico, no sabemos en qué dispositivo físico va a acabar.
-En cualquier momento se puede añadir un nuevo physical volume con el que hacer crecer los volúmenes lógicos.
-
-Da una gran versatilidad. Todas las versiones de linux incorporan LVM.
-
-
-sda2
-    rl-root         : particion logica root sobre el volume group rl.
-    rl-swap         : particion logica swap sobre el volume group rl.
-    
-Physical volume: pv (+ tab para ver comandos), lv, pv
-
-vgdisplay:
-Free PE / Size: Todo el espacio disponible ya lo ha dado a logical volumes
-
-
-Procesos en ejecución + del espacio en memoria principal: problema serio
-
-## Llevar /var a LVM
-Cuidado con añadir RAIDs a Volume Groups con discos sin RAID. No se asegura usar RAID.
-Volume Groups se usan para separar discos con capacidades distintas:
-
-Separar en Volume Groups: SSD, HDD, RAIDs (separar en mismo tipo de raid).
-
-1. Crear volumen logico para /var
-    pvcreate /dev/md0           (añadir info al comienzo del dispositivo)
-    vgcreate raid1 /dev/md0     Crear Volume Group
-    vgdisplay raid1             Ver Volume Group
-    lvcreate -L 10G -n rvar raid1   Crear Volumen Lógico
-    vgdisplay /dev/raid1/rvar
-
-Los logical volumen tienen como nombre de dispositivo (sinónimos):
-/dev/[nombre volume group]/[nombre dispositivo]
-/dev/mapper/[volume group]-[nombre dispositivo]
-
-2. Queremos coger de /root /var y meterlo ahí: formatear /dev/raid1/rvar y montarlo
- 
-- mkfs (make filesystem)
-- mout
-
-Para ello, hay que formatearlo: mkfs -t ext4 /dev/raid1/rvar 
-
-Una vez formateado, se puede montar:
-mount /dev/mapper/raid1-rvar /mnt
-
-mount para ver los dispositivos montados.
-
-3. Copiar /var en /mnt
-No podemos hacer cp -a /var/* /mnt 
-En /var SIEMPRE se están escribiendo cosas, luego al hacer la copia se perderán cosas
-
-Hay varios modos de ejecución de los sistemas linux. Modos:
-0: reset (reinicia el sistema).
-1: single user o mantenimiento.
-3: multi user + network.
-5: 3 + GUI
-+ niveles personalizables por distribuciones de linux
-
-
-Para ello, hay que dejar el sistema en modo manteminiento: expulsa a todos los usuarios y a los procesos que no sean de root.
-Para ello:
-
-systemctl isolate runlevel1.target
-
-Para comprobarlo:
-systemctl status
-
-Ahora sí:
+### sshd
+El demonio **sshd** gestiona conexiones SSH, proporcionando comunicación segura entre hosts. Se activa al inicio desde `/etc/rc`.
+
+## Realización
+
+1. Descarga Rocky Linux desde su [página oficial](https://rockylinux.org/) o este [enlace directo](http://atcproyectos.ugr.es/esriie/Rocky-9.0-20220805.0-x86_64-minimal.iso). Guarda la ISO en un directorio estable.
+2. Arrastra la ISO a VirtualBox para abrir el menú de importación:
+ - Deja las opciones por defecto, ajustando nombre y recursos (CPU, RAM) si deseas más rendimiento.
+ - Activa **Enable EFI** para evitar errores.
+3. Inicia la VM y en el menú de instalación:
+ - (1) Crea un usuario no root con contraseña y permisos administrativos.
+ - (2) Configura el **hostname** (ejemplo: `dekMV01` para Donald Ervin Knuth).
+4. Tras instalar, verifica en la terminal:
+ - `systemctl status sshd` (comprueba que sshd esté activo).
+ - Confirma que el usuario tiene privilegios de superusuario.
+5. Configurar el prompt:
+ - (1) Edita el fichero .bashrc
+ - (2) Añade una linea para modificar el prompt (por ejemplo): PS1='\[\u@\h \W\] \[\e[0;32m\]\t \W>\[\e[1;37m\]'
+ - (3) Aplica los cambios a la sesión actual con source .bashrc
+6. Configura las redes en VirtualBox:
+ - Adaptador 1: **NAT**.
+ - Adaptador 2: **Host-Only Adapter**, con "Cable Connected" activado.
+7. Para la ip estática, usaremos la herramienta nmcli, en nuestro caso particular ejecutaremos:
+ ```
+sudo nmcli connection modify "Wired connection 1" ipv4.addresses 192.168.56.69/24 # Para asignar la ip deseada
+sudo nmcli connection modify "Wired connection 1" ipv4.gateway 192.168.56.1 # Configuración del gateway
+sudo nmcli connection modify "Wired connection 1" ipv4.dns "8.8.8.8,8.8.4.4" # DNS 
+sudo nmcli connection modify "Wired connection 1" ipv4.method manual
+sudo nmcli connection up "Wired connection 1"
+ ```
+7. Guarda y crea un **snapshot** desde el menú de snapshots como estado de referencia.
+8. Verifica el funcionamiento:
+ - Ping desde el anfitrión a la VM y viceversa.
+ - Conéctate por SSH desde el anfitrión.
+ - Haz ping a internet desde la VM (ejemplo: `ping 1.1.1.1`).
+
+---
+
+# Configuración de LVM
+
+El **Logical Volume Manager (LVM)** abstrae el almacenamiento físico, permitiendo crear volúmenes lógicos flexibles. Esto elimina restricciones de tamaño físico y separa la configuración hardware del software, facilitando ajustes sin desmontar el sistema de archivos.
+
+### Componentes de LVM
+- **Physical Volumes (PV)**: Discos o particiones físicas inicializadas para LVM.
+- **Volume Groups (VG)**: Grupos que combinan PVs para formar un pool de almacenamiento.
+- **Logical Volumes (LV)**: Volúmenes lógicos creados desde el VG, usados como particiones flexibles.
+
+En este apartado modificaremos la configuración por defecto de Rocky Linux para usar LVM.
+
+### Comandos útiles
+- `pvdisplay`, `vgdisplay`, `lvdisplay`: Muestran detalles de PVs, VGs y LVs.
+- `vgextend`: Añade un nuevo PV a un VG existente.
+- `lvextend`/`lvreduce`: Aumenta o reduce el tamaño de un LV.
+- `resize2fs`: Ajusta el sistema de archivos tras redimensionar un LV (para `ext4`).
+
+Sin LVM, si `/` (root) ocupa todo el disco y un usuario llena el espacio (ej. en `/var` o `/home`), el sistema puede fallar, incluso impidiendo el arranque. Por ello, es común separar directorios críticos como `/boot` (con los archivos de arranque) o `/var` (con datos variables como logs) en particiones o volúmenes distintos.
+
+## RAID
+
+**RAID** (Redundant Array of Independent/Inexpensive Disks) es una tecnología que agrupa dispositivos de almacenamiento en un disco virtual con características específicas, como redundancia o mayor rendimiento, a un costo potencialmente menor al combinar discos económicos. Nos centraremos en tres niveles principales: RAID 0, RAID 1 y RAID 5, además de diferenciar entre implementaciones hardware y software.
+
+- **RAID 0** (Striping)
+    - Combina varios discos en un único volumen virtual cuya capacidad es la suma de los discos individuales. Utiliza striping (segmentación), distribuyendo sectores contiguos entre discos distintos para permitir acceso paralelo y aumentar la velocidad de lectura/escritura.
+    - Antes era común en sistemas donde la velocidad era crítica (ej. HDD en servidores antiguos).
+    - No ofrece redundancia. Si un disco falla, se pierde toda la información del arreglo, lo que lo hace muy sensible a errores físicos. Por esta razón, hoy se usa poco o nada en entornos críticos.
+
+- **RAID 1** (Mirroring)
+
+    - Copia idénticamente toda la información en todos los discos que forman el "espejo", proporcionando redundancia total. La capacidad útil se reduce a la del disco más pequeño en el arreglo.
+    - Alta tolerancia a fallos; si un disco muere, los datos persisten en los demás. Al leer un bloque, puede comparar datos entre discos para detectar errores, y algunas implementaciones permiten lectura en paralelo para mejorar el rendimiento.
+    - Para evitar retrasos en escritura, los discos suelen conectarse a buses distintos (ej. canales SATA separados).
+    -  Ideal para datos críticos donde la integridad es prioritaria sobre la capacidad (ej. sistemas operativos, configuraciones clave).
+
+- **RAID 5**
+
+    - Mejora de RAID 1 en términos de costo y eficiencia. Requiere al menos tres discos: usa striping como RAID 0 para los datos y reserva un disco virtual equivalente para almacenar información de paridad (recuperación). Si un disco falla, los datos se reconstruyen usando la paridad y los bloques restantes.
+    - Ofrece robustez a un costo razonable (solo se "pierde" la capacidad de un disco para paridad). Soporta la caída de un disco sin pérdida de datos.
+    - Las operaciones de escritura son más lentas debido al cálculo de paridad, y la reconstrucción tras un fallo reduce aún más las prestaciones. En centros de datos grandes, donde la caída de discos es común, esto puede ser un cuello de botella.
+    - Adecuado para logs del sistema, bases de datos no críticas o entornos donde el balance entre costo y redundancia es clave.
+
+Diferenciamos además entre RAID Hardware y Software. En el hardware, hay un controlador físico que gestiona el RAID, es más rápido gracias a la controladora independiente y transparente al SO, que ve un único disco conjunto (ej. con 4 discos en RAID 5, el SO detecta uno solo). En cuanto al software, la gestión la realiza el sistema operativo o un programa, sin hardware dedicado. Depende de la CPU, lo que puede reducir rendimiento, pero es más económico y flexible.
+
+## Configuración de RAID en VirtualBox
+
+ - En VirtualBox, ve a Configuración > Almacenamiento > Controladora SATA.
+        Añade discos virtuales nuevos (ej. dos discos de 10 GB cada uno: /dev/sdb y /dev/sdc).
+ - Crear un RAID con mdadm:
+        Crea un RAID 1:
+```
+sudo mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sdb /dev/sdc
+```
+Los arreglos RAID se nombran como /dev/mdX (multidisk). Por ello, si escribimos ($ echo 1 > /dev/md0) se escribira en ambos discos mientras que si lo hacemos sobre /dev/sdb romperemos la integridad.
+## Integración de LVM con RAID
+
+LVM y RAID pueden combinarse para obtener redundancia (RAID) y flexibilidad (LVM). Por ejemplo, un RAID 1 puede usarse como base para un PV, asegurando que los datos estén duplicados antes de gestionarlos con LVM. Sin embargo, hay que tener cuidado al integrar RAIDs en Volume Groups con discos sin RAID, ya que no se garantiza que los datos aprovechen la redundancia del RAID si el VG mezcla discos con capacidades o configuraciones distintas. Por ello, una práctica recomendada es separar los discos en VGs según su tipo: SSD, HDD o RAIDs (y dentro de RAIDs, usar el mismo nivel, como RAID 1).
+
+### Configuración práctica: Mover /var a un volumen lógico sobre RAID 1
+A continuación, detallamos cómo mover el directorio `/var` (que crece con el tiempo por logs y datos variables) a un volumen lógico basado en un RAID 1 creado con `mdadm`. Este proceso asegura redundancia y flexibilidad para el almacenamiento.
+
+#### 1. Crear el RAID 1
+- Añade dos discos virtuales en VirtualBox (ej. `/dev/sdb` y `/dev/sdc`, 10 GB cada uno).
+- Crea el arreglo RAID:
+```
+sudo mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sdb /dev/sdc
+```
+
+#### 2. Inicializar LVM sobre RAID
+
+- Crea un Physical Volume (PV) en el RAID:
+```
+sudo pvcreate /dev/md0
+```
+Esto añade metadatos de LVM al inicio del dispositivo RAID.
+- Crea un Volume Group (VG) llamado `raid1`:
+```
+sudo vgcreate raid1 /dev/md0
+sudo vgdisplay raid1
+```
+- Crea un Logical Volume (LV) llamado `rvar` de 10 GB:
+```
+sudo lvcreate -L 10G -n rvar raid1
+```
+- Verifica el LV:
+
+```
+sudo lvdisplay /dev/raid1/rvar
+```
+Nota: Los LVs tienen dos nombres equivalentes:
+- `/dev/raid1/rvar`
+- `/dev/mapper/raid1-rvar`
+
+#### 3. Formatear y montar temporalmente
+- Formatea el LV con el sistema de archivos `ext4`:
+```
+sudo mkfs -t ext4 /dev/raid1/rvar # mkfs.ext4 /dev/raid1/rvar
+```
+- Monta el LV en `/mnt` para pruebas:
+```
+sudo mount /dev/mapper/raid1-rvar /mnt
+```
+
+#### 4. Copiar /var en modo mantenimiento
+Dado que `/var` está en uso constante por el sistema (logs, servicios activos), una copia directa como `cp -a /var/* /mnt` podría perder datos escritos durante el proceso. Para evitarlo, cambiamos al modo mantenimiento (single-user), que expulsa a todos los usuarios y detiene procesos no esenciales:
+- Cambia al modo single-user:
+```
+sudo systemctl isolate runlevel1.targekt
+```
+Podemos comprobarlo con systemctl status, una vez comprobado y con todo correcto:
+```
 cp -a /var/* /mnt/
+ls /mnt
+```
 
-Si ahora nos vamos a /mnt y hacemos ls, vemos que todo lo de /var está allí
+#### 5. Reubicar /var
+- Desmonta el volumen lógico de `/mnt`:
+```
+sudo umount /mnt
+```
+- Renombra el `/var` original como respaldo (por seguridad):
+- Crea un nuevo directorio `/var`:
+```
+sudo mkdir /var
+sudo mount /dev/raid1/rvar /var
+```
+- Verifica el espacio y montaje:
+```
+df -h
+```
+#### 6. Hacer el montaje permanente
+Los montajes con mount son temporales y se pierden al reiniciar, para hacerlo permanente, podemos editar /etc/fstab y añadir la linea:
+```
+/dev/raid1/rvar  /var  ext4  defaults  0  0
+```
 
-4. Falta sacar /dev/raid1/rvar de /mnt y meterlo en /var
+Para probarlo todo:
+```
+sudo systemctl daemon-reload # Recargar el demonio
+sudo mount -a # Monta todo lo definido en /etc/fstab
+df -h
+```
+Ahora tras reiniciar todo (desmontar /var antes) debería mantenerse como lo hemos definido. Lo podremos comprobar con df y con lsblk
+Estos últimos pasos vienen explicados con más detenimiento a continuación.
 
-umount /mnt
-mv /var /var_old        (Copia de seguridad por si acaso)
-mkdir /var
-mount /dev/raid1/rvar /var
+## Administración del Sistema de Archivos
 
-df -h       (Se ve todo)
+### systemd
+**systemd** es el sistema de inicio predominante en Linux, reemplazando a SysVinit. SysVinit usaba niveles de ejecución (runlevels) con capacidades específicas, mientras que systemd ofrece un enfoque más modular.
 
-5. Hacer permanentes los montajes
-Los montajes con mount no son permanentes. Para hacer permanente un montaje, en /etc/fstab:
+### Jerarquía del sistema de archivos
+- `/bin`: Binarios de comandos esenciales.
+- `/boot`: Archivos estáticos del cargador de arranque.
+- `/dev`: Archivos de dispositivos.
+- `/etc`: Configuración específica del sistema.
+- `/lib`: Bibliotecas compartidas esenciales y módulos del kernel.
+- `/media`: Punto de montaje para medios extraíbles.
+- `/mnt`: Punto de montaje temporal para sistemas de archivos.
+- `/opt`: Paquetes de software adicionales.
+- `/sbin`: Binarios esenciales del sistema.
+- `/srv`: Datos de servicios del sistema.
+- `/tmp`: Archivos temporales.
+- `/usr`: Jerarquía secundaria (binarios, bibliotecas, etc.).
+- `/var`: Datos variables (logs, bases de datos, etc.).
 
-dispositivo     punto de montaje    sistema de ficheros     propiedades del fs      prioridad de montaje (en qué orden se montan, si todos = => lineal)
-Hay que situarlo debajo de rl-root.
+### Sistemas de archivos
+- **ext4**: El más usado, rápido y robusto, con soporte para volúmenes y archivos grandes.
+- **btrfs**: Basado en árboles B, usa *copy-on-write* para mayor integridad, pero es más lento.
+
+Para manejar y consultar cómodamente los montajes y discos conectados podemos usar las siguientes herramientas:
+- lsblk: Para ver las distintas particiones y discos conectados
+- df -h: Disk free, nos da el espacio disponible en disco, -h se usa para el formato humano
+
+### /etc/fstab
+Archivo que facilita montar/desmontar sistemas de archivos, su estructura se compone de varias columnas para cada sistema, con las siguientes correspondencias y orden:
+
+- **Device**: Nombre o UUID del dispositivo (ej. `/dev/sda1`).
+- **Mount Point**: Directorio donde se monta (ej. `/mnt`).
+- **File System Type**: Tipo de sistema (ej. `ext4`).
+- **Options**: Opciones de montaje (ej. `defaults`).
+- **Backup Operation**: 1 para respaldo (obsoleto), 0 para ninguno.
+- **FS Check Order**: 0 (sin chequeo), 1 (raíz), 2 (otros).
+
+## Ejercicio Opcional: Servicio de Gestión Documental
+
+Partiendo de un servidor básico configurado según el apartado 2 (Rocky Linux en VirtualBox con LVM, dos tarjetas de red y sshd), se plantea la instalación de un **servicio de gestión documental**. Este servicio requiere:
+- **Espacio de almacenamiento creciente**: Posiblemente considerable con el tiempo.
+- **Contenido crítico**: Necesita un mecanismo de respaldo ante fallos de hardware.
+- **Máxima disponibilidad**: Garantizando la conservación de datos y continuidad del servicio.
 
 
-Probamos a demontar: umount /var
-Al reiniciar iría bien
+## Diseño del Sistema de Almacenamiento
 
-Para probarlo antes: 
-systemctl daemon-reload     (hay que recargar el demonio)
-mount -a                    (Va al fichero /etc/fstab y monta todo)
+### Requisitos y Solución Propuesta
+1. **Crecimiento del almacenamiento**: Usaremos **LVM** (Logical Volume Manager) para permitir la expansión dinámica del espacio, añadiendo discos según sea necesario sin interrumpir el servicio, (por ejemplo podríamos llevarnos el directorio /var a otro volumen lógico) (No se puede alojar a un volume group ya que al poder estar formado de varios discos, puede ser que perdamos garantías de RAID o tengamos un comportamiento no deseado)
+2. **Redundancia ante fallos**: Implementaremos **RAID 1** (mirroring) para duplicar los datos entre dos discos, asegurando que un fallo en uno no comprometa la información. (RAID 5 también sería válido)
+3. **Sistema de archivos**: Optaremos por **ext4** por su rendimiento, estabilidad y soporte amplio en Linux, aunque se considerará **btrfs** como alternativa por su capacidad de snapshots y mayor integridad de datos.
+4. **Disponibilidad**: La combinación de LVM y RAID 1, junto con copias de seguridad regulares, maximizará el tiempo de actividad y la recuperación ante desastres.
 
+# Acceso Seguro al Servidor
 
+**iptables** es una utilidad de Linux para configurar el firewall a nivel de kernel. En Rocky Linux, usamos **firewalld**, un frontend más sencillo, gestionado mediante el comando `firewall-cmd`. Este se ejecuta como un servicio y podemos activarlo o verificarlo así:
+```
+sudo systemctl enable --now firewalld
+sudo systemctl status firewalld
+```
+
+### Comandos básicos de `firewall-cmd`
+- `firewall-cmd --state`: Muestra el estado del firewall.
+- `firewall-cmd --reload`: Recarga la configuración (necesario tras cambios permanentes).
+- `firewall-cmd --list-all`: Lista la configuración actual.
+- `firewall-cmd --runtime-to-permanent`: Guarda los cambios temporales como permanentes.
+
+## Zonas
+
+Las **zonas** son conjuntos de reglas que se aplican según el nivel de confianza de la red. Ejemplo: conexiones Ethernet más confiables que Wi-Fi. Resumen de las principales zonas:
+
+- **drop**: Bloquea todo el tráfico entrante sin respuesta; solo permite saliente.
+- **block**: Similar a drop, pero rechaza con mensaje ICMP.
+- **public**: Para redes públicas no confiables; permite conexiones selectivas.
+- **external**: Para redes externas con NAT; oculta la red interna.
+- **internal**: Para redes internas de confianza moderada.
+- **dmz**: Para equipos aislados en una DMZ.
+- **work**: Para redes de trabajo; confianza media.
+- **home**: Para entornos domésticos; confianza alta.
+- **trusted**: Máxima confianza; todo permitido (usar con precaución).
+
+Normalmente usaremos **trusted**, **home** o **public**. Para ver la zona por defecto:
+```
+firewall-cmd --get-default-zone
+```
+
+### Gestión de zonas
+- Cambiar zona por defecto: `firewall-cmd --set-default-zone=[zona]`
+- Añadir interfaz a zona: `firewall-cmd --zone=[zona] --add-interface=[dispositivo]`
+- Cambiar zona de interfaz: `firewall-cmd --zone=[zona] --change-interface=[dispositivo]`
+- Eliminar interfaz de zona: `firewall-cmd --zone=[zona] --remove-interface=[dispositivo]`
+
+## Puertos
+
+Para servicios comunes como **SSH**, **FTP** o **HTTPS**, es mejor gestionarlos como servicios, no como puertos. Comandos útiles:
+
+- `firewall-cmd --list-ports`: Lista puertos abiertos (alternativa: `nmap`).
+- `firewall-cmd --zone=public --add-port=[numero]/[tcp/udp]`: Abre un puerto.
+- `firewall-cmd --zone=public --remove-port=[numero]/[tcp/udp]`: Cierra un puerto.
+
+### Gestión de servicios
+- Lista de servicios disponibles: `firewall-cmd --get-services`
+- Servicios activos: `firewall-cmd --list-services`
+- Añadir servicio: `firewall-cmd --zone=public --add-service=[servicio]`
+- Eliminar servicio: `firewall-cmd --zone=public --remove-service=[servicio]`
+
+## Restricción de Acceso
+
+Para un servidor no público (ej. acceso SSH restringido), hay dos enfoques:
+
+### 1. Zona restrictiva con IP específica
+1. Usa una zona como **trusted** y asigna tu interfaz.
+2. Añade el servicio SSH: `firewall-cmd --zone=trusted --add-service=ssh`.
+3. Restringe acceso a una IP o rango:
+```
+firewall-cmd --permanent --zone=trusted --add-source=192.168.1.0/24
+```
+(Cambia `--add-source` por `--remove-source` para revertir).
+
+### 2. Combinación de zonas (público + privado)
+Para un servidor con servicios públicos (ej. web) pero SSH restringido:
+
+- **Zona public**: Interfaz asignada, con servicios como HTTP/HTTPS:
+```
+firewall-cmd --zone=public --add-service=http
+firewall-cmd --zone=public --add-service=https
+```
+- **Zona trusted**: Solo para SSH desde un rango IP:
+```
+firewall-cmd --zone=trusted --add-source=192.168.1.0/24
+firewall-cmd --zone=trusted --add-service=ssh
+```
+- Elimina SSH de la zona pública:
+```
+firewall-cmd --zone=public --remove-service=ssh
+```
+
+### Nota
+Si pierdes acceso, reinicia el servidor desde el panel de control del VPS y ajusta la configuración. Guarda cambios con `--runtime-to-permanent` solo tras probar.
+
+### Nmap
+Nmap es una herramienta que permite explorar redes y hacer auditorías de seguridad. Está diseñado para escanear rápidamente redes grandes, tiene muchas posibilidades y configuraciones así que vamos a dar algunos comandos que pueden resultar útiles en nuestro caso de uso:
+
+```
+sudo nmap -v direccion.es
+nmap -sS xxx.xxx.xxx.xxx/24
+```
+La primera activa el modo verbose para escanear puertos reservados (TCP) en la máquina dada y el segundo lanza un escaneo SYN hacia las 256 IPs de la red dada
+
+## Ejercicio Opcional
+
+### Nginx 
+Nginx es un servidor que podemos usar para montar un servidor web o un reverse proxy.
+
+Para instalar Nginx en Rocky Linux, ejecutaremos el siguiente comando que usa el gestor de paquetes dnf (recomendable hacer update antes)
+```
+sudo dnf install nginx
+```
+
+Una vez instalado, ejecutaremos el siguiente comando para empezar el servidor web:
+
+```
+sudo systemctl enable nginx
+sudo systemctl start nginx
+```
+Con esta configuración ya se iniciará nginx cada vez que reiniciemos la máquina virtual, deberemos tener en cuenta en el firewall este servicio:
+
+```
+sudo firewall-cmd --permanent --add-service=http 
+sudo firewall-cmd --permanent --list-all
+```
+Que deberá incluir en la linea services: http. Además deberemos recargar la configuración para hacer el servidor accesible a visitantes externos
+```
+sudo firewall-cmd --reload
+```
+Además se sugiere el siguiente comando para saber nuestra ip publica y accediendo al servidor:
+```
+curl -4 icanhazip.com
+```
+### Apache
+
+Veamos ahora la configuración equivalente para un servidor en apache:
+```
+sudo dnf -y install httpd
+mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf.org
+vi /etc/httpd/conf/httpd.conf
+```
+Ahora cambiaremos las siguientes líneas:
+
+- ServerAdmin (Pondremos el correo del administrador)
+- ServerName (Pondremos el nombew o dirección del servidor)
+- Options (Quitaremos los índices)
+- AllowOverride (All)
+- DirectoryIndex (index.html index.php index.cgi (Según lo queramos configurar nosotros))
+
+```
+systemctl enable --now httpd
+```
+Ahora el firewall igual que antes:
+```
+sudo firewall-cmd --permanent --add-service=http 
+sudo firewall-cmd --reload
+sudo firewall-cmd --permanent --list-all
+```
+
+Podemos probarlo ahora creando una página web en /var/www/html/index.html 
+```
+<!DOCTYPE html>
+<html>
+    <body>
+        <h1>Bienvenidos a la Web de [Tu Nombre y Apellido] en Prácticas ISE</h1>
+    </body>
+</html>
+```
+
+## Ejercicio opcional
+Eligiremos uno de anteriores programas, ejecutaremos el procedimiento dado para iniciar el servidor y editaremos el archivo index.html para que muestre:
+
+Bienvenidos a la Web de <Nombre y Apellido> en Prácticas ISE
+
+Para comprobar que está bien realizado, podemos tanto entrar a la página web como escanear los puertos sobre el servidor y comprobar que muestra ssh y el de http
+
+## SSH
+
+Como ya hemos mencionado, SSH es un término ambiguo porque puede referirse tanto al cliente como al servicio. Para diferenciarlos, en algunos sistemas se usa `sshd` para indicar el demonio. OpenSSH es la herramienta principal y segura para acceder remotamente a otros ordenadores mediante tráfico cifrado. Debemos saber configurarlo para:
+
+- Limitar el acceso por contraseña al usuario `root`.
+- Cambiar el puerto por defecto (actualizando también la configuración de `firewalld`).
+- Automatizar la ejecución remota de comandos usando claves simétricas y asimétricas.
+
+**Servicios incluidos en OpenSSH:**
+- Operaciones remotas: `ssh`, `scp`, `sftp`.
+- Gestión de claves: `ssh-add`, `ssh-keysign`, `ssh-keyscan`, `ssh-keygen`.
+- Lado del servidor: `sshd`, `sftp-server`, `ssh-agent`.
+
+En el siguiente ejercicio aplicaremos estos conceptos.
+
+## Ejercicio opcional
+
+### Cambiar el puerto de SSH
+Editamos el archivo de configuración de `sshd`:
+```
+sudo vi /etc/ssh/sshd_config
+```
+- Buscamos la línea `Port 22` y la sustituimos por un puerto mayor a 1024, por ejemplo, `2025`:
+- Verificamos en `/etc/services` que el puerto no esté en uso por otra aplicación.
+
+Actualizamos el firewall:
+```
+sudo firewall-cmd --permanent --remove-service=ssh
+sudo firewall-cmd --permanent --add-port=2025/tcp
+sudo firewall-cmd --reload
+sudo systemctl restart sshd
+```
+### Configurar acceso por clave pública
+Generamos un par de claves en el cliente usando RSA (Podríamos haber usado cualquier otro método, por ejemplo para GitHub se suele usar ed25519)
+```
+ssh-keygen -t rsa -b 4096
+ssh-copy-id -p 2025 usuario@<IP-del-servidor>
+```
+- Sustituye `usuario` por el nombre del usuario remoto y `<IP-del-servidor>` por la dirección IP real.
+
+### Validación
+Comprobamos la configuración ejecutando un comando remoto:
+```
+ssh -p 2025 usuario@<IP-del-servidor> "ls -la /"
+```
+- Esto debería mostrar el contenido completo del directorio raíz (`/`) sin pedir contraseña.
+
+### Seguridad adicional (opcional)
+Para limitar el acceso por contraseña y al usuario `root`, editamos `/etc/ssh/sshd_config`:
+```
+PermitRootLogin no
+PasswordAuthentication no
+```
+Reiniciando el servicio podremos comprobar que ya no se puede acceder mediante contraseña.
+
+## Ansible
+Ansible es una herramienta que automatiza la gestión remota de sistemas y controla su estado deseado.
