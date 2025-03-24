@@ -3,10 +3,19 @@
 
 \author{Arturo Olivares Martos}
 \date{\today}
-\title{Entrega Métodos Numéricos II}
+%\title{Entrega Métodos Numéricos II}
 
 \begin{document}
-    \maketitle
+    %\maketitle
+    {\color{blue}
+    \fancyhead[R]{\color{blue}\helv \nouppercase{\color{blue}Arturo Olivares Martos}}
+    \fancyhead[L]{\color{blue}\helv \nouppercase{\color{blue}Entrega Métodos Numéricos II}}
+
+    % Poner Línea del Encabezado en Azul
+    \renewcommand{\headrulewidth}{1pt}
+    \renewcommand{\headrule}{\hbox to\headwidth{%
+    \color{blue}\leaders\hrule height \headrulewidth\hfill}}
+    
     
     \begin{ejercicio}
         Considerar la fórmula numérica siguiente:
@@ -15,8 +24,82 @@
         \end{equation*}
         \begin{enumerate}
             \item Hallar los valores de $\alpha_0$, $\alpha_1$ y $\alpha_2$.
+            
+            Calculamos cada uno de los polinomios básicos de Lagrange:
+            \begin{align*}
+                \ell_0(x)
+                &=\prod_{\substack{j=0\\j\neq 0}}^2\frac{x-x_j}{x_0-x_j}
+                = \frac{x-x_1}{x_0-x_1}\cdot\frac{x-x_2}{x_0-x_2}
+                = \dfrac{x(x-1)}{(-1)(-2)} = \dfrac{x(x-1)}{2}\\
+                \ell_1(x)
+                &= \prod_{\substack{j=0\\j\neq 1}}^2\frac{x-x_j}{x_1-x_j}
+                = \frac{x-x_0}{x_1-x_0}\cdot\frac{x-x_2}{x_1-x_2}
+                = \dfrac{(x+1)(x-1)}{1(-1)} = -(x+1)(x-1)\\
+                \ell_2(x)
+                &= \prod_{\substack{j=0\\j\neq 2}}^2\frac{x-x_j}{x_2-x_j}
+                = \frac{x-x_0}{x_2-x_0}\cdot\frac{x-x_1}{x_2-x_1}
+                = \dfrac{x(x+1)}{(2)1} = \dfrac{x(x+1)}{2}
+            \end{align*}
+
+            Multiplicamos ahora cada uno de los polinomios por la función peso:
+            \begin{align*}
+                \ell_0(x)(1-x^2) &= -\ell_0(x)(x+1)(x-1) = -\dfrac{x(x-1)^2(x+1)}{2} = -\frac{1}{2}(x^4-x^3-x^2+x)\\
+                \ell_1(x)(1-x^2) &= -\ell_1(x)(x+1)(x-1) = (x+1)^2(x-1)^2 = x^4-2x^2+1\\
+                \ell_2(x)(1-x^2) &= -\ell_2(x)(x+1)(x-1) = -\dfrac{x(x+1)^2(x-1)}{2} = -\frac{1}{2}(x^4+x^3-x^2-x)
+            \end{align*}
+
+            Calculamos ahora los valores de $\alpha_0$, $\alpha_1$ y $\alpha_2$:
+            \begin{align*}
+                \alpha_0 &= \int_{-1}^1\ell_0(x)(1-x^2)\ dx = -\frac{1}{2}\int_{-1}^1(x^4-x^3-x^2+x)\ dx = -\left(\dfrac{1}{5}-\dfrac{1}{3}\right) = \dfrac{2}{15}\\
+                \alpha_1 &= \int_{-1}^1\ell_1(x)(1-x^2)\ dx = \int_{-1}^1(x^4-2x^2+1)\ dx = 2\left(\dfrac{1}{5}-\dfrac{2}{3}+1\right) = \dfrac{16}{15}\\
+                \alpha_2 &= \int_{-1}^1\ell_2(x)(1-x^2)\ dx = -\frac{1}{2}\int_{-1}^1(x^4+x^3-x^2-x)\ dx = \dfrac{2}{15}
+            \end{align*}
+
+            Por tanto, tenemos que:
+            \begin{align*}
+                \int_{-1}^1f(x)(1-x^2)\ dx &\approx \int_{-1}^1\left[\ell_0(x)f(-1)+\ell_1(x)f(0)+\ell_2(x)f(1)\right](1-x^2)\ dx\\
+                &= \left(\int_{-1}^1\ell_0(x)(1-x^2)\ dx\right)f(-1)+\left(\int_{-1}^1\ell_1(x)(1-x^2)\ dx\right)f(0)+\\&\hspace{1.5cm}+\left(\int_{-1}^1\ell_2(x)(1-x^2)\ dx\right)f(1)\\
+                &= \dfrac{2}{15}f(-1)+\dfrac{16}{15}f(0)+\dfrac{2}{15}f(1)
+            \end{align*}
             \item Hallar una expresión del error $R(f)$.
+            
+            Tenemos que la expresión del error cometido al aproximar $f(x)$ por el polinomio de interpolación de Lagrange de grado 2 es:
+            \begin{equation*}
+                E(x) = f[-1,0,1,x]\Pi(x)\qquad \text{donde}\qquad \Pi(x) = \prod_{j=0}^2(x-x_j)=x(x-1)(x+1)
+            \end{equation*}
+
+            Por tanto:
+            \begin{equation*}
+                R(f)=L(E)=\int_{-1}^1E(x)(1-x^2)\ dx = \int_{-1}^1f[-1,0,1,x]\Pi(x)(1-x^2)\ dx
+            \end{equation*}
+
+            Sabemos que $\Pi(x)$ cambia de signo en $x=0$. Para evitar esto, hacemos uso de que:
+            \begin{multline*}
+                f[-1, 0, 0, 1, x] = \dfrac{f[-1, 0, 1, x]-f[-1, 0, 0, 1]}{x-0}
+                \Longrightarrow\\\Longrightarrow f[-1, 0, 1, x] = f[-1, 0, 0, 1, x]x + f[-1, 0, 0, 1]
+            \end{multline*}
+
+            Por tanto, tenemos que:
+            \begin{align*}
+                R(f) &= \int_{-1}^1\left(f[-1, 0, 0, 1, x]x + f[-1, 0, 0, 1]\right)x(x-1)(x+1)(1-x^2)\ dx
+                =\\&= \int_{-1}^1\left(f[-1, 0, 0, 1, x]x^2+f[-1, 0, 0, 1]x\right)(x-1)^2(x+1)^2\ dx
+                =\\&= \int_{-1}^1f[-1, 0, 0, 1, x]x^2(x-1)^2(x+1)^2\ dx + f[-1, 0, 0, 1]\int_{-1}^1x(x-1)^2(x+1)^2\ dx
+            \end{align*}
+
+            Por el Teorema del Valor Medio Integral Generalizado, $\exists \mu\in [-1,1]$ tal que:
+            \begin{align*}
+                R(f) &= f[-1, 0, 0, 1, \mu]\int_{-1}^1x^2(x-1)^2(x+1)^2\ dx + f[-1, 0, 0, 1]\int_{-1}^1x(x-1)^2(x+1)^2\ dx
+                =\\&= f[-1, 0, 0, 1, \mu]\int_{-1}^1(x^6-2x^4+x^2)\ dx + f[-1, 0, 0, 1]\int_{-1}^1(x^5-2x^3+x)\ dx
+                =\\&= 2f[-1, 0, 0, 1, \mu]\left(\dfrac{1}{7}-\dfrac{2}{5}+\dfrac{1}{3}\right) + f[-1, 0, 0, 1]\cdot 0
+                \\&= \dfrac{16}{105}\cdot f[-1, 0, 0, 1, \mu]
+            \end{align*}
+
+            Suponiendo $f\in C^4[-1,1]$, $\exists \xi\in [-1,1]$ tal que:
+            \begin{equation*}
+                R(f) = \dfrac{16}{105}\cdot \dfrac{f^{(4)}(\xi)}{4!}
+                = \dfrac{2}{315}\cdot f^{(4)}(\xi)
+            \end{equation*}
         \end{enumerate}
     \end{ejercicio}    
-    
+    }
 \end{document}
