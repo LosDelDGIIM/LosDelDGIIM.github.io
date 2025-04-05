@@ -330,14 +330,14 @@
     - [ ] La ecuación \\(f[x]=0\\) tiene un número impar de raíces simples en \\([a,b]\\).
 
 
-35. Una fórmula de derivación numérica de tipo interpolatorio clásico (en los polinomios), para aproximar \\(f'a[ ]\\), que tenga dos nodos...
+35. Una fórmula de derivación numérica de tipo interpolatorio clásico (en los polinomios), para aproximar \\(f'(a)\\), que tenga dos nodos...
     - [ ] no puede ser exacta en \\(\mathbb{P}_2\\).
     - [x] es exacta en \\(\mathbb{P}_1\\).
     - [ ] puede obtenerse imponiendo exactitud para las funciones \\(x,x^2\\).
     - [ ] puede alcanzar un grado máximo de exactitud 3.
 
 
-36. Para obtener tres fórmulas para aproximar respectivamente \\(f'(a)\\), \\(f^{''}(a)\\) y \\(f^{'''}(a)\\) se han elegido cinco abscisas diferentes, se ha calculado el polinomio \\(p[x]\\) de grado cuatro que interpola en ellas los valores de la función \\(f\\), y se ha derivando sucesivamente \\(p(x)\\) para obtenerlas.
+36. Para obtener tres fórmulas para aproximar respectivamente \\(f'(a)\\), \\(f^{''}(a)\\) y \\(f^{'''}(a)\\) se han elegido cinco abscisas diferentes, se ha calculado el polinomio \\(p(x)\\) de grado cuatro que interpola en ellas los valores de la función \\(f\\), y se ha derivando sucesivamente \\(p(x)\\) para obtenerlas.
     - [x] Las tres fórmulas de derivación numérica obtenidas son exactas para las funciones \\(x^3\\) y \\(x^4\\).
     - [x] Si las abscisas de interpolación están igualmente espaciadas con un paso \\(h\\) y uno de los cinco nodos es \\(a\\), la fórmula que aproxima \\(f'(a)\\) tendrá \\(h\\) en el denominador, la que aproxima \\(f^{''}(a)\\) tendrá \\(h^2\\) y la tercera tendrá \\(h^3\\).
     - [ ] Las tres fórmulas de derivación numérica obtenidas contienen el mismo número de nodos con pesos no nulos.
@@ -345,14 +345,6 @@
     - [x] Las tres fórmulas de derivación numérica obtenidas tienen unos pesos que suma cero.
     - [ ] Las tres fórmulas de derivación numérica obtenidas tienen el mismo orden de exactitud.
     - [ ] El procedimiento más simple es obtener la fórmula para \\(f'(a)\\) a partir de \\(p'(a)\\), y después derivar \\(f'(a)\\) un par de veces para obtener \\(f^{''}(a)\\) y \\(f^{'''}(a)\\).
-
-
-37. Tiene orden de convergencia local al menos cuadrático...
-    - [ ] la iteración funcional cuando \\(|g'(s)|<1\\).
-    - [ ] el método de la secante cuando la raíz es simple.
-    - [x] el método de Newton-Raphson cuando la raíz es simple.
-    - [x] a iteración funcional cuando \\(g\in\mathbb{C}^2\\) y \\(|g'(s)|=0\\)
-    - [ ] el método de bisección.
 
 
 38. Si \\(g\\) es derivable y aplica \\([a,b]\\) en \\([a,b]\\). Entonces:
@@ -396,9 +388,9 @@
     - [ ] se puede extender a sistemas de ecuaciones no lineales.
 
 
-42. Si se calcula el polinomio \\(p[x]\\) de grado \\(2\\) que interpola a una función \\(f\\) en \\(a\\), \\(a+h\\) y \\(a+2h\\)...
+42. Si se calcula el polinomio \\(p(x)\\) de grado \\(2\\) que interpola a una función \\(f\\) en \\(a\\), \\(a+h\\) y \\(a+2h\\)...
     - [x] A partir de \\(p(x)\\) se puede obtener una fórmula para aproximar \\(f'(a)\\) y otra para aproximar \\(f^{''}(a)\\) y ambas son exactas para \\(1,x,x^2\\).
-    - [ ] A partir de \\(p[x]\\) se puede obtener una fórmula para aproximar \\(f'(a)\\) solamente cuando los datos conocidos de \\(f\\) son tres puntos igualmente espaciados, y siendo \\(a\\) el menor de los tres.
+    - [ ] A partir de \\(p(x)\\) se puede obtener una fórmula para aproximar \\(f'(a)\\) solamente cuando los datos conocidos de \\(f\\) son tres puntos igualmente espaciados, y siendo \\(a\\) el menor de los tres.
     - [x] \\(p'(a)\\) es una aproximación de \\(f'(a)\\), exacta para \\(1,x,x^2\\).
     - [ ] \\(p'(a)\\) es una aproximación de \\(f'(a)\\), exacta para \\(a,a+h,a+2h\\).
     - [x] A partir de \\(p(x)\\) se puede obtener una fórmula para aproximar \\(f'(1)\\) a partir de \\(f(1),f(0.9),f(0.8)\\).
