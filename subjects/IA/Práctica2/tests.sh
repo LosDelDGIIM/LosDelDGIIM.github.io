@@ -15,6 +15,7 @@ tests_0=(
     "./practica2SG ./mapas/pruebaCiclo.map 0 0 13 3 6 5 12 6"               # Evitar Ciclos
     "./practica2SG ./mapas/pruebaDosUnicos_Zapas.map 0 0 24 10 2 17 17 0"   # Permitir ciclos si ha conseguido zapatillas
     "./practica2SG ./mapas/pruebaDosUnicos_Choque.map 0 0 16 9 2 16 14 6"   # Permitir ciclos si ha habido un choque
+    "./practica2SG ./mapas/mapa75.map 0 0 63 29 6 59 68 1"
 )
 tests_1=(
     "./practica2SG ./mapas/mapa30.map 0 1 6 3 0 21 15 2"
