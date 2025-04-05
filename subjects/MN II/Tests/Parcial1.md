@@ -10,19 +10,19 @@
 
 1. Sea \\(g\\) una función real continua en un intervalo \\([a, b]\\).
     - [x] Si \\( g \\) toma valores en \\([ \frac{a+b}{2}, b ]\\), entonces tiene al menos un punto fijo en \\([a, b]\\).
-    - [ ] La ecuación \\(x = g[x]\\) tiene una única raíz en \\([a, b]\\).
+    - [ ] La ecuación \\(x = g(x)\\) tiene una única raíz en \\([a, b]\\).
     - [x] Si \\(g\\) toma valores en \\([a, b]\\) y es contráctil, entonces tiene un único punto fijo en \\([a, b]\\).
     - [ ] Si \\(g\\) toma valores en \\([a, b]\\) y es derivable con derivada menor que 1 en todo punto, entonces el correspondiente método de iteración funcional es convergente partiendo de un punto diferente de \\(s\\) pero suficientemente cercano.
     - [x] Si \\( g \\) toma valores en \\([a, b]\\), entonces tiene al menos un punto fijo en \\([a, b]\\).
-    - [ ] La ecuación \\( x = g[x] \\) tiene al menos una raíz en \\([a, b]\\). No se dice que aplique el intervalo en el mismo.
+    - [ ] La ecuación \\( x = g(x) \\) tiene al menos una raíz en \\([a, b]\\). No se dice que aplique el intervalo en el mismo.
     - [ ] Si \\( g \\) toma valores en \\([a, b]\\) y es derivable, entonces el correspondiente método de iteración funcional es convergente partiendo de un punto diferente de \\( s \\) pero suficientemente próximo a \\( s \\).
  
 2. Sea \\(f\\) una función continua en \\([a, b]\\) con valores en \\(\mathbb{R}\\), tal que \\(f(a)f(b) < 0\\).
-    - [ ] Si \\(f\\) es derivable en \\([a, b]\\) la ecuación \\(f[x] = 0\\) tiene una sola raíz en \\([a, b]\\).
+    - [ ] Si \\(f\\) es derivable en \\([a, b]\\) la ecuación \\(f(x) = 0\\) tiene una sola raíz en \\([a, b]\\).
     - [x] Si la derivada de \\(f\\) existe y en todo el intervalo abierto es negativa, entonces hay solo una raíz de \\(f(x) = 0\\) en el intervalo.
     - [x] Tanto el método de bisección como el de Regula Falsi son convergentes, pero pueden converger a dos raíces diferentes de la ecuación \\(f(x) = 0\\).
     - [x] La ecuación \\(f(x) = 0\\) tiene al menos una raíz en el intervalo abierto \\([a, b]\\).
-    - [ ] Si la derivada de \\(f\\) existe y en todo el intervalo abierto es negativa, entonces el método de NR converge a la única raíz de \\(f[x] = 0\\), partiendo del centro del intervalo.
+    - [ ] Si la derivada de \\(f\\) existe y en todo el intervalo abierto es negativa, entonces el método de NR converge a la única raíz de \\(f(x) = 0\\), partiendo del centro del intervalo.
     - [x] El método de la secante es aplicable pero no tiene garantía de convergencia a ninguna de las raíces de la ecuación \\(f(x) = 0\\).
     - [x] Si \\(f\\) es suficientemente derivable y en todo el intervalo abierto su primera derivada es negativa, entonces el método de NR converge a la única raíz de \\(f(x) = 0\\), partiendo de cualquier punto de algún subintervalo que contenga a la raíz.
 
@@ -34,23 +34,12 @@
     - [ ] El método de Newton-Raphson tiene siempre convergencia local cuadrática.
     - [ ] El método de la secante requiere una semilla.
     - [x] El método de iteración funcional requiere una semilla.
-    - [ ] El método de Bisección requiere un intervalo donde se cumpla Bolzano.
+    - [ ] El método de Bisección requiere una semilla.
     - [x] Si la raíz es simple, entonces el método de Newton-Raphson tiene convergencia local al menos cuadrática.
     - [x] Cuando las aproximaciones están muy próximas a la solución, el método de la Secante puede incurrir en división por cero al computar.
 
  
-4. Si \\(g\\) es derivable y aplica \\([a, b]\\) en \\([a, b]\\). Entonces:
-
-    - [ ] Si \\(g(s) = s \ y \ g'(s) = 0\\), existe un entorno de \\(s\\) en el cual la convergencia a \\(s\\) del método de iteración funcional asociado a \\(g\\) es exactamente cuadrática.
-    - [x] Si \\(g(s) = s \ y \ g'(s) = 0\\), existe un entorno de \\(s\\) en el cual la convergencia a \\(s\\) del método de iteración funcional asociado a \\(g\\) es al menos cuadrática.
-    - [ ] Si \\(g(s) = s \ y \ g'(s) = 0\\), existe un entorno de \\(s\\) en el cual la convergencia a \\(s\\) del método de iteración funcional asociado a \\(g\\) es más rápida que si aplicamos el metodo de NR a \\(f[x] = x - g(x)\\).
-    - [ ] Si existe la derivada segunda de \\(g\\) y se verifica que \\(g''(s) = 0\\), la convergencia del método de iteración funcional es al menos cúbica.
-    - [x] Si existe la derivada segunda de \\(g\\) y se verifica que \\(g'(s) = s \ y \ g'(s) = g''(s) = 0\\), la convergencia local del método de iteración funcional es al menos cúbica.
-    - [x] Si existe la derivada segunda de \\(g\\) y se verifica que \\(g(s) = s \ y \ g'(s) = g''(s) = 0\\), la convergencia local del método de iteración funcional es al menos cuadrática.
-    - [ ] Si existe la derivada segunda de \\(g\\) y se verifica que \\(g(s) = s\ y \ g'(s) = g''(s) = 0\\), la convergencia local del método de iteración funcional es cúbica.
-
- 
-5. Si la función \\(f[x]\\) no es derivable, pero es continua y \\(f(a)f(b) < 0\\), entonces puedo aplicar los métodos de:
+5. Si la función \\(f(x)\\) no es derivable, pero es continua y \\(f(a)f(b) < 0\\), entonces puedo aplicar los métodos de:
 
     - [ ] Sólo los métodos de iteración funcional.
     - [ ] Newton-Raphson y secante.
@@ -68,8 +57,6 @@
     - [x] La iteración funcional cuando \\(g \in \mathcal{C}^2\\) y \\(|g'(s)| = 0\\).
     - [ ] El método de bisección.
     
-    ---
-
 7. Un algoritmo eficiente y estable para la evaluación de polinomios es:
 
     - [ ] El producto escalar del vector de coeficientes por el vector de potencias de la variable.
@@ -85,11 +72,11 @@
     - [x] No hay garantía de convergencia del método de la secante a una raíz de la ecuación \\(f(x) = 0\\), partiendo de las semillas \\(a\\) y \\(b\\) como valores iniciales.
     - [ ] Si \\(f(a)f(b) < 0\\) entonces hay al menos un punto \\(s\\) comprendido entre \\(a\\) y \\(b\\) en el cual la función vale cero.
     - [ ] Para que el método de la secante sea aplicable se necesita que \\(f(a)f(b) > 0\\).
-    - [ ] La ecuación \\(f[x] = 0\\) tiene un número impar de raíces simples en \\([a, b]\\).
-    - [ ] Si la ecuación \\(f[x] = 0\\) tiene una única raíz en \\([a, b]\\) siempre puede aplicarse el método de bisección para aproximarla con un error menor que 0.05.
+    - [ ] La ecuación \\(f(x) = 0\\) tiene un número impar de raíces simples en \\([a, b]\\).
+    - [ ] Si la ecuación \\(f(x) = 0\\) tiene una única raíz en \\([a, b]\\) siempre puede aplicarse el método de bisección para aproximarla con un error menor que 0.05.
     
   
-10. Si tiene que resolver un sistema no lineal de dos ecuaciones, \\(F[x] = 0\\).
+10. Si tiene que resolver un sistema no lineal de dos ecuaciones, \\(F(X) = 0\\).
 
     - [ ] Aplicaría Newton-Raphson a cada una de las dos ecuaciones.
     - [x] Necesitaría dos semillas, una para cada componente.
@@ -122,7 +109,7 @@
     - [ ] No es raíz de \\(p'\\).
 
  
-13. Para poder aplicar el método de la secante, la función \\(f[x]\\) ha de ser necesariamente:
+13. Para poder aplicar el método de la secante, la función \\(f(x)\\) ha de ser necesariamente:
 
     - [x] Continua.
     - [ ] Derivable \\(1 + \frac{\sqrt{5}}{2}\\) veces.
@@ -152,7 +139,7 @@
     - [x] La primera de las funciones debe ser derivable en todo el intervalo que estamos considerando.
 
   
-16. Toda función de iteración \\(g[x]\\) definida en \\([0, 10]\\)...
+16. Toda función de iteración \\(g(x)\\) definida en \\([0, 10]\\)...
 
     - [ ] con valores en el intervalo \\([5, 7]\\) tiene al menos un punto fijo.
     - [ ] continua y con valores en el intervalo \\([5, 7]\\) tiene un único punto fijo.
@@ -180,9 +167,9 @@
     - [ ] se ganan 1 dígito de precisión cada 5 términos
 
  
-19. Sea la ecuación \\(x = g[x]\\). Entonces, si \\(g\\) aplica el intervalo \\([a, b]\\) en \\([a, b]\\):
+19. Sea la ecuación \\(x = g(x)\\). Entonces, si \\(g\\) aplica el intervalo \\([a, b]\\) en \\([a, b]\\):
 
-    - [ ] Si \\(g\\) es derivable y su derivada es negativa pero mayor que \\(-1/2\\), entonces el método de iteración funcional asociado genera una sucesión de aproximaciones decreciente hacia la raíz de la ecuación \\(x = g[x]\\).
+    - [ ] Si \\(g\\) es derivable y su derivada es negativa pero mayor que \\(-1/2\\), entonces el método de iteración funcional asociado genera una sucesión de aproximaciones decreciente hacia la raíz de la ecuación \\(x = g(x)\\).
     - [ ] Si \\(g\\) es derivable y su derivada está acotada en valor absoluto por \\(\frac{1}{2}\\) en todo el intervalo, entonces el método de iteración funcional asociado tiene convergencia al menos cuadrática.
     - [x] Si \\(g\\) es de clase 2 y en un punto fijo \\(s\\) verifica \\(g'(s) = 0\\), entonces partiendo de un valor suficientemente próximo a \\(s\\) el método de iteración funcional converge con orden de convergencia al menos cuadrático.
     - [x] Si \\(g\\) es derivable y su derivada está acotada en valor absoluto por \\(\frac{1}{2}\\) en todo el intervalo, entonces el método de iteración funcional asociado comete tras \\(n\\) iteraciones un error menor que \\(\frac{b-a}{2^n}\\).
@@ -223,7 +210,7 @@
     - [ ] Ninguna de las demás.
 
 
-23. Para poder aplicar el método de Newton-Raphson, la función \\(f[x]\\) tiene que ser
+23. Para poder aplicar el método de Newton-Raphson, la función \\(f(x)\\) tiene que ser
     - [ ] Dos veces derivable
     - [ ] Con que sea continua es suficiente
     - [ ] Creciente
@@ -235,19 +222,19 @@
     - [x] Es una fórmula de tipo interpolatorio con un solo nodo, que puede ser el que se quiera.
     - [ ] Es una de las fórmulas más precisas para aproximar el valor de la derivada de una función en cero.
     - [ ] Es exacta para \\(1,x, x^2, x^3, x^4\\).
-    - [x] Es exacta para las funciones: \\(1, cos(x)\\).
+    - [x] Es exacta para las funciones: \\(1, \cos(x)\\).
     - [x] Es exacta para \\(1,x^2,x^3,x^4\\).
 
 
 25. Fórmulas de derivación numérica de tipo interpolatorio
-    - [x] Una de las fórmulas de derivación numérica para aproximar \\(f'(a)\\) es \\((f(a+h)-f(a-h))/(2h)\\).
-    - [x] Una de las fórmulas de derivación numérica para aproximar es \\((f(a)-f(a+h))/(-h)\\).
+    - [x] Una de las fórmulas de derivación numérica para aproximar \\(f'(a)\\) es \\(\frac{f(a+h)-f(a-h)}{2h}\\).
+    - [x] Una de las fórmulas de derivación numérica para aproximar es \\(\frac{f(a)-f(a+h)}{-h}\\).
     - [ ] Las fórmulas de derivación numérica más habituales tienen un nodo, dos nodos o tres nodos.
     - [ ]Las fórmulas de derivación numérica son imprescindibles para derivar funciones de las que no se conoce una primitiva expresada en términos elementales.
     - [ ] Las fórmulas de derivación numérica pueden ser simples o compuestas
-    - [ ] Una de las fórmulas de derivación numérica para aproximar más recomendable es \\(f(a+h)-f(a-h)/(2h)\\).
-    - [x] Al aplicar una fórmula de derivación numérica, basada en los valores de la función en los puntos \\(a\\) y \\(a+h\\), el valor de no puede ser nulo
-    - [ ] Al aplicar una fórmula de derivación numérica, basada en los valores de la función en los puntos \\(a\\) y \\(a+h\\), el valor de no puede ser negativo
+    - [ ] Una de las fórmulas de derivación numérica para aproximar más recomendable es \\(\frac{f(a+h)-f(a-h)}{2h}\\).
+    - [x] Al aplicar una fórmula de derivación numérica, basada en los valores de la función en los puntos \\(a\\) y \\(a+h\\), el valor de \\(h\\) no puede ser nulo
+    - [ ] Al aplicar una fórmula de derivación numérica, basada en los valores de la función en los puntos \\(a\\) y \\(a+h\\), el valor de \\(h\\) no puede ser negativo
 
 
 26. Una fórmula de tipo interpolatorio clásico para aproximar la derivada \\(k\\)-ésima de en un punto ...
@@ -259,7 +246,7 @@
     - [ ] que use \\(n\\) nodos, puede tener como máximo orden de exactitud \\(n-1\\).
 
 
-27. Si la función \\(f[x]\\) no es derivable, pero es continua y \\((a)f(b)<0\\), entonces puedo aplicar los métodos de 
+27. Si la función \\(f(x)\\) no es derivable, pero es continua y \\(f(a)f(b)<0\\), entonces puedo aplicar los métodos de 
     - [ ] Bisección y Newton-Raphson
     - [x] Bisección, Secante y Regula Falsi
     - [ ] Newton-Raphson y secante
@@ -306,10 +293,11 @@
 
 32. Una fórmula de derivación numérica de tipo interpolatorio clásico para aproximar \\(f'(a)\\)...
     - [ ] con dos nodos, no puede ser exacta en \\(\mathbb{P}_2\\).
-    - [x] con \\(n\\) nodos, podría ser exacta en \\(\mathbb{P}_n\\).
-    - [x] con dos nodos, no puede ser exacta en \\(\mathbb{P}_3\\).
-    - [ ] con dos nodos, puede obtenerse imponiendo exactitud para las funciones \\(1,x\\).
+    - [ ] con dos nodos, no puede ser exacta en \\(\mathbb{P}_1\\).
+    - [ ] con dos nodos, puede ser exacta en \\(\mathbb{P}_3\\).
+    - [x] con dos nodos, puede obtenerse imponiendo exactitud para las funciones \\(\{1,x\}\\).
     - [ ] con \\(n\\) nodos, es siempre exacta en \\(\mathbb{P}_n\\).
+    - [x] con \\(n\\) nodos, podría ser exacta en \\(\mathbb{P}_n\\).
     - [x] con dos nodos, podría ser exacta en \\(\mathbb{P}_2\\).
 
  
@@ -322,12 +310,12 @@
     - [ ] La combinación \\(\frac{1}{3}(2P(\frac{h}{2})-P(h))\\) aumenta en una unidad el orden de exactitud y es convergente a \\(f'(a)\\) cuando \\(h\\) tiende a \\(0\\).
 
 
-34. Sea \\(f\\) una función real definica en un intervalo cerrado \\([a,b]\\). Entonces:
+34. Sea \\(f\\) una función real definida en un intervalo cerrado \\([a,b]\\). Entonces:
     - [ ] Para que el método de la secante sea aplicable se necesita que \\(f(a)f(b)>0\\).
     - [x] No hay garantía de convergencia del método de la secante a una raíz de la ecuación \\(f(x)=0\\), partiendo de las semillas \\(a\\) y \\(b\\) como valores iniciales.
     - [ ] Si \\(f(a)f(b)<0\\) entonces hay al menos un punto comprendido entre \\(a\\) y \\(b\\) en el cual la función vale cero.
-    - [ ] Si la ecuación \\(f[x]=0\\) tiene una única raíz en \\([a,b]\\) siempre puede aplicarse el método de bisección para aproximarla con un error menor que \\(0.05\\).
-    - [ ] La ecuación \\(f[x]=0\\) tiene un número impar de raíces simples en \\([a,b]\\).
+    - [ ] Si la ecuación \\(f(x)=0\\) tiene una única raíz en \\([a,b]\\) siempre puede aplicarse el método de bisección para aproximarla con un error menor que \\(0.05\\).
+    - [ ] La ecuación \\(f(x)=0\\) tiene un número impar de raíces simples en \\([a,b]\\).
 
 
 35. Una fórmula de derivación numérica de tipo interpolatorio clásico (en los polinomios), para aproximar \\(f'(a)\\), que tenga dos nodos...
@@ -346,12 +334,20 @@
     - [ ] Las tres fórmulas de derivación numérica obtenidas tienen el mismo orden de exactitud.
     - [ ] El procedimiento más simple es obtener la fórmula para \\(f'(a)\\) a partir de \\(p'(a)\\), y después derivar \\(f'(a)\\) un par de veces para obtener \\(f^{''}(a)\\) y \\(f^{'''}(a)\\).
 
+37. El funcional lineal \\(f'(a)\\) puede aproximarse por la fórmula \\(P(h) = \frac{f(a+h)-f(a-h)}{2h}\\) de tal forma que si \\(f\\) es suficientemente regular, desarrollando por Taylor se tiene \\(f'(a)=P(h)+c_2h^2+c_4h^4+...\\), que escrita para \\(\frac{h}{2}\\) es \\(f'(a)=P(\frac{h}{2})+c_2\frac{h^2}{4}+c_4\frac{h^4}{16}+...\\). Este proceso es el de extrapolación de Richardson aplicado a una fórmula de derivación numérica. Entonces:
+    - [ ] \\(\frac{1}{3}(4P(\frac{h}{2})+P(h))\\) aumenta la exactitud con respecto a \\(P(h)\\) en 2 unidades.
+    - [x] \\(P(h)\\) es la aproximación \\(f'(a)\\) con la fórmula centrada.
+    - [x] \\(\frac{1}{3}(4P(\frac{h}{2})-P(h))\\) aumenta la exactitud con respecto a \\(P(h)\\) al menos en una unidad.
+    - [ ] No es posible establecer una combinación de \\(P(h)\\) y \\(P(\frac{h}{2})\\) que aumente la exactitud en 2 unidades.
+    - [ ] \\(\frac{1}{3}(2P(\frac{h}{2})+P(h))\\) aumenta la exactitud con respecto a \\(P(h)\\) en al menos una unidad.
+    - [ ] \\(2P(\frac{h}{2})-P(h)\\) aumenta la exactitud con respecto a \\(P(h)\\) en una unidad.
+    - [ ] \\(P(h)\\) tiene orden de exactitud 1.
 
 38. Si \\(g\\) es derivable y aplica \\([a,b]\\) en \\([a,b]\\). Entonces:
     - [x] Si existe la derivada segunda de \\(g\\) y se verifica que \\(g(s)=s\\) y \\(g'(s)=g^{''}(s)=0\\), la convergencia local del método de iteración funcional es al menos cúbica.
     - [x] Si \\(g(s)=s\\) y \\(g'(s)=0\\), existe un entorno de \\(s\\) en cual la convergencia a \\(s\\) del método de iteración funcional asociado a \\(g\\) es al menos cuadrática. 
     - [ ] Si existe la derivada segunda de \\(g\\) y se verifica que \\(g^{''}(s)=0\\), la convergencia del método de iteración funcional es al menos cúbica.
-    - [ ] Si \\(g(s)=s\\) y \\(g'(s)=0\\), existe un entorno de \\(s\\) en cual la convergencia a \\(s\\) del método de iteración funcional asociado a es más rápida que si aplicamos el método de NR a \\(f[x]=x-g(x)\\).
+    - [ ] Si \\(g(s)=s\\) y \\(g'(s)=0\\), existe un entorno de \\(s\\) en cual la convergencia a \\(s\\) del método de iteración funcional asociado a es más rápida que si aplicamos el método de NR a \\(f(x)=x-g(x)\\).
     - [ ] Si existe la derivada segunda de \\(g\\) y se verifica que \\(g(s)=s\\) y \\(g'(s)=g^{''}(s)=0\\), la convergencia local del método de iteración funcional es cúbica.
     - [x] Si existe la derivada segunda de \\(g\\) y se verifica que \\(g(s)=s\\) y \\(g'(s)=g^{''}(s)=0\\), la convergencia local del método de iteración funcional es al menos cuadrática.
     - [ ] Si \\(g(s)=s\\) y \\(g'(s)=0\\), existe un entorno de \\(s\\) en cual la convergencia a \\(s\\) del método de iteración funcional asociado a \\(g\\) es exactamente cuadrática.
@@ -396,12 +392,12 @@
     - [x] A partir de \\(p(x)\\) se puede obtener una fórmula para aproximar \\(f'(1)\\) a partir de \\(f(1),f(0.9),f(0.8)\\).
 
 
-43. Una función periódica de periodo \\(2\pi\\), se aproxima interpolando con funciones de espacios trigonométricas, es decir, generados por: \\(1,sin[x],cos(x),sin(2x),cos(2x),sin(3x),...\\) Se quiere aprovechar esos interpolantes para obtener una fórmula de derivación numérica, efectuando la derivada correspondiente del interpolante. En tal caso:
-    - [ ] La fórmula correspondiente a los nodos:\\(0,\frac{\pi}{2},\pi\\), sería exacta para \\(1,x,x^2\\).
+43. Una función periódica de periodo \\(2\pi\\), se aproxima interpolando con funciones de espacios trigonométricas, es decir, generados por: \\(1,\sin(x),\cos(x),\sin(2x),\cos(2x),\sin(3x),...\\) Se quiere aprovechar esos interpolantes para obtener una fórmula de derivación numérica, efectuando la derivada correspondiente del interpolante. En tal caso:
+    - [ ] La fórmula correspondiente a los nodos: \\(0,\frac{\pi}{2},\pi\\), sería exacta para \\(1,x,x^2\\).
     - [ ] Sería una fórmula de tipo interpolatorio clásico.
     - [ ] El error de la fórmula se obtendría a partir de desarrollos en serie de Taylor.
-    - [x] Para obtener la fórmula que aproxime \\(f'(\frac{\pi}{2})\\)usando como nodos: \\(0,\frac{\pi}{2},\pi\\), se puede exigir exactitud en \\(1,sin(x),cos(x)\\) y resolver el sistema correspondiente.
-    - [ ] Para obtener la fórmula que aproxime \\(f'(\frac{\pi}{2})\\)usando como nodos: \\(0,\frac{\pi}{2},\pi\\), se puede calcular el interpolante trigonométrico con la fórmula de Newton, derivarlo y evaluarlo en \\(\frac{\pi}{2}\\).
+    - [x] Para obtener la fórmula que aproxime \\(f'(\frac{\pi}{2})\\) usando como nodos: \\(0,\frac{\pi}{2},\pi\\), se puede exigir exactitud en \\(1,\sin(x),cos(x)\\) y resolver el sistema correspondiente.
+    - [ ] Para obtener la fórmula que aproxime \\(f'(\frac{\pi}{2})\\) usando como nodos: \\(0,\frac{\pi}{2},\pi\\), se puede calcular el interpolante trigonométrico con la fórmula de Newton, derivarlo y evaluarlo en \\(\frac{\pi}{2}\\).
     - [ ] No sería una fórmula de tipo interpolatorio.
  
 

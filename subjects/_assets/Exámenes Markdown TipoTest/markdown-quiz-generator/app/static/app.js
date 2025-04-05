@@ -130,6 +130,6 @@ $(function () {
     }
 
     // Llamar a las funciones para mezclar las preguntas y las opciones al cargar la página
-    shuffleQuestions();
-    shuffleOptions();
+    //shuffleQuestions();
+    //shuffleOptions();
 });
