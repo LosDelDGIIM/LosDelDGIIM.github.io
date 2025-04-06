@@ -14,7 +14,7 @@
     - [x] Si \\(g\\) toma valores en \\([a, b]\\) y es contráctil, entonces tiene un único punto fijo en \\([a, b]\\).
     - [ ] Si \\(g\\) toma valores en \\([a, b]\\) y es derivable con derivada menor que 1 en todo punto, entonces el correspondiente método de iteración funcional es convergente partiendo de un punto diferente de \\(s\\) pero suficientemente cercano.
     - [x] Si \\( g \\) toma valores en \\([a, b]\\), entonces tiene al menos un punto fijo en \\([a, b]\\).
-    - [ ] La ecuación \\( x = g(x) \\) tiene al menos una raíz en \\([a, b]\\). No se dice que aplique el intervalo en el mismo.
+    - [ ] La ecuación \\( x = g(x) \\) tiene al menos una raíz en \\([a, b]\\).
     - [ ] Si \\( g \\) toma valores en \\([a, b]\\) y es derivable, entonces el correspondiente método de iteración funcional es convergente partiendo de un punto diferente de \\( s \\) pero suficientemente próximo a \\( s \\).
  
 2. Sea \\(f\\) una función continua en \\([a, b]\\) con valores en \\(\mathbb{R}\\), tal que \\(f(a)f(b) < 0\\).
@@ -169,7 +169,7 @@
  
 19. Sea la ecuación \\(x = g(x)\\). Entonces, si \\(g\\) aplica el intervalo \\([a, b]\\) en \\([a, b]\\):
 
-    - [ ] Si \\(g\\) es derivable y su derivada es negativa pero mayor que \\(-1/2\\), entonces el método de iteración funcional asociado genera una sucesión de aproximaciones decreciente hacia la raíz de la ecuación \\(x = g(x)\\).
+    - [ ] Si \\(g\\) es derivable y su derivada es negativa pero mayor que \\(-\frac{1}{2}\\), entonces el método de iteración funcional asociado genera una sucesión de aproximaciones decreciente hacia la raíz de la ecuación \\(x = g(x)\\).
     - [ ] Si \\(g\\) es derivable y su derivada está acotada en valor absoluto por \\(\frac{1}{2}\\) en todo el intervalo, entonces el método de iteración funcional asociado tiene convergencia al menos cuadrática.
     - [x] Si \\(g\\) es de clase 2 y en un punto fijo \\(s\\) verifica \\(g'(s) = 0\\), entonces partiendo de un valor suficientemente próximo a \\(s\\) el método de iteración funcional converge con orden de convergencia al menos cuadrático.
     - [x] Si \\(g\\) es derivable y su derivada está acotada en valor absoluto por \\(\frac{1}{2}\\) en todo el intervalo, entonces el método de iteración funcional asociado comete tras \\(n\\) iteraciones un error menor que \\(\frac{b-a}{2^n}\\).
