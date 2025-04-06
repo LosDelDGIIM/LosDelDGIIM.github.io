@@ -232,7 +232,7 @@
     - [ ] Las fórmulas de derivación numérica más habituales tienen un nodo, dos nodos o tres nodos.
     - [ ]Las fórmulas de derivación numérica son imprescindibles para derivar funciones de las que no se conoce una primitiva expresada en términos elementales.
     - [ ] Las fórmulas de derivación numérica pueden ser simples o compuestas
-    - [ ] Una de las fórmulas de derivación numérica para aproximar más recomendable es \\(\frac{f(a+h)-f(a-h)}{2h}\\).
+    - [ ] Una de las fórmulas de derivación numérica para aproximar más recomendable es \\(f(a+h)-f(a-h)/(2h)\\).
     - [x] Al aplicar una fórmula de derivación numérica, basada en los valores de la función en los puntos \\(a\\) y \\(a+h\\), el valor de \\(h\\) no puede ser nulo
     - [ ] Al aplicar una fórmula de derivación numérica, basada en los valores de la función en los puntos \\(a\\) y \\(a+h\\), el valor de \\(h\\) no puede ser negativo
 
@@ -244,15 +244,6 @@
     - [ ] que use \\(n\\) nodos, puede tener como máximo orden de exactitud \\(k\\).
     - [x] debe tener al menos \\(k+1\\) nodos, para que tenga algún interés.
     - [ ] que use \\(n\\) nodos, puede tener como máximo orden de exactitud \\(n-1\\).
-
-
-27. Si la función \\(f(x)\\) no es derivable, pero es continua y \\(f(a)f(b)<0\\), entonces puedo aplicar los métodos de 
-    - [ ] Bisección y Newton-Raphson
-    - [x] Bisección, Secante y Regula Falsi
-    - [ ] Newton-Raphson y secante
-    - [ ] Sólo los métodos de iteración funcional
-    - [ ] Todos los métodos estudiados.
-    - [x] Bisección
 
 
 28. Toda fórmula de derivación numérica de tipo interpolatorio clásico para aproximar una derivada \\(k\\)-ésima en \\(a\\) ...
@@ -306,16 +297,8 @@
     - [x] No es posible establecer una combinación de \\(P(h)\\) y \\(P(\frac{h}{2})\\) que aumente la exactitud en 2 unidades.
     - [ ] Toda combinación lineal de \\(P(h)\\) y \\(P(\frac{h}{2})\\) mantiene el mismo orden de exactitud.
     - [x] La combinación \\(2P(\frac{h}{2})-P(h)\\) aumenta en una unidad el orden de exactitud.
-    - [x] La combinación \\(\frac{1}{3}(2P(\frac{h}{2})-P(h))\\) no aumenta en una unidad el orden de exactitud,pero es convergente a \\(f'(a)\\) cuando \\(h\\) tiende a \\(0\\).
-    - [ ] La combinación \\(\frac{1}{3}(2P(\frac{h}{2})-P(h))\\) aumenta en una unidad el orden de exactitud y es convergente a \\(f'(a)\\) cuando \\(h\\) tiende a \\(0\\).
-
-
-34. Sea \\(f\\) una función real definida en un intervalo cerrado \\([a,b]\\). Entonces:
-    - [ ] Para que el método de la secante sea aplicable se necesita que \\(f(a)f(b)>0\\).
-    - [x] No hay garantía de convergencia del método de la secante a una raíz de la ecuación \\(f(x)=0\\), partiendo de las semillas \\(a\\) y \\(b\\) como valores iniciales.
-    - [ ] Si \\(f(a)f(b)<0\\) entonces hay al menos un punto comprendido entre \\(a\\) y \\(b\\) en el cual la función vale cero.
-    - [ ] Si la ecuación \\(f(x)=0\\) tiene una única raíz en \\([a,b]\\) siempre puede aplicarse el método de bisección para aproximarla con un error menor que \\(0.05\\).
-    - [ ] La ecuación \\(f(x)=0\\) tiene un número impar de raíces simples en \\([a,b]\\).
+    - [x] La combinación \\(\frac{1}{3}(2P(\frac{h}{2})+P(h))\\) no aumenta en una unidad el orden de exactitud,pero es convergente a \\(f'(a)\\) cuando \\(h\\) tiende a \\(0\\).
+    - [ ] La combinación \\(\frac{1}{3}(2P(\frac{h}{2})+P(h))\\) aumenta en una unidad el orden de exactitud y es convergente a \\(f'(a)\\) cuando \\(h\\) tiende a \\(0\\).
 
 
 35. Una fórmula de derivación numérica de tipo interpolatorio clásico (en los polinomios), para aproximar \\(f'(a)\\), que tenga dos nodos...
@@ -373,15 +356,6 @@
     - [ ] sirven exclusivamente para aproximar la derivada de una función en un punto o su integral definida en un intervalo. 
     - [ ] son fórmulas de interpolacíón.
     - [x] sirven para aproximar un funcional lineal, como cierta derivada de una función en un punto, o el valor de la integral definida de una función en un intervalo.
-
-
-41. El método de bisección 
-    - [x] exige las mismas condiciones que el teorema de Bolzano.
-    - [ ] requiere una semilla.
-    - [ ] tiene orden de convergencia local al menos cuadrático.
-    - [x] tiene orden de convergencia lineal.
-    - [ ] es un método de iteración funcional.
-    - [ ] se puede extender a sistemas de ecuaciones no lineales.
 
 
 42. Si se calcula el polinomio \\(p(x)\\) de grado \\(2\\) que interpola a una función \\(f\\) en \\(a\\), \\(a+h\\) y \\(a+2h\\)...
