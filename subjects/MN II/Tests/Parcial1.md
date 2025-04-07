@@ -410,8 +410,8 @@
     - [x] El método de Newton Raphson puede modificarse para que tenga orden de convergencia al menos cuadrático cuando la raíz es múltiple.
 
 48. Sucesión de Sturm
-    - [ ] Si al intentar crear una sucesión de Sturm asociada a un polinomio, definida en el intervalo en el que se encuentran todas las raíces reales, el último resto no nulo no cambia de signo, podemos aprovechar la sucesión para separar todas las raíces reales de dicha ecuación.
-    - [ ] Si al intentar construir una sucesión de Sturm asociada a un polinomio se obtiene como último resto no nulo \\(2x-5\\) se puede asegurar que dicho polinomio no tiene ningún cero con multiplicidad mayor que 1 en los reales negativos.
+    - [x] Si al intentar crear una sucesión de Sturm asociada a un polinomio, definida en el intervalo en el que se encuentran todas las raíces reales, el último resto no nulo no cambia de signo, podemos aprovechar la sucesión para separar todas las raíces reales de dicha ecuación.
+    - [x] Si al intentar construir una sucesión de Sturm asociada a un polinomio se obtiene como último resto no nulo \\(2x-5\\) se puede asegurar que dicho polinomio no tiene ningún cero con multiplicidad mayor que 1 en los reales negativos.
     - [x] Si al intentar construir una sucesión de Sturm asociada a un polinomio se obtiene como último resto no nulo \\(2x-5\\) se puede asegurar que dicho polinomio no tiene ningún cero con multiplicidad mayor que 2.
     - [x] Si al intentar crear una sucesión de Sturm asociada a un polinomio no lo conseguimos es porque el último resto no nulo cambia de signo en \\([a,b]\\) que estemos considerando.
     - [x] Si al intentar crear una sucesión de Sturm asociada a un polinomio, definida en el intervalo en el que se encuentran todas sus raíces reales, el último resto no nulo no es una constante, podemos asegurar que tiene ceros múltiples.
