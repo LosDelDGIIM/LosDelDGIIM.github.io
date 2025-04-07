@@ -230,7 +230,7 @@
     - [x] Una de las fórmulas de derivación numérica para aproximar \\(f'(a)\\) es \\(\frac{f(a+h)-f(a-h)}{2h}\\).
     - [x] Una de las fórmulas de derivación numérica para aproximar es \\(\frac{f(a)-f(a+h)}{-h}\\).
     - [ ] Las fórmulas de derivación numérica más habituales tienen un nodo, dos nodos o tres nodos.
-    - [ ]Las fórmulas de derivación numérica son imprescindibles para derivar funciones de las que no se conoce una primitiva expresada en términos elementales.
+    - [ ] Las fórmulas de derivación numérica son imprescindibles para derivar funciones de las que no se conoce una primitiva expresada en términos elementales.
     - [ ] Las fórmulas de derivación numérica pueden ser simples o compuestas
     - [ ] Una de las fórmulas de derivación numérica para aproximar más recomendable es \\(f(a+h)-f(a-h)/(2h)\\).
     - [x] Al aplicar una fórmula de derivación numérica, basada en los valores de la función en los puntos \\(a\\) y \\(a+h\\), el valor de \\(h\\) no puede ser nulo
@@ -415,8 +415,8 @@
     - [x] Si al intentar construir una sucesión de Sturm asociada a un polinomio se obtiene como último resto no nulo \\(2x-5\\) se puede asegurar que dicho polinomio no tiene ningún cero con multiplicidad mayor que 2.
     - [x] Si al intentar crear una sucesión de Sturm asociada a un polinomio no lo conseguimos es porque el último resto no nulo cambia de signo en \\([a,b]\\) que estemos considerando.
     - [x] Si al intentar crear una sucesión de Sturm asociada a un polinomio, definida en el intervalo en el que se encuentran todas sus raíces reales, el último resto no nulo no es una constante, podemos asegurar que tiene ceros múltiples.
-    - [x] El número de ceros de la primera función de la sucesión de Sturm en el intervalo \\([a,b]\\) es igual al número de cambios de signo de dicha sucesión al evaluarla en \\(a\\) menor el número de cambios de signo de dicha sucesión evaluada en \\(b\\). 
+    - [x] El número de ceros de la primera función de la sucesión de Sturm en el intervalo \\([a,b]\\) es igual al número de cambios de signo de dicha sucesión al evaluarla en \\(a\\) menos el número de cambios de signo de dicha sucesión evaluada en \\(b\\). 
     - [ ] Si al intentar construir una sucesión de Sturm asociada a un polinomio, definida en el intervalo en el que se encuentran todas sus raíces reales, se obtiene como último resto no nulo \\(2x-5\\) puede asegurar que la sucesión obtenida permite separar las raíces del polinomio inicial.
-    - [ ] El número de ceros de la primera función de la sucesión de Sturm en el intervalo \\([a,b]\\) es igual al número de cambios de signo de dicha sucesión al evaluarla en \\(b\\) menor el número de cambios de signo de dicha sucesión evaluada en \\(a\\). 
+    - [ ] El número de ceros de la primera función de la sucesión de Sturm en el intervalo \\([a,b]\\) es igual al número de cambios de signo de dicha sucesión al evaluarla en \\(b\\) menos el número de cambios de signo de dicha sucesión evaluada en \\(a\\). 
     - [ ] Si al intentar crear una sucesión de Sturm asociada a un polinomio, definidad en el intervalo en el que se encuentran todas sus raíces reales, el último resto no nulo no es una constante, es porque dicho polinomio tiene todas sus raíces complejas. 
   
