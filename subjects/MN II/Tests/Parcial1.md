@@ -398,3 +398,25 @@
     - [x] La fórmula será \\(f^{'''}(0)\approx0\\)
     - [ ] El término del error será \\(R(f)=\frac{f^{'''}(0)}{3!}\\)
     - [x] El término del error será \\(R(f)=f^{'''}(0)\\)
+
+47. Orden de convergencia
+    - [ ] El método de la secante tiene orden de convergencia cuadrático.
+    - [x] El método de la secante tiene orden de convergencia \\(\frac{1+\sqrt{5}}{2}\\)
+    - [ ] El método de la secante tiene orden de convergencia \\(1 + \frac{\sqrt{5}}{2}\\)
+    - [ ] El método de Newton Raphson tiene orden de convergencia al menos cuadrático cuando la raíz es múltiple.
+    - [ ] El método de la secante tiene orden de convergencia lineal.
+    - [x] El método de Newton Raphson tiene orden de convergencia al menos cuadrático cuando la raíz es simple.
+    - [ ] El método de iteración funcional tiene orden de convergencia el intervalo abierto \\(]-1,1[\\).
+    - [x] El método de Newton Raphson puede modificarse para que tenga orden de convergencia al menos cuadrático cuando la raíz es múltiple.
+
+48. Sucesión de Sturm
+    - [ ] Si al intentar crear una sucesión de Sturm asociada a un polinomio, definida en el intervalo en el que se encuentran todas las raíces reales, el último resto no nulo no cambia de signo, podemos aprovechar la sucesión para separar todas las raíces reales de dicha ecuación.
+    - [ ] Si al intentar construir una sucesión de Sturm asociada a un polinomio se obtiene como último resto no nulo \\(2x-5\\) se puede asegurar que dicho polinomio no tiene ningún cero con multiplicidad mayor que 1 en los reales negativos.
+    - [x] Si al intentar construir una sucesión de Sturm asociada a un polinomio se obtiene como último resto no nulo \\(2x-5\\) se puede asegurar que dicho polinomio no tiene ningún cero con multiplicidad mayor que 2.
+    - [x] Si al intentar crear una sucesión de Sturm asociada a un polinomio no lo conseguimos es porque el último resto no nulo cambia de signo en \\([a,b]\\) que estemos considerando.
+    - [x] Si al intentar crear una sucesión de Sturm asociada a un polinomio, definida en el intervalo en el que se encuentran todas sus raíces reales, el último resto no nulo no es una constante, podemos asegurar que tiene ceros múltiples.
+    - [x] El número de ceros de la primera función de la sucesión de Sturm en el intervalo \\([a,b]\\) es igual al número de cambios de signo de dicha sucesión al evaluarla en \\(a\\) menor el número de cambios de signo de dicha sucesión evaluada en \\(b\\). 
+    - [ ] Si al intentar construir una sucesión de Sturm asociada a un polinomio, definida en el intervalo en el que se encuentran todas sus raíces reales, se obtiene como último resto no nulo \\(2x-5\\) puede asegurar que la sucesión obtenida permite separar las raíces del polinomio inicial.
+    - [ ] El número de ceros de la primera función de la sucesión de Sturm en el intervalo \\([a,b]\\) es igual al número de cambios de signo de dicha sucesión al evaluarla en \\(b\\) menor el número de cambios de signo de dicha sucesión evaluada en \\(a\\). 
+    - [ ] Si al intentar crear una sucesión de Sturm asociada a un polinomio, definidad en el intervalo en el que se encuentran todas sus raíces reales, el último resto no nulo no es una constante, es porque dicho polinomio tiene todas sus raíces complejas. 
+  
