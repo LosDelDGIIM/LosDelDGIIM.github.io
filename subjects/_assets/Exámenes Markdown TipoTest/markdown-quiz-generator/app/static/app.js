@@ -76,6 +76,36 @@ $(function () {
         $('li.question-row input').attr('disabled', false);
     });
 
+    // Función para mostrar todas las respuestas correctas
+    $('#show-answers').on('click', function () {
+        $('li.question-row').each(function () {
+            var question = $(this);
+
+            // Mostrar respuestas correctas para preguntas de tipo radio
+            if (question.hasClass('radio-list')) {
+                question.find('input[type="radio"][data-content="1"]').prop('checked', true);
+                question.addClass('text-success');
+                question.find('input[type="radio"]').attr('disabled', true); // Bloquear inputs
+            }
+
+            // Mostrar respuestas correctas para preguntas de tipo checkbox
+            if (question.hasClass('checklist')) {
+                question.find('input[type="checkbox"][data-content="1"]').prop('checked', true);
+                question.addClass('text-success');
+                question.find('input[type="checkbox"]').attr('disabled', true); // Bloquear inputs
+            }
+
+            // Mostrar respuestas correctas para preguntas de tipo textbox
+            if (question.hasClass('textbox')) {
+                var textbox = question.find('input[type="text"]');
+                var correct_text = String(textbox.data("content")).trim();
+                textbox.val(correct_text);
+                question.addClass('text-success');
+                textbox.attr('disabled', true); // Bloquear inputs
+            }
+        });
+    });
+
     
     // Función para mezclar las preguntas
     function shuffleQuestions() {
