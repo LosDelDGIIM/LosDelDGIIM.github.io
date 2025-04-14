@@ -49,6 +49,7 @@ tests_0=(
     "$ejecutable ./mapas/pruebaDosUnicos_Choque.map 0 0 15 18 2 17 17 0"
     "$ejecutable ./mapas/mapa75.map 0 0 8 5 2 17 17 0 3 3 0"
     "$ejecutable ./mapas/mapa100.map 0 0 70 38 6 79 91 1 0 3 3 0"
+    "$ejecutable ./mapas/mapa100_especial.map 0 0 70 38 6 50 91 6"
 )
 tests_1=(
     "$ejecutable ./mapas/mapa30.map 0 1 6 3 0 21 15 2"
