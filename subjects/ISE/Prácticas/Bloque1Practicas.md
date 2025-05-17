@@ -1,26 +1,47 @@
 # Introducción
 
-En este documento, exploraremos la instalación de un software de máquinas virtuales (denominado aquí como **VMSW**), que crea una capa de abstracción sobre el hardware, permitiendo ejecutar varias máquinas virtuales simultáneamente en un mismo servidor. Este enfoque, conocido como **virtualización completa**, implica que el sistema operativo invitado no requiere modificaciones para operar sobre el hardware virtualizado, a diferencia de la virtualización parcial. Una alternativa moderna a esta tecnología es el uso de **contenedores** (como Docker), que comparten recursos del kernel del anfitrión con los contenedores, optimizando el uso de recursos pero sacrificando aislamiento completo.
+La virtualización es una técnica que permite crear una capa de abstracción entre el hardware y el software, facilitando la ejecución de múltiples sistemas operativos en un solo servidor físico. Puesto que en la presente asignatura no contamos con servidores físicos, emplearemos esta técnica para simular un entorno de trabajo real.
 
-Nos centraremos en la instalación de **VirtualBox** como ejemplo de VMSW, un hipervisor de tipo 2 gratuito y de código abierto, aunque también mencionaremos alternativas como **VMware** y compararemos con hipervisores de tipo 1 como **Hyper-V**.
+La virtualización se basa en la creación de máquinas virtuales (VMs), que son instancias independientes de un sistema operativo que funcionan como si fueran servidores físicos. Cada VM tiene su propio sistema operativo, aplicaciones y recursos asignados, lo que permite ejecutar diferentes entornos en un solo servidor físico. En una máquina virtual, se distinguen:
+- **Anfitrión/*Host***: El servidor físico que ejecuta el software de virtualización.
+- **Invitado/*Guest*/Virtualizado**: La máquina virtual que se ejecuta sobre el anfitrión, con su propio sistema operativo y aplicaciones.
 
-### Diferencia entre Hyper-V y VirtualBox
+En este documento, exploraremos la instalación de un software de máquinas virtuales (denominado aquí como **VMSW**, *Virtual Machine Software*). Algunos de ellos son *Oracle VirtualBox*o  *VMware* , por ejemplo.
 
-- **Hyper-V**: Hipervisor de tipo 1 desarrollado por Microsoft, integrado en Windows Professional y superiores. Opera directamente sobre el hardware sin depender de un sistema operativo anfitrión, lo que mejora el rendimiento, especialmente en entornos Windows. Es ideal para servidores y sistemas Microsoft, pero su compatibilidad está limitada a hardware soportado por Windows y no es tan flexible en entornos Linux o macOS.
-- **VirtualBox**: Hipervisor de tipo 2 de Oracle, ejecutado como una aplicación sobre un sistema operativo anfitrión (Windows, Linux, macOS). Su diseño lo hace más versátil y compatible con una amplia gama de sistemas invitados, incluyendo distribuciones Linux poco comunes. Sin embargo, al depender del anfitrión, puede tener un rendimiento inferior en escenarios de alta carga.
+Hay dos tipos de virtualización:
+- **Virtualización Completa**: El sistema operativo invitado no necesita modificaciones para funcionar sobre el hardware virtualizado. Esto permite ejecutar sistemas operativos distintos al del anfitrión sin necesidad de adaptaciones.
+- **Virtualización Parcial**: El sistema operativo invitado debe ser modificado para funcionar sobre el hardware virtualizado. Este tipo de virtualización es menos común y se utiliza principalmente en entornos específicos.
 
-**Ventajas de la virtualización** (aplicables a ambos):
-- Ejecución de plataformas distintas a la del anfitrión.
-- Mayor seguridad mediante aislamiento.
-- Uniformización de entornos para desarrollo o pruebas.
-- Amortización de recursos físicos al consolidar servidores.
-- Aprovisionamiento a demanda, base del **cloud computing**, donde los recursos pasan de ser activos fijos a servicios bajo demanda.
+Los componentes principales de la virtualización se muestran en la siguiente tabla:
+|Virtualización|
+|------------------|
+| Apliación |
+| SO Invitado |
+| HW Virtualizado |
+| Hipervisor/*VMSW* |
+| SO Anfitrión |
+| Hardware Físico |
 
-**Desventajas**: En el modelo de servicio (cloud), si un proyecto falla, los costos no se amortizan como con activos físicos, y un servicio prolongado puede superar el costo de adquirir hardware.
 
----
+Entre las ventajas de la virtualización, encontramos:
+- **Plataforma distinta a la real**: Permite ejecutar sistemas operativos diferentes al del anfitrión.
+- **Seguridad**: Como todo el flujo de datos pasa por el hipervisor, se puede aplicar un control de acceso más estricto.
+- **Uniformidad**: Facilita la creación de entornos homogéneos para desarrollo o pruebas.
+- **Amortización de los Activos de Cómputo**.
+- **Aprovisionamiento a demanda**: Permite la creación de máquinas virtuales bajo demanda, lo que es fundamental en el contexto del **cloud computing**. En vez de comprar un servidor físico y dejar de usarlo al tiempo, se paga mientras que se usa, y se puede escalar, reducir, o incluso eliminar el servicio según las necesidades del momento. Los tipos de servicios de cloud computing son:
+    - Privado: está todo alojado en nuestras infraestructuras.
+    - Público: está todo alojado en la nube de un proveedor público.
+    - Híbrido: una combinación de ambos, donde parte de la infraestructura está en la nube pública y parte en la privada.
 
-## Realización
+Entre las desventajas, podemos encontrar evidentemente que, si el proyecto tiene éxito, posiblemente los costes de un servicio de cloud computing superen los de un activo físico.
+
+
+## Oracle VirtualBox
+
+En las prácticas, emplearemos **Oracle VirtualBox**, un software de virtualización que nos permitirá crear y gestionar máquinas virtuales. Este emplea *virtualización completa*.
+
+<!-- //TODO: Por aquí -->
+
 
 ### Instalación de VirtualBox
 - **Enlace de descarga**: [VirtualBox Downloads](https://www.virtualbox.org/wiki/Downloads).
