@@ -895,5 +895,153 @@ Retiramos que es necesario tanto modificar el archivo de configración de `sshd`
 
 Como último aspecto a mencionar, hemos de destacar que, una vez establecida la conexión, no va a cerrar la sesión automáticamente. Aunque se cambie el puerto de `ssh`, aunque se cierre el puerto en el que estaba escuchando, etc. No obstante, si se cierra la sesión, no podremos volver a conectarnos hasta que se abra el puerto de nuevo. Por tanto, es recomendable hacer un `ssh -p <puerto> <usuario>@<ip>` en una terminal diferente antes de cerrar la sesión, para asegurarnos de que efectivamente funciona.
 
-## Ansible
-Ansible es una herramienta que automatiza la gestión remota de sistemas y controla su estado deseado.
+## Automatización de la Configuración con Ansible
+
+Ansible es una herramienta de automatización de configuración y gestión de sistemas muy ampliamente utilizada. Consta de:
+- **Controlador**: Dispositivo que ejecuta Ansible y controla la configuración de los nodos. En nuestro caso, es el anfitrión. Es necesario que tenga instalado Ansible.
+- **Nodos Manejados**: Dispositivos que se configuran mediante Ansible. En nuestro caso, es cada una de las VMs. Tan solo es necesario que tengan el servicio `sshd` activo y que tengan `python`, algo muy común en sistemas Linux. No es necesario que tengan Ansible instalado.
+
+Esta es una de las grandes ventajas de Ansible, que en los nodos manejados tiene muy pocas dependencias, lo que hace que sea muy usado.
+
+No se trata de un demonio, luego no se ejecuta con permisos de superusuario sino con los permisos del usuario que lo ejecuta. Al no tratarse de un demonio, posiblemente no tenga carpeta de configuración en `/etc`, sino que suele estar en `~/.ansible`. No obstante, de tener ambas, tiene preferencia la del usuario. En el archivo de configuración, `ansible.cfg`, pueden especificarse parámetros por defecto, pero no lo usaremos apenas.
+
+Un archivo esencial es el **Inventario**, que se explica en detalle [aquí](https://docs.ansible.com/ansible/latest/inventory_guide/intro_inventory.html). Este contiene la lista de nodos manejados y su configuración. Puede emplearse tanto notación `INI` (más antigua, pero mantenida por compatibilidad) como `YAML` (más moderna y recomendada). En las prácticas emplearemos notación `YAML`.
+- Este fichero contiene la información de **todos** los nodos manejados, luego no se pueden enviar comandos a nodos que no aparezcan ahí.
+- Aunque se denomina inventario, es común referirse a él como `hosts.yaml`, puesto que contiene la información de los hosts.
+- Los nodos se organizan por etiquetas, algo que nos permite administrar más de un nodo a la vez. Todos los nodos han de estar especificados en al menos una etiqueta.   
+  - Si pertenecen a más de una, en las adicionales puede aparecer solo el identificador, sin que sea necesario especificar de nuevo todos los datos.
+  - Si no se desea que pertenezca a ninguna, puede emplearse la etiqueta `ungrouped`. No obstante siempre se pertenecerá al grupo `all`, que contiene todos los nodos.
+  - Además de la dirección IP de cada nodo, pueden especificarse otros valores como el usuario que se va a emplear para conectarse. También pueden añadirse variables adicionales específicas de cada nodo/grupo. Las variables más comunes son:
+    - `ansible_host`: Dirección IP del nodo manejado.
+    - `ansible_user`: Usuario con el que se va a conectar al nodo manejado.
+    - `ansible_password`: Contraseña del usuario con el que se va a conectar al nodo manejado. No es recomendable usarla, puesto que no es segura. En su lugar, se recomienda usar conexión SSH mediante clave pública.
+    - `ansible_port`: Puerto en el que escucha el servicio SSH del nodo manejado. Por defecto es el 22.
+    - `ansible_python_interpreter`: Ruta al intérprete de Python del nodo manejado. Por defecto es `/usr/bin/python3`, pero puede cambiarse si se desea.
+
+Un ejemplo de un inventario en `YAML` sería el siguiente, aunque en la documentación puede encontrar más ejemplos:
+```yaml
+ungrouped:
+  hosts:
+    apache:
+      ansible_host: 192.168.56.2
+      ansible_user: admin
+    nginx:
+      ansible_host: 192.168.56.3
+      ansible_user: admin
+
+servers:
+  hosts:
+    apache
+    nginx
+```
+
+*Observación:* La sintaxis de YAML es muy estricta, y los errores de Ansible no son muy esclarativos. Por ejemplo:
+- Cada fichero debe comenzar por `---` para indicar que es el inicio del fichero.
+- Una línea no puede terminar en espacios en blanco.
+- La tabulación, que es muy estricta, ha de realizarse con espacios, no con tabuladores.
+
+Estos son solo algunos de los muchos errores que seguramente Ansible le dé al lector. Por ello, y para evitar dolores de cabeza, se recomienda siempre validar cualquier archivo `yaml` que generemos. Para validar el inventario en concreto, podemos usar los siguientes comandos:
+```
+$ ansible-inventory --list -i <inventario.yaml>
+$ ansible-inventory --graph -i <inventario.yaml>
+```
+
+Para validar cualquier archivo `yaml` en general, podemos usar los siguientes comandos:
+```shell
+$ yamllint *.yaml       # Genérico para YAML
+$ ansible-lint *.yaml   # Específico para Ansible
+```
+
+Por otro lado, a la hora de trabajar con Ansible, los comandos que se emplean se denominan **módulos**, y están disponibles [aquí](https://docs.ansible.com/ansible/latest/collections/index_module.html). Recomendamos muy encarecidamente emplear esta documentación, puesto que está bien explicada. Los módulos más comunes:
+- Los nativos de Ansible (`ansible.builtin`)
+- Los de `ansible.posix` (para sistemas Linux)
+- Los de `community.general` (comunidad)
+- Los de `ansible.windows` (para sistemas Windows). Nosotros no los emplearemos.
+
+Un concepto que cumplen los módulos, y que debe cumplir todo comando o *playbook* de Ansible, es el de **idempotencia**. Este concepto significa que, si se ejecuta un comando varias veces, el resultado es el mismo que si se ejecuta una sola vez. Un módulo de Ansible te garantiza un estado final, independientemente del número de veces que se ejecute.
+- Por ejemplo, si se ejecuta un comando para instalar un paquete, si este no está instalado, se instala. Si ya está instalado, no se vuelve a instalar. Esto es muy importante para la automatización, ya que evita errores y hace que los comandos sean más seguros.
+- Esto ha de tenerse especialmente en cuenta a la hora de modificar archivos o añadir líneas a archivos, puesto que en caso contrario una línea puede añadirse varias veces.
+
+### Comandos Ad-Hoc
+
+Estos están explicados en detalle [aquí](https://docs.ansible.com/ansible/latest/command_guide/intro_adhoc.html). Los comandos *ad-hoc* son comandos que se ejecutan de forma directa en los nodos manejados, como si se manejasen por línea de comandos. Estos no son para nada usuales puesto que no proporcionan automatización, pero se enseñan por motivos didácticos para comprender cómo se usa Ansible.
+
+Para ejecutar un comando *ad-hoc*, se emplea el siguiente comando:
+```shell
+$ ansible <grupo> -i <inventario.yaml> -m <módulo> -a '<argumentos>'
+```
+Otro aspecto con lo que la sintaxis es estricta es con las comillas. Emplearemos comillas simples para englobar a todos los parámetros, y comillas dobles para cada uno de los parámetros (como veremos). Vamos a emplear varios módulos *ad-hoc* para ver cómo funcionan. El inventario que usaremos es:
+```yaml
+---
+ungrouped:
+  hosts:
+    rocky:
+      ansible_host: 192.168.56.2
+      ansible_user: arturo
+```
+
+Los módulos que se verán son:
+1. **[`Ping`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/ping_module.html#ansible-collections-ansible-builtin-ping-module)**: Comprueba la conectividad entre el controlador y los nodos manejados. En la misma documentación especifica que no e hace un `ping` al uso mediante paquetes ICMP, sino que simplemente comprueba que toda la conexión funciona y está preparada para ejecutar más comandos. Su uso (explicado en la documentación) es:
+    ```shell
+    $ ansible rocky -i hosts.yaml -m ping -a 'data="Hola Mundo"'
+    rocky | SUCCESS => {
+        "ansible_facts": {
+            "discovered_interpreter_python": "/usr/bin/python3"
+        },
+        "changed": false,
+        "ping": "Hola Mundo"
+    }
+    ```
+
+    Notemos que ha funcionado de forma adecuada sin especificarle la contraseña. Esto se debe a que ya configuramos en su momento que el usuario `arturo` pudiese conectarse por SSH sin contraseña, sino empleando la clave pública. 
+    - Si no se hubiese configurado así, habría sido necesario añadir la opción `-k` (minúscula), que nos pidiese la contraseña de la contraseña SSH (es necesario instalar el paquete sshpass). No obstante, esto no es recomendado puesto que pierde la automatización buscada.
+    - Como tercera opción, se podría emplear la variable `ansible_password` en el inventario, pero esto no es seguro.
+
+2. **[`Shell`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/shell_module.html#ansible-collections-ansible-builtin-shell-module)**: Ejecuta un comando en el nodo manejado, de forma directa, en la terminal. Está muy desaconsejado, puesto que depende del nodo manejado, de la sdistibución de Linux empleada, etc. El código no es genérico y por tanto se evita.
+
+    Es el comando por defecto, y por tanto no es necesario especificar `-m shell`. No obstante, se recomienda especificarlo por claridad. Su uso (explicado en la documentación) es:
+    ```shell
+    $ ansible rocky -i hosts.yaml -m shell -a 'who'
+    rocky | CHANGED | rc=0 >>
+    arturo   pts/0        2025-05-18 17:22 (192.168.56.1)
+    ```
+    Notemos que el resultado es el mismo que si ejecutásemos `who` en la terminal del nodo manejado.
+
+3. Instamos ahora al lector a intentar ejecutar un comando que requiera de privilegios de superusuario, como listar el firewall. Veamos qué salida da:
+    ```shell
+    $ ansible rocky -i hosts.yaml -m shell -a 'firewall-cmd --list-all'
+    rocky | FAILED | rc=253 >>
+    # ...
+    Authorization failed.
+        Make sure polkit agent is running or run the application as superuser.non-zero return code
+    ```
+    Como se puede ver, no tiene permisos de superusuario. Esto se debe a que no se ha ejecutado con privilegios de superusuario. Para ello, se podría poner `sudo` delante del comando, pero no es recomendable puesto que no en todas las distribuciones de Linux se emplea dicha palabra. La opción que nos proporciona Ansible es añadir `--become` al final del comando, que se encarga de ejecutar el comando con privilegios de superusuario. Veamos ahora qué ocurre:
+    ```shell
+    $ ansible rocky -i hosts.yaml -m shell -a 'firewall-cmd --list-all' --become
+    rocky | FAILED | rc=-1 >>
+    Missing sudo password
+    ```
+    Como se puede ver, sigue dando error, puesto que no se ha especificado la contraseña. Esto se debe a que el usuario empleado requiere de contraseña para ejecutar comandos con privilegios de superusuario. Como vimos, esto se puede solventar modificando el archivo de sudoers.
+    - De no querer modificarlo, se puede especificar la opción `-K` (mayúscula), que nos pedirá la contraseña de sudo. No obstante, esto no es recomendado, puesto que se pierde la automatización buscada. La salida en este caso es:
+      ```shell
+      $ ansible rocky -i hosts.yaml -m shell -a 'firewall-cmd --list-all' --become -K
+      BECOME password: 
+      rocky | CHANGED | rc=0 >>
+      public (active)
+        target: default
+        icmp-block-inversion: no
+        interfaces: enp0s3 enp0s8
+        sources: 
+        services: cockpit dhcpv6-client http ssh
+        # ...
+      ```
+    - Como tercera opción, se podría emplear la variable `ansible_become_pass` en el inventario, pero esto no es seguro.
+
+Como consejos generales para la automatización, se recomienda entonces emplear un usuario que:
+- No requiera contraseña para conectarse por SSH, sino que se autentique mediante clave pública.
+- No requiera contraseña para ejecutar comandos con privilegios de superusuario.
+
+### Playbooks
+
+
+
