@@ -138,6 +138,9 @@ Realizamos los siguientes cambios:
     $ visudo
     ```
 
+    Además, en ese archivo podemos ver la línea `includedir /etc/sudoers.d`, que indica que se añaden todas las reglas que haya en dicha carpeta. Esto nos permite no modificar directamente el archivo `/etc/sudoers`, sino crear un nuevo archivo en la carpeta `/etc/sudoers.d` con las reglas que queramos. Esto es útil para mantener la organización y evitar conflictos al modificar el archivo principal.
+
+
     En el archivo, tenemos las siguientes líneas:
     ```shell
     ## Allows people in group wheel to run all commands
@@ -890,7 +893,7 @@ $ semanage port -a -t ssh_port_t -p tcp 22212
 $ systemctl restart sshd
 ```
 
-Retiramos que es necesario tanto modificar el archivo de configración de `sshd` como emplear el comando `semenage`, puesto que si no hacemos lo segundo el `restart` nos dará error. Una vez realizado esto, podremos acceder sin problema desde el cliente empleando el puerto especificado.
+Reiteramos que es necesario tanto modificar el archivo de configración de `sshd` como emplear el comando `semenage`, puesto que si no hacemos lo segundo el `restart` nos dará error. Una vez realizado esto, podremos acceder sin problema desde el cliente empleando el puerto especificado.
 
 
 Como último aspecto a mencionar, hemos de destacar que, una vez establecida la conexión, no va a cerrar la sesión automáticamente. Aunque se cambie el puerto de `ssh`, aunque se cierre el puerto en el que estaba escuchando, etc. No obstante, si se cierra la sesión, no podremos volver a conectarnos hasta que se abra el puerto de nuevo. Por tanto, es recomendable hacer un `ssh -p <puerto> <usuario>@<ip>` en una terminal diferente antes de cerrar la sesión, para asegurarnos de que efectivamente funciona.
@@ -1043,5 +1046,419 @@ Como consejos generales para la automatización, se recomienda entonces emplear 
 
 ### Playbooks
 
+Estos están explicados en detalle [aquí](https://docs.ansible.com/ansible/latest/getting_started/get_started_playbook.html). Los playbooks son archivos, asemejables a scripts, que contienen una serie de tareas que se ejecutan en los nodos manejados. Estos son el corazón de Ansible, y son la forma más común de automatizar tareas. Se escriben en `YAML`. Para ejecutarlos, se emplea el siguiente comando:
+```shell
+$ ansible-playbook <playbook.yaml> -i <inventario.yaml>
+```
+Este comando normalmente es introducido en un script de shell, pero se puede ejecutar directamente en la terminal.
+ Asímismo, como se vió con los archivos de inventario, la sintaxis de `YAML` es muy estricta, por lo que se recomienda siempre validar cualquier archivo `yaml` que generemos con los comandos `yamllint` o `ansible-lint` que se han visto antes. Además, en particular para los playbooks, se puede usar el siguiente comando:
+```shell
+$ ansible-playbook --syntax-check <playbook.yaml> -i <inventario.yaml>
+```
+
+Además, puesto que la sintaxis es complicada, se recomienda que se vaya comprobando el adecuado funcionamiento del playbook tras añadir cada tarea. Para facilitar la detección de errores, se recomienda asignar un nombre aclarativo a cada tarea. Además, mientras se desarrolla el playbook es recomendable ejecutarlo en un único nodo, y una vez esté terminado se puede ejecutar en todos los nodos manejados. Por último, es importante destacar de nuevo el concepto de **idempotencia**, de vital importancia en los playbooks.
+
+Es importante resaltar que, cuando se ejecuta un playbook, en primer lugar se lleva a cabo la tarea [`Gathering Facts`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/gather_facts_module.html), que se encarga de recopilar información del nodo manejado. Esta información se almacena en la variable `ansible_facts`, y contiene información como (hay muchas más, estos son algunos ejemplos):
+- `ansible_facts['os_family']`: Familia del sistema operativo. Por ejemplo, `RedHat` o `Debian`.
+- `ansible_facts['distribution']`: Distribución del sistema operativo. Por ejemplo, `Rocky` o `Ubuntu`.
+- `ansible_facts['processor_cores']`: Número de núcleos del procesador.
+- `ansible_facts['hostname']`: Nombre del nodo manejado.
+- `ansible_facts['default_ipv4']`: Dirección IP del nodo manejado.
+
+Llegados a este punto, y puesto que no es posible que el lector conozca la totalidad de los módulos, la mejor forma de aprender es viendo otros ejemplos y empleando la documentación. Destacamos que es recomendable emplear el nombre completo de los módulos para evitar colisiones (por ejemplo, en vez de `ping` se recomienda `ansible.builtin.ping`).
+
+Un ejemplo de un playbook sería el siguiente:
+```yaml
+---
+- name: <nombre del playbook>
+  hosts: <grupo>
+  vars_files:
+    - <fichero de variables.yaml>       # Es opcional
+  tasks:
+    - name: Nombre de la tarea
+      ansible.<módulo>:
+        <argumento1>: <valor1>
+        <argumento2>: <valor2>
+        # ...
+    - # ...
+...
+```
+
+#### Ejercicio Obligatorio
+
+En este apartado, resolveremos el ejercicio obligatorio de la práctica. Este será además un ejemplo muy ilustrativo de playbooks con Ansible.
 
 
+El ejercicio consiste en la configuración de dos servidores web. Un primer playbook consistirá en la configuración inicial y básica para poder administrar cualquier servidor. El objetivo del segundo playbook es la instalación y configuración de un servidor web, tanto `Nginx` como `Apache`. Partimos por tanto de dos VM con la configuración básica reflejada en la primera sección. 
+
+En primer lugar, y antes de empezar con Ansible, hemos de permitir el acceso remoto del usuario `root` por SSH, como se vió anteriormente.
+
+Abordamos por tanto ahora el primer playbook, que se encargará de la configuración inicial de los servidores. Como tan solo podemos garantizar que el nodo manejado tiene el usuario `root` y que este puede conectarse por SSH sin contraseña, el playbook que usaremos es el siguiente:
+```yaml
+---
+ungrouped:
+  hosts:
+    apache:
+      ansible_host: <ip del servidor apache>
+      ansible_user: root
+      ansible_password: <password de root en el servidor apache>
+    nginx:
+      ansible_host: <ip del servidor nginx>
+      ansible_user: root
+      ansible_password: <password de root en el servidor nginx>
+```
+
+Somos conscientes de que no es lo más seguro usar la contraseña de `root` en el inventario, pero esta primera vez (cuando el servidor no contiene la clave pública del `root`) y para evitar perder la automatización (evitamos usar `-k`), es la mejor opción. 
+
+Por otro lado, como el usuario empleado es el root, en ningún momento será necesario emplear `--become`, puesto que ya tiene privilegios de superusuario.
+
+Comenzamos ahora por tanto con el playbook en sí.
+1. **Crear un nuevo usuario llamado `admin` que pueda ejecutar comandos privilegiados sin contraseña.**
+
+    Para crear el usuario, hemos de emplear el módulo [`user`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/user_module.html#ansible-collections-ansible-builtin-user-module).
+    ```yaml
+    - name: Crear el usuario admin
+      ansible.builtin.user:
+        name: admin
+        state: present
+    ```
+    - El parámetro `state` indica el estado del usuario. En este caso, `present` indica que el usuario ha de existir. Si no existe, se crea. Si ya existe, no se hace nada. También podría usarse `absent`, que indica que el usuario ha de eliminarse.
+
+    Para permitirle ejecutar comandos con privilegios de superusuario sin contraseña, hay dos opciones:
+    
+    1. Emplear el módulo [`sudoers`](https://docs.ansible.com/ansible/latest/collections/community/general/sudoers_module.html#ansible-collections-community-general-sudoers-module). Este es un módulo de la comunidad, pero es ampliamente utilizado y está destinado a administrar los permisos de sudoers. Su uso es el siguiente:
+        ```yaml
+        - name: Permitir al usuario admin ejecutar comandos con privilegios de superusuario sin contraseña
+        community.general.sudoers:
+            name: admin
+            state: present
+            user: admin
+            commands: ALL
+            nopassword: true
+        ```
+        - `name` : Parámetro que indica el nombre del archivo de sudoers que se creará. En este caso, se creará un archivo llamado `admin` en la carpeta `/etc/sudoers.d/`.
+        - `user`: Usuario al que se le van a conceder los permisos de sudoers. También se podría emplear `group`, que indica el grupo al que se le van a conceder los permisos de sudoers.
+        - `commands`: Comandos a los que se le van a conceder los permisos de sudoers. En este caso, se le conceden permisos para ejecutar cualquier comando.
+        - `nopassword`: Indica si se puede ejecutar el comando sin contraseña. En este caso, se le concede el permiso para ejecutar cualquier comando sin contraseña.
+
+
+    2. Modificar directamente el archivo `/etc/sudoers`. Para ello, se emplea el módulo [`lineinfile`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/lineinfile_module.html#ansible-collections-ansible-builtin-lineinfile-module). Este módulo permite modificar una línea de un archivo. Su uso es el siguiente:
+        ```yaml
+        - name: Permitir que admin ejecute comandos sudo sin contraseña
+        ansible.builtin.lineinfile:
+            path: /etc/sudoers
+            state: present
+            line: "admin\tALL=(ALL)\tNOPASSWD: ALL"
+            regex: "^admin\\s+ALL="
+            validate: "visudo -cf %s"
+        ```
+        - `path`: Ruta al archivo que se va a modificar. En este caso, el archivo `/etc/sudoers`.
+        - `line`: Línea que se va a añadir al archivo. En este caso, se le concede al usuario `admin` permisos para ejecutar cualquier comando sin contraseña.
+        - `regex`: Expresión regular que se va a usar para buscar la línea en el archivo. En este caso, se busca la línea que comienza por `admin` y contiene `ALL`. Si se encuentra, se modifica. Si no se encuentra, se añade. Esto permite así la idempotencia del comando.
+        - `validate`: Comando que se va a usar para validar el archivo. Antes de escribir, se ejecuta el comando `visudo -cf %s`, que comprueba si el archivo es válido. `%s` es un archivo temporal que se emplea para la validación.
+
+    Optamos por la primera opción, puesto que es más general al no depender de dónde se ubica el archivo de `sudoers`.
+
+
+2. **Dar acceso por SSH al usuario `admin` con llave pública.**
+
+    Como vimos, hemos de añadir la clave pública del usuario `admin` al archivo `~/.ssh/authorized_keys` del usuario `admin`. Para esto, y puesto que emplearemos más de una clave, crearemos una carpeta `./keys/` en el nodo controlador, donde almacenaremos las claves públicas de los usuarios. En este caso, la clave pública del usuario `admin` se llamará `admin.pub`.
+
+    En primer lugar, hemos de garantizar que el archivo de las claves autorizadas es el por defecto, `~/.ssh/authorized_keys`. Para ello, empleamos el módulo [`lineinfile`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/lineinfile_module.html#ansible-collections-ansible-builtin-lineinfile-module) para modificar el archivo `/etc/ssh/sshd_config` del servidor. Su uso es el siguiente:
+    ```yaml
+    - name: Asegurarnos que el archivo de las claves autorizadas es el por defecto
+    ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        line: "AuthorizedKeysFile\t.ssh/authorized_keys"
+        regex: '^AuthorizedKeysFile\s+'
+        validate: "sshd -t -f %s"
+    ```
+    - `validate`: En este caso, se emplea el comando `sshd -t -f %s`, que comprueba si el archivo de configuración de `sshd` es válido.
+
+    Una vez garantizado esto, hemos de añadir la clave pública del usuario `admin` al archivo `~/.ssh/authorized_keys` del usuario `admin`. Para ello, hay dos opciones:
+    1. Emplear el módulo [`ansible.posix.authorized_key`](https://docs.ansible.com/ansible/latest/collections/ansible/posix/authorized_key_module.html#ansible-collections-ansible-posix-authorized-key-module). Este módulo, compatible con el estándar POSIX, permite añadir una clave pública al archivo `~/.ssh/authorized_keys` del usuario. Su uso es el siguiente:
+        ```yaml
+        - name: Añadir la clave pública del usuario admin al archivo authorized_keys
+        ansible.posix.authorized_key:
+            user: admin
+            state: present
+            key: "{{ lookup('ansible.builtin.file', './keys/admin.pub') }}"
+        ```
+        - `user`: Usuario al que se le va a añadir la clave pública. En este caso, el usuario `admin`.
+        - `key`: Clave pública que se va a añadir al archivo `~/.ssh/authorized_keys` del usuario. En este caso, se usa el plugin `lookup` de `file` para buscar la clave pública en el archivo `./keys/admin.pub`. Este plugin permite buscar un archivo en el controlador y usar su contenido como parámetro.
+
+    2. Modificar directamente el archivo `~/.ssh/authorized_keys` del usuario `admin`. Para ello, se emplea el módulo [`lineinfile`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/lineinfile_module.html#ansible-collections-ansible-builtin-lineinfile-module). Como ventaja, no se requiere de los módulos de POSIX, tan solo de los `builtin`.
+    Su uso es el siguiente:
+        ```yaml
+        - name: Permitir que admin se conecte por SSH sin contraseña
+        ansible.builtin.lineinfile:
+            path: "/home/admin/.ssh/authorized_keys"
+            create: true
+            mode: u+rw
+            line: "{{ lookup('ansible.builtin.file', './keys/admin.pub') }}"
+            state: present
+        ```
+        - `create`: Crea el archivo si no existe. En este caso, se crea el archivo `~/.ssh/authorized_keys` del usuario `admin` si no existe.
+        - `mode`: Permisos del archivo. En el caso de crear el archivo, se le dan dichos permisos.
+
+    Recomendamos la primera opción, puesto que se emplea un módulo específico para ello. No obstante, la segunda opción es válida y no requiere de módulos adicionales.
+
+3. **Crear el grupo `wheel` (si no existe) y permitir a sus miembros ejecutar `sudo`.**
+
+    En primer lugar, hemos de crear el grupo `wheel`. Para ello, empleamos el módulo [`group`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/group_module.html#ansible-collections-ansible-builtin-group-module). Su uso es el siguiente:
+    ```yaml
+    - name: Creamos el grupo Wheel
+      ansible.builtin.group:
+        name: wheel
+        state: present
+    ```
+
+    Una vez creado, debemos permitir a los miembros del grupo `wheel` ejecutar `sudo`. Para ello, existen las dos soluciones que antes también mencionamos.
+    1. Emplear el módulo [`sudoers`](https://docs.ansible.com/ansible/latest/collections/community/general/sudoers_module.html#ansible-collections-community-general-sudoers-module):
+        ```yaml
+        - name: Permitir que wheel ejecute comandos sudo con contraseña
+        community.general.sudoers:
+            name: wheel
+            state: present
+            group: wheel
+            commands: ALL
+            nopassword: false
+        ```
+
+    2. Modificar directamente el archivo `/etc/sudoers`. Para ello, empleamos el módulo [`lineinfile`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/lineinfile_module.html#ansible-collections-ansible-builtin-lineinfile-module):
+        ```yaml
+        - name: Permitir que wheel ejecute comandos sudo con contraseña
+        ansible.builtin.lineinfile:
+            path: /etc/sudoers
+            state: present
+            line: "%wheel\tALL=(ALL)\tALL"
+            regex: '^%wheel\s+ALL='
+            validate: "visudo -cf %s"
+        ```
+
+    Recomendamos de nuevo la primera opción.
+
+4. **Añadir una lista variable de usuarios (se proporcionará un ejemplo con al menos dos), añadiéndolos al grupo `wheel` y concediéndoles acceso por SSH con llave pública.**
+
+    Para que sea variable, al archivo `vars.yaml` se le añadirá la siguiente lista:
+    ```yaml
+    users:
+        - name: user1
+        - name: user2
+    ```
+
+    Además, crearemos las claves públicas correspondientes en la carpeta `./keys/` del controlador. Por motivos de simplicidad para la práctica, todas las claves públicas pueden ser la misma, pero en un escenario de la vida real serían las de los usuarios reales.
+
+
+    Una vez comentado esto, creamos los usuarios añadiéndolos al grupo `wheel`. Para ello, empleamos el módulo [`user`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/user_module.html#ansible-collections-ansible-builtin-user-module):
+    ```yaml
+    - name: Creamos los usuarios, añadiéndolos al grupo wheel
+    ansible.builtin.user:
+        name: "{{ item.name }}"
+        groups: wheel
+        append: true
+        state: present
+    loop: "{{ users }}"
+    ```
+    - `loop`: Permite iterar sobre una lista. En este caso, se itera sobre la lista de usuarios definida en el archivo `vars.yaml`. Para cada usuario, se crea un usuario con el nombre especificado en la lista.
+    - `append`: Indica si se ha de añadir el usuario al grupo o no. En este caso, se añade el usuario al grupo `wheel` sin eliminarlo de otros grupos a los que pertenezca.
+
+    Les damos acceso por SSH con llave pública. Como mencionamos antes, hay dos formas:
+    1. Emplear el módulo [`ansible.posix.authorized_key`](https://docs.ansible.com/ansible/latest/collections/ansible/posix/authorized_key_module.html#ansible-collections-ansible-posix-authorized-key-module):
+        ```yaml
+        - name: Permitir que los usuarios se conecten por SSH sin contraseña
+        ansible.posix.authorized_key:
+            user: "{{ item.name }}"
+            state: present
+            key: "{{ lookup('ansible.builtin.file', './keys/' + item.name + '.pub') }}"
+        loop: "{{ users }}"
+        ```
+
+    2. Modificar directamente el archivo `~/.ssh/authorized_keys` del usuario. Para ello, empleamos el módulo [`lineinfile`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/lineinfile_module.html#ansible-collections-ansible-builtin-lineinfile-module):
+        ```yaml
+        - name: Permitir que los usuarios se conecten por SSH sin contraseña
+        ansible.builtin.lineinfile:
+            path: "/home/{{ item.name }}/.ssh/authorized_keys"
+            create: true
+            mode: u+rw
+            line: "{{ lookup('ansible.builtin.file', keys_folder + item.name + '.pub') }}"
+            state: present
+        loop: "{{ users }}"
+        ```
+
+    Recomendamos de nuevo la primera opción.
+
+
+5. **Deshabilitar el acceso por contraseña sobre SSH para el usuario `root`.**
+
+    Como mencionamos, esto era una decisión arriesgada y no recomendada. Una vez realizada la configuración mínima y necesaria, bloqueamos de nuevo esta opción.
+    Para ello, empleamos el módulo [`lineinfile`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/lineinfile_module.html#ansible-collections-ansible-builtin-lineinfile-module):
+    ```yaml
+    - name: Deshabilitar el acceso SSH para root
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        line: "PermitRootLogin\tprohibit-password"
+        regex: '^PermitRootLogin\s+'
+        validate: "sshd -t -f %s"
+    ```
+
+    Reiniciamos ahora el servicio `sshd` para que los cambios surtan efecto. Para ello, empleamos el módulo [`service`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/service_module.html#ansible-collections-ansible-builtin-service-module):
+    ```yaml
+    - name: Reiniciamos el servicio SSH
+      ansible.builtin.service:
+        name: sshd
+        state: restarted
+        enabled: true
+    ```
+    - `enabled`: Indica si el servicio ha de iniciarse al arrancar el sistema.
+    - `state`: Indica el estado del servicio. En este caso, `restarted` indica que el servicio ha de reiniciarse.
+
+    Notemos que es posible que este último paso no se refleje de forma inmediata y que podamos ejecutar aún el playbook durante unos segundos, pero el usuario `root` ya no podrá acceder por SSH y, por tanto, este playbook no podrá ejecutarse de nuevo.
+
+
+Ejecutando dicho playbook, tendremos dos servidores administrables mediante Ansible con el usuario `admin`. Para realizar un ejemplo prácico, en uno de ellos instalaremos un servidor web `Nginx` y en el otro un servidor web `Apache`. Para ello, en este caso el inventario será el siguiente:
+```yaml
+---
+ungrouped:
+  hosts:
+    apache:
+      ansible_host: 192.168.56.2
+      ansible_user: admin
+    nginx:
+      ansible_host: 192.168.56.3
+      ansible_user: admin
+
+apache_server:
+  hosts:
+    apache
+nginx_server:
+  hosts:
+    nginx
+```
+A priori puede no tener mucho sentido, pero nos proporciona la versatilidad de, si queremos instalar Apache en varios servidores, simplemente añadirlos al grupo `apache_server` y ejecutar el playbook. Notemos además que el usuario ya no es `root`, sino `admin`, que es el que hemos creado.
+
+Para este playbook, y común para ambos servidores, hemos de habilitar el puerto de `HTTP` en el firewall. Para ello, empleamos el módulo [`firewalld`](https://docs.ansible.com/ansible/latest/collections/ansible/posix/firewalld_module.html#ansible-collections-ansible-posix-firewalld-module):
+```yaml
+- name: Abrir el puerto HTTP en el firewall
+  ansible.posix.firewalld:
+    service: http
+    permanent: true
+    state: enabled
+    immediate: true
+  become: true
+```
+- `immediate`: Indica si el cambio ha de aplicarse en la configuración del firewall en el momento o no (recordemos que había dos modos del firewall, la configuración del momento y la configuración en memoria).
+- `permanent`: Indica si el cambio ha de aplicarse en la configuración del firewall de forma permanente o no.
+- `state`: Indica el estado del servicio. En este caso, `enabled` indica que el servicio ha de habilitarse.
+- `become`: Notemos que hemos añadido este parámetro, puesto que hacen falta privilegios de superusuario para modificar el firewall. De no especificarlo, dará error.
+
+Una vez realizado este aspecto común, detallamos lo necesario para el servidor Apache.
+1. En primer lugar, hemos de instalar y activar el servicio/demonio de `http`. Esto se hace mediante el módulo [`package`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/package_module.html#ansible-collections-ansible-builtin-package-module):
+    ```yaml
+    - name: Instalar el servidor HTTP
+      ansible.builtin.package:
+        name: httpd
+        state: present
+      become: true
+    ```
+    Notemos que se emplea el módulo general, `package`, que se encarga de emplear el gestor de paquetes correspondiente en función del sistema operativo del nodo controlado (`apt`, `dnf`, etc.).
+
+    Para iniciar el servicio, empleamos el módulo [`service`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/service_module.html#ansible-collections-ansible-builtin-service-module):
+    ```yaml
+    - name: Iniciar el servicio HTTP
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: true
+      become: true
+    ```
+
+
+  2. Comprobamos que el servidor efectivamente está escuchando en el puerto 80. Lo logramos mediante el módulo [`lineinfile`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/lineinfile_module.html#ansible-collections-ansible-builtin-lineinfile-module):
+      ```yaml
+      - name: Puerto en el que está escuchando el servidor HTTP
+        ansible.builtin.lineinfile:
+          path: /etc/httpd/conf/httpd.conf
+          regexp: '^Listen'
+          line: "Listen\t80"
+          state: present
+        become: true
+      ```
+
+3. Comprobamos ahora la ubicación de la web en sí, de nuevo mediante el módulo [`lineinfile`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/lineinfile_module.html#ansible-collections-ansible-builtin-lineinfile-module):
+    ```yaml
+    - name: Ubicación del DocumentRoot
+      ansible.builtin.lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        regexp: '^DocumentRoot'
+        line: "DocumentRoot /var/www/html/"
+        state: present
+      become: true
+    ```
+
+4. Ahora sí, creamos en sí la web. Para ello, tendremos en el controlador un archivo denominado `apache.html`, y lo copiamos en el `index` correspondiente empleado el módulo [`copy`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/copy_module.html#ansible-collections-ansible-builtin-copy-module):
+    ```yaml
+    - name: Crear el archivo index.html
+      ansible.builtin.copy:
+        dest: "/var/www/html/index.html"
+        src: "apache.html"
+        mode: preserve
+      become: true
+    ```
+    - `mode`: Permisos del archivo. `preserve` indica que se han de conservar los permisos del archivo original. En este caso, se conservan los permisos del archivo `apache.html` del controlador.
+
+De forma análoga, describimos el playbook para el servidor `Nginx`. 
+1. De nuevo, hemos de instalar y activar el servicio/demonio de `nginx`. Esto se hace mde nuevo ediante el módulo [`package`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/package_module.html#ansible-collections-ansible-builtin-package-module):
+    ```yaml
+    - name: Instalar el servidor Nginx
+      ansible.builtin.package:
+        name: nginx
+        state: present
+      become: true
+    ```
+
+    Para iniciar el servicio, empleamos el módulo [`service`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/service_module.html#ansible-collections-ansible-builtin-service-module):
+    ```yaml
+    - name: Iniciar el servicio Nginx
+      ansible.builtin.service:
+        name: nignx
+        state: started
+        enabled: true
+      become: true
+    ```
+
+
+2. Comprobamos que el servidor efectivamente está escuchando en el puerto 80. Lo logramos mediante el módulo [`lineinfile`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/lineinfile_module.html#ansible-collections-ansible-builtin-lineinfile-module):
+   ```yaml
+   - name: Puerto en el que está escuchando el servidor Nginx
+     ansible.builtin.lineinfile:
+       path: /etc/nginx/nginx.conf
+       regexp: "^\\s*listen\\s+[^[\\s].*$"
+       line: "\tlisten\t80;"
+       state: present
+     become: true
+   ```
+
+3. Comprobamos ahora la ubicación de la web en sí, de nuevo mediante el módulo [`lineinfile`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/lineinfile_module.html#ansible-collections-ansible-builtin-lineinfile-module):
+    ```yaml
+    - name: Ubicación del Root
+      ansible.builtin.lineinfile:
+        path: /etc/nginx/nginx.conf
+        regexp: "^\\s*root\\s+"
+        line: "\troot\t /usr/share/nginx/html/;"
+      become: true
+    ```
+
+4. Ahora sí, creamos en sí la web. Para ello, tendremos en el controlador un archivo denominado `nginx.html`, y lo copiamos en el `index` correspondiente empleado el módulo [`copy`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/copy_module.html#ansible-collections-ansible-builtin-copy-module):
+    ```yaml
+    - name: Crear el archivo index.html
+      ansible.builtin.copy:
+        dest: "/usr/share/nginx/html/index.html"
+        src: "nginx.html"
+        mode: preserve
+      become: true
+    ```
+
+Una vez ejecutado este playbook, deberíamos poder acceder a la web de `Nginx` y `Apache` desde el navegador. Para ello, simplemente hemos de acceder a la dirección IP del servidor correspondiente.
