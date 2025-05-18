@@ -68,26 +68,28 @@ El demonio **sshd** gestiona conexiones SSH, proporcionando comunicación segura
 4. Tras instalar, verifica en la terminal:
  - `systemctl status sshd` (comprueba que sshd esté activo).
  - Confirma que el usuario tiene privilegios de superusuario.
+ - En caso de no haberlo hecho en el paso previo, se puede configurar el **hostname** desde la terminal con `hostname xxxMV01`. Para hacer este cambio permanente ejecute el comando `hostnamectl set-hostname xxxMV01`.
 5. Configurar el prompt:
  - (1) Edita el fichero .bashrc
- - (2) Añade una linea para modificar el prompt (por ejemplo): PS1='\[\u@\h \W\] \[\e[0;32m\]\t \W>\[\e[1;37m\]'
+ - (2) Añade una linea para modificar el prompt (por ejemplo): PS1='\[\u@\h \W\] \[\e[0;32m\]\t \W>\[\e[1;37m\]'. O uno más básico: PS1='\[\u@\h-\t \W\]$'
  - (3) Aplica los cambios a la sesión actual con source .bashrc
 6. Configura las redes en VirtualBox:
  - Adaptador 1: **NAT**.
- - Adaptador 2: **Host-Only Adapter**, con "Cable Connected" activado.
-7. Para la ip estática, usaremos la herramienta nmcli, en nuestro caso particular ejecutaremos:
+ - Adaptador 2: **Host-Only Adapter**, con "Cable Connected" activado. Es posible que VirtualBox no tenga una red de este tipo creada por defecto, en cuyo caso puede crearla en `Tools > Network Manager > Host-only Networks > Create`.
+7. Para la ip estática, usaremos la herramienta nmcli(network manager command line), en nuestro caso particular ejecutaremos:
  ```
 sudo nmcli connection modify "Wired connection 1" ipv4.addresses 192.168.56.69/24 # Para asignar la ip deseada
 sudo nmcli connection modify "Wired connection 1" ipv4.gateway 192.168.56.1 # Configuración del gateway
 sudo nmcli connection modify "Wired connection 1" ipv4.dns "8.8.8.8,8.8.4.4" # DNS 
-sudo nmcli connection modify "Wired connection 1" ipv4.method manual
-sudo nmcli connection up "Wired connection 1"
+sudo nmcli connection modify "Wired connection 1" ipv4.method manual # Para indicar que use IP estática
+sudo nmcli connection up "Wired connection 1" # Para activar la nueva configuración de la conexión
  ```
-7. Guarda y crea un **snapshot** desde el menú de snapshots como estado de referencia.
+Otra opción más cómoda es usar `nmtui` (network manager text user interface).
 8. Verifica el funcionamiento:
- - Ping desde el anfitrión a la VM y viceversa.
- - Conéctate por SSH desde el anfitrión.
+ - Ping desde el anfitrión a la VM y viceversa. Para saber la ip de tu máquina puedes usar el comando `ifconfig`.
+ - Conéctate por SSH desde el anfitrión. `ssh user@ip`
  - Haz ping a internet desde la VM (ejemplo: `ping 1.1.1.1`).
+9. Guarda y crea un **snapshot** desde el menú de snapshots como estado de referencia. (`Tools > Snapshots`)
 
 ---
 
@@ -138,8 +140,9 @@ Diferenciamos además entre RAID Hardware y Software. En el hardware, hay un con
 ## Configuración de RAID en VirtualBox
 
  - En VirtualBox, ve a Configuración > Almacenamiento > Controladora SATA.
-        Añade discos virtuales nuevos (ej. dos discos de 10 GB cada uno: /dev/sdb y /dev/sdc).
- - Crear un RAID con mdadm:
+        Crea y añade discos virtuales nuevos (ej. dos discos de 10 GB cada uno: /dev/sdb y /dev/sdc). 
+        Recuerda que se necesitan al menos 3 discos para RAID 5.
+ - Crear un RAID con `mdadm`:
         Crea un RAID 1:
 ```
 sudo mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sdb /dev/sdc
@@ -196,11 +199,11 @@ sudo mount /dev/mapper/raid1-rvar /mnt
 
 #### 4. Copiar /var en modo mantenimiento
 Dado que `/var` está en uso constante por el sistema (logs, servicios activos), una copia directa como `cp -a /var/* /mnt` podría perder datos escritos durante el proceso. Para evitarlo, cambiamos al modo mantenimiento (single-user), que expulsa a todos los usuarios y detiene procesos no esenciales:
-- Cambia al modo single-user:
+- Cambia al modo single-user (debes ser **root** para ello):
 ```
-sudo systemctl isolate runlevel1.targekt
+sudo systemctl isolate runlevel1.target
 ```
-Podemos comprobarlo con systemctl status, una vez comprobado y con todo correcto:
+Podemos comprobarlo con `systemctl status` y nos debería salir `State: maintenance`, una vez comprobado y con todo correcto:
 ```
 cp -a /var/* /mnt/
 ls /mnt
@@ -212,6 +215,9 @@ ls /mnt
 sudo umount /mnt
 ```
 - Renombra el `/var` original como respaldo (por seguridad):
+```
+mv /var /oldvar
+```
 - Crea un nuevo directorio `/var`:
 ```
 sudo mkdir /var
@@ -385,6 +391,7 @@ sudo nmap -v direccion.es
 nmap -sS xxx.xxx.xxx.xxx/24
 ```
 La primera activa el modo verbose para escanear puertos reservados (TCP) en la máquina dada y el segundo lanza un escaneo SYN hacia las 256 IPs de la red dada
+En caso de no tener esta herramienta instalada en su MV Rocky Linux, puede instalarla con `sudo dnf install nmap`
 
 ## Ejercicio Opcional
 
@@ -422,6 +429,8 @@ curl -4 icanhazip.com
 ```
 ### Apache
 
+**Nota:** Si has realizado la configuración para el servidor de Nginx, asegurate de pararlo primero con `sudo service nginx stop` para que libere el puerto 80 y así lo pueda usar tu servidor de Apache.
+
 Veamos ahora la configuración equivalente para un servidor en apache:
 ```
 sudo dnf -y install httpd
@@ -431,7 +440,7 @@ vi /etc/httpd/conf/httpd.conf
 Ahora cambiaremos las siguientes líneas:
 
 - ServerAdmin (Pondremos el correo del administrador)
-- ServerName (Pondremos el nombew o dirección del servidor)
+- ServerName (Pondremos el nombre o dirección del servidor)
 - Options (Quitaremos los índices)
 - AllowOverride (All)
 - DirectoryIndex (index.html index.php index.cgi (Según lo queramos configurar nosotros))
@@ -467,7 +476,7 @@ Para comprobar que está bien realizado, podemos tanto entrar a la página web c
 
 ## SSH
 
-SSH (Secure Shell) es una aplicación de terminal remoto seguro que reemplaza soluciones antiguas como Telnet, donde tanto el inicio de sesión como la sesión se transmitían en texto plano, sin cifrado. En SSH, tanto el proceso de autenticación como la sesión están protegidos mediante cifrado.
+SSH (Secure Shell) es una aplicación de terminal remoto segura que reemplaza soluciones antiguas como Telnet, donde tanto el inicio de sesión como la sesión se transmitían en texto plano, sin cifrado. En SSH, tanto el proceso de autenticación como la sesión están protegidos mediante cifrado.
 
 - **Uso básico**: `ssh usuario@ip/nombreDominio`.
 - **Ventaja**: Utiliza varias técnicas criptográficas para garantizar seguridad.
@@ -592,6 +601,8 @@ ssh-copy-id usuario@ip
 En el siguiente ejercicio aplicaremos estos conceptos.
 
 ## Ejercicio opcional
+**Nota:** Se aconseja crear un clon de la MV. De está forma una actuará como servidor y otra como cliente. Recordad cambiar el hostname y la dirección ip en el clone. 
+Otra opción es usar una MV como servidor y el anfitrión como cliente.
 
 ### Cambiar el puerto de SSH
 Editamos el archivo de configuración de `sshd`:
@@ -606,8 +617,22 @@ Actualizamos el firewall:
 sudo firewall-cmd --permanent --remove-service=ssh
 sudo firewall-cmd --permanent --add-port=2025/tcp
 sudo firewall-cmd --reload
+```
+
+Reiniciamos SSH: 
+```
 sudo systemctl restart sshd
 ```
+En caso de error en el archivo de configuración o de que no tiene permiso para utilizar ese puerto a pesar de ser un puerto > 1024 y estar libre, puede ser que lo esté bloqueando SELinux. Para solucionarlo:
+```
+sudo dnf install policycoreutils-python-utils
+sudo semanage port -a -t ssh_port_t -p tcp 2025
+```
+Se puede comprobar que se ha añadido correctamente con:
+```
+sudo semanage port -l | grep ssh
+```
+
 ## Configurar acceso por clave pública
 Generamos un par de claves en el cliente usando RSA (Podríamos haber usado cualquier otro método, por ejemplo para GitHub se suele usar ed25519)
 ```
@@ -629,7 +654,7 @@ Para limitar el acceso por contraseña y al usuario `root`, editamos `/etc/ssh/s
 PermitRootLogin no
 PasswordAuthentication no
 ```
-Reiniciando el servicio podremos comprobar que ya no se puede acceder mediante contraseña.
+Reiniciando el servicio podremos comprobar que ya se puede acceder sin contraseña.
 
 ## Ansible
 Ansible es una herramienta que automatiza la gestión remota de sistemas y controla su estado deseado.
