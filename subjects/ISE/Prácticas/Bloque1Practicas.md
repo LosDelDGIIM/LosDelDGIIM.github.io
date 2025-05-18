@@ -123,7 +123,36 @@ Realizamos los siguientes cambios:
     ```shell
     $ passwd <nombre_usuario>
     ```
-    Este comando nos pedirá la contraseña de dicho usuario. Por último, para darle permisos de superusuario, lo añadimos al grupo `wheel` (que tiene permisos de superusuario) con el siguiente comando:
+    Este comando nos pedirá la contraseña de dicho usuario. Por último, hemos de darle permisos de superusuario. Todo esto se regyla en archivo `/etc/sudoers`, que define qué usuarios tienen permisos de superusuario. De hecho, vemos que:
+    ```shell
+    $ sudo cat /etc/sudoers
+    ## Sudoers allows particular users to run various commands as the root user, without needing the root password.
+    ##
+    ## ...
+    ## 
+    ## This file must be edited with the 'visudo' command.
+    ```
+
+    El mismo documento indica que, para editarlo, hemos de usar el comando `visudo`. Si abrimos dicho archivo con `nano` (previamente el lector deberá instalarlo con `dnf`), veremos que hay una alerta en rojo que nos indica que no se debe editar con un editor de texto normal. Esto se debe a que `visudo` comprueba la sintaxis del archivo antes de guardarlo, evitando así errores que podrían dejar al sistema sin acceso a superusuario. Por tanto, si necestásemos editarlo (no lo necesitaremos ahora), lo haremos con el siguiente comando:
+    ```shell
+    $ visudo
+    ```
+
+    En el archivo, tenemos las siguientes líneas:
+    ```shell
+    ## Allows people in group wheel to run all commands
+    %wheel	ALL=(ALL)	ALL
+
+    ## Same thing without a password
+    # %wheel	ALL=(ALL)	NOPASSWD: ALL
+    ```
+
+    La primera línea indica que el grupo `wheel` (sabemos que es un grupo puesto que va precedido de `%`) tiene permisos de superusuario para ejecutar todos los comandos, pero ha de introducir la contraseña. La segunda línea (que está comentada para dehabilitar esa opción por seguridad) indica cómo se ha de configurar para que no se le pida la contraseña al grupo `wheel`. En el caso de que quisiésemos que no fuese a un grupo sino a un usuario, tendríamos que añadir:
+    ```shell
+    <nombre_usuario> ALL=(ALL) ALL  NOPASSWD: ALL
+    ```
+
+    Por tanto, y en lo que en este ejemplo nos atañe, para darle permisos de superusuario al usuario recién creado, lo añadimos al grupo `wheel` (que hemos visto que tiene permisos de superusuario) con el siguiente comando:
     ```shell
     $ usermod -aG wheel <nombre_usuario>
     ```
@@ -149,7 +178,7 @@ Realizamos los siguientes cambios:
     PS1=<valor_deseado>
     ```
 
-    Para modificar el archivo, posiblemente el usuario desee instalar mediante `dnf` el editor de texto `nano`. Como ejemplo de prompt interesante, podemos usar el siguiente valor:
+    Como ejemplo de prompt interesante, podemos usar el siguiente valor:
     ```shell
     PS1="[\e[1;32m\u@\H\e[1;37m-\t \w\e[0m]\$ "
     ```
@@ -272,7 +301,7 @@ Con estos conocimientos, ya podemos emplear dos comandos útiles, `lsblk` y `df`
     - Suge como una mejora de RAID 1, combinándolo con RAID 0. Si se dispone de $N+1$ discos, cada uno de $t_i$ GB, se crea un dispositivo virtual cuya capacidad es la suma de los $N$ primeros, y el $N+1$ se reserva para proporcionar seguridad (ahora se explicará). Por tanto, la capacidad del dispositivo virtual es:
     $$C = \sum_{i=1}^{N} t_i\ GB$$
 
-    - En el dispositivo "desperdiciado", se almacenan los *códigos de redundancia cíclica*. Si uno de los $N$ primeros dispositivos falla, en vez de fallar el sistema entero como ocurría con RAID 0, se emplea una función que, en base al código de redundancia y a la información presente en el resto de los discos, reconstruye el disco que ha fallado. 
+    - En el dispositivo "desperdiciado", se almacenan los *códigos de redundancia cíclica* (RCR, *Rebuild Check Rate*). Si uno de los $N$ primeros dispositivos falla, en vez de fallar el sistema entero como ocurría con RAID 0, se emplea una función que, en base al código de redundancia y a la información presente en el resto de los discos, reconstruye el disco que ha fallado. 
 
     - En términos de costes es muy bueno, puesto que tan solo se pierde un dispositivo. No obstante, las prestaciones son peores al necesitar pasar por dicha función, puesto que en los centros grandes de servidores es muy común la caída de discos.
 
@@ -528,22 +557,86 @@ Supongamos ahora un caso práctico en el que en `/var` se almacena una base de d
     Si llegados a este punto vemos que efectivamente el LV está montado en `/var`, podemos garantizar que se montará de forma automática al reiniciar el sistema. Hemos pues logrado el objetivo buscado, que era montar `/var` en un RAID 1 gestionado por LVM.
 
 
-<!-- //TODO: Por aquí. Revisar lo de ADE desde RAID -->
-
 ## Acceso Seguro al Servidor
 
-**iptables** es una utilidad de Linux para configurar el firewall a nivel de kernel. En Rocky Linux, usamos **firewalld**, un frontend más sencillo, gestionado mediante el comando `firewall-cmd`. Este se ejecuta como un servicio y podemos activarlo o verificarlo así:
-```
-sudo systemctl enable --now firewalld
-sudo systemctl status firewalld
+### Cortafuegos
+
+El cortafuegos es una herramienta de seguridad que controla el tráfico de red entrante y saliente en un sistema. El lector debe estar familiarizado con este concetp, puesto que se estudió en la asignatura de Fundamentos de Redes. Aquí, tan solo veremos cómo administrarlo en un sistema Linux.
+
+Hay que diferenciar tres niveles de abstracción:
+- **`iptables`**: Herramienta de bajo nivel Linux para gestionar el cortafuegos a nivel de kernel. Permite definir de forma directa las reglas del firewall, pero su uso es complejo. No se verá en la asignatura.
+- **`firewalld`**: Servicio/demonio de medio/alto nivel, más sencillo de usar que `iptables`, que por debajo controla `iptables`. Permite gestionar el firewall de forma más sencilla y flexible. 
+- **`firewall-cmd`**: Comando de alto nivel para interactuar con `firewalld`. Permite gestionar el firewall de forma sencilla y rápida desde la terminal. Es una especie de interfaz de usuario para `firewalld`.
+
+Para ver si el firewall está activo, podemos ejecutar los siguientes comandos:
+```shell
+$ firewall-cmd --state
+$ systemctl status firewalld
 ```
 
-### Comandos básicos de `firewall-cmd`
-- `firewall-cmd --state`: Muestra el estado del firewall.
-- `firewall-cmd --reload`: Recarga la configuración (necesario tras cambios permanentes).
-- `firewall-cmd --list-all`: Lista la configuración actual.
-- `firewall-cmd --runtime-to-permanent`: Guarda los cambios temporales como permanentes.
+Como cualquier servicio, podemos activarlo/desactivarlo haciendo uso de `systemctl`:
+```shell
+$ systemctl start firewalld   # Activa el servicio
+$ systemctl stop firewalld    # Desactiva el servicio
+```
 
+Con `firewall-cmd`, podemos trabajar de forma directa con puertos (bajo nivel), o con servicios. Los servicios son alias a puertos, y permiten gestionar el firewall de forma más sencilla. Los servicios disponibles se pueden obtener como sigue:
+```shell
+$ firewall-cmd --get-services
+```
+
+Para ver la información relativa a un servicio, como qué puerto y de qué protocolo usa, podemos ejecutar el siguiente comando:
+```shell
+$ firewall-cmd --info-service=<nombre_servicio>
+```
+
+De hecho, cada servicio tiene su archivo correspondiente, que almacena dicha información, en la carpeta siguiente:
+```shell
+$ ls -la /usr/lib/firewalld/services/
+$ cat /usr/lib/firewalld/services/<nombre_servicio>.xml
+```
+
+De hecho, para crear un servicio nuevo, tan solo deberemos crear un archivo XML en la carpeta `/usr/lib/firewalld/services/` con el nombre del servicio, y con el contenido que queramos, y posteriormente recargar el servicio `firewalld` para que lo reconozca (esto se verá más adelante).
+
+
+Para listar el estado actual del firewall, donde podemos ver los servicios y puertos abiertos (refiriéndose siempre a conexiones entrantes), podemos ejecutar el siguiente comando:
+```shell
+$ firewall-cmd --list-all
+$ firewall-cmd --list-ports       # Solo puertos
+$ firewall-cmd --list-services    # Solo servicios
+```
+
+Para modificar el firewall, es importante que no es posible realizar una modificación de forma instantánea y, además, almacenarlo en memoria para que se mantenga tras un reinicio. Hay por ello dos formas de trabajar:
+1. **Modificaciones temporales**: Se aplican de forma inmediata, pero no se guardan tras un reinicio. Tienen nombres ilustrativos, y se recomienda al lector probarlas:
+    ```shell
+    $ firewall-cmd --add-service=http
+    $ firewall-cmd --add-port=80/tcp    # Al habilitar un puerto siempre hemos de especificar el protocolo
+    $ firewall-cmd --remove-service=http
+    $ firewall-cmd --remove-port=80/tcp
+    ```
+
+    Una vez realizados todos estos cambios temporales, para guardarlos de forma permanente, hemos de ejecutar el siguiente comando:
+    ```shell
+    $ firewall-cmd --runtime-to-permanent
+    ```
+
+2. **Modificaciones permanentes**: Se guardan de forma inmediata, pero no se aplican hasta el reinicio. Para realizarlas, ha de añadirse la opción `--permanent` al comando. Por ejemplo:
+    ```shell
+    $ firewall-cmd --permanent --add-service=http
+    $ firewall-cmd --permanent --add-port=80/tcp
+    $ firewall-cmd --permanent --remove-service=http
+    $ firewall-cmd --permanent --remove-port=80/tcp
+
+    $ firewall-cmd --list-all   # Comprobamos que efectivamente no se activan de forma instantánea
+    ```
+
+    Una vez realizados todos estos cambios permanentes, si deseamos que se apliquen de forma instanea basta con:
+    ```shell
+    $ firewall-cmd --reload
+    $ systemctl reload firewalld    # Alternativa
+    ```
+
+<!--
 ## Zonas
 
 Las **zonas** son conjuntos de reglas que se aplican según el nivel de confianza de la red. Ejemplo: conexiones Ethernet más confiables que Wi-Fi. Resumen de las principales zonas:
@@ -568,126 +661,50 @@ firewall-cmd --get-default-zone
 - Añadir interfaz a zona: `firewall-cmd --zone=[zona] --add-interface=[dispositivo]`
 - Cambiar zona de interfaz: `firewall-cmd --zone=[zona] --change-interface=[dispositivo]`
 - Eliminar interfaz de zona: `firewall-cmd --zone=[zona] --remove-interface=[dispositivo]`
-
-## Puertos
-
-Para servicios comunes como **SSH**, **FTP** o **HTTPS**, es mejor gestionarlos como servicios, no como puertos. Comandos útiles:
-
-- `firewall-cmd --list-ports`: Lista puertos abiertos (alternativa: `nmap`).
-- `firewall-cmd --zone=public --add-port=[numero]/[tcp/udp]`: Abre un puerto.
-- `firewall-cmd --zone=public --remove-port=[numero]/[tcp/udp]`: Cierra un puerto.
-
-### Gestión de servicios
-- Lista de servicios disponibles: `firewall-cmd --get-services`
-- Servicios activos: `firewall-cmd --list-services`
-- Añadir servicio: `firewall-cmd --zone=public --add-service=[servicio]`
-- Eliminar servicio: `firewall-cmd --zone=public --remove-service=[servicio]`
-
-## Restricción de Acceso
-
-Para un servidor no público (ej. acceso SSH restringido), hay dos enfoques:
-
-### 1. Zona restrictiva con IP específica
-1. Usa una zona como **trusted** y asigna tu interfaz.
-2. Añade el servicio SSH: `firewall-cmd --zone=trusted --add-service=ssh`.
-3. Restringe acceso a una IP o rango:
-```
-firewall-cmd --permanent --zone=trusted --add-source=192.168.1.0/24
-```
-(Cambia `--add-source` por `--remove-source` para revertir).
-
-### 2. Combinación de zonas (público + privado)
-Para un servidor con servicios públicos (ej. web) pero SSH restringido:
-
-- **Zona public**: Interfaz asignada, con servicios como HTTP/HTTPS:
-```
-firewall-cmd --zone=public --add-service=http
-firewall-cmd --zone=public --add-service=https
-```
-- **Zona trusted**: Solo para SSH desde un rango IP:
-```
-firewall-cmd --zone=trusted --add-source=192.168.1.0/24
-firewall-cmd --zone=trusted --add-service=ssh
-```
-- Elimina SSH de la zona pública:
-```
-firewall-cmd --zone=public --remove-service=ssh
-```
-
-### Nota
-Si pierdes acceso, reinicia el servidor desde el panel de control del VPS y ajusta la configuración. Guarda cambios con `--runtime-to-permanent` solo tras probar.
+-->
 
 ### Nmap
-Nmap es una herramienta que permite explorar redes y hacer auditorías de seguridad. Está diseñado para escanear rápidamente redes grandes, tiene muchas posibilidades y configuraciones así que vamos a dar algunos comandos que pueden resultar útiles en nuestro caso de uso:
 
-```
-sudo nmap -v direccion.es
-nmap -sS xxx.xxx.xxx.xxx/24
-```
-La primera activa el modo verbose para escanear puertos reservados (TCP) en la máquina dada y el segundo lanza un escaneo SYN hacia las 256 IPs de la red dada
+**Nmap** (*Network Mapper*) es una herramienta de código abierto para la exploración de redes. Permite explorar redes, detectar hosts y puertos abiertos, etc. Se recomienda ejecutarlo con privilegios de administrador para obtener resultados más precisos.
 
-## Ejercicio Opcional
-
-### Nginx 
-Nginx es un servidor que podemos usar para montar un servidor web o un reverse proxy.
-
-Para instalar Nginx en Rocky Linux, ejecutaremos el siguiente comando que usa el gestor de paquetes dnf (recomendable hacer update antes)
-```
-sudo dnf install nginx
+Se pueden analizar tanto redes, como hosts individuales, como nombres de dominio. Por defecto realiza un escaneo de los puertos más comunes, pero se pueden especificar alternativas:
+```shell
+$ sudo nmap 192.168.56.0/24    # Escaneo de puertos (por defecto) en una red
+$ sudo nmap 192.168.56.1    # Escaneo de un puertos en un host
+$ sudo nmap -sn 192.168.56.0/24   # Escaneo de hosts en una red, haciendo tan solo PING
 ```
 
-Una vez instalado, ejecutaremos el siguiente comando para empezar el servidor web:
+Normalmente, `nmap` escanea los 1000 puetos más comunes. Se puede especificar `-p-` para escanear todos los puertos (del 0 al 65535), o `-p <puerto>` para escanear un puerto específico. Hay otras opciones como:
+- `-F` : Escaneo rápido (menos puertos). Tan solo escanea los 100 puertos más comunes.
+- `--top-ports <n>`: Escaneo de los n puertos más comunes.
 
-```
-sudo systemctl enable nginx
-sudo systemctl start nginx
-```
-Con esta configuración ya se iniciará nginx cada vez que reiniciemos la máquina virtual, deberemos tener en cuenta en el firewall este servicio:
 
-```
-sudo firewall-cmd --permanent --add-service=http 
-sudo firewall-cmd --permanent --list-all
-```
-De otra forma podemos hacer que la configuración actual sea permanente mediante:
-```
-sudo firewall-cmd --runtime-to-permanent
-```
-Que deberá incluir en la linea services: http. Además deberemos recargar la configuración para hacer el servidor accesible a visitantes externos
-```
-sudo firewall-cmd --reload
-```
-Además se sugiere el siguiente comando para saber nuestra ip publica y accediendo al servidor:
-```
-curl -4 icanhazip.com
-```
-### Apache
+### Servidores Web
 
-Veamos ahora la configuración equivalente para un servidor en apache:
-```
-sudo dnf -y install httpd
-mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf.org
-vi /etc/httpd/conf/httpd.conf
-```
-Ahora cambiaremos las siguientes líneas:
+En este apartado, y para trabajar con el firewall, veremos cómo instalar y configurar un servidor web. Para ello, usaremos dos de los servidores más comunes: Nginx y Apache. Ambos son servidores web de código abierto, pero tienen algunas diferencias. Muy a gran escala, Apache es más sencillo, antiguo y flexible, mientras que Nginx es más moderno, ligero, rápido, y eficiente. Veremos por tanto cómo instalar un servidor web de ambas formas.
 
-- ServerAdmin (Pondremos el correo del administrador)
-- ServerName (Pondremos el nombew o dirección del servidor)
-- Options (Quitaremos los índices)
-- AllowOverride (All)
-- DirectoryIndex (index.html index.php index.cgi (Según lo queramos configurar nosotros))
-
-```
-systemctl enable --now httpd
-```
-Ahora el firewall igual que antes:
-```
-sudo firewall-cmd --permanent --add-service=http 
-sudo firewall-cmd --reload
-sudo firewall-cmd --permanent --list-all
+En primer lugar, y puesto que las conexiones las realizaremos desde el host, es necesario que el firewall tenga abierto el puerto para el servicio `http`. Para ello, ejecutaremos el siguiente comando:
+```shell
+$ firewall-cmd --permanent --add-service=http
+$ firewall-cmd --reload
 ```
 
-Podemos probarlo ahora creando una página web en /var/www/html/index.html 
+Procedemos ahora a trabajar con cada uno de los servidores web. Notemos que, puesto que no disponemos de certificado para autenticarnos, no podremos usar el protocolo `https`, y por tanto nuestro navegador nos informará de que no es seguro acceder a dichas páginas web.
+
+
+#### Nginx
+
+En primer lugar, hemos de instalarnos el servicio de `Nginx`, y activarlo. Lo configuraremos además para que se inicie automáticamente al arrancar el sistema. Para ello, ejecutamos los siguientes comandos:
+```shell
+$ dnf install nginx
+$ systemctl enable nginx    # Activa el servicio al arrancar el sistema
+$ systemctl start nginx     # Iniciarlo sin necesidad de reiniciar
 ```
+
+Una vez realizado esto, podemos comprobar que efectivamente todo va correctamente accediendo a la dirección IP del servidor. Para ello, desde el anfitrión, accedemos en un navegador a la dirección IP del servidor. Si todo ha ido bien, deberíamos ver una página de bienvenida de Nginx.
+
+A continuación, buscamos cambiar la página de bienvenida por una página web personalizada. Para ello hemos de saber que la web que se muestra está ubicada en `/usr/share/nginx/html/index.html`. Para modificarla, sustituimos el contenido de dicho `index.html` por:
+```html
 <!DOCTYPE html>
 <html>
     <body>
@@ -696,180 +713,187 @@ Podemos probarlo ahora creando una página web en /var/www/html/index.html
 </html>
 ```
 
-## Ejercicio opcional
-Eligiremos uno de anteriores programas, ejecutaremos el procedimiento dado para iniciar el servidor y editaremos el archivo index.html para que muestre:
+La configuración de Nginx, como era de esperar, se encuentra en `/etc/nginx/nginx.conf`. En este archivo se pueden modificar varias configuraciones, como el puerto en el que se escucha o la ubicación de la web. Se recomienda al lector que le eche un vistazo a este archivo, donde podrá ver:
+```shell
+server {
+    listen       80;          # Puerto en el que escucha
+    listen       [::]:80;
+    server_name  _;
+    root         /usr/share/nginx/html;   # Ubicación de la web
 
-Bienvenidos a la Web de <Nombre y Apellido> en Prácticas ISE
+    # Load configuration files for the default server block.
+    include /etc/nginx/default.d/*.conf;
 
-Para comprobar que está bien realizado, podemos tanto entrar a la página web como escanear los puertos sobre el servidor y comprobar que muestra ssh y el de http
+    error_page 404 /404.html;
+    location = /404.html {
+    }
 
-# SSH y Criptografía
-
-## SSH
-
-SSH (Secure Shell) es una aplicación de terminal remoto seguro que reemplaza soluciones antiguas como Telnet, donde tanto el inicio de sesión como la sesión se transmitían en texto plano, sin cifrado. En SSH, tanto el proceso de autenticación como la sesión están protegidos mediante cifrado.
-
-- **Uso básico**: `ssh usuario@ip/nombreDominio`.
-- **Ventaja**: Utiliza varias técnicas criptográficas para garantizar seguridad.
-- **Nota**: El término SSH puede referirse tanto al cliente como al servicio. Para el servicio, a menudo se usa `sshd` (demonio de SSH). OpenSSH es la implementación más común y segura.
-
-### Servicios incluidos en OpenSSH
-- **Operaciones remotas**: `ssh` (conexión), `scp` (copia segura), `sftp` (transferencia de archivos segura).
-- **Gestión de claves**: `ssh-add`, `ssh-keysign`, `ssh-keyscan`, `ssh-keygen`.
-- **Lado del servidor**: `sshd`, `sftp-server`, `ssh-agent`.
-
-### Configuración recomendada
-- Limitar el acceso por contraseña al usuario `root`.
-- Cambiar el puerto por defecto (por ejemplo, de 22 a otro mayor a 1024).
-- Actualizar la configuración del firewall (`firewalld`) tras cambiar el puerto.
-- Automatizar comandos remotos usando claves simétricas y asimétricas.
-
----
-
-## Repaso rápido de criptografía y seguridad
-
-### Algoritmos más comunes
-
-#### Llave simétrica
-- **Definición**: Usa un secreto compartido entre las partes.
-- **Características**:
-  - Muy eficiente computacionalmente.
-  - Ideal para ciertas circunstancias.
-- **Algoritmo más usado**: DES (Data Encryption Standard), aunque hoy se considera obsoleto; AES (Advanced Encryption Standard) lo ha reemplazado ampliamente.
-- **Problema**: 
-  - Escalabilidad limitada.
-  - Solución parcial: Llaves por pares, pero sigue siendo ineficiente a gran escala.
-- **Solución**: Esto motivó el desarrollo de algoritmos de llave asimétrica.
-
-#### Llave asimétrica (clave pública - privada)
-- **Definición**: Cada entidad tiene dos claves:
-  - **Pública**: Compartida con todos.
-  - **Privada**: Secreta y personal.
-- **Problema**: Requiere obtener las claves públicas de los interlocutores, pero al ser públicas, esto es manejable.
-- **Algoritmo principal**: RSA.
-- **Desventaja**: Alto costo computacional.
-
-#### Hash
-- **Definición**: Genera un valor único (hash) a partir de datos.
-- **Ejemplo**: Familia SHA (Secure Hash Algorithm), como SHA-256.
-- **Características de un buen hash**:
-  - Un pequeño cambio en los datos produce un hash completamente diferente.
-  - No es reversible (unidireccional).
-
-### Identidad y firma digital
-- **Garantía**: Mediante firma digital.
-- **Proceso**:
-  1. Calcular el hash de la información.
-  2. Cifrar el hash con la clave privada del emisor.
-- **Verificación**:
-  1. El receptor descifra la firma con la clave pública del emisor.
-  2. Compara el hash recibido con el calculado.
-  - **Resultado**: Confirma integridad y autenticidad.
-
-### Autoridades de certificación
-- **Función**: Validan la correspondencia entre claves y personas/entidades.
-- **Ejemplo (España)**:
-  1. Generación de claves pública y privada.
-  2. Envío de la clave pública a la FNMT.
-  3. Validación presencial ante un funcionario.
-  4. Emisión de un certificado por la FNMT.
-- **Contenido del certificado**:
-  - Datos personales.
-  - Información adicional.
-  - Firmado con hash y clave privada de la FNMT.
-- **Formato común**: X.509.
-
-### Cadena de certificación
-- **Funcionamiento**: Certificados firmados recursivamente hasta un certificado raíz.
-- **Confianza**: Basada en claves públicas preinstaladas en el software.
-- **Visualización**:
-  1. Clic en el candado del navegador.
-  2. "Más información" > Ver certificado.
-  3. Seguir la cadena hasta el raíz (Configuración > Certificados).
-
----
-
-## Cómo funciona SSH
-
-SSH combina criptografía simétrica y asimétrica para garantizar confidencialidad y autenticación.
-
-### 1. Confidencialidad de la comunicación
-- **Proceso**:
-  1. El cliente inicia `ssh usuario@ip`.
-  2. El servidor envía su clave pública.
-  3. El cliente cifra la contraseña con esa clave pública y la envía.
-  4. El servidor verifica la contraseña en su base de datos y responde.
-- Al aceptar, la clave se guarda en `~/.ssh/known_hosts` para futuras conexiones.
-
-- **Cifrado de la sesión**:
-1. El servidor envía su clave pública.
-2. El cliente genera una clave de sesión (secreto simétrico), la cifra con la clave pública del servidor y la envía.
-3. Ambos usan esta clave simétrica para el resto de la comunicación, reduciendo el costo computacional.
-
-- **Nota**: La criptografía asimétrica se usa solo para autenticación e intercambio inicial; luego se pasa a simétrica por eficiencia.
-
-### 2. Acceso sin contraseña (autenticación por claves)
-- **Proceso**:
-1. El servidor tiene una base de datos de claves públicas en `~/.ssh/authorized_keys`.
-2. Al conectar, el servidor envía un "challenge" (mensaje aleatorio).
-3. El cliente firma el challenge con su clave privada y lo devuelve.
-4. El servidor verifica la firma con la clave pública del usuario y, si es correcta, permite el acceso.
-
-- **Generación de claves**:
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+    }
+}
 ```
-ssh-keygen -t rsa -b 4096
-```
-- Genera `id_rsa` (privada) y `id_rsa.pub` (pública) en `~/.ssh/`.
-- Se recomienda proteger la clave privada con contraseña.
 
-- **Envío de clave pública al servidor**:
-```
-ssh-copy-id usuario@ip
-```
-- Añade la clave pública a `~/.ssh/authorized_keys` en el servidor tras ingresar la contraseña por última vez.
+#### Apache
 
-- **Uso**: Ahora se puede conectar sin contraseña:
-En el siguiente ejercicio aplicaremos estos conceptos.
+Veamos ahora la configuración equivalente para un servidor en apache:
+```shell
+$ dnf install httpd
+$ systemctl enable httpd
+$ systemctl start httpd
+```
 
-## Ejercicio opcional
+Si el lector ha intentado ejecutar directamente esos tres comandos, verá que no ha funcionado. Esto se debe a que no se puede tener el servicio `httpd` y `nginx` al mismo tiempo escuchando en el mismo puerto. Por tanto, si se ha instalado `nginx`, hemos de pararlo o cambiarlo de puerto. En este caso lo pararemos por simplicidad:
+```shell
+$ systemctl stop nginx
+$ systemctl disable nginx
+```
 
-### Cambiar el puerto de SSH
-Editamos el archivo de configuración de `sshd`:
-```
-sudo vi /etc/ssh/sshd_config
-```
-- Buscamos la línea `Port 22` y la sustituimos por un puerto mayor a 1024, por ejemplo, `2025`:
-- Verificamos en `/etc/services` que el puerto no esté en uso por otra aplicación.
+Una vez realizado esto e iniciado el servicio `httpd`, podemos comprobar que efectivamente todo va correctamente accediendo a la dirección IP del servidor. Para ello, desde el anfitrión, accedemos en un navegador a la dirección IP del servidor. Si todo ha ido bien, deberíamos ver una página de bienvenida de Apache.
 
-Actualizamos el firewall:
-```
-sudo firewall-cmd --permanent --remove-service=ssh
-sudo firewall-cmd --permanent --add-port=2025/tcp
-sudo firewall-cmd --reload
-sudo systemctl restart sshd
-```
-## Configurar acceso por clave pública
-Generamos un par de claves en el cliente usando RSA (Podríamos haber usado cualquier otro método, por ejemplo para GitHub se suele usar ed25519)
-```
-ssh-keygen -t rsa -b 4096
-ssh-copy-id -p 2025 usuario@<IP-del-servidor>
-```
-- Sustituye `usuario` por el nombre del usuario remoto y `<IP-del-servidor>` por la dirección IP real.
 
-### Validación
-Comprobamos la configuración ejecutando un comando remoto:
-```
-ssh -p 2025 usuario@<IP-del-servidor> "ls -la /"
-```
-- Esto debería mostrar el contenido completo del directorio raíz (`/`) sin pedir contraseña.
+En este caso, la página web se encuentra en `/var/www/html/index.html`. Podemos modificarla como hicimos en el caso de Nginx.
 
-### Seguridad adicional (opcional)
-Para limitar el acceso por contraseña y al usuario `root`, editamos `/etc/ssh/sshd_config`:
+La configuración de Apache se encuentra en `/etc/httpd/conf/httpd.conf`. En este archivo se pueden modificar varias configuraciones, como el puerto en el que se escucha o la ubicación de la web. Se recomienda al lector que le eche un vistazo a este archivo. Algunas de las líneas que podrá ver y modificar son:
+```shell
+...
+Listen 80
+...
+DocumentRoot "/var/www/html"
+...
 ```
-PermitRootLogin no
-PasswordAuthentication no
+
+
+### SSH
+
+SSH *(Secure Shell)* es un protocolo de red que permite la comunicación segura entre dos dispositivos mediante una terminal remota segura. Antes existían otros protocolos como `telnet`, pero este enviaba toda la información en texto plano (incluida la información del login), por lo que no es una opción segura. SSH en cambio cifra toda la información, tanto el proceso de login como el de dsesón, luego es seguro. De hecho, en lo que llevamos de práctica hemos estado accediendo a la VM a través de SSH.
+
+#### Resumen Criptografía
+Veamos ahora un pequeño repaso de cifrado y seguridad, aunque recomendamos al lector leer el Temario de Fundamentos de Redes si no está familiarizado con estos conceptos. Hay dos algoritmos de cifrado:
+- **Cifrado Simétrico**: Entre cada par de entidades se comparte una clave secreta. Al cifrar con cierta clave, solo el receptor que tenga la misma clave podrá descifrarlo. El algoritmo más empleado se denomina `DES`.
+    - Este tipo de cifrado es muy eficiente, pero tiene el problema de la escalabilidad, ya que cada par de entidades ha de compartir una clave secreta. Por ello, se desarrolló el cifrado asimétrico.
+- **Cifrado Asimétrico**: Cada entidad tiene dos claves, una pública y otra privada. La clave pública se comparte con todos, mientras que la privada es secreta. Cuando se cifra con la clave pública, solo el receptor que tenga la clave privada podrá descifrarlo. El algoritmo más empleado se denomina `RSA`.
+    - Este tipo de cifrado es muy seguro, pero tiene el problema de la eficiencia, ya que es mucho más costoso computacionalmente.
+
+Además, se emplean los resúmenes llamados `hash`, que son funciones unidireccionales que generan un valor único a partir de unos datos. Estos permiten comprobar la integridad de los datos, ya que un pequeño cambio en los datos genera un hash completamente diferente. Los algoritmos se denominan `SHA-n` (*Secure Hash Algorithm*), donde `n` es el número de bits del hash. Por ejemplo, `SHA-256` genera un hash de 256 bits.
+
+Por tanto, para garantizar la integridad de los documentos se emplea la firma dital. Esta consiste en, a partir de una información, calcular su hash y cifrar todo con la llave privada. Cuando el receptor recibe el mensaje, descifra el hash con la llave pública del emisor y compara el hash recibido con el calculado. Si son iguales, se garantiza la integridad del mensaje y que ha sido enviado por el emisor.
+
+Todo esto tiene un último problema: nada nos garantiza que las claves públicas y privadas efectivamente sean de quien dicen ser. Para ello, se emplean las Autoridades de Certificación (AC). Estas son entidades de confianza que validan la correspondencia entre claves y personas/entidades. Por ejemplo, en España la FNMT (Fábrica Nacional de Moneda y Timbre) es la AC oficial. Estas emiten un certificado que contiene la clave pública y los datos del propietario, firmado con la clave privada de la AC para garantizar que ese certificado es válido. Cuando un usuario recibe un certificado, hay dos opciones.
+- Si confía en la AC, puede confiar en el certificado.
+- Si no conoce la AC, comprueba quién ha certificado a dicha AC (ya que estas se autorizan entre sí). Se repite por tanto el proceso hasta llegar a una AC raíz, que es de confianza (caso anterior).
+
+Por ejemplo, para ver todo esto, en cualquier navegador accedemos a una web mediante el protocolo `https`, por ejemplo `https://www.ugr.es`. Para acceder al certificado depende del navegador, pero siempre podremos ver los detalles de esto, la jerarquía de Autenticación, etc. En [este enlace](chrome://certificate-manager/crscerts) se pueden ver las AC raíz en las que confía el navegador de Google Chrome.
+
+
+#### Conexión SSH mediante usuario y contraseña
+
+Veamos ahora cómo funciona SSH en concreto. As importante destacar dos entidades:
+- **Cliente**: Máquina que inicia la conexión SSH. En nuestro caso, es el ordenador anfitrión.
+- **Servidor**: Máquina que recibe la conexión SSH. En nuestro caso, es la VM.
+
+Evidentemente, es necesario que el servicio `sshd` esté ejecutándose en el servidor. Para conectarnos, ejecutamos el siguiente comando desde el cliente:
+```shell
+$ ssh <usuario>@<ip>
+$ ssh -u <usuario> <ip>   # Alternativa, pero no es común
 ```
-Reiniciando el servicio podremos comprobar que ya no se puede acceder mediante contraseña.
+
+Por defecto, se conecta al puerto `22/tcp` (puerto por defecto de SSH). Si el servidor está escuchando en otro puerto, hemos de especificarlo con la opción `-p`:
+```shell
+$ ssh -p <puerto> <usuario>@<ip>
+```
+
+En ese momento, el servidor responde con su clave pública para autenticarse. Como no hay AC, el cliente contiene en el archivo `~/.ssh/known_hosts` las claves públicas de los servidores de confianza a los que se ha conectado, junto con su dirección IP. De esta forma:
+- Cuando es la primera vez que se conecta, el cliente pregunta si confía en la clave pública del servidor. Si el usuario acepta, se añade al archivo `known_hosts`.
+- Si se detecta que ya se ha conectado a esa dirección IP pero la clave pública no es la misma, se impide la conexión y se avisa de un posible ataque de *man-in-the-middle*. En este caso, será el usurio el que tendrá que modificar manualmente el archivo `known_hosts` para eliminar la clave pública del servidor.
+
+Una vez recibida la clave pública del servidor, el cliente envía su contraseña para iniciar sesión cifrada con la clave pública del servidor. El servidor comprueba la contraseña y, si las credenciales son correctas, se ha establecido la coneión. Como el cifrado asimétrico es muy costoso computacionalmente, en ese momento se establece una clave simétrica de sesión compartida por ambos, y se utiliza para cifrar el resto de la sesión.
+
+
+#### Conexión SSH mediante clave pública
+
+Supongamos ahora que el usuario no quiere introducir la contraseña cada vez que se conecta. Para ello, es posible usar claves asimétricas para autenticarse frente al servidor. En primer lugar, hemos de crearlas con el comando `ssh-keygen` (en el caso de no tener). Es recomendable siempre ponerles una contraseña, pero para evitar tener que introducirla cada vez, podemos usar el comando `ssh-agent` para almacenar la clave privada en memoria, y este escribirá por nosotros la contraseña.
+
+Una vez las tengamos generadas (este proceso es muy común y es posible que el lector ya las tuviese, puesto que se usan por ejemplo en `GitHub`), podemos conectarnos al servidor sin necesidad de introducir la contraseña. Para ello, el servidor dispone del archivo `~/.ssh/authorized_keys`, donde se almacenan las claves públicas de los clientes autorizados a conectarse sin conectarse. Para añadir la clave pública del cliente al servidor, hay dos opciones:
+1. Copiar la clave pública manualmente al servidor, y añadirla al archivo `~/.ssh/authorized_keys` del usuario con el que queremos conectarnos. Esta opción está desactonsejada, puesto que está sujeta a errores humanos.
+2. Usar el comando `ssh-copy-id`, que se encarga de copiar la clave pública al servidor y añadirla al archivo `~/.ssh/authorized_keys` del usuario con el que queremos conectarnos. Esta es la opción recomendada.  Desde el cliente:
+    ```shell
+    $ ssh-copy-id <usuario>@<ip>
+    ```
+    Tras introducir la contraseña, el cliente se conecta al servidor y añade la clave pública al archivo `~/.ssh/authorized_keys` del usuario con el que queremos conectarnos.
+
+Una vez realizada esta operación, el cliente puede conectarse al servidor como hemos descrito antes sin necesidad de introducir la contraseña.
+
+
+Por último, cabe destacar que, si al comando SSH se le añade final un comando como parámetro, este se ejecutará en el servidor sin necesidad de abrir una terminal remota. Por ejemplo:
+```shell
+$ ssh arturo@rockybase ls -la
+total 24
+drwx------. 3 arturo arturo  111 May 18 13:51 .
+drwxr-xr-x. 3 root   root     20 May 17 19:43 ..
+-rw-------. 1 arturo arturo 5003 May 18 13:50 .bash_history
+-rw-r--r--. 1 arturo arturo   18 May 16  2022 .bash_logout
+-rw-r--r--. 1 arturo arturo  141 May 16  2022 .bash_profile
+-rw-r--r--. 1 arturo arturo  537 May 17 20:03 .bashrc
+-rw-------. 1 arturo arturo   46 May 18 12:32 .lesshst
+drwx------. 2 arturo arturo   29 May 18 13:51 .ssh
+```
+
+Este es el inicio de la automatización. Notemos que, si en un servidor ponemos un firewall muy restrictivo en el que tan solo permitamos acceso por SSH, podremos administrarlo sin problema como hemos visto, pero será muy seguro.
+
+
+#### Estructura de archivos de SSH
+
+El servicio SSH cuenta con dos carpetas importantes.
+1. `~/.ssh/`: Carpeta del usuario que contiene las claves públicas y privadas del usuario. Además, contiene:
+    - `authorized_keys`: En el servidor, contiene las claves públicas de los clientes autorizados a conectarse sin contraseña.
+    - `known_hosts`: En el cliente, contiene las claves públicas de los servidores a los que se ha conectado.
+2. `/etc/ssh/`: Carpeta del sistema que contiene la configuración del servicio SSH. Notemos que se puede configurar tanto el cliente como el servidor, y es importante tener en cuenta qué se está configurando.
+   - `sshd_config`: Archivo de configuración del *servidor* SSH. Termina en `d` por referirse al demonio `sshd`. Algunos aspectos importantes de este son:
+       - **`Port`**: Puerto en el que escucha el servidor SSH. Por defecto es el 22.
+       - **`PermitRootLogin`**: Permite o no el acceso por SSH al usuario `root`. Además de las opciones de `yes` o `no`, destaca la opción `prohibit-password`, que permite el acceso por SSH al usuario `root`, pero no permite el acceso por contraseña. Solo permite el acceso por clave pública.
+   - `ssh_config`: Archivo de configuración del *cliente* SSH.
+
+#### Ejercicio Adicional
+
+Supongamos ahora que queremos cambiel puerto en el que escucha el servicio SSH. Para ello, en primer lugar hemos de detectar un puerto que no esté en uso, para evitar colisiones. Para ello, el archivo `/etc/services` contiene una lista de los puertos y servicios que están en uso. Por comodidad, recomendamos filtrar con `grep` para buscar el puerto que queremos.
+```shell
+$ cat /etc/services | grep <puerto>
+```
+
+Una vez detectado un puerto libre, y antes de cambiar la configuración de SSH, hemos de modificar el firewall para que permita el acceso a ese puerto.
+```
+$ firewall-cmd --add-port=<puerto>/tcp
+```
+
+Una vez abierto dicho puerto, procedemos a cambiarlo. Si intentamos modificar el puerto en el archivo de configuración `/etc/ssh/sshd_config`, vemos:
+```shell
+# If you want to change the port on a SELinux system, you have to tell
+# SELinux about this change.
+# semanage port -a -t ssh_port_t -p tcp #PORTNUMBER
+#
+#Port 22
+```
+Por tanto, para cambiar el puerto, además de modificar el archivo de configuración, hemos de emplear el comando `semanage` como ahí especifica. Notemos que este comando tendremos que instalarlo, y para ello hemos de hacer uso de `dnf provides`.
+```shell
+$ dnf provides semanage
+Rocky Linux 9 - BaseOS                                                                                  2.0 MB/s | 2.3 MB     00:01    
+Rocky Linux 9 - AppStream                                                                               5.2 MB/s | 8.4 MB     00:01    
+Rocky Linux 9 - Extras                                                                                   21 kB/s |  16 kB     00:00    
+policycoreutils-python-utils-3.6-2.1.el9.noarch : SELinux policy core python utilities
+Repo        : appstream
+Matched from:
+Filename    : /usr/sbin/semanage
+
+$ dnf install policycoreutils-python-utils-3.6-2.1.el9.noarch
+$ semanage port -a -t ssh_port_t -p tcp 22212
+$ systemctl restart sshd
+```
+
+Retiramos que es necesario tanto modificar el archivo de configración de `sshd` como emplear el comando `semenage`, puesto que si no hacemos lo segundo el `restart` nos dará error. Una vez realizado esto, podremos acceder sin problema desde el cliente empleando el puerto especificado.
+
+
+Como último aspecto a mencionar, hemos de destacar que, una vez establecida la conexión, no va a cerrar la sesión automáticamente. Aunque se cambie el puerto de `ssh`, aunque se cierre el puerto en el que estaba escuchando, etc. No obstante, si se cierra la sesión, no podremos volver a conectarnos hasta que se abra el puerto de nuevo. Por tanto, es recomendable hacer un `ssh -p <puerto> <usuario>@<ip>` en una terminal diferente antes de cerrar la sesión, para asegurarnos de que efectivamente funciona.
 
 ## Ansible
 Ansible es una herramienta que automatiza la gestión remota de sistemas y controla su estado deseado.
