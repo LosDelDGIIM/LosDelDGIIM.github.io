@@ -1,302 +1,536 @@
-# Introducción
+# Bloque 1: Instalación y Configuración de Sistema Operativo y Servicios
 
-En este documento, exploraremos la instalación de un software de máquinas virtuales (denominado aquí como **VMSW**), que crea una capa de abstracción sobre el hardware, permitiendo ejecutar varias máquinas virtuales simultáneamente en un mismo servidor. Este enfoque, conocido como **virtualización completa**, implica que el sistema operativo invitado no requiere modificaciones para operar sobre el hardware virtualizado, a diferencia de la virtualización parcial. Una alternativa moderna a esta tecnología es el uso de **contenedores** (como Docker), que comparten recursos del kernel del anfitrión con los contenedores, optimizando el uso de recursos pero sacrificando aislamiento completo.
+- **Autor**: Arturo Olivares Martos
+- **Autor**: Miguel Ángel de la Vera
 
-Nos centraremos en la instalación de **VirtualBox** como ejemplo de VMSW, un hipervisor de tipo 2 gratuito y de código abierto, aunque también mencionaremos alternativas como **VMware** y compararemos con hipervisores de tipo 1 como **Hyper-V**.
 
-### Diferencia entre Hyper-V y VirtualBox
+## Introducción
 
-- **Hyper-V**: Hipervisor de tipo 1 desarrollado por Microsoft, integrado en Windows Professional y superiores. Opera directamente sobre el hardware sin depender de un sistema operativo anfitrión, lo que mejora el rendimiento, especialmente en entornos Windows. Es ideal para servidores y sistemas Microsoft, pero su compatibilidad está limitada a hardware soportado por Windows y no es tan flexible en entornos Linux o macOS.
-- **VirtualBox**: Hipervisor de tipo 2 de Oracle, ejecutado como una aplicación sobre un sistema operativo anfitrión (Windows, Linux, macOS). Su diseño lo hace más versátil y compatible con una amplia gama de sistemas invitados, incluyendo distribuciones Linux poco comunes. Sin embargo, al depender del anfitrión, puede tener un rendimiento inferior en escenarios de alta carga.
+La virtualización es una técnica que permite crear una capa de abstracción entre el hardware y el software, facilitando la ejecución de múltiples sistemas operativos en un solo servidor físico. Puesto que en la presente asignatura no contamos con servidores físicos, emplearemos esta técnica para simular un entorno de trabajo real.
 
-**Ventajas de la virtualización** (aplicables a ambos):
-- Ejecución de plataformas distintas a la del anfitrión.
-- Mayor seguridad mediante aislamiento.
-- Uniformización de entornos para desarrollo o pruebas.
-- Amortización de recursos físicos al consolidar servidores.
-- Aprovisionamiento a demanda, base del **cloud computing**, donde los recursos pasan de ser activos fijos a servicios bajo demanda.
+La virtualización se basa en la creación de máquinas virtuales (VMs), que son instancias independientes de un sistema operativo que funcionan como si fueran servidores físicos. Cada VM tiene su propio sistema operativo, aplicaciones y recursos asignados, lo que permite ejecutar diferentes entornos en un solo servidor físico. En una máquina virtual, se distinguen:
+- **Anfitrión/*Host***: El servidor físico que ejecuta el software de virtualización.
+- **Invitado/*Guest*/Virtualizado**: La máquina virtual que se ejecuta sobre el anfitrión, con su propio sistema operativo y aplicaciones.
 
-**Desventajas**: En el modelo de servicio (cloud), si un proyecto falla, los costos no se amortizan como con activos físicos, y un servicio prolongado puede superar el costo de adquirir hardware.
+En este documento, exploraremos la instalación de un software de máquinas virtuales (denominado aquí como **VMSW**, *Virtual Machine Software*). Algunos de ellos son *Oracle VirtualBox*o  *VMware* , por ejemplo.
 
----
+Hay dos tipos de virtualización:
+- **Virtualización Completa**: El sistema operativo invitado no necesita modificaciones para funcionar sobre el hardware virtualizado. Esto permite ejecutar sistemas operativos distintos al del anfitrión sin necesidad de adaptaciones.
+- **Virtualización Parcial**: El sistema operativo invitado debe ser modificado para funcionar sobre el hardware virtualizado. Este tipo de virtualización es menos común y se utiliza principalmente en entornos específicos.
 
-## Realización
+Los componentes principales de la virtualización se muestran en la siguiente tabla:
+|Virtualización|
+|------------------|
+| Apliación |
+| SO Invitado |
+| HW Virtualizado |
+| Hipervisor/*VMSW* |
+| SO Anfitrión |
+| Hardware Físico |
+
+
+Entre las ventajas de la virtualización, encontramos:
+- **Plataforma distinta a la real**: Permite ejecutar sistemas operativos diferentes al del anfitrión.
+- **Seguridad**: Como todo el flujo de datos pasa por el hipervisor, se puede aplicar un control de acceso más estricto.
+- **Uniformidad**: Facilita la creación de entornos homogéneos para desarrollo o pruebas.
+- **Amortización de los Activos de Cómputo**.
+- **Aprovisionamiento a demanda**: Permite la creación de máquinas virtuales bajo demanda, lo que es fundamental en el contexto del **cloud computing**. En vez de comprar un servidor físico y dejar de usarlo al tiempo, se paga mientras que se usa, y se puede escalar, reducir, o incluso eliminar el servicio según las necesidades del momento. Los tipos de servicios de cloud computing son:
+    - Privado: está todo alojado en nuestras infraestructuras.
+    - Público: está todo alojado en la nube de un proveedor público.
+    - Híbrido: una combinación de ambos, donde parte de la infraestructura está en la nube pública y parte en la privada.
+
+Entre las desventajas, podemos encontrar evidentemente que, si el proyecto tiene éxito, posiblemente los costes de un servicio de cloud computing superen los de un activo físico.
+
+
+## Oracle VirtualBox
+
+En las prácticas, emplearemos **Oracle VirtualBox**, un software de virtualización que nos permitirá crear y gestionar máquinas virtuales. Este emplea *virtualización completa*.
+
 
 ### Instalación de VirtualBox
 - **Enlace de descarga**: [VirtualBox Downloads](https://www.virtualbox.org/wiki/Downloads).
+- **Para Ubuntu**:
+  ```
+  sudo apt install virtualbox
+  ```
 - **Para Arch Linux**:
- ```
-sudo pacman -S virtualbox
+  ```
+  sudo pacman -S virtualbox
+  ```
+
+
+
+A continuación, hemos de crear una máquina virtual, que simbolizará nuestro servidor. Para ello, como en cualquier ordenador, hemos de elegir el Sistema Operativo previamente. El que usaremos en las prácticas será una distribución minimal de **Rocky Linux**, una distribución de Linux basada en Red Hat Enterprise Linux (RHEL). Optamos por esta distribución por ser sencilla y por requerir pocos recursos. En el caso de necesitar documentación, se recomienda consultar la documentación de Rocky Linux, en su defecto la de CentOS o RHEL, y también podrá ser útil la documentación de Fedora.
+- La ISO que se empleará, con el objetivo de emplear una versión estable y común (y poder así compartir dudas) es [esta](http://atcproyectos.ugr.es/esriie/Rocky-9.0-20220805.0-x86_64-minimal.iso), proporcionada por la UGR.
+- En su defecto, se puede descargar la última versión estable de [Rocky Linux](https://rockylinux.org/download).
+
+Creamos ahora VM. Debemos seguir la configuración por defecto, eligiendo la ISO que hemos descargado. Tras crearla, arrancamos la VM para configurarla inicialmente. En la configuración, hemos de asignar la contraseña del usuario `root`, encargado de administrar el sistema. Como consejo, y debido a que tan solo nosotros podremos tener acceso a esta VM, recomendamos emplear contraseñas sencillas como `root`, aunque esto evidentemente no es recomendable en un entorno de producción. Tras un tiempo de espera, nos pedirá que reiniciemos el sistema. Tras reiniciar e iniciar sesión con el usuario `root` para comprobar que todo ha funcionado correctamente, apagaremos la VM con el comando `poweroff`. Ya tenemos creado nuestro servidor virtualizado.
+
+
+### Clonaciones y Snapshots
+
+Antes de avanzar con la configuración del servidor, es necesario hablar de dos conceptos generales de virtualización: **clonaciones** y **snapshots**. Ambas son formas distintas de proteger la máquina virtual frente a cambios no deseados, y permiten volver a un estado anterior de la máquina. Sin embargo, tienen diferencias clave:
+- **Clonaciones**: Como su propio nombre indica, crean una copia de la máquina virtual. Esta copia es independiente de la original y puede ser utilizada como una nueva máquina virtual. Las clonaciones son útiles para crear entornos de prueba o desarrollo a partir de una configuración existente.
+  > En ciertos momentos de la práctica, especialmente con el RAID, esta forma de protección dará problemas. Se preferirá por tanto el uso de **snapshots**.
+  - **Clonación completa**: Crea una copia exacta de la máquina virtual, incluyendo su disco duro virtual y su configuración. Esta clonación es independiente de la original y puede ser utilizada como una nueva máquina virtual.
+  - **Clonación vinculada**: Crea una copia de la máquina virtual que comparte el disco duro virtual con la original. Esto significa que los cambios realizados en la clonación no afectan a la original, pero ambas máquinas comparten el mismo espacio en disco. Esta opción es útil para ahorrar espacio en disco, pero puede ser menos eficiente en términos de rendimiento.
+
+- **Snapshots**: Guardan el estado actual de la máquina virtual, incluyendo su configuración. Esto permite volver a un estado anterior en cualquier momento.
+
+Notemos que el uso de ambas herramientas ha de ser limitado, pues consumen una gran cantidad de recursos en memoria. Recomendamos aun así que el lector se familiarice con ambos, especialmente con los `snapshots`.
+
+
+### Configuración de la red
+
+En este apartado, vamos a simular la red en la que estarán intercomunicados el ordenador anfitrión y el servidor virtualizado. Para ello, en primer lugar hemos de crear la red. Desde el programa de VirtualBox, accedemos a los ajusted de red:
+```
+File -> Tools -> Network Manager
 ```
 
-### Alternativa: VMware
-- **Enlace**: [VMware Workstation y Fusion](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion)
+En esta pestaña, en el apartado de `Host-Only Networks` (más delante desarrollaremos por qué en este) configuramos la red. Tras crearla, nos fijamos en la dirección de la red asignada. En nuestro caso (y a ella haremos referencia), nuestra red es `192.168.56.0/24` y se llama `vboxnet0`. En las propiedades de la red, podemos configurar el adaptador y el Servidor DHCP.
+- El adaptador debemos configurarlo manualmente, para evitar así cambios inesperados en la configuración de la red. Ahí vemos la dirección IP del *anfitrión* (en nuestro caso `192.168.56.1`). Cuando guardemos los cambios, podemos comprobar en nuestro anfitrión que está conectado a esta red nueva. Esto podremos verlo, en Ubuntu, como sigue:
+  ```shell
+  $ ifconfig
+  ```
+- El servidor DHCP debemos desactivarlo, puesto que deseamos trabajar con direcciones IP estáticas.
 
----
-
-# Instalación de Rocky Linux
-
-Utilizaremos el **VMSW** (por ejemplo, VirtualBox) para instalar **Rocky Linux** en modo mínimo, sin entorno gráfico, incluyendo el demonio **sshd**. La instalación será por defecto, pero crearemos una cuenta no root con privilegios administrativos. La máquina tendrá **dos tarjetas de red**, configuradas teniendo en cuenta:
-
-### Modos de red en VirtualBox
+Llegados a este punto, tenemos configurada la red en la que está el anfitrión. Debemos ahora configurar la VM. Para ello, en las preferencias de esta, accedemos al apartado de `Network`. Como vemos, puede tener distintos tipos de adaptadores, explicados en detalle [aquí](https://www.virtualbox.org/manual/UserManual.html#networkingdetails) con una tabla muy ilustrativa. Los principales tipos de adaptadores, y los que son necesarios que sepamos, son:
 - **Not Attached**: Simula una tarjeta sin conexión, como si no hubiera cable.
-- **NAT**: Ideal para navegación y descargas básicas; traduce direcciones de red del invitado al anfitrión.
-- **NAT Network**: Permite conexiones salientes en una red interna.
-- **Bridged Networking**: Conecta la VM directamente a la red física del anfitrión, útil para servidores o simulaciones.
-- **Internal Networking**: Crea una red aislada visible solo para las VMs seleccionadas.
-- **Host-Only Networking**: Conecta el anfitrión y las VMs sin acceso externo, usando una interfaz virtual.
-- **Cloud Networking**: Conecta la VM a una subred en un servicio en la nube.
-- **Generic Networking**: Modos avanzados con control de drivers específicos.
+- **NAT**: VirtualBox emula un router que realiza NAT, luego la VM tiene acceso al Host y a Internet, pero no al revés. Ideal para navegación y descargas básicas.
+- **Bridged**: Conecta la VM directamente a la red física del anfitrión, teniendo por tanto los mismos servicios que el anfitrión. Por motivos de seguridad, en la UGR no funciona puesto que hay dos direcciones IP distintas con la misma dirección MAC. Es una opción que da muchas opciones, pero es más arriesgada. En estas prácticas no la usaremos.
+- **Host-Only**: Se crea una red virtual (similar a `loopback`) que conecta el anfitrión y las VMs, pero no permite acceso a Internet. Crea además una tarjeta virtual en el anfitrión y en cada VM.
 
-Configuraremos una tarjeta en **NAT** (para acceso a internet) y otra en **Host-Only** con una **IP estática** (para comunicación entre el anfitrión y el invitado). También estableceremos un **hostname** (nombre legible para identificar la máquina).
+Nuestra máquina por defecto tiene el adaptador NAT, por lo que tiene acceso a la red. Procedemos ahora a configurarle el adaptador `Host-Only` para que haya conexión entre el anfitrión y la VM. La red virtual la hemos creado anteriormente, y notemos que hemos configurado el adaptador del anfitrión. Ahora, en la VM, habilitamos un segundo adaptador en modo `Host-Only`, y lo conectamos a la red que hemos creado. Ya está por tanto conectado el adaptador de red. Es como si tuviésemos el anfitrión y la VM conectados a un mismo switch.
 
-### Snapshot
-Tras la configuración, crearemos un **snapshot** de la VM, que guarda su estado actual (configuración, archivos y memoria si está en ejecución). Esto permite volver al estado inicial en cualquier momento. A diferencia de un **clon** (otra máquina independiente), el snapshot depende de la VM original.
+### Configuración de la VM
 
-### sshd
-El demonio **sshd** gestiona conexiones SSH, proporcionando comunicación segura entre hosts. Se activa al inicio desde `/etc/rc`.
+Arrancamos ahora la VM, e iniciamos sesión como `root` (que es el único usuario que tenemos). Aunque forme parte de la configuración por defecto, comprobamos que:
+- No se ha instalado el modo gráfico. Esto se podrá comprobar puesto que no podremos hacer uso del ratón.
+- Se ha instalado el servicio SSHD (con el que trabajaremos y explicaremos más adelante). Esto lo comprobamos con el comando:
+  ```shell
+  $ systemctl status sshd
+  ```
+  Hemos de ver que está activo y habilitado.
 
-## Realización
 
-1. Descarga Rocky Linux desde su [página oficial](https://rockylinux.org/) o este [enlace directo](http://atcproyectos.ugr.es/esriie/Rocky-9.0-20220805.0-x86_64-minimal.iso). Guarda la ISO en un directorio estable.
-2. Arrastra la ISO a VirtualBox para abrir el menú de importación:
- - Deja las opciones por defecto, ajustando nombre y recursos (CPU, RAM) si deseas más rendimiento.
- - Activa **Enable EFI** para evitar errores.
-3. Inicia la VM y en el menú de instalación:
- - (1) Crea un usuario no root con contraseña y permisos administrativos.
- - (2) Configura el **hostname** (ejemplo: `dekMV01` para Donald Ervin Knuth).
-4. Tras instalar, verifica en la terminal:
- - `systemctl status sshd` (comprueba que sshd esté activo).
- - Confirma que el usuario tiene privilegios de superusuario.
- - En caso de no haberlo hecho en el paso previo, se puede configurar el **hostname** desde la terminal con `hostname xxxMV01`. Para hacer este cambio permanente ejecute el comando `hostnamectl set-hostname xxxMV01`.
-5. Configurar el prompt:
- - (1) Edita el fichero .bashrc
- - (2) Añade una linea para modificar el prompt (por ejemplo): PS1='\[\u@\h \W\] \[\e[0;32m\]\t \W>\[\e[1;37m\]'. O uno más básico: PS1='\[\u@\h-\t \W\]$'
- - (3) Aplica los cambios a la sesión actual con source .bashrc
-6. Configura las redes en VirtualBox:
- - Adaptador 1: **NAT**.
- - Adaptador 2: **Host-Only Adapter**, con "Cable Connected" activado. Es posible que VirtualBox no tenga una red de este tipo creada por defecto, en cuyo caso puede crearla en `Tools > Network Manager > Host-only Networks > Create`.
-7. Para la ip estática, usaremos la herramienta nmcli(network manager command line), en nuestro caso particular ejecutaremos:
- ```
-sudo nmcli connection modify "Wired connection 1" ipv4.addresses 192.168.56.69/24 # Para asignar la ip deseada
-sudo nmcli connection modify "Wired connection 1" ipv4.gateway 192.168.56.1 # Configuración del gateway
-sudo nmcli connection modify "Wired connection 1" ipv4.dns "8.8.8.8,8.8.4.4" # DNS 
-sudo nmcli connection modify "Wired connection 1" ipv4.method manual # Para indicar que use IP estática
-sudo nmcli connection up "Wired connection 1" # Para activar la nueva configuración de la conexión
- ```
-Otra opción más cómoda es usar `nmtui` (network manager text user interface).
-8. Verifica el funcionamiento:
- - Ping desde el anfitrión a la VM y viceversa. Para saber la ip de tu máquina puedes usar el comando `ifconfig`.
- - Conéctate por SSH desde el anfitrión. `ssh user@ip`
- - Haz ping a internet desde la VM (ejemplo: `ping 1.1.1.1`).
-9. Guarda y crea un **snapshot** desde el menú de snapshots como estado de referencia. (`Tools > Snapshots`)
+Realizamos los siguientes cambios:
 
----
+1. Creamos un usuario distinto de `root` con permisos de superusuario. Para crearlo, ejecutamos el siguiente comando:
+    ```shell
+    $ useradd <nombre_usuario>
+    ```
+    Para asignarle una contraseña, ejecutamos:
+    ```shell
+    $ passwd <nombre_usuario>
+    ```
+    Este comando nos pedirá la contraseña de dicho usuario. Por último, para darle permisos de superusuario, lo añadimos al grupo `wheel` (que tiene permisos de superusuario) con el siguiente comando:
+    ```shell
+    $ usermod -aG wheel <nombre_usuario>
+    ```
+    - `a`: *Add* (añadir).
+    - `G`: *Group* (grupo).
 
-# Configuración de LVM
+    Llegados a este punto, ya tenemos un usuario con permisos de superusuario. Por motivos de seguridad, cerramos sesión con `root` (comando `exit`) y accedemos con el nuevo usuario, que será con el que trabajaremos a partir de ahora.
 
-El **Logical Volume Manager (LVM)** abstrae el almacenamiento físico, permitiendo crear volúmenes lógicos flexibles. Esto elimina restricciones de tamaño físico y separa la configuración hardware del software, facilitando ajustes sin desmontar el sistema de archivos.
+    **Nota**: De aquí en adelante, no especificaremos cuándo hemos de emplear el comando `sudo` para tener permisos de superusuario. Se espera que el usuario comprenda que, si al ejecutar un comando el sistema informa de que no tiene permisos, debe anteponer `sudo` al comando.
 
-### Componentes de LVM
-- **Physical Volumes (PV)**: Discos o particiones físicas inicializadas para LVM.
-- **Volume Groups (VG)**: Grupos que combinan PVs para formar un pool de almacenamiento.
-- **Logical Volumes (LV)**: Volúmenes lógicos creados desde el VG, usados como particiones flexibles.
+2. Configuramos el **hostname** de la máquina virtual. Para ello, ejecutamos:
+    ```shell
+    $ hostnamectl set-hostname <nombre_maquina>
+    ```
+    Tras cerrar sesión y volver a entrar, podemos comprobar que el nombre ha cambiado.De hecho, este nombre también se encuentra en el fichero `/etc/hostname`.
 
-En este apartado modificaremos la configuración por defecto de Rocky Linux para usar LVM.
+3. Cambiamos ahora el prompt de la terminal. Esta se configura con el valor de la variable `PS1`. Para hacer pruebas, podemos ejecutar el siguiente comando:
+    ```shell
+    $ export PS1=<valor_deseado>
+    ```
+    No obstante, para que el cambio sea permanente, hemos de modificar el archivo `~/.bashrc` (el archivo de configuración de la terminal) añadiendo la siguiente línea al final del archivo, y ejecutar `source ~/.bashrc` para que se aplique el cambio:
+    ```shell
+    PS1=<valor_deseado>
+    ```
 
-### Comandos útiles
-- `pvdisplay`, `vgdisplay`, `lvdisplay`: Muestran detalles de PVs, VGs y LVs.
-- `vgextend`: Añade un nuevo PV a un VG existente.
-- `lvextend`/`lvreduce`: Aumenta o reduce el tamaño de un LV.
-- `resize2fs`: Ajusta el sistema de archivos tras redimensionar un LV (para `ext4`).
+    Para modificar el archivo, posiblemente el usuario desee instalar mediante `dnf` el editor de texto `nano`. Como ejemplo de prompt interesante, podemos usar el siguiente valor:
+    ```shell
+    PS1="[\e[1;32m\u@\H\e[1;37m-\t \w\e[0m]\$ "
+    ```
 
-Sin LVM, si `/` (root) ocupa todo el disco y un usuario llena el espacio (ej. en `/var` o `/home`), el sistema puede fallar, incluso impidiendo el arranque. Por ello, es común separar directorios críticos como `/boot` (con los archivos de arranque) o `/var` (con datos variables como logs) en particiones o volúmenes distintos.
+    El lector podrá encontrar en internet gran cantidad de ejemplos de `PS1` para personalizar su terminal, junto con qué significa cada uno de los símbolos. Algunos a destacar, aunque animamos al lector a investigar en este aspecto, son:
+    - `\u`: Nombre de usuario.
+    - `\H`: Nombre de la máquina, modificado anteriormente con `hostnamectl`.
+    - `\t`: Hora actual, en formato de 24 horas.
+    - `\w`: Ruta completa del directorio de trabajo.
+    - `\$`: Símbolo del prompt (por defecto `$` para usuarios normales y `#` para root).
 
-## RAID
+4. Como cambio más importante, buscamos ahora asignarle una dirección IP estática a la máquina virtual, para poder así conectarnos a ella desde el anfitrión. Para conocer el estado actual de la máquina, podemos emplear:
+    ```shell
+    $ ip a        # Interfaces de red y las direcciones IP
+    $ ip route    # Tabla de enrutamiento del sistema
+    ```
 
-**RAID** (Redundant Array of Independent/Inexpensive Disks) es una tecnología que agrupa dispositivos de almacenamiento en un disco virtual con características específicas, como redundancia o mayor rendimiento, a un costo potencialmente menor al combinar discos económicos. Nos centraremos en tres niveles principales: RAID 0, RAID 1 y RAID 5, además de diferenciar entre implementaciones hardware y software.
+    Para los usuarios acostumbrados a trabajar con Ubuntu, pueden ejecutar el paquete `net-tools`, y podrán usar los comandos como en dicho sistema operativo.
+    ```shell
+    $ dnf install net-tools
+    $ ifconfig    # Interfaces de red y las direcciones IP
+    $ route -n    # Tabla de enrutamiento del sistema
+    ```
 
-- **RAID 0** (Striping)
-    - Combina varios discos en un único volumen virtual cuya capacidad es la suma de los discos individuales. Utiliza striping (segmentación), distribuyendo sectores contiguos entre discos distintos para permitir acceso paralelo y aumentar la velocidad de lectura/escritura.
-    - Antes era común en sistemas donde la velocidad era crítica (ej. HDD en servidores antiguos).
-    - No ofrece redundancia. Si un disco falla, se pierde toda la información del arreglo, lo que lo hace muy sensible a errores físicos. Por esta razón, hoy se usa poco o nada en entornos críticos.
+    Podemos además ejecutar el comando `nmcli` (*NetworkManager Command Line Interface*), y observamos que hay una interfaz (en nuestro caso `enp0s8`) a la que está conectada la máquina virtual, pero no obtiene la dirección IP. Esta es la interfaz que debemos configurar. Para ello, ejecutamos el siguiente comando:
+    ```shell
+    $ nmcli con add type ethernet con-name vboxnet0 ifname enp0s8 ip4 192.168.56.2/24
+    $ nmcli con up vboxnet0
+    ```
+    Notemos que el nombre de la conexión (`vboxnet0`) y la interfaz (`enp0s8`) pueden cambiar. La dirección a asignar depende de la red y de las direcciones IP que ya estén asignadas. En nuestro caso, la dirección IP que le hemos asignado es la `192.168.56.2`. Podemos comprobar ahora, con los comandos anteriormente descritos, que ya tenemos una dirección IP asignada. Para comprobar que efectivamente no se emplea DHCP, podemos ejecutar el siguiente comando:
+    ```shell
+    $ nmcli -p con show vboxnet0 | grep ipv4.method
+    ```
+    Y si todo ha ido bien, el resultado debería ser `manual`, lo que indica que no se está usando DHCP.
 
-- **RAID 1** (Mirroring)
 
-    - Copia idénticamente toda la información en todos los discos que forman el "espejo", proporcionando redundancia total. La capacidad útil se reduce a la del disco más pequeño en el arreglo.
-    - Alta tolerancia a fallos; si un disco muere, los datos persisten en los demás. Al leer un bloque, puede comparar datos entre discos para detectar errores, y algunas implementaciones permiten lectura en paralelo para mejorar el rendimiento.
-    - Para evitar retrasos en escritura, los discos suelen conectarse a buses distintos (ej. canales SATA separados).
-    -  Ideal para datos críticos donde la integridad es prioritaria sobre la capacidad (ej. sistemas operativos, configuraciones clave).
+Ya se ha configurado la red de la máquina virtual. Para comprobar que todo funciona correctamente, debemos ser capaces de:
+1. Hacer `ping` desde el anfitrión a la máquina virtual, y vicersa.
+2. Hacer `ping` desde la máquina virtual a una dirección IP pública (por ejemplo, `8.8.8.8`).
+3. Conectarnos a la máquina virtual desde el anfitrión mediante SSH. Para ello, en el anfitrión, ejecutamos:
+    ```shell
+    $ ssh <nombre_usuario>@<ip_maquina_virtual>
+    ```
+    Posiblemente nos pida confirmar que somos nosotros (más adelante explicaremos en datelle el funcionamiento de SSH), pero tras introducir la contraseña debemos poder acceder sin problemas.
+
+
+    Esto nos permitirá, de aquí en adelante, no trabajar con la VM en sí (ya que no es del todo cómodo), sino conectarnos a ella desde el anfitrión por SSH. De esta forma, podremos usar, por ejemplo, el portapapeles sin problema. Como consejo adicional, se recomienda al lector añadir al archivo `/etc/hosts` del anfitrión la dirección IP de la máquina virtual junto con un nombre característico (como `rockybase`). Esto le permitirá conectarse a la máquina virtual sin necesidad de recordar la dirección IP como sigue:
+    ```shell
+    $ ssh <nombre_usuario>@rockybase
+    ```
+
+Llegados a este punto, hemos terminado la configuración inicial necesaria para nuestro servidor. Recomendamos al lector hacer un **snapshot** de la máquina virtual, para poder volver a este estado en caso de que algo falle, o incluso clonar el estado inicial del servidor en el caso de que lo necesitemos.
+
+
+## Gestión del Almacenamiento
+
+Como administrador de sistemas, este aspecto es de vital importancia, puesto que es muy configurable y tiene muchas repercusiones. Antes de empezar a ver cómo configurarlo y a entender medidas, hemos de entender que la estructura estándar del *filesystem* de Linux es jerárquica, comportándose como un árbol que cuelga del nodo raíz `/`. Esta jerarquía se encuentra explicada [aquí](https://www.pathname.com/fhs/pub/fhs-2.3.html), pero las principales carpetas son:
+- `/boot`: Archivos de arranque.
+- `/root`: Directorio personal del usuario root.
+- `/home`: Directorios personales de los usuarios. Dentro de este directorio, cada usuario tiene su propio subdirectorio.
+- `/var`: Archivos variables, como logs o bases de datos. Suele crecer en tamaño y provocar problemas, por lo que trabajaremos en él más adelante.
+- `/tmp`: Archivos temporales.
+- `/etc`: Archivos de configuración del SO y de distintos servicios. Será una carpeta con la que trabajemos continuamente, y contiene información sobre los sudoers, configuración IP, puntos de montaje, etc.
+- `/dev`: Archivos de dispositivos. Aquí se encuentran los dispositivos conectados al sistema, como discos duros.
+- `/mnt`: Punto de montaje temporal para sistemas de archivos, de forma manual.
+- `/media`: Punto de montaje temporal para sistemas de archivos, de forma automática. Es donde monta el demonio de gestor de medios de Linux, y para evitar colisiones, no se recomienda usarlo.
+- `/proc`: Archivos de proceso. Aquí se encuentran los archivos que representan los procesos en ejecución en el sistema.
+
+Una vez vista la jerarquía del filesystem, hemos de mencionar los **sistemas de ficheros** más comunes en Linux. Todos los sistemas de ficheros se encuentran en:
+```shell
+$ ls -la /lib/modules/<version_kernel>/kernel/fs/
+```
+Los más usados son `ext4` y `xfs`, ambos sistemas de ficheros transaccionales (*journalist*). Esto se refiere a que, cuando se realiza una modificación en un fichero, esta se marca como provisional y tan solo se realiza cuando se confirma que todo ha ido bien. Esto permite evitar la corrupción de datos en caso de un fallo del sistema, y es una característica muy importante a la hora de elegir un sistema de ficheros.
+
+
+Por otro lado, es importante comprender la asociación entre los sistemas de ficheros y los dispositivos de almacenamiento. En Linux, cada dispositivo de almacenamiento se representa como un archivo especial en el directorio `/dev`. Cada disco duro sata se representa como `/dev/sdX`, donde `X` es una letra que identifica el disco (a, b, c, etc.). Las particiones de un disco se representan como `/dev/sdXN`, donde `N` es un número que identifica la partición (1, 2, 3, etc.). Por ejemplo, `/dev/sda1` representa la primera partición del primer disco duro. Además, para poder saber cómo arrancar, el primer sector del `sda` se denomina `MBR` (*Master Boot Record*), y contiene información sobre cómo se organizan las particiones en el disco, dónde se encuentra el gestor de arranque, etc.
+
+
+Con estos conocimientos, ya podemos emplear dos comandos útiles, `lsblk` y `df`.
+1. `lsblk` (*list block devices*): Muestra la jerarquía de dispositivos de bloque y sus particiones. Es útil para ver cómo están organizados los discos y las particiones en el sistema.
+    ```shell
+    $ lsblk
+    NAME             MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+    sda                8:0    0   20G  0 disk 
+    ├─sda1             8:1    0    1G  0 part /boot
+    └─sda2             8:2    0   19G  0 part 
+      ├─rl_vbox-root 253:0    0   17G  0 lvm  /
+      └─rl_vbox-swap 253:1    0    2G  0 lvm  [SWAP]
+    sr0               11:0    1 1024M  0 rom
+    ```
+
+    Como vemos, esta máquina virtual tan solo tiene un disco duro (`sda`), que tiene dos particiones (`sda1` y `sda2`). La primera partición es está montada en `/boot`, y la segunda partición (ahora desarrollaremos lo de `lvm`) está montada en `/`. Separar `/boot` es una buena práctica, puesto que es la partición que contiene los archivos de arranque del sistema. Si algún usuario crease muchos archivos y llenase el disco, podría provocar que el sistema no arrancase. Sin embargo, al separar esta información en una partición distinta, el sistema siempre va a poder arrancar sin problema.
+
+2. `df -h` (*disk free human-readable*): Muestra información sobre el uso del espacio en disco de los sistemas de archivos montados. La opción `-h` muestra la información en un formato legible para humanos (por ejemplo, en GB o MB).
+
+
+### RAID
+
+**RAID** *(Redundant Array of Independent/Inexpensive Disks)* es una tecnología que agrupa dispositivos de almacenamiento en un nuevo dispositivo virtual con características extendidas. Antes se denominaba `Inexpensive`, puesto que antes usar 3 discos de 1 GB era más barato que usar un disco de 3 GB. Sin embargo, hoy en día esto no ocurre y el término `Inexpensive` ha pasado a ser `Independent`, puesto que los discos son independientes entre sí. Hay distintos tipos de RAID, cada uno con sus ventajas y desventajas, aunque nosotros nos centraremos en los tipos 0, 1 y 5.
+
+- **RAID 0** (*Striping*)
+    - Combina varios dispositivos en un único dispositivo virtual cuya capacidad es la suma de los dispositivos individuales. Es decir, si hay $N$ discos de $t_i\ GB$ de almacenamiento, la capacidad total es:
+    $$C = \sum_{i=1}^{N} t_i\ \ GB$$
+  
+    - Si hay un único error, falla el dispositivo virtual entero, por lo que hoy en día no se usa apenas.
+
+    - El concepto de *striping* (segmentación), de debe a que se intentan colocar segmentos contiguos en dispositivos distintos, para acceder en paralelo a ellos. Esto antes se empleaba para lograr un aumento en la velocidad.
+
+- **RAID 1** (*Mirroring*)
+
+    - Copia idénticamente toda la información en todos los discos que forman el "espejo", proporcionando redundancia total. Si hay $N$ discos de $t_i\ GB$ de almacenamiento, la capacidad total es:
+    $$C = \min \{t_1, t_2, \ldots, t_N\}\ GB$$
+    - Cuando se lee un bloque, se compara el resultado entre varios discos para encontrar errores. Si un disco falla, el sistema sigue funcionando con los demás *sin pérdida de prestaciones*, por lo que es mucho más seguro frente a fallos.
+    - Para evitar retrasos en la lectura/escritura, los discos suelen conectarse a buses distintos (ej. canales SATA separados).
+    - Aunque es más seguro, tiene un coste elevado, puesto que se necesita un mayor número de dispositivos para almacenar la misma cantidad de datos.
+    - Nomalmente se emplean $N=2$ discos de la misma capacidad.
 
 - **RAID 5**
 
-    - Mejora de RAID 1 en términos de costo y eficiencia. Requiere al menos tres discos: usa striping como RAID 0 para los datos y reserva un disco virtual equivalente para almacenar información de paridad (recuperación). Si un disco falla, los datos se reconstruyen usando la paridad y los bloques restantes.
-    - Ofrece robustez a un costo razonable (solo se "pierde" la capacidad de un disco para paridad). Soporta la caída de un disco sin pérdida de datos.
-    - Las operaciones de escritura son más lentas debido al cálculo de paridad, y la reconstrucción tras un fallo reduce aún más las prestaciones. En centros de datos grandes, donde la caída de discos es común, esto puede ser un cuello de botella.
+    - Suge como una mejora de RAID 1, combinándolo con RAID 0. Si se dispone de $N+1$ discos, cada uno de $t_i$ GB, se crea un dispositivo virtual cuya capacidad es la suma de los $N$ primeros, y el $N+1$ se reserva para proporcionar seguridad (ahora se explicará). Por tanto, la capacidad del dispositivo virtual es:
+    $$C = \sum_{i=1}^{N} t_i\ GB$$
+
+    - En el dispositivo "desperdiciado", se almacenan los *códigos de redundancia cíclica*. Si uno de los $N$ primeros dispositivos falla, en vez de fallar el sistema entero como ocurría con RAID 0, se emplea una función que, en base al código de redundancia y a la información presente en el resto de los discos, reconstruye el disco que ha fallado. 
+
+    - En términos de costes es muy bueno, puesto que tan solo se pierde un dispositivo. No obstante, las prestaciones son peores al necesitar pasar por dicha función, puesto que en los centros grandes de servidores es muy común la caída de discos.
+
     - Adecuado para logs del sistema, bases de datos no críticas o entornos donde el balance entre costo y redundancia es clave.
 
-Diferenciamos además entre RAID Hardware y Software. En el hardware, hay un controlador físico que gestiona el RAID, es más rápido gracias a la controladora independiente y transparente al SO, que ve un único disco conjunto (ej. con 4 discos en RAID 5, el SO detecta uno solo). En cuanto al software, la gestión la realiza el sistema operativo o un programa, sin hardware dedicado. Depende de la CPU, lo que puede reducir rendimiento, pero es más económico y flexible.
+Diferenciamos además entre RAID Hardware y Software:
+- **Hardware**: Un controlador físico gestiona el RAID, lo que mejora la velocidad gracias a la controladora independiente y transparente al sistema operativo (SO). El SO ve un único disco, aunque por debajo haya varios discos en RAID.
 
-## Configuración de RAID en VirtualBox
-
- - En VirtualBox, ve a Configuración > Almacenamiento > Controladora SATA.
-        Crea y añade discos virtuales nuevos (ej. dos discos de 10 GB cada uno: /dev/sdb y /dev/sdc). 
-        Recuerda que se necesitan al menos 3 discos para RAID 5.
- - Crear un RAID con `mdadm`:
-        Crea un RAID 1:
-```
-sudo mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sdb /dev/sdc
-```
-Los arreglos RAID se nombran como /dev/mdX (multidisk). Por ello, si escribimos ($ echo 1 > /dev/md0) se escribira en ambos discos mientras que si lo hacemos sobre /dev/sdb romperemos la integridad.
-## Integración de LVM con RAID
-
-LVM y RAID pueden combinarse para obtener redundancia (RAID) y flexibilidad (LVM). Por ejemplo, un RAID 1 puede usarse como base para un PV, asegurando que los datos estén duplicados antes de gestionarlos con LVM. Sin embargo, hay que tener cuidado al integrar RAIDs en Volume Groups con discos sin RAID, ya que no se garantiza que los datos aprovechen la redundancia del RAID si el VG mezcla discos con capacidades o configuraciones distintas. Por ello, una práctica recomendada es separar los discos en VGs según su tipo: SSD, HDD o RAIDs (y dentro de RAIDs, usar el mismo nivel, como RAID 1).
-
-### Configuración práctica: Mover /var a un volumen lógico sobre RAID 1
-A continuación, detallamos cómo mover el directorio `/var` (que crece con el tiempo por logs y datos variables) a un volumen lógico basado en un RAID 1 creado con `mdadm`. Este proceso asegura redundancia y flexibilidad para el almacenamiento.
-
-#### 1. Crear el RAID 1
-- Añade dos discos virtuales en VirtualBox (ej. `/dev/sdb` y `/dev/sdc`, 10 GB cada uno).
-- Crea el arreglo RAID:
-```
-sudo mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sdb /dev/sdc
-```
-
-#### 2. Inicializar LVM sobre RAID
-
-- Crea un Physical Volume (PV) en el RAID:
-```
-sudo pvcreate /dev/md0
-```
-Esto añade metadatos de LVM al inicio del dispositivo RAID.
-- Crea un Volume Group (VG) llamado `raid1`:
-```
-sudo vgcreate raid1 /dev/md0
-sudo vgdisplay raid1
-```
-- Crea un Logical Volume (LV) llamado `rvar` de 10 GB:
-```
-sudo lvcreate -L 10G -n rvar raid1
-```
-- Verifica el LV:
-
-```
-sudo lvdisplay /dev/raid1/rvar
-```
-Nota: Los LVs tienen dos nombres equivalentes:
-- `/dev/raid1/rvar`
-- `/dev/mapper/raid1-rvar`
-
-#### 3. Formatear y montar temporalmente
-- Formatea el LV con el sistema de archivos `ext4`:
-```
-sudo mkfs -t ext4 /dev/raid1/rvar # mkfs.ext4 /dev/raid1/rvar
-```
-- Monta el LV en `/mnt` para pruebas:
-```
-sudo mount /dev/mapper/raid1-rvar /mnt
-```
-
-#### 4. Copiar /var en modo mantenimiento
-Dado que `/var` está en uso constante por el sistema (logs, servicios activos), una copia directa como `cp -a /var/* /mnt` podría perder datos escritos durante el proceso. Para evitarlo, cambiamos al modo mantenimiento (single-user), que expulsa a todos los usuarios y detiene procesos no esenciales:
-- Cambia al modo single-user (debes ser **root** para ello):
-```
-sudo systemctl isolate runlevel1.target
-```
-Podemos comprobarlo con `systemctl status` y nos debería salir `State: maintenance`, una vez comprobado y con todo correcto:
-```
-cp -a /var/* /mnt/
-ls /mnt
-```
-
-#### 5. Reubicar /var
-- Desmonta el volumen lógico de `/mnt`:
-```
-sudo umount /mnt
-```
-- Renombra el `/var` original como respaldo (por seguridad):
-```
-mv /var /oldvar
-```
-- Crea un nuevo directorio `/var`:
-```
-sudo mkdir /var
-sudo mount /dev/raid1/rvar /var
-```
-- Verifica el espacio y montaje:
-```
-df -h
-```
-#### 6. Hacer el montaje permanente
-Los montajes con mount son temporales y se pierden al reiniciar, para hacerlo permanente, podemos editar /etc/fstab y añadir la linea:
-```
-/dev/raid1/rvar  /var  ext4  defaults  0  0
-```
-
-Para probarlo todo:
-```
-sudo systemctl daemon-reload # Recargar el demonio
-sudo mount -a # Monta todo lo definido en /etc/fstab
-df -h
-```
-Ahora tras reiniciar todo (desmontar /var antes) debería mantenerse como lo hemos definido. Lo podremos comprobar con df y con lsblk
-Estos últimos pasos vienen explicados con más detenimiento a continuación.
-
-## Administración del Sistema de Archivos
-
-### systemd
-**systemd** es el sistema de inicio predominante en Linux, reemplazando a SysVinit. SysVinit usaba niveles de ejecución (runlevels) con capacidades específicas, mientras que systemd ofrece un enfoque más modular.
-
-### Jerarquía del sistema de archivos
-- `/bin`: Binarios de comandos esenciales.
-- `/boot`: Archivos estáticos del cargador de arranque.
-- `/dev`: Archivos de dispositivos.
-- `/etc`: Configuración específica del sistema.
-- `/lib`: Bibliotecas compartidas esenciales y módulos del kernel.
-- `/media`: Punto de montaje para medios extraíbles.
-- `/mnt`: Punto de montaje temporal para sistemas de archivos.
-- `/opt`: Paquetes de software adicionales.
-- `/sbin`: Binarios esenciales del sistema.
-- `/srv`: Datos de servicios del sistema.
-- `/tmp`: Archivos temporales.
-- `/usr`: Jerarquía secundaria (binarios, bibliotecas, etc.).
-- `/var`: Datos variables (logs, bases de datos, etc.).
-
-### Sistemas de archivos
-- **ext4**: El más usado, rápido y robusto, con soporte para volúmenes y archivos grandes.
-- **btrfs**: Basado en árboles B, usa *copy-on-write* para mayor integridad, pero es más lento.
-
-Para manejar y consultar cómodamente los montajes y discos conectados podemos usar las siguientes herramientas:
-- lsblk: Para ver las distintas particiones y discos conectados
-- df -h: Disk free, nos da el espacio disponible en disco, -h se usa para el formato humano
-
-### /etc/fstab
-Archivo que facilita montar/desmontar sistemas de archivos, su estructura se compone de varias columnas para cada sistema, con las siguientes correspondencias y orden:
-
-- **Device**: Nombre o UUID del dispositivo (ej. `/dev/sda1`).
-- **Mount Point**: Directorio donde se monta (ej. `/mnt`).
-- **File System Type**: Tipo de sistema (ej. `ext4`).
-- **Options**: Opciones de montaje (ej. `defaults`).
-- **Backup Operation**: 1 para respaldo (obsoleto), 0 para ninguno.
-- **FS Check Order**: 0 (sin chequeo), 1 (raíz), 2 (otros).
-
-## Ejercicio Opcional: Servicio de Gestión Documental
-
-Partiendo de un servidor básico configurado según el apartado 2 (Rocky Linux en VirtualBox con LVM, dos tarjetas de red y sshd), se plantea la instalación de un **servicio de gestión documental**. Este servicio requiere:
-- **Espacio de almacenamiento creciente**: Posiblemente considerable con el tiempo.
-- **Contenido crítico**: Necesita un mecanismo de respaldo ante fallos de hardware.
-- **Máxima disponibilidad**: Garantizando la conservación de datos y continuidad del servicio.
+- **Software**: Hay un driver del SO dedicado a mantener los RAIDs. El código de este se ejecuta en la CPU, por lo que bajan las rprestciones. Además, es visible al administrador del sistema, por lo que este podría comprromperlo de forma accidental.
 
 
-## Diseño del Sistema de Almacenamiento
+#### Comandos para gestionar RAID
 
-### Requisitos y Solución Propuesta
-1. **Crecimiento del almacenamiento**: Usaremos **LVM** (Logical Volume Manager) para permitir la expansión dinámica del espacio, añadiendo discos según sea necesario sin interrumpir el servicio, (por ejemplo podríamos llevarnos el directorio /var a otro volumen lógico) (No se puede alojar a un volume group ya que al poder estar formado de varios discos, puede ser que perdamos garantías de RAID o tengamos un comportamiento no deseado)
-2. **Redundancia ante fallos**: Implementaremos **RAID 1** (mirroring) para duplicar los datos entre dos discos, asegurando que un fallo en uno no comprometa la información. (RAID 5 también sería válido)
-3. **Sistema de archivos**: Optaremos por **ext4** por su rendimiento, estabilidad y soporte amplio en Linux, aunque se considerará **btrfs** como alternativa por su capacidad de snapshots y mayor integridad de datos.
-4. **Disponibilidad**: La combinación de LVM y RAID 1, junto con copias de seguridad regulares, maximizará el tiempo de actividad y la recuperación ante desastres.
+Procedemos a ver ahora cómo configurar RAID software en Linux. Para ello, en primer lugar hemos de disponer de más de un disco, por lo que hemos de virtualizarlo. Crearemos dos de ellos.
 
-# Acceso Seguro al Servidor
+Con la VM apagada, desde los ajustes de almacenamiento, selecionamos `Add Attachment` y elegimos `Hard Disk`. En ese punto, hemos de crear en sí el disco duro y seleccionarlo. Una vez hayamos creado estos dos discos duros, tras arrancar de nuevo el distema y ejecutar `lsblk` se puede ver que hay dos discos duros más, `/dev/sdb` y `/dev/sdc`, ambos sin montar. Ya están ambos creados, pero hemos de crear el RAID.
+
+Creamos el RAID con el siguiente comando:
+```shell
+$ dnf install mdadm     # Multiple Device Admin
+$ mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sdb /dev/sdc
+```
+- `mdadm`: Herramienta para gestionar RAID en Linux.
+- `--create /dev/md0`: Crea un nuevo dispositivo RAID, llamado en este caso `/dev/md0`.
+- `--level=1`: Especifica el nivel de RAID (en este caso, RAID 1). Estamos empleando ambos discos para crear un RAID 1.
+- `--raid-devices=2`: Número de dispositivos en el RAID (en este caso, 2).
+- `/dev/sdb /dev/sdc`: Dispositivos físicos que se usarán para crear el RAID.
+
+Ya que podemos siempre restaurar sin problema gracias a los snapshots, podemos probar ahora a dañar el RAID y ver qué ocurre. Los comandos para ver el estado del RAID son:
+```shell
+$ cat /proc/mdstat
+$ mdadm --detail /dev/md0
+```
+
+Procedemos entonces como sigue:
+1. Hacemos una escritura correcta (directamente en el RAID), y vemos cómo no daña el dispositivo.
+    ```shell
+    $ echo "OK desde RAID" | sudo dd of=/dev/md0 bs=512 count=1
+    $ mdadm --detail /dev/md0   # Todo OK
+    ```
+2. Hacemos una escritura incorrecta, escribiendo directamente en uno de los dispositivos que forman el RAID 1. Esto provoca que no se mantenga el RAID:
+    ```shell
+    $ echo "desincronizado" | sudo dd of=/dev/sdb bs=512 count=1 conv=notrunc
+    $ dmesg | grep md0
+    [    7.443760] md/raid1:md0: active with 1 out of 2 mirrors
+    [    7.446534] md0: detected capacity change from 0 to 41908224
+    [    7.456755] md: recovery of RAID array md0
+    [   42.789320] md: md0: recovery done.
+    [  124.261490] md: data-check of RAID array md0
+    [  229.738934] md: md0: data-check done.
+    $ mdadm --detail /dev/md0   # Todo OK
+    ```
+    Como podemos ver, cuando "rompemos el RAID", el sistema lo detecta de forma automática y lo resuelve, provocando que el usuario no percibe queha habido ningún problema.
+
+3. En vez de simular que se rompe el RAID, en este caso simularemos que se cae directamente un disco duro.
+    ```shell
+    $ sudo mdadm /dev/md0 --fail /dev/sdb     # Simulamos que se cae el disco duro
+    mdadm: set /dev/sdb faulty in /dev/md0
+    $ cat /proc/mdstat
+    Personalities : [raid1] 
+    md0 : active raid1 sdb[2](F) sdc[1]
+          20954112 blocks super 1.2 [2/1] [_U]    # [_U] indica que hay un disco caído
+    ```
+
+    Como se ha caído el disco, suponemos que hay que sustituirlo. Veamos qué ocurre:
+    ```shell
+    $ mdadm /dev/md0 --remove /dev/sdb
+    mdadm: hot removed /dev/sdb from /dev/md0
+    $ mdadm /dev/md0 --add /dev/sdb
+    mdadm: added /dev/sdb
+    ```
+
+    Como vemos, simula que se ha realizado el cambio del disco duro sin apagar la máquina, por eso lo de `hot removed`. Esto es una de las ventajas de usar RAID, puesto que si un disco duro se cae, el sistema sigue funcionando sin problemas. Veamos cómo se recupera el RAID:
+    ```shell
+    $ cat /proc/mdstat
+    Personalities : [raid1] 
+    md0 : active raid1 sdb[2] sdc[1]
+          20954112 blocks super 1.2 [2/1] [_U]
+          [===>.................]  recovery = 18.1% (3801728/20954112) finish=1.4min speed=200090K/sec
+    ```
+
+    Si monitorizamos dicho archivo mediante el comando `watch`, podemos ver cómo se va recuperando el RAID, y cómo dicho porcentaje va subiendo, hasta que llega al 100% y se obtiene `[UU]` de vuelta.
+
+
+
+
+### LVM
+
+Un problema de las particiones tal y como las conocemos es que son particionamientos estáticos: no se pueden redimensionar sin perder datos, y si un disco se llena, no se puede ampliar sin formatear. Para evitar esto, se introdujo el concepto de **Logical Volume Manager (LVM)** (presente actualmente en todas las versiones de Linux), que introduce varias capas de abstracción. Estas son:
+- **Physical Volumes (PV)**: Discos o particiones físicas, base en la que se almacenarán los datos.
+- **Volume Groups (VG)**: Grupos que combinan PVs para formar un pool de almacenamiento. Se pueden entender como una especie de "cajón de sastre".
+- **Logical Volumes (LV)**: Volúmenes lógicos creados desde el VG, usados como particiones flexibles. Se pueden entender como "particiones virtuales". De hecho, y debido a la abstracción, cuando se crea un LV no se sabe en qué PV terminará. Como ventaja, en cualquier momento se puede añadir un nuevo PV a cierto VG, de forma que el LV puede crecer sin problemas.
+
+#### Comandos para gestionar LVM
+
+Son muchos, y es por ello que es importante saber cómo acceder a ellos. Todos los comandos relacionados con PV empiezan por `pv`, los de VG por `vg` y los de LV por `lv`. Por tanto, para ver todos los comandos disponibles para cierto nivel de abstracción, podemos escribir en la terminal las siglas por las que empieza y emplear el autocompletado del tabulador.
+
+Los comandos más importantes son los siguientes, aunque más adelante veremos paso a paso cómo se usan:
+- `{pv, vg, lv}create`: Crea un PV, VG o LV.
+- `{pv, vg, lv}display`: Muestra información sobre PVs, VGs o LVs.
+
+Llegados a este punto, podemos entender la salida del comando `lsblk` que hemos visto anteriormente.
+```shell
+$ lsblk
+NAME             MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINTS
+sda                8:0    0   20G  0 disk  
+├─sda1             8:1    0    1G  0 part  /boot
+└─sda2             8:2    0   19G  0 part  
+  ├─rl_vbox-root 253:0    0   17G  0 lvm   /
+  └─rl_vbox-swap 253:1    0    2G  0 lvm   [SWAP]
+sr0               11:0    1 1024M  0 rom
+```
+Como vemos, la partición `sda2` es un PV, y dentro de este hay dos LVs (`rl_vbox-root` y `rl_vbox-swap`). Estos son dos LV que están dentro de un mismo VG (`rl_vbox`). Este VG tiene como PV la partición `sda2`, que es un disco duro físico. Todo esto se puede comprobar con los comandos `display` ya mencionados. Notemos que un mismo LV siempre va a poder referenciarse mediante dos *path* distintos, uno enlace simbólico del otro:
+1. `/dev/<VG>/<LV>`.
+2. `/dev/mapper/<VG>-<LV>`. Notemos que esta es la notación que ha empleado el comando `lsblk` para referirse a los LVs.
+
+
+Por último, es importante destacar que se deben separar PVs de distintas características en VGs distintos.
+- Por ejemplo, si introducimos en un mismo VG dispositivos que emplean RAID y dispositivos que no, entonces cuando se escriba en cierto LV, como no se sabe en qué PV está, no sabremos si se ha empleado el RAID o no.
+- Si mezclamos discos SSD y HDD, el rendimiento de los SSD se verá afectado por la latencia de los HDD.
+
+Por tanto, es recomendable crear VGs separados para cada tipo de dispositivo.
+
+#### Integración de LVM con RAID
+
+Como mencionamos anteriormente, es de vital importancia separar `/boot` de `/`, para evitar así que se llene el disco y no se pueda arrancar. Algunas de las carpetas de `/` que más pueden crecer en temaño, provando dicho riesgo, son `/var`o `/home`. El LVM será de gran utilidad en estos casos, puesto que permite redimensionar los volúmenes lógicos sin perder datos.
+
+
+Supongamos ahora un caso práctico en el que en `/var` se almacena una base de datos que que crecerá con el tiempo y que es de vital importancia. Como es de vital importancia, querremos que esté respaldado por un RAID 1, mientras que como crecerá con el tiempo, querremos que esté gestionado por LVM. Por tanto, vamos a desarrollar cómo pasar `/var` a un RAID 1 gestionado por LVM.
+
+
+1. En este caso ya tenemos creado el RAID 1, por lo que podemos proceder directamente a crear el PV.
+    ```shell
+    $ pvcreate /dev/md0     # Le da el mismo nombre, /dev/md0
+    $ pvdisplay     # No tiene VG asociado, por lo que Allocatable=NO
+    ```
+
+2. Como el único VG que tenemos no está sobre RAID 1, hemos de separarlo en un VG distinto. Lo creamos:
+    ```shell
+    $ vgcreate raid1 /dev/md0
+    $ vgdisplay raid1
+    $ pvdisplay     # Ya tiene un VG asociado, Allocatable=YES
+    ```
+    Notemos que se ha creado un VG de nombre `raid1`. Tras el nombre se indica el nombre de todos los PV que lo integran, que en este caso es solo uno.
+
+3. Ahora que tenemos el VG creado, podemos crear un LV dentro de este. En este caso, vamos a crear un LV para `/var`, que es lo que nos interesa.
+    ```shell
+    $ lvcreate -L 10G -n rvar raid1
+    $ lvdisplay /dev/raid1/rvar
+    ```
+    donde:
+    - `-L 10G`: Especifica el tamaño del LV (en este caso, 10 GB).
+    - `-n rvar`: Especifica el nombre del LV (en este caso, `rvar`).
+
+    Recordemos que los LVs tienen dos nombres equivalentes:
+    - `/dev/raid1/rvar`
+    - `/dev/mapper/raid1-rvar`
+
+4. Llegados a este punto, ya tenemos el LV creado, es como si fuese un USB. No obstante, no está montado, no tiene sistema de archivos... En primer lugar, le damos sistema de archivos con el siguiente comando:
+    ```shell
+    $ mkfs.ext4 /dev/raid1/rvar
+    # Otra opción.
+    # $ mkfs -t ext4 /dev/mapper/raid1-rvar
+    ```
+    Notemos que el tipo de sistema de archivos es `ext4`, y se puede proporcionar tanto con el parametro `-t` como con el comando `mkfs.ext4`.
+
+5. Ahora que tenemos el LV creado y formateado, podemos montarlo. Para ello, y usando el directorio `/mnt` como punto de montaje, ejecutamos:
+    ```shell
+    $ mount /dev/mapper/raid1-rvar /mnt
+    ```
+
+    Se puede emplear el comando `mount` para ver los dispositivos montados.
+
+6. Ahora, tan solo faltaría copiar el contenido de `/var` en `/mnt`. No obstante, como `/var` es un directorio que está en uso constante por el sistema (logs, servicios activos), una copia directa como `cp -a /var/* /mnt` podría perder datos escritos durante el proceso. Para evitarlo, se introduce el concepto de los modos de funcionamiento del sistema Linux. Hay distintos modos:
+   - Modo 0 (*Halt*): Apaga el sistema.
+   - Modo 1 (*Single-user*): Modo de mantenimiento. Expulsa a todos los usuarios y detiene procesos no esenciales (incluido servicios de red). Es el modo que nos interesa para que no se esté escribiendo en `/var` mientras lo copiamos.
+   - Modo 2 (*Multi-user*): Modo normal, multiusuario, pero sin acceso a la red.
+   - Modo 3 (*Extended multi-user*): Modo normal, multiusuario, pero en este caso con acceso a la red. No tiene GUI, tan solo acceso por consola.
+   - Modo 5 (*Graphical*): Igual que el modo 3, pero sí tiene GUI.
+   - Modo 6 (*Reboot*): Reinicia el sistema.
+
+    Para saber en qué modo estamos, podemos ejecutar el siguiente comando:
+    ```shell
+    $ systemctl status
+    ```
+
+    Para cambiar al modo de mantenimiento, ejecutamos:
+    ```shell
+    $ systemctl isolate runlevelN.target
+    ```
+    donde `N` es el número del modo al que queremos cambiar.
+    
+    Por último, para saber qué modo de funcionamiento tiene el sistema por defecto, podemos ejecutar el siguiente comando:
+    ```shell
+    $ systemctl get-default
+    multi-user.target
+    ```
+    En este caso, el sistema arranca en modo multiusuario, que es el modo por defecto. Si quisiéramos cambiarlo, podríamos ejecutar el siguiente comando:
+    ```shell
+    $ systemctl set-default runlevelN.target
+    ```
+    donde `N` es el número del modo al que queremos cambiar. Esta información del modo por defecto se almacena en `/etc/systemd/system/default.target`, que es un enlace simbólico a la unidad de destino por defecto.
+    
+    
+    En nuestro caso, cambiamos al modo de mantenimiento y, tras comprobarlo, copiamos el contenido de `/var` en `/mnt`:
+    ```shell
+    $ systemctl isolate runlevel1.target
+    $ systemctl status
+    $ df -h       # Comprobamos USED de /dev/mapper/raid1-rvar
+    $ cp -a /var/* /mnt/
+    $ df -h       # Comprobamos USED de /dev/mapper/raid1-rvar, y vemos que efectivamente se ha escrito.
+    ```
+
+7. Ahora que tenemos el contenido de `/var` en `/mnt`, borramos `/var` (por si acaso lo movemos a `/var_old`):
+    ```shell
+    $ mv /var /var_old
+    $ ls -la /    # Comprobamos que efectivamente se ha borrado
+    ```
+
+8. Creamos ahora `/var`, y montaremos el LV en `/var`:
+    ```shell
+    $ mkdir /var
+    $ umount /mnt/
+    $ mount /dev/mapper/raid1-rvar /var
+    $ lsblk
+    $ df -h
+    ```
+
+    Efectivamente ya estaría montado `/var` en un LVM sobre RAID 1, que es lo buscado. No obstante, esto es un montaje temporal, y al reiniciar el sistema se perderá.
+    
+9. Para evitar que esto ocurra, hemos de añadir el montaje a `/etc/fstab`, que es el archivo que contiene la información sobre los sistemas de archivos montados. Para ello, editamos el archivo `/etc/fstab` y añadimos la siguiente línea:
+    ```shell
+    /dev/raid1/rvar  /var  ext4  defaults  0  0
+    ```
+    El contenido de cada campo se puede consultar fácilmente con `man fstab`. Estos son:
+   - **Device**: Nombre o UUID del dispositivo (ej. `/dev/sda1`).
+   - **Mount Point**: Directorio donde se monta (ej. `/mnt`).
+   - **File System Type**: Tipo de sistema (ej. `ext4`).
+   - **Options**: Opciones de montaje (ej. `defaults`).
+   - **Backup Operation**: 1 para respaldo (obsoleto), 0 para ninguno.
+   - **FS Check Order**: Prioridad de verificación al arrancar (0 para no verificar, 1 para el sistema raíz, 2 para otros sistemas). En el caso de que todos tengan la misma prioridad, se montan por orden de aparición en el archivo.
+   
+   Es especialmente relevante el último caso si todos tienen la misma prioridad. Es importante añadir la línea mencionada después del punto de montaje de `/rl_vbox-root`, que se monta en `/`, puesto que si no, no podremos montar en `/var` al no estar montado `/`.
+
+    Probamos ahora a desmontar y montarlo de forma automática.
+    ```shell
+    $ umount /var
+    $ systemctl daemon-reload
+    $ mount -a
+    $ df -h
+    ```
+
+    Si llegados a este punto vemos que efectivamente el LV está montado en `/var`, podemos garantizar que se montará de forma automática al reiniciar el sistema. Hemos pues logrado el objetivo buscado, que era montar `/var` en un RAID 1 gestionado por LVM.
+
+
+<!-- //TODO: Por aquí. Revisar lo de ADE desde RAID -->
+
+## Acceso Seguro al Servidor
 
 **iptables** es una utilidad de Linux para configurar el firewall a nivel de kernel. En Rocky Linux, usamos **firewalld**, un frontend más sencillo, gestionado mediante el comando `firewall-cmd`. Este se ejecuta como un servicio y podemos activarlo o verificarlo así:
 ```
