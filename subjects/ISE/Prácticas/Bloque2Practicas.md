@@ -7,6 +7,12 @@ Para permitir que un usuario no privilegiado use docker:
 groupadd docker # en caso de que no esté creado ya
 sudo usermod -aG docker $(whoami)
 ```
+Para ver los contanier ejecutándose: `docker ps`
+Para hacer que un container ya lanzado ejecute un comando:
+```
+docker contanier exec <container id> <command>
+```
+
 # Bechmarks
 
 ### Phoronix Test Suite
@@ -123,3 +129,41 @@ Para ejecutar algo cada 5 minutos: `/5 * * * *`
 
 Copiamos el los ficheros del guión y hacemos `docker compose up -d`.
 Tenemos que darle permiso de escritura al grupo para la carpeta `grafana_data` y `prometheus_data` para que se nos lancen los cubernetes.
+
+### Node exporter Linux
+Hay que instalarlo en la **MV**. 
+curl -LO con O de Oso
+hay que hacer lo que dice jj y el guion
+ponerlo como servicio firewall etc
+incluyendo recovecon skljfls
+
+En el host runeamos el grafana y prometheus con docker
+para hacer los dashboard que nos piden
+Status sshd y Apache httpd: necesitamos instalar en la MV systemd_explorer
+Hay que modificar el promtheus.yml para incluir este job, el puerto 9558.
+Hay que meterlo como servicio tb.
+Lo movemos el ejecutable a /usr/local/bin
+
+
+Otra opcion es sin instalar esto con node_explorer usando un collector (crear script, updatearlo con cron etc).
+
+
+Bueno hemos hecho la query del porcentaje de cpu:
+- node_cpu_seconds_total{mode="idle"}: tiempo de la cpu en segundos que pasa en estado "idle" (sin usarse)
+- [5m]: durante 5 minutso
+- rate: nos da la media por segundo (de los 5 min el procentaje) 
+- avg by (instace): nos da la media 
+
+
+## lo de la API
+para poder conectar los distintos contenedores con distintos compose he creado un red interna con:
+```
+docker network create <red>
+```
+y en los dockerfiles la he añadido
+```yml
+networks:
+    default:
+        external: true
+        name: <red>
+```
