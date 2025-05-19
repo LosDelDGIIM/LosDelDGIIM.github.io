@@ -663,7 +663,7 @@ curl -4 icanhazip.com
 ```
 ### Apache
 
-**Nota:** Si has realizado la configuración para el servidor de Nginx, asegurate de pararlo primero con `sudo service nginx stop` para que libere el puerto 80 y así lo pueda usar tu servidor de Apache.
+**Nota:** Si has realizado la configuración para el servidor de Nginx, asegúrate de pararlo primero con `sudo service nginx stop` para que libere el puerto 80 y así lo pueda usar tu servidor de Apache.
 
 Veamos ahora la configuración equivalente para un servidor en apache:
 ```
@@ -673,8 +673,8 @@ vi /etc/httpd/conf/httpd.conf
 ```
 Ahora cambiaremos las siguientes líneas:
 
-- ServerAdmin (Pondremos el correo del administrador)
-- ServerName (Pondremos el nombre o dirección del servidor)
+- ServerAdmin (Pondremos el correo del administrador) # myuser@myip
+- ServerName (Pondremos el nombre o dirección del servidor) # myip
 - Options (Quitaremos los índices)
 - AllowOverride (All)
 - DirectoryIndex (index.html index.php index.cgi (Según lo queramos configurar nosotros))
