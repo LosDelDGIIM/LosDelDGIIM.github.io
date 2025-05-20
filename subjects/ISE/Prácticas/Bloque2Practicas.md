@@ -1,169 +1,238 @@
-**Autora:** Laura Mandow Fuentes
+# Introducción
+En este documento abordamos herramientas y técnicas para la monitorización de sistemas y la simulación de carga de trabajo en servidores. Utilizaremos tecnologías modernas como contenedores Docker, herramientas de benchmark, generadores de carga como JMeter, y soluciones de monitorización como Grafana y Prometheus. Esta infraestructura permite evaluar el rendimiento de los sistemas y asegurar su correcto funcionamiento bajo diferentes condiciones de uso.
 
-## Docker
+# Contenedores Docker
+Los contenedores proporcionan una capa de abstracción sobre el sistema operativo, similar a una máquina virtual pero más ligera y eficiente. A diferencia de los hipervisores, Docker permite ejecutar múltiples aplicaciones encapsuladas, compartiendo el kernel del host.
+Los contenedores han facilitado la adopción de arquitecturas de microservicios, donde cada servicio corre de forma independiente y se comunica con otros mediante APIs o colas de mensajes.
+Cabe mencionar alternativas a Docker como Podman, que destaca por tener una sintaxis muy similar pero no requiere un daemon para su ejecución, lo que lo hace más seguro y ligero.
 
-Para permitir que un usuario no privilegiado use docker:
-```
-groupadd docker # en caso de que no esté creado ya
-sudo usermod -aG docker $(whoami)
-```
-Para ver los contanier ejecutándose: `docker ps`
-Para hacer que un container ya lanzado ejecute un comando:
-```
-docker contanier exec <container id> <command>
-```
+Otra herramienta que usaremos más adelante es Docker Compose, que sirve para definir y ejecutar aplicaciones multi-contenedor. Con un solo comando, podemos crear y ejecutar todos los contenedores necesarios para una aplicación, facilitando la gestión de entornos complejos.
 
-# Bechmarks
-
-### Phoronix Test Suite
-Hay varias formas de instalar esta aplicación. Nosotros usaremos el contenedor asociado que tiene con Docker.
-Para instalarlo:
-```
-docker pull phoronix/pts
+## Instalación de Docker
+Para instalar docker, podemos optar por la instalación en la MV o en el host. Para instalarlo en el Host, podemos seguir la guia de instalación oficial de Docker. Sin embargo, se muestran algunos comandos para distribuciones comunes.
+### Debian 
+```bash
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
 ```
 
-Para ejecutarlo de forma que la shell te permita ejecutar comandos -it (interativo). 
-```
-docker run -it phoronix/pts
-```
-Tras esto se nos abrirá una shell interactiva en la que podremos ejecutar comandos de Phoronix Test Suite.
-Consultemos los tests disponibles:
-```
-list-available-tests
-```
-Escogemos uno, por ejemplo:
-```
-install pts/git
-```
-Una vez instalado, lo ejecutamos:
-```
-run pts/git
-```
-Nos preguntará si queremos guardar los resultados de este test, y el fichero en el que queremos hacerlo.
-
-
-### Apache Benchmark
-
-En primer lugar, se realizan los pasos vistos en el bloque 1 para montar un servidor web http en una MV. Se aconseja montar un servidor de Apache en una y otro de Nginx en otra para poder comparar ambas.
-
-Instalamos la herramienta `ab`, en Ubuntu:
-```
-sudo apt install apache2-utils
+```bash
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
 ```
 
-Este comando tiene muchas opciones interesantes, pero solo nos interesan dos:
-- `-n`: especifica el número peticiones a realizar.
-- `-c`: número de peticiones que se envían simultáneamente de cada vez (concurrencia). 
+Y ahora ya podemos instalar docker junto con algunos plugins adicionales que usaremos:
+```bash
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+wget https://desktop.docker.com/linux/main/amd64/docker-desktop-amd64.deb?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-linux-amd64
+sudo apt-get update
+sudo apt-get install ./docker-desktop-amd64.deb
 
-Finalmente probamos el benchmark:
-```
-ab -n 1000 -c 100 192.168.56.69/index.html
-```
-**Nota:** es necesariop especificar la ruta del fichero que quiero obtener del servidor.
-
-## JMeter
-**MUY** recomendable Listener > View Results Tree
-
-### HTTP REQUEST DEFAULTS
-Para poner campos comunes a las http request como la ip del servidor y el puesto
-
-### HTTP AUTHENTICATION MANAGER
-Lo usamos para el BasicAuth
-user:password
-
-### THREAD GROUP
-Tenemos 2:
-- Alumnos
-- Administradores
-
-### Alumnos
-Son un Thread Group.
-Primero debemos hacer login
-- Http Request:
-    - path: /api/v1/auth/login
-    - Tipo: POST
-    - Parametros (name): login y password.
-- CSV Data Set Config: para obtener los user and passwd de todos los alumnos. El nombre de las variables ya viene especificado en el fichero. **OJO:** el path del fichero debe ser relativo (estamos en el dir del repo, ./jMeter/alumnos.csv sería el path correcto). 
-
-Una vez hecho el login, queremos obtener el expediente del alumno. 
-Para ello hacemos otro Http Request:
-- Tipo: GET
-- path: /api/v1/alumnos/alumno/${login}
-Este a su vez tiene un hijo que será un Http Header Manager. Debemos pasarle "Bearer ${token}" a un campo "Authentication" de la cabecera. 
-Para ello necesitamos el token que es valor de retorno de el Http Request anterior.
-Para logralo le añadimos un Regular Extractor (Post-Processor). 
-- name: token
-- regular expresion: .* (pq queremos todo lo q devuelve)
-- group: $0$ (por poner uno, da igual pero si no lo poner no funciona)
-El token lo devuelve en el Body.
-
-### Administradores
-Se hace igual pero en vez de un segundo Http Request para el contenido, usamos un Access Log Server para leer del fichero. Hace falta especificar ip y puerto pq no viene en el fichero dado y no lo toma por defecto.
-
-## Monitorizacion
-### TOP
-mirar jj
-
-### Stress
-Utilidad para meterle workload al sistema. 
-`--timeout 10s`: importante si no quieres que se te quede infinitamente
-`--cpu 20`: para workload de cpu (sqrt()). Número de procesos creados.
-
-## Cron
-Usaremos `cron` y `logger`.
-### Logger
-Escribe en el archivo `/var/log/syslog`.
-`-t`: la tag del msg a loguear
-```
-logger -t ise "hola"
-```
-### Cron
-Para ejecutarlo: `crontab -e`
-Cada usuario tiene su `crontab` asociado distinto.
-Para ejecutar algo cada 5 minutos: `/5 * * * *`
-```
-* * * * * logger -t ISE "LMF:`date` - `cat /proc/loadavg`"
 ```
 
-## Grafana + Prometheus
-
-Copiamos el los ficheros del guión y hacemos `docker compose up -d`.
-Tenemos que darle permiso de escritura al grupo para la carpeta `grafana_data` y `prometheus_data` para que se nos lancen los cubernetes.
-
-### Node exporter Linux
-Hay que instalarlo en la **MV**. 
-curl -LO con O de Oso
-hay que hacer lo que dice jj y el guion
-ponerlo como servicio firewall etc
-incluyendo recovecon skljfls
-
-En el host runeamos el grafana y prometheus con docker
-para hacer los dashboard que nos piden
-Status sshd y Apache httpd: necesitamos instalar en la MV systemd_explorer
-Hay que modificar el promtheus.yml para incluir este job, el puerto 9558.
-Hay que meterlo como servicio tb.
-Lo movemos el ejecutable a /usr/local/bin
-
-
-Otra opcion es sin instalar esto con node_explorer usando un collector (crear script, updatearlo con cron etc).
-
-
-Bueno hemos hecho la query del porcentaje de cpu:
-- node_cpu_seconds_total{mode="idle"}: tiempo de la cpu en segundos que pasa en estado "idle" (sin usarse)
-- [5m]: durante 5 minutso
-- rate: nos da la media por segundo (de los 5 min el procentaje) 
-- avg by (instace): nos da la media 
-
-
-## lo de la API
-para poder conectar los distintos contenedores con distintos compose he creado un red interna con:
+### Arch (By The Way)
+```bash
+sudo pacman -S docker docker-compose
 ```
-docker network create <red>
+
+## Comandos esenciales de Docker
+```bash
+# Imágenes
+docker pull <imagen>        # Descargar una imagen desde Docker Hub
+docker image ls             # Listar imágenes descargadas
+docker image rm <imagen>    # Eliminar una imagen del sistema
+
+# Contenedores
+docker run <imagen>         # Crear y ejecutar un nuevo contenedor
+docker run -it <img> sh     # Ejecutar un contenedor con terminal interactivo
+docker container ls         # Ver contenedores en ejecución
 ```
-y en los dockerfiles la he añadido
-```yml
-networks:
-    default:
-        external: true
-        name: <red>
+
+## Ejercicio Evaluable (Hello World)
+Para este ejercicio, bastará con descargar la imagen de hello-world y ejecutarla. Si los pasos anteriores están bien realizados, bastará con ejecutar los siguientes comandos:
+```bash
+sudo systemctl start docker
+sudo usermod -aG docker $USER
+sudo reboot
 ```
+Ahora una vez aplicados los cambios:
+```bash
+docker pull hello-world
+docker run hello-world
+```
+
+# Benchmarking
+El benchmarking es una técnica fundamental para evaluar el rendimiento de sistemas y servicios. Permite comparar distintas configuraciones, detectar cuellos de botella y validar mejoras de rendimiento. En este bloque se explorarán tanto herramientas de propósito general como específicas para servidores web.
+
+## OpenBenchmark
+Es un repositorio de benchmarks de codigo abierto, *Phoronix* es la plataforma de OpenBench que permite ejecutar benchmarks en una amplia variedad de sistemas y configuraciones. Permite realizar pruebas de rendimiento en CPU, GPU, memoria, almacenamiento y más.
+
+Podemos instalar Phoronix en el equipo anfitrion, en la MV, o en Docker, se ha recomendado aprender a usarlo en Docker sin embargo vamos a tener menos problemas de dependencias si lo instalamos directamente.
+
+Una vez instalado, deberemos configurarlo, descargar los tests y ejecutarlos:
+```bash
+phoronix-test-suite batch-setup
+phoronix-test-suite install compress-7zip
+phoronix-test-suite install stress-ng
+phoronix-test-suite batch-run compress-7zip stress-ng
+```
+De otra forma, podríamos haber usado la versión de Docker y haber instalado tests sin dependencias, por ejemplo compress-gzip.
+
+## Apache Benchmark
+Dentro de los benchmarks para servidores web hay varias herramientas, una de ellas bastante popular es Apache Benchmark (Mediante el comando *ab*). Particularmente, nos dice cuantas peticiones por segundo es capaz de soportar nuestro servidor.
+
+Para ejecutar ApacheBench, tenemos la sintaxis:
+```bash
+ab <OPTIONS> <WEB_SERVER_ADDRESS>/<PATH>
+```
+Las opciones mas comunes que usaremos son:
+- *-n*: El número de peticiones a enviar
+- *-t*: La duración (en segundos) del benchmark
+- *-c*: El número de peticiones concurrentes a realizar. 
+Si usamos -t y -n, deberemos poner primero -t ya que de lo contrario, ApacheBench lo va a ignorar, dejando por defecto 50000.
+El comando *ab* se ejecuta en un solo hilo, el flag -c indica cuantos fd se van a reservar para la ejecución, no cuantas peticiones HTTP se van a mandar simultáneamente.
+
+### Ejercicio 2.2.1 
+
+Para la resolución de este ejercicio usaremos la maquina o maquinas virtuales en las que hayamos desplegado un servidor web ya sea con Apache o con Nginx como se explica en el bloque 1. A continuación ejecutaremos el benchmark, por ejemplo:
+```bash
+ab -n 5000 -c 10 http://192.168.69.69/
+```
+Lo que nos devolverá una salida con varios campos, destacamos los siguientes:
+- Time per request: Apache proporciona dos variantes de esta métrica, ambas dependen del tiempo tomado para los tests (Time taken for tests) y del número de respuestas que se han procesado. Ambas multiplican por 1000 para obtener el resultado en ms.
+La diferencia es que la primera que aparece no toma la concurrencia en cuenta.
+
+- Request per second: El número de peticiones que nuestro servidor es capaz de procesar por cada segundo.
+
+- Transfer Rate: Es otra métrica importante ya que nos dice la cantidad de datos que es capaz de transferir la pagina por segundo, este dato esta relacionado con los anteriores sin embargo, existen ciertas técnicas que pudieran mantener el rendimiento ante una página más pesada.
+
+# Simulación Carga Jmeter
+Aunque Apache Benchmark tiene muchas posibilidades y es una herramienta poderosa y correcta, existen otras herramientas que permiten hacer tests más complejos, nosotros veremos concretamente Jmeter. Este software está diseñado para cargar funcionalidades de benchmark y medir rendimiento, es decir, puede medir y generar carga de forma genérica para varios elementos, si que es cierto, que en un principio estaba reservada a medir servidores web.
+
+Una de las características interesantes de Jmeter es que se puede crear concurrencia real gracias a la posibilidad de crear varias hebras dentro de las mismas CPU así como de distribuir el esfuerzo de carga entre varios equipos en red local.
+
+La ejecución es mediante linea de comandos, lo que aligera la carga de la maquina que genera las peticiones al servidor, además facilita la automatización de ciertos tests.
+
+Para la realización del siguiente ejercicio, deberemos clonarnos el siguiente repositorio:
+```bash
+git clone https://github.com/davidPalomar-ugr/iseP4JMeter
+```
+Una vez clonado, podemos acceder a el, veremos que nos encontramos con un docker-compose.yaml, haciendo simplemente: 
+```bash
+docker compose up
+```
+Podremos ejecutarlo y lo detendremos mediante down. Para ver la API podemos conectarnos a localhost en el puerto 3000. En esta página encontraremos una descripción básica de la API, concretamente dos métodos que usaremos:
+
+- /auth/login: Un método POST que nos permite autenticar un usuario, devolviendo un token de acceso JWT. La autenticación se realiza mediante un email y una contraseña.
+El acceso a este servicio está protegido por HTTP Basic Auth, por lo que deberemos enviar las credenciales en la cabecera de la petición.
+
+- /alumnos/alumno/\<email\>: Un método GET que nos permite obtener información sobre un alumno en particular. Este método requiere un token de acceso JWT que se obtiene al autenticar al usuario mediante el método anterior. El token portará la identidad y rol del usuario. El rol alumno solo puede solicitar sus datos mediante que un administrador puede solicitar los datos de cualquier alumno. Retorna un objeto JSON.
+
+Una vez levantado el servidor, podemos comprobar que funciona ejecutando pruebaEntorno.sh, que nos debería devolver la información en formato JSON de un alumno junto con comentarios de relleno estilo Lorem. Para ejecutarlo deberemos tener instalado curl. Además es recomendable copiar la salida a algún interprete de JSON para ver la salida de forma más legible.
+
+## Ejercicio
+El subdirectorio del repositorio jMeter contiene los ficheros necesarios para la realización del ejercicio:
+
+- alumnos.csv: Archivo con credenciales de alumnos
+- administradores.csv: Archivo con credenciales de administradores
+- apiAlumno.log: Log de accesso Http en formato apache.
+
+Para la realización de la prueba, crearemos un fichero .jmx, lo más cómodo es crearlo desde la aplicación de jMeter, el contenido del test será el siguiente:
+
+- **User Defined Variables** (Add > Config Element > User defined variables):
+  - Name: IP, Value: localhost (o la IP del servidor)
+  - Name: PUERTO, Value: 3000
+
+- **Access to ETSII API** (Add > Config Element > HTTP Request Defaults) :
+  - Server Name: `${IP}`
+  - Port Number: `${PUERTO}`
+  - Protocol: `http`
+  - Path: *(vacío)*
+
+- **Basic Auth API** (Add > Config Element > HTTP Authorization Manager):
+  - Base URL: `http://${IP}:${PUERTO}/api/v1/auth/login`
+  - Username: `etsiiApi`
+  - Password: `laApiDeLaETSIIDaLache`
+  - Mechanism: `BASIC`
+
+Ahora crearemos el Thread Group. Para este ejercicio crearemos uno para los usuarios y otro para los administradores. En JMeter, un Thread Group simula múltiples usuarios que ejecutan acciones simultáneamente contra tu servidor o API. Dentro de un thread group encontramos las siguientes definiciones fundamentales.
+
+- Number of threads (users):Número de usuarios virtuales (hilos) que simulan peticiones concurrentes.
+
+- Ramp-up period (seconds): Tiempo total en segundos que JMeter tarda en lanzar todos los usuarios. Si tienes 50 hilos y pones 25, lanzará 2 usuarios cada segundo.
+
+- Loop Count: Número de veces que cada hilo ejecutará el conjunto de acciones del test. Si pones 5, cada uno de los 50 usuarios hará 5 ciclos de prueba.
+
+Warm-up: El ramp-up simula un arranque progresivo, evitando una avalancha de tráfico al servidor. Esto es realista y reduce errores como saturaciones iniciales.
+
+Cooldown: Aunque JMeter no lo implementa directamente, puedes finalizar grupos de hilos progresivamente o añadir retardos entre grupos para simularlo.
+
+Para crearlo vamos a Add > Threads (Users) > Thread Group, podemos ponerle nombre Alumnos, en cuanto a los campos, por ejemplo poner 50, 25 y 5. Estos son los explicados anteriormente.
+Ahora dentro de Alumnos vamos a configurar todo lo siguiente:
+
+- **Credenciales Alumnos** (Add > Config Element > CSV Dataset):
+    - Filename: `./jMeter/alumnos.csv`
+    - File encoding: `UTF-8`
+    - Variable Names: `login,password`
+    - Ignore first line: `True`
+    - Delimiter: `,`
+    - Allow quoted data?: `False`
+    - Recycle on EOF: `True`
+    - Stop Thread on EOF: `False`
+    - Sharing Mode: `Current thread group`
+
+- **Login Alumno** (Add > Sampler > HTTP Request)
+    - Name: `Login Alumno`
+    - Method: `POST`
+    - Path: `/api/v1/auth/login`
+    - Parámetros:
+    - Name: `login`, Value: `${login}`
+    - Name: `password`, Value: `${password}`
+
+Ahora en Login alumno:
+- **JWT Token** (Add > Post > Regular Expression Extractor)
+    - Podemos llamar a la variable como queramos pero debemos recordar el nombre para usarlo a la hora de recuperar datos, de aqui en adelante nos referiremos a esta variable como   
+    ${token}.
+    - Regular Expression: `.+`
+    - Template: `$0$`. $i$ significa que coja la i-ésima ocurrencia. Con 0 coge todas.
+
+Añadimos además un temporizador mediante Add > Timer > Gaussian Random Timer.
+
+- **Recuperar Datos Alumno** (Add > Sampler > HTTP Request)
+    - Method: `GET`
+    - Path: `/api/v1/alumnos/alumno/${login}`
+    Add > Config Element > HTTP Header Manager:
+    - Name: `Authorization`, Value: `Bearer ${token}`
+
+Para los administradores, copia el grupo anterior y modifica lo siguiente:
+
+- CSV Dataset:
+  - Filename: `./jMeter/administradores.csv`
+
+- Recuperar datos:
+  - Sustituye por Add > Sampler > **Access Log Sampler**
+    - Name: `Accesos Administradores`
+    - Protocol: `http`
+    - Server: `${IP}`
+    - Port: `${PUERTO}`
+    - Log file location: `./jMeter/apiAlumno.log`
+    - Parser: `shared`
+
+Ahora añadimos a ETSII Alumnos API los siguientes Listener
+Add > Listener > Summary Report
+Add > Listener > View Results in Table
+Add > Listener > Aggregate Report
+**Nota:** Se aconseja además: Add > Listener > View Results Tree
+
+Ahora podemos ejecutar con el run de la interfaz gráfica, sin embargo, para aplicaciones que vayamos a lanzar a producción, y, para la resolución de este ejercicio, ejecutamos sin modo gráfico:
+```bash
+jmeter -n -t ./archivo.jmx -l results.jtl
+```
+
+Donde -n significa que no se abre el modo gráfico, -t es el archivo a ejecutar con la configuración y -l se utiliza para saber en que fichero guardar los resultados.
