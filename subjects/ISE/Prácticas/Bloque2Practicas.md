@@ -132,14 +132,47 @@ Hacemos referencia ahora brevemente a distintos términos:
     ENV NODE_ENV=production
     CMD ["npm","start"]
     ```
-    - Este ejemplo cabe destacarlo, puesto que se emplea la opción `EXPOSE`, que indica el puerto que se va a exponer al exterior. En este caso, el puerto 3000. Esto es importante, ya que si no se expone el puerto, no podremos acceder al contenedor desde el exterior de este.
+    - Este ejemplo cabe destacarlo, puesto que se emplea la opción `EXPOSE`, que indica que este contenedor va a escuchar en el puerto 3000. Esto es importante, ya que si no se especifica, el contenedor no podrá recibir peticiones en ese puerto.
 
+2. **Docker Compose**: Es una herramienta que permite definir y ejecutar aplicaciones multi-contenedor. Con un solo archivo de configuración (`docker-compose.yml`), podemos definir un único servicio que emplee varios contenedores. De nuevo, aunque no es necesario que sepamos construirlos, veamos un ejemplo:
+    ```yaml
+    version: '2.0'
+    services:
+      #MongoDB based in the original Mongo Image
+      mongodb:
+        image: mongo:6
+        ports:
+          - "27017:27017"
 
+      # Initialize mongodb with data
+      mongodbinit:
+        build: ./mongodb
+        links:
+          - mongodb
 
-<!-- TODO: Dockerfile 
-https://chatgpt.com/share/682e5f7a-7b08-8010-a721-22aa50685d96
-Lo de ADE
--->
+      # Nodejs App
+      nodejs:
+        build: ./nodejs
+        ports:
+          - "3000:3000"
+        links:
+          - mongodb
+    ```
+    - En este caso, se definen tres servicios: `mongodb`, `mongodbinit` y `nodejs`. Cada uno de ellos tiene su propia configuración y se pueden ejecutar juntos. Notemos que los últimos dos dependen del primero, por lo que no se ejecutarán si no se ha levantado el primero. Esto es importante, ya que si no se especifica, los contenedores pueden no funcionar correctamente.
+    - En lo referido a los puertos, vemos que se especifican de la forma `<puerto_host>:<puerto_contenedor>`. Esto significa que el puerto 27017 del host se redirige al puerto 27017 del contenedor. De esta forma, podemos acceder al contenedor desde el host a través del puerto 27017.
+
+    Para levantar dicho servicio multi-contenedor, simplemente ejecutamos el siguiente comando:
+    ```shell
+    $ docker-compose up [-d]
+    ```
+    - El flag `-d` indica que se va a ejecutar en segundo plano, es decir, que no se va a mostrar la salida del contenedor en la consola.
+
+    Para detenerlo, hay dos casos:
+    - Si se ha ejecutado en segundo plano, se puede usar el siguiente comando:
+      ```shell
+      $ docker-compose down
+      ```
+    - Si se ha ejecutado en primer plano, se puede usar `Ctrl + C` para detenerlo.
 
 
 ## Benchmarking
@@ -340,6 +373,9 @@ donde:
 Una vez ejecutado, los resultados se pueden ver desde la interfaz gráfica de JMeter, o bien desde el informe HTML generado. Este informe contiene gráficos y tablas con información detallada sobre los resultados del test, lo que facilita la interpretación de los resultados.
 
 
+- *Observación*: Las traducciones de la versión en español de la interfaz gráfica no son del todo correctas, por lo que se recomienda emplear la versión en inglés.
+
+
 ### Ejemplo Práctico
 
 JMeter tiene infinidad de opciones, y sería imposible explicarlas todas. Es por ello que veremos un ejemplo práctico, en el que explicaremos en detalle cada aspecto.
@@ -348,84 +384,242 @@ Para este ejemplo, emplearemos una web disponible gracias en el siguiente reposi
 ```shell
 $ git clone https://github.com/davidPalomar-ugr/iseP4JMeter
 ```
-Una vez clonado, podemos acceder a el, veremos que nos encontramos con un docker-compose.yaml, haciendo simplemente: 
+
+En la documenación de [dicho repositorio](https://github.com/davidPalomar-ugr/iseP4JMeter) se explica en detalle qué hemos de hacer. Se trata de una aplicación multi-contenedor, por lo que en primer lugar hemos de levantar el contenedor.
 ```shell
-docker compose up
+$ docker-compose up
 ```
-Podremos ejecutarlo y lo detendremos mediante down. Para ver la API podemos conectarnos a localhost en el puerto 3000. En esta página encontraremos una descripción básica de la API, concretamente dos métodos que usaremos:
 
-- /auth/login: Un método POST que nos permite autenticar un usuario, devolviendo un token de acceso JWT. La autenticación se realiza mediante un email y una contraseña.
-El acceso a este servicio está protegido por HTTP Basic Auth, por lo que deberemos enviar las credenciales en la cabecera de la petición.
+Este contenedor levantará un servidor web, y hemos de realizar una simulación de carga empleando JMeter. Como vemos en el correspondiente archivo de configuración `docker-compose.yml` y en la documentación, la API está disponible en el puerto 3000, por lo que accederemos desde un navegador a [http://localhost:3000](http://localhost:3000) (en el caso de que estemos ejecutándolo en el mismo ordenador. En caso contrario, especificar en vez de `localhost`, la IP del servidor), donde vemos:
 
-- /alumnos/alumno/\<email\>: Un método GET que nos permite obtener información sobre un alumno en particular. Este método requiere un token de acceso JWT que se obtiene al autenticar al usuario mediante el método anterior. El token portará la identidad y rol del usuario. El rol alumno solo puede solicitar sus datos mediante que un administrador puede solicitar los datos de cualquier alumno. Retorna un objeto JSON.
+![API](./Images/API_JMeter.png)
 
-Una vez levantado el servidor, podemos comprobar que funciona ejecutando pruebaEntorno.sh, que nos debería devolver la información en formato JSON de un alumno junto con comentarios de relleno estilo Lorem. Para ejecutarlo deberemos tener instalado curl. Además es recomendable copiar la salida a algún interprete de JSON para ver la salida de forma más legible.
+Como vemos, se trata de una descripción básica de la API. Esta API es de tipo *RESTful* (*Resource State Transfer*); es decir, emplea operaciones básicas de HTML como `GET`o `POST` para hacer operaciones de tipo CRUD (*Create, Read, Update, Delete*) sobre entidades. En este caso, es una API orientada al manejo de expedientes de alumnos. La API contiene dos métodos:
+- `POST /api/v1/auth/login`: Este método permite autenticar un usuario y obtener un token de acceso JWT, que le permitirá emplear el segundo método. La autenticación se realiza mediante el usuario y la contraseña, que se proporcionan como parámetros en la petición. El acceso a este servicio está protegido por HTTP Basic Auth, por lo que deberemos enviar las credenciales en la cabecera de la petición.
+- `GET /api/v1/alumnos/alumno/<email>`: Un método GET que nos permite obtener el expediente de un alumno en particular. Este método requiere un token de acceso JWT que se obtiene al autenticar al usuario mediante el método anterior.
 
-## Ejercicio
-El subdirectorio del repositorio jMeter contiene los ficheros necesarios para la realización del ejercicio:
+Notemos que hay dos tipos de usuarios: alumnos y administradores.
+- Los usuarios autenticados como alumnos pueden acceder en el segundo método a su propio expediente, pero no pueden acceder a la información de otros alumnos.
+- Los usuarios autenticados como administradores pueden acceder al expediente de cualquier alumno.
 
-- alumnos.csv: Archivo con credenciales de alumnos
-- administradores.csv: Archivo con credenciales de administradores
-- apiAlumno.log: Log de accesso Http en formato apache.
 
-Para la realización de la prueba, crearemos un fichero .jmx, lo más cómodo es crearlo desde la aplicación de jMeter, el contenido del test será el siguiente:
+Explicamos ahora en detalle la seguridad de la API, antes ligeramente mencionada.
+1. El primero de los métodos emplea el protocolo de autenticación `HTTP Basic Auth`, que es un método sencillo y ampliamente utilizado para autenticar usuarios en aplicaciones web. Aunque este está obsoleto y no es seguro sobre HTTP (puesto que no se cifran las credenciales), permite paliar el ruido del canal, puesto que solo se procesan las peticiones que contienen las credenciales correctas. Para autenticarse, se emplea un *Encabezado de Autenticación* que contiene el nombre de usuario y la contraseña codificados en Base64. En nuestro caso, podemos ver que la API está protegida por `HTTP Basic Auth`, y las credenciales son:
+    - Usuario: `etsiiApi`
+    - Contraseña: `laApiDeLaETSIIDaLache`
 
-- **User Defined Variables** (Add > Config Element > User defined variables):
-  - Name: IP, Value: localhost (o la IP del servidor)
-  - Name: PUERTO, Value: 3000
+2. El segundo método emplea el protocolo de autenticación `JWT` (JSON Web Token) que se basa en Tokens, que son cadenas de texto codificadas en Base64 que contienen información sobre el usuario. Contiene tres partes separados por un `.`:
+    - **Header**: Contiene información sobre el algoritmo de firma y el tipo de token.
+    - **Payload**: Contiene la información del usuario, como su ID, nombre, etc. En nuestro caso, contiene el ID del usuario y su rol (alumno o administrador).
+    - **Signature**: Es la firma del token, que se genera a partir del header y el payload. Esta firma se utiliza para verificar la integridad del token y asegurarse de que no ha sido modificado.
 
-- **Access to ETSII API** (Add > Config Element > HTTP Request Defaults) :
-  - Server Name: `${IP}`
-  - Port Number: `${PUERTO}`
-  - Protocol: `http`
-  - Path: *(vacío)*
+    Estas tres partes pueden obtenerse con el [JWT Debugger](https://jwt.io/), que nos permite decodificar el token y ver su contenido. Además, este nos permite conocer si efectivamente es un Token válido, pero para ello necesita saber con qué contraseña se firmó. Esta está disponible en [./nodejs/config/config.js](https://github.com/davidPalomar-ugr/iseP4JMeter/blob/master/nodejs/config/config.json)
+    ```json
+    {
+      "mongodburl":"mongodb://mongodb:27017/etsii",
+      "jwtTokenSecret":"meMolaMuchoEstudiarEnLaETSII",
+      "jwtTokenTTLInSecons": 3600,
+      "jwtTimeJitterInSeconds":60,
+      "basicAuthLogin":"etsiiApi",
+      "basicAuthPassword":"laApiDeLaETSIIDaLache"
+    }
+    ```
+    Como vemos, la contraseña es `meMolaMuchoEstudiarEnLaETSII`. Esta contraseña se utiliza para firmar el token, y es la que se utiliza para verificar la firma del token. Si el token no está firmado con esta contraseña, no será válido.
+    
+    Es importante resaltar que:
+    - **No están cifrados**, por lo que no se puede incluir información sensible.
+    - **Sí están firmados**, por lo que se puede verificar la integridad del token y asegurarse de que no ha sido modificado.
 
-- **Basic Auth API** (Add > Config Element > HTTP Authorization Manager):
-  - Base URL: `http://${IP}:${PUERTO}/api/v1/auth/login`
-  - Username: `etsiiApi`
-  - Password: `laApiDeLaETSIIDaLache`
-  - Mechanism: `BASIC`
+    Como se explica, hemos de incluir en la cabecera de la petición `GET`, en el campo `Authorization`, el valor de `Bearer <token>`.
 
-Ahora crearemos el Thread Group. Para este ejercicio crearemos uno para los usuarios y otro para los administradores. En JMeter, un Thread Group simula múltiples usuarios que ejecutan acciones simultáneamente contra tu servidor o API. Dentro de un thread group encontramos las siguientes definiciones fundamentales.
 
-- Number of threads (users):Número de usuarios virtuales (hilos) que simulan peticiones concurrentes.
+Una vez levantado el servidor y explicado su funcionamiento, para probar el entorno ejecutamos el siguiente script, que se encuentra en el fichero `pruebaEntorno.sh`.
+```bash
+#!/bin/bash
+SERVER=localhost
+TOKEN=$(curl -s \
+-u etsiiApi:laApiDeLaETSIIDaLache \
+-d "login=mariweiss@tropoli.com&password=anim" \
+-H "Content-Type: application/x-www-form-urlencoded" \
+-X POST http://$SERVER:3000/api/v1/auth/login)
 
-- Ramp-up period (seconds): Tiempo total en segundos que JMeter tarda en lanzar todos los usuarios. Si tienes 50 hilos y pones 25, lanzará 2 usuarios cada segundo.
+resultado=$?
+if test "$resultado" != "0"; then
+   echo "ERROR: Curl fallo con resultado: $resultado"
+fi
 
-- Loop Count: Número de veces que cada hilo ejecutará el conjunto de acciones del test. Si pones 5, cada uno de los 50 usuarios hará 5 ciclos de prueba.
+echo $TOKEN
 
-Warm-up: El ramp-up simula un arranque progresivo, evitando una avalancha de tráfico al servidor. Esto es realista y reduce errores como saturaciones iniciales.
+curl \
+-H "Authorization: Bearer $TOKEN" \
+http://$SERVER:3000/api/v1/alumnos/alumno/mariweiss%40tropoli.com 
+```
 
-Cooldown: Aunque JMeter no lo implementa directamente, puedes finalizar grupos de hilos progresivamente o añadir retardos entre grupos para simularlo.
+Como vemos, para obtener el Token se emplea el comando `curl` con los siguientes parámetros:
+- `u`: Especifica el usuario y la contraseña a usar para autenticarse. En este caso, se especifica el usuario y la contraseña separados por `:`. Empleamos la opción `-u` para que `curl` use `HTTP Basic Auth`.
+- `d`: Especifica los datos a enviar en la petición. En este caso, se especifica el login y la contraseña del usuario a autenticar. Estos datos se envían como parámetros en la petición.
+- `H`: Especifica la cabecera a enviar en la petición. En este caso, se especifica el tipo de contenido a enviar. En este caso, se especifica que se van a enviar datos en formato `application/x-www-form-urlencoded`, que es el formato utilizado por los formularios HTML.
+- `X`: Especifica el método HTTP a usar. En este caso, se especifica que se va a usar el método `POST`.
+- `s`: Especifica que se va a usar el modo silencioso, es decir, que no se va a mostrar la salida del comando en la consola. Esto es útil para evitar que se muestre información innecesaria en la consola.
 
-Para crearlo vamos a Add > Threads (Users) > Thread Group, podemos ponerle nombre Alumnos, en cuanto a los campos, por ejemplo poner 50, 25 y 5. Estos son los explicados anteriormente.
-Ahora dentro de Alumnos vamos a configurar todo lo siguiente:
+Por otro lado, una vez obtenido el token, se usa de nuevo `curl` para hacer la petición `GET` al servidor. El único parámetro que se añade es:
+- `H`: Especifica la cabecera a enviar en la petición. En este caso, se especifica el token a usar para autenticar la petición. Este token se obtiene de la respuesta del servidor al autenticar al usuario.
 
-- **Credenciales Alumnos** (Add > Config Element > CSV Dataset):
+Como vemos, la salida está en formato JSON. Se recomienda emplear un [formateador de JSON](https://jsonformatter.org/json-pretty-print) para ver el expediente de forma más legible:
+```json
+{
+  "_id": "682f03b487779655f4d6ac8d",
+  "nombre": "Mari",
+  "apellidos": "Fletcher Weiss",
+  "sexo": "female",
+  "email": "mariweiss@tropoli.com",
+  "fechaNacimiento": "1992-04-04T00:00:00.000Z",
+  "comentarios": "Aliquip dolor laboris ullamco id ex labore. Ipsum [...] minim nostrud et.\r\n",
+  "cursos": [
+    {
+      "_id": "682f13f1d1a1dab4e510a177",
+      "curso": 1,
+      "media": 5.2
+    },
+    {
+      "_id": "682f13f1d1a1dab4e510a178",
+      "curso": 2,
+      "media": 9.1
+    }
+  ],
+  "usuario": 10
+}
+```
+
+Por simple curiosidad para el lector, los ejemplos de los alumnos se han obtenido empleando [JSON Generator](https://json-generator.com/) con las plantillas ubicadas en [./mongodb/scripts](https://github.com/davidPalomar-ugr/iseP4JMeter/tree/master/mongodb/scripts).
+
+Una vez desarrollado y explicado el entorno, pocedemos en sí a explicación de la práctica.
+- Se debe simular el acceso de cierto número de alumnos. Estos tan solo deben verificarse y obtener su expediente. Las credenciales de los alumnos se encuentran en [./jMeter/alumnos.csv](https://github.com/davidPalomar-ugr/iseP4JMeter/tree/master/jMeter/alumnos.csv).
+- Se debe simular el acceso de cierto número de administradores. Estos deben verificar su acceso y ejecutar un acceso log. Las credenciales de los administradores se encuentran en [./jMeter/administradores.csv](https://github.com/davidPalomar-ugr/iseP4JMeter/tree/master/jMeter/administradores.csv), mientras que el log a simular se encuentra en [./jMeter/apiAlumno.log](https://github.com/davidPalomar-ugr/iseP4JMeter/tree/master/jMeter/apiAlumno.log).
+
+Para la realización, hemos de crear el fichero de jMeter `jmx` correspondiente desde la interfaz gráfica. La situación final del test, de cara a facilitar el trabajo al lector, debe quedar como sigue:
+
+![JMeter](https://raw.githubusercontent.com/davidPalomar-ugr/iseP4JMeter/refs/heads/master/images/jmeterLoadTest.png)
+
+
+
+ A continuación, describiremos paso por paso:
+1. **ETSII Alumnos API**
+
+    `Test Plan` es la base del proyecto, y desde él colgarán todos los elementos del test. En él, aparte del nombre y de los comentarios, hemos de conocer el campo de `User Defined Variables`, que nos permite definir variables que se pueden usar en todo el test.
+   - Para acceder a ellas, deberemos usar el símbolo `$` seguido del nombre de la variable. Por ejemplo, si definimos una variable llamada `PORT`, la usaremos como `${PORT}`. Esto es útil para definir variables que se usan en varias partes del test. En nuestro caso, hemos de usar (como mínimo):
+     - `HOST`: `localhost` (o la IP del servidor)
+     - `PORT`: 3000 (es el puerto en el que está levantado el servidor).
+
+2. **Access to ETSII API**
+   
+   Es buena costumbre unificar todos los valores por defecto de las peticiones HTML en un elemento de configuración llamado `HTTP Request Defaults` (`Add > Config Element > HTTP Request Defaults`). Esto nos permite definir valores por defecto para todas las peticiones que se hagan en el test. De esta forma, si queremos cambiar algún valor, lo haremos una sola vez y se aplicará a todas las peticiones. En nuestro caso, hemos de definir:
+     - Server Name: `${HOST}`
+     - Port Number: `${PORT}`
+     - Protocol: `http`, puesto que el servidor está levantado en HTTP (no tenemos certificados para emplear HTTPS).
+
+    También se podrían añadir los siguientes elementos:
+    - Path por defecto.
+    - Parámetros a enviar en cada petición.
+    - En la opción de `Advanced`, hay una opción llamada `Retrieve All Embeded Resources`, que permite descargar todos los recursos embebidos en la página (imágenes, CSS, etc.). Esto es útil para hacer pruebas de rendimiento más completas y fiables (puesto que en una situación real las visitas descargarán dichos elementos). No obstante, debido a la sencillez de la aplicación, no hay recursos embebidos, por lo que no es necesario.
+
+3. **Basic Auth API** 
+   
+   A continuación, debemos controlar el acceso a la API mediante `HTTP Basic Auth`. Para ello, hemos de añadir un elemento de configuración llamado `HTTP Authorization Manager` (`Add > Config Element > HTTP Authorization Manager`). Este elemento permite gestionar la autenticación HTTP en las peticiones que se realicen. Este debe contener:
+     - Base URL: `http://${HOST}:${PORT}/api/v1/auth/login`
+     - Username: `etsiiApi`
+     - Password: `laApiDeLaETSIIDaLache`
+     - Mechanism: `BASIC`
+
+4. **Alumnos**
+
+    Ahora, añadimos el *Thread Group* de los alumnos. Este es un elemento que permite simular la carga de usuarios en el servidor. En este caso, vamos a simular el acceso de varios alumnos a la API. Para ello, añadimos un elemento llamado `Thread Group` (`Add > Threads (Users) > Thread Group`). Este elemento permite configurar cómo va a ser esa carga:
+    - **Number of Threads (users)**: 30. 
+
+      Representa el número de usuarios que van a acceder al servidor. En este caso, vamos a simular el acceso de 30 alumnos.
+    - **Ramp-up period (seconds)**: 10.
+  
+      Representa el tiempo que va a tardar JMeter en lanzar todos los usuarios, puesto que no es realista el acceso tan simultáneo de tantos clientes. En este caso, vamos a lanzar 30 usuarios en 10 segundos, lo que significa que JMeter lanzará 3 usuarios por segundo. Este concepto está relacionado con los dos siguientes:
+      - **Warmup**: El tiempo que tarda el servidor en estabilizarse. La arquitectura solicita los recursos de forma progresiva.
+      - **Cooldown**: Concepto análogo al *warmup* pero a la hora de aparcar el servidor.
+    - **Loop Count**: 5. 
+
+      Representa el número de veces que cada usuario va a acceder al servidor. En este caso, cada usuario va a acceder 5 veces al servidor. Esto significa que se van a realizar un total de $30 \cdot 5 = 150$ peticiones al servidor.
+
+    Aunque esos sean los valores que dejemos fijos en producción, en el desarrollo del test es recomendable usar valores más bajos, para evitar saturar el servidor y que las pruebas vayan más rápidas.
+
+
+5. **Credenciales Alumnos** 
+   
+   A continuación, y dentro ya del *Thread Group* de alumnos, hemos de recoger sus credenciales, que como especificamos se encuentran en [./jMeter/alumnos.csv](https://github.com/davidPalomar-ugr/iseP4JMeter/tree/master/jMeter/alumnos.csv). Para ello, hemos crear un elemento llamado `CSV Data Set Config` (`Add > Config Element > CSV Data Set Config`). Este elemento permite leer datos de un archivo CSV y usarlos en las peticiones que se realicen. Este elemento debe contener:
     - Filename: `./jMeter/alumnos.csv`
+
+      Path al archivo CSV que buscamos procesar. A efectos prácticos en el desarrollo de la práctica, **es indispensable emplear paths relativos**.
     - File encoding: `UTF-8`
     - Variable Names: `login,password`
+
+      Variables que se van a usar en el test, ordenadas tal y como aparecen en el CSV. En este caso, las variables son `login` y `password`, que corresponden al login y la contraseña de los alumnos.
     - Ignore first line: `True`
+
+      Esta opción es útil en el caso de que el archivo CSV contenga una cabecera con los nombres de las columnas, como es nuestro caso.
     - Delimiter: `,`
+
+      Delimitador que se va a usar en el archivo CSV. Otros delimitadores son `;` o `\t` (tabulador), dependiendo del formato del archivo CSV.
     - Allow quoted data?: `False`
     - Recycle on EOF: `True`
+  
+      Cuando se acaben los datos del archivo CSV (se lea el EOF, *End Of File*), al estar a `True` se volverá a leer el archivo desde el principio. Esto es útil si queremos que los usuarios se repitan.
     - Stop Thread on EOF: `False`
+
+      Solo tiene sentido si `Recycle on EOF` está a `False`. Determina si el hilo se ha de detener cuando se acabe el archivo CSV.
     - Sharing Mode: `Current thread group`
 
-- **Login Alumno** (Add > Sampler > HTTP Request)
-    - Name: `Login Alumno`
+      Determina si los datos leídos del archivo CSV son también accesibles por otros grupos de hilos o no. En nuestro caso, no es necesario.
+
+6. **Login Alumno**
+
+    Llegados a este punto, ya tenemos las credenciales de los alumnos y el acceso a la API, por lo que podemos realizar la primera petición para obtener el Token. Para ello, hemos de añadir un elemento llamado `HTTP Request` (`Add > Sampler > HTTP Request`). Este elemento permite realizar peticiones HTTP al servidor, y empleará las opciones ya configuradas por defecto en el `HTTP Request Defaults`. Este elemento debe contener:
     - Method: `POST`
     - Path: `/api/v1/auth/login`
-    - Parámetros:
+
+    En los parámetros de la petición, hemos de añadir los siguientes:
     - Name: `login`, Value: `${login}`
     - Name: `password`, Value: `${password}`
+    Esos dos parámetros los tomará del fichero CSV que hemos leído anteriormente. Además, en este elemento está la opción de `Follow Redirects`, que permite seguir las redirecciones que se produzcan en la petición (como ocurrió con el caso de la Universidad de Granada visto anteriormente).
 
-Ahora en Login alumno:
-- **JWT Token** (Add > Post > Regular Expression Extractor)
-    - Podemos llamar a la variable como queramos pero debemos recordar el nombre para usarlo a la hora de recuperar datos, de aqui en adelante nos referiremos a esta variable como   
-    ${token}.
-    - Regular Expression: `.+`
-    - Template: `$0$`
+7. **Listeners**
+
+    Llegados a este punto, puesto que ya hemos realizado una petición, nos interesa saber si se ha realizado todo correctamente. Para ello, añadiremos elemenos llamados `Listeners` (`Add > Listener`) que cuelguen de todo el *Test Plan*. Estos elementos permiten ver los resultados de las peticiones que se realicen. En este caso, añadiremos los siguientes:
+    - `View Results Tree`: Permite ver el resultado de cada petición realizada. Este elemento es útil para depurar el test y ver si las peticiones se están realizando correctamente. En el caso de que no sea así, permite ver las cabeceras de la petición y la respuesta del servidor, pudiendo así comprobar si se ha realizado la petición tal y como se buscaba.
+
+    - `View Results in Table`: Permite ver los resultados de las peticiones en forma de tabla. Este elemento es útil para ver los resultados de forma más clara y ordenada.
+    
+    - `Summary Report`: Permite ver un resumen de los resultados de las peticiones realizadas. Este elemento es útil para ver un resumen de los resultados sin tener que ver cada petición por separado.
+    
+    - `Aggregate Report`: Permite ver un informe agregado de los resultados de las peticiones realizadas.
+
+    Los últimos dos *listeners* son parecidos, aunque el último incluye también percentiles. Estos nos permitarán depurar, y son los que nos ayudarán a obtener conclusiones sobre el rendimiento del servidor una vez el test esté en producción. 
+    - Para ejecutar el test desde la interfaz gráfica, se emplean los botones de `Start` disponibles en la barra de herramientas de arriba, y para limpiar el contenido de los *listeners* se emplea el botón de `Clear All` (el que tiene una escoba).
+    - Mientras que el test se encuentra en producción y se está ejecutando por línea de comandos, se recomienda deshabilitar los *listeners* para evitar esta sobrecarga. Para ello, se puede hacer clic derecho sobre el *listener* y seleccionar `Disable`. Esto hará que el *listener* no se ejecute, pero seguirá estando disponible para su uso posterior. Para habilitarlo de nuevo, se hace clic derecho sobre el *listener* y se selecciona `Enable`.
+    - Los listeners también son los que nos permiten ver los resultados de los test ejecutados por línea de comandos. Para ello, hemos de emplear el campo `Filename` del *listener* y especificarle el nombre del archivo donde se han guardado los resultados.
+
+8. **Extract JWT Token**
+
+    Una vez estamos autenticados, hemos de realizar la segunda petición. No obstante, para ello hemos de obtener el Token (resultado de la petición ya realiza) para poder usarlo en la siguiente petición. Para ello, hemos de añadir un elemento llamado `Regular Expression Extractor` (`Add > Post Processors > Regular Expression Extractor`) dentro del `HTTP Request` que acabamos de crear. Este elemento permite extraer información de la respuesta del servidor y guardarla en una variable que se puede usar en las siguientes peticiones. Este elemento debe contener:
+    - *Name of created variable*: `token`
+    - *Regular Expression*: `.+`
+    - *Template*: `$0$`
+
+      Este último campo se usaría en expresiones regulares más complejas, pero en este caso no es necesario.
+      <!-- en la expresion regular le puedes meter por ejemplo:
+      User: (regex1) Pass: (regex2)
+      Si en template pones $1$, te guarda solo regex1, si pones $1$-$2$ te pilla regex1-regex2, y si pones $0$ te pilla todo
+      -->
+
+    Como se puede intuir, se almacenará la parte de la respuesta que coincide con la expresión regular en una variable llamada `token` (en este caso).
+
+
+    <!-- // TODO: Por aquí-->
 
 Añadimos además un temporizador mediante Add > Timer > Gaussian Random Timer.
 
