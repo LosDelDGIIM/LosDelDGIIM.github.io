@@ -200,7 +200,7 @@ Ahora en Login alumno:
     - Podemos llamar a la variable como queramos pero debemos recordar el nombre para usarlo a la hora de recuperar datos, de aqui en adelante nos referiremos a esta variable como   
     ${token}.
     - Regular Expression: `.+`
-    - Template: `$0$`. $i$ significa que coja la i-ésima ocurrencia. Con 0 coge todas.
+    - Template: `$0$`
 
 Añadimos además un temporizador mediante Add > Timer > Gaussian Random Timer.
 
@@ -222,13 +222,11 @@ Para los administradores, copia el grupo anterior y modifica lo siguiente:
     - Server: `${IP}`
     - Port: `${PUERTO}`
     - Log file location: `./jMeter/apiAlumno.log`
-    - Parser: `shared`
 
 Ahora añadimos a ETSII Alumnos API los siguientes Listener
 Add > Listener > Summary Report
 Add > Listener > View Results in Table
 Add > Listener > Aggregate Report
-**Nota:** Se aconseja además: Add > Listener > View Results Tree
 
 Ahora podemos ejecutar con el run de la interfaz gráfica, sin embargo, para aplicaciones que vayamos a lanzar a producción, y, para la resolución de este ejercicio, ejecutamos sin modo gráfico:
 ```bash
@@ -236,3 +234,122 @@ jmeter -n -t ./archivo.jmx -l results.jtl
 ```
 
 Donde -n significa que no se abre el modo gráfico, -t es el archivo a ejecutar con la configuración y -l se utiliza para saber en que fichero guardar los resultados.
+
+# Monitorización
+La monitorización es una parte esencial en la administración de sistemas.
+
+## Herramientas de monitorización
+
+### `top`
+- Herramienta clásica, disponible en casi todos los sistemas Linux.
+- Muestra en tiempo real:
+  - Carga del sistema (`load average`)
+  - Uso de CPU y memoria
+  - Procesos en ejecución
+- Funciona en terminales sin entorno gráfico.
+- Usa información del sistema de archivos `/proc`.
+
+### `htop`
+- Versión mejorada de `top`:
+  - Interfaz interactiva y más visual.
+  - Permite ordenar procesos con teclas, matar procesos fácilmente.
+  - Muestra uso de CPU por core y RAM con barras gráficas.
+
+### `btop`
+- Evolución moderna con mejor UI:
+  - Interfaz basada en ncurses (colores, gráficos animados).
+  - Muestra carga, memoria, procesos, red y disco.
+  - Uso muy intuitivo.
+  - Ideal para visualización avanzada en terminales modernos.
+
+## Fuente de datos: `/proc`
+- `/proc/loadavg`: carga media del sistema.
+- `/proc/meminfo`: uso de memoria.
+- `/proc/uptime`: tiempo activo del sistema.
+- `/proc/cpuinfo`: info del procesador.
+- `/proc/[PID]/`: info específica de cada proceso.
+
+Además de las herramientas ya mencionadas, tenemos comandos como `uptime`, `free` o `vmstat` que acceden a las mismas fuentes de información pero son más adecuados para extraer información específica o para scripts.
+
+## Ejercicio Opcional
+
+Stress es una herramienta de carga que permite estresar el sistema, generando carga en CPU, memoria, disco y red. Permite simular condiciones extremas para evaluar la estabilidad y rendimiento del sistema. Se recomienda la herramienta `stress-ng`, que es una versión mejorada de `stress` y ofrece más opciones y configuraciones.
+
+Las opciones más comunes son:
+- --cpu N: Estresa N núcleos de CPU.
+- --all 0: Estreza todos los subsistemas (No recomendado probar)
+- --cpu-load N: Estresa la CPU al N% de carga (Aproximadamente).
+- --timeout Ns: Ejecuta el estrés durante N segundos.
+
+Para resolver el ejercicio, bastará con ejecutar el comando con las flags que veamos oportunas mientras monitoreamos el sistema con las herramientas anteriormente descritas.
+
+## Programacion tareas
+En el ambito de la adminitración de servidores es muy común la ejecución de tareas periódicas de mantenimiento. Para automatizar este fin, existen varias herramientas muy útiles, nos centraremos en cron, que es la clásica y más extendida solución, sin embargo, se recomienda leer sobre systemd timers, que para sistemas basados en systemd proporcionan una manera más adecuada, sencilla y eficiente de ejecutar estas tareas.
+
+## ¿Cómo funciona `cron`?
+
+`cron` ejecuta tareas en segundo plano definidas por el usuario mediante un archivo especial llamado *crontab* (tabla de cron). Cada usuario puede tener su propia tabla de tareas.
+
+Para editarla:
+
+```bash
+crontab -e
+```
+
+Este comando abre el archivo de configuración asociado al usuario actual. Las tareas se escriben en líneas con el siguiente formato:
+
+* * * * * comando
+│ │ │ │ │
+│ │ │ │ └── Día de la semana (0-7) (domingo es 0 o 7)
+│ │ │ └──── Mes (1-12)
+│ │ └────── Día del mes (1-31)
+│ └──────── Hora (0-23)
+└────────── Minuto (0-59)
+
+## Comandos útiles
+
+- Ver tareas programadas: crontab -l
+- Borrar tareas: crontab -r
+- Editar tareas: crontab -e
+- Ver logs del sistema: journalctl, dmesg, o /var/log/syslog (depende del sistema)
+
+## Ejercicio opcional
+
+Queremos que ejecute un comando para el log del sistema con las características dadas, para ello, podemos usar el siguiente comando, que deberemos insertar en el crontab con la frecuencia deseada:
+```bash
+echo "[INICIALES] $(date '+%d-%m-%Y %H:%M:%S') – CPU: $(top -bn1 | grep 'Cpu(s)' | awk '{print 100 - $8}')%" | logger -t ISE
+```
+En este caso se imprime el % de CPU en uso, podríamos haber definido cualquier otra forma para representar la carga y sería valido. Por ejemplo en top tambien hay un parámetro de carga media.
+Para poner la frecuencia editamos con crontab -e y añadimos la linea anterior junto con la frecuencia deseada, por ejemplo:
+```bash
+0 4 8-14 * * echo "[INICIALES] $(date '+%d-%m-%Y %H:%M:%S') – CPU: $(top -bn1 | grep 'Cpu(s)' | awk '{print 100 - $8}')%" | logger -t ISE
+```
+Que ejecutaría a las 4:00 cada dia del mes comprendido entre 8 y 14. Para obtener los tiempos de forma más sencilla, se recomienda la pagina crontab.guru.
+
+## Logs
+Una forma sencilla de monitorización es ver los logs del sistema, se almacenan en /var/logs/ que contiene tanto logs del sistema linux como de servicios instalados. En ocasiones el formato es texto plano y podemos consultarlos con herramientas del estilo de `cat`. En otras ocasiones necesitaremos comandos específicos para consultarlos, por ejemplo `last` y `who` permiten consultar los accesos registrados en el archivo binario btmp,wtmp.
+
+## Journalctl
+En sistemas modernos basados en systemd, todos los eventos del sistema y de los servicios se registran en el journal. El servicio encargado de esta tarea es `systemd-journald`.
+
+Por defecto, el journal es volátil, lo que significa que los logs se almacenan en memoria y se pierden tras un reinicio. Para habilitar persistencia:
+```bash
+sudo mkdir -p /var/log/journal
+sudo systemctl restart systemd-journald
+```
+También puede ajustarse la opción `Storage=persistent` en el archivo de configuración /etc/systemd/journald.conf.
+Para consultar los registros del sistema se utiliza:
+```bash
+journalctl
+```
+Opciones comunes:
+
+- -b: muestra los logs desde el último arranque.
+- -p: filtra por prioridad (emerg, alert, crit, err, warning, etc.).
+- -u nombre_servicio: filtra por unidad de systemd.
+## Ejercicio Opcional: Logs del arranque
+
+Queremos ver los logs del último arranque con nivel de severidad warning o superior (advertencias, errores, fallos críticos).
+```bash
+journalctl -b -p warning
+```
