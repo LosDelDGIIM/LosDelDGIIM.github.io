@@ -1084,6 +1084,11 @@ Un ejemplo de un playbook sería el siguiente:
 ...
 ```
 
+Como vemos, para que el playbook sea variable, es recomendable emplear variables. Estas pueden definirse de varias formas:
+- En el propio playbook.
+- En un fichero de variables externo, y especificarlo como está en el ejemplo.
+- Si se quiere que las variables ean propias que cierto grupo de nodos, en la carpeta `group_vars` hermana de la carpeta se puede crear un fichero con el nombre del grupo, y ahí se pueden definir las variables. Por ejemplo, si el grupo se llama `web`, se puede crear un fichero `./group_vars/web.yaml` y ahí definir las variables. Estas variables estarán disponibles para todos los nodos que pertenezcan a ese grupo. También se puede crear un fichero `./group_vars/all.yaml` para definir variables que estén disponibles para todos los nodos manejados.
+
 #### Ejercicio Obligatorio
 
 En este apartado, resolveremos el ejercicio obligatorio de la práctica. Este será además un ejemplo muy ilustrativo de playbooks con Ansible.
@@ -1248,7 +1253,7 @@ Comenzamos ahora por tanto con el playbook en sí.
         - name: user2
     ```
 
-    Además, crearemos las claves públicas correspondientes en la carpeta `./keys/` del controlador. Por motivos de simplicidad para la práctica, todas las claves públicas pueden ser la misma, pero en un escenario de la vida real serían las de los usuarios reales.
+    Además, crearemos las claves públicas correspondientes en la carpeta `./keys/` del controlador y las contraseñas de los usuarios en `/pass/`. Por motivos de simplicidad para la práctica, todas las claves públicas pueden ser la misma, pero en un escenario de la vida real serían las de los usuarios reales.
 
 
     Una vez comentado esto, creamos los usuarios añadiéndolos al grupo `wheel`. Para ello, empleamos el módulo [`user`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/user_module.html#ansible-collections-ansible-builtin-user-module):
@@ -1259,10 +1264,12 @@ Comenzamos ahora por tanto con el playbook en sí.
         groups: wheel
         append: true
         state: present
+        password: "{{ lookup('ansible.builtin.file', './pass/' + item.name + '.pass') | password_hash('sha512') }}"
     loop: "{{ users }}"
     ```
     - `loop`: Permite iterar sobre una lista. En este caso, se itera sobre la lista de usuarios definida en el archivo `vars.yaml`. Para cada usuario, se crea un usuario con el nombre especificado en la lista.
     - `append`: Indica si se ha de añadir el usuario al grupo o no. En este caso, se añade el usuario al grupo `wheel` sin eliminarlo de otros grupos a los que pertenezca.
+    - `password`: Contraseña del usuario. Además, se le aplica un hash a la contraseña para que no se almacene en texto plano. Para ello, se emplea el módulo `password_hash`, que permite aplicar un hash a la contraseña.
 
     Les damos acceso por SSH con llave pública. Como mencionamos antes, hay dos formas:
     1. Emplear el módulo [`ansible.posix.authorized_key`](https://docs.ansible.com/ansible/latest/collections/ansible/posix/authorized_key_module.html#ansible-collections-ansible-posix-authorized-key-module):
@@ -1354,8 +1361,28 @@ Para este playbook, y común para ambos servidores, hemos de habilitar el puerto
 - `state`: Indica el estado del servicio. En este caso, `enabled` indica que el servicio ha de habilitarse.
 - `become`: Notemos que hemos añadido este parámetro, puesto que hacen falta privilegios de superusuario para modificar el firewall. De no especificarlo, dará error.
 
-Una vez realizado este aspecto común, detallamos lo necesario para el servidor Apache.
-1. En primer lugar, hemos de instalar y activar el servicio/demonio de `http`. Esto se hace mediante el módulo [`package`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/package_module.html#ansible-collections-ansible-builtin-package-module):
+Por otro lado, y ya que nos aseguraremos de que escucha en el puerto 80, hemos de emplear el comando `semanage` tal y como se vió en la sección del `ssh`. Para ello, en primer lugar hemos de instalar el paquete `policycoreutils-python-utils`. Para ello, empleamos el módulo [`package`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/package_module.html#ansible-collections-ansible-builtin-package-module):
+```yaml
+- name: Instalar el servicio policycoreutils-python-utils
+  ansible.builtin.package:
+    name: "policycoreutils-python-utils"
+    state: present
+  become: true
+```
+
+Por otro lado, hemos de emplear el comando `semanage` para permitir el tráfico HTTP. Para ello, empleamos el módulo [`seport`](https://docs.ansible.com/ansible/latest/collections/community/general/seport_module.html#ansible-collections-community-general-seport-module):
+```yaml
+- name: Aplicamos el comando semanage
+  community.general.seport:
+    ports: 80
+    proto: tcp
+    setype: http_port_t
+    state: present
+  become: true
+```
+
+Una vez realizado este aspecto común, detallamos lo necesario para el servidor Apache. Notemos que, puesto que ya no somos `root`, es necesario especificar `--become` para ejecutar los comandos con privilegios de superusuario.
+1. En primer lugar, hemos de instalar el servicio/demonio de `http`. Esto se hace mediante el módulo [`package`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/package_module.html#ansible-collections-ansible-builtin-package-module):
     ```yaml
     - name: Instalar el servidor HTTP
       ansible.builtin.package:
@@ -1363,17 +1390,7 @@ Una vez realizado este aspecto común, detallamos lo necesario para el servidor 
         state: present
       become: true
     ```
-    Notemos que se emplea el módulo general, `package`, que se encarga de emplear el gestor de paquetes correspondiente en función del sistema operativo del nodo controlado (`apt`, `dnf`, etc.).
-
-    Para iniciar el servicio, empleamos el módulo [`service`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/service_module.html#ansible-collections-ansible-builtin-service-module):
-    ```yaml
-    - name: Iniciar el servicio HTTP
-      ansible.builtin.service:
-        name: httpd
-        state: started
-        enabled: true
-      become: true
-    ```
+    Notemos que se emplea el módulo general, `package`, que se encarga de emplear el gestor de paquetes correspondiente en función del sistema operativo del nodo controlado (`apt`, `dnf`, etc.). Notemos que no lo iniciamos aún, puesto que haremos modificaciones en su configuración.
 
 
   2. Comprobamos que el servidor efectivamente está escuchando en el puerto 80. Lo logramos mediante el módulo [`lineinfile`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/lineinfile_module.html#ansible-collections-ansible-builtin-lineinfile-module):
@@ -1398,7 +1415,18 @@ Una vez realizado este aspecto común, detallamos lo necesario para el servidor 
       become: true
     ```
 
-4. Ahora sí, creamos en sí la web. Para ello, tendremos en el controlador un archivo denominado `apache.html`, y lo copiamos en el `index` correspondiente empleado el módulo [`copy`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/copy_module.html#ansible-collections-ansible-builtin-copy-module):
+4. Ahora sí, una vez configurado el servidor, lo iniciamos. Para ello, hemos de habilitar el servicio `httpd` para que se inicie al arrancar el sistema. Esto se hace mediante el módulo [`service`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/service_module.html#ansible-collections-ansible-builtin-service-module):
+    ```yaml
+    - name: Iniciar el servicio HTTP
+      ansible.builtin.service:
+        name: httpd
+        state: reloaded
+        enabled: true
+      become: true
+    ```
+    Notemos que se emplea `reloaded` en vez de `started`, puesto que el servicio podría estar ya iniciado. En este caso, lo que se hace es recargar la configuración del servicio.
+
+5. Ahora sí, creamos en sí la web. Para ello, tendremos en el controlador un archivo denominado `apache.html`, y lo copiamos en el `index` correspondiente empleado el módulo [`copy`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/copy_module.html#ansible-collections-ansible-builtin-copy-module):
     ```yaml
     - name: Crear el archivo index.html
       ansible.builtin.copy:
@@ -1410,22 +1438,12 @@ Una vez realizado este aspecto común, detallamos lo necesario para el servidor 
     - `mode`: Permisos del archivo. `preserve` indica que se han de conservar los permisos del archivo original. En este caso, se conservan los permisos del archivo `apache.html` del controlador.
 
 De forma análoga, describimos el playbook para el servidor `Nginx`. 
-1. De nuevo, hemos de instalar y activar el servicio/demonio de `nginx`. Esto se hace mde nuevo ediante el módulo [`package`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/package_module.html#ansible-collections-ansible-builtin-package-module):
+1. De nuevo, hemos de instalar el servicio/demonio de `nginx`. Esto se hace mde nuevo ediante el módulo [`package`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/package_module.html#ansible-collections-ansible-builtin-package-module):
     ```yaml
     - name: Instalar el servidor Nginx
       ansible.builtin.package:
         name: nginx
         state: present
-      become: true
-    ```
-
-    Para iniciar el servicio, empleamos el módulo [`service`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/service_module.html#ansible-collections-ansible-builtin-service-module):
-    ```yaml
-    - name: Iniciar el servicio Nginx
-      ansible.builtin.service:
-        name: nignx
-        state: started
-        enabled: true
       become: true
     ```
 
@@ -1451,7 +1469,17 @@ De forma análoga, describimos el playbook para el servidor `Nginx`.
       become: true
     ```
 
-4. Ahora sí, creamos en sí la web. Para ello, tendremos en el controlador un archivo denominado `nginx.html`, y lo copiamos en el `index` correspondiente empleado el módulo [`copy`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/copy_module.html#ansible-collections-ansible-builtin-copy-module):
+4. Ahora sí, una vez configurado el servidor, lo iniciamos. Para ello, hemos de habilitar el servicio `nginx` para que se inicie al arrancar el sistema. Esto se hace mediante el módulo [`service`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/service_module.html#ansible-collections-ansible-builtin-service-module):
+    ```yaml
+    - name: Iniciar el servicio Nginx
+      ansible.builtin.service:
+        name: nignx
+        state: reloaded
+        enabled: true
+      become: true
+    ```
+
+5. Ahora sí, creamos en sí la web. Para ello, tendremos en el controlador un archivo denominado `nginx.html`, y lo copiamos en el `index` correspondiente empleado el módulo [`copy`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/copy_module.html#ansible-collections-ansible-builtin-copy-module):
     ```yaml
     - name: Crear el archivo index.html
       ansible.builtin.copy:
