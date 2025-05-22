@@ -110,6 +110,31 @@ $ docker run hello-world
 ```
 Como vemos, este se descarga automáticamente y se ejecuta, mostrando un mensaje de bienvenida.
 
+Hacemos referencia ahora brevemente a distintos términos:
+1. **Dockerfile**: Es un archivo de texto que contiene instrucciones para construir una imagen de Docker. Define cómo se debe configurar el contenedor, qué software instalar, etc. Se puede considerar como un script de construcción de la imagen. Aunque en la asignatura no se nos pide saber construirlos, veamos un ejemplo:
+    ```
+    FROM mongo:6
+    COPY ./scripts/* /tmp/
+    RUN chmod 755 /tmp/initializeMongoDB.sh
+    WORKDIR /tmp
+    CMD ./initializeMongoDB.sh
+    ```
+    - Se está especificando que se use la versión 6 de la imagen de `mongo`. Además, se ejecutan ciertos comandos para el correcto funcionamiento del contenedor. Se emplea además el sistema de archivos propio, como vemos en `/tmp/`.
+
+    Otro ejemplo relevante es el siguiente:
+    ```
+    FROM node:16.13.0-stretch
+    RUN mkdir -p /usr/src/app
+    COPY . /usr/src/app
+    EXPOSE 3000
+    WORKDIR /usr/src/app
+    RUN ["npm", "install"]
+    ENV NODE_ENV=production
+    CMD ["npm","start"]
+    ```
+    - Este ejemplo cabe destacarlo, puesto que se emplea la opción `EXPOSE`, que indica el puerto que se va a exponer al exterior. En este caso, el puerto 3000. Esto es importante, ya que si no se expone el puerto, no podremos acceder al contenedor desde el exterior de este.
+
+
 
 <!-- TODO: Dockerfile 
 https://chatgpt.com/share/682e5f7a-7b08-8010-a721-22aa50685d96
@@ -288,16 +313,40 @@ También es de notar por qué hay dos tipos de *Time per request*:
 
 Como vemos, esta es una herramienta útil por su sencillez, pero nos impide hacer estudios más en profundidad. Se usa para lo que se conoce como *smoketest* (prueba de humo), que es una prueba rápida para comprobar que el sistema funciona correctamente. Sin embargo, no es suficiente para hacer un análisis exhaustivo del rendimiento de un sistema. Ahí es donde entran en juego otras herramientas más avanzadas como JMeter, que nos permiten hacer pruebas más complejas y detalladas.
 
-# Simulación Carga Jmeter
-Aunque Apache Benchmark tiene muchas posibilidades y es una herramienta poderosa y correcta, existen otras herramientas que permiten hacer tests más complejos, nosotros veremos concretamente Jmeter. Este software está diseñado para cargar funcionalidades de benchmark y medir rendimiento, es decir, puede medir y generar carga de forma genérica para varios elementos, si que es cierto, que en un principio estaba reservada a medir servidores web.
+## Simulación de Carga: Jmeter
+Aunque Apache Benchmark tiene muchas posibilidades y es una herramienta poderosa y correcta, existen otras herramientas que permiten hacer tests más complejos. Nosotros estudiaremos JMeter, que es una de las más populares y completas. Aunque es ciertamente antigua, sigue siendo una de las más utilizadas en la industria. Está está diseñado para cargar funcionalidades de benchmark y medir rendimiento, especialmente en servidores web.
 
-Una de las características interesantes de Jmeter es que se puede crear concurrencia real gracias a la posibilidad de crear varias hebras dentro de las mismas CPU así como de distribuir el esfuerzo de carga entre varios equipos en red local.
+Una de las características interesantes de Jmeter es su manejo de la distribución de la carga:
+- Puede crear concurrencia real gracias a la posibilidad de crear varias hebras dentro de la misma CPU.
+- También puede distribuir el esfuerzo de carga entre varios equipos en red local.
+- Existen otros proveedores de servicios de carga en la nube, como *Flood*, que permiten distribuir el esfuerzo de carga entre varios equipos en la nube, de forma global.
 
-La ejecución es mediante linea de comandos, lo que aligera la carga de la maquina que genera las peticiones al servidor, además facilita la automatización de ciertos tests.
+Como veremos, una de las principales ventajas de JMeter, que le distingue de Apache Benchark, es que se puede configurar como proxy de un servidor a JMeter, registrando la navegación de los usuarios. De esta forma, podremos replicar situaciones exactas de carga en el servidor, lo que es muy útil para hacer pruebas de rendimiento.
+- Por ejemplo, si el servidor ha estado especialmente recargado en cierto momento y se ha caído, podemos realizar pequeños ajustes y comprobar si, con la misma carga, el servidor aguantará.
 
-Para la realización del siguiente ejercicio, deberemos clonarnos el siguiente repositorio:
+Los test en JMeter se diseñan y se configuran mediante la interfaz gráfica, y esto también nos permite ejecutarlos con fines de depuración; pero no es recomendable usar la interfaz gráfica para ejecutar los tests en producción, ya que esta consume muchos recursos y los resultados se verían alterados.
+
+Para ejecutar los tests en producción mediante la línea de comandos, se emplea:
 ```shell
-git clone https://github.com/davidPalomar-ugr/iseP4JMeter
+$ jmeter -n -t <jmx file>.jmx -l <results file> -e -o <Path to web report folder>
+```
+donde:
+- `-n`: Indica que se va a ejecutar en modo no gráfico.
+- `-t`: Indica el archivo de configuración del test. Este es el que habremos creado previamente con la interfaz gráfica. Tendrá extensión `.jmx`.
+- `-l`: Indica el archivo donde se van a guardar los resultados del test. Este archivo tendrá extensión `.jtl`, aunque también puede ser `.csv` o `.xml`.
+- `-e`: Indica que se va a generar un informe HTML al finalizar el test. Esto es opcional.
+- `-o`: Indica la ruta donde se va a guardar el informe HTML. Este informe se generará al finalizar el test y contendrá información detallada sobre los resultados del test. Esta carpeta ha de estar vacía, o bien no existir, para que el comando no falle.
+
+Una vez ejecutado, los resultados se pueden ver desde la interfaz gráfica de JMeter, o bien desde el informe HTML generado. Este informe contiene gráficos y tablas con información detallada sobre los resultados del test, lo que facilita la interpretación de los resultados.
+
+
+### Ejemplo Práctico
+
+JMeter tiene infinidad de opciones, y sería imposible explicarlas todas. Es por ello que veremos un ejemplo práctico, en el que explicaremos en detalle cada aspecto.
+
+Para este ejemplo, emplearemos una web disponible gracias en el siguiente repositorio.
+```shell
+$ git clone https://github.com/davidPalomar-ugr/iseP4JMeter
 ```
 Una vez clonado, podemos acceder a el, veremos que nos encontramos con un docker-compose.yaml, haciendo simplemente: 
 ```shell

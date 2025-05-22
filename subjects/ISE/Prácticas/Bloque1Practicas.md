@@ -786,7 +786,7 @@ Todo esto tiene un último problema: nada nos garantiza que las claves públicas
 - Si confía en la AC, puede confiar en el certificado.
 - Si no conoce la AC, comprueba quién ha certificado a dicha AC (ya que estas se autorizan entre sí). Se repite por tanto el proceso hasta llegar a una AC raíz, que es de confianza (caso anterior).
 
-Por ejemplo, para ver todo esto, en cualquier navegador accedemos a una web mediante el protocolo `https`, por ejemplo `https://www.ugr.es`. Para acceder al certificado depende del navegador, pero siempre podremos ver los detalles de esto, la jerarquía de Autenticación, etc. En [este enlace](chrome://certificate-manager/crscerts) se pueden ver las AC raíz en las que confía el navegador de Google Chrome.
+Por ejemplo, para ver todo esto, en cualquier navegador accedemos a una web mediante el protocolo `https`, por ejemplo `https://www.ugr.es`. Para acceder al certificado depende del navegador, pero siempre podremos ver los detalles de esto, la jerarquía de Autenticación, etc. En la configuración de Google Chrome se pueden ver las AC raíz en las que confía el navegador, en concreto en `chrome://certificate-manager/crscerts`.
 
 
 #### Conexión SSH mediante usuario y contraseña
@@ -826,6 +826,11 @@ Una vez las tengamos generadas (este proceso es muy común y es posible que el l
     Tras introducir la contraseña, el cliente se conecta al servidor y añade la clave pública al archivo `~/.ssh/authorized_keys` del usuario con el que queremos conectarnos.
 
 Una vez realizada esta operación, el cliente puede conectarse al servidor como hemos descrito antes sin necesidad de introducir la contraseña.
+
+**Observación**: Es importante tener en cuenta que un usuario puede tener más de un par de claves pública y privada, por lo que es importante tener en cuenta cómo funciona en este caso.
+  - Según el `man` de `ssh-cpy-id`, se emplea el último archivo que coincida con `~/.ssh/id*.pub`.
+  - `ssh` emplea cualquier llave privada de entre `~/.ssh/id_rsa`, `~/.ssh/id_dsa`, `~/.ssh/id_ecdsa`, `~/.ssh/id_ecdsa_sk`, `~/.ssh/id_ed25519`, `~/.ssh/id_ed25519_sk` y `~/.ssh/id_dsa`.
+En cualquier caso, es importante tener en cuenta que ambos comandos aceptan el parámetro `-i`, que nos permite especificar la clave en concreto a usar.
 
 
 Por último, cabe destacar que, si al comando SSH se le añade final un comando como parámetro, este se ejecutará en el servidor sin necesidad de abrir una terminal remota. Por ejemplo:
@@ -906,7 +911,7 @@ Ansible es una herramienta de automatización de configuración y gestión de si
 
 Esta es una de las grandes ventajas de Ansible, que en los nodos manejados tiene muy pocas dependencias, lo que hace que sea muy usado.
 
-No se trata de un demonio, luego no se ejecuta con permisos de superusuario sino con los permisos del usuario que lo ejecuta. Al no tratarse de un demonio, posiblemente no tenga carpeta de configuración en `/etc`, sino que suele estar en `~/.ansible`. No obstante, de tener ambas, tiene preferencia la del usuario. En el archivo de configuración, `ansible.cfg`, pueden especificarse parámetros por defecto, pero no lo usaremos apenas.
+No se trata de un demonio, sino de una herramienta. Por tanto, no se ejecuta con permisos de superusuario sino con los permisos del usuario que lo ejecuta. Al no tratarse de un demonio, posiblemente no tenga carpeta de configuración en `/etc`, sino que suele estar en `~/.ansible`. No obstante, de tener ambas, tiene preferencia la del usuario. En el archivo de configuración, `ansible.cfg`, pueden especificarse parámetros por defecto, pero no lo usaremos apenas.
 
 Un archivo esencial es el **Inventario**, que se explica en detalle [aquí](https://docs.ansible.com/ansible/latest/inventory_guide/intro_inventory.html). Este contiene la lista de nodos manejados y su configuración. Puede emplearse tanto notación `INI` (más antigua, pero mantenida por compatibilidad) como `YAML` (más moderna y recomendada). En las prácticas emplearemos notación `YAML`.
 - Este fichero contiene la información de **todos** los nodos manejados, luego no se pueden enviar comandos a nodos que no aparezcan ahí.
@@ -954,6 +959,19 @@ Para validar cualquier archivo `yaml` en general, podemos usar los siguientes co
 $ yamllint *.yaml       # Genérico para YAML
 $ ansible-lint *.yaml   # Específico para Ansible
 ```
+
+Aunque no es necesario, se pueden emplear archivos de configuración de Ansible. Este se denomina `ansible.cfg`, y se puede encontrar en tres ubicaciones (notemos que hemos de crearlos manualmente):
+1. `/etc/ansible/ansible.cfg`: Archivo de configuración del sistema. Se aplica a todos los usuarios.
+2. `~/.ansible/ansible.cfg`: Archivo de configuración del usuario. Se aplica solo al usuario que lo tiene.
+3. `./ansible.cfg`: Archivo de configuración del directorio actual. Se aplica tan solo al proyecto en cuestión.
+
+Contiene configuración por defecto, y es importante notar que la información de los archivos más particulares tienen preferencia sobre los de los archivos más generales. En estos archivos, entre otros aspectos de configuración, se puede especificar la ruta al inventario por defecto (aunque también se puede especificar con el parámetro `-i` como veremos):
+```ini
+[defaults]
+inventory=<ruta al inventario>
+```
+
+
 
 Por otro lado, a la hora de trabajar con Ansible, los comandos que se emplean se denominan **módulos**, y están disponibles [aquí](https://docs.ansible.com/ansible/latest/collections/index_module.html). Recomendamos muy encarecidamente emplear esta documentación, puesto que está bien explicada. Los módulos más comunes:
 - Los nativos de Ansible (`ansible.builtin`)
@@ -1065,6 +1083,10 @@ Es importante resaltar que, cuando se ejecuta un playbook, en primer lugar se ll
 - `ansible_facts['hostname']`: Nombre del nodo manejado.
 - `ansible_facts['default_ipv4']`: Dirección IP del nodo manejado.
 
+En ciertas situaciones, puede ser interesante desactivar esta tarea, puesto que puede tardar demasiado tiempo en ejecutarse y porque no se vaya a usar la información recogida. Para ello, se puede añadir la opción `gather_facts: no` al playbook.
+
+
+
 Llegados a este punto, y puesto que no es posible que el lector conozca la totalidad de los módulos, la mejor forma de aprender es viendo otros ejemplos y empleando la documentación. Destacamos que es recomendable emplear el nombre completo de los módulos para evitar colisiones (por ejemplo, en vez de `ping` se recomienda `ansible.builtin.ping`).
 
 Un ejemplo de un playbook sería el siguiente:
@@ -1072,8 +1094,13 @@ Un ejemplo de un playbook sería el siguiente:
 ---
 - name: <nombre del playbook>
   hosts: <grupo>
+  vars:
+    <variable1>: <valor1>
+    <variable2>: <valor2>
+    # ...
   vars_files:
-    - <fichero de variables.yaml>       # Es opcional
+    - <fichero de variables.yaml>   
+  gather_facts: no                  # Es opcional, explicado anteriormente
   tasks:
     - name: Nombre de la tarea
       ansible.<módulo>:
@@ -1085,7 +1112,7 @@ Un ejemplo de un playbook sería el siguiente:
 ```
 
 Como vemos, para que el playbook sea variable, es recomendable emplear variables. Estas pueden definirse de varias formas:
-- En el propio playbook.
+- En el propio playbook, como se ha visto en el ejemplo. Esta opción no es muy recomendable, puesto que el playbook puede crecer y hacerse demasiado grande.
 - En un fichero de variables externo, y especificarlo como está en el ejemplo.
 - Si se quiere que las variables ean propias que cierto grupo de nodos, en la carpeta `group_vars` hermana de la carpeta se puede crear un fichero con el nombre del grupo, y ahí se pueden definir las variables. Por ejemplo, si el grupo se llama `web`, se puede crear un fichero `./group_vars/web.yaml` y ahí definir las variables. Estas variables estarán disponibles para todos los nodos que pertenezcan a ese grupo. También se puede crear un fichero `./group_vars/all.yaml` para definir variables que estén disponibles para todos los nodos manejados.
 
@@ -1098,7 +1125,7 @@ El ejercicio consiste en la configuración de dos servidores web. Un primer play
 
 En primer lugar, y antes de empezar con Ansible, hemos de permitir el acceso remoto del usuario `root` por SSH, como se vió anteriormente.
 
-Abordamos por tanto ahora el primer playbook, que se encargará de la configuración inicial de los servidores. Como tan solo podemos garantizar que el nodo manejado tiene el usuario `root` y que este puede conectarse por SSH sin contraseña, el playbook que usaremos es el siguiente:
+Abordamos por tanto ahora el primer playbook, que se encargará de la configuración inicial de los servidores. Como tan solo podemos garantizar que el nodo manejado tiene el usuario `root` y que este puede conectarse por SSH sin contraseña, el inventario que usaremos es el siguiente:
 ```yaml
 ---
 ungrouped:
