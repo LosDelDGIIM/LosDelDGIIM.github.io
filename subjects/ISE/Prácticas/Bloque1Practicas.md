@@ -12,7 +12,7 @@ La virtualización se basa en la creación de máquinas virtuales (VMs), que son
 - **Anfitrión/*Host***: El servidor físico que ejecuta el software de virtualización.
 - **Invitado/*Guest*/Virtualizado**: La máquina virtual que se ejecuta sobre el anfitrión, con su propio sistema operativo y aplicaciones.
 
-En este documento, exploraremos la instalación de un software de máquinas virtuales (denominado aquí como **VMSW**, *Virtual Machine Software*). Algunos de ellos son *Oracle VirtualBox*o  *VMware* , por ejemplo.
+En este documento, exploraremos la instalación de un software de máquinas virtuales (denominado aquí como **VMSW**, *Virtual Machine Software*). Algunos de ellos son *Oracle VirtualBox* o  *VMware* , por ejemplo.
 
 Hay dos tipos de virtualización:
 - **Virtualización Completa**: El sistema operativo invitado no necesita modificaciones para funcionar sobre el hardware virtualizado. Esto permite ejecutar sistemas operativos distintos al del anfitrión sin necesidad de adaptaciones.
@@ -21,7 +21,7 @@ Hay dos tipos de virtualización:
 Los componentes principales de la virtualización se muestran en la siguiente tabla:
 |Virtualización|
 |------------------|
-| Apliación |
+| Aplicación |
 | SO Invitado |
 | HW Virtualizado |
 | Hipervisor/*VMSW* |
@@ -64,7 +64,7 @@ A continuación, hemos de crear una máquina virtual, que simbolizará nuestro s
 - La ISO que se empleará, con el objetivo de emplear una versión estable y común (y poder así compartir dudas) es [esta](http://atcproyectos.ugr.es/esriie/Rocky-9.0-20220805.0-x86_64-minimal.iso), proporcionada por la UGR.
 - En su defecto, se puede descargar la última versión estable de [Rocky Linux](https://rockylinux.org/download).
 
-Creamos ahora VM. Debemos seguir la configuración por defecto, eligiendo la ISO que hemos descargado. Tras crearla, arrancamos la VM para configurarla inicialmente. En la configuración, hemos de asignar la contraseña del usuario `root`, encargado de administrar el sistema. Como consejo, y debido a que tan solo nosotros podremos tener acceso a esta VM, recomendamos emplear contraseñas sencillas como `root`, aunque esto evidentemente no es recomendable en un entorno de producción. Tras un tiempo de espera, nos pedirá que reiniciemos el sistema. Tras reiniciar e iniciar sesión con el usuario `root` para comprobar que todo ha funcionado correctamente, apagaremos la VM con el comando `poweroff`. Ya tenemos creado nuestro servidor virtualizado.
+Creamos ahora la VM. Debemos seguir la configuración por defecto, eligiendo la ISO que hemos descargado. Tras crearla, arrancamos la VM para configurarla inicialmente. En la configuración, hemos de asignar la contraseña del usuario `root`, encargado de administrar el sistema. Como consejo, y debido a que tan solo nosotros podremos tener acceso a esta VM, recomendamos emplear contraseñas sencillas como `root`, aunque esto evidentemente no es recomendable en un entorno de producción. Tras un tiempo de espera, nos pedirá que reiniciemos el sistema. Tras reiniciar e iniciar sesión con el usuario `root` para comprobar que todo ha funcionado correctamente, apagaremos la VM con el comando `poweroff`. Ya tenemos creado nuestro servidor virtualizado.
 
 
 ### Clonaciones y Snapshots
@@ -273,7 +273,7 @@ Con estos conocimientos, ya podemos emplear dos comandos útiles, `lsblk` y `df`
     sr0               11:0    1 1024M  0 rom
     ```
 
-    Como vemos, esta máquina virtual tan solo tiene un disco duro (`sda`), que tiene dos particiones (`sda1` y `sda2`). La primera partición es está montada en `/boot`, y la segunda partición (ahora desarrollaremos lo de `lvm`) está montada en `/`. Separar `/boot` es una buena práctica, puesto que es la partición que contiene los archivos de arranque del sistema. Si algún usuario crease muchos archivos y llenase el disco, podría provocar que el sistema no arrancase. Sin embargo, al separar esta información en una partición distinta, el sistema siempre va a poder arrancar sin problema.
+    Como vemos, esta máquina virtual tan solo tiene un disco duro (`sda`), que tiene dos particiones (`sda1` y `sda2`). La primera partición está montada en `/boot`, y la segunda partición (ahora desarrollaremos lo de `lvm`) está montada en `/`. Separar `/boot` es una buena práctica, puesto que es la partición que contiene los archivos de arranque del sistema. Si algún usuario crease muchos archivos y llenase el disco, podría provocar que el sistema no arrancase. Sin embargo, al separar esta información en una partición distinta, el sistema siempre va a poder arrancar sin problema.
 
 2. `df -h` (*disk free human-readable*): Muestra información sobre el uso del espacio en disco de los sistemas de archivos montados. La opción `-h` muestra la información en un formato legible para humanos (por ejemplo, en GB o MB).
 
@@ -301,7 +301,7 @@ Con estos conocimientos, ya podemos emplear dos comandos útiles, `lsblk` y `df`
 
 - **RAID 5**
 
-    - Suge como una mejora de RAID 1, combinándolo con RAID 0. Si se dispone de $N+1$ discos, cada uno de $t_i$ GB, se crea un dispositivo virtual cuya capacidad es la suma de los $N$ primeros, y el $N+1$ se reserva para proporcionar seguridad (ahora se explicará). Por tanto, la capacidad del dispositivo virtual es:
+    - Surge como una mejora de RAID 1, combinándolo con RAID 0. Si se dispone de $N+1$ discos, cada uno de $t_i$ GB, se crea un dispositivo virtual cuya capacidad es la suma de los $N$ primeros, y el $N+1$ se reserva para proporcionar seguridad (ahora se explicará). Por tanto, la capacidad del dispositivo virtual es:
     $$C = \sum_{i=1}^{N} t_i\ GB$$
 
     - En el dispositivo "desperdiciado", se almacenan los *códigos de redundancia cíclica* (RCR, *Rebuild Check Rate*). Si uno de los $N$ primeros dispositivos falla, en vez de fallar el sistema entero como ocurría con RAID 0, se emplea una función que, en base al código de redundancia y a la información presente en el resto de los discos, reconstruye el disco que ha fallado. 
@@ -313,7 +313,7 @@ Con estos conocimientos, ya podemos emplear dos comandos útiles, `lsblk` y `df`
 Diferenciamos además entre RAID Hardware y Software:
 - **Hardware**: Un controlador físico gestiona el RAID, lo que mejora la velocidad gracias a la controladora independiente y transparente al sistema operativo (SO). El SO ve un único disco, aunque por debajo haya varios discos en RAID.
 
-- **Software**: Hay un driver del SO dedicado a mantener los RAIDs. El código de este se ejecuta en la CPU, por lo que bajan las rprestciones. Además, es visible al administrador del sistema, por lo que este podría comprromperlo de forma accidental.
+- **Software**: Hay un driver del SO dedicado a mantener los RAIDs. El código de este se ejecuta en la CPU, por lo que bajan las prestaciones. Además, es visible al administrador del sistema, por lo que este podría corromperlo de forma accidental.
 
 
 #### Comandos para gestionar RAID
@@ -489,11 +489,13 @@ Supongamos ahora un caso práctico en el que en `/var` se almacena una base de d
     Para saber en qué modo estamos, podemos ejecutar el siguiente comando:
     ```shell
     $ systemctl status
+    # Otra opción: runlevel (dice el modo en el que estaba antes y el actual)
     ```
 
     Para cambiar al modo de mantenimiento, ejecutamos:
     ```shell
     $ systemctl isolate runlevelN.target
+    # Otra opción: sudo telinit N
     ```
     donde `N` es el número del modo al que queremos cambiar.
     
@@ -564,7 +566,7 @@ Supongamos ahora un caso práctico en el que en `/var` se almacena una base de d
 
 ### Cortafuegos
 
-El cortafuegos es una herramienta de seguridad que controla el tráfico de red entrante y saliente en un sistema. El lector debe estar familiarizado con este concetp, puesto que se estudió en la asignatura de Fundamentos de Redes. Aquí, tan solo veremos cómo administrarlo en un sistema Linux.
+El cortafuegos es una herramienta de seguridad que controla el tráfico de red entrante y saliente en un sistema. El lector debe estar familiarizado con este concepto, puesto que se estudió en la asignatura de Fundamentos de Redes. Aquí, tan solo veremos cómo administrarlo en un sistema Linux.
 
 Hay que diferenciar tres niveles de abstracción:
 - **`iptables`**: Herramienta de bajo nivel Linux para gestionar el cortafuegos a nivel de kernel. Permite definir de forma directa las reglas del firewall, pero su uso es complejo. No se verá en la asignatura.
@@ -769,7 +771,7 @@ DocumentRoot "/var/www/html"
 
 ### SSH
 
-SSH *(Secure Shell)* es un protocolo de red que permite la comunicación segura entre dos dispositivos mediante una terminal remota segura. Antes existían otros protocolos como `telnet`, pero este enviaba toda la información en texto plano (incluida la información del login), por lo que no es una opción segura. SSH en cambio cifra toda la información, tanto el proceso de login como el de dsesón, luego es seguro. De hecho, en lo que llevamos de práctica hemos estado accediendo a la VM a través de SSH.
+SSH *(Secure Shell)* es un protocolo de red que permite la comunicación segura entre dos dispositivos mediante una terminal remota segura. Antes existían otros protocolos como `telnet`, pero este enviaba toda la información en texto plano (incluida la información del login), por lo que no es una opción segura. SSH en cambio cifra toda la información, tanto el proceso de login como el de sesión, luego es seguro. De hecho, en lo que llevamos de práctica hemos estado accediendo a la VM a través de SSH.
 
 #### Resumen Criptografía
 Veamos ahora un pequeño repaso de cifrado y seguridad, aunque recomendamos al lector leer el Temario de Fundamentos de Redes si no está familiarizado con estos conceptos. Hay dos algoritmos de cifrado:
@@ -780,7 +782,7 @@ Veamos ahora un pequeño repaso de cifrado y seguridad, aunque recomendamos al l
 
 Además, se emplean los resúmenes llamados `hash`, que son funciones unidireccionales que generan un valor único a partir de unos datos. Estos permiten comprobar la integridad de los datos, ya que un pequeño cambio en los datos genera un hash completamente diferente. Los algoritmos se denominan `SHA-n` (*Secure Hash Algorithm*), donde `n` es el número de bits del hash. Por ejemplo, `SHA-256` genera un hash de 256 bits.
 
-Por tanto, para garantizar la integridad de los documentos se emplea la firma dital. Esta consiste en, a partir de una información, calcular su hash y cifrar todo con la llave privada. Cuando el receptor recibe el mensaje, descifra el hash con la llave pública del emisor y compara el hash recibido con el calculado. Si son iguales, se garantiza la integridad del mensaje y que ha sido enviado por el emisor.
+Por tanto, para garantizar la integridad de los documentos se emplea la firma digital. Esta consiste en, a partir de una información, calcular su hash y cifrar todo con la llave privada. Cuando el receptor recibe el mensaje, descifra el hash con la llave pública del emisor y compara el hash recibido con el calculado. Si son iguales, se garantiza la integridad del mensaje y que ha sido enviado por el emisor.
 
 Todo esto tiene un último problema: nada nos garantiza que las claves públicas y privadas efectivamente sean de quien dicen ser. Para ello, se emplean las Autoridades de Certificación (AC). Estas son entidades de confianza que validan la correspondencia entre claves y personas/entidades. Por ejemplo, en España la FNMT (Fábrica Nacional de Moneda y Timbre) es la AC oficial. Estas emiten un certificado que contiene la clave pública y los datos del propietario, firmado con la clave privada de la AC para garantizar que ese certificado es válido. Cuando un usuario recibe un certificado, hay dos opciones.
 - Si confía en la AC, puede confiar en el certificado.
@@ -808,17 +810,17 @@ $ ssh -p <puerto> <usuario>@<ip>
 
 En ese momento, el servidor responde con su clave pública para autenticarse. Como no hay AC, el cliente contiene en el archivo `~/.ssh/known_hosts` las claves públicas de los servidores de confianza a los que se ha conectado, junto con su dirección IP. De esta forma:
 - Cuando es la primera vez que se conecta, el cliente pregunta si confía en la clave pública del servidor. Si el usuario acepta, se añade al archivo `known_hosts`.
-- Si se detecta que ya se ha conectado a esa dirección IP pero la clave pública no es la misma, se impide la conexión y se avisa de un posible ataque de *man-in-the-middle*. En este caso, será el usurio el que tendrá que modificar manualmente el archivo `known_hosts` para eliminar la clave pública del servidor.
+- Si se detecta que ya se ha conectado a esa dirección IP pero la clave pública no es la misma, se impide la conexión y se avisa de un posible ataque de *man-in-the-middle*. En este caso, será el usuario el que tendrá que modificar manualmente el archivo `known_hosts` para eliminar la clave pública del servidor.
 
-Una vez recibida la clave pública del servidor, el cliente envía su contraseña para iniciar sesión cifrada con la clave pública del servidor. El servidor comprueba la contraseña y, si las credenciales son correctas, se ha establecido la coneión. Como el cifrado asimétrico es muy costoso computacionalmente, en ese momento se establece una clave simétrica de sesión compartida por ambos, y se utiliza para cifrar el resto de la sesión.
+Una vez recibida la clave pública del servidor, el cliente envía su contraseña para iniciar sesión cifrada con la clave pública del servidor. El servidor comprueba la contraseña y, si las credenciales son correctas, se ha establecido la conexión. Como el cifrado asimétrico es muy costoso computacionalmente, en ese momento se establece una clave simétrica de sesión compartida por ambos, y se utiliza para cifrar el resto de la sesión.
 
 
 #### Conexión SSH mediante clave pública
 
 Supongamos ahora que el usuario no quiere introducir la contraseña cada vez que se conecta. Para ello, es posible usar claves asimétricas para autenticarse frente al servidor. En primer lugar, hemos de crearlas con el comando `ssh-keygen` (en el caso de no tener). Es recomendable siempre ponerles una contraseña, pero para evitar tener que introducirla cada vez, podemos usar el comando `ssh-agent` para almacenar la clave privada en memoria, y este escribirá por nosotros la contraseña.
 
-Una vez las tengamos generadas (este proceso es muy común y es posible que el lector ya las tuviese, puesto que se usan por ejemplo en `GitHub`), podemos conectarnos al servidor sin necesidad de introducir la contraseña. Para ello, el servidor dispone del archivo `~/.ssh/authorized_keys`, donde se almacenan las claves públicas de los clientes autorizados a conectarse sin conectarse. Para añadir la clave pública del cliente al servidor, hay dos opciones:
-1. Copiar la clave pública manualmente al servidor, y añadirla al archivo `~/.ssh/authorized_keys` del usuario con el que queremos conectarnos. Esta opción está desactonsejada, puesto que está sujeta a errores humanos.
+Una vez las tengamos generadas (este proceso es muy común y es posible que el lector ya las tuviese, puesto que se usan por ejemplo en `GitHub`), podemos conectarnos al servidor sin necesidad de introducir la contraseña. Para ello, el servidor dispone del archivo `~/.ssh/authorized_keys`, donde se almacenan las claves públicas de los clientes autorizados a conectarse sin constraseña. Para añadir la clave pública del cliente al servidor, hay dos opciones:
+1. Copiar la clave pública manualmente al servidor, y añadirla al archivo `~/.ssh/authorized_keys` del usuario con el que queremos conectarnos. Esta opción se desaconseja, puesto que está sujeta a errores humanos.
 2. Usar el comando `ssh-copy-id`, que se encarga de copiar la clave pública al servidor y añadirla al archivo `~/.ssh/authorized_keys` del usuario con el que queremos conectarnos. Esta es la opción recomendada.  Desde el cliente:
     ```shell
     $ ssh-copy-id <usuario>@<ip>
@@ -859,7 +861,7 @@ El servicio SSH cuenta con dos carpetas importantes.
 
 #### Ejercicio Adicional
 
-Supongamos ahora que queremos cambiel puerto en el que escucha el servicio SSH. Para ello, en primer lugar hemos de detectar un puerto que no esté en uso, para evitar colisiones. Para ello, el archivo `/etc/services` contiene una lista de los puertos y servicios que están en uso. Por comodidad, recomendamos filtrar con `grep` para buscar el puerto que queremos.
+Supongamos ahora que queremos cambiar el puerto en el que escucha el servicio SSH. Para ello, en primer lugar hemos de detectar un puerto que no esté en uso, para evitar colisiones. Para ello, el archivo `/etc/services` contiene una lista de los puertos y servicios que están en uso. Por comodidad, recomendamos filtrar con `grep` para buscar el puerto que queremos.
 ```shell
 $ cat /etc/services | grep <puerto>
 ```
@@ -984,7 +986,7 @@ ungrouped:
 ```
 
 Los módulos que se verán son:
-1. **[`Ping`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/ping_module.html#ansible-collections-ansible-builtin-ping-module)**: Comprueba la conectividad entre el controlador y los nodos manejados. En la misma documentación especifica que no e hace un `ping` al uso mediante paquetes ICMP, sino que simplemente comprueba que toda la conexión funciona y está preparada para ejecutar más comandos. Su uso (explicado en la documentación) es:
+1. **[`Ping`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/ping_module.html#ansible-collections-ansible-builtin-ping-module)**: Comprueba la conectividad entre el controlador y los nodos manejados. En la misma documentación especifica que no se hace un `ping` al uso mediante paquetes ICMP, sino que simplemente comprueba que toda la conexión funciona y está preparada para ejecutar más comandos. Su uso (explicado en la documentación) es:
     ```shell
     $ ansible rocky -i hosts.yaml -m ping -a 'data="Hola Mundo"'
     rocky | SUCCESS => {
@@ -1000,7 +1002,7 @@ Los módulos que se verán son:
     - Si no se hubiese configurado así, habría sido necesario añadir la opción `-k` (minúscula), que nos pidiese la contraseña de la contraseña SSH (es necesario instalar el paquete sshpass). No obstante, esto no es recomendado puesto que pierde la automatización buscada.
     - Como tercera opción, se podría emplear la variable `ansible_password` en el inventario, pero esto no es seguro.
 
-2. **[`Shell`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/shell_module.html#ansible-collections-ansible-builtin-shell-module)**: Ejecuta un comando en el nodo manejado, de forma directa, en la terminal. Está muy desaconsejado, puesto que depende del nodo manejado, de la sdistibución de Linux empleada, etc. El código no es genérico y por tanto se evita.
+2. **[`Shell`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/shell_module.html#ansible-collections-ansible-builtin-shell-module)**: Ejecuta un comando en el nodo manejado, de forma directa, en la terminal. Está muy desaconsejado, puesto que depende del nodo manejado, de la distribución de Linux empleada, etc. El código no es genérico y por tanto se evita.
 
     Es el comando por defecto, y por tanto no es necesario especificar `-m shell`. No obstante, se recomienda especificarlo por claridad. Su uso (explicado en la documentación) es:
     ```shell
@@ -1056,7 +1058,7 @@ Este comando normalmente es introducido en un script de shell, pero se puede eje
 $ ansible-playbook --syntax-check <playbook.yaml> -i <inventario.yaml>
 ```
 
-Además, puesto que la sintaxis es complicada, se recomienda que se vaya comprobando el adecuado funcionamiento del playbook tras añadir cada tarea. Para facilitar la detección de errores, se recomienda asignar un nombre aclarativo a cada tarea. Además, mientras se desarrolla el playbook es recomendable ejecutarlo en un único nodo, y una vez esté terminado se puede ejecutar en todos los nodos manejados. Por último, es importante destacar de nuevo el concepto de **idempotencia**, de vital importancia en los playbooks.
+Además, puesto que la sintaxis es complicada, se recomienda que se vaya comprobando el adecuado funcionamiento del playbook tras añadir cada tarea. Para facilitar la detección de errores, se recomienda asignar un nombre aclarativo a cada tarea. Además, mientras se desarrolla el playbook es recomendable ejecutarlo en un único nodo, y una vez esté terminado se puede ejecutar en todos los nodos manejados. Para facilitar la depuración de errores, también es interesante ejecutar ansible con la flag `--check`, que te da el output resultante de ejecutar el playbook en los nodos pero **sin efectuar los cambios** de verdad. Por último, es importante destacar de nuevo el concepto de **idempotencia**, de vital importancia en los playbooks.
 
 Es importante resaltar que, cuando se ejecuta un playbook, en primer lugar se lleva a cabo la tarea [`Gathering Facts`](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/gather_facts_module.html), que se encarga de recopilar información del nodo manejado. Esta información se almacena en la variable `ansible_facts`, y contiene información como (hay muchas más, estos son algunos ejemplos):
 - `ansible_facts['os_family']`: Familia del sistema operativo. Por ejemplo, `RedHat` o `Debian`.
