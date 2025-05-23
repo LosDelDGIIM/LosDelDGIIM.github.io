@@ -1,7 +1,7 @@
 # Bloque 2: Simulación de Carga de Trabajo y Monitorización
 
 - **Autor**: Arturo Olivares Martos
-- **Autor**: Miguel Ángel de la Vera
+- **Autor**: Miguel Ángel de la Vega Rodríguez
 
 
 ## Introducción
@@ -939,4 +939,167 @@ La modificación del archivo `crontab` que realizaremos con el comando `crontab 
 0 * * * * logger -t ISE -p user.info "Tarea programada ejecutada el $(date)"
 ```
 
-Recordemos que no es buena práctica espeficiar directamente el comando a ejecutar, sino que es mejor crear un script y llamarlo desde `cron`. No obstante, por motivos de simplicidad, en este caso lo haremos directamente.
+Recordemos que no es buena práctica especificar directamente el comando a ejecutar, sino que es mejor crear un script y llamarlo desde `cron`. No obstante, por motivos de simplicidad, en este caso lo haremos directamente.
+
+## Grafana + Prometheus
+Grafana OSS es una plataforma de observabilidad open-source que te permite:
+- Consultar métricas, logs y trazas con un lenguaje de consultas unificado o el lenguaje propio de cada origen (p. ej. Prometheus, Loki, Elasticsearch, Postgres, entre otros).
+- Visualizar en tiempo real esos datos mediante paneles interactivos con gráficos, tablas, alertas y anotaciones.
+- Generar alertas basadas en reglas, con rutas de notificación flexibles (correo, Slack, webhooks, etc.).
+- Explorar y depurar rápidamente tu infraestructura gracias al modo Explore, correlacionando series temporales con registros y trazas.
+- Extender capacidades mediante un amplio ecosistema de plugins de fuentes de datos y paneles, además de un SDK para que crees los tuyos.
+Todo esto se ejecuta como un único binario, es auto-hosteable, se integra con sistemas de autenticación externos y funciona bien en entornos Linux o contenedores.
+
+Grafana proporciona los servicios de visualización sin embargo no realiza por si misma la extracción de la información, para este fin es para el que usamos Prometheus, una herramienta diseñada especialmente para extraer y almacenar la información de monitorización de forma eficiente.
+
+Por esta razón, vamos a combinar el uso de ambos, en particular usaremos Docker como forma preferida para este fín. Para ello, deberemos elegir un directorio y deberemos crear los siguientes ficheros:
+
+#### docker-compose.yml
+```yml
+---
+version: "3"
+services:
+  prometheus:
+    image: prom/prometheus:v2.50.0
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus_data:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+
+  grafana:
+    image: grafana/grafana:9.1.0
+    ports:
+      - 4000:3000
+    volumes:
+      - ./grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+```
+#### prometheus.yml
+```yml
+---
+global:
+  scrape_interval: 3s
+
+scrape_configs:
+  - job_name: "prometheus_service"
+    static_configs:
+      - targets: ["prometheus:9090"]
+  - job_name: 'node_exporter_metrics'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ["<IP Maquina Virtual>:9100"]
+```
+Ahora, (y teniendo la máquina virtual arrancada), ejecutaremos `docker compose up`. Para comprobar que todo ha funcionado correctamente podemos acceder en un navegador (evitaremos safari) a las siguientes direcciones:
+
+- localhost:4000
+- localhost:9090
+
+Que son las paginas autoalojadas que nos permitiran trabajar con Grafana y Prometheus respectivamente. Nuestro siguiente paso será acceder a la máquina virtual cuya ip hemos puesto en el parámetro targets del yml de prometheus para instalar node_exporter.
+
+node_exporter es una herramienta de prometheus diseñada con el objetivo de exportar las métricas del sistema host, por defecto, node_exporter escucha en HTTP sobre el puerto 9100. Para instalarlo en la máquina virtual ejecutaremos los siguientes comandos:
+```bash
+cd /tmp
+curl -LO https://github.com/prometheus/node_exporter/releases/download/v0.18.1/node_exporter-0.18.1.linux-amd64.tar.gz
+tar -xvf node_exporter-0.18.1.linux-amd64.tar.gz
+sudo mv node_exporter-0.18.1.linux-amd64/node_exporter /usr/local/bin/
+sudo useradd -rs /bin/false node_exporter
+sudo vi /etc/systemd/system/node_exporter.service
+```
+El contenido será el siguiente:
+```bash
+[Unit]
+Description=Node Exporter
+After=network.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/bin/node_exporter --collector.systemd
+
+[Install]
+WantedBy=multi-user.target
+```
+El --collector.systemd lo ponemos para prevenir posibles errores más adelante. Una vez hecho lo anterior, podemos activar el servicio:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start node_exporter
+sudo systemctl enable node_exporter
+sudo restorecon -v /usr/local/bin/node_exporter # Para evitar fallos | sudo setenforce 0 también sirve
+```
+Una vez comprobemos que todo funciona correctamente, accedemos a la página web de grafana y en el menu izquierdo:
+
+- Configuracion > Data sources > Add data source
+Seleccionaremos la serie de tiempo prometheus y únicamente deberemos modificar la URL, pondremos http://prometheus:9090
+
+Podemos guardar y salir al menú principal, acabamos de añadir la fuente de los datos de Prometheus a Grafana para que se puedan consultar las métricas que este recopila. La URL es así ya que al levantar el servicio por docker, hemos puesto el nombre de servicio como hostname (Docker crea un DNS interno) y usaremos el puerto 9090 que es donde se expone la API.
+
+Para entender esquematicamente el flujo:
+node_exporter recoge y genera las métricas de la MV, expone los datos en localhost:9100/metrics, como hemos configurado en el yml, para escuchar en esta dirección, prometheus scrapea esas métricas cada 5s (tiempo que hemos configurado) y guarda esas metricas en funcion del tiempo en su base de datos temporal (directorio prometheus_data que hemos configurado en el yml), tras esto, grafana accede a los datos scrapeados que expone Prometheus en prometheus:9090 y los muestra en el formato que nosotros deseamos. Esto último es lo que vamos a hacer ahora, mostrar los datos:
+
+Para ello accedemos a Dashboard > Import
+En esta pagina, en el campo import via grafana.com insertaremos 1860 (Un dashboard ya creado para manejar los datos de node_exporter). En nombre pondremos nuestro nombre en camelCase seguido de Linux, en prometheus, pondremos el data source que ya hemos configurado antes. Si hemos hecho todo bien, debería salirnos ahora un dashboard que nos muestra métricas en verde sobre el sistema. Para el ejercicio, deberemos añadir un panel (Arriba derecha) > Add a New Panel.
+En el nuevo menú que se nos muestra, nos vamos abajo, donde se pide el codigo para el metrics browser y deberemos insertar 3 paneles, veamos el contenido de cada uno para este campo (Además el nombre deberá ser sobre el tipo de panel seguido con nuestras iniciales):
+
+Para ver si el servicio SSH está activo en la máquina:
+
+```
+node_systemd_unit_state{name="sshd.service",state="active"}
+```
+
+La linea se explica por si sola sin embargo, puede surgir la duda de cómo sabemos qué es node_systemd_unit_state. La métricas de node_exporter comienzan todas con node_ seguido de esto, hay varias expresiones que podemos usar que encontraremos en la documentacion de prometheus en la guia de node-exporter o de forma más sencilla, se nos autocompletará al escrbir, si no ocurre, en el icono del globo se pueden explorar todas las opciones.
+
+Continuamos para ver si el servicio HTTPD está activo en la máquina, se recomienda al lector tratar de encontrar o deducir el comando a ejecutar sin embargo, lo mostraremos aquí:
+
+```
+node_systemd_unit_state{name="httpd.service",state="active"}
+```
+Si hemos hecho todo lo anterior bien, se nos mostrará el status de ambos servicios, se recomienda seleccionar el tipo de grafico al crearlo que nos muestra 1/0, que es el más conveniente en este caso, para la resolución deberemos mostrar como encendiendo y apagando el servicio en la máquina se actualizan estos campos, si no conseguimos ver esto, algunas opciones son mirar arriba a la derecha de la pagina donde encontraremos el intervalo de tiempo sobre el que se muestran los gráficos y la frecuencia de actualización.
+
+Además vamos a añadir un panel para ver el porcentaje de CPU en uso, para ello, usaremos el comando:
+```
+100 - (avg(irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+```
+
+#### Desglose parte por parte
+
+| Parte                        | Explicación                                                                                      |
+|-----------------------------|--------------------------------------------------------------------------------------------------|
+| `node_cpu_seconds_total`    | Métrica de `node_exporter` que representa el **tiempo acumulado por la CPU** en varios modos.   |
+| `{mode="idle"}`             | Filtra solo el tiempo en modo **inactivo** (CPU sin hacer trabajo útil).                        |
+| `irate(...[5m])`            | Calcula la **tasa de cambio instantánea** en los últimos 5 minutos (en segundos por segundo).    |
+| `avg(...)`                  | Promedia entre **todas las CPUs** (`cpu="0"`, `cpu="1"`, etc.) para un valor global del sistema. |
+| `* 100`                     | Convierte el valor de fracción (0–1) a **porcentaje**.                                           |
+| `100 - (...)`               | Resta el porcentaje de inactividad para obtener el **porcentaje de CPU en uso**.                |
+
+Ahora deberiamos ver el gráfico sobre el porcentaje de CPU en uso, podemos ejecutar un stress-ng en la maquina para ver como varía. El ejercicio nos pide crear una alarma de 5 min para que cuando el uso de CPU sea mayor al 75% durante varios minutos nos salte la alarma. Para ello iremos a Alerting > New alert rule.
+En el campo de expresión pondremos la que hemos visto antes que mide el % de CPU en uso, y ahora en el campo B, pondremos la condicion de la alarma para que cuando avg() of A (% CPU) IS ABOVE 75% nos de la alarma. Guardando deberíamos ver la alarma verde en estado Normal, si durante varios minutos ejecutamos stress a más del 75%, Veremos como se pone en amarillo y tras un rato esperando (el configurado) saltará la alarma en Rojo (Firing).
+
+## Monitorización de la API WEB
+Para este apartado, deberemos usar lo que ya vimos de ansible, levantaremos los dos servidores Nginx y Apache, además usaremos la carga de iseP4JMeter. Deberemos crear un dashboard nuevo, con el mismo data source de Prometheus, en este caso al final en vez de Linux, pondremos API.
+
+Tendremos que extraer datos de las máquinas que vendran dados por la carga de jMeter, es por tanto que añadiremos lo siguiente  prometheus.yml:
+```yml
+- job_name: 'nodejs'
+  static_configs:
+    - targets: ["<Nuestra IP>:3000"]
+```
+Ahora, en el dashboard, incluiremos varios paneles, sobre el uso de CPU, Memoria y Tiempo de respuesta:
+Para la **CPU**:
+```
+100 * avg(rate(process_cpu_seconds_total{job="nodejs"}[$__rate_interval]))
+```
+Para la Memoria:
+```
+nodejs_heap_size_total_bytes
+```
+Y para la latencia:
+```
+http_request_duration_seconds_bucket
+```
+Notemos que el job que hemos puesto antes es el mismo que el job_name que se ha configurado en el .yml.
+Para resolver el ejercicio deberemos ejecutar la carga de jMeter y observar los cambios en los paneles anteriores. Si no da tiempo a que capture todo, se puede subir la carga en jMeter.
