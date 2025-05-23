@@ -1,7 +1,7 @@
 # Bloque 1: Instalación y Configuración de Sistema Operativo y Servicios
 
 - **Autor**: Arturo Olivares Martos
-- **Autor**: Miguel Ángel de la Vera
+- **Autor**: Miguel Ángel de la Vega Rodríguez
 
 
 ## Introducción
@@ -240,7 +240,7 @@ Llegados a este punto, hemos terminado la configuración inicial necesaria para 
 
 ## Gestión del Almacenamiento
 
-Como administrador de sistemas, este aspecto es de vital importancia, puesto que es muy configurable y tiene muchas repercusiones. Antes de empezar a ver cómo configurarlo y a entender medidas, hemos de entender que la estructura estándar del *filesystem* de Linux es jerárquica, comportándose como un árbol que cuelga del nodo raíz `/`. Esta jerarquía se encuentra explicada [aquí](https://www.pathname.com/fhs/pub/fhs-2.3.html), pero las principales carpetas son:
+Como administrador de sistemas, este aspecto es de vital importancia, puesto que es muy configurable y tiene muchas repercusiones. Antes de empezar a ver cómo configurarlo y a entender medidas, hemos de entender que la estructura estándar del *filesystem* de Linux es jerárquica, comportándose como un árbol que cuelga del nodo raíz `/`. Esta jerarquía se denomina *Filesystem Hierarchy Standard* **(FHS)**, y se encuentra explicada [aquí](https://www.pathname.com/fhs/pub/fhs-2.3.html), pero las principales carpetas son:
 - `/boot`: Archivos de arranque.
 - `/root`: Directorio personal del usuario root.
 - `/home`: Directorios personales de los usuarios. Dentro de este directorio, cada usuario tiene su propio subdirectorio.
@@ -286,7 +286,8 @@ Con estos conocimientos, ya podemos emplear dos comandos útiles, `lsblk` y `df`
 
 - **RAID 0** (*Striping*)
     - Combina varios dispositivos en un único dispositivo virtual cuya capacidad es la suma de los dispositivos individuales. Es decir, si hay $N$ discos de $t_i\ GB$ de almacenamiento, la capacidad total es:
-    $$C = \sum_{i=1}^{N} t_i\ \ GB$$
+  
+    $$C = \sum\limits_{i=1}^{N} t_i\ \ GB$$
   
     - Si hay un único error, falla el dispositivo virtual entero, por lo que hoy en día no se usa apenas.
 
@@ -295,7 +296,9 @@ Con estos conocimientos, ya podemos emplear dos comandos útiles, `lsblk` y `df`
 - **RAID 1** (*Mirroring*)
 
     - Copia idénticamente toda la información en todos los discos que forman el "espejo", proporcionando redundancia total. Si hay $N$ discos de $t_i\ GB$ de almacenamiento, la capacidad total es:
+    
     $$C = \min \{t_1, t_2, \ldots, t_N\}\ GB$$
+    
     - Cuando se lee un bloque, se compara el resultado entre varios discos para encontrar errores. Si un disco falla, el sistema sigue funcionando con los demás *sin pérdida de prestaciones*, por lo que es mucho más seguro frente a fallos.
     - Para evitar retrasos en la lectura/escritura, los discos suelen conectarse a buses distintos (ej. canales SATA separados).
     - Aunque es más seguro, tiene un coste elevado, puesto que se necesita un mayor número de dispositivos para almacenar la misma cantidad de datos.
@@ -304,7 +307,8 @@ Con estos conocimientos, ya podemos emplear dos comandos útiles, `lsblk` y `df`
 - **RAID 5**
 
     - Surge como una mejora de RAID 1, combinándolo con RAID 0. Si se dispone de $N+1$ discos, cada uno de $t_i$ GB, se crea un dispositivo virtual cuya capacidad es la suma de los $N$ primeros, y el $N+1$ se reserva para proporcionar seguridad (ahora se explicará). Por tanto, la capacidad del dispositivo virtual es:
-    $$C = \sum_{i=1}^{N} t_i\ GB$$
+    
+    $$C = \sum\limits_{i=1}^{N} t_i\ GB$$
 
     - En el dispositivo "desperdiciado", se almacenan los *códigos de redundancia cíclica* (RCR, *Rebuild Check Rate*). Si uno de los $N$ primeros dispositivos falla, en vez de fallar el sistema entero como ocurría con RAID 0, se emplea una función que, en base al código de redundancia y a la información presente en el resto de los discos, reconstruye el disco que ha fallado. 
 
@@ -747,7 +751,7 @@ A continuación, buscamos cambiar la página de bienvenida por una página web p
 </html>
 ```
 
-La configuración de Nginx, como era de esperar, se encuentra en `/etc/nginx/nginx.conf`. En este archivo se pueden modificar varias configuraciones, como el puerto en el que se escucha o la ubicación de la web. Se recomienda al lector que le eche un vistazo a este archivo, donde podrá ver:
+La configuración de Nginx, como era de esperar, se encuentra en `/etc/nginx/nginx.conf`. En este archivo se pueden modificar varias configuraciones, como el puerto en el que se escucha o la ubicación de la web. Se recomienda al lector que consulte este archivo, donde podrá ver:
 ```shell
 server {
     listen       80;          # Puerto en el que escucha
