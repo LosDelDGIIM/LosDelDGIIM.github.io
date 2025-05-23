@@ -763,6 +763,7 @@ MiB Swap:   4096,0 total,   2565,5 free,   1530,5 used.   1982,1 avail Mem
    - `avail Mem`: Memoria disponible para procesos. En la mayoría de veces considera que la memoria usada por buffers y caché está disponible para procesos, ya que el sistema puede liberar esa memoria si es necesario. Es por tanto mayor que la memoria libre.
 
     Toda esta información se obtiene del archivo `/proc/meminfo`, archivo que también emplean comandos como `free` o `vmstat` para mostrar información sobre el uso de memoria.
+    > El comando `memfree` no existe. Es en muchos casos un error tipográfico del comando `free`.
 
 
 5. A continuación, para cada uno de los procesos en ejecución, se muestra información suya. Para cada uno de los procesos, hay una carpeta `/proc/<PID>/` que contiene información sobre el proceso, como su estado, uso de CPU y memoria, etc. Esta información es actualizada en tiempo real por el kernel del sistema operativo.
@@ -808,10 +809,90 @@ $ stress-ng --cpu 4 --io 2 --timeout 60s
 
 Esto vemos que provoca que el porcentaje de CPU usado por procesos en modo usuario (`us`) se eleve, que el número de procesos en estado de espera (`wa`) aumente por las esperas de I/O, y que el número de ciclos de reloj dedicados a resolver interrupciones software (`si`) aumente.
 
-## Programacion tareas
+## Logs
+Una forma sencilla de monitorización es analizar los logs del sistema, que son archivos que registran eventos y actividades del sistema. Estos logs pueden ser útiles para detectar problemas, analizar el rendimiento, etc.
+
+En los sistemas Linux, `systemd` es el encargado de la recepción y posible almacenamiento de logs. Este emplea el servicio `systemd-journald`, que se encarga de recibir y almacenar los logs del sistema y de los servicios. Estos se almacenan de forma volátil en la RAM y en `/run/`, de forma que se pierden al reiniciar el sistema.
+- Para evitar esto, hay un servicio denominado `rsyslog` encargado de leer los logs de `systemd-journald` y almacenarlos en disco, en la carpeta `/var/log/`. Este servicio se encarga de almacenar los logs principales de forma persistente, de forma que no se pierden al reiniciar el sistema.
+- Para que el servicio `systemd-journald` almacene los logs en disco de forma persistente, se puede configurar el archivo `/etc/systemd/journald.conf` y establecer la opción `Storage=persistent`. Esto hará que los logs se almacenen en disco de forma persistente, en la carpeta `/var/log/journal/`.
+    - Por defecto, esta opción en *Rocky 9* está en `auto`, por lo que creando la carpeta `/var/log/journal/` y reiniciando el servicio `systemd-journald`, se almacenarán los logs en disco de forma persistente de forma automática.
+
+La gran mayoría de logs de `/var/log` se encuentran en texto plano y se pueden consultar sin problema, pero hay algunos que son binarios y requieren comandos específicos para su consulta.
+- `btmp` ha de consultarse empleando el comando `last`.
+- `wtmp` ha de consultarse empleando el comando `who`.
+
+El log más importante es el llamado `messages`, que contiene información sobre el sistema y los servicios. A veces, se encuentra dividido en tres log distintos:
+- `syslog`: Contiene información sobre el sistema y los servicios.
+- `kern.log`: Contiene información sobre el kernel del sistema.
+- `auth.log`: Contiene información sobre la autenticación de usuarios.
+
+
+### Envío de logs: `logger`
+
+Para enviar logs al sistema, se puede usar el comando `logger`, que permite enviar mensajes al sistema de logs.
+```shell
+$ logger -t <tag> -p <facility>.<level> <message>
+```
+
+Veamos el concepto de *tag* y las prioridades.
+- `tag`: Es una etiqueta que se añade al mensaje para identificarlo. Por defecto, se usa el nombre del usuario que envía el mensaje.
+- Respecto a las prioridades, estas están especificadas por dos campos:
+  - `facility`: Indica la fuente del mensaje. Algunas comunes son:
+      - `kern`: Mensajes del kernel.
+      - `user`: Mensajes de aplicaciones de usuario. Es la establecida por defecto.
+      - `auth`: Mensajes de autenticación.
+
+  - `level`: Indica la severidad del mensaje. De mayor a menor severidad, las prioridades son:
+      - `emerg`: Emergencia. El sistema no puede funcionar.
+      - `alert`: Alerta. Se requiere atención inmediata.
+      - `crit`: Crítico. Error crítico.
+      - `err`: Error. Error normal.
+      - `warning`: Advertencia. Advertencia normal.
+      - `notice`: Aviso. Aviso normal. Es el nivel establecido por defecto.
+      - `info`: Información.
+      - `debug`: Depuración. Información de depuración.
+
+  Todos estos niveles y facilidades se pueden consultar en el manual de `logger` (`man logger`).
+
+### Consulta de los logs: `Journalctl`
+
+Como hemos especificado, algunos logs se pueden consultar de forma directa accediendo a los archivos de texto plano. No obstante, esta no es la forma más común de hacerlo, sino que se emplea el comando `journalctl`, que permite consultar los logs de `systemd-journald`. Este comando permite filtrar y buscar información en los logs de forma sencilla y rápida. Además, permite ver los logs en tiempo real, lo que es útil para monitorizar el sistema y los servicios.
+
+Algunas de las opciones más comunes son:
+- `--list-boots`: Muestra la lista de arranques del sistema. Esto es útil para ver los logs de un arranque específico. Por ejemplo:
+    ```shell
+    $ journalctl --list-boots
+    0 708b1f5019b04a79b823a91a892a13d3 Fri 2025-05-23 11:48:37 CEST—Fri 2025-05-23 12:34:40 CEST
+    ```
+    Como vemos, muestra el número de arranque, el identificador del arranque y la fecha y hora de inicio y fin del arranque.
+- `-b`: muestra los logs de ciertos arranques.
+    - Si se especifica el identificador del arranque, se muestran los logs de ese arranque.
+    - Si se especifica `all`, se muestran los logs de todos los arranques.
+    - Si se especifica un número positivo `n`, se muestran los logs de los primeros `n` arranques. El `1` es el arranque más antiguo.
+    - Si se especifica un número negativo `-n`, se muestran los logs de los últimos `n` arranques. El `-0` es el arranque actual.
+- `-p`: filtra por nivel de prioridad, tal y como se ha explicado anteriormente. Se emplea de la forma `-p <nivel1>..<nivel2>`, y muestra los logs entre los niveles especificados. De solo especificar uno, se muestran los logs de ese nivel y más graves.
+- `--facility`: filtra por facilidad. Se emplea de la forma `--facility=<facilidad1>,<facilidad2>,...`, y muestra los logs de las facilidades especificadas.
+- `-u`: filtra por unidad de servicio. Se emplea de la forma `-u <unidad>`, y muestra los logs de la unidad especificada. Una unidad es, por ejemplo, un servicio o un socket. Se puede ver la lista de unidades con el comando `systemctl list-units`.
+
+### Rotación de logs
+
+Los archivos de logs pueden crecer mucho y ocupar mucho espacio en disco, llegando incluso a ser tan grandes que no quepan en la RAM y, por tanto, no puedan ser leídos. Para evitar esto, se emplea la rotación de logs, que emplea diversas técnicas para reducir el tamaño de los logs y evitar que ocupen demasiado espacio en disco. Algunas de estas técnicas son:
+- Se crea una copia del log actual y se renombra. Por ejemplo, `syslog.1`, `syslog.2`, etc. De esta forma, los nuevos logs se escriben en el archivo original y los antiguos se almacenan en archivos separados. Esto permite mantener un historial de los logs evitando que un único archivo crezca demasiado. Estas copias pueden estar numeradas, o empleando la fecha de creación.
+- Se comprimen los archivos de logs antiguos para reducir su tamaño.
+
+En sistemas con cierto uso, como posiblemente sea su ordenador personal, podrá ver que emplea ambas técnicas. En la mayoría de los equipos, el programa empleado para la rotación de logs es `logrotate`, que se encarga de gestionar la rotación de logs de forma automática. Este programa se ejecuta periódicamente con la herramienta `cron` (a continuación se verá), aunque también se puede ejecutar con timers de `systemd`.
+
+La configuración por defecto se encuentra en `/etc/logrotate.conf`, donde se especifica cada cuánto ha de rotarse, si se han de comprimir los ficheros, si se emplea la fecha como sufijo... No obstante, la información concreta de cómo rotar cada log en función de quién lo ha producido se encuentra en el directorio `/etc/logrotate.d/`, donde cada archivo de configuración corresponde a un log específico. Por ejemplo, el archivo `/etc/logrotate.d/firealld` contiene la configuración para rotar el log del firewall `firewalld`.
+  
+Lo importante de cara a esta práctica no es comprender cómo configurar el `logrotate`, sino cómo se realiza la rotación. Cuando se va a rotar un log, y para evitar que el programa que lo está escribiendo falle, se le ha de notificar para que cierre el log. Una vez que esté cerrado, se puede rotar; y una vez que esté rotado, se le notifica al programa que lo vuelva a abrir. Esto en muchos casos se realiza relanzando el servicio original.
+- Esto evidentemente no es lo más idóneo, puesto que sería mejor que el servicio no se enterase de que el archivo de log se ha rotado. Para ello, se puede emplear otra herramienta más moderna denominada *Apache Httpd* `rotatelogs`, y aunque fue diseñada para el servidor web Apache, se puede usar con cualquier programa que escriba logs. Los logs en este caso no se envían a archivos, sino a la salida estándar (`stdout`), y el programa `rotatelogs` se encarga de redirigir la salida a un archivo mediante un *pipe*. Este programa se encarga de gestionar la rotación de logs de forma automática, sin necesidad de notificar al servicio que está escribiendo los logs. Esto permite evitar problemas de rendimiento y asegurar que los logs se rotan de forma correcta.
+
+
+
+## Programacion tareas.
 En el ambito de la adminitración de servidores es muy común la ejecución de tareas periódicas de mantenimiento. Para automatizar este fin, existen varias herramientas muy útiles, nos centraremos en cron, que es la clásica y más extendida solución, sin embargo, se recomienda leer sobre systemd timers, que para sistemas basados en systemd proporcionan una manera más adecuada, sencilla y eficiente de ejecutar estas tareas.
 
-## ¿Cómo funciona `cron`?
+### ¿Cómo funciona `cron`?
 
 `cron` ejecuta tareas en segundo plano definidas por el usuario mediante un archivo especial llamado *crontab* (tabla de cron). Cada usuario puede tener su propia tabla de tareas.
 
@@ -831,14 +912,14 @@ Este comando abre el archivo de configuración asociado al usuario actual. Las t
 │ └──────── Hora (0-23)
 └────────── Minuto (0-59)
 
-## Comandos útiles
+### Comandos útiles
 
 - Ver tareas programadas: crontab -l
 - Borrar tareas: crontab -r
 - Editar tareas: crontab -e
 - Ver logs del sistema: journalctl, dmesg, o /var/log/syslog (depende del sistema)
 
-## Ejercicio opcional
+### Ejercicio opcional
 
 Queremos que ejecute un comando para el log del sistema con las características dadas, para ello, podemos usar el siguiente comando, que deberemos insertar en el crontab con la frecuencia deseada:
 ```shell
@@ -850,31 +931,3 @@ Para poner la frecuencia editamos con crontab -e y añadimos la linea anterior j
 0 4 8-14 * * echo "[INICIALES] $(date '+%d-%m-%Y %H:%M:%S') – CPU: $(top -bn1 | grep 'Cpu(s)' | awk '{print 100 - $8}')%" | logger -t ISE
 ```
 Que ejecutaría a las 4:00 cada dia del mes comprendido entre 8 y 14. Para obtener los tiempos de forma más sencilla, se recomienda la pagina crontab.guru.
-
-## Logs
-Una forma sencilla de monitorización es ver los logs del sistema, se almacenan en /var/logs/ que contiene tanto logs del sistema linux como de servicios instalados. En ocasiones el formato es texto plano y podemos consultarlos con herramientas del estilo de `cat`. En otras ocasiones necesitaremos comandos específicos para consultarlos, por ejemplo `last` y `who` permiten consultar los accesos registrados en el archivo binario btmp,wtmp.
-
-## Journalctl
-En sistemas modernos basados en systemd, todos los eventos del sistema y de los servicios se registran en el journal. El servicio encargado de esta tarea es `systemd-journald`.
-
-Por defecto, el journal es volátil, lo que significa que los logs se almacenan en memoria y se pierden tras un reinicio. Para habilitar persistencia:
-```shell
-sudo mkdir -p /var/log/journal
-sudo systemctl restart systemd-journald
-```
-También puede ajustarse la opción `Storage=persistent` en el archivo de configuración /etc/systemd/journald.conf.
-Para consultar los registros del sistema se utiliza:
-```shell
-journalctl
-```
-Opciones comunes:
-
-- -b: muestra los logs desde el último arranque.
-- -p: filtra por prioridad (emerg, alert, crit, err, warning, etc.).
-- -u nombre_servicio: filtra por unidad de systemd.
-## Ejercicio Opcional: Logs del arranque
-
-Queremos ver los logs del último arranque con nivel de severidad warning o superior (advertencias, errores, fallos críticos).
-```shell
-journalctl -b -p warning
-```

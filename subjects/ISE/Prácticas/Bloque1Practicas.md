@@ -60,7 +60,9 @@ En las prácticas, emplearemos **Oracle VirtualBox**, un software de virtualizac
 
 
 
-A continuación, hemos de crear una máquina virtual, que simbolizará nuestro servidor. Para ello, como en cualquier ordenador, hemos de elegir el Sistema Operativo previamente. El que usaremos en las prácticas será una distribución minimal de **Rocky Linux**, una distribución de Linux basada en Red Hat Enterprise Linux (RHEL). Optamos por esta distribución por ser sencilla y por requerir pocos recursos. En el caso de necesitar documentación, se recomienda consultar la documentación de Rocky Linux, en su defecto la de CentOS o RHEL, y también podrá ser útil la documentación de Fedora.
+A continuación, hemos de crear una máquina virtual, que simbolizará nuestro servidor. Para ello, como en cualquier ordenador, hemos de elegir el Sistema Operativo previamente. El que usaremos en las prácticas será una distribución minimal de **Rocky Linux**, una conocida distribución de Linux. Es el sucesor de **CentOS**, y es compatible con Red Hat Enterprise Linux (RHEL). En este caso, es una distribución de código abierto y gratuita.
+
+En el caso de necesitar documentación, se recomienda consultar la documentación de Rocky Linux, o en su defecto la de CentOS o RHEL, y también podrá ser útil la documentación de Fedora.
 - La ISO que se empleará, con el objetivo de emplear una versión estable y común (y poder así compartir dudas) es [esta](http://atcproyectos.ugr.es/esriie/Rocky-9.0-20220805.0-x86_64-minimal.iso), proporcionada por la UGR.
 - En su defecto, se puede descargar la última versión estable de [Rocky Linux](https://rockylinux.org/download).
 
@@ -426,7 +428,34 @@ Por último, es importante destacar que se deben separar PVs de distintas caract
 - Por ejemplo, si introducimos en un mismo VG dispositivos que emplean RAID y dispositivos que no, entonces cuando se escriba en cierto LV, como no se sabe en qué PV está, no sabremos si se ha empleado el RAID o no.
 - Si mezclamos discos SSD y HDD, el rendimiento de los SSD se verá afectado por la latencia de los HDD.
 
-Por tanto, es recomendable crear VGs separados para cada tipo de dispositivo.
+Por tanto, es recomendable crear VGs separados para cada tipo de dispositivo. No obstante, esto no es obligatorio, y el usuario puede decidir si lo hace o no. Veamos un ejemplo de una **mala praxis** para ver que es posible:
+```shell
+$ lsblk
+NAME             MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINTS
+### ...
+sdb                8:16   0   20G  0 disk  
+└─md0              9:0    0   20G  0 raid1 
+sdc                8:32   0   20G  0 disk  
+└─md0              9:0    0   20G  0 raid1 
+sdd                8:48   0   20G  0 disk  
+```
+
+Como vemos, hay un RAID 1 (`md0`) y hay un disco normal (`sdd`). Tras crear los V y el VG correspondiente, podemos ver que ambos PV pertencen al mismo VG:
+```shell
+$ pvdisplay
+  --- Physical volume ---
+  PV Name               /dev/md0
+  VG Name               vg1
+  PV Size               19.98 GiB / not usable 3.00 MiB
+  ### ...
+   
+  --- Physical volume ---
+  PV Name               /dev/sdd
+  VG Name               vg1
+  PV Size               20.00 GiB / not usable 4.00 MiB
+  ### ...
+```
+
 
 #### Integración de LVM con RAID
 
