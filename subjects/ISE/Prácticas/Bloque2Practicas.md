@@ -889,45 +889,54 @@ Lo importante de cara a esta práctica no es comprender cómo configurar el `log
 
 
 
-## Programacion tareas.
-En el ambito de la adminitración de servidores es muy común la ejecución de tareas periódicas de mantenimiento. Para automatizar este fin, existen varias herramientas muy útiles, nos centraremos en cron, que es la clásica y más extendida solución, sin embargo, se recomienda leer sobre systemd timers, que para sistemas basados en systemd proporcionan una manera más adecuada, sencilla y eficiente de ejecutar estas tareas.
+## Programación de tareas
 
-### ¿Cómo funciona `cron`?
+En el ambito de la adminitración de servidores es muy común la ejecución de tareas periódicas de mantenimiento. Para automatizar este fin, existen varias herramientas muy útiles, entre las que destacan `cron` y `systemd timers`. Esta segunda es mucho más potente, pero es más compleja y, por motivos históricos y por su amplia difusión, en la asignatura nos centraremos en `cron`.
 
-`cron` ejecuta tareas en segundo plano definidas por el usuario mediante un archivo especial llamado *crontab* (tabla de cron). Cada usuario puede tener su propia tabla de tareas.
-
-Para editarla:
-
+El servicio `crond` ejecuta tareas en segundo plano definidas por el usuario. Estas se encuentran en el archivo `/etc/crontab`:
 ```shell
-crontab -e
+$ cat crontab 
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+
+# For details see man 4 crontabs
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name  command to be executed
 ```
 
-Este comando abre el archivo de configuración asociado al usuario actual. Las tareas se escriben en líneas con el siguiente formato:
+Como vemos, se especifica en primer lugar el shell a usar, el path a usar y el usuario que ejecuta la tarea. El último aspecto es importante, puesto que los comandos se ejecutarán con los permisos del usuario especificado.
 
-* * * * * comando
-│ │ │ │ │
-│ │ │ │ └── Día de la semana (0-7) (domingo es 0 o 7)
-│ │ │ └──── Mes (1-12)
-│ │ └────── Día del mes (1-31)
-│ └──────── Hora (0-23)
-└────────── Minuto (0-59)
+A continuación en el fichero, se especifican las tareas a ejecutar, con el formato que ahí se explica. Hay gran cantidad de herramientas online empleadas para trabajar con ese formato, como [crontab.guru](https://crontab.guru/), que permiten especificar la frecuencia de ejecución de la tarea. Normalmente, puesto que el comando a ejecutar debe ser uno único, se suele crear un script que contenga el comando a ejecutar y se llama a ese script desde `cron`.
 
-### Comandos útiles
+Además, hay ciertas carpetas como `/etc/cron.daily/`, `/etc/cron.hourly/`, `/etc/cron.weekly/` y `/etc/cron.monthly/` que contienen scripts que se ejecutan periódicamente conforme dice su nombre. Estos scripts se ejecutan con los permisos del usuario `root`.
+  - Normalmente, en `/etc/cron.daily/` se encuentra el script de `logrotate`.
 
-- Ver tareas programadas: crontab -l
-- Borrar tareas: crontab -r
-- Editar tareas: crontab -e
-- Ver logs del sistema: journalctl, dmesg, o /var/log/syslog (depende del sistema)
+No obstante, no suele ser común que se tengan permisos de administrador. Es por ello que cada usuario tiene su propio archivo `crontab`, que se encuentra en `/var/spool/cron/<usuario>`. Este archivo contiene las tareas programadas por el usuario, y se ejecutan con los permisos de ese usuario. Para evitar problemas de seguridad, este archivo no es accesible por el usuario, sino que se accede a él mediante el comando `crontab`. Veamos algunas de sus opciones:
+- `-l`: Muestra el contenido del archivo `crontab` del usuario.
+- `-r`: Borra el archivo `crontab` del usuario.
+- `-e`: Edita el archivo `crontab` del usuario.
 
-### Ejercicio opcional
+El demonio `crond` no tiene terminal asociada, por lo que no se pueden enviar salidas por pantalla. Es aquí donde entra especialmente en juego el comando `logger`, que permite enviar mensajes al sistema de logs.
 
-Queremos que ejecute un comando para el log del sistema con las características dadas, para ello, podemos usar el siguiente comando, que deberemos insertar en el crontab con la frecuencia deseada:
+### Ejemplo práctico
+
+Vamos a realizar un ejemplo práctico de cómo programar una tarea periódica con `cron` y `logger`. En este caso, vamos a programar una tarea que se ejecute cada hora y que genere un log:
+- Cuya etiqueta sea `ISE`.
+- Cuya prioridad sea `info`.
+- Que contenga la fecha y hora de ejecución.
+
+
+La modificación del archivo `crontab` que realizaremos con el comando `crontab -e` será la siguiente:
 ```shell
-echo "[INICIALES] $(date '+%d-%m-%Y %H:%M:%S') – CPU: $(top -bn1 | grep 'Cpu(s)' | awk '{print 100 - $8}')%" | logger -t ISE
+0 * * * * logger -t ISE -p user.info "Tarea programada ejecutada el $(date)"
 ```
-En este caso se imprime el % de CPU en uso, podríamos haber definido cualquier otra forma para representar la carga y sería valido. Por ejemplo en top tambien hay un parámetro de carga media.
-Para poner la frecuencia editamos con crontab -e y añadimos la linea anterior junto con la frecuencia deseada, por ejemplo:
-```shell
-0 4 8-14 * * echo "[INICIALES] $(date '+%d-%m-%Y %H:%M:%S') – CPU: $(top -bn1 | grep 'Cpu(s)' | awk '{print 100 - $8}')%" | logger -t ISE
-```
-Que ejecutaría a las 4:00 cada dia del mes comprendido entre 8 y 14. Para obtener los tiempos de forma más sencilla, se recomienda la pagina crontab.guru.
+
+Recordemos que no es buena práctica espeficiar directamente el comando a ejecutar, sino que es mejor crear un script y llamarlo desde `cron`. No obstante, por motivos de simplicidad, en este caso lo haremos directamente.
