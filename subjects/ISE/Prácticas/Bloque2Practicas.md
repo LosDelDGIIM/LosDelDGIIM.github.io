@@ -158,8 +158,10 @@ Hacemos referencia ahora brevemente a distintos términos:
         links:
           - mongodb
     ```
-    - En este caso, se definen tres servicios: `mongodb`, `mongodbinit` y `nodejs`. Cada uno de ellos tiene su propia configuración y se pueden ejecutar juntos. Notemos que los últimos dos dependen del primero, por lo que no se ejecutarán si no se ha levantado el primero. Esto es importante, ya que si no se especifica, los contenedores pueden no funcionar correctamente.
+    - En este caso, se definen tres servicios: `mongodb`, `mongodbinit` y `nodejs`. Cada uno de ellos tiene su propia configuración y se pueden ejecutar juntos.
     - En lo referido a los puertos, vemos que se especifican de la forma `<puerto_host>:<puerto_contenedor>`. Esto significa que el puerto 27017 del host se redirige al puerto 27017 del contenedor. De esta forma, podemos acceder al contenedor desde el host a través del puerto 27017.
+    - El comando `links` se usa para conectar contenedores entre sí. Cada vez que `docker-compose` levanta un contenedor, se crea una red virtual entre ellos y les asigna una dirección IP a cada servicio. Para que los contenedores puedan comunicarse entre sí, añadirá una entrada en el archivo `/etc/hosts` de cada contenedor, permitiendo que se puedan resolver los nombres de los contenedores entre sí. De esta forma, para conectarse desde un contenedor a otro, se puede usar el nombre del servicio como si fuera un nombre de host.
+      - Por ejemplo, el contenedor `nodejs` puede conectarse al contenedor `mongodb` usando la dirección `mongodb:27017`.
 
     Para levantar dicho servicio multi-contenedor, simplemente ejecutamos el siguiente comando:
     ```shell
@@ -168,7 +170,7 @@ Hacemos referencia ahora brevemente a distintos términos:
     - El flag `-d` indica que se va a ejecutar en segundo plano, es decir, que no se va a mostrar la salida del contenedor en la consola.
 
     Para detenerlo, hay dos casos:
-    - Si se ha ejecutado en segundo plano, se puede usar el siguiente comando:
+    - Si se ha ejecutado en segundo plano (o desde otra terminal pero en la misma carpeta), se puede usar el siguiente comando:
       ```shell
       $ docker-compose down
       ```
@@ -510,13 +512,14 @@ Para la realización, hemos de crear el fichero de jMeter `jmx` correspondiente 
    - Para acceder a ellas, deberemos usar el símbolo `$` seguido del nombre de la variable. Por ejemplo, si definimos una variable llamada `PORT`, la usaremos como `${PORT}`. Esto es útil para definir variables que se usan en varias partes del test. En nuestro caso, hemos de usar (como mínimo):
      - `HOST`: `localhost` (o la IP del servidor)
      - `PORT`: 3000 (es el puerto en el que está levantado el servidor).
+     - `PROTOCOL`: `http` (es el protocolo que se va a usar para acceder al servidor).
 
 2. **Access to ETSII API**
    
    Es buena costumbre unificar todos los valores por defecto de las peticiones HTML en un elemento de configuración llamado `HTTP Request Defaults` (`Add > Config Element > HTTP Request Defaults`). Esto nos permite definir valores por defecto para todas las peticiones que se hagan en el test. De esta forma, si queremos cambiar algún valor, lo haremos una sola vez y se aplicará a todas las peticiones. En nuestro caso, hemos de definir:
      - Server Name: `${HOST}`
      - Port Number: `${PORT}`
-     - Protocol: `http`, puesto que el servidor está levantado en HTTP (no tenemos certificados para emplear HTTPS).
+     - Protocol: `${PROTOCOL}`
 
     También se podrían añadir los siguientes elementos:
     - Path por defecto.
@@ -526,7 +529,7 @@ Para la realización, hemos de crear el fichero de jMeter `jmx` correspondiente 
 3. **Basic Auth API** 
    
    A continuación, debemos controlar el acceso a la API mediante `HTTP Basic Auth`. Para ello, hemos de añadir un elemento de configuración llamado `HTTP Authorization Manager` (`Add > Config Element > HTTP Authorization Manager`). Este elemento permite gestionar la autenticación HTTP en las peticiones que se realicen. Este debe contener:
-     - Base URL: `http://${HOST}:${PORT}/api/v1/auth/login`
+     - Base URL: `"${PROTOCOL}"://${HOST}:${PORT}/api/v1/auth/login`
      - Username: `etsiiApi`
      - Password: `laApiDeLaETSIIDaLache`
      - Mechanism: `BASIC`
@@ -619,88 +622,191 @@ Para la realización, hemos de crear el fichero de jMeter `jmx` correspondiente 
     Como se puede intuir, se almacenará la parte de la respuesta que coincide con la expresión regular en una variable llamada `token` (en este caso).
 
 
-    <!-- // TODO: Por aquí-->
+9. **Espera un poco**
 
-Añadimos además un temporizador mediante Add > Timer > Gaussian Random Timer.
+    Añadimos un temporizador mediante `Add > Timer > Uniform Random Timer`, que nos permite simular el tiempo que tarda un usuario en realizar la petición.
+    - *Random Delay Maximum*: 3000
 
-- **Recuperar Datos Alumno** (Add > Sampler > HTTP Request)
+      Este campo permite especificar el tiempo máximo que se va a esperar entre peticiones. En este caso, se especifica que se va a esperar un máximo de 3 segundos entre peticiones.
+
+    - *Constant Delay Offset*: 0
+
+      Este campo permite especificar un tiempo constante que se va a esperar entre peticiones.
+
+10. **Recuperar Datos Alumno**
+
+    Petición `GET` para recuperar los datos del alumno. Para ello, hemos de añadir un `HTTP Request` (ya explicado) con:
     - Method: `GET`
     - Path: `/api/v1/alumnos/alumno/${login}`
-    Add > Config Element > HTTP Header Manager:
-    - Name: `Authorization`, Value: `Bearer ${token}`
 
-Para los administradores, copia el grupo anterior y modifica lo siguiente:
+    Para que funcione, hemos de especificar el JWT Token en la cabecera de la petición.
 
-- CSV Dataset:
-  - Filename: `./jMeter/administradores.csv`
+11. **JWT Token**
 
-- Recuperar datos:
-  - Sustituye por Add > Sampler > **Access Log Sampler**
-    - Name: `Accesos Administradores`
-    - Protocol: `http`
-    - Server: `${IP}`
-    - Port: `${PUERTO}`
-    - Log file location: `./jMeter/apiAlumno.log`
+    Para ello, hemos de añadir un elemento llamado `HTTP Header Manager` (`Add > Config Element > HTTP Header Manager`) que cuelgue del anterior. Este elemento permite añadir cabeceras a las peticiones que se realicen. Este elemento debe contener:
+    - Name: `Authorization`
+    - Value: `Bearer ${token}`
 
-Ahora añadimos a ETSII Alumnos API los siguientes Listener
-Add > Listener > Summary Report
-Add > Listener > View Results in Table
-Add > Listener > Aggregate Report
+    Llegados a este punto, ya tenemos la configuración del test para los alumnos. Recomendamos evientemente ejecutar el test desde la interfaz gráfica para comprobar que todo funciona correctamente.
 
-Ahora podemos ejecutar con el run de la interfaz gráfica, sin embargo, para aplicaciones que vayamos a lanzar a producción, y, para la resolución de este ejercicio, ejecutamos sin modo gráfico:
-```shell
-jmeter -n -t ./archivo.jmx -l results.jtl
-```
+12. **Administradores**
 
-Donde -n significa que no se abre el modo gráfico, -t es el archivo a ejecutar con la configuración y -l se utiliza para saber en que fichero guardar los resultados.
+    Se crea el `Thread Group` de los administradores, análogo al de los alumnos.
 
-# Monitorización
+13. **Credenciales Administradores**
+
+    A continuación, y dentro del *Thread Group* de administradores, hemos de configurar el `CSV Data Set Config` para leer las credenciales de los administradores, de forma análoga a la de los alumnos.
+
+14. **Login Administrador**
+
+    Hemos de crear un `HTTP Request` para autenticar al administrador. Este elemento es análogo al de los alumnos.
+
+15. **Extract JWT Token Administrador**
+
+    Hemos de crear un `Regular Expression Extractor` para extraer el token del administrador. Este elemento es análogo al de los alumnos.
+
+16. **Espera un poco Administrador**
+
+    Hemos de crear un `Uniform Random Timer` para simular el tiempo que tarda un administrador en realizar la petición. Este elemento es análogo al de los alumnos.
+
+
+17. **Accesos Administradores**
+
+    Este acceso recordamos que es distinto, puesto que se emplea el log de accesos disponible en [./jMeter/apiAlumno.log](https://github.com/davidPalomar-ugr/iseP4JMeter/tree/master/jMeter/apiAlumno.log).
+
+
+    Para ello, hemos de añadir un elemento llamado `Access Log Sampler` (`Add > Sampler > Access Log Sampler`). Este elemento permite simular el acceso a un servidor web mediante un log de accesos. Este elemento debe contener:
+    - Protocol: `${PROTOCOL}`
+    - Server: `${HOST}`
+    - Port: `${PORT}`
+    - Log file: `./jMeter/apiAlumno.log`
+    - Parser: `org.apache.jmeter.protocol.http.util.accesslog.SharedTCLogParser`. Dependiendo de cómo se ha generado el log, se puede usar un parser u otro.
+
+18. **JWT Token Administrador**
+
+    Hemos de crear un `HTTP Header Manager` para añadir el token a la petición. Este elemento es análogo al de los alumnos.
+
+
+Estos son todos los pasos que hemos de seguir para crear el test. Algunos detalles relevantes que merece la pena recalcar son:
+- Importancia de los Path Relativos.
+- Simulación de la carga en producción sin interfaz gráfica.
+- Uso de los *listeners* deshabilitados en producción.
+
+## Monitorización
 La monitorización es una parte esencial en la administración de sistemas.
 
-## Herramientas de monitorización
-
 ### `top`
-- Herramienta clásica, disponible en casi todos los sistemas Linux.
-- Muestra en tiempo real:
-  - Carga del sistema (`load average`)
-  - Uso de CPU y memoria
-  - Procesos en ejecución
-- Funciona en terminales sin entorno gráfico.
-- Usa información del sistema de archivos `/proc`.
 
-### `htop`
-- Versión mejorada de `top`:
-  - Interfaz interactiva y más visual.
-  - Permite ordenar procesos con teclas, matar procesos fácilmente.
-  - Muestra uso de CPU por core y RAM con barras gráficas.
+`Top` es una herramienta de monitorización de procesos en tiempo real, muy ampliamente extendida y disponible en casi todos los sistemas operativos basados en Unix. Permite ver información sobre el uso de CPU, memoria, procesos en ejecución y carga del sistema.
+- `htop` es una versión mejorada de `top`, que incluye una interfaz más amigable y visual. No obstante, `top` está más extendido y es más comúnmente utilizado en sistemas de producción.
 
-### `btop`
-- Evolución moderna con mejor UI:
-  - Interfaz basada en ncurses (colores, gráficos animados).
-  - Muestra carga, memoria, procesos, red y disco.
-  - Uso muy intuitivo.
-  - Ideal para visualización avanzada en terminales modernos.
+Esta herramienta tan solo muestra y presenta los datos ofrecidos por el SO de forma visual. Estos datos son en su gran mayoría obtenidos del sistema de archivos `/proc`, que es un sistema de archivos virtual que contiene información sobre los procesos en ejecución y el estado del sistema.
 
-## Fuente de datos: `/proc`
-- `/proc/loadavg`: carga media del sistema.
-- `/proc/meminfo`: uso de memoria.
-- `/proc/uptime`: tiempo activo del sistema.
-- `/proc/cpuinfo`: info del procesador.
-- `/proc/[PID]/`: info específica de cada proceso.
+Además, en `top` podemos ordenar los procesos por diferentes criterios, como el uso de CPU, memoria, tiempo de ejecución, etc. Algunos de los atajos más comunes son:
+- `M`: Ordenar por uso de memoria.
+- `P`: Ordenar por uso de CPU.
+- `T`: Ordenar por tiempo de ejecución.
+- `R`: Revertir el orden de la lista.
+
+También se permite pulsar `-k` para seleccionar el PID de un proceso y matarlo.
+
+
+Una salida de `top` podría ser la siguiente, aunque recomendamos que se ejecute el comando para ver la salida real:
+```shell
+$ top
+top - 18:00:37 up 1 day, 36 min,  1 user,  load average: 1,00, 1,10, 0,91
+Tasks: 306 total,   1 running, 305 sleeping,   0 stopped,   0 zombie
+%Cpu(s): 12,5 us,  4,7 sy,  0,2 ni, 81,7 id,  0,8 wa,  0,0 hi,  0,2 si,  0,0 st 
+MiB Mem :   7843,8 total,    214,5 free,   5861,7 used,   2524,4 buff/cache     
+MiB Swap:   4096,0 total,   2565,5 free,   1530,5 used.   1982,1 avail Mem 
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND                                                          
+   3813 arturoo+  20   0 4773100 215596  55688 S  19,9   2,7  49:44.94 gnome-shell                                                      
+ 477508 arturoo+  20   0 1164,8g 397248 119068 S  10,3   4,9   7:49.83 code                                                             
+ 376184 arturoo+  20   0   32,4g  79480  76084 S   8,3   1,0   1:47.64 code          
+```
+
+1. La primera línea en realidad es el comando `uptime` (compruébese).
+   - Hora actual del sistema, empleando el comando `date`.
+   - Tiempo que lleva activo el sistema. En este caso, 1 día y 36 minutos. Se obtiene del archivo `/proc/uptime`.
+   - Número de usuarios conectados al sistema.
+   - Carga media del sistema en los últimos 1, 5 y 15 minutos. Esta información se obtiene del archivo `/proc/loadavg`.
+      ```shell
+      $ cat /proc/loadavg 
+      1.79 1.41 1.13 3/1408 521226
+      ```
+      Como vemos, muestra en primer lugar la carga media del sistema en los últimos 1, 5 y 15 minutos. En segundo lugar, el número de procesos ejecutables (en ejecución o en cola) sobre el número total de procesos; y por último muestra el PID del último proceso creado.
+
+      En lo referente a la carga media, es importante aclarar que su interpretación depende del número de procesadores del sistema. Por ejemplo:
+      - Un único procesador con carga media de `1.0` significa que el procesador está al 100% de su capacidad.
+      - Un único procesador con carga media de `0.5` significa que el procesador está al 50% de su capacidad.
+      - Cuatro procesadores con carga media de `2.0` significa que el sistema está al 50% de su capacidad.
+      
+
+2. La segunda línea muestra información sobre los procesos en ejecución:
+   - Total de procesos activos en el sistema. Es la suma del resto de tipos de procesos.
+   - Número de procesos en ejecución, en espera, detenidos y zombi (un proceso zombie es un proceso que ha terminado su ejecución pero aún tiene un PID asignado, y no ha sido eliminado por su padre. De hecho, no ha liberado memoria).
+
+3. La tercera línea muestra información sobre el uso de CPU:
+   - `us`: Porcentaje de CPU usado por procesos en modo usuario.
+   - `sy`: Porcentaje de CPU usado por procesos en modo sistema (kernel).
+   - `ni`: Porcentaje de CPU usado por procesos con prioridad modificada (`nice value`).
+   - `id`: Porcentaje de CPU inactivo.
+   - `wa`: Porcentaje de CPU usado por procesos en espera de I/O.
+   - `hi`: Porcentaje de CPU usado por interrupciones de hardware.
+   - `si`: Porcentaje de CPU usado por interrupciones de software.
+   - `st`: Porcentaje de CPU "robado" por máquinas virtuales. Este porcentaje es el tiempo que la CPU ha estado ejecutando procesos del hipervisor en lugar de procesos del sistema operativo invitado.
+
+4. Las siguientes dos líneas muestran información sobre el uso de memoria. Algunos aspectos a destacar son:
+   - `free`: Memoria total libre.
+   - `buff/cache`: Memoria usada por buffers y caché.
+   - `avail Mem`: Memoria disponible para procesos. En la mayoría de veces considera que la memoria usada por buffers y caché está disponible para procesos, ya que el sistema puede liberar esa memoria si es necesario. Es por tanto mayor que la memoria libre.
+
+    Toda esta información se obtiene del archivo `/proc/meminfo`, archivo que también emplean comandos como `free` o `vmstat` para mostrar información sobre el uso de memoria.
+
+
+5. A continuación, para cada uno de los procesos en ejecución, se muestra información suya. Para cada uno de los procesos, hay una carpeta `/proc/<PID>/` que contiene información sobre el proceso, como su estado, uso de CPU y memoria, etc. Esta información es actualizada en tiempo real por el kernel del sistema operativo.
+    
+    Veamos esto gráficamente, aunque recomendamos al lector probar un poco porque hay gran cantidad de información:
+    ```shell
+    $ sudo cat /proc/703/status | head -n 5
+    Name:	node_exporter
+    Umask:	0022
+    State:	S (sleeping)
+    Tgid:	703
+    Ngid:	0
+    # ...
+    ```
+
+Como hemos mencionado, la gran mayoría de la información que muestra `top` se obtiene del sistema de archivos `/proc`. Esto se puede probar monitorizando un archivo del sistema de archivos `/proc` y viendo cómo cambia su contenido en tiempo real de la misma forma que lo hace `top`. Esto se consigue con el comando `watch`:
+```shell
+$ watch -n 1 cat /proc/loadavg
+```
+   - `-n 1`: Actualiza cada segundo.
+   - `cat /proc/loadavg`: comando a ejecutar cada segundo.
+
+La ventaja de esto es que, mientras que `top` es una herramienta de foreground, los archivos de `/proc` y los comandos base vistos son herramientas de background, y esto permite obtener información de ellos de forma más sencilla y rápida.
 
 Además de las herramientas ya mencionadas, tenemos comandos como `uptime`, `free` o `vmstat` que acceden a las mismas fuentes de información pero son más adecuados para extraer información específica o para scripts.
 
-## Ejercicio Opcional
+#### Ejercicio Práctico
 
-Stress es una herramienta de carga que permite estresar el sistema, generando carga en CPU, memoria, disco y red. Permite simular condiciones extremas para evaluar la estabilidad y rendimiento del sistema. Se recomienda la herramienta `stress-ng`, que es una versión mejorada de `stress` y ofrece más opciones y configuraciones.
+Para comprobar que efectivamente `top` es empleado para monitorizar el sistema, vamos a realizar una sobrecarga y veremos cómo reacciona. Para ello, emplearemos la herramienta `stress-ng
 
-Las opciones más comunes son:
-- --cpu N: Estresa N núcleos de CPU.
-- --all 0: Estreza todos los subsistemas (No recomendado probar)
-- --cpu-load N: Estresa la CPU al N% de carga (Aproximadamente).
-- --timeout Ns: Ejecuta el estrés durante N segundos.
 
-Para resolver el ejercicio, bastará con ejecutar el comando con las flags que veamos oportunas mientras monitoreamos el sistema con las herramientas anteriormente descritas.
+Stress es una herramienta de carga que permite estresar el sistema, generando carga en CPU, memoria, disco y red. Permite simular condiciones extremas para evaluar la estabilidad y rendimiento del sistema. Se empleará `stress-ng` en vez de `stress`, puesto que es una versión más moderna y mejorada de `stress`.
+
+Algunas de las opciones son:
+- `--cpu N`: Estresa `N` núcleos de CPU.
+- `--io N`: Estresa `N` dispositivos de I/O.
+- `--timeout Ns`: Ejecuta el estrés durante `N` segundos.
+
+No obstante, en el manual se puede apreciar que hay opciones mucho más específicas para estresar componentes concretos del sistema, como la memoria, el disco o la red. Ejecutamos por tanto el siguiente comando:
+```shell
+$ stress-ng --cpu 4 --io 2 --timeout 60s
+```
+
+Esto vemos que provoca que el porcentaje de CPU usado por procesos en modo usuario (`us`) se eleve, que el número de procesos en estado de espera (`wa`) aumente por las esperas de I/O, y que el número de ciclos de reloj dedicados a resolver interrupciones software (`si`) aumente.
 
 ## Programacion tareas
 En el ambito de la adminitración de servidores es muy común la ejecución de tareas periódicas de mantenimiento. Para automatizar este fin, existen varias herramientas muy útiles, nos centraremos en cron, que es la clásica y más extendida solución, sin embargo, se recomienda leer sobre systemd timers, que para sistemas basados en systemd proporcionan una manera más adecuada, sencilla y eficiente de ejecutar estas tareas.
