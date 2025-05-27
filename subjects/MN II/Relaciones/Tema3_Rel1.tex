@@ -44,6 +44,15 @@ siendo $x = x(t)$ una función desconocida de $t$.
         x_{n+1} = x_n + h f\left(t_n + \frac{h}{2}, x_n + \frac{h}{2} f(t_n, x_n)\right)
     \end{equation*}
 
+    Veamos que $\Phi$ es lipschitziana. Supongamos que $f$ lo es con constante $L$.
+    \begin{align*}
+        |\Phi(z; t, h) - \Phi(w; t, h)| &= \left| f\left(t + \frac{h}{2}, z + \frac{h}{2} f(t, z)\right) - f\left(t + \frac{h}{2}, w + \frac{h}{2} f(t, w)\right) \right|\\
+        &\leq L\left|z + \frac{h}{2} f(t, z) - w - \frac{h}{2} f(t, w)\right|\\
+        &\leq L\left|z - w\right| + \frac{h}{2} L \left|f(t, z) - f(t, w)\right|\\
+        &\leq L\left|z - w\right| + \frac{h}{2} L^2 \left|z - w\right|\\
+        &= \left(L + \frac{h}{2} L^2\right) \left|z - w\right|
+    \end{align*}
+    Por tanto, $\Phi$ es lipschitziana con constante de Lipschitz $L + \frac{h}{2} L^2$.
     Su polinomio característico es:
     \begin{equation*}
         p(\lm) = \lm -1
@@ -65,7 +74,7 @@ siendo $x = x(t)$ una función desconocida de $t$.
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:3.1.4}
-    Razone la veracidad o falsedad de la afirmación siguiente: El método de Euler modificado (Heun) proporciona la solución exacta de la EDO dada por $x' = -2\lambda t$.
+    Razone la veracidad o falsedad de la afirmación siguiente: El método de Euler modificado (Heun) proporciona la solución exacta de la EDO dada por $x' = -2\lambda t$.\\
 
     La solución exacta de la EDO $x' = -2\lambda t$ es:
     \begin{equation*}
@@ -243,17 +252,145 @@ siendo $x = x(t)$ una función desconocida de $t$.
             x_{n+1} &= x_n + h(t_n - x_n) + \frac{h^2}{2} (1 - t_n + x_n)
         \end{align*}
 
-        % // TODO: Cont
+        \item El método de Heun para resolver el PVI $x' = f(t, x)$ es:
+        \begin{align*}
+            x_{n+1} &= x_n + \frac{h}{2} \left( f(t_n, x_n) + f(t_{n+1}, x_{n} + h f(t_n, x_n)) \right)
+            =\\&= x_n + \frac{h}{2} \left( (t_n - x_n) + (t_{n+1} - (x_n + h(t_n - x_n))) \right)
+            =\\&= x_n + \frac{h}{2} \left( 2t_n -x_n +h -x_n -ht_n +hx_n\right)
+            =\\&= x_n + h(t_n - x_n) + \frac{h^2}{2} \left( 1 - t_n + x_n \right)
+        \end{align*}
+
+        \item El método del punto medio para resolver el PVI $x' = f(t, x)$ es:
+        \begin{align*}
+            x_{n+1} &= x_n + h f\left(t_n + \frac{h}{2}, x_n + \frac{h}{2} f(t_n, x_n)\right)
+            =\\&= x_n + h\left(t_n + \frac{h}{2} - (x_n + \frac{h}{2} (t_n - x_n))\right)
+            =\\&= x_n + h(t_n - x_n) + \frac{h^2}{2} (1 - t_n + x_n)
+        \end{align*}
+    \end{enumerate}
+
+    El aspecto resañable es que los tres métodos resultan en el mismo.
+    Tiene como polinomio característico:
+    \begin{equation*}
+        p(\lm) = \lm - 1
+    \end{equation*}
+
+    Por tanto, es estable. Veamos ahora si es consistente con el PVI~\eqref{eq:pvi} empleando la caracterización de la consistencia, tenemos que:
+    \begin{itemize}
+        \item $p(1)= 0$, que se tiene.
+        \item $\Phi(x(t_n), t_n, 0)=p'(1)f(t_n, x(t_n))$:
+        \begin{align*}
+            \Phi(x(t_n), t_n, 0) &= t_n - x(t_n) = f(t_n, x(t_n)) = p'(1) f(t_n, x(t_n))
+        \end{align*}
+        Por tanto, se tiene también.
+    \end{itemize}
+
+    Por tanto, este método es estable y consistente, luego converge a la solución del PVI~\eqref{eq:pvi}.
+\end{ejercicio}
+
+\begin{ejercicio}\label{ej:3.1.8}
+    Demuestre que el PVI $x' = t^2 x$, $x(0) = 1$ tiene una única solución $x(t)$ en $[0, 1]$. Demuestre que el método de Taylor de orden 2 y el método de Runge-Kutta clásico convergen a $x(t)$ y halle las aproximaciones de cada uno de estos dos métodos para el tamaño de paso $h = 0.2$.\\
+
+    Sea $x'=f(t, x)$, con:
+    \Func{f}{\bb{R}^2}{\bb{R}}{(t, x)}{t^2 x}
+
+    Veamos que $f$ es continua y lipschitziana en su segunda variable. La continuidad de $f$ es inmediata, y para ver que es lipschitziana, sean $x,y\in \bb{R}$:
+    \begin{align*}
+        |f(t, x) - f(t, y)| &= |t^2 x - t^2 y| = |t^2||x - y| \leq |x-y|\qquad \forall t\in [0, 1]
+    \end{align*}
+    Por tanto, $f$ es lipschitziana en su segunda variable con constante de Lipschitz $M \leq 1$. Por tanto, el PVI tiene una única solución en $[0,1]\subset \bb{R}$.
+
+    \begin{enumerate}
+        \item El método de Taylor de orden 2 para resolver el PVI $x' = f(t, x)$ es:
+        \begin{align*}
+            x_{n+1} &\approx x(t_n + h) \approx x(t_n) + hx'(t_n) + \frac{h^2}{2} x''(t_n)
+        \end{align*}
+
+        Para aproximar $x'(t_n)$ y $x''(t_n)$, utilizamos que:
+        \begin{align*}
+            x'(t_n) &= f(t_n, x(t_n)) = t_n^2 x(t_n)\approx t_n^2 x_n \\
+            x''(t_n) &= \frac{\partial f}{\partial t}(t_n, x(t_n)) + \frac{\partial f}{\partial x}(t_n, x(t_n)) x'(t_n) = 2 t_n x(t_n) + t_n^2 (t_n^2 x(t_n)) = (2 t_n + t_n^4) x(t_n)
+        \end{align*}
+
+        Por tanto, la ecuación en diferencias del método de Taylor de orden 2 para resolver el PVI $x' = t^2 x$ es:
+        \begin{align*}
+            x_{n+1} &= x_n + h t_n^2 x_n + \frac{h^2}{2} (2 t_n + t_n^4) x_n
+        \end{align*}
+
+        Su polinomio característico es:
+        \begin{equation*}
+            p(\lm) = \lm - 1
+        \end{equation*}
+
+        Para ver que es estable, es necesario ver que el módulo de las raíces del polinomio característico es menor o igual que 1, y en el caso de que sea igual a 1, que la raíz sea simple. En este caso, la única raíz es $\lm = 1$, que es simple, por lo que el método de Taylor de orden 2 es estable.
+
+        Para ver que es consistente con el PVI~\eqref{eq:pvi} empleando la caracterización de la consistencia, tenemos que:
+        \begin{itemize}
+            \item $p(1)= 0$, que se tiene.
+            \item $\Phi(x(t_n), t_n, 0)=p'(1)f(t_n, x(t_n))$:
+            \begin{align*}
+                \Phi(x(t_n), t_n, 0) &= t_n^2 x(t_n) = f(t_n, x(t_n)) = p'(1) f(t_n, x(t_n))
+            \end{align*}
+            Por tanto, se tiene también.
+        \end{itemize}
+
+        Por tanto, el método de Taylor de orden 2 es consistente con el PVI~\eqref{eq:pvi}. Como es estable y consistente, converge a la solución del PVI~\eqref{eq:pvi}.
+
+        Para $h = 0.2$, tenemos que:
+        \begin{align*}
+            x_{n+1} &= x_n + 0.2 t_n^2 x_n + 0.0002(2 t_n + t_n^4) x_n \\
+        \end{align*}
+        \begin{equation*}
+            \begin{array}{c|c|c}
+                n & t_n & x_n\\ \hline
+                0 & 0 & 1 \\
+                1 & 0.2 & 1\\
+                2 & 0.4 & 1.00808\\
+            \end{array}
+        \end{equation*}
+
+        \item El método de Runge-Kutta clásico para resolver el PVI $x' = f(t, x)$ se define por la siguiente ecuación en diferencias:
+        \begin{align*}
+            x_{n+1} &= x_n + \frac{h}{6} \left( K_1 + 2K_2 + 2K_3 + K_4 \right)\\
+            K_1 &= f(t_n, x_n) \\
+            K_2 &= f\left(t_n + \frac{h}{2}, x_n + \frac{h}{2} K_1\right) \\
+            K_3 &= f\left(t_n + \frac{h}{2}, x_n + \frac{h}{2} K_2\right) \\
+            K_4 &= f(t_n + h, x_n + h K_3)
+        \end{align*}
+
+        Este método ya se ha visto que es convergente. La primera evaluación es:
+        \begin{equation*}
+            \begin{array}{c|c|c|c|c|c|c}
+                n & t_n & K_1 & K_2 & K_3 & K_4 & x_n\\ \hline
+                0 & 0 & &&&& 1 \\
+                1 & 0.2 & 0.04 & 0.01004&0.01001004&0.04008008032& 1.004006005
+            \end{array}
+        \end{equation*}
 
     \end{enumerate}
 \end{ejercicio}
 
-\begin{ejercicio}\label{ej:3.1.8}
-    Demuestre que el PVI $x' = t^2 x$, $x(0) = 1$ tiene una única solución $x(t)$ en $[0, 1]$. Demuestre que el método de Taylor de orden 2 y el método de Runge-Kutta clásico convergen a $x(t)$ y halle las aproximaciones de cada uno de estos dos métodos para el tamaño de paso $h = 0.2$.
-\end{ejercicio}
-
 \begin{ejercicio}\label{ej:3.1.9}
-    Utilizando el método de Runge-Kutta clásico para resolver el PVI $x' = f(t)$, $x(0) = \mu$, deduzca una conocida fórmula de integración numérica e indique de qué fórmula se trata.
+    Utilizando el método de Runge-Kutta clásico para resolver el PVI $x' = f(t)$, $x(0) = \mu$, deduzca una conocida fórmula de integración numérica e indique de qué fórmula se trata.\\
+
+    El método de Runge-Kutta clásico para resolver el PVI $x' = f(t)$, $x(0) = \mu$ se define por la siguiente ecuación en diferencias:
+    \begin{align*}
+        x_{n+1} &= x_n + \frac{h}{6} \left( K_1 + 2K_2 + 2K_3 + K_4 \right)\\
+        K_1 &= f(t_n, x_n) = f(t_n) \\
+        K_2 &= f\left(t_n + \frac{h}{2}, x_n + \frac{h}{2} K_1\right) = f\left(t_n + \frac{h}{2}\right) \\
+        K_3 &= f\left(t_n + \frac{h}{2}, x_n + \frac{h}{2} K_2\right) = f\left(t_n + \frac{h}{2}\right) \\
+        K_4 &= f(t_n + h, x_n + h K_3)
+        = f(t_n + h)
+    \end{align*}
+
+    Tenemos que:
+    \begin{align*}
+        \int_{t_n}^{t_{n+1}} f(s)\, ds &= x(t_{n+1}) - x(t_n) \approx x_{n+1} - x_n 
+        = \dfrac{h}{6} \left( K_1 + 2K_2 + 2K_3 + K_4 \right)
+        =\\&= \dfrac{h}{6} \left( f(t_n) + 2f\left(t_n + \frac{h}{2}\right) + 2f\left(t_n + \frac{h}{2}\right) + f(t_n + h) \right)
+        =\\&= \dfrac{h}{6} \left( f(t_n) + 4f\left(t_n + \frac{h}{2}\right) + f(t_n + h) \right)
+    \end{align*}
+
+    Por tanto, el método de Runge-Kutta clásico para resolver el PVI $x' = f(t)$, $x(0) = \mu$ es equivalente a la fórmula simple de Simpson.
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:3.1.10}
@@ -267,8 +404,22 @@ siendo $x = x(t)$ una función desconocida de $t$.
     \end{equation*}
     \begin{enumerate}
         \item Determine el orden del método según los valores del escalar $\alpha$.
+        
+        El método es:
+        \begin{align*}
+            x_{n+1} &= x_n + h \left( \dfrac{1-\alpha}{2} K_1 + \dfrac{1+\alpha}{2} K_2 \right)\\
+            K_1 &= f(t_n + 0\cdot h, x_n + h(0K_1 + 0K_2)) = f(t_n, x_n) \\
+            K_2 &= f\left(t_n + \alpha h, x_n + h(\alpha K_1 + 0K_2)\right) = f\left(t_n + \alpha h, x_n + \alpha h K_1\right)
+        \end{align*}
         \item Para $\alpha$ adecuado para que el método tenga orden máximo, ¿cuál es el término principal del error local de truncatura?
         \item ¿Es estable (cero-estable) el método para todo $\alpha$ si $f(t, x)$ es continua y lipschitziana respecto de $x$ sobre $D$?
+        
+        El polinomio característico del método es:
+        \begin{equation*}
+            p(\lm) = \lm - 1
+        \end{equation*}
+
+        Para ver que es estable, es necesario ver que el módulo de las raíces del polinomio característico es menor o igual que 1, y en el caso de que sea igual a 1, que la raíz sea simple. En este caso, la única raíz es $\lm = 1$, que es simple, por lo que el método de Runge-Kutta de 2 evaluaciones con arreglo de Butcher es estable.
     \end{enumerate}
 \end{ejercicio}
 
@@ -279,9 +430,82 @@ siendo $x = x(t)$ una función desconocida de $t$.
     \end{equation*}
     \begin{enumerate}
         \item Exprese los valores de $a_0$, $b_0$, $b_1$ respecto de $a_1$ para que el método sea de orden, al menos, 2.
+        
+        Tenemos que:
+        \begin{align*}
+            x_{n+2} = - a_1 x_{n+1} - a_0 x_n + h (b_0 f_n + b_1 f_{n+1})
+        \end{align*}
+
+        Para que el método sea de orden, al menos, 2, hemos de cumplir que:
+        \begin{align*}
+            0 = C_0 &= 1+a_1+a_0 \\
+            0 = C_1 &= 2 + 0a_0 + a_1 - b_0 - b_1 \\
+            0 = C_2 &= \dfrac{2^2}{2!} + \dfrac{0^2}{2!}a_0 + \dfrac{1^2}{2!} a_1 - \dfrac{1^1}{1!} b_1
+            = 4 + a_1 - 2b_1
+        \end{align*}
+
+        Por tanto:
+        \begin{equation*}
+            a_0 = -1 - a_1,\qquad b_1 = \dfrac{4 + a_1}{2},\qquad b_0 = 2+a_1-b_1 = \dfrac{4 +2a_1-4-a_1}{2} = \dfrac{a_1}{2}
+        \end{equation*}
         \item Para la familia de métodos obtenida en el apartado anterior, ¿qué valor(es) de $a_1$ hacen el MML estable?
+        
+        Para estudiar la estabilidad del MML, hemos de estudiar el polinomio característico:
+        \begin{align*}
+            p(\lm) &= \lm^2 + a_1 \lm + a_0
+            = \lm^2 + a_1 \lm - 1 - a_1
+            = 0\iff\\&\iff
+            \lm = \dfrac{-a_1 \pm \sqrt{a_1^2 +4+4a_1}}{2}
+            = \dfrac{-a_1 \pm \sqrt{(a_1+2)^2}}{2}
+            = \dfrac{-a_1 \pm (a_1+2)}{2}
+            \iff\\&\iff
+            \lm \in \{1,-a_1-1\}
+        \end{align*}
+
+        Tenemos que:
+        \begin{align*}
+            |-a_1-1|\leq 1\iff -1 \leq a_1+1\leq 1
+            \iff a_1\in [-2,0]
+        \end{align*}
+
+        Si $a_1=-2$, entonces $1$ es una raíz doble, por lo que no es estable. Por tanto, el MML es estable si y solo si $a_1\in \left]-2,0\right]$.
         \item ¿Qué métodos particulares se obtienen si $a_1 = 0$ y $a_1 = -1$?
+        \begin{itemize}
+            \item Si $a_1 = 0$, entonces:
+            \begin{equation*}
+                a_0 = -1,\qquad b_0 = 0,\qquad b_1 = 2
+            \end{equation*}
+
+            Por tanto, el MML es:
+            \begin{equation*}
+                x_{n+2} = x_n + 2h f_{n+1}
+            \end{equation*}
+
+            En este caso, se trata del MML basado en la fórmula de cuadratura del punto medio aplicada al segumento $[t_n, t_{n+2}]$.
+
+            \item Si $a_1 = -1$, entonces:
+            \begin{equation*}
+                a_0 = 0,\qquad b_0 = \nicefrac{-1}{2},\qquad b_1 = \nicefrac{3}{2}
+            \end{equation*}
+
+            Por tanto, el MML es:
+            \begin{align*}
+                x_{n+2} &= x_{n+1} +h\left(-\frac{1}{2}f_n + \dfrac{3}{2}f_{n+1}\right)
+                =\\&= x_{n+1} +\dfrac{h}{2}\left(3f_{n+1}-f_n\right)
+            \end{align*}
+        \end{itemize}
         \item ¿Es estable y de orden 3 el MML para algún valor de $a_1$?
+        
+        Calculemos para ello $C_3$.
+        \begin{align*}
+            C_3 &= \dfrac{2^3}{3!}+ 0\cdot a_0 + \dfrac{1}{3!}a_1 -\dfrac{1}{2!}b_1
+            = \dfrac{8}{6} + \dfrac{a_1}{6} - \dfrac{4+a_1}{4}
+            =\\&= \frac{1}{3}+ \dfrac{a_1}{6} -\dfrac{a_1}{4}
+            = \frac{1}{3}- \dfrac{a_1}{12}
+            =0 \iff a_1=4
+        \end{align*}
+
+        No obstante, en ese caso $a_1\notin \left]-2,0\right]$, por lo que no es posible encontrar dicho valor de $a_1$ pedido.
     \end{enumerate}
 \end{ejercicio}
 
@@ -290,11 +514,111 @@ siendo $x = x(t)$ una función desconocida de $t$.
     \begin{equation*}
         x_{n+2} - (1 + \alpha) x_{n+1} + \alpha x_n = h ((1 + \beta) f_{n+2} - (\alpha + \beta + \alpha \beta) f_{n+1} + \alpha \beta f_n)
     \end{equation*}
-    con $n = 0, \ldots, N-2$, tiene el mayor orden posible. ¿Cuál es dicho orden? ¿Es convergente el método obtenido? ¿Por qué?
+    con $n = 0, \ldots, N-2$, tenga el mayor orden posible. ¿Cuál es dicho orden? ¿Es convergente el método obtenido? ¿Por qué?\\
+
+    Calculemos los valores de los $C_i$.
+    \begin{align*}
+        C_0 &= 1-(1+\alpha) + \alpha = 0\qquad \forall \alpha,\beta\\
+        C_1 &= 2 +0\cdot \alpha -(1+\alpha) - \alpha\beta + (\alpha+\beta+\alpha\beta) - (1+\beta) = 0\qquad \forall \alpha,\beta\\
+        C_2 &= \dfrac{2^2}{2!} - \dfrac{1}{2!}(1+\alpha)+\dfrac{1}{1!}(\alpha+\beta+\alpha\beta) - \dfrac{2^1}{1!}(1+\beta)
+        = -\frac{1}{2}+\frac{\alpha}{2}-\beta+\alpha\beta=0\\
+        C_3 &= \dfrac{2^3}{3!} - \dfrac{1}{3!}(1+\alpha)+\dfrac{1}{2!}(\alpha+\beta+\alpha\beta) - \dfrac{2^2}{2!}(1+\beta)
+        = -\frac{5}{6}+\frac{\alpha}{3}-\dfrac{3\beta}{2}+\frac{\alpha\beta}{2}
+    \end{align*}
+
+    Por tanto, planteamos el siguiente sistema:
+    \begin{equation*}
+        \left.
+            \begin{array}{rcl}
+                \alpha-2\beta+2\alpha\beta &=& 1\\
+                2\alpha-9\beta+3\alpha\beta &=& 5
+            \end{array}
+        \right\}
+        \Longrightarrow
+        \left\{
+            \begin{array}{rcl}
+                \alpha &=& 1\\
+                \beta &=& \nicefrac{-1}{2}
+            \end{array}
+        \right\}
+    \end{equation*}
+
+    Por tanto, ya tenemos determinados los valores de $\alpha$ y $\beta$. Veamos si estos también cumplen que $C_4=0$:
+    \begin{align*}
+        C_4 &= \dfrac{2^4}{4!} - \dfrac{1}{4!}(1+\alpha)+\dfrac{1}{3!}(\alpha+\beta+\alpha\beta) - \dfrac{2^3}{3!}(1+\beta)
+        =\\&= \dfrac{16}{24}-\dfrac{2}{24} + \dfrac{1}{3!}\cdot 0 - \dfrac{8}{6\cdot 2}
+        = -\dfrac{1}{12}\neq 0
+    \end{align*}
+
+    Por tanto, su orden exacto es $3$. Veamos si es convergente. Su polinomio característico es:
+    \begin{align*}
+        p(\lm) = \lm^2-(1+\alpha)\lm + \alpha
+        = \lm^2-2\lm + 1 = (\lm-1)^2
+    \end{align*}
+
+    Por tanto, y como las raíces de $p$ de módulo $1$ no son simples, el método no es estable y por tanto no podrá ser convergente.
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:3.1.13}
-    Construya una familia 1-paramétrica de MML implícitos de dos pasos con el mayor orden posible. ¿Cuál es dicho orden? Si $x(t)$ es suficientemente diferenciable, ¿cuál es la parte principal de error de truncatura local? ¿Qué valores del parámetro aseguran la convergencia?
+    Construya una familia 1-paramétrica de MML implícitos de dos pasos con el mayor orden posible. ¿Cuál es dicho orden? Si $x(t)$ es suficientemente diferenciable, ¿cuál es la parte principal de error de truncatura local? ¿Qué valores del parámetro aseguran la convergencia?\\
+
+    Un MML genérico implícito de 2 pasos es:
+    \begin{align*}
+        x_{n+2} = \alpha_1x_{n+1} + \alpha_0x_{n} + h\left(\beta_0f_n + \beta_1f_{n+1} + \beta_2f_{n+2}\right)
+    \end{align*}
+
+    Como tenemos $5$ parámetros y buscamos una solución uniparamétrica, necesitamos $4$ ecuaciones.
+    \begin{align*}
+        0 = C_0 &= 1-\alpha_0-\alpha_1\\
+        0 = C_1 &= 2-\alpha_1-\beta_0-\beta_1-\beta_2\\
+        0 = C_2 &= \dfrac{2^2}{2!} -\frac{\alpha_1}{2!} - \frac{0^1}{1!}\beta_0- \frac{1^1}{1!}\beta_1- \frac{2^1}{1!}\beta_2
+        = 2-\frac{\alpha_1}{2}-\beta_1-2\beta_2\\
+        0 = C_3 &= \dfrac{2^3}{3!} -\frac{\alpha_1}{3!} - \frac{0^2}{2!}\beta_0- \frac{1^2}{2!}\beta_1- \frac{2^2}{2!}\beta_2
+        = \frac{8}{6} - \frac{\alpha_1}{6} - \frac{\beta_1}{2} - 2\beta_2
+    \end{align*}
+
+    Planteamos por tanto el siguiente sistema:
+    \begin{equation*}
+        \left.
+            \begin{array}{rcl}
+                \alpha_0+\alpha_1 &=& 1\\
+                \alpha_1+\beta_0 + \beta_1 + \beta_2 &=& 2\\
+                \alpha_1 + 2\beta_1 + 4\beta_2 &=& 4\\
+                \alpha_1 + 3\beta_1+12\beta_2 &=& 8
+            \end{array}
+        \right\}
+        \Longrightarrow
+        \left\{
+            \begin{array}{rcl}
+                \alpha_0 &=&-12\beta_2+5\\
+                \alpha_1 &=&12\beta_2-4\\
+                \beta_0 &=&19\beta_2-7\\
+                \beta_1 &=&-8\beta_2+4
+            \end{array}
+        \right\}
+    \end{equation*}
+
+    Por tanto, la familia de MML implícitos de 2 pasos con el mayor orden posible es:
+    \begin{align*}
+        x_{n+2} &= (-12\beta_2 + 5)x_{n+1} + (12\beta_2 - 4)x_n + h\left((19\beta_2 - 7)f_n + (-8\beta_2 + 4)f_{n+1} + \beta_2 f_{n+2}\right)
+    \end{align*}
+
+    Este MML es al menos de orden 3. Veamos el valor de $C_4$:
+    \begin{align*}
+        C_4 &= \dfrac{2^4}{4!} -\frac{\alpha_1}{4!} - \frac{1^3}{3!}\beta_1- \frac{2^3}{3!}\beta_2
+        = \frac{2}{3} - \frac{12\beta_2-4}{24} - \frac{-8\beta_2+4}{6} - \frac{8}{6}\beta_2
+        = \frac{1}{6} - \frac{\beta_2}{2}
+    \end{align*}
+
+    Por tanto, distinguimos según el valor de $\beta_2$:
+    \begin{itemize}
+        \item Si $\beta_2=\nicefrac{1}{3}$, el orden del MML es al menos $3$.
+        % // TODO: Cont
+        \item Si $\beta_2\neq \nicefrac{1}{3}$, el orden del MML es $3$.
+    \end{itemize}
+    
+    
+    
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:3.1.14}
