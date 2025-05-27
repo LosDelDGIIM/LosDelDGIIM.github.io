@@ -149,11 +149,62 @@ siendo $x = x(t)$ una función desconocida de $t$.
     Razone la veracidad o falsedad de las siguientes afirmaciones:
     \begin{enumerate}
         \item Al aplicar el método de un paso del punto medio al problema $x'(t) = -x(t) + 1$, $x(0) = 2$ se obtiene la solución numérica $\{t_n, x_n\}_{n=0}^N$ donde $x_n = A^n + 1$ con $A = 1 - h + \frac{h^2}{2}$.
+        
+        El método del punto medio para resolver el PVI $x' = f(t, x)$ se define por la siguiente ecuación en diferencias:
+        \begin{equation*}
+            x_{n+1} = x_n + h f\left(t_n + \frac{h}{2}, x_n + \frac{h}{2} f(t_n, x_n)\right)
+        \end{equation*}
+        Aplicada al PVI $x' = -x + 1$, la ecuación en diferencias queda:
+        \begin{align*}
+            x_{n+1} &= x_n + h\left(-x_n - \frac{h}{2}(-x_n + 1)+1\right) \\
+            &= x_n + h\left(-x_n + \frac{h}{2} x_n - \frac{h}{2} + 1\right)
+        \end{align*}
+
+        Demostramos ahora por inducción.
+        \begin{itemize}
+            \item Para $n=0$, tenemos que:
+            \begin{equation*}
+                x_0 = 2 = A^0 + 1
+            \end{equation*}
+
+            \item Supongamos que se cumple para $n$, y demostremos que se cumple para $n+1$:
+            \begin{align*}
+                x_{n+1} &= x_n + h\left(-x_n + \frac{h}{2} x_n - \frac{h}{2} + 1\right) \\
+                &= A^n + 1 + h\left(-A^n - 1 + \frac{h}{2} (A^n+1) - \frac{h}{2} + 1\right) \\
+                &= A^n + 1 + h\left(-A^n + \frac{h}{2} A^n\right) \\
+                &= 1 + A^n + hA^n\left(-1 + \frac{h}{2}\right) \\
+                &= 1 + A^n\left(1 - h + \frac{h^2}{2}\right) \\
+                &= 1 + A^{n+1}
+            \end{align*}
+
+            Por tanto, se cumple para $n+1$.
+        \end{itemize}
+
+        Por tanto, por inducción, se tiene demostrado para todo $n \in \bb{N}$.
         \item El orden de un método explícito de un paso cuya ecuación en diferencias es:
         \begin{equation*}
             x_{n+1} = x_n + h \Phi(x_n; t_n, h),\qquad n = 0, \ldots, N-1
         \end{equation*}
-        con $\Phi(x; t, h) = f(t, x) + \frac{h^2}{2} x''(t)$ es al menos 2.
+        con $\Phi(x; t, h) = f(t, x) + \frac{h}{2} x''(t)$ es al menos 2.\\
+
+        Tenemos que calcular:
+        \begin{align*}
+            R_{n+1} &= x(t_{n+1}) - x(t_n) -h \Phi(x(t_n); t_n, h)
+            =\\&= x(t_{n+1}) - x(t_n) - h f(t_n, x(t_n)) - \frac{h^2}{2} x''(t_n) 
+            =\\&= x(t_n + h) - x(t_n) - h x'(t_n) - \frac{h^2}{2} x''(t_n)
+        \end{align*}
+
+        El desarrollo de Taylor de $x(t_n + h)$ alrededor de $t_n$ es:
+        \begin{align*}
+            x(t_n + h) &= x(t_n) + h x'(t_n) + \frac{h^2}{2} x''(t_n) + O(h^3)
+        \end{align*}
+
+        Por tanto, tenemos que:
+        \begin{align*}
+            R_{n+1} &= O(h^3)
+        \end{align*}
+
+        Por tanto, el orden del método es al menos 2.
     \end{enumerate}
 \end{ejercicio}
 
@@ -164,7 +215,37 @@ siendo $x = x(t)$ una función desconocida de $t$.
         \item el método de Heun?
         \item el método del punto medio?
     \end{itemize}
-    ¿Por qué? Escriba la ecuación en diferencias de cada uno de estos métodos para resolver el PVI considerado. ¿Ocurre algo reseñable?
+    ¿Por qué? Escriba la ecuación en diferencias de cada uno de estos métodos para resolver el PVI considerado. ¿Ocurre algo reseñable?\\
+
+    Sea $x'=f(t, x)$, con:
+    \Func{f}{\bb{R}^2}{\bb{R}}{(t, x)}{t - x}
+
+    Veamos que $f$ es continua y lipschitziana en su segunda variable. La continuidad de $f$ es inmediata, y para ver que es lipschitziana, sean $x,y\in \bb{R}$:
+    \begin{align*}
+        |f(t, x) - f(t, y)| &= |(t - x) - (t - y)| = |y - x|\leq 1\cdot |x-y|\qquad \forall t\in \bb{R}
+    \end{align*}
+
+    Por tanto, $f$ es lipschitziana en su segunda variable con constante de Lipschitz $M = 1$. Por tanto, el PVI tiene una única solución en $[0,1]\subset \bb{R}$. Se puede aproximar mediante los tres métodos, veámoslo:
+    \begin{enumerate}
+        \item El método de Taylor de orden 2 para resolver el PVI $x' = f(t, x)$ es:
+        \begin{align*}
+            x_{n+1} &\approx x(t_n + h) \approx x(t_n) + hx'(t_n) + \frac{h^2}{2} x''(t_n)
+        \end{align*}
+
+        Para aproximar $x'(t_n)$ y $x''(t_n)$, utilizamos que:
+        \begin{align*}
+            x'(t_n) &= f(t_n, x(t_n)) = t_n - x(t_n)\approx t_n - x_n \\
+            x''(t_n) &= \frac{\partial f}{\partial t}(t_n, x(t_n)) + \frac{\partial f}{\partial x}(t_n, x(t_n)) x'(t_n) = 1 - 1\cdot (t_n - x(t_n)) \approx 1 - t_n + x_n
+        \end{align*}
+
+        Por tanto, la ecuación en diferencias del método de Taylor de orden 2 para resolver el PVI $x' = t - x$ es:
+        \begin{align*}
+            x_{n+1} &= x_n + h(t_n - x_n) + \frac{h^2}{2} (1 - t_n + x_n)
+        \end{align*}
+
+        % // TODO: Cont
+
+    \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:3.1.8}
