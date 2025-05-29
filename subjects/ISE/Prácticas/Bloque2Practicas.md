@@ -952,7 +952,7 @@ Todo esto se ejecuta como un único binario, es auto-hosteable, se integra con s
 
 Grafana proporciona los servicios de visualización sin embargo no realiza por si misma la extracción de la información, para este fin es para el que usamos Prometheus, una herramienta diseñada especialmente para extraer y almacenar la información de monitorización de forma eficiente.
 
-Por esta razón, vamos a combinar el uso de ambos, en particular usaremos Docker como forma preferida para este fín. Para ello, deberemos elegir un directorio y deberemos crear los siguientes ficheros:
+Por esta razón, vamos a combinar el uso de ambos, en particular usaremos Docker como forma preferida para este fin. Para ello, deberemos elegir un directorio y deberemos crear los siguientes ficheros:
 
 #### docker-compose.yml
 ```yml
@@ -993,44 +993,81 @@ scrape_configs:
     static_configs:
       - targets: ["<IP Maquina Virtual>:9100"]
 ```
-Ahora, (y teniendo la máquina virtual arrancada), ejecutaremos `docker compose up`. Para comprobar que todo ha funcionado correctamente podemos acceder en un navegador (evitaremos safari) a las siguientes direcciones:
+Ahora, ejecutaremos `docker-compose up`. Para comprobar que todo ha funcionado correctamente podemos acceder en un navegador (evitaremos safari) a las siguientes direcciones:
 
 - localhost:4000
 - localhost:9090
 
-Que son las paginas autoalojadas que nos permitiran trabajar con Grafana y Prometheus respectivamente. Nuestro siguiente paso será acceder a la máquina virtual cuya ip hemos puesto en el parámetro targets del yml de prometheus para instalar node_exporter.
+Que son las paginas autoalojadas que nos permitiran trabajar con Grafana y Prometheus respectivamente. Nuestro paso ahora será configurar la máquina virtual para que pueda exportar las métricas del sistema a Prometheus, para lo que hemos de instalar `node_exporter`. Este es un servicio que se ejecuta en la máquina virtual y que expone las métricas del sistema a Prometheus, permitiendo que este las recoja y las almacene.
 
-node_exporter es una herramienta de prometheus diseñada con el objetivo de exportar las métricas del sistema host, por defecto, node_exporter escucha en HTTP sobre el puerto 9100. Para instalarlo en la máquina virtual ejecutaremos los siguientes comandos:
-```bash
-cd /tmp
-curl -LO https://github.com/prometheus/node_exporter/releases/download/v0.18.1/node_exporter-0.18.1.linux-amd64.tar.gz
-tar -xvf node_exporter-0.18.1.linux-amd64.tar.gz
-sudo mv node_exporter-0.18.1.linux-amd64/node_exporter /usr/local/bin/
-sudo useradd -rs /bin/false node_exporter
-sudo vi /etc/systemd/system/node_exporter.service
-```
-El contenido será el siguiente:
-```bash
-[Unit]
-Description=Node Exporter
-After=network.target
+Para la instalación, seguiremos [este tutorial](https://devopscube.com/monitor-linux-servers-prometheus-node-exporter/).
 
-[Service]
-User=node_exporter
-Group=node_exporter
-Type=simple
-ExecStart=/usr/local/bin/node_exporter --collector.systemd
+1. Descargar y descomprimir el `node_exporter`, y guardarlo en `/usr/local/bin/`.
+    ```shell
+    cd /tmp
+    curl -LO https://github.com/prometheus/node_exporter/releases/download/v0.18.1/node_exporter-0.18.1.linux-amd64.tar.gz
+    tar -xvf node_exporter-0.18.1.linux-amd64.tar.gz
+    sudo mv node_exporter-0.18.1.linux-amd64/node_exporter /usr/local/bin/
+    ```
+    ![Node Exporter](./Images/1-Node_Exporter.png)
 
-[Install]
-WantedBy=multi-user.target
-```
-El --collector.systemd lo ponemos para prevenir posibles errores más adelante. Una vez hecho lo anterior, podemos activar el servicio:
-```bash
-sudo systemctl daemon-reload
-sudo systemctl start node_exporter
-sudo systemctl enable node_exporter
-sudo restorecon -v /usr/local/bin/node_exporter # Para evitar fallos | sudo setenforce 0 también sirve
-```
+2. Hemos de crear un usuario específico para ejecutar el `node_exporter`, de forma que no se ejecute con permisos de root. Esto es una buena práctica de seguridad, ya que limita los permisos del servicio. También cambiamos los permisos del binario para que el usuario creado sea el propietario.
+    ```shell
+    $ sudo useradd -rs /bin/false node_exporter
+    $ sudo chown node_exporter:node_exporter /usr/local/bin/node_exporter
+    ```
+
+    También le indicamos a SELinux que este fichero es un ejecutable:
+    ```shell
+    $ sudo chcon -t bin_t /usr/local/bin/node_exporter
+    ```
+
+3. Ahora, hemos de crear un archivo de configuración para el servicio `node_exporter`. Este archivo se encuentra en `/etc/systemd/system/node_exporter.service` y contiene la configuración del servicio. El contenido del archivo es el siguiente:
+    ```ini
+    [Unit]
+    Description=Node Exporter
+    After=network.target
+
+    [Service]
+    User=node_exporter
+    Group=node_exporter
+    Type=simple
+    ExecStart=/usr/local/bin/node_exporter --collector.systemd --collector.processes
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+4. A continuación, hemos de abrir el puerto 9100 en el firewall para permitir el acceso al servicio `node_exporter` (puesto que, por defecto, este servicio escucha en el puerto 9100). Recordamos que también debemos hacer uso de `SELinux` para evitar problemas de permisos. Para ello, ejecutamos los siguientes comandos:
+    ```shell
+    $ sudo firewall-cmd --add-port=9100/tcp --permanent
+    $ sudo firewall-cmd --reload
+    $ sudo semanage port -a -t http_port_t -p tcp 9100
+    ```
+    ![Node Exporter Firewall](./Images/2-Node_Exporter.png)
+
+5. Ahora, hemos de recargar el demonio `systemd` para que reconozca el nuevo servicio y luego iniciar el servicio `node_exporter`. Comprobamos que el servicio se ha iniciado correctamente y que está escuchando en el puerto 9100:
+    ```shell
+    $ sudo systemctl daemon-reload
+    $ sudo systemctl start node_exporter
+    $ sudo systemctl status node_exporter
+    ```
+    ![Node Exporter Status](./Images/3-Node_Exporter.png)
+
+    Habilitamos el servicio para que se inicie automáticamente al arrancar la máquina:
+    ```shell
+    $ sudo systemctl enable node_exporter
+    ```
+
+Una vez realizado todo, podemos comprobar que el servicio `node_exporter` está funcionando correctamente accediendo a la dirección `http://<IP Maquina Virtual>:9100/metrics`. Aquí vemos una lista de métricas en formato texto, que son las que `node_exporter` está exponiendo.
+
+![Node Exporter Metrics](./Images/4-Node_Exporter.png)
+
+También podemos comprobar que el servicio funciona correctamente desde Prometheus, comprobando que funciona correctamente.
+
+![Prometheus Targets](./Images/5-Node_Exporter.png)
+    
+
 Una vez comprobemos que todo funciona correctamente, accedemos a la página web de grafana y en el menu izquierdo:
 
 - Configuracion > Data sources > Add data source
