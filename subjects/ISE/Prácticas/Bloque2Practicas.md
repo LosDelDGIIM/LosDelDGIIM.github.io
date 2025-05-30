@@ -1004,10 +1004,10 @@ Para la instalación, seguiremos [este tutorial](https://devopscube.com/monitor-
 
 1. Descargar y descomprimir el `node_exporter`, y guardarlo en `/usr/local/bin/`.
     ```shell
-    cd /tmp
-    curl -LO https://github.com/prometheus/node_exporter/releases/download/v0.18.1/node_exporter-0.18.1.linux-amd64.tar.gz
-    tar -xvf node_exporter-0.18.1.linux-amd64.tar.gz
-    sudo mv node_exporter-0.18.1.linux-amd64/node_exporter /usr/local/bin/
+    $ cd /tmp
+    $ curl -LO https://github.com/prometheus/node_exporter/releases/download/v0.18.1/node_exporter-0.18.1.linux-amd64.tar.gz
+    $ tar -xvf node_exporter-0.18.1.linux-amd64.tar.gz
+    $ sudo mv node_exporter-0.18.1.linux-amd64/node_exporter /usr/local/bin/
     ```
     ![Node Exporter](./Images/1-Node_Exporter.png)
 
