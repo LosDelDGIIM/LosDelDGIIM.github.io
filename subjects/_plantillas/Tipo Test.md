@@ -30,7 +30,7 @@ ______
 2. Enunciado:
     - (x) Opción Correcta.
     - ( ) Opción 2.
-    - ( ) Opción 3.
+    - ( ) Opción 3, que incluye un pequeño `código`.
     - ( ) Opción 4, que incluye lo siguiente en Latex \\(f(x)=2\\)
 
 3. Enunciado múltiple opción:
