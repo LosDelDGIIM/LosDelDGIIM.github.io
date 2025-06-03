@@ -25,7 +25,7 @@
 
 4. En el algoritmo A* cuando un sucesor corresponde con un nodo que ya estaba en CERRADOS:
     - ( ) el nodo se revisa para determinar cuál es su mejor sucesor, y en el caso de que haya cambio se propaga al padre del nodo.
-    - ( ) el nodo se revisa para determinar cuál es su mejor padr(correcta, pero está incompleta).
+    - ( ) el nodo se revisa para determinar cuál es su mejor padre.
     - ( ) el nodo de elimina.
     - (x) el nodo se revisa para determinar cuál es su mejor padre, y en el caso de que haya cambio se propaga dicho cambio a los sucesores.
 
@@ -132,9 +132,10 @@
     - ( ) un tipo de agente deliberativo.
     - ( ) un método de decisión para maximizar la pérdida mínima esperada en juegos con adversario, perfecta y suma nula.
 
-26. En un juego con componente aleatoria, si realizamos un cambio de escala en los valores ¿la variantetipo de juegos elegirá la misma jugada?:
-    - ( ) Si, no depende de los cambios de escala siempre que se conserve el orden de los valores.
-    - (x) No siempre, pues puede cambiar el orden de la esperanza matemática de las opciones de unaconserve el orden de los valores.
+26. En un juego con componente aleatoria, si realizamos un cambio de escala en los valores mediante una función real creciente (escala lineal, escala logarítmicas, etc..), ¿la variante del `Minimax` para este tipo de juegos elegirá la misma jugada?:
+    - [ ] Si, no depende de los cambios de escala siempre que se conserve el orden de los valores.
+    - [x] No siempre, pues puede cambiar el orden de la esperanza matemática de las opciones de una jugada aunque se conserve el orden de los valores.
+    - [x] No siempre, pero si el cambio de escala consiste en multiplicar por un número positivo si.
 
 27. La cota alfa se calcula como el:
     - (x) el valor máximo de los nodos `MAX` en el camino del nodo a la raíz.
@@ -148,8 +149,8 @@
     - ( ) falso.
     - ( ) depende de la función de evaluación estática usada.
 
-29. En el contexto de búsqueda en juegos con una profundidad de corte o limitada, una posición estable:
-    - ( ) a. Una posición del juego en la que la valoración de sus sucesores no cambia respecto a la posicion actual.
+29. En el contexto de búsqueda en juegos con una profundidad de corte o limitada, una posición estable es:
+    - ( ) Una posición del juego en la que la valoración de sus sucesores no cambia respecto a la posicion actual.
     - (x) Una posición del juego desde la no se producen variaciones drásticas de la valoración de sus posición actual.
     - ( ) Una posición a la que se puede volver para iniciar una nueva estrategia contingente.
 
@@ -188,7 +189,7 @@
     - (x) es una regla de inferencia en lógica en lógica proposicional y de predicados.
     - ( ) es una regla de inferencia solo aplicable en lógica proposicional.
 
-37. Si partimos de dos cláusulas, una en la que se afirma que “no llueve o hace frío” y otra que en la que hace frío”, la regla de resolución aplicada a ambas establece que:
+37. Si partimos de dos cláusulas, una en la que se afirma que "no llueve o hace frío" y otra que en la que "hace frío", la regla de resolución aplicada a ambas establece que:
     - (x) hace frío.
     - ( ) no llueve.
     - ( ) no se pueden resolver, son cláusulas inconsistentes.
@@ -252,7 +253,7 @@
     - (x) Irrevocable.
     - ( ) Retroactiva.
 
-49. ¿Qué representan los nodos cuando se usa la estructura de grafo dirigido para representar un Artificial? ¿Y los arcos?:
+49. ¿Qué representan los nodos cuando se usa la estructura de grafo dirigido para representar un problema de Inteligencia Artificial? ¿Y los arcos?:
     - ( ) Nodos: un objeto; Arcos: un camino.
     - (x) Nodos: un estado del sistema; Arcos: una posible acción.
     - ( ) Nodos: una posible acción; Arcos: un estado del sistema.
@@ -313,7 +314,7 @@
     - ( ) tan solo cuando no se incluyen probabilidades.
     - ( ) siempre.
 
-61. ¿Cuál de entre los siguientes algoritmos de escalada tiene más probabilidad de caer en óptimo?:
+61. ¿Cuál de entre los siguientes algoritmos de escalada tiene más probabilidad de caer en un óptimo local?:
     - ( ) escalada por máxima pendiente.
     - ( ) enfriamiento simulado.
     - (x) escalada simple.
@@ -338,7 +339,7 @@
     - ( ) la población.
     - ( ) el operador de selección.
 
-66. Cuando se resuelve un problema con un algoritmo genético tanto la condificación del problema:
+66. Cuando se resuelve un problema con un algoritmo genético tanto la condificación del problema como los operadores:
     - ( ) es conveniente que se adapten al modelo definido por el algoritmo genético.
     - ( ) no es necesario que se adapten al modelo definido por el algoritmo genético.
     - (x) es necesario que se adapten al modelo definido por el algoritmo genético.
@@ -364,7 +365,7 @@
     - ( ) la cercanía al óptimo.
     - (x) la función heurística.
 
-71. En el algoritmo simulado la temperatura representa:
+71. En el algoritmo de enfriamento simulado la temperatura representa:
     - ( ) la cercanía al óptimo.
     - (x) un parámetro artificial que permite controlar la conducta del algoritmo a lo largo del tiempo.
     - ( ) el incremento de la función heurística.
@@ -531,7 +532,7 @@
     - (x) consiste en usar módulos de comportamiento que se activan y que con una determinada prioridad devuelven una acción a aplicar.
 
 102. Un algoritmo de aprendizaje es bueno si:
-    - ( ) produce hipótesis que hacen un buen trabajo al evaluar clasifacaciones de ejemplos observados previamente.
+    - ( ) produce hipótesis que hacen un buen trabajo al evaluar clasificaciones de ejemplos observados previamente.
     - (x) produce hipótesis que hacen un buen trabajo al evaluar clasificaciones de ejemplos no han sido observados.
     - ( ) hace un buen trabajo produciendo clasificaciones de las diferentes hipótesis observadas.
 
@@ -838,7 +839,7 @@
     - ( ) Verdadero
     - (x) Falso
 
-159. Es un sistema hardware capaz de percibir un entorno y actuar en él, se caracteriza por ser autónomo, reactivo, pro­activo y racional
+159. Un agente es un sistema hardware capaz de percibir un entorno y actuar en él, se caracteriza por ser autónomo, reactivo, pro­activo y racional
     - (x) Verdadero
     - ( ) Falso
 
@@ -968,9 +969,8 @@
     - ( ) Grafos implícitos.
 
 17. En la fase de búsqueda de la solución, ¿Puede ocurrir que aunque se use un grafo implícito, se desborde la memoria?:
-    - ( ) No, los grafos explícitos se usan para evitar el desbordamiento de memoria que se produce con los grafos explícitos.
-    - (x) Sí, porque puede ocurrir que el tamaño del subgrafo explícito que se va explorando sea tan grande que no pueda guardarse en memoria.
-    - ( ) Sí, porque los grafos explícitos no pueden usarse en este tipo de problemas.
+    - ( ) No, los grafos implícito se usan para evitar el desbordamiento de memoria que se produce con los grafos explícitos.
+    - (x) Sí, porque puede ocurrir que el tamaño del subgrafo implícito que se va explorando sea tan grande que no pueda guardarse en memoria.
     - ( ) No, porque los grafos implícitos nunca pueden ocasionar un fallo en la memoria de un agente.
 
 18. La búsqueda retroactiva o backtracking pertenece a:
@@ -983,8 +983,8 @@
 
 20. ¿Qué es un MC?:
     - ( ) Modelo de creación.
-    - (x) Modulo de competencia.
-    - ( ) Modelo de conocimiento.
+    - ( ) Modulo de competencia.
+    - (x) Modelo de conocimiento.
 
 21. En Inteligencia Artificial los Árboles de Decisión son una técnica encuadrada dentro del Aprendizaje Automático. ¿Sabría decir a qué se dedica este campo?:
     - (x) estudia los procesos o técnicas que permiten al software "aprender" o adquirir conocimientos que le permitan resolver problemas en un futuro, o bien adaptarse a partir de la experiencia.
@@ -1005,7 +1005,7 @@
     - ( ) Ninguna de las anteriores, el GPS tiene la capacidad de reconocer su entorno e ir aprendiendo.
 
 
-24. El algoritmo ID3. El algoritmo ID3:
+24. El algoritmo ID3:
     - (x) tiende a elegir atributos con muchos valores posibles.
     - ( ) tiende a obtener árboles especialmente pequeños.
     - ( ) ninguna de las anteriores.
@@ -1016,7 +1016,7 @@
     - ( ) Falso.
 
 
-26. El algoritmo minimax. El algoritmo minimax:
+26. El algoritmo `Minimax`.
     - [x] escoge siempre la opcion con la que se maximiza el resultado suponiendo que el contrincante intenta minimizarlo.
     - [x] evalua los estados de la frontera de búsqueda con una función heuristica.
     - [ ] da a cada nodo siempre el valor del maximo de sus hijos y cambia el signo de los valores de los nodos `MAX`.
@@ -1051,14 +1051,7 @@
     - (x) Falso.
 
 
-34. De las siguientes opciones, señale las que sean ciertas para un agente:
-    - [ ] Un agente reactivo puede pasar a ser deliberativo si crea una representación del mundo que lo rodea.
-    - [x] Un agente reactivo, por norma general, será más rápido en dar una respuesta a un estímulo que un agente deliberativo.
-    - [ ] Un agente reactivo puede contener algunas fórmulas lógicas y mecanismos deductivos para decidir cómo actuar sobre su entorno.
-    - [x] Un agente que toma decisiones en función de los estímulos que recibe y siguiendo un comportamiento programado sin realizar ningún tipo de deducción lógica es un agente reactivo.
-
-
-35. La Habitación China. A principios de los 80, John Searle propone el ejemplo de La Habitación China como crítica al Test de Turing:
+32. La Habitación China. A principios de los 80, John Searle propone el ejemplo de La Habitación China como crítica al Test de Turing:
     - (x) Verdadero.
     - ( ) Falso.
 
@@ -1192,24 +1185,19 @@
     - ( ) La falta de recursos físicos para sostener los algoritmos.
     - ( ) Las discrepancias sobre qué es la IA.
 
-8. ¿Cuáles de los siguientes son los principales problemas de los agentes reactivos?
-    - [x] Necesitan disponer de suficiente información sobre su entorno para actuar adecuadamente.
-    - [x] No hay metodologías claras para crear este tipo de agentes: sigue siendo un desarrollo por prueba y error.
-    - [x] Es difícil el aprendizaje y la mejora de las capacidades de los agentes con el tiempo.
-    - [ ] Son robustos, tratables computacionalmente y tolerantes a fallos.
 
-9. La característica capacidad estímulo-respuesta de un agente se define como:
+8. La característica capacidad estímulo-respuesta de un agente se define como:
     - (x) El agente debe percibir el entorno y responder de una forma temporal a los cambios que ocurren en dicho entorno.
     - ( ) El agente solamente debe responder de una forma temporal a los cambios que ocurren en dicho entorno.
     - ( ) El agente no debe simplemente actuar en respuesta a su entorno, debe de ser capaz de exhibir comportamientos dirigidos a lograr objetivos, y tomar la iniciativa cuando sea apropiado.
 
-32. En realidad los computadores no son inteligentes, hacen solamente lo que le dicen los programadores:
+9.  En realidad los computadores no son inteligentes, hacen solamente lo que le dicen los programadores:
     - (x) Verdadero, pero se pueden comportar, actuar o responder 'de forma inteligente'.
     - ( ) Falso, resuelven problemas que solo alguien muy inteligente puede hacerlo.
     - ( ) Verdadero, no pueden aprender ni mejorar.
     - ( ) Falso, pueden simular a una persona inteligente.
 
-54. Las características indispensables que tiene que tener cualquier sistema (de cualquier tipo) para ser considerado como un agente son:
+10. Las características indispensables que tiene que tener cualquier sistema (de cualquier tipo) para ser considerado como un agente son:
     - ( ) Que sea autónomo, capacidad social y sea pro-activo.
     - ( ) Que tenga capacidad social, capacidad estímulo-respuesta y sea pro-activo.
     - (x) Que sea autónomo, sea pro-activo y tenga capacidad de estímulo-respuesta.
@@ -1254,62 +1242,56 @@
     - (x) Entorno
     - ( ) Órdenes predefinidas
 
-184. ¿Cuáles de estas características pertenecen a un agente deliberativo?
-    - ( ) Genera y trata de alcanzar sus propios objetivos
-    - ( ) Reconoce oportunidades
-    - ( ) Toma la iniciativa
-    - (x) Todas las anteriores son correctas
-
-185. Los agentes deliberativos, en comparación con los agentes reactivos, son complejos y tardan más en reaccionar ya que tienen un modelo del mundo.
+184. Los agentes deliberativos, en comparación con los agentes reactivos, son complejos y tardan más en reaccionar ya que tienen un modelo del mundo.
     - (x) Verdadero
     - ( ) Falso
 
-186. ¿Cuál de las siguientes características NO es imprescindible en un agente?
+185. ¿Cuál de las siguientes características NO es imprescindible en un agente?
     - ( ) Reactivo
     - ( ) Proactivo
     - (x) Social
 
-187. De las siguientes opciones, señale las que sean ciertas para un agente:
+186. De las siguientes opciones, señale las que sean ciertas para un agente:
     - [ ] Un agente reactivo puede pasar a ser deliberativo si crea una representación del mundo que lo rodea
     - [x] Un agente reactivo, por norma general, será más rápido en dar una respuesta a un estímulo que un agente deliberativo
     - [ ] Un agente reactivo puede contener algunas fórmulas lógicas y mecanismos deductivos para decidir cómo actuar sobre su entorno
     - [x] Un agente que toma decisiones en función de los estímulos que recibe y siguiendo un comportamiento programado sin realizar ningún tipo de deducción lógica es un agente reactivo
 
-188. Un hipotético sistema de transporte de trenes en el cual puede haber tanto locomotoras automatizadas como locomotoras controladas por humanos es...
+187. Un hipotético sistema de transporte de trenes en el cual puede haber tanto locomotoras automatizadas como locomotoras controladas por humanos es...
     - ( ) Un sistema multi-agente exclusivamente deliberativo
     - ( ) Un sistema de computación distribuida con funcionamiento de paso de mensajes
     - (x) Un sistema multi-agente híbrido con una potente capacidad reactiva
     - ( ) Un sistema controlado por árbitros humanos
 
-189. Los principales problemas de los agentes reactivos son:
+188. Los principales problemas de los agentes reactivos son:
     - [x] Necesitan disponer de suficiente información sobre su entorno para actuar adecuadamente
     - [ ] No hay metodologías claras para crear este tipo de agentes: sigo siendo un desarrollo por prueba y error
     - [x] Es difícil el aprendizaje y la mejora de las capacidades de los agentes con el tiempo
     - [ ] Son robustos, tratables computacionalmente y tolerantes a fallos
 
-190. Un modelo cognitivo se asocia con:
+189. Un modelo cognitivo se asocia con:
     - (x) Sistemas que piensan como humanos.
     - ( ) Sistemas que actúan como humanos.
     - ( ) Sistemas que piensan racionalmente.
     - ( ) Sistemas que actúan racionalmente.
 
-191. ¿Es posible un agente sin sensores?
+190. ¿Es posible un agente sin sensores?
     - ( ) Sí, porque si tiene un modelo del mundo no le hacen falta sensores para actuar en base a él.
     - (x) No, porque dejaría de ser un agente al no percibir el entorno en el que se encuentra.
     - ( ) No, porque dejaría de ser un agente al no tener autonomía.
     - ( ) No, porque dejaría de ser un agente al actuar siempre de la misma manera en cualquier situación.
 
-192. ¿Un agente que sea pro-activo debe ser capaz de exhibir comportamientos dirigidos a lograr los objetivos que se plantee?
+191. ¿Un agente que sea pro-activo debe ser capaz de exhibir comportamientos dirigidos a lograr los objetivos que se plantee?
     - (x) Verdadero.
     - ( ) Falso.
 
-193. El periodo de gestación de la IA fue ___________.
+192. El periodo de gestación de la IA fue ___________.
     - ( ) (1979–1975).
     - (x) (1943–1955).
     - ( ) (1900–1905).
     - ( ) (2000–2020).
 
-194. La cota alfa es:
+193. La cota alfa es:
     - (x) una cota inferior.
     - ( ) una cota superior.
 
@@ -1326,79 +1308,70 @@
     - ( ) No, es demasiado complejo.
     - (x) Sí, porque habría que actuar en función del entorno.
     - ( ) Dependiendo del tipo de agente.
-
-4. Sistema multiagente. ¿Qué es un sistema multiagente?:
-    - (x) Los entornos en los que dos o más agentes intervienen simultáneamente.
-    - ( ) Un tipo de mapa para un agente deliberativo.
-    - ( ) Un algoritmo para resolver problemas matemáticos, y que para ello hace uso del algoritmo Minimax.
     - ( ) Ninguna de las anteriores.
 
-5. Empleando técnicas de Inteligencia Artificial podemos construir:
+3. Empleando técnicas de Inteligencia Artificial podemos construir:
     - [x] Sistemas que actúan racionalmente.
     - [x] Sistemas que actúan como humanos.
     - [ ] Sistemas que piensan racionalmente.
     - [ ] Sistemas que piensan como humanos.
 
-6. ¿Un agente que juega al ajedrez es de tipo...?:
+4. ¿Un agente que juega al ajedrez es de tipo...?:
     - (x) Deliberativo.
     - ( ) Reactivo.
     - ( ) Híbrido.
 
-7. Los agentes deliberativos, en comparación con los agentes reactivos, son complejos y tardan más en reaccionar ya que tienen un modelo del mundo:
+5. Los agentes deliberativos, en comparación con los agentes reactivos, son complejos y tardan más en reaccionar ya que tienen un modelo del mundo:
     - (x) Verdadero.
     - ( ) Falso.
 
-8. ¿Es correcta la siguiente definición de agente? "Es un sistema hardware capaz de percibir un entorno y actuar en él, se caracteriza por ser autónomo, reactivo, pro-activo y racional":
-    - ( ) Verdadero.
-    - (x) Falso.
-
-9.  De las siguientes afirmaciones, ¿cuál no está relacionada en general con los Agentes Reactivos?:
-    - [x] Buen desarrollo de sus funcionalidades en entornos altamente dinámicos.
+6.  De las siguientes afirmaciones, ¿cuál no está relacionada en general con los Agentes Reactivos?:
+    - [ ] Buen desarrollo de sus funcionalidades en entornos altamente dinámicos.
     - [ ] Sólo puede ser utilizado para un propósito concreto.
     - [ ] Eficiencia, reacciones con respuesta rápida.
     - [x] Problemas en trasladar el entorno a una representación simbólica.
 
-10. “El intercambio de información mediante símbolos puede producir fallos lógicos” es una objeción al Test de Turing del tipo:
+7.  “El intercambio de información mediante símbolos puede producir fallos lógicos” es una objeción al Test de Turing del tipo:
     - ( ) Religioso.
     - ( ) Matemático.
     - ( ) Técnico.
     - (x) Filosófico.
 
-11. ¿Cuál o cuáles de estas capacidades son necesarias para pasar el Test de Turing?:
+8.  ¿Cuál o cuáles de estas capacidades son necesarias para pasar el Test de Turing?:
     - [x] Razonamiento.
     - [ ] Información.
     - [x] Representación del conocimiento.
     - [ ] Autonomía.
     - [ ] Todas son correctas.
 
-12. Según el test de Alang Turing, una máquina es inteligente cuando:
+9.  Según el test de Alang Turing, una máquina es inteligente cuando:
     - ( ) Es capaz de interactuar con la realidad de forma autónoma.
     - ( ) No necesita a un ser humano para su mantenimiento.
     - (x) No se puede diferenciar su comportamiento del de un ser humano.
 
-13. En un sistema multiagente (SMA), ¿tiene sentido que todos los agentes tengan información completa de todo su entorno?:
+10. En un sistema multiagente (SMA), ¿tiene sentido que todos los agentes tengan información completa de todo su entorno?:
     - ( ) Verdadero.
     - (x) Falso.
 
-14. ¿Cuál de las siguientes características de los agentes, no es indispensable?:
+11. ¿Cuál de las siguientes características de los agentes, no es indispensable?:
     - ( ) Capacidad Estímulo-Respuesta.
     - ( ) Pro-activo.
     - (x) Capacidad Social.
     - ( ) Autonomía.
 
-15. Un agente es un sistema que __________:
+12. Un agente es un sistema que __________:
     - ( ) Piensa racionalmente.
     - (x) Actúa racionalmente.
     - ( ) Piensa como un humano.
     - ( ) Actúa como un humano.
 
-16. ¿Qué enfoque de Inteligencia Artificial es el que se usa en agentes reactivos?:
+13. ¿Qué enfoque de Inteligencia Artificial es el que se usa en agentes reactivos?:
     - ( ) Sistemas que piensan como humanos.
     - ( ) Sistemas que actúan como humanos.
     - ( ) Sistemas que piensan racionalmente.
     - (x) Sistemas que actúan racionalmente.
 
-17. Análisis de enfoques. ¿Qué enfoque de la IA podemos realmente abordar? Es decir, ¿qué clase de sistemas son los que realmente podemos diseñar hoy en día con los conocimientos actuales del campo de la IA?
+14. Análisis de enfoques. ¿Qué enfoque de la IA podemos realmente abordar? Es decir, ¿qué clase de sistemas son los que realmente podemos diseñar hoy en día con los conocimientos actuales del campo de la IA?
     - [ ] Sistemas que piensan como humanos.
     - [x] Sistemas que actúan como humanos.
     - [ ] Sistemas que piensan racionalmente.
