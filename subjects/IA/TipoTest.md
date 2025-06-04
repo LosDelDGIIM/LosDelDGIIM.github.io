@@ -231,10 +231,10 @@
     - ( ) Los algoritmos de búsqueda no informada requieren de información heurística para que funcionen.
     - ( ) La búsqueda en profundidad garantiza obtener la solución óptima siempre que el coste sea unitario.
 
-45. ¿Cuáles de las siguientes opciones son correctas:
+45. ¿Cuáles de las siguientes opciones son correctas?
     - [x] El agente deliberativo dispone de un modelo de los efectos de sus acciones sobre el mundo.
     - [x] El agente deliberativo dispone de un modelo en el mundo que habita.
-    - ( ) El agente deliberativo reacciona a los cambios que percibe, aunque no estén en modelo.
+    - [ ] El agente deliberativo reacciona a los cambios que percibe, aunque no estén en modelo.
 
 46. ¿Cuáles  de los siguientes métodos son búsqueda sin información?:
     - ( ) búsqueda en profundidad pero no búsqueda en anchura.
