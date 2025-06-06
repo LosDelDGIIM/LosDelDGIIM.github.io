@@ -418,10 +418,6 @@
     - ( ) Verdadero
     - (x) Falso
 
-53. Lo soguiente es una poscondición correcta "se creó una lista en la que se incluye el nombre del cliente, dirección y teléfono, que se proporciona como salida de la operación".
-    - ( ) Verdadero
-    - (x) Falso
-
 
 55. Los requisitos no funcionales suponen limitaciones para el diseño de un sistema software.
     - (x) Verdadero
