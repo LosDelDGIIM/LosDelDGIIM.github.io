@@ -118,18 +118,34 @@ $(function () {
         });
     }
 
-    // Función para mezclar las opciones dentro de cada pregunta
     function shuffleOptions() {
-        $('ul.radio-list').each(function() {
-            var ul = $(this);
-            var liArr = ul.children('li');
-            liArr.sort(function() {
-                return (Math.round(Math.random()) - 0.5);
-            }).detach().appendTo(ul);
-        });
+    $('ul.radio-list').each(function() {
+        var ul = $(this);
+        var liArr = ul.children('li');
+
+        // Verificar si la lista tiene exactamente dos opciones
+        if (liArr.length === 2) {
+            var options = liArr.map(function() {
+                return $(this).text().trim().toLowerCase();
+            }).get();
+
+            // Comprobar si las opciones son "verdadero" y "falso" (o "true" y "false")
+            if ((options.includes('verdadero') && options.includes('falso')) ||
+                (options.includes('v') && options.includes('f')) ||
+                (options.includes('t') && options.includes('f')) ||
+                (options.includes('true') && options.includes('false'))) {
+                return; // No mezclar si son Verdadero/Falso
+            }
+        }
+
+        // Mezclar las opciones si no es un caso de Verdadero/Falso
+        liArr.sort(function() {
+        return (Math.round(Math.random()) - 0.5);
+        }).detach().appendTo(ul);
+    });
     }
 
     // Llamar a las funciones para mezclar las preguntas y las opciones al cargar la página
     shuffleQuestions();
-    //shuffleOptions();
+    shuffleOptions();
 });

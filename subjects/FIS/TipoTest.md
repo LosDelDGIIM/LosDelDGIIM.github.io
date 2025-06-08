@@ -266,9 +266,9 @@
     - (x) Verdadero
     - ( ) Falso
 
-15. El diagrama de clases de diseño se deduce de los diagramas de comunicación. Elaboran los diagramas de comunicación y después el diagrama de clases del diseño.
-    - ( ) Verdadero
-    - (x) Falso
+15. El diagrama de clases de diseño se deduce de los diagramas de comunicación. Se elaboran los diagramas de comunicación y después el diagrama de clases del diseño.
+    - (x) Verdadero
+    - ( ) Falso
 
 16. El diagrama de secuencia del sistema puede contener tantos objetos como sean necesarios para llevar a cabo una operación del sistema.
     - ( ) Verdadero
@@ -331,8 +331,8 @@
     - ( ) Falso
 
 31. En el modelo conceptual hay que definir los atributos y los métodos de todas las clases.
-    - (x) Verdadero
-    - ( ) Falso
+    - ( ) Verdadero
+    - (x) Falso
 
 32. En los diagramas de clases de diseño no se deben representar las relaciones de dependencia entre clases, solo se deben representar las de asociación y de generalización.
     - ( ) Verdadero
@@ -470,3 +470,188 @@
 68. Una mala solución para remediar el retraso en la entrega de un proyecto software es la llamada "horda mongoliana".
     - (x) Verdadero
     - ( ) Falso
+
+
+
+1. En los diagramas de clases no pueden aparecer relaciones de generalización.
+    - ( ) Verdadero
+    - (x) Falso
+
+2. El principio de modularidad es básico, sin él no tienen sentido los demás principios.
+    - (x) Verdadero
+    - ( ) Falso
+
+3. El tipo de relación entre actor y CU es de asociación.
+    - (x) Verdadero
+    - ( ) Falso
+
+4. En el MC (modelo conceptual) se deben incluir las relaciones de generalización entre conceptos.
+    - (x) Verdadero
+    - ( ) Falso
+
+5. El acoplamiento indica dependencia entre módulos. Cuanto más alto mejor es el diseño.
+    - ( ) Verdadero
+    - (x) Falso
+
+6. La cohesión es indicador de la unión formal de los elementos que forman un módulo.
+    - (x) Verdadero
+    - ( ) Falso
+
+7. Un patrón de diseño es la descripción del problema con su solución en un determinado contexto.
+    - (x) Verdadero
+    - ( ) Falso
+
+8. Hacer diagramas de comunicación es sitemático, no interviene la creatividad del diseñador.
+    - ( ) Verdadero
+    - (x) Falso
+
+9. Nivel de acoplamiento nulo de un módulo nos garantiza un diseño de calidad.
+    - ( ) Verdadero
+    - (x) Falso
+
+10. Diseño es el proceso de aplicar distintos métodos, herramientas y principios con el propósito de definir un dispositivo, proceso o sistema con el suficiente detalle como para permitir su realización física.
+    - (x) Verdadero
+    - ( ) Falso
+
+11. El patrón experto en información propone asignar una responsabilidad a la clase que conoce la información necesaria para llevarla a cabo.
+    - (x) Verdadero
+    - ( ) Falso
+
+12. El uso de los diagramas de comunicación o de secuencia UML para representar el modelo de interacción de objetos nos va a proporcionar distintos resultados de diseño.
+    - ( ) Verdadero
+    - (x) Falso
+
+13. Las relaciones de dependencia en el diagrama de clases del diseño se obtienen de las asociaciones de tipo agregación fuerte.
+    - ( ) Verdadero
+    - (x) Falso
+
+14. Un enlace entre objetos estereotipado como local `<<L>>` nos está indicando que esa vía de comunicación queda establecida para cualquier otra colaboración entre esos objetos.
+    - ( ) Verdadero
+    - (x) Falso
+
+15. El uso del patrón controlador aumenta el número de conexiones entre las capas de interfaz de dominio. Esto implica que aumenta su acoplamiento.
+    - ( ) Verdadero
+    - (x) Falso
+
+16. Una de las principales tareas del diseño de la arquitectura es refinar la descomposición del sistema en subsistemas.
+    - (x) Verdadero
+    - ( ) Falso
+
+17. El patrón experto en información nos dice que el objeto responsable de hacer las cosas es el que tiene el control.
+    - ( ) Verdadero
+    - (x) Falso
+
+18. El patrón experto en información nos ayuda a conocer qué clases son las encargadas de crear y destruir objetos en un DC (diagrama de comunicación).
+    - ( ) Verdadero
+    - (x) Falso
+
+19. Contra del patrón experto en información: va en contra de principios de acoplamiento y cohesión.
+    - (x) Verdadero
+    - ( ) Falso
+
+20. Un enlace entre objetos en un diagrama de colaboración especifica un camino a lo largo del cual un objeto puede enviar mensajes a otro o a sí mismo.
+    - (x) Verdadero
+    - ( ) Falso
+
+21. La restricción de UML `{new}` se usa en los DC (diagramas de comunicación) para representar la creación de un objeto o la creación de un enlace entre 2 objetos.
+    - (x) Verdadero
+    - ( ) Falso
+
+22. El ocultamiento de información limita impacto global de las decisiones de diseño locales.
+    - (x) Verdadero
+    - ( ) Falso
+
+23. Las clases que aparezcan en el modelo de dominio son las únicas que tendrán el diagrama de clases del diseño.
+    - ( ) Verdadero
+    - (x) Falso
+
+24. Cuando un objeto se pasa como parámetro, en el diagrama de comunicación de la operación los enlaces con ese objeto tendrán una visibilidad del tipo `<<A>>`. 
+    - ( ) Verdadero
+    - (x) Falso
+
+25. La herramienta para representar el modelo de diseño de la interacción de objetos son los diagramas de clases UML. 
+    - ( ) Verdadero
+    - (x) Falso
+
+26. Al elaborar el DC de una operación son esenciales los siguientes apartados del contrato: excepciones, precondiciones y poscondiciones.
+    - ( ) Verdadero
+    - (x) Falso
+
+27. Las clases del diagrama de clases del diseño toman todos sus atributos de los diagramas de conceptos.
+    - ( ) Verdadero
+    - (x) Falso
+
+28. ¿Qué principio del diseño facilita el trabajo independiente y concurrente de un equipo software?
+    - ( ) Abstracción
+    - (x) Modularidad
+    - ( ) Alta cohesión
+
+29. En el proceso de diseño, a mayor refinamiento...
+    - ( ) el nivel de abstracción es independiente del nivel de refinamiento.
+    - ( ) el nivel de abstracción es más alto.
+    - (x) el nivel de abstracción es más bajo.
+
+30. ¿Cuál de las siguientes acciones empeoran el ocultamiento de información?
+    - ( ) Declarar atributos con visibilidad pública.
+    - ( ) Utilizar variables globales.
+    - (x) Todas son correctas.
+
+31. Respecto a la independencia modular, rasgos en diseño de un módulo:
+    - (x) Alta cohesión y bajo acoplamiento.
+    - ( ) Alta cohesión y alto acoplamiento.
+    - ( ) Baja cohesión y bajo acoplamiento.
+
+32. El diagrama de clases del diseñon describe la estructura:
+    - ( ) Del modelo de análisis.
+    - ( ) En el dominio del problema.
+    - (x) En el dominio de la solución.
+
+33. ¿Cuál de los siguientes modelos es más importante para realizar el diagrama de clases de diseño?
+    - (x) Diagramas de interacción del diseño.
+    - ( ) Todas son correctas.
+    - ( ) El modelo conceptual
+
+34. En el diagrama de clases del diseño:
+    - ( ) Las clases se obtienen del MC y los atributos del DC.
+    - (x) Las clases y atributos se obtienen de DC.
+    - ( ) Clases se obtienen de DC y atributos de MC.
+
+35. En el diagrama de clases del diseño, los métodos:
+    - ( ) Se obtienen del MC.
+    - (x) Se obtienen de los DC.
+    - ( ) No se especifican.
+
+36. Las relaciones de generalización en el diagrama de clases del diseño son:
+    - ( ) Las que había en el MC.
+    - ( ) Las identificadas con `<<G>>` en los diagramas de interacción.
+    - (x) Las que se pueden extraer al encontrar atributos y/o métodos comunes a varias clases.
+
+37. ¿Cuando el diseño de la arquitectura no es conveniente?
+    - (x) Subsistemas están muy acoplados.
+    - ( ) Ninguna es verdad.
+    - ( ) Subsistemas tienen alta cohesión.
+
+38. Los estereotipos de visibilidad representan tipo de acceso que se da entre objetos en los DC.
+    - (x) Verdadero
+    - ( ) Falso
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
