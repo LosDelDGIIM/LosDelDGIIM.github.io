@@ -43,19 +43,19 @@ protocolo SATA-3 puede proporcionar.
     - (x) Verdadero
     - ( ) Falso
 
-5.  Puedo conectar un disco SATA usando el controlador SAS de la placa, pero no un disco SAS usando el controlador SATA de la placa.
+5. Puedo conectar un disco SATA usando el controlador SAS de la placa, pero no un disco SAS usando el controlador SATA de la placa.
     - (x) Verdadero
     - ( ) Falso
 
-6.  SO-DIMM es un tipo de memoria pensada para servidores.
+6. SO-DIMM es un tipo de memoria pensada para servidores.
     - ( ) Verdadero
     - (x) Falso
 
-7.  En la jerarquía de memoria de un computador, la memoria LLC tiene menor latencia que la DRAM.
+7. En la jerarquía de memoria de un computador, la memoria LLC tiene menor latencia que la DRAM.
     - (x) Verdadero
     - ( ) Falso
 
-8.  El conjunto de instrucciones que ejecutan el auto-test de arranque (Power On self-test) se encuentran almacenadas en la ROM/Flash BIOS de la placa.
+8. El conjunto de instrucciones que ejecutan el auto-test de arranque (Power On self-test) se encuentran almacenadas en la ROM/Flash BIOS de la placa.
     - (x) Verdadero
     - ( ) Falso
 
@@ -242,35 +242,35 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - ( ) Verdadero
     - (x) Falso
 
-2.   En la monitorización de un servidor durante un tiempo T, CO no puede ser mayor que A0.
+2. En la monitorización de un servidor durante un tiempo T, CO no puede ser mayor que A0.
     - ( ) Verdadero
     - (x) Falso
 
-3.   \\(R_i=W_i+Q_i\\), para todo \\(i=1..K\\)
+3. \\(R_i=W_i+Q_i\\), para todo \\(i=1..K\\)
     - ( ) Verdadero
     - (x) Falso
 
-4.   La versión serie del interfaz SCSI se llama SAS, cuyas siglas provienen de "Serial Attached SCSI".
+4. La versión serie del interfaz SCSI se llama SAS, cuyas siglas provienen de "Serial Attached SCSI".
     - (x) Verdadero
     - ( ) Falso
 
-5.   Una red de colas abierta se puede considerar un caso particular de red de colas cerrada si hacemos que \\(Z = 0s\\).
+5. Una red de colas abierta se puede considerar un caso particular de red de colas cerrada si hacemos que \\(Z = 0s\\).
     - ( ) Verdadero
     - (x) Falso
 
-6.   El pliego de condiciones se divide en "pliego de cláusulas administrativas particulares" y "pliego de prescripciones técnicas".
+6. El pliego de condiciones se divide en "pliego de cláusulas administrativas particulares" y "pliego de prescripciones técnicas".
     - (x) Verdadero
     - ( ) Falso
 
-7.   AMD ofrece los procesadores EPYC para el mercado de sobremesa y los OPTERON para el de servidores.
+7. AMD ofrece los procesadores EPYC para el mercado de sobremesa y los OPTERON para el de servidores.
     - ( ) Verdadero
     - (x) Falso
 
-8.   La cola/pasta térmica es un aislante que evita que el calor salga de la CPU.
+8. La cola/pasta térmica es un aislante que evita que el calor salga de la CPU.
     - ( ) Verdadero
     - (x) Falso
 
-9.   Las SSD tienen menor latencia que los discos duros debido a que, entre otras cosas, no tienen que esperar a que el cabezal se posicione sobre la pista a leer/escribir.
+9. Las SSD tienen menor latencia que los discos duros debido a que, entre otras cosas, no tienen que esperar a que el cabezal se posicione sobre la pista a leer/escribir.
     - (x) Verdadero
     - ( ) Falso
 
