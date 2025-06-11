@@ -133,7 +133,7 @@ protocolo SATA-3 puede proporcionar.
     - ( ) Verdadero
     - (x) Falso
 
-35. a hipótesis de partida de un test `ANOVA` es que el factor que se está estudiando influye en el rendimiento.
+35. La hipótesis de partida de un test `ANOVA` es que el factor que se está estudiando influye en el rendimiento.
     - ( ) Verdadero
     - (x) Falso
 

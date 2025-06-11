@@ -756,3 +756,41 @@ programa.
 multicapas.
     - (x) Verdadero
     - ( ) Falso
+
+
+
+
+
+
+10.  En la arquitectura MVC (Model View Controller) los subsistemas de vista y controlador son los que hacen uso más extensivo de componentes reutilizables.
+    - (x) Verdadero
+    - ( ) Falso
+
+20. Al usar una arquitectura cliente-servidor es necesario diseñar e implementar los servidores previamente a poder probar los clientes.
+    - ( ) Verdadero
+    - (x) Falso
+
+25.  ¿En cuál de las siguientes relaciones de asociación entre conceptos no es conveniente aplicar el patrón creador?
+    - (x) Asignatura 1..n - 1..m Alumno
+    - ( ) Casa - 1..n Habitación
+    - ( ) en ninguna de las dos
+
+26. ¿Por qué en el diseño de la operación incluirAsignatura la clase GEA tiene baja cohesión? <br><img src="./Images/diagramaCohesion.jpeg" alt="Diagrama Comunicación" width="400">
+    - (x) porque crea la Asignatura asig, y esto lo debería hacer el objeto “pe”
+    - ( ) porque crea la Asignatura asig,y esto lo debería hacer el multi-objeto de PlanEstudios
+    - ( ) porque crea la Asignatura asig, y esto lo debería hacer el multi- objeto de Asignaturas
+
+32. Un mensaje enviado a un multi-objeto de la clase X:
+    - (x) no se convierte en un método porque se supone que es un método de la clase contenedora
+    - ( ) hay que convertirlo en un método de la clase que representa al sistema
+    - ( ) hay que convertirlo en un método de la clase X
+
+33. ¿Es obligatorio incluir los tipos de datos de los atributos y los parámetros en los diagramas de clases del diseño?
+    - (x) depende del destinatario del programa (herramienta CASE con generación automática de código, equipo de desarrollo del proyecto, etc.)
+    - ( ) siempre
+    - ( ) nunca
+
+34. ¿Por qué hay doble navegabilidad en la asociación entre Profesor y Proyecto? <br><img src="./Images/navegabilidad.jpeg" alt="Diagrama Comunicación" width="400">
+    - (x) por los mensajes 4.1 y 4.1.1
+    - ( ) sólo por el mensaje 4.1
+    - ( ) sólo por el mensaje 4.1.1
