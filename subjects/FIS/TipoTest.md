@@ -564,65 +564,62 @@
     - ( ) Verdadero
     - (x) Falso
 
-26. Al elaborar el DC de una operación son esenciales los siguientes apartados del contrato: excepciones, precondiciones y poscondiciones.
+
+26. Las clases del diagrama de clases del diseño toman todos sus atributos de los diagramas de conceptos.
     - ( ) Verdadero
     - (x) Falso
 
-27. Las clases del diagrama de clases del diseño toman todos sus atributos de los diagramas de conceptos.
-    - ( ) Verdadero
-    - (x) Falso
-
-28. ¿Qué principio del diseño facilita el trabajo independiente y concurrente de un equipo software?
+27. ¿Qué principio del diseño facilita el trabajo independiente y concurrente de un equipo software?
     - ( ) Abstracción
     - (x) Modularidad
     - ( ) Alta cohesión
 
-29. En el proceso de diseño, a mayor refinamiento...
+28. En el proceso de diseño, a mayor refinamiento...
     - ( ) el nivel de abstracción es independiente del nivel de refinamiento.
     - ( ) el nivel de abstracción es más alto.
     - (x) el nivel de abstracción es más bajo.
 
-30. ¿Cuál de las siguientes acciones empeoran el ocultamiento de información?
+29. ¿Cuál de las siguientes acciones empeoran el ocultamiento de información?
     - ( ) Declarar atributos con visibilidad pública.
     - ( ) Utilizar variables globales.
     - (x) Todas son correctas.
 
-31. Respecto a la independencia modular, rasgos en diseño de un módulo:
+30. Respecto a la independencia modular, rasgos en diseño de un módulo:
     - (x) Alta cohesión y bajo acoplamiento.
     - ( ) Alta cohesión y alto acoplamiento.
     - ( ) Baja cohesión y bajo acoplamiento.
 
-32. El diagrama de clases del diseño describe la estructura:
+31. El diagrama de clases del diseño describe la estructura:
     - ( ) Del modelo de análisis.
     - ( ) En el dominio del problema.
     - (x) En el dominio de la solución.
 
-33. ¿Cuál de los siguientes modelos es más importante para realizar el diagrama de clases de diseño?
+32. ¿Cuál de los siguientes modelos es más importante para realizar el diagrama de clases de diseño?
     - (x) Diagramas de interacción del diseño.
     - ( ) Todas son correctas.
     - ( ) El modelo conceptual
 
-34. En el diagrama de clases del diseño:
+33. En el diagrama de clases del diseño:
     - ( ) Las clases se obtienen del MC y los atributos del DC.
     - ( ) Las clases y atributos se obtienen de DC.
     - (x) Clases se obtienen de DC y atributos de MC.
 
-35. En el diagrama de clases del diseño, los métodos:
+34. En el diagrama de clases del diseño, los métodos:
     - ( ) Se obtienen del MC.
     - (x) Se obtienen de los DC.
     - ( ) No se especifican.
 
-36. Las relaciones de generalización en el diagrama de clases del diseño son:
+35. Las relaciones de generalización en el diagrama de clases del diseño son:
     - ( ) Las que había en el MC.
     - ( ) Las identificadas con `<<G>>` en los diagramas de interacción.
     - (x) Las que se pueden extraer al encontrar atributos y/o métodos comunes a varias clases.
 
-37. ¿Cuando el diseño de la arquitectura no es conveniente?
+36. ¿Cuando el diseño de la arquitectura no es conveniente?
     - (x) Subsistemas están muy acoplados.
     - ( ) Ninguna es verdad.
     - ( ) Subsistemas tienen alta cohesión.
 
-38. Los estereotipos de visibilidad representan tipo de acceso que se da entre objetos en los DC.
+37. Los estereotipos de visibilidad representan tipo de acceso que se da entre objetos en los DC.
     - (x) Verdadero
     - ( ) Falso
 

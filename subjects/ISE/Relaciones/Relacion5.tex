@@ -1293,27 +1293,118 @@
 \end{comment}
 
 \begin{ejercicio}\label{ej:5.24}
-    El proceso de modelado de un servidor de base de datos mediante técnicas de análisis operacional ha dado los siguientes parámetros:
+    El proceso de modelado de un servidor de base de datos mediante técnicas de análisis operacional ha dado los parámetros que se muestran en la Tabla~\ref{tab:5.24} (los tiempos se expresan en segundos).
     \begin{table}[h]
         \centering
         \begin{tabular}{|c|c|c|}
             \hline
             Dispositivo & $S_i$ & $V_i$ \\
             \hline
-            Procesador (1) & 0.15 & 6 \\
-            Disco (2) & 0.05 & 5 \\
+            Procesador (1) & $0.15$ & 6 \\
+            Disco (2) & $0.05$ & 5 \\
             \hline
         \end{tabular}
         \caption{Parámetros del servidor de base de datos.}
         \label{tab:5.24}
     \end{table}
-    El servidor recibe una media de 1.05 peticiones por segundo. Suponiendo que $R_i = (N_i + 1) \times S_i$, responda a las siguientes cuestiones justificando numéricamente la respuesta.
+    El servidor recibe una media de $1.05$ peticiones por segundo. Suponiendo que $R_i = (N_i + 1) \times S_i$, responda a las siguientes cuestiones justificando numéricamente la respuesta.
     \begin{enumerate}
         \item Indique si el servidor está sometido a alta o baja carga.
+        
+        En este caso no tiene sentido preguntarse por el punto teórico de saturación (knee point) porque estamos ante una red abierta. Calculemos en primer lugar el cuello de botella, y posteriormente su utilización:
+        \begin{align*}
+            D_1 &= V_1 \cdot S_1 = 6 \cdot 0.15 = \unitfrac[0.9]{s}{peticion} \\
+            D_2 &= V_2 \cdot S_2 = 5 \cdot 0.05 = \unitfrac[0.25]{s}{peticion}
+        \end{align*}
+
+        El cuello de botella es el procesador porque su demanda de servicio es mayor que la del disco. Por la Ley de la Utilización, tenemos que:
+        \begin{equation*}
+            U_1 = X_0 \cdot D_1 = 1.05 \cdot 0.9 = 0.945
+            \Longrightarrow U_1 = 94.5\%
+        \end{equation*}
+
+        Como el cuello de botella tiene una utilización del 94.5\%, el servidor está sometido a alta carga, aunque aún no está saturado.
         \item ¿Cuál es el número medio de trabajos en la cola del procesador?
+        
+        Por la Ley de Little, el número medio de trabajos en la cola del procesador es:
+        \begin{align*}
+            Q_1 &= X_1 \cdot W_1
+        \end{align*}
+
+        Calculamos en primer lugar $X_1$ empleando para ello la Ley del Flujo Forzado:
+        \begin{align*}
+            X_1 &= X_0 \cdot V_1 = 1.05 \cdot 6 = 6.3 \unitfrac{trabajos}{s}
+        \end{align*}
+
+        A continuación, calculamos el tiempo medio de espera en la cola del procesador:
+        \begin{align*}
+            W_1 &= R_1 - S_1 = (N_1 + 1) \cdot S_1 - S_1 = N_1 \cdot S_1
+        \end{align*}
+
+        Por la Ley de Little, tenemos que:
+        \begin{align*}
+            N_1 &= X_1 \cdot R_1
+            = X_1 \cdot (N_1 + 1) \cdot S_1
+            \Longrightarrow N_1 = \dfrac{X_1 \cdot S_1}{1 - X_1 \cdot S_1}
+            = 17.181818 \unit{trabajos}
+        \end{align*}
+
+        Por tanto, el número medio de trabajos en la cola del procesador es:
+        \begin{align*}
+            Q_1 &= X_1 \cdot W_1 = 6.3 \cdot 17.181818 \cdot 0.15 = 16.24 \unit{trabajos}
+        \end{align*}
         \item Calcule el tiempo medio de respuesta del servidor.
+        
+        Por la Ley General del Tiempo de Respuesta, el tiempo medio de respuesta del servidor es:
+        \begin{align*}
+            R_0 &= V_1 \cdot R_1 + V_2 \cdot R_2
+        \end{align*}
+
+        Para calcular $R_1$ y $R_2$, necesitamos optener $N_1$ y $N_2$:
+        \begin{align*}
+            N_i &= X_i \cdot R_i
+            = X_i \cdot (N_i + 1) \cdot S_i
+            \Longrightarrow N_i = \dfrac{X_i \cdot S_i}{1 - X_i \cdot S_i}
+        \end{align*}
+
+        Calculamos ahora $X_1$ y $X_2$ empleando la Ley del Flujo Forzado:
+        \begin{align*}
+            X_i &= X_0 \cdot V_i
+        \end{align*}
+
+        Por tanto:
+        \begin{align*}
+            N_i &= \dfrac{X_0 \cdot V_i \cdot S_i}{1 - X_0 \cdot V_i \cdot S_i}
+        \end{align*}
+
+        Por tanto:
+        \begin{align*}
+            R_i &= \left(\dfrac{X_0 \cdot V_i \cdot S_i}{1 - X_0 \cdot V_i \cdot S_i} + 1\right) \cdot S_i\\
+            R_1 &= 2.72727\unit{s}\\
+            R_2 &= 0.0677966\unit{s}
+        \end{align*}
+
+        Por tanto, el tiempo medio de respuesta del servidor es:
+        \begin{align*}
+            R_0 &= V_1 \cdot R_1 + V_2 \cdot R_2 = 16.702619\unit{s}
+        \end{align*}
         \item ¿Tendría algún efecto sobre las prestaciones sustituir el procesador por una versión más rápida?
+        
+        Sí, puesto que el procesador es el cuello de botella del servidor, por lo que la productividad máxima del servidor aumentaría.
         \item Determine cuál sería el cuello de botella del servidor si el procesador y el disco se sustituyen, respectivamente, por versiones 5 y 2 veces más rápidas.
+        
+        En este caso, la razón de visita no cambia, pero:
+        \begin{align*}
+            S_1' &= \dfrac{0.15}{5} = 0.03 \\
+            S_2' &= \dfrac{0.05}{2} = 0.025
+        \end{align*}
+
+        Calculamos la demanda de servicio de cada dispositivo:
+        \begin{align*}
+            D_1' &= V_1 \cdot S_1' = 6 \cdot 0.03 = \unitfrac[0.18]{s}{peticion} \\
+            D_2' &= V_2 \cdot S_2' = 5 \cdot 0.025 = \unitfrac[0.125]{s}{peticion}
+        \end{align*}
+        En este caso, el cuello de botella seguiría siendo el procesador.
     \end{enumerate}
 \end{ejercicio}
 \begin{comment}
@@ -1328,7 +1419,7 @@
 \end{comment}
 
 \begin{ejercicio}\label{ej:5.25}
-    Un sistema interactivo con 3 clientes (suponga un trabajo por cliente) y un tiempo medio de reflexión de 5 segundos se modela mediante los siguientes parámetros (los tiempos se expresan en segundos):
+    Un sistema interactivo con 3 clientes (suponga un trabajo por cliente) y un tiempo medio de reflexión de 5 segundos se modela mediante los parámetros que se muestran en la Tabla~\ref{tab:5.25} (los tiempos se expresan en segundos):
     \begin{table}[h]
         \centering
         \begin{tabular}{|c|c|c|}
@@ -1343,10 +1434,25 @@
         \caption{Parámetros del sistema interactivo.}
         \label{tab:5.25}
     \end{table}
-    Determine, sabiendo que la productividad del servidor es 0.49 trabajos/s:
+    Determine, sabiendo que la productividad del servidor es $\unitfrac[0.49]{trabajos}{s}$, los siguientes valores:
     \begin{enumerate}
         \item El tiempo medio de respuesta del servidor.
+        
+        Por la Ley del Tiempo de Respuesta Interactivo:
+        \begin{align*}
+            N_T &= X_0 \cdot (R_0 + Z)
+            \Longrightarrow R_0 = \dfrac{N_T}{X_0} - Z = 1.12 \unit{s}
+        \end{align*}
         \item Las utilizaciones de cada dispositivo.
+        
+        Por la Ley de la Utilización, tenemos que:
+        \begin{align*}
+            U_i &= X_0 \cdot D_i
+            = X_0 \cdot V_i \cdot S_i\\
+            U_1 &= 0.49 \cdot 15 \cdot 0.01 = 0.0735 = 7.35\% \\
+            U_2 &= 0.49 \cdot 8 \cdot 0.04 = 0.1568 = 15.68\% \\
+            U_3 &= 0.49 \cdot 6 \cdot 0.08 = 0.2352 = 23.52\%
+        \end{align*}
     \end{enumerate}
 \end{ejercicio}
 \begin{comment}
@@ -1375,24 +1481,123 @@
     \end{table}
     A partir de la información anterior:
     \begin{enumerate}
-        \item Calcule la demanda de servicio de cada dispositivo, la productividad máxima del servidor y el punto teórico de saturación (knee point).
-        \item Determine el tiempo mínimo de respuesta del servidor. Justifique la respuesta.
+        \item Calcule la demanda de servicio, la productividad y la utilización de cada dispositivo.
+        
+        La demanda de servicio de cada dispositivo se calcula como:
+        \begin{align*}
+            D_i &= V_i \cdot S_i\\
+            D_1 &= 8 \cdot 0.01 = \unitfrac[0.08]{s}{peticion} \\
+            D_2 &= 4 \cdot 0.04 = \unitfrac[0.16]{s}{peticion} \\
+            D_3 &= 3 \cdot 0.03 = \unitfrac[0.09]{s}{peticion}
+        \end{align*}
+
+        La productividad de cada dispositivo se calcula por la Ley del Flujo Forzado como:
+        \begin{align*}
+            X_i &= X_0 \cdot V_i = 4 \cdot V_i\\
+            X_1 &= 4 \cdot 8 = 32 \unitfrac{trabajos}{s} \\
+            X_2 &= 4 \cdot 4 = 16 \unitfrac{trabajos}{s} \\
+            X_3 &= 4 \cdot 3 = 12 \unitfrac{trabajos}{s}
+        \end{align*}
+
+        La utilización de cada dispositivo se calcula por la Ley de la Utilización como:
+        \begin{align*}
+            U_i &= X_i \cdot S_i\\
+            U_1 &= 32 \cdot 0.01 = 0.32 = 32\% \\
+            U_2 &= 16 \cdot 0.04 = 0.64 = 64\% \\
+            U_3 &= 12 \cdot 0.03 = 0.36 = 36\%
+        \end{align*}
+        
+        \item Determine el tiempo mínimo posible de respuesta del servidor web. Justifique la respuesta.
+        
+        Por la Ley General del Tiempo de Respuesta, el tiempo mínimo de respuesta del servidor web es:
+        \begin{align*}
+            R_0^{\text{min}} &= \sum_{i=1}^{3} V_i \cdot S_i = \sum_{i=1}^{3} D_i = D_1 + D_2 + D_3\\
+            &= 0.08 + 0.16 + 0.09 = \unit[0.33]{s}
+        \end{align*}
         \item ¿Qué dispositivo es el cuello de botella del servidor y por qué? ¿Qué valor tendría que tener la tasa de llegadas para que el cuello de botella fuese otro dispositivo? Desde el punto de vista del reparto de la carga entre los componentes del servidor web, ¿estamos ante un sistema equilibrado?
+        
+        El cuello de botella del servidor es el disco duro, ya que es el dispositivo con mayor demanda de servicio ($D_2 = 0.16\unitfrac{s}{peticion}$). La tasa de llegadas $X_0$ no afecta al dispositivo cuello de botella, ya que este se determina por la demanda de servicio de cada dispositivo. Por último, el sistema no está equilibrado porque la utilización del disco duro es muy superior a la del resto de dispositivos ($U_2 = 64\%$ frente a $U_1 = 32\%$ y $U_3 = 36\%$). 
         \item Calcule la productividad máxima del servidor web. ¿Qué tiempo de servicio debería tener el dispositivo cuello de botella para obtener el doble de esa productividad máxima? Razone la respuesta.
-        \item Suponiendo que $R_i = (N_i + 1) \times S_i$ para cada dispositivo, calcule el tiempo de respuesta del servidor web.
+        
+        La productividad máxima del servidor web se calcula como:
+        \begin{align*}
+            X_0^{\text{max}} &= \dfrac{1}{D_b} = \dfrac{1}{D_2} = \dfrac{1}{0.16} = 6.25 \unitfrac{peticiones}{s}
+        \end{align*}
+
+        Si quisiéramos obtener el doble de esa productividad máxima, tendríamos que tener:
+        \begin{align*}
+            X_0^{\text{max}} &= 2 \cdot 6.25 = 12.5 \unitfrac{peticiones}{s} = \dfrac{1}{D_b'}
+            \Longrightarrow
+            D_b' &= \dfrac{1}{12.5} = 0.08 \unitfrac{s}{peticion}
+        \end{align*}
+
+        Por tanto, la demanda de servicio del dispositivo cuello de botella debería ser:
+        \begin{align*}
+            D_b' = 0.08\unitfrac{s}{peticion}
+        \end{align*}
+
+        Por tanto, por un lado necesitaríamos que:
+        \begin{align*}
+            S_2' &= \dfrac{0.08}{4} = 0.02 \unitfrac{s}{peticion}
+        \end{align*}
+
+        No obstante, puesto que $D_3=0.09>D_b'$, también tendríamos que reducir el tiempo de servicio del dispositivo red:
+        \begin{align*}
+            S_3' &= \dfrac{0.08}{3} = 0.0266667 \unitfrac{s}{peticion}
+        \end{align*}
+        \item Suponiendo que $R_i=(N_i+1)\cdot S_i$ para cada dispositivo, calcule el tiempo de respuesta del servidor web.
+        
+        Por la Ley General del Tiempo de Respuesta, el tiempo de respuesta del servidor web es:
+        \begin{align*}
+            R_0 &= \sum_{i=1}^{3} V_i \cdot R_i
+        \end{align*}
+
+        Para calcular $R_i$, necesitamos calcular $N_i$. Por la Ley de Little, tenemos que:
+        \begin{align*}
+            N_i = X_i \cdot R_i
+            = X_i \cdot (N_i + 1) \cdot S_i
+            \Longrightarrow N_i &0= \dfrac{X_i \cdot S_i}{1 - X_i \cdot S_i}\\
+            N_1 &= \dfrac{32 \cdot 0.01}{1 - 32 \cdot 0.01} = \unitfrac[0.47058]{trabajos}{s} \\
+            N_2 &= \dfrac{16 \cdot 0.04}{1 - 16 \cdot 0.04} = \unitfrac[1.7777]{trabajos}{s} \\
+            N_3 &= \dfrac{12 \cdot 0.03}{1 - 12 \cdot 0.03} = \unitfrac[0.5625]{trabajos}{s}
+        \end{align*}
+
+        Por tanto, el tiempo de respuesta de cada dispositivo es:
+        \begin{align*}
+            R_i &= (N_i + 1) \cdot S_i\\
+            R_1 &= \unit[0.0147]{s} \\
+            R_2 &= \unit[0.1111]{s} \\
+            R_3 &= \unit[0.0468]{s}
+        \end{align*}
+
+        Por tanto, el tiempo de respuesta del servidor web es:
+        \begin{align*}
+            R_0 &= V_1 \cdot R_1 + V_2 \cdot R_2 + V_3 \cdot R_3 = \unit[0.70271]{s}
+        \end{align*}
         \item Calcule el número medio de peticiones en el servidor web. ¿Cómo se llama la ley que ha utilizado?
+        
+        Por la Ley de Little, el número medio de peticiones en el servidor web es:
+        \begin{align*}
+            N_0 &= X_0 \cdot R_0 = 4 \cdot 0.70271 = \unit[2.81086]{peticiones}
+        \end{align*}
     \end{enumerate}
 \end{ejercicio}
 \begin{comment}
 \solucion
-    \begin{enumerate}
-        \item $D_1 = 0.08$ s/petición, $D_2 = 0.16$ s/petición, $D_3 = 0.09$ s/petición; $X_0 = 6.25$ peticiones/s; $N_T^* = 4.6$ clientes.
-        \item El tiempo mínimo de respuesta es $R_0^{\min} = 0.33$ s porque no hay esperas en la cola de ningún dispositivo.
-        \item El cuello de botella es el disco duro porque tiene la mayor demanda de servicio y, por tanto, mayor utilización. La tasa de llegadas tendría que ser menor a 4 peticiones/s para que el cuello de botella fuese otro dispositivo. El sistema no está equilibrado ya que el disco duro presenta una utilización muy superior al del resto de dispositivos.
-        \item La productividad máxima del servidor web es $X_0^{\max} = 6.25$ peticiones/s. Para obtener el doble de esa productividad máxima, el tiempo de servicio del disco duro debería ser $0.02$ s.
-        \item El tiempo de respuesta del servidor web es $R_0 = 0.7$ s/petición.
-        \item El número medio de peticiones en el servidor web es $N_0 = 2.81$ peticiones, utilizando la ley de Little.
-    \end{enumerate}
+\begin{enumerate}
+a) D1=0,08 s/petición al servidor, X1= 32 trabajos/s, U1=0,32; D2=0,16 s/petición al servidor, X2= 16
+trabajos/s, U2=0,64; D3=0,09 s/petición al servidor, X3= 12 trabajos/s, U3=0,36;
+b) R0min=0,33s. Se produce cuando no hay esperas en la cola de ningún dispositivo por lo que los tiempos 
+de respuesta individuales coinciden con los tiempos de servicio.
+c) El disco ya que es el que tiene mayor demanda de servicio y, por tanto, mayor utilización. La tasa de
+llegadas no influye en cuál es el dispositivo cuello de botella. El sistema no está equilibrado ya que el
+disco presenta una utilización muy superior al del resto de dispositivos.
+d) X0max=6,25 peticiones/s. Podría pensarse que el tiempo de servicio del disco debería ser la mitad, pero
+eso haría que el cuello de botella dejase de ser el disco para pasar a ser la red. Es la red la que entonces
+limitaría la productividad máxima y ésta nunca podría superar las 11,1 peticiones/s.
+e) R0=0,7 s/petición.
+f) N0=2,81 peticiones. Hemos usado la ley de Little.
+\end{enumerate}
 \end{comment}
 
 \begin{ejercicio}\label{ej:5.27}
@@ -1414,10 +1619,36 @@
     \begin{enumerate}
         \item Explique el significado de cada una de las variables que aparecen en las siguientes expresiones y obtenga su valor (no olvide las unidades).
         \begin{align*}
-            X_0 &\leq m_m \left( N_T D + Z, 1 / D_b \right) \\
-            D_b &= D_1 + D_2 + D_3
+            X_0 &\leq \min\left\{\frac{N_T}{D+Z}, \frac{1}{D_b}\right\}
         \end{align*}
+        \begin{itemize}
+            \item $X_0$: productividad del servidor, en $\unitfrac{peticiones}{s}$.
+            \item $N_T$: número total de clientes conectados al servidor, en unidades. En este caso:
+            \begin{align*}
+                N_T &= \unit[25]{peticiones}
+            \end{align*}
+
+            \item $D$: demanda de servicio del servidor, en $\unitfrac{s}{peticion}$. En este caso:
+            \begin{align*}
+                D &= D_1 + D_2 = V_1 \cdot S_1 + V_2 \cdot S_2 = 4 \cdot 0.5 + 3 \cdot 0.75 = \unitfrac[4.25]{s}{peticion}
+            \end{align*}
+            \item $Z$: tiempo medio de reflexión de los clientes, en segundos. En este caso:
+            \begin{align*}
+                Z &= \unit[6]{s}
+            \end{align*}
+            \item $D_b$: demanda de servicio del cuello de botella, en $\unitfrac{s}{peticion}$. Esta es la mayor demanda de servicio entre los dispositivos del servidor. En este caso:
+            \begin{align*}
+                D_b &= \max\{D_1, D_2\} = \max\{V_1 \cdot S_1, V_2 \cdot S_2\} =\\&= \max\{4 \cdot 0.5, 3 \cdot 0.75\} = \max\{2, 2.25\} = \unitfrac[2.25]{s}{peticion}
+            \end{align*}
+        \end{itemize}
         \item ¿Cuál es el punto teórico de saturación (knee point) del servidor? A la vista de su valor, ¿el sistema se encuentra sometido a baja o alta carga?
+        
+        El punto teórico de saturación (knee point) del servidor se calcula como:
+        \begin{align*}
+            \dfrac{N_T^*}{D + Z} = \dfrac{1}{D_b}
+            \Longrightarrow N_T^* = \dfrac{D+Z}{D_b} = \dfrac{4.25 + 6}{2.25} \approx \unit[4.555]{clientes}
+        \end{align*}
+        Como $N_T = 25 > N_T^* \approx 4.555$, el sistema se encuentra sometido a alta carga.
     \end{enumerate}
 \end{ejercicio}
 \begin{comment}
@@ -1432,8 +1663,88 @@
     Un ingeniero informático pretende modelar el servidor de base de datos que está administrando utilizando un modelo basado en redes de colas. Para ello, ha monitorizado el servidor durante 24 horas, contabilizando un total de 15000 peticiones externas al servidor. Durante ese tiempo, el monitor \verb|sar| le ha indicado que el procesador ha estado ocupado un total de 800 minutos y ejecutado 60000 procesos, mientras que se han realizado un total de 135000 accesos al disco duro, habiendo éste trabajado un total de 1200 minutos. Suponiendo que el servidor no está saturado:
     \begin{enumerate}
         \item Calcule la razón de visita, el tiempo de servicio, la productividad y la utilización tanto del procesador como del disco duro.
+        
+        Los datos proporcionados son:
+        \begin{align*}
+            X_0 &= \dfrac{15000}{24 \cdot 3600} \approx \unitfrac[0.1736]{peticiones}{s}\\
+            U_1 &= \dfrac{800}{24 \cdot 60} \approx 0.5556 = 55.56\%\\
+            V_1 &= \dfrac{60000}{15000} = 4 \\
+            V_2 &= \dfrac{135000}{15000} = 9 \\
+            U_2 &= \dfrac{1200}{24 \cdot 60} = 0.8333 = 83.33\%
+        \end{align*}
+
+        Por tanto, tan solo nos falta por calcular el tiempo de servicio y la productividad de cada dispositivo.
+        Por la Ley del Flujo Forzado, tenemos que:
+        \begin{align*}
+            X_i &= X_0 \cdot V_i\\
+            X_1 &= 0.1736 \cdot 4 \approx \unitfrac[0.6944]{trabajos}{s} \\
+            X_2 &= 0.1736 \cdot 9 \approx \unitfrac[1.5624]{trabajos}{s}
+        \end{align*}
+
+        Por la Ley de la Utilización, tenemos que:
+        \begin{align*}
+            U_i = X_i \cdot S_i
+            \Longrightarrow S_i &= \dfrac{U_i}{X_i}\\
+            S_1 &\approx \unit[0.800]{s} \\
+            S_2 &\approx \unit[0.533]{s}
+        \end{align*}
         \item ¿Cuál es la productividad máxima que puede alcanzar este servidor? ¿Y el tiempo de respuesta mínimo?
-        \item Suponiendo que $W_i = N_i \times S_i$, ¿cuál es el tiempo de respuesta actual de los trabajos que llegan al servidor? ¿y el número medio de trabajos en la cola de cada dispositivo?
+        
+        En primer lugar, calculamos las demandas de servicio de cada dispositivo:
+        \begin{align*}
+            D_1 &= V_1 \cdot S_1 = 4 \cdot 0.800 = \unitfrac[3.2]{s}{peticion} \\
+            D_2 &= V_2 \cdot S_2 = 9 \cdot 0.533 = \unitfrac[4.797]{s}{peticion}
+        \end{align*}
+
+        Por tanto, el cuello de botella del servidor es el disco, ya que su demanda de servicio es mayor que la del procesador. Por tanto, la productividad máxima del servidor es:
+        \begin{align*}
+            X_0^{\max} &= \dfrac{1}{D_b} = \dfrac{1}{D_2} \approx \unitfrac[0.2084]{peticiones}{s}
+        \end{align*}
+
+        El tiempo de respuesta mínimo del servidor es:
+        \begin{align*}
+            R_0^{\min} &= \sum_{i=1}^{2} V_i \cdot S_i = \sum_{i=1}^{2} D_i \approx \unit[7.997]{s}
+        \end{align*}
+        \item Suponiendo que $W_i = N_i \cdot S_i$, ¿cuál es el tiempo de respuesta actual de los trabajos que llegan al servidor? ¿y el número medio de trabajos en la cola de cada dispositivo?
+        
+        Por la Ley General del Tiempo de Respuesta, el tiempo de respuesta del servidor es:
+        \begin{align*}
+            R_0 &= \sum_{i=1}^{2} V_i \cdot R_i
+        \end{align*}
+
+        Para calcular $R_i$, necesitamos calcular $N_i$. Por la Ley de Little, tenemos que:
+        \begin{align*}
+            N_i = X_i \cdot R_i
+            = X_i \cdot (W_i+ S_i)
+            = X_i \cdot (N_i \cdot S_i + S_i)
+            \Longrightarrow N_i = \dfrac{X_i \cdot S_i}{1 - X_i \cdot S_i}
+        \end{align*}
+
+        Por tanto, tenemos que:
+        \begin{align*}
+            N_1 &= \dfrac{X_1 \cdot S_1}{1 - X_1 \cdot S_1} \approx \unit[1.24982]{trabajos} \\
+            \\
+            N_2 &= \dfrac{X_2 \cdot S_2}{1 - X_2 \cdot S_2} \approx \unit[4.9794021]{trabajos}
+        \end{align*}
+
+        Por tanto, el tiempo de respuesta de cada dispositivo es:
+        \begin{align*}
+            R_i &= W_i + S_i = N_i \cdot S_i + S_i = (N_i + 1) \cdot S_i\\
+            R_1 &\approx \unit[1.79985]{s} \\
+            R_2 &\approx \unit[3.18702]{s}
+        \end{align*}
+
+        Por tanto, el tiempo de respuesta del servidor es:
+        \begin{align*}
+            R_0 &= V_1 \cdot R_1 + V_2 \cdot R_2 \approx \unit[35.88261]{s}
+        \end{align*}
+
+        El número medio de trabajos en la cola de cada dispositivo es:
+        \begin{align*}
+            Q_i &= X_i \cdot W_i = X_i \cdot N_i \cdot S_i\\
+            Q_1 &\approx \unit[0.6943]{trabajos} \\
+            Q_2 &\approx \unit[4.1466]{trabajos}
+        \end{align*}
     \end{enumerate}
 \end{ejercicio}
 \begin{comment}
@@ -1446,7 +1757,7 @@
 \end{comment}
 
 \begin{ejercicio}\label{ej:5.29}
-    Los parámetros del modelo de un servidor de comercio electrónico (red abierta) son los reflejados en la Tabla~\ref{tab:5.29} (los tiempos de la tabla se expresan en segundos):
+    Los parámetros del modelo de un servidor de comercio electrónico (red abierta) son los reflejados en la Tabla~\ref{tab:5.29} (los tiempos de la tabla se expresan en segundos).
     \begin{table}[h]
         \centering
         \begin{tabular}{|c|c|c|}
@@ -1463,9 +1774,40 @@
     La tasa de llegada al servidor es de 1.5 transacciones por segundo.
     \begin{enumerate}
         \item Identifique el cuello de botella y calcule la productividad máxima del servidor.
+        
+        Calculamos la demanda de servicio de cada dispositivo:
+        \begin{align*}
+            D_1 &= V_1 \cdot S_1 = 8 \cdot 0.025 = \unitfrac[0.2]{s}{transaccion} \\
+            D_2 &= V_2 \cdot S_2 = 9 \cdot 0.050 = \unitfrac[0.45]{s}{transaccion}
+        \end{align*}
+
+        El cuello de botella del servidor es el HDD, ya que su demanda de servicio es mayor que la del procesador. Por tanto, la productividad máxima del servidor es:
+        \begin{align*}
+            X_0^{\max} &= \dfrac{1}{D_b} = \dfrac{1}{D_2} = \dfrac{1}{0.45} \approx \unitfrac[2.22]{transacciones}{s}
+        \end{align*}
         \item ¿Cuál es la utilización de la CPU?
-        \item ¿Cuál sería dicha utilización si la tasa de llegada fuese de 3 transacciones/s?
+        
+        Por la Relación Demanda-Utilización, tenemos que:
+        \begin{align*}
+            U_{cpu} &= X_0 \cdot D_1 = 1.5 \cdot 0.2 = 0.3 = 30\%
+        \end{align*}
+        \item ¿Cuál sería dicha utilización si la tasa de llegada fuese de $\unitfrac[3]{transacciones}{s}$?
+        
+        En ese caso el servidor estaría saturado puesto que la tasa de llegada es mayor que la productividad máxima del servidor. La utilización de la CPU máxima que podría alcanzar sería:
+        \begin{align*}
+            U_{cpu}^{\max} &= X_0^{\max} \cdot D_1 = 2.22 \cdot 0.2 = 0.444 = 44.4\%
+        \end{align*}
         \item ¿Cuál sería ahora la productividad máxima del servidor si añadiéramos dos discos duros idénticos al actual suponiendo que la carga se repartiera equitativamente entre los tres discos?
+        
+        En este caso, la demanda de servicio de cada dispositivo HDD sería:
+        \begin{align*}
+            D_2' &= S_2\cdot \frac{V_2}{3} = 0.050 \cdot \frac{9}{3} = 0.15 \unitfrac{s}{transaccion}
+        \end{align*}
+
+        Por tanto, el cuello de botella del servidor pasaría a ser la CPU, ya que su demanda de servicio es mayor que la del HDD. Por tanto, la productividad máxima del servidor sería:
+        \begin{align*}
+            X_0^{\max} &= \dfrac{1}{D_1} = \dfrac{1}{0.2} = 5 \unitfrac{transacciones}{s}
+        \end{align*}
     \end{enumerate}
 \end{ejercicio}
 \begin{comment}
@@ -1489,7 +1831,31 @@
     A partir de la información anterior:
     \begin{enumerate}
         \item Calcule cuánto tiempo, de media, le dedica la unidad SSD a cada consulta que llega al servidor.
+        
+
+        Nos piden el valor de $D_i$, puesto que es el tiempo dedicado, de media, a cada petición que llega al \emph{servidor}. Los datos que tenemos son:
+        \begin{align*}
+            X_0 &= \dfrac{54000}{24 \cdot 3600} \approx \unitfrac[0.625]{consultas}{s}\\
+            U_i &= 0.6 \\
+            V_i &= 5
+        \end{align*}
+
+        Por la Relación Demanda-Utilización, tenemos que:
+        \begin{align*}
+            U_i = X_0 \cdot D_i
+            \Longrightarrow D_i &= \dfrac{U_i}{X_0} = \dfrac{0.6}{0.625} = \unitfrac[0.96]{s}{consulta}
+        \end{align*}
+
+        Por tanto, la demanda de servicio de la unidad SSD es $D_{i} = \unitfrac[0.96]{s}{consulta}$.
+
+        
         \item Calcule el tiempo medio de servicio de la unidad SSD.
+        
+        Por la definición de demanda de servicio, tenemos que:
+        \begin{align*}
+            D_i &= V_i \cdot S_i
+            \Longrightarrow S_i &= \dfrac{D_i}{V_i} = \dfrac{0.96}{5} = \unitfrac[0.192]{s}{consulta}
+        \end{align*}
     \end{enumerate}
 \end{ejercicio}
 \begin{comment}
@@ -1501,10 +1867,28 @@
 \end{comment}
 
 \begin{ejercicio}\label{ej:5.31}
-    En una red interactiva formada por un servidor de impresión, durante un tiempo $T = 2$ horas, se encuentran conectados un total de $N_T = 30$ clientes, cada uno imprimiendo un único fichero (1 cliente = 1 fichero). Durante esas dos horas, el tiempo medio entre que un cliente solicita la impresión de un fichero al servidor y éste termina de imprimir dicho fichero (es decir, se completa la tarea) es de 45 s. Asimismo, el tiempo que transcurre entre que un cliente ve impreso su fichero y vuelve a pedirle al servidor la impresión de otro nuevo es, de media, 25 s.
+    En una red interactiva formada por un servidor de impresión, durante un tiempo $T = 2$ horas, se encuentran conectados un total de $N_T = 30$ clientes, cada uno imprimiendo un único fichero (1 cliente = 1 fichero). Durante esas dos horas, el tiempo medio entre que un cliente solicita la impresión de un fichero al servidor y éste termina de imprimir dicho fichero (es decir, se completa la tarea) es de $\unit[45]{s}$. Asimismo, el tiempo que transcurre entre que un cliente ve impreso su fichero y vuelve a pedirle al servidor la impresión de otro nuevo es, de media, $\unit[25]{s}$.
     \begin{enumerate}
         \item Calcule la productividad media del servidor.
+        
+        Como datos, nos proporcionan:
+        \begin{align*}
+            N_T &= 30 \\
+            R_0 &= \unit[45]{s} \\
+            Z &= \unit[25]{s}
+        \end{align*}
+
+        Por la Ley del Tiempo de Respuesta Interactivo, tenemos que:
+        \begin{align*}
+            N_T = X_0 \cdot (R_0 + Z)
+            \Longrightarrow X_0 &= \dfrac{N_T}{R_0 + Z} = \dfrac{30}{45 + 25} = \dfrac{30}{70} = \unitfrac[0.42857]{transacciones}{s}
+        \end{align*}
         \item ¿Cuántos clientes se encuentran, de media, en reflexión?
+        
+        Por la Ley de Little, el número medio de clientes en reflexión es:
+        \begin{align*}
+            N_z &= X_0 \cdot Z = 0.42857 \cdot 25 = \unit[10.7143]{clientes}
+        \end{align*}
     \end{enumerate}
 \end{ejercicio}
 \begin{comment}
@@ -1527,6 +1911,7 @@
         \item Calcule los tiempos de espera en la cola y los tiempos de respuesta que experimentan cada uno de los trabajos. Calcule finalmente sus valores medios.
         \item Para el intervalo de medida $[0, 10]$ s, calcule la productividad de la estación de servicio, su utilización y el número medio de trabajos en la cola.
     \end{enumerate}
+    % // TODO: Hacer
 \end{ejercicio}
 \begin{comment}
 \solucion
@@ -1537,7 +1922,7 @@
 \end{comment}
 
 \begin{ejercicio}\label{ej:5.33}
-    Queremos diseñar un servidor de ayuda a la docencia al que se conectarán unos 30 estudiantes durante las 2 horas que duran las sesiones de prácticas de la asignatura. Este servidor consta de una CPU, un disco duro y una tarjeta de red. Tras la prueba de funcionamiento de 2 horas con 30 estudiantes, se han medido los siguientes valores:
+    Queremos diseñar un servidor de ayuda a la docencia al que se conectarán unos 30 estudiantes durante las 2 horas que duran las sesiones de prácticas de la asignatura. Este servidor consta de una CPU, un disco duro y una tarjeta de red. Tras la prueba de funcionamiento de 2 horas con 30 estudiantes, se han medido los valores reflejados en la Tabla~\ref{tab:5.33} (los tiempos de la tabla se expresan en segundos):
     \begin{table}[h]
         \centering
         \begin{tabular}{|c|c|c|}
@@ -1553,13 +1938,48 @@
         \label{tab:5.33}
     \end{table}
     ¿Cuánto tiempo debería transcurrir, de media, entre que un estudiante recibe la respuesta de este servidor hasta que vuelve a realizar una nueva petición, para que 30 sea precisamente el número ideal de clientes de este servidor?
+    % // TODO: Hacer
 \end{ejercicio}
 \begin{comment}
 \solucion
     El tiempo que debería transcurrir, de media, entre que un estudiante recibe la respuesta de este servidor hasta que vuelve a realizar una nueva petición es de 288 s.
 \end{comment}
 \begin{ejercicio}\label{ej:5.34}
-    Partiendo de la hipótesis de que $W_i = N_i \times S_i$ para cada estación de servicio de una red de colas que simula el comportamiento de un servidor, demuestre que el cuello de botella del mismo será aquel dispositivo con mayor número medio de trabajos en la cola.
+    Partiendo de la hipótesis de que $W_i = N_i \cdot S_i$ para cada estación de servicio de una red de colas que simula el comportamiento de un servidor, demuestre que el cuello de botella del mismo será aquel dispositivo con mayor número medio de trabajos en la cola.\\
+
+    Calculamos el número medio de trabajos en la cola de cada estación de servicio, $Q_i$. Usando la Ley de Little, tenemos que:
+    \begin{align*}
+        Q_i &= X_i \cdot W_i = X_i \cdot N_i \cdot S_i
+    \end{align*}
+    Por la Ley de la Utilización, tenemos que:
+    \begin{align*}
+        U_i &= X_i \cdot S_i
+    \end{align*}
+
+    Por tanto, podemos expresar $Q_i$ como:
+    \begin{align*}
+        Q_i &= U_i\cdot N_i
+    \end{align*}
+
+    Calculemos $N_i$:
+    \begin{multline*}
+        N_i = X_i\cdot R_i = X_i \cdot (W_i + S_i) = X_i \cdot (N_i \cdot S_i + S_i) = X_i \cdot S_i \cdot (N_i + 1)
+        \Longrightarrow \\\Longrightarrow N_i = \dfrac{X_i \cdot S_i}{1 - X_i \cdot S_i} = \dfrac{U_i}{1 - U_i}
+    \end{multline*}
+
+    Por tanto, podemos expresar $Q_i$ como:
+    \begin{align*}
+        Q_i &= U_i \cdot \dfrac{U_i}{1 - U_i} = \dfrac{U_i^2}{1 - U_i}
+    \end{align*}
+
+    Ahora queremos ver que, efectivamente, si $U_i<U_j$ entonces $Q_i<Q_j$. Para ello, bastará demostrar que la siguiente función es estrictamente creciente:
+    \Func{f}{[0,1[}{\bb{R}}{x}{\frac{x^2}{1-x}}
+
+    Calculamos su derivada:
+    \begin{align*}
+        f'(x) &= \dfrac{(1-x)\cdot 2x +x^2}{(1-x)^2} = \dfrac{2x - 2x^2 + x^2}{(1-x)^2} = \dfrac{2x - x^2}{(1-x)^2} = \dfrac{x(2-x)}{(1-x)^2}
+    \end{align*}
+    Como $x(2-x) > 0$ para $x \in \left]0, 1\right[$, tenemos que $f'(x) > 0$ para $x \in \left]0, 1\right[$. Por tanto, $f$ es estrictamente creciente en el intervalo $\left]0, 1\right[$, y por tanto si $0 < U_i < U_j < 1$, se cumple que $Q_i < Q_j$. Es decir, la estación de servicio con mayor utilización (es decir, el cuello de botella) también será la que tenga un mayor número de trabajos en la cola.
 \end{ejercicio}
 \begin{comment}
 \solucion
