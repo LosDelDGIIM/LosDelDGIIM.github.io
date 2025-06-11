@@ -3,6 +3,8 @@
 # Fundamentos de Ingeniería del Software
 
 - **Autor:** Arturo Olivares Martos
+- **Autor:** Lucas Hidalgo Herrera
+- **Autor:** Laura Mandow Fuentes
 - **Descripción:** Recopilación de preguntas Tipo Test de la asignatura de FIS. Se han obtenido de fuentes diversas, por lo que si faltasen, sobrasen o estuviesen mal formuladas, por favor, se ruega nos lo hagan saber para corregirlo.
 
 ---

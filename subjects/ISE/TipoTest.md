@@ -133,7 +133,7 @@ protocolo SATA-3 puede proporcionar.
     - ( ) Verdadero
     - (x) Falso
 
-35. a hipótesis de partida de un test ANOVA es que el factor que se está estudiando influye en el rendimiento.
+35. a hipótesis de partida de un test `ANOVA` es que el factor que se está estudiando influye en el rendimiento.
     - ( ) Verdadero
     - (x) Falso
 
@@ -201,11 +201,11 @@ protocolo SATA-3 puede proporcionar.
     - (x) Verdadero
     - ( ) Falso
 
-52. En un test ANOVA, si Fexp es mayor que el grado de significatividad concluiremos que no podemos decir que el factor a considerar influya en la variable respuesta.
+52. En un test `ANOVA`, si `Fexp` es mayor que el grado de significatividad concluiremos que no podemos decir que el factor a considerar influya en la variable respuesta.
     - ( ) Verdadero
     - (x) Falso
 
-53. gprofbasa su información en lo que obtiene leyendo de /proc.
+53. `gprof` basa su información en lo que obtiene leyendo de `/proc`.
     - ( ) Verdadero
     - (x) Falso
 
