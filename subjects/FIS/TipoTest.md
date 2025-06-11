@@ -613,8 +613,8 @@
 
 34. En el diagrama de clases del diseño:
     - ( ) Las clases se obtienen del MC y los atributos del DC.
-    - (x) Las clases y atributos se obtienen de DC.
-    - ( ) Clases se obtienen de DC y atributos de MC.
+    - ( ) Las clases y atributos se obtienen de DC.
+    - (x) Clases se obtienen de DC y atributos de MC.
 
 35. En el diagrama de clases del diseño, los métodos:
     - ( ) Se obtienen del MC.
