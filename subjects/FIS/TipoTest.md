@@ -501,7 +501,7 @@
     - (x) Verdadero
     - ( ) Falso
 
-8. Hacer diagramas de comunicación es sitemático, no interviene la creatividad del diseñador.
+8. Hacer diagramas de comunicación es sistemático, no interviene la creatividad del diseñador.
     - ( ) Verdadero
     - (x) Falso
 
@@ -635,23 +635,123 @@
     - (x) Verdadero
     - ( ) Falso
 
+5. La validación de la especificación no forma parte de la Ingeniería de requisitos.
+    - ( ) Verdadero
+    - (x) Falso
 
+6. El modelo de casos de uso puede ser usado como guía para el diseño de la interfaz de
+usuario y para facilitar la construcción de prototipos.
+    - (x) Verdadero
+    - ( ) Falso
 
+8. La entrevista es una técnica encaminada a obtener información sobre el sistema mediante el
+diálogo con los expertos en el dominio del problema.
+    - (x) Verdadero
+    - ( ) Falso
 
+11. La Especificación de Requisitos es un documento en el que se dice qué debe hacer el
+sistema software.
+    - (x) Verdadero
+    - ( ) Falso
 
+12. Un sistema informático externo a la aplicación con el que ésta debe interaccionar puede
+definirse como actor.
+    - (x) Verdadero
+    - ( ) Falso
 
+14. Ejemplo de requisito funcional: La aplicación debe ser fácil de utilizar, e incluir ayudas en
+línea fáciles de entender.
+    - ( ) Verdadero
+    - (x) Falso
 
+15. Es mejor que las actividades de verificación las lleve a cabo el mismo equipo que haya
+hecho el desarrollo.
+    - ( ) Verdadero
+    - (x) Falso
 
+16. Los actores de un modelo de casos de uso son siempre humanos.
+    - ( ) Verdadero
+    - (x) Falso
 
+17. Un caso de uso esencial describe una actividad que es imprescindible para el
+funcionamiento del sistema que modela.
+    - ( ) Verdadero
+    - (x) Falso
 
+19. El numero de iteraciones en las fases de elaboración y construcción del proceso unificado
+deben ser las mismas.
+    - ( ) Verdadero
+    - (x) Falso
 
+20. La identificación de los implicados facilita la obtención de requisitos.
+    - (x) Verdadero
+    - ( ) Falso
 
+22. La clasificación de los requisitos según su ámbito distingue entre requisitos funcionales, no
+funcionales y de información.
+    - ( ) Verdadero
+    - (x) Falso
 
+1. El nodo 5 es un nodo join. <br><img src="./Images/diagramaActividad.png" alt="Diagrama Actividad" width="400">
+    - (x) Sí 
+    - ( ) No
 
+2. Cuando se alcanza el nodo 6 termina la actividad "Carrera de F1". <br><img src="./Images/diagramaActividad.png" alt="Diagrama Actividad" width="400">
+    - ( ) Sí 
+    - (x) No
 
+3. Cuando comienza la actividad "Carrera de F1" se activan las calles "Dirección de carrera" y SI
+"Dirección de equipo". <br><img src="./Images/diagramaActividad.png" alt="Diagrama Actividad" width="400">
+    - (x) Sí 
+    - ( ) No
 
+2. Este modelo conceptual está mal, faltaría incluir la navegabilidad que hay entre Pizza y
+Masa, pues una pizza es la que está formada por la masa, igualmente ocurre entre Pizza e Ingrediente. <br><img src="./Images/diagramaConceptos.png" alt="Modelo Conceptual" width="400">
+    - ( ) Verdadero
+    - (x) Falso
 
+9. Un objeto pedido puede incluir más de una pizza. <br><img src="./Images/diagramaConceptos.png" alt="Modelo Conceptual" width="400">
+    - ( ) Verdadero
+    - (x) Falso
 
+11. Un ingrediente puede tener un precio diferente dependiendo de la pizza en la que esté. <br><img src="./Images/diagramaConceptos.png" alt="Modelo Conceptual" width="400">
+    - ( ) Verdadero
+    - (x) Falso
 
+3. Un diagrama de conceptos sin operaciones es incorrecto.
+    - ( ) Verdadero
+    - (x) Falso
 
+7. La semántica de la composición no permite que las partes existan independientemente del
+compuesto
+    - (x) Verdadero
+    - ( ) Falso
 
+10. En el DSS tratamos el sistema como si fuera una caja negra.
+    - (x) Verdadero
+    - ( ) Falso
+
+11. Cuando establecemos una relación de generalización entre clases todas las subclases deben
+cumplir con la regla “es-un”.
+    - (x) Verdadero
+    - ( ) Falso
+
+14. En el diagrama de conceptos no deben aparecer atributos no primitivos.
+    - (x) Verdadero
+    - ( ) Falso
+
+8. Los paquetes durante el diseño arquitectónico son una representación física de los
+subsistemas.
+    - ( ) Verdadero
+    - (x) Falso
+
+17. En la arquitectura MVC (Model View Controller) para cambiar la interfaz de usuario es
+necesario cambiar el subsistema del modelo ya que este incluye la lógica de funcionamiento del
+programa.
+    - ( ) Verdadero
+    - (x) Falso
+
+18. El rendimiento es uno de los problemas importantes del diseño arquitectónico usando
+multicapas.
+    - (x) Verdadero
+    - ( ) Falso
