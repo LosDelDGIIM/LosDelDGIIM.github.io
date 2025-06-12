@@ -78,7 +78,7 @@ $(function () {
         }
     }
 
-    $('li.question-row input').on('change', function () {
+    $(document).on('change', 'li.question-row input', function () {
         var question = $(this).closest('li.question-row');
         checkQuestion(question);
     });
