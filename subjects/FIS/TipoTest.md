@@ -169,14 +169,14 @@
     - (x) Falso
 
 6. Un participante en un diagrama de secuencia puede ser un objeto individual o un multiobjeto.
-    - (x) Verdadero
-    - ( ) Falso
+    - ( ) Verdadero
+    - (x) Falso
 
 7. La diferencia entre una precondición y una excepción es que la precondición no tiene que comprobarse en la operación que se está definiendo.
     - (x) Verdadero
     - ( ) Falso
 
-8. En el diagrama de clases del diseño, la multiplicidad se obtiene de la existencia o no de multiobjetos en los diagrama de comunicación.
+8. En el diagrama de clases del diseño, la multiplicidad se obtiene de la existencia o no de multiobjetos en los diagramas de comunicación.
     - (x) Verdadero
     - ( ) Falso
 
@@ -311,8 +311,8 @@
     - (x) Falso
 
 26. El proceso unificado es un modelo de proceso dirigido por casos de uso.
-    - ( ) Verdadero
-    - (x) Falso
+    - (x) Verdadero
+    - ( ) Falso
 
 27. El resultado del diseño de la arquitectura del software es un conjunto de subsistemas y las relaciones entre ellos.
     - (x) Verdadero
@@ -374,7 +374,7 @@
     - (x) Verdadero
     - ( ) Falso
 
-42. Lo siguiente es un requisito NO funcional de facilidad de uso "el entorno debe avisar al usuario mediante email tras días antes de que finalice el plazo del préstamo".
+42. Lo siguiente es un requisito NO funcional de facilidad de uso "el entorno debe avisar al usuario mediante email tres días antes de que finalice el plazo del préstamo".
     - ( ) Verdadero
     - (x) Falso
 
@@ -887,3 +887,17 @@ multicapas.
 25. Un modelo es una representación de un sistema en un determinado lenguaje.
     - (x) Verdadero
     - ( ) Falso
+
+
+
+7. Un diagrama de secuencia del sistema muestra la interacción entre los objetos más importantes del sistema software para llevar a cabo una operación.
+    - ( ) Verdadero
+    - (x) Falso
+
+9. El atributo `numeroUnidades` representa el número de ingredientes de una pizza <br><img src="./Images/diagramaConceptos.jpeg" alt="Modelo Conceptual" width="400">
+    - ( ) Verdadero
+    - (x) Falso
+
+11. Obligatoriamente uno de los atributos que debe incluir un concepto es su identificador que permita identificar al objeto de forma única.
+    - ( ) Verdadero
+    - (x) Falso
