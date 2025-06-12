@@ -179,7 +179,7 @@
     - (x) Verdadero
     - ( ) Falso
 
-9. La Etnografía es una técnica de obtención de requisitos que consiste en preguntar a los trabajadores de un negocio sobre la forma en que realizan sus tareas.
+9. La etnografía es una técnica de obtención de requisitos que consiste en preguntar a los trabajadores de un negocio sobre la forma en que realizan sus tareas.
     - ( ) Verdadero
     - (x) Falso
 
@@ -265,147 +265,139 @@
     - (x) Verdadero
     - ( ) Falso
 
-15. El diagrama de secuencia del sistema puede contener tantos objetos como sean necesarios para llevar a cabo una operación del sistema.
-    - ( ) Verdadero
-    - (x) Falso
-
-16. EL diseño es el proceso de refinamiento, en el que partiendo de modelos del análisis vamos añadiendo información hasta completar el diseño.
+15. EL diseño es el proceso de refinamiento, en el que partiendo de modelos del análisis vamos añadiendo información hasta completar el diseño.
     - (x) Verdadero
     - ( ) Falso
 
-17. El mayor esfuerzo durante el proceso de producción del software se realiza en la etapa de desarrollo.
+16. El mayor esfuerzo durante el proceso de producción del software se realiza en la etapa de desarrollo.
     - ( ) Verdadero
     - (x) Falso
 
-18. El mayor esfuerzo realizado durante el mantenimiento de un software es para adaptar el software o nuevos requisitos.
+17. El mayor esfuerzo realizado durante el mantenimiento de un software es para adaptar el software o nuevos requisitos.
     - ( ) Verdadero
     - (x) Falso
 
-19. El modelado de casos de uso solo puede ser usado en la etapa de detección de requisitos.
+18. El modelado de casos de uso solo puede ser usado en la etapa de detección de requisitos.
     - ( ) Verdadero
     - (x) Falso
 
-20. El modelo conceptual no debe incluir los nombres de rol de las asociaciones.
+19. El modelo conceptual no debe incluir los nombres de rol de las asociaciones.
     - ( ) Verdadero
     - (x) Falso
 
-21. El modelo conceptual no puede contener las navegabilidades de las asociaciones.
+20. El modelo conceptual no puede contener las navegabilidades de las asociaciones.
     - (x) Verdadero
     - ( ) Falso
 
-22. El modelo conceptual o modelo de dominio es básico para especifiar las postcondiciones de un contrato.
+21. El modelo conceptual o modelo de dominio es básico para especifiar las postcondiciones de un contrato.
     - (x) Verdadero
     - ( ) Falso
 
-23. El modelo de casos de uso permite determinar con facilidad los requisitos no funcionales del sistema.
+22. El modelo de casos de uso permite determinar con facilidad los requisitos no funcionales del sistema.
     - ( ) Verdadero
     - (x) Falso
 
-24. El modelo de casos de uso se usa exclusivamente para la obtención de requisitos.
+23. El modelo de casos de uso se usa exclusivamente para la obtención de requisitos.
     - ( ) Verdadero
     - (x) Falso
 
-25. El número de módulos de un sistema software debe ser cuantos más mejor, pues así garantizamos la independencia modular de cada uno de ellos.
+24. El número de módulos de un sistema software debe ser cuantos más mejor, pues así garantizamos la independencia modular de cada uno de ellos.
     - ( ) Verdadero
     - (x) Falso
 
-26. El número de operaciones principales de un sistema es el mismo que el número de casos de usos que tengamos.
+25. El número de operaciones principales de un sistema es el mismo que el número de casos de usos que tengamos.
     - ( ) Verdadero
     - (x) Falso
 
-27. El proceso unificado es un modelo de proceso dirigido por casos de uso.
+26. El proceso unificado es un modelo de proceso dirigido por casos de uso.
+    - ( ) Verdadero
+    - (x) Falso
+
+27. El resultado del diseño de la arquitectura del software es un conjunto de subsistemas y las relaciones entre ellos.
     - (x) Verdadero
     - ( ) Falso
 
-28. El resultado del diseño de la arquitectura del software es un conjunto de subsistemas y las relaciones entre ellos.
-    - (x) Verdadero
-    - ( ) Falso
-
-29. En el modelo conceptual hay que definir los atributos y los métodos de todas las clases.
+28. En el modelo conceptual hay que definir los atributos y los métodos de todas las clases.
     - ( ) Verdadero
     - (x) Falso
 
-30. En los diagramas de clases de diseño no se deben representar las relaciones de dependencia entre clases, solo se deben representar las de asociación y de generalización.
+29. En los diagramas de clases de diseño no se deben representar las relaciones de dependencia entre clases, solo se deben representar las de asociación y de generalización.
     - ( ) Verdadero
     - (x) Falso
 
-31. En los diagramas de clases de diseño pueden aparecer relaciones de dependencia.
+30. En los diagramas de clases de diseño pueden aparecer relaciones de dependencia.
     - (x) Verdadero
     - ( ) Falso
 
-32. En un diagrama de secuencia del sistema pueden aparecer tantos objetos como necesitemos para modelar la interacción entre ellos y con los actores.
+31. Es posible que en un caso de uso no tenga que intervenir el sistema software a modelar.
     - ( ) Verdadero
     - (x) Falso
 
-33. Es posible que en un caso de uso no tenga que intervenir el sistema software a modelar.
+32. La arquitectura cliente-servidor favorece la escalabilidad de los sistemas software, porque permite la reconfiguración añadiendo clientes y servidores extra.
+    - (x) Verdadero
+    - ( ) Falso
+
+33. La forma más directa de identificar casos de uso es identificando los objetivos y necesidades de los actores del sistema.
+    - (x) Verdadero
+    - ( ) Falso
+
+34. La navegabilidad de las asociaciones en el diagrama de clases del diseño se obtiene teniendo en cuenta la dirección en los envíos de mensaje en los diagramas de comunicación.
+    - (x) Verdadero
+    - ( ) Falso
+
+35. La primera tarea del diseño es encontrar el diseño de la arquitectura del sistema.
+    - (x) Verdadero
+    - ( ) Falso
+
+36. Las relaciones entre actores y casos de uso son la asociación y la dependencia.
     - ( ) Verdadero
     - (x) Falso
 
-34. La arquitectura cliente-servidor favorece la escalabilidad de los sistemas software, porque permite la reconfiguración añadiendo clientes y servidores extra.
-    - (x) Verdadero
-    - ( ) Falso
-
-35. La forma más directa de identificar casos de uso es identificando los objetivos y necesidades de los actores del sistema.
-    - (x) Verdadero
-    - ( ) Falso
-
-36. La navegabilidad de las asociaciones em el diagrama de clases del diseño se obtiene teniendo en cuenta la dirección en los envíos de mensaje en los diagramas de comunicación.
-    - (x) Verdadero
-    - ( ) Falso
-
-37. La primera tarea del diseño es encontrar el diseño de la arquitectura del sistema.
-    - (x) Verdadero
-    - ( ) Falso
-
-38. Las relaciones entre actores y casos de uso son la asociación y la dependencia.
+37. Las relaciones entre los casos de uso pueden ser asociación, generalización y dependencia.
     - ( ) Verdadero
     - (x) Falso
 
-39. Las relaciones entre los casos de uso pueden ser asociación, generalización y dependencia.
+38. Las relaciones que se dan entre casos de uso es la dependencia y la generalización.
+    - (x) Verdadero
+    - ( ) Falso
+
+39. Las tareas principales de la ingeniería de requisitos son detección, análisis, especificación, revisión y reacción de requisitos.
     - ( ) Verdadero
     - (x) Falso
 
-40. Las relaciones que se dan entre casos de uso es la dependencia y la generalización.
+40. Las vías de comunicación o enlaces entre objetos en un diagrama de colaboración son bidireccionales.
     - (x) Verdadero
     - ( ) Falso
 
-41. Las tareas principales de la ingeniería de requisitos son detección, análisis, especificación, revisión y reacción de requisitos.
+41. Lo siguiente es un requisito funcional "las reservas de préstamos de libros caducan a los 10 días a partir del momento que el libro esté a disposición del usuario".
     - (x) Verdadero
     - ( ) Falso
 
-42. Las vías de comunicación o enlaces entre objetos en un diagrama de colaboración son bidireccionales.
-    - (x) Verdadero
-    - ( ) Falso
-
-43. Lo siguiente es un recurso funcional "las reservas de préstamos de libros caducan a los 10 días a partir del momento que el libro esté a disposición del usuario".
-    - (x) Verdadero
-    - ( ) Falso
-
-44. Lo siguiente es un requisito NO funcional de facilidad de uso "el entorno debe avisar al usuario mediante email tras días antes de que finalice el plazo del préstamo".
+42. Lo siguiente es un requisito NO funcional de facilidad de uso "el entorno debe avisar al usuario mediante email tras días antes de que finalice el plazo del préstamo".
     - ( ) Verdadero
     - (x) Falso
 
-45. Los actores representan roles que son interpretados por personas, dispositivos, otros sistemas... cuando el sistema está en uso.
+43. Los actores representan roles que son interpretados por personas, dispositivos, otros sistemas... cuando el sistema está en uso.
     - (x) Verdadero
     - ( ) Falso
 
-46. Los actores tienen que ser necesariamente los identificados como usuarios del sistema.
+44. Los actores tienen que ser necesariamente los identificados como usuarios del sistema.
     - ( ) Verdadero
     - (x) Falso
 
-47. Los diagramas de actividad de UML es una herramienta muy adecuada para el diseño del flujo de control.
+45. Los diagramas de actividad de UML es una herramienta muy adecuada para el diseño del flujo de control.
     - (x) Verdadero
     - ( ) Falso
 
-48. Los diagramas de interacción y los diagramas de actividad UML son herramientas de diseño que permiten representar lo mismo, son equivalentes.
+46. Los diagramas de interacción y los diagramas de actividad UML son herramientas de diseño que permiten representar lo mismo, son equivalentes.
     - ( ) Verdadero
     - (x) Falso
 
-49. Los prototipos siempre se transforman hasta convertirse en el programa que se entrega al cliente.
+47. Los prototipos siempre se transforman hasta convertirse en el programa que se entrega al cliente.
     - ( ) Verdadero
     - (x) Falso
 
-50. Los requisitos no funcionales determinan los objetivos del diseño.
+48. Los requisitos no funcionales determinan los objetivos del diseño.
     - ( ) Verdadero
     - (x) Falso
 
@@ -442,23 +434,19 @@
     - ( ) Verdadero
     - (x) Falso
 
-63. Un concepto no debe incluir los atributos de otros conceptos que indiquen las relaciones entre ellos.
+63. Un modelo de casos de uso lo componen los diagramas de casos de uso y la especificación de actores y casos de uso.
     - (x) Verdadero
     - ( ) Falso
 
-64. Un modelo de casos de uso lo componen los diagramas de casos de uso y la especificación de actores y casos de uso.
+64. Un modelo de casos de uso se centra en las necesidades que el usuario espera lograr al utilizar el sistema.
     - (x) Verdadero
     - ( ) Falso
 
-65. Un modelo de casos de uso se centra en las necesidades que el usuario espera lograr al utilizar el sistema.
-    - (x) Verdadero
-    - ( ) Falso
-
-66. Un nivel de acoplamiento alto y de cohesión bajo en un módulo garantiza un diseño de calidad.
+65. Un nivel de acoplamiento alto y de cohesión bajo en un módulo garantiza un diseño de calidad.
     - ( ) Verdadero
     - (x) Falso
 
-68. Una mala solución para remediar el retraso en la entrega de un proyecto software es la llamada "horda mongoliana".
+66. Una mala solución para remediar el retraso en la entrega de un proyecto software es la llamada "horda mongoliana".
     - (x) Verdadero
     - ( ) Falso
 
@@ -614,7 +602,7 @@
     - ( ) Las identificadas con `<<G>>` en los diagramas de interacción.
     - (x) Las que se pueden extraer al encontrar atributos y/o métodos comunes a varias clases.
 
-36. ¿Cuando el diseño de la arquitectura no es conveniente?
+36. ¿Cuándo el diseño de la arquitectura no es conveniente?
     - (x) Subsistemas están muy acoplados.
     - ( ) Ninguna es verdad.
     - ( ) Subsistemas tienen alta cohesión.
@@ -712,7 +700,7 @@ Masa, pues una pizza es la que está formada por la masa, igualmente ocurre entr
     - ( ) Verdadero
     - (x) Falso
 
-9. Un objeto pedido puede incluir más de una pizza. <br><img src="./Images/diagramaConceptos.jpeg" alt="Modelo Conceptual" width="400">
+9. Un objeto `pedido` puede incluir más de una pizza. <br><img src="./Images/diagramaConceptos.jpeg" alt="Modelo Conceptual" width="400">
     - ( ) Verdadero
     - (x) Falso
 
@@ -775,18 +763,18 @@ multicapas.
     - ( ) Casa - 1..n Habitación
     - ( ) en ninguna de las dos
 
-26. ¿Por qué en el diseño de la operación incluirAsignatura la clase GEA tiene baja cohesión? <br><img src="./Images/diagramaCohesion.jpeg" alt="Diagrama Comunicación" width="400">
-    - (x) porque crea la Asignatura asig, y esto lo debería hacer el objeto “pe”
-    - ( ) porque crea la Asignatura asig,y esto lo debería hacer el multi-objeto de PlanEstudios
-    - ( ) porque crea la Asignatura asig, y esto lo debería hacer el multi- objeto de Asignaturas
+26. ¿Por qué en el diseño de la operación `incluirAsignatura` la clase `GEA` tiene baja cohesión? <br><img src="./Images/diagramaCohesion.jpeg" alt="Diagrama Comunicación" width="400">
+    - (x) porque crea la Asignatura `asig`, y esto lo debería hacer el objeto `pe`
+    - ( ) porque crea la Asignatura `asig`,y esto lo debería hacer el multi-objeto de PlanEstudios
+    - ( ) porque crea la Asignatura `asig`, y esto lo debería hacer el multi-objeto de Asignaturas
 
-32. Un mensaje enviado a un multi-objeto de la clase X:
+32. Un mensaje enviado a un multi-objeto de la clase `X`:
     - (x) no se convierte en un método porque se supone que es un método de la clase contenedora
     - ( ) hay que convertirlo en un método de la clase que representa al sistema
-    - ( ) hay que convertirlo en un método de la clase X
+    - ( ) hay que convertirlo en un método de la clase `X`
 
 33. ¿Es obligatorio incluir los tipos de datos de los atributos y los parámetros en los diagramas de clases del diseño?
-    - (x) depende del destinatario del programa (herramienta CASE con generación automática de código, equipo de desarrollo del proyecto, etc.)
+    - (x) depende del destinatario del programa (herramienta `CASE` con generación automática de código, equipo de desarrollo del proyecto, etc.)
     - ( ) siempre
     - ( ) nunca
 
@@ -794,3 +782,107 @@ multicapas.
     - (x) por los mensajes 4.1 y 4.1.1
     - ( ) sólo por el mensaje 4.1
     - ( ) sólo por el mensaje 4.1.1
+
+
+
+
+
+1. El análisis y especificación de requisitos es una de las fases de la ingeniería de requisitos.
+    - (x) Verdadero
+    - ( ) Falso
+
+2. El modelo de casos de uso utiliza un lenguaje próximo al desarrollador, mientras que el modelo de análisis usa un lenguaje más próximo al cliente.
+    - ( ) Verdadero
+    - (x) Falso
+
+3. En el diagrama de conceptos se indican las multiplicidades de las asociaciones.
+    - (x) Verdadero
+    - ( ) Falso
+
+4. En el diagrama de secuencia del sistema también se representa la interacción entre actores.
+    - ( ) Verdadero
+    - (x) Falso
+
+5. En las poscondiciones de un contrato únicamente hay que indicar los objetos que se construyen y los atributos que se modifican.
+    - ( ) Verdadero
+    - (x) Falso
+
+6. El Diagrama de Secuencia del Sistema (DSS) forma parte del modelo estático de análisis.
+    - ( ) Verdadero
+    - (x) Falso
+
+7. El software de gestión se caracteriza por la complejidad de sus algoritmos.
+    - ( ) Verdadero
+    - (x) Falso
+
+8. El proceso unificado lo componen 5 fases que son: inicio, elaboración, construcción, transición y producción.
+    - (x) Verdadero
+    - ( ) Falso
+
+9. Los casos de uso los empieza el sistema.
+    - ( ) Verdadero
+    - (x) Falso
+
+10. Lo siguiente es un requisito no funcional "El sistema debe cumplir las disposiciones recogidas en la ley orgánica de datos personales y en el régimen de medidas de seguridad".
+    - (x) Verdadero
+    - ( ) Falso
+
+11. Un sistema basado en computadora incluye sistemas software.
+    - (x) Verdadero
+    - ( ) Falso
+
+12. Definición de Ingeniería del Software: Disciplina de ingeniería que se interesa por todos aspectos de la producción de software, desde las primeras etapas de la especificación hasta el mantenimiento del sistema después de su puesta en operación.
+    - (x) Verdadero
+    - ( ) Falso
+
+13. Los requisitos no funcionales describen la estructura de la información que se debe almacenar en el sistema.
+    - ( ) Verdadero
+    - (x) Falso
+
+14. Ejemplo de requisito no funcional: la aplicación se encargará de gestionar los alquileres de material deportivo en una tienda.
+    - ( ) Verdadero
+    - (x) Falso
+
+15. La única clasificación de tipos de requisitos aceptada por la comunidad de Ingenieros de Requisitos son los requisitos funcionales y los no funcionales.
+    - ( ) Verdadero
+    - (x) Falso
+
+16. Conocer el vocabulario propio del sistema forma parte de la preparación y realización de las sesiones de elicitación/negociación.
+    - ( ) Verdadero
+    - (x) Falso
+
+17. Durante la obtención de requisitos ha de obtenerse información sobre del alcance del sistema o producto
+    - (x) Verdadero
+    - ( ) Falso
+
+18. La demanda creciente de nuevo software hizo evidente la necesidad de adoptar un enfoque de desarrollo informal.
+    - ( ) Verdadero
+    - (x) Falso
+
+19. En el modelo de los prototipos no se hace especificación de requerimientos.
+    - (x) Verdadero
+    - ( ) Falso
+
+20. Tanto principio como heurística son reglas que se han obtenido a través del conocimiento/experiencia.
+    - (x) Verdadero
+    - ( ) Falso
+
+21. Llamamos Software hecho a medida al desarrollado bajo pedido a un desarrollador específico.
+    - (x) Verdadero
+    - ( ) Falso
+
+22. Un requisito es una propiedad o restricción, determinada con precisión, que un producto software debe satisfacer.
+    - (x) Verdadero
+    - ( ) Falso
+
+23. Un prototipo nunca llega a ser el producto final.
+    - ( ) Verdadero
+    - (x) Falso
+
+24. Un caso de uso sólo puede tener un actor secundario.
+    - ( ) Verdadero
+    - (x) Falso
+
+25. Un modelo es una representación de un sistema en un determinado lenguaje.
+    - (x) Verdadero
+    - ( ) Falso
