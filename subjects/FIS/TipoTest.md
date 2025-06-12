@@ -5,6 +5,7 @@
 - **Autor:** Arturo Olivares Martos
 - **Autor:** Lucas Hidalgo Herrera
 - **Autor:** Laura Mandow Fuentes
+- **Autor:** José Juan Urrutia Milán
 - **Descripción:** Recopilación de preguntas Tipo Test de la asignatura de FIS. Se han obtenido de fuentes diversas, por lo que si faltasen, sobrasen o estuviesen mal formuladas, por favor, se ruega nos lo hagan saber para corregirlo.
 
 ---
@@ -138,7 +139,7 @@
     - (x) Verdadero
     - ( ) Falso
 
-18. Los patrones de diseño para la asignación de responsabilidades a objetas ayudan a obtener el diagrama de clases del diseño.
+18. Los patrones de diseño para la asignación de responsabilidades a objetos ayudan a obtener el diagrama de clases del diseño.
     - ( ) Verdadero
     - (x) Falso
 
@@ -237,7 +238,7 @@
     - ( ) Verdadero
     - (x) Falso
 
-8. Un concepto debe incluir los atributos que indique las asociaciones que tienen otros conceptos.
+8. Un concepto debe incluir los atributos que indiquen las asociaciones que tienen otros conceptos.
     - ( ) Verdadero
     - (x) Falso
 
@@ -273,7 +274,7 @@
     - ( ) Verdadero
     - (x) Falso
 
-17. El mayor esfuerzo realizado durante el mantenimiento de un software es para adaptar el software o nuevos requisitos.
+17. El mayor esfuerzo realizado durante el mantenimiento de un software es para adaptar el software a nuevos requisitos.
     - ( ) Verdadero
     - (x) Falso
 
@@ -366,8 +367,8 @@
     - (x) Falso
 
 40. Las vías de comunicación o enlaces entre objetos en un diagrama de colaboración son bidireccionales.
-    - (x) Verdadero
-    - ( ) Falso
+    - ( ) Verdadero
+    - (x) Falso
 
 41. Lo siguiente es un requisito funcional "las reservas de préstamos de libros caducan a los 10 días a partir del momento que el libro esté a disposición del usuario".
     - (x) Verdadero
@@ -536,7 +537,7 @@
     - (x) Verdadero
     - ( ) Falso
 
-22. El ocultamiento de información limita impacto global de las decisiones de diseño locales.
+22. El ocultamiento de información limita el impacto global de las decisiones de diseño locales.
     - (x) Verdadero
     - ( ) Falso
 
@@ -682,7 +683,7 @@ funcionales y de información.
     - ( ) Verdadero
     - (x) Falso
 
-1. El nodo 5 es un nodo join. <br><img src="./Images/diagramaActividad.jpeg" alt="Diagrama Actividad" width="400">
+1. El nodo 5 es un nodo `join`. <br><img src="./Images/diagramaActividad.jpeg" alt="Diagrama Actividad" width="400">
     - (x) Sí 
     - ( ) No
 
@@ -765,7 +766,7 @@ multicapas.
 
 26. ¿Por qué en el diseño de la operación `incluirAsignatura` la clase `GEA` tiene baja cohesión? <br><img src="./Images/diagramaCohesion.jpeg" alt="Diagrama Comunicación" width="400">
     - (x) porque crea la Asignatura `asig`, y esto lo debería hacer el objeto `pe`
-    - ( ) porque crea la Asignatura `asig`,y esto lo debería hacer el multi-objeto de PlanEstudios
+    - ( ) porque crea la Asignatura `asig`, y esto lo debería hacer el multi-objeto de PlanEstudios
     - ( ) porque crea la Asignatura `asig`, y esto lo debería hacer el multi-objeto de Asignaturas
 
 32. Un mensaje enviado a un multi-objeto de la clase `X`:
@@ -851,7 +852,7 @@ multicapas.
     - ( ) Verdadero
     - (x) Falso
 
-17. Durante la obtención de requisitos ha de obtenerse información sobre del alcance del sistema o producto
+17. Durante la obtención de requisitos ha de obtenerse información sobre el alcance del sistema o producto
     - (x) Verdadero
     - ( ) Falso
 
@@ -867,7 +868,7 @@ multicapas.
     - (x) Verdadero
     - ( ) Falso
 
-21. Llamamos Software hecho a medida al desarrollado bajo pedido a un desarrollador específico.
+21. Llamamos "Software hecho a medida" al desarrollado bajo pedido a un desarrollador específico.
     - (x) Verdadero
     - ( ) Falso
 

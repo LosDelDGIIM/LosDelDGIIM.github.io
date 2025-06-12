@@ -1,4 +1,19 @@
 $(function () {
+    // Guardar el orden inicial de las preguntas y opciones
+    var initialQuestions = [];
+    var initialOptions = [];
+
+    // Guardar el orden inicial de las preguntas y opciones al cargar la página
+    $('ol').each(function (i, ol) {
+        var $ol = $(ol);
+        initialQuestions[i] = $ol.children('li').toArray();
+    });
+    $('ul.radio-list').each(function (i, ul) {
+        var $ul = $(ul);
+        initialOptions[i] = $ul.children('li').toArray();
+    });
+
+
     $('ul.radio-list, ul.checklist, ul.textbox').each(function (i, el) {
         var questionClass = $(this).attr('class');
         $(this).parent().addClass('question-row').addClass(questionClass);
@@ -133,6 +148,7 @@ $(function () {
             if ((options.includes('verdadero') && options.includes('falso')) ||
                 (options.includes('v') && options.includes('f')) ||
                 (options.includes('t') && options.includes('f')) ||
+                (options.includes('Sí') && options.includes('No')) ||
                 (options.includes('true') && options.includes('false'))) {
                 return; // No mezclar si son Verdadero/Falso
             }
@@ -148,4 +164,23 @@ $(function () {
     // Llamar a las funciones para mezclar las preguntas y las opciones al cargar la página
     shuffleQuestions();
     shuffleOptions();
+
+
+
+    // Función para restaurar el orden inicial de preguntas y opciones
+    function restoreInitialOrder() {
+        // Restaurar preguntas
+        $('ol').each(function(i, ol) {
+            $(ol).empty();
+            $(ol).append(initialQuestions[i]);
+        });
+        // Restaurar opciones
+        $('ul.radio-list').each(function(i, ul) {
+            $(ul).empty();
+            $(ul).append(initialOptions[i]);
+        });
+    }
+    $('#reorder-questions').on('click', function () {
+        restoreInitialOrder();
+    });
 });
