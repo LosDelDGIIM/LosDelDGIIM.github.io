@@ -773,6 +773,6 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 80. El contratante es el proponente que resulta adjudicatario de una licitación y quien finalmente se encargara de llevar a cabo los trabajos contratados.
     - ( ) Verdadero.
     - (x) Falso.
-81.  Es el propio microprocesador de muchas placas base actuales el que realiza la función de puente norte en el chipset.
+81. Es el propio microprocesador de muchas placas base actuales el que realiza la función de puente norte en el chipset.
     - (x) Verdadero.
     - ( ) Falso.
