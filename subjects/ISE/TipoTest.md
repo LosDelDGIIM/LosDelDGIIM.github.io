@@ -387,3 +387,81 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 37. El pliego de prescripciones técnicas debe contener, con carácter general, la información sobre el plazo de ejecución o duración del contrato.
     - ( ) Verdadero
     - (x) Falso
+
+
+
+1. Puedo colocar una PCIe x16 en una x4 pero no al revés.
+    - ( ) Verdadero
+    - (x) Falso
+
+2. MTTF significa Mean Time To Failure.
+    - (x) Verdadero
+    - ( ) Falso
+
+3. PCI soporta *Hot Plugging*.
+    - ( ) Verdadero
+    - (x) Falso
+
+4. Ultra-SCSI no soporta Full-Duplex.
+    - (x) Verdadero
+    - ( ) Falso
+
+5. La ROM tiene el código para instalar los drivers que se usarán por el SO para usar normalmente.
+    - ( ) Verdadero
+    - (x) Falso
+
+6. Un servidor blade es más complejo que un rack.
+    - (x) Verdadero
+    - ( ) Falso
+
+7. Los procesadores Opteron son los procesadores de Intel para servidores.
+    - ( ) Verdadero
+    - (x) Falso
+
+9. El puente norte del chipset es el que se encarga de las transferencias de alta velocidad.
+    - (x) Verdadero
+    - ( ) Falso
+
+10. Llamamos "rango" a cada una de las caras de un módulo de memoria RAM.
+    - ( ) Verdadero
+    - (x) Falso
+
+11. La anchura de entrada de un monitor es la frecuencia máx de la ocurrencia de los eventos.
+    - ( ) Verdadero
+    - (x) Falso
+
+12. En `gprof` la columna `self` de cada función incluye el tiempo de código propio (incluyendo el tiempo que tardan sus hijos en ejecutarse).
+    - ( ) Verdadero
+    - (x) Falso
+
+13. `gprof` da información exacta (no estimada) del tiempo de ejecución de cada función de un programa instrumentado por esta herramienta.
+    - ( ) Verdadero
+    - (x) Falso
+
+14. Un monitor por eventos siempre da info exacta.
+    - (x) Verdadero
+    - ( ) Falso
+
+15. Medir los `MIPS` es un buen índice de rendimiento.
+    - ( ) Verdadero
+    - (x) Falso
+
+16. En un *call graph*, las flechas indican el número de veces que una función llama a otra. Este número siempre es entero.
+    - ( ) Verdadero
+    - (x) Falso
+
+17. SPECrate, a diferencia de SPECspeed, mide cuántos programas se ejecutan por unidad de tiempo.
+    - (x) Verdadero
+    - ( ) Falso
+
+18. Si lanzo dos dados (sin truncar) muchas veces, la media de la diferencia entre los valores de sus lanzamientos debería tender a 0.
+    - ( ) Verdadero
+    - (x) Falso
+
+19. El tiempo de respuesta medio de un servidor es la suma de los tiempos de respuesta de las estaciones de servicio.
+    - ( ) Verdadero
+    - (x) Falso
+
+20. Si añado una nueva CPU a nuestro servidor, el tiempo mínimo medido de respuesta del servidor seguro que disminuye.
+    - ( ) Verdadero
+    - (x) Falso
