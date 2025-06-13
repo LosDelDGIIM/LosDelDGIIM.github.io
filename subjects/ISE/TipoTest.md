@@ -466,3 +466,50 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 20. Si añado una nueva CPU a nuestro servidor, el tiempo mínimo medido de respuesta del servidor seguro que disminuye.
     - ( ) Verdadero
     - (x) Falso
+
+
+
+
+
+
+
+
+1. Las principales medidas de prestaciones de un servidor se basan en tiempos de respuesta (o latencias) y en productividades (o anchos de banda). 
+    - (x) Verdadero
+    - ( ) Falso
+
+2. Todos los sistemas escalables son extensibles, pero no a la inversa.
+    - (x) Verdadero
+    - ( ) Falso
+
+3. Xeon es una familia de microprocesadores de IBM especialmente dirigida a los servidores.
+    - ( ) Verdadero
+    - (x) Falso
+
+4. La familia "AMD Opteron X Series" usa microprocesadores de ARM.
+    - ( ) Verdadero
+    - (x) Falso
+
+6. El voltaje que usa un módulo DDR4 es menor que el de un módulo DDR3.
+    - (x) Verdadero
+    - ( ) Falso
+
+7. Las latencias de las unidades de cinta suelen ser muy bajas ya que hay que rebobinar la cinta hasta que el cabezal se encuentre en la posición deseada. 
+    - ( ) Verdadero
+    - (x) Falso
+
+9. SAS es full-duplex. 
+    - (x) Verdadero
+    - ( ) Falso
+
+10. En el panel trasero de la placa base de un servidor es habitual encontrar varios conectores para Ethernet. 
+    - (x) Verdadero
+    - ( ) Falso
+
+11. A través del "System Panel" se puede conectar el altavoz del chasis a la placa base. 
+    - (x) Verdadero
+    - ( ) Falso
+
+12. La pila que hay en la placa base sirve, entre otras cosas, para tener el reloj en tiempo real de dicha placa actualizado. 
+    - (x) Verdadero
+    - ( ) Falso
