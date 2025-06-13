@@ -357,7 +357,7 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - (x) Verdadero
     - ( ) Falso
 
-30. Decimos que un módulo de DRAM tiene dos rangos si tiene chips por las dos caras.
+30. Decimos que un módulo de DRAM tiene dos rangos si tiene chips por las dos caras (dualranked).
     - ( ) Verdadero
     - (x) Falso
 
@@ -513,3 +513,24 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 12. La pila que hay en la placa base sirve, entre otras cosas, para tener el reloj en tiempo real de dicha placa actualizado. 
     - (x) Verdadero
     - ( ) Falso
+
+
+1. SSD procede de las siglas "Solid State Disk":
+    - ( ) Verdadero.
+    - (x) Falso.
+
+1. La placa base de la figura tiene una ranura PCI y 4 PCIe:<br><img src="./Images/placabase.png" alt="Placa Base">
+    - (x) Verdadero.
+    - ( ) Falso.
+
+1. La placa base de la figura tiene al menos dos conectores mini-SAS:<br><img src="./Images/placabase.png" alt="Placa Base">
+    - (x) Verdadero.
+    - ( ) Falso.
+
+1. La placa base de la figura admite hasta dos microprocesadores y un máximo de cuatro DIMM de memoria RAM dinámica en total.:<br><img src="./Images/placabase.png" alt="Placa Base">
+    - ( ) Verdadero.
+    - (x) Falso.
+
+2. \\(R_0=V_1\cdot R_1 \cdot V_2 \cdot R_2\dots\\)
+    - ( ) Verdadero.
+    - (x) Falso.
