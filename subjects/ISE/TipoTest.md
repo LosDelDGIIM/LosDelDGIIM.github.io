@@ -287,11 +287,7 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - (x) Verdadero
     - ( ) Falso
 
-12. Las pistas en una placa base están hechas de una resina no conductora y no inflamable.
-    - ( ) Verdadero
-    - (x) Falso
-
-13. Los conectores de la placa base de la figura podrían ser de tipo SATA. <br><img src="./Images/conector_sata.png" alt="Conector SATA" width="200">
+12. Los conectores de la placa base de la figura podrían ser de tipo SATA. <br><img src="./Images/conector_sata.png" alt="Conector SATA" width="200">
     - (x) Verdadero
     - ( ) Falso
 
@@ -474,31 +470,27 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - ( ) Verdadero
     - (x) Falso
 
-4. La familia "AMD Opteron X Series" usa microprocesadores de ARM.
+4. El voltaje que usa un módulo DDR4 es menor que el de un módulo DDR3.
+    - (x) Verdadero
+    - ( ) Falso
+
+5. Las latencias de las unidades de cinta suelen ser muy bajas ya que hay que rebobinar la cinta hasta que el cabezal se encuentre en la posición deseada. 
     - ( ) Verdadero
     - (x) Falso
 
-6. El voltaje que usa un módulo DDR4 es menor que el de un módulo DDR3.
+6. SAS es full-duplex. 
     - (x) Verdadero
     - ( ) Falso
 
-7. Las latencias de las unidades de cinta suelen ser muy bajas ya que hay que rebobinar la cinta hasta que el cabezal se encuentre en la posición deseada. 
-    - ( ) Verdadero
-    - (x) Falso
-
-9. SAS es full-duplex. 
+7.  En el panel trasero de la placa base de un servidor es habitual encontrar varios conectores para Ethernet. 
     - (x) Verdadero
     - ( ) Falso
 
-10. En el panel trasero de la placa base de un servidor es habitual encontrar varios conectores para Ethernet. 
+8.  A través del "System Panel" se puede conectar el altavoz del chasis a la placa base. 
     - (x) Verdadero
     - ( ) Falso
 
-11. A través del "System Panel" se puede conectar el altavoz del chasis a la placa base. 
-    - (x) Verdadero
-    - ( ) Falso
-
-12. La pila que hay en la placa base sirve, entre otras cosas, para tener el reloj en tiempo real de dicha placa actualizado. 
+9.  La pila que hay en la placa base sirve, entre otras cosas, para tener el reloj en tiempo real de dicha placa actualizado. 
     - (x) Verdadero
     - ( ) Falso
 
@@ -654,91 +646,85 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 45. En los paneles traseros de las placas de servidores los conectores de red son de bajas prestaciones.
     - ( ) Verdadero.
     - (x) Falso.
-46. El puente sur del chipset se encarga de la comunicación con la RAM. 
+46. La productividad de un servidor nunca podrá ser superior a \\(\frac{1}{D_b}\\).
     - ( ) Verdadero.
     - (x) Falso.
-47. La productividad de un servidor nunca podrá ser superior a \\(\frac{1}{D_b}\\).
-    - ( ) Verdadero.
-    - (x) Falso.
-48. Intel Xeon es la familia de microprocesadores de Intel especializada en servidores.
+47. Intel Xeon es la familia de microprocesadores de Intel especializada en servidores.
     - (x) Verdadero.
     - ( ) Falso.
-49. Los procesadores AMD Opteron Serie A están basados en microprocesadores de ARM.
+48. Los procesadores AMD Opteron Serie A están basados en microprocesadores de ARM.
     - (x) Verdadero.
     - ( ) Falso.
-50. \\(\lambda_i = \frac{Q_i}{W_i}\\)
+49. \\(\lambda_i = \frac{Q_i}{W_i}\\)
     - (x) Verdadero.
     - ( ) Falso.
-51. \\(S_i = \frac{C_i}{B_i}\\)
+50. \\(S_i = \frac{C_i}{B_i}\\)
     - ( ) Verdadero.
     - (x) Falso.
-52. Es la media aritmética y no el índice SPEC el que nos ayuda a saber qué computadora ejecuta el conjunto total de programas de un benchmark en menos tiempo.
+51. Es la media aritmética y no el índice SPEC el que nos ayuda a saber qué computadora ejecuta el conjunto total de programas de un benchmark en menos tiempo.
     - (x) Verdadero.
     - ( ) Falso.
-53. `sar` al igual que `top` es un monitor software por eventos.
+52. `sar` al igual que `top` es un monitor software por eventos.
     - ( ) Verdadero.
     - (x) Falso.
-54. Las pistas de una placa base están hechas de una resina no conductora y no inflamable.
+53. Las pistas de una placa base están hechas de una resina no conductora y no inflamable.
     - ( ) Verdadero.
     - (x) Falso.
-55. Frotándose las manos se elimina la electricidad estática.
+54. Frotándose las manos se elimina la electricidad estática.
     - ( ) Verdadero.
     - (x) Falso.
-56. La memoria caché L3 se comparte por todos los cores de un microprocesador. 
+55. La memoria caché L3 se comparte por todos los cores de un microprocesador. 
     - (x) Verdadero.
     - ( ) Falso.
-57. Conforme aumenta la generación de memorias DDR aumenta el ancho de banda y disminuye el voltaje.
+56. Conforme aumenta la generación de memorias DDR aumenta el ancho de banda y disminuye el voltaje.
     - (x) Verdadero.
     - ( ) Falso.
-58. Los VGA de un servidor son de altas prestaciones.
+57. Los VGA de un servidor son de altas prestaciones.
     - ( ) Verdadero.
     - (x) Falso.
-59. El puente sur se encarga del PCIe x16.
+58. El conjunto de instrucciones POST se encuentra en la RAM.
     - ( ) Verdadero.
     - (x) Falso.
-60. El conjunto de instrucciones POST se encuentra en la RAM.
+59. Una fuente de alimentación convierte corriente continua en corriente alterna para usarla en la placa base.
     - ( ) Verdadero.
     - (x) Falso.
-61. Una fuente de alimentación convierte corriente continua en corriente alterna para usarla en la placa base.
+60. \\(Z=N_z\cdot R_0\\)
     - ( ) Verdadero.
     - (x) Falso.
-62. \\(Z=N_z\cdot R_0\\)
-    - ( ) Verdadero.
-    - (x) Falso.
-63. La carga de un sistema se puede definir como el conjunto de tareas que ha de realizar.
+61. La carga de un sistema se puede definir como el conjunto de tareas que ha de realizar.
     - (x) Verdadero.
     - ( ) Falso.
-64. La interfaz Serial ATA es compatible con SAS. Dicho de otra manera, si tengo una placa con conectores Serial ATA voy a poder pinchar en ella unidades SAS.
+62. La interfaz Serial ATA es compatible con SAS. Dicho de otra manera, si tengo una placa con conectores Serial ATA voy a poder pinchar en ella unidades SAS.
     - ( ) Verdadero.
     - (x) Falso.
-65. La expresión \\(N_i=X_i\cdot R_i\\) solo es válida si el servidor está saturado. 
+63. La expresión \\(N_i=X_i\cdot R_i\\) solo es válida si el servidor está saturado. 
     - ( ) Verdadero.
     - (x) Falso.
-66. La placa base de la figura admite un único microprocesador y 4 módulos de memoria DRAM.<br><img src="./Images/placabase2.png" width="400" alt="Placa Base">
+64. La placa base de la figura admite un único microprocesador y 4 módulos de memoria DRAM.<br><img src="./Images/placabase2.png" width="400" alt="Placa Base">
     - (x) Verdadero.
     - ( ) Falso.
-67. La placa base de la figura tiene 4 ranuras PCIe y 6 conectores SATA.<br><img src="./Images/placabase2.png" width="400" alt="Placa Base">
+65. La placa base de la figura tiene 4 ranuras PCIe y 6 conectores SATA.<br><img src="./Images/placabase2.png" width="400" alt="Placa Base">
     - (x) Verdadero.
     - ( ) Falso.
-68. Los paneles traseros de placas de servidores suelen tener conectores de audio y video de altas prestaciones.
+66. Los paneles traseros de placas de servidores suelen tener conectores de audio y video de altas prestaciones.
     - ( ) Verdadero.
     - (x) Falso.
-69. Un microprocesador puede acceder simultáneamente a 2 módulos de memoria DRAM solo si están en canales diferentes.
+67. Un microprocesador puede acceder simultáneamente a 2 módulos de memoria DRAM solo si están en canales diferentes.
     - (x) Verdadero.
     - ( ) Falso.
-70. Tanto PCI como PCIe definen un protocolo de comunicación serie punto a punto.
+68. Tanto PCI como PCIe definen un protocolo de comunicación serie punto a punto.
     - ( ) Verdadero.
     - (x) Falso.
-71. La expresión \\(N_0 = X_0 \cdot R_0\\) solo es válida si el servidor no está saturado. 
+69. La expresión \\(N_0 = X_0 \cdot R_0\\) solo es válida si el servidor no está saturado. 
     - (x) Verdadero.
     - ( ) Falso.
-72. La expresión \\(U_i = X_i \cdot S_i\\) solo es válida si el servidor no está saturado.
+70. La expresión \\(U_i = X_i \cdot S_i\\) solo es válida si el servidor no está saturado.
     - ( ) Verdadero.
     - (x) Falso.
-73. El resultado de un benchmark siempre se expresa como el tiempo necesario para ejecutar una cantidad pre-establecida de tareas.
+71. El resultado de un benchmark siempre se expresa como el tiempo necesario para ejecutar una cantidad pre-establecida de tareas.
     - ( ) Verdadero.
     - (x) Falso.
-74. El contratante es el proponente que resulta adjudicatario de una licitación y quien finalmente se encargara de llevar a cabo los trabajos contratados.
+72. El contratante es el proponente que resulta adjudicatario de una licitación y quien finalmente se encargara de llevar a cabo los trabajos contratados.
     - ( ) Verdadero.
     - (x) Falso.
 
@@ -758,39 +744,35 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - ( ) Verdadero
     - (x) Falso
 
-82. Una red de colas abiertas se puede considerar un caso particular de red de colas cerrada si hacemos que \\(Z = 0s\\).
-    - ( ) Verdadero
-    - (x) Falso
-
-83. Si aplicamos la ley de Little a los usuarios en reflexión de una red de colas cerrada Interactiva, podemos relacionar el número medio de usuarios en reflexión con la productividad media del servidor y el tiempo medio de reflexión de dichos usuarios.
+82. Si aplicamos la ley de Little a los usuarios en reflexión de una red de colas cerrada Interactiva, podemos relacionar el número medio de usuarios en reflexión con la productividad media del servidor y el tiempo medio de reflexión de dichos usuarios.
     - (x) Verdadero
     - ( ) Falso
 
-84. Si un servidor web ha recibido una media de 10 visitas por segundo, entonces la razón media de visita del servidor es 10 tr/s.
+83. Si un servidor web ha recibido una media de 10 visitas por segundo, entonces la razón media de visita del servidor es 10 tr/s.
     - ( ) Verdadero
     - (x) Falso
 
-85. Si añadimos una segunda CPU a nuestro servidor, idéntica a la ya existente, es razonable suponer que la razón media de visita de la primera CPU se va a dividir por dos.
+84. Si añadimos una segunda CPU a nuestro servidor, idéntica a la ya existente, es razonable suponer que la razón media de visita de la primera CPU se va a dividir por dos.
     - (x) Verdadero
     - ( ) Falso
 
-86. \\(W_i = N_i \cdot S_i\\) es una ley válida para servidores modelados mediante una red de colas abierta en equilibrio de flujo.
+85. \\(W_i = N_i \cdot S_i\\) es una ley válida para servidores modelados mediante una red de colas abierta en equilibrio de flujo.
     - ( ) Verdadero
     - (x) Falso
 
-87. Si el servidor A es un \\(50\%\\) más rápido que el servidor B en ejecutar un determinado programa de benchmark, entonces podemos decir igualmente que el servidor B es un \\(50\%\\) más lento que el servidor A en ejecutar dicho programa de benchmark.
+86. Si el servidor A es un \\(50\%\\) más rápido que el servidor B en ejecutar un determinado programa de benchmark, entonces podemos decir igualmente que el servidor B es un \\(50\%\\) más lento que el servidor A en ejecutar dicho programa de benchmark.
     - ( ) Verdadero
     - (x) Falso
 
-88. Las memorias con ECC se usan para aumentar la disponibilidad de un servidor.
+87. Las memorias con ECC se usan para aumentar la disponibilidad de un servidor.
     - ( ) Verdadero
     - (x) Falso
 
-89. La frecuencia de reloj de las CPU sigue todavía incrementándose de forma exponencial con los años.
+88. La frecuencia de reloj de las CPU sigue todavía incrementándose de forma exponencial con los años.
     - ( ) Verdadero
     - (x) Falso
 
-90. La placa base de la figura tiene 2 ranuras PCI, 3 PCIe y 6 conectores SATA.<br><img src="./Images/board.jpg" width="400" alt="Placa Base">
+89. La placa base de la figura tiene 2 ranuras PCI, 3 PCIe y 6 conectores SATA.<br><img src="./Images/board.jpg" width="400" alt="Placa Base">
     - (x) Verdadero
     - ( ) Falso
    
