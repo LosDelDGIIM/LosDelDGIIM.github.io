@@ -826,3 +826,11 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 135. Es posible conectar unidades de almacenamiento con interfaz SATA a una placa base con conectores SAS.
     - (x) Verdadero
     - ( ) Falso
+
+89. La celda básica de una SRAM es mayor que la de una DRAM.
+    - (x) Verdadero
+    - ( ) Falso
+
+88. La familia AMD Opteron X Series usa microprocesadores de ARM.
+    - ( ) Verdadero
+    - (x) Falso
