@@ -746,10 +746,10 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 71. La expresión \\(N_i=X_i\cdot R_i\\) solo es válida si el servidor está saturado. 
     - ( ) Verdadero.
     - (x) Falso.
-72. La placa base de la figura que hay al final del examen admite un único microprocesador y 4 módulos de memoria DRAM.
+72. La placa base de la figura admite un único microprocesador y 4 módulos de memoria DRAM.<br><img src="./Images/placabase2.png" alt="Placa Base">
     - (x) Verdadero.
     - ( ) Falso.
-73. La placa base de la figura que hay al final del examen tiene 4 ranuras PCIe y 6 conectores SATA.
+73. La placa base de la figura tiene 4 ranuras PCIe y 6 conectores SATA.<br><img src="./Images/placabase2.png" alt="Placa Base">
     - (x) Verdadero.
     - ( ) Falso.
 74. Los paneles traseros de placas de servidores suelen tener conectores de audio y video de altas prestaciones.
