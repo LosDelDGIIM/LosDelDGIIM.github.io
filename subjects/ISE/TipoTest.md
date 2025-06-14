@@ -7,6 +7,7 @@
 - **Autor:** Laura Mandow Fuentes
 - **Autor:** Joaquín Avilés de la Fuente
 - **Autor:** Irina Kuzyshyn Basarab
+- **Autor:** Roberto González Lugo 
 - **Descripción:** Recopilación de preguntas Tipo Test de la asignatura de Ingeniería de Servidores. Como mínimo, se incluyen las preguntas de los exámenes de **Enero y Febrero de cada año desde 2022 hasta 2024**.
 Se han obtenido de fuentes diversas, por lo que si faltasen, sobrasen o estuviesen mal formuladas, por favor, se ruega nos lo hagan saber para corregirlo.
 
@@ -112,7 +113,7 @@ protocolo SATA-3 puede proporcionar.
     - (x) Verdadero
     - ( ) Falso
 
-29. Con la Ley de Amdahl podemos estimar la ganancia en velocidad de la ejecución un único trabajo (un hilo) en un computador después de mejorar k veces un componente.
+29. Con la Ley de Amdahl podemos estimar la ganancia en velocidad de la ejecución un único trabajo (un hilo) en un computador después de mejorar \\(k\\) veces un componente.
     - (x) Verdadero
     - ( ) Falso
 
@@ -241,67 +242,60 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - (x) Verdadero
     - ( ) Falso
 
-1. La expresión \\(Wi=Ni \cdot Si\\) es una ley operacional.
+
+1. En la monitorización de un servidor durante un tiempo \\(T\\), \\(C_O\\) no puede ser mayor que \\(A_0\\).
     - ( ) Verdadero
     - (x) Falso
 
-2. En la monitorización de un servidor durante un tiempo T, CO no puede ser mayor que A0.
+2. \\(R_i=W_i+Q_i\\), para todo \\(i=1..K\\)
     - ( ) Verdadero
     - (x) Falso
 
-3. \\(R_i=W_i+Q_i\\), para todo \\(i=1..K\\)
-    - ( ) Verdadero
-    - (x) Falso
-
-4. La versión serie del interfaz SCSI se llama SAS, cuyas siglas provienen de "Serial Attached SCSI".
+3. La versión serie del interfaz SCSI se llama SAS, cuyas siglas provienen de "Serial Attached SCSI".
     - (x) Verdadero
     - ( ) Falso
 
-5. Una red de colas abierta se puede considerar un caso particular de red de colas cerrada si hacemos que \\(Z = 0s\\).
+4. Una red de colas abierta se puede considerar un caso particular de red de colas cerrada si hacemos que \\(Z = 0s\\).
     - ( ) Verdadero
     - (x) Falso
 
-6. El pliego de condiciones se divide en "pliego de cláusulas administrativas particulares" y "pliego de prescripciones técnicas".
+5. El pliego de condiciones se divide en "pliego de cláusulas administrativas particulares" y "pliego de prescripciones técnicas".
     - (x) Verdadero
     - ( ) Falso
 
-7. AMD ofrece los procesadores EPYC para el mercado de sobremesa y los OPTERON para el de servidores.
+6. AMD ofrece los procesadores EPYC para el mercado de sobremesa y los OPTERON para el de servidores.
     - ( ) Verdadero
     - (x) Falso
 
-8. La cola/pasta térmica es un aislante que evita que el calor salga de la CPU.
+7. La cola/pasta térmica es un aislante que evita que el calor salga de la CPU.
     - ( ) Verdadero
     - (x) Falso
 
-9. Las SSD tienen menor latencia que los discos duros debido a que, entre otras cosas, no tienen que esperar a que el cabezal se posicione sobre la pista a leer/escribir.
+8. Las SSD tienen menor latencia que los discos duros debido a que, entre otras cosas, no tienen que esperar a que el cabezal se posicione sobre la pista a leer/escribir.
     - (x) Verdadero
     - ( ) Falso
 
-10. Las LR-DIMM se utilizan para caché de altas prestaciones en servidores.
+9. Las LR-DIMM se utilizan para caché de altas prestaciones en servidores.
     - ( ) Verdadero
     - (x) Falso
 
-11. Es el propio microprocesador en muchos computadores actuales el que realiza la función de puente norte del chipset.
+10. Es el propio microprocesador en muchos computadores actuales el que realiza la función de puente norte del chipset.
     - (x) Verdadero
     - ( ) Falso
 
-12. El fenómeno llamado "timing skew" motivó la aparición de protocolos de comunicación paralelos como P-ATA (también llamado IDE) o PCI.
+11. El fenómeno llamado "timing skew" motivó la aparición de protocolos de comunicación paralelos como P-ATA (también llamado IDE) o PCI.
     - ( ) Verdadero
     - (x) Falso
 
-13. Existen servidores con fuentes de alimentación reemplazables en caliente (hot swappable).
+12. Existen servidores con fuentes de alimentación reemplazables en caliente (hot swappable).
     - (x) Verdadero
     - ( ) Falso
 
-14. Las primeras instrucciones que ejecuta un procesador en el arranque proceden de las primeras direcciones de la DRAM.
+13. Las pistas en una placa base están hechas de una resina no conductora y no inflamable.
     - ( ) Verdadero
     - (x) Falso
 
-15. Las pistas en una placa base están hechas de una resina no conductora y no inflamable.
-    - ( ) Verdadero
-    - (x) Falso
-
-16. Los conectores de la placa base de la figura de la derecha podrían ser de tipo SATA. <br><img src="./Images/conector_sata.png" alt="Conector SATA" width="400">
+14. Los conectores de la placa base de la figura de la derecha podrían ser de tipo SATA. <br><img src="./Images/conector_sata.png" alt="Conector SATA" width="400">
     - (x) Verdadero
     - ( ) Falso
 
@@ -465,7 +459,7 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - ( ) Verdadero
     - (x) Falso
 
-20. Si añado una nueva CPU a nuestro servidor, el tiempo mínimo medido de respuesta del servidor seguro que disminuye.
+20. Si añado una nueva CPU a nuestro servidor, el tiempo mínimo medio de respuesta del servidor seguro que disminuye.
     - ( ) Verdadero
     - (x) Falso
 
@@ -557,9 +551,9 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 8. Un módulo de DRAM con chips en ambas caras no tiene por qué ser de doble rango (dual ranked).
     - (x) Verdadero.
     - ( ) Falso.
-9.  Tanto las SRAM como las DRAM son volátiles, pero solo las DRAM necesitan refresco. 
-    - ( ) Verdadero.
-    - (x) Falso.
+9. Tanto las SRAM como las DRAM son volátiles, pero solo las DRAM necesitan refresco. 
+    - (x) Verdadero.
+    - ( ) Falso.
 10. Los protocolos de comunicación serie pueden ser half-duplex.
     - (x) Verdadero.
     - ( ) Falso.
@@ -584,195 +578,289 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 17. Cuando nos referimos al índice de prestaciones que se calcula según el benchmark SPEC CPU2017, el SPEC pico (peak) nunca puede ser menor que el SPEC base. 
     - (x) Verdadero.
     - ( ) Falso.
-18.  En los benchmarks TPC-C y TPC-H, el índice de prestaciones se calcula a partir de la media geométrica de las ganancias en velocidad con respecto a una máquina de referencia. 
+18. En los benchmarks TPC-C y TPC-H, el índice de prestaciones se calcula a partir de la media geométrica de las ganancias en velocidad con respecto a una máquina de referencia. 
     - ( ) Verdadero.
     - (x) Falso.
 19. Actuando sobre el elemento con mayor razón de visita nos garantizamos mejorar la productividad máxima de un servidor.
     - ( ) Verdadero.
     - (x) Falso.
-20. La razón media de visita de un dispositivo no tiene por qué ser un número entero.
+20. En un servidor, si la demanda de servicio de un dispositivo es menor que la de otro, su utilización nunca podrá ser mayor que la de ese otro dispositivo.
     - (x) Verdadero.
     - ( ) Falso.
-21. En un servidor, si la demanda de servicio de un dispositivo es menor que la de otro, su utilización nunca podrá ser mayor que la de ese otro dispositivo.
+21. En un servidor modelado mediante una red de colas se cumple que \\(B_i = (N_i-Q_i) \cdot T\\).
     - (x) Verdadero.
     - ( ) Falso.
-22. En un servidor modelado mediante una red de colas se cumple que \\(B_i = (N_i-Q_i) \cdot T\\).
+22. Si el número total de usuarios en un servidor modelado mediante una red de colas cerrada interactiva es superior a `NT*`, entonces el servidor está saturado. 
+    - ( ) Verdadero.
+    - (x) Falso.
+23. La memoria técnica que presenta cada licitador no podrá hacer referencia a una fabricación o una procedencia determinada con la finalidad de favorecer o descartar ciertas empresas o ciertos productos. Si no es posible, se acompañará la mención «o equivalente». 
+    - ( ) Verdadero.
+    - (x) Falso.
+24. Un mismo servidor, según su tipo de carga puede tener distintos cuellos de botella.
     - (x) Verdadero.
     - ( ) Falso.
-23.  Si el número total de usuarios en un servidor modelado mediante una red de colas cerrada interactiva es superior a `NT*`, entonces el servidor está saturado. 
+25. \\(R_0 = V_1 \cdot R_1 \cdot V_2 \cdot R_2\\)
     - ( ) Verdadero.
     - (x) Falso.
-24. La memoria técnica que presenta cada licitador no podrá hacer referencia a una fabricación o una procedencia determinada con la finalidad de favorecer o descartar ciertas empresas o ciertos productos. Si no es posible, se acompañará la mención «o equivalente». 
+26. La versión serie de SCSI se llama M2, también conocida como NGFF.
     - ( ) Verdadero.
     - (x) Falso.
-25. Un mismo servidor, según su tipo de carga puede tener distintos cuellos de botella.
+27. Si reemplazamos un dispositivo por otro el doble de rápido, su razón de visita será menor.
+    - ( ) Verdadero.
+    - (x) Falso.
+28. Si aplicamos la ley de Little a cada cola de una estación de servicio obtenemos que: \\(V_i = X_i \cdot S_i\\)
+    - ( ) Verdadero.
+    - (x) Falso.
+29. Una maquina con un SPEC menor de 1 significa que es más rápida que la máquina de referencia.
+    - ( ) Verdadero.
+    - (x) Falso.
+30. Uno de los inconvenientes de utilizar la media aritmética de los tiempos de ejecución de los benchmark es que su valor dependerá de la máquina de referencia que se escoja.
+    - ( ) Verdadero.
+    - (x) Falso.
+31. En el servidor modelado mediante una red abierta la tasa de llegada no puede superar \\(\frac{1}{D_b}\\)
+    - ( ) Verdadero.
+    - (x) Falso.
+32. Si `NT >> NT*` el servidor está saturado (para colas cerradas).
+    - ( ) Verdadero.
+    - (x) Falso.
+33. En un test t, el valor-p obtenido depende del nivel de confianza seleccionado.
+    - ( ) Verdadero.
+    - (x) Falso.
+34. En un test t, a mayor nivel de confianza es más fácil rechazar la hipótesis de que ambas alternativas son iguales.
+    - ( ) Verdadero.
+    - (x) Falso.
+35. Al bajar el grado de significatividad, es más difícil conseguir que el valor-p < alfa.
     - (x) Verdadero.
     - ( ) Falso.
-26. \\(R_0 = V_1 \cdot R_1 \cdot V_2 \cdot R_2\\)
-    - ( ) Verdadero.
-    - (x) Falso.
-27. La versión serie de SCSI se llama M2, también conocida como NGFF.
-    - ( ) Verdadero.
-    - (x) Falso.
-28. Si reemplazamos un dispositivo por otro el doble de rápido, su razón de visita será menor.
-    - ( ) Verdadero.
-    - (x) Falso.
-29. Si aplicamos la ley de Little a cada cola de una estación de servicio obtenemos que: \\(V_i = X_i \cdot S_i\\)
-    - ( ) Verdadero.
-    - (x) Falso.
-30. Una maquina con un SPEC menor de 1 significa que es más rápida que la máquina de referencia.
-    - ( ) Verdadero.
-    - (x) Falso.
-31. Uno de los inconvenientes de utilizar la media aritmética de los tiempos de ejecución de los benchmark es que su valor dependerá de la máquina de referencia que se escoja.
-    - ( ) Verdadero.
-    - (x) Falso.
-32. En el servidor modelado mediante una red abierta la tasa de llegada no puede superar \\(\frac{1}{D_b}\\)
-    - ( ) Verdadero.
-    - (x) Falso.
-33. Si `NT >> NT*` el servidor está saturado (para colas cerradas).
-    - ( ) Verdadero.
-    - (x) Falso.
-34. En un test t, el valor-p obtenido depende del nivel de confianza seleccionado.
-    - ( ) Verdadero.
-    - (x) Falso.
-35. En un test t, a mayor nivel de confianza es más fácil rechazar la hipótesis de que ambas alternativas son iguales.
-    - ( ) Verdadero.
-    - (x) Falso.
-36. Al bajar el grado de significatividad, es más difícil conseguir que el valor-p < alfa.
+36. En Linux, la información a la que se accede a través de /proc está almacenada realmente en la RAM.
     - (x) Verdadero.
     - ( ) Falso.
-37.  En Linux, la información a la que se accede a través de /proc está almacenada realmente en la RAM.
+37. Si un servidor siempre responde a nuestras peticiones podemos decir que es un servidor de alta fiabilidad.
+    - ( ) Verdadero.
+    - (x) Falso.
+38. \\(N_0 = \sum\limits_{i=1}^n N_i\\)
     - (x) Verdadero.
     - ( ) Falso.
-38. Si un servidor siempre responde a nuestras peticiones podemos decir que es un servidor de alta fiabilidad.
-    - ( ) Verdadero.
-    - (x) Falso.
-39. \\(N_0 = \sum\limits_{i=1}^n N_i\\)
+39. La expresión \\(Q_i = \lambda_i\cdot W_i \\) es válida, aunque el servidor esté saturado.
     - (x) Verdadero.
     - ( ) Falso.
-40. La expresión \\(Q_i = \lambda_i\cdot W_i \\) es válida, aunque el servidor esté saturado.
+40. Las unidades SSD tienen mayor latencia que los discos duros debido a que no tienen que esperar a que el cabezal se posicione sobre la pista a leer/escribir.
+    - ( ) Verdadero.
+    - (x) Falso.
+41. Bajo ningún concepto se puede hacer referencia a una fabricación o una procedencia determinada cuando se especifican los componentes a instalar o suministrar en un pliego de prescripciones técnicas. 
+    - ( ) Verdadero.
+    - (x) Falso.
+42. Las pistas en una placa base están normalmente hechas de cobre rodeadas de láminas de un substrato no conductor.
     - (x) Verdadero.
     - ( ) Falso.
-41. Las unidades SSD tienen mayor latencia que los discos duros debido a que no tienen que esperar a que el cabezal se posicione sobre la pista a leer/escribir.
-    - ( ) Verdadero.
-    - (x) Falso.
-42. Bajo ningún concepto se puede hacer referencia a una fabricación o una procedencia determinada cuando se especifican los componentes a instalar o suministrar en un pliego de prescripciones técnicas. 
-    - ( ) Verdadero.
-    - (x) Falso.
-43.  Las pistas en una placa base están normalmente hechas de cobre rodeadas de láminas de un substrato no conductor.
+43. El número medio de trabajos en un servidor es la suma de los números medios de trabajos en cada uno de sus componentes. 
     - (x) Verdadero.
     - ( ) Falso.
-44.  El número medio de trabajos en un servidor es la suma de los números medios de trabajos en cada uno de sus componentes. 
+44. Los códigos CPV deben figurar obligatoriamente en todos los pliegos de prescripciones técnicas.
+    - ( ) Verdadero.
+    - (x) Falso.
+45. En los paneles traseros de las placas de servidores los conectores de red son de bajas prestaciones.
+    - ( ) Verdadero.
+    - (x) Falso.
+46. En un test ANOVA, si Fexp es menor que el grado de significatividad rechazamos la hipótesis nula y concluiremos que el factor a considerar sí que influye en la variable respuesta.
+    - ( ) Verdadero.
+    - (x) Falso.
+47. El puente sur del chipset se encarga de la comunicación con la RAM. 
+    - ( ) Verdadero.
+    - (x) Falso.
+48. La productividad de un servidor nunca podrá ser superior a \\(\frac{1}{D}\\).
+    - ( ) Verdadero.
+    - (x) Falso.
+49. Intel Xeon es la familia de microprocesadores de Intel especializada en servidores.
     - (x) Verdadero.
     - ( ) Falso.
-45. Las unidades SSD son capaces de alcanzar anchos de banda superiores a los que el protocolo SATA-3 puede proporcionar.
+50. Los procesadores AMD Opteron Serie A están basados en microprocesadores de ARM.
     - (x) Verdadero.
     - ( ) Falso.
-46. Los códigos CPV deben figurar obligatoriamente en todos los pliegos de prescripciones técnicas.
-    - ( ) Verdadero.
-    - (x) Falso.
-47. En los paneles traseros de las placas de servidores los conectores de red son de bajas prestaciones.
-    - ( ) Verdadero.
-    - (x) Falso.
-48. En un test ANOVA, si Fexp es menor que el grado de significatividad rechazamos la hipótesis nula y concluiremos que el factor a considerar sí que influye en la variable respuesta.
-    - ( ) Verdadero.
-    - (x) Falso.
-49. El puente sur del chipset se encarga de la comunicación con la RAM. 
-    - ( ) Verdadero.
-    - (x) Falso.
-50. La productividad de un servidor nunca podrá ser superior a \\(\frac{1}{D}\\).
-    - ( ) Verdadero.
-    - (x) Falso.
-51. Intel Xeon es la familia de microprocesadores de Intel especializada en servidores.
+51. \\(\lambda_i = \frac{Q_i}{w_i}\\)
     - (x) Verdadero.
     - ( ) Falso.
-52. Los procesadores AMD Opteron Serie A están basados en microprocesadores de ARM.
+52. \\(S_i = \frac{C_i}{B_i}\\)
+    - ( ) Verdadero.
+    - (x) Falso.
+53. Es la media aritmética y no el índice SPEC el que nos ayuda a saber qué computadora ejecuta el conjunto total de programas de un benchmark en menos tiempo.
     - (x) Verdadero.
     - ( ) Falso.
-53. \\(\lambda_i = \frac{Q_i}{w_i}\\)
+54. `sar` al igual que `top` es un monitor software por eventos.
+    - ( ) Verdadero.
+    - (x) Falso.
+55. Las pistas de una placa base están hechas de una resina no conductora y no inflamable.
+    - ( ) Verdadero.
+    - (x) Falso.
+56. Frotándose las manos se elimina la electricidad estática.
+    - ( ) Verdadero.
+    - (x) Falso.
+57. La memoria caché L3 se comparte por todos los cores de un microprocesador. 
     - (x) Verdadero.
     - ( ) Falso.
-54. \\(S_i = \frac{C_i}{B_i}\\)
-    - ( ) Verdadero.
-    - (x) Falso.
-55. Es la media aritmética y no el índice SPEC el que nos ayuda a saber qué computadora ejecuta el conjunto total de programas de un benchmark en menos tiempo.
+58. Conforme aumenta la generación de memorias DDR aumenta el ancho de banda y disminuye el voltaje.
     - (x) Verdadero.
     - ( ) Falso.
-56. `sar` al igual que `top` es un monitor software por eventos.
+59. La transmisión DDR4 \\(\rightarrow\\)CPU es full-duplex.
     - ( ) Verdadero.
     - (x) Falso.
-57. Las pistas de una placa base están hechas de una resina no conductora y no inflamable.
+60. Los VGA de un servidor son de altas prestaciones.
     - ( ) Verdadero.
     - (x) Falso.
-58. Frotándose las manos se elimina la electricidad estática.
+61. El puente sur se encarga del PCIe x16.
     - ( ) Verdadero.
     - (x) Falso.
-59. La memoria caché L3 se comparte por todos los cores de un microprocesador. 
+62. El conjunto de instrucciones POST se encuentra en la RAM.
+    - ( ) Verdadero.
+    - (x) Falso.
+63. Una fuente de alimentación convierte corriente continua en corriente alterna para usarla en la placa base.
+    - ( ) Verdadero.
+    - (x) Falso.
+64. \\(Z=N_z\cdot R_0\\)
+    - ( ) Verdadero.
+    - (x) Falso.
+65. La carga del sistema es el conjunto de tareas que ha de realizar.
     - (x) Verdadero.
     - ( ) Falso.
-60. Conforme aumenta la generación de memorias DDR aumenta el ancho de banda y disminuye el voltaje.
+66. La carga de un sistema se puede definir como el conjunto de tareas que ha de realizar.
     - (x) Verdadero.
     - ( ) Falso.
-61. La transmisión DDR4 \\(\rightarrow\\)CPU es full-duplex.
+67. El tiempo medio de respuesta de un servidor es la suma de los tiempos medios de respuesta de todos sus componentes.
     - ( ) Verdadero.
     - (x) Falso.
-62. Los VGA de un servidor son de altas prestaciones.
+68. La interfaz Serial ATA es compatible con SAS. Dicho de otra manera, si tengo una placa con conectores Serial ATA voy a poder pinchar en ella unidades SAS.
     - ( ) Verdadero.
     - (x) Falso.
-63. El puente sur se encarga del PCIe x16.
+69. La expresión \\(N_i=X_i\cdot R_i\\) solo es válida si el servidor está saturado. 
     - ( ) Verdadero.
     - (x) Falso.
-64. El conjunto de instrucciones POST se encuentra en la RAM.
-    - ( ) Verdadero.
-    - (x) Falso.
-65. Una fuente de alimentación convierte corriente continua en corriente alterna para usarla en la placa base.
-    - ( ) Verdadero.
-    - (x) Falso.
-66. \\(Z=N_z\cdot R_0\\)
-    - ( ) Verdadero.
-    - (x) Falso.
-67. La carga del sistema es el conjunto de tareas que ha de realizar.
+70. La placa base de la figura admite un único microprocesador y 4 módulos de memoria DRAM.<br><img src="./Images/placabase2.png" width="400" alt="Placa Base">
     - (x) Verdadero.
     - ( ) Falso.
-68. La carga de un sistema se puede definir como el conjunto de tareas que ha de realizar.
+71. La placa base de la figura tiene 4 ranuras PCIe y 6 conectores SATA.<br><img src="./Images/placabase2.png" width="400" alt="Placa Base">
     - (x) Verdadero.
     - ( ) Falso.
-69. El tiempo medio de respuesta de un servidor es la suma de los tiempos medios de respuesta de todos sus componentes.
+72. Los paneles traseros de placas de servidores suelen tener conectores de audio y video de altas prestaciones.
     - ( ) Verdadero.
     - (x) Falso.
-70. La interfaz Serial ATA es compatible con SAS. Dicho de otra manera, si tengo una placa con conectores Serial ATA voy a poder pinchar en ella unidades SAS.
-    - ( ) Verdadero.
-    - (x) Falso.
-71. La expresión \\(N_i=X_i\cdot R_i\\) solo es válida si el servidor está saturado. 
-    - ( ) Verdadero.
-    - (x) Falso.
-72. La placa base de la figura admite un único microprocesador y 4 módulos de memoria DRAM.<br><img src="./Images/placabase2.png" alt="Placa Base">
+73. Un microprocesador puede acceder simultáneamente a 2 módulos de memoria DRAM solo si están en canales diferentes.
     - (x) Verdadero.
     - ( ) Falso.
-73. La placa base de la figura tiene 4 ranuras PCIe y 6 conectores SATA.<br><img src="./Images/placabase2.png" alt="Placa Base">
+74. Tanto PCI como PCIe definen un protocolo de comunicación serie punto a punto.
+    - ( ) Verdadero.
+    - (x) Falso.
+75. La expresión \\(N_0 = X_0 \cdot R_0\\) solo es válida si el servidor no está saturado. 
     - (x) Verdadero.
     - ( ) Falso.
-74. Los paneles traseros de placas de servidores suelen tener conectores de audio y video de altas prestaciones.
+76. La expresión \\(U_i = X_i \cdot S_i\\) solo es válida si el servidor no está saturado.
     - ( ) Verdadero.
     - (x) Falso.
-75. Un microprocesador puede acceder simultáneamente a 2 módulos de memoria DRAM solo si están en canales diferentes.
-    - (x) Verdadero.
-    - ( ) Falso.
-76. Tanto PCI como PCIe definen un protocolo de comunicación serie punto a punto.
+77. El resultado de un benchmark siempre se expresa como el tiempo necesario para ejecutar una cantidad pre-establecida de tareas.
     - ( ) Verdadero.
     - (x) Falso.
-77. La expresión \\(N_0 = X_0 \cdot R_0\\) solo es válida si el servidor no está saturado. 
-    - (x) Verdadero.
-    - ( ) Falso.
-78. La expresión \\(U_i = X_i \cdot S_i\\) solo es válida si el servidor no está saturado.
+78. El contratante es el proponente que resulta adjudicatario de una licitación y quien finalmente se encargara de llevar a cabo los trabajos contratados.
     - ( ) Verdadero.
     - (x) Falso.
-79. El resultado de un benchmark siempre se expresa como el tiempo necesario para ejecutar una cantidad pre-establecida de tareas.
-    - ( ) Verdadero.
-    - (x) Falso.
-80. El contratante es el proponente que resulta adjudicatario de una licitación y quien finalmente se encargara de llevar a cabo los trabajos contratados.
-    - ( ) Verdadero.
-    - (x) Falso.
-81. Es el propio microprocesador de muchas placas base actuales el que realiza la función de puente norte en el chipset.
-    - (x) Verdadero.
-    - ( ) Falso.
+
+
+
+
+
+79. Time skew es un protocolo de comunicación paralelo.
+    - ( ) Verdadero
+    - (x) Falso
+
+80. Si el servidor A es el doble de rápido que el servidor B para todos los programas de un benchmark cuyo rendimiento se calcula según el criterio SPEC, entonces ese índice SPEC del servidor A será mayor que el del servidor B, independientemente de la maquina de referencia elegida.
+    - (x) Verdadero
+    - ( ) Falso
+
+81. El conjunto de instrucciones que ejecutan el auto-test de arranque (Power On self-test) se encuentran almacenadas en las primeras direcciones de la DRAM.
+    - ( ) Verdadero
+    - (x) Falso
+
+82. Una red de colas abiertas se puede considerar un caso particular de red de colas cerrada si hacemos que \\(Z = 0s\\).
+    - ( ) Verdadero
+    - (x) Falso
+
+83. Si aplicamos la ley de Little a los usuarios en reflexión de una red de colas cerrada Interactiva, podemos relacionar el número medio de usuarios en reflexión con la productividad media del servidor y el tiempo medio de reflexión de dichos usuarios.
+    - (x) Verdadero
+    - ( ) Falso
+
+84. Si un servidor web ha recibido una media de 10 visitas por segundo, entonces la razón media de visita del servidor es 10 tr/s.
+    - ( ) Verdadero
+    - (x) Falso
+
+85. Si añadimos una segunda CPU a nuestro servidor, idéntica a la ya existente, es razonable suponer que la razón media de visita de la primera CPU se va a dividir por dos.
+    - (x) Verdadero
+    - ( ) Falso
+
+86. \\(W_i = N_i \cdot S_i\\) es una ley válida para servidores modelados mediante una red de colas abierta en equilibrio de flujo.
+    - ( ) Verdadero
+    - (x) Falso
+
+87. Si el servidor A es un \\(50\%\\) más rápido que el servidor B en ejecutar un determinado programa de benchmark, entonces podemos decir igualmente que el servidor B es un \\(50\%\\) más lento que el servidor A en ejecutar dicho programa de benchmark.
+    - ( ) Verdadero
+    - (x) Falso
+
+88. Las memorias con ECC se usan para aumentar la disponibilidad de un servidor.
+    - ( ) Verdadero
+    - (x) Falso
+
+89. La frecuencia de reloj de las CPU sigue todavía incrementándose de forma exponencial con los años.
+    - ( ) Verdadero
+    - (x) Falso
+
+90. La placa base de la figura tiene 2 ranuras PCI, 3 PCIe y 6 conectores SATA.<br><img src="./Images/board.jpg" width="400" alt="Placa Base">
+    - (x) Verdadero
+    - ( ) Falso
+   
+
+121. La placa base de la figura solo admite una CPU y 4 DIMM de memoria RAM dinámica.<br><img src="./Images/board.jpg" width="400" alt="Placa Base">
+    - (x) Verdadero
+    - ( ) Falso
+  
+
+122. La transmisión de información entre un módulo de memoria de tipo DDR4 y la CPU es full-duplex.
+    - ( ) Verdadero
+    - (x) Falso
+
+123. El uso de Cloud Computing y de la virtualización facilita el diseño de servidores escalables.
+    - (x) Verdadero
+    - ( ) Falso
+
+124. Si la ganancia en velocidad (speedup o aceleración) entre dos servidores para un determinado programa es mayor que 0, es razonable concluir que uno de los servidores es más rápido que el otro para ese programa.
+    - ( ) Verdadero
+    - (x) Falso
+
+125. Con un benchmark especializado en DRAM puedo diagnosticar el correcto funcionamiento de un módulo de DRAM.
+    - ( ) Verdadero
+    - (x) Falso
+
+126. En una red de colas cerrada interactiva se cumple que: \\(N_T = X_0^{max} \cdot (R_0^{min} + Z)\\)
+    - ( ) Verdadero
+    - (x) Falso
+
+127. La siguiente figura puede corresponder a la evolución de la productividad media de un servidor modelado mediante una red de colas cerrada frente al número total de usuarios en dicha red.<br><img src="./Images/grafica.png" alt="Gráfica de productividad media">
+    - (x) Verdadero
+    - ( ) Falso
+
+
+131. Las memorias de tipo U-DIMM, al carecer de buffer/registro interno, son las que permiten albergar la mayor cantidad de memoria por módulo.
+    - ( ) Verdadero
+    - (x) Falso
+
+132. En una red abierta en equilibrio de flujo se cumple que \\(R_0 = R_1 + R_2 + \dots + R_K\\), siendo \\(K\\) el número de estaciones de servicio de nuestro modelo.
+    - ( ) Verdadero
+    - (x) Falso
+
+133. En Linux, el profiler `gprof` utiliza monitorización por muestreo para estimar el tiempo de CPU que consume cada función de nuestro programa escrito en C.
+    - (x) Verdadero
+    - ( ) Falso
+
+134. Cuando comparamos tiempos de ejecución, expresados en segundos, de programas ejecutados en servidores utilizando el test t, el estadístico \\(t_{exp}\\) también se puede expresar en segundos.
+    - ( ) Verdadero
+    - (x) Falso
+
+135. Es posible conectar unidades de almacenamiento con interfaz SATA a una placa base con conectores SAS.
+    - (x) Verdadero
+    - ( ) Falso
