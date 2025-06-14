@@ -93,7 +93,7 @@ protocolo SATA-3 puede proporcionar.
     - ( ) Verdadero
     - (x) Falso
 
-24. Si una interfaz es Plug and Play podemos cambiar el componente en caliente (sin reiniciar).
+24. Si una interfaz es *Plug and Play* podemos cambiar el componente en caliente (sin reiniciar).
     - ( ) Verdadero
     - (x) Falso
 
@@ -133,7 +133,7 @@ protocolo SATA-3 puede proporcionar.
     - (x) Verdadero
     - ( ) Falso
 
-34. En un test t, el valor-p equivale esencialmente a la probabilidad de que la hipótesis nula sea falsa.
+34. En un test t, el \\(p-value\\) equivale esencialmente a la probabilidad de que la hipótesis nula sea falsa.
     - ( ) Verdadero
     - (x) Falso
 
@@ -157,7 +157,7 @@ protocolo SATA-3 puede proporcionar.
     - (x) Verdadero
     - ( ) Falso
 
-40. eDonkeyes un ejemplo de Arquitectura Cliente/Servidor de varios niveles.
+40. *eDonkey* es un ejemplo de Arquitectura Cliente/Servidor de varios niveles.
     - ( ) Verdadero
     - (x) Falso
 
@@ -205,7 +205,7 @@ protocolo SATA-3 puede proporcionar.
     - (x) Verdadero
     - ( ) Falso
 
-52. En un test `ANOVA`, si `Fexp` es mayor que el grado de significatividad concluiremos que no podemos decir que el factor a considerar influya en la variable respuesta.
+52. En un test `ANOVA`, si `F_{exp}` es mayor que el grado de significatividad concluiremos que no podemos decir que el factor a considerar influya en la variable respuesta.
     - ( ) Verdadero
     - (x) Falso
 
@@ -229,7 +229,7 @@ protocolo SATA-3 puede proporcionar.
     - ( ) Verdadero
     - (x) Falso
 
-58. El conector de la figura de la derecha proviene de una fuente de alimentación. <br><img src="./Images/conector_fuente_alimentacion.png" alt="Conector de fuente de alimentacion" width="400">
+58. El conector de la figura proviene de una fuente de alimentación. <br><img src="./Images/conector_fuente_alimentacion.png" alt="Conector de fuente de alimentacion" width="400">
     - (x) Verdadero
     - ( ) Falso
 
@@ -243,7 +243,7 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - ( ) Falso
 
 
-1. En la monitorización de un servidor durante un tiempo \\(T\\), \\(C_O\\) no puede ser mayor que \\(A_0\\).
+1. En la monitorización de un servidor durante un tiempo \\(T\\), \\(C_0\\) no puede ser mayor que \\(A_0\\).
     - ( ) Verdadero
     - (x) Falso
 
@@ -271,31 +271,27 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - ( ) Verdadero
     - (x) Falso
 
-8. Las SSD tienen menor latencia que los discos duros debido a que, entre otras cosas, no tienen que esperar a que el cabezal se posicione sobre la pista a leer/escribir.
-    - (x) Verdadero
-    - ( ) Falso
-
-9. Las LR-DIMM se utilizan para caché de altas prestaciones en servidores.
+8. Las LR-DIMM se utilizan para caché de altas prestaciones en servidores.
     - ( ) Verdadero
     - (x) Falso
 
-10. Es el propio microprocesador en muchos computadores actuales el que realiza la función de puente norte del chipset.
+9.  Es el propio microprocesador en muchos computadores actuales el que realiza la función de puente norte del chipset.
     - (x) Verdadero
     - ( ) Falso
 
-11. El fenómeno llamado "timing skew" motivó la aparición de protocolos de comunicación paralelos como P-ATA (también llamado IDE) o PCI.
+10. El fenómeno llamado "timing skew" motivó la aparición de protocolos de comunicación paralelos como P-ATA (también llamado IDE) o PCI.
     - ( ) Verdadero
     - (x) Falso
 
-12. Existen servidores con fuentes de alimentación reemplazables en caliente (hot swappable).
+11. Existen servidores con fuentes de alimentación reemplazables en caliente (hot swappable).
     - (x) Verdadero
     - ( ) Falso
 
-13. Las pistas en una placa base están hechas de una resina no conductora y no inflamable.
+12. Las pistas en una placa base están hechas de una resina no conductora y no inflamable.
     - ( ) Verdadero
     - (x) Falso
 
-14. Los conectores de la placa base de la figura de la derecha podrían ser de tipo SATA. <br><img src="./Images/conector_sata.png" alt="Conector SATA" width="400">
+13. Los conectores de la placa base de la figura podrían ser de tipo SATA. <br><img src="./Images/conector_sata.png" alt="Conector SATA" width="200">
     - (x) Verdadero
     - ( ) Falso
 
@@ -369,19 +365,15 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - ( ) Verdadero
     - (x) Falso
 
-34. Un determinado monitor software por muestreo se activa cada 5s. Cada activación del monitor (para medir lo que tenga que medir) requiere un total de 6 ms de uso de la única CPU de nuestro servidor. Entonces, la sobrecarga de CPU del monitor será 0,0012%.
-    - ( ) Verdadero
-    - (x) Falso
-
-35. La precisión de un sensor está relacionada con la dispersión de las medidas que realiza.
+34. La precisión de un sensor está relacionada con la dispersión de las medidas que realiza.
     - (x) Verdadero
     - ( ) Falso
 
-36. El indice SPEC no tiene unidades.
+35. El indice SPEC no tiene unidades.
     - (x) Verdadero
     - ( ) Falso
 
-37. El pliego de prescripciones técnicas debe contener, con carácter general, la información sobre el plazo de ejecución o duración del contrato.
+36. El pliego de prescripciones técnicas debe contener, con carácter general, la información sobre el plazo de ejecución o duración del contrato.
     - ( ) Verdadero
     - (x) Falso
 
@@ -403,7 +395,7 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - (x) Verdadero
     - ( ) Falso
 
-5. La ROM tiene el código para instalar los drivers que se usarán por el SO para usar normalmente.
+5. La ROM tiene el código para instalar los drivers que se usarán por el SO para funcionar normalmente.
     - ( ) Verdadero
     - (x) Falso
 
@@ -423,7 +415,7 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - ( ) Verdadero
     - (x) Falso
 
-11. La anchura de entrada de un monitor es la frecuencia máx de la ocurrencia de los eventos.
+11. La anchura de entrada de un monitor es la frecuencia máxima de la ocurrencia de los eventos.
     - ( ) Verdadero
     - (x) Falso
 
@@ -435,7 +427,7 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - ( ) Verdadero
     - (x) Falso
 
-14. Un monitor por eventos siempre da info exacta.
+14. Un monitor por eventos siempre da información exacta.
     - (x) Verdadero
     - ( ) Falso
 
@@ -452,8 +444,8 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - ( ) Falso
 
 18. Si lanzo dos dados (sin truncar) muchas veces, la media de la diferencia entre los valores de sus lanzamientos debería tender a 0.
-    - ( ) Verdadero
-    - (x) Falso
+    - (x) Verdadero
+    - ( ) Falso
 
 19. El tiempo de respuesta medio de un servidor es la suma de los tiempos de respuesta de las estaciones de servicio.
     - ( ) Verdadero
@@ -569,10 +561,10 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 14. `sar` es un monitor software por eventos. 
     - ( ) Verdadero.
     - (x) Falso.
-15. Con "carga del sistema", el S.O. Linux se refiere al número de procesos en modo running, runnable o 1/0 blocked. 
+15. Con "carga del sistema", el S.O. Linux se refiere al número de procesos en modo *running*, *runnable* o *I/0 blocked*. 
     - (x) Verdadero.
     - ( ) Falso.
-16. La hipótesis inicial de un test tes que los rendimientos de ambas alternativas a analizar son estadísticamente diferentes.
+16. La hipótesis inicial de un test t es que los rendimientos de ambas alternativas a analizar son estadísticamente diferentes.
     - ( ) Verdadero.
     - (x) Falso.
 17. Cuando nos referimos al índice de prestaciones que se calcula según el benchmark SPEC CPU2017, el SPEC pico (peak) nunca puede ser menor que el SPEC base. 
@@ -611,7 +603,7 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 28. Si aplicamos la ley de Little a cada cola de una estación de servicio obtenemos que: \\(V_i = X_i \cdot S_i\\)
     - ( ) Verdadero.
     - (x) Falso.
-29. Una maquina con un SPEC menor de 1 significa que es más rápida que la máquina de referencia.
+29. Una máquina con un SPEC menor de 1 significa que es más rápida que la máquina de referencia.
     - ( ) Verdadero.
     - (x) Falso.
 30. Uno de los inconvenientes de utilizar la media aritmética de los tiempos de ejecución de los benchmark es que su valor dependerá de la máquina de referencia que se escoja.
@@ -623,16 +615,16 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 32. Si `NT >> NT*` el servidor está saturado (para colas cerradas).
     - ( ) Verdadero.
     - (x) Falso.
-33. En un test t, el valor-p obtenido depende del nivel de confianza seleccionado.
+33. En un test t, el \\(p-value\\) obtenido depende del nivel de confianza seleccionado.
     - ( ) Verdadero.
     - (x) Falso.
 34. En un test t, a mayor nivel de confianza es más fácil rechazar la hipótesis de que ambas alternativas son iguales.
     - ( ) Verdadero.
     - (x) Falso.
-35. Al bajar el grado de significatividad, es más difícil conseguir que el valor-p < alfa.
+35. Al bajar el grado de significatividad, es más difícil conseguir que el \\(p-value\\) < alfa.
     - (x) Verdadero.
     - ( ) Falso.
-36. En Linux, la información a la que se accede a través de /proc está almacenada realmente en la RAM.
+36. En Linux, la información a la que se accede a través de `/proc` está almacenada realmente en la RAM.
     - (x) Verdadero.
     - ( ) Falso.
 37. Si un servidor siempre responde a nuestras peticiones podemos decir que es un servidor de alta fiabilidad.
@@ -662,103 +654,91 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 45. En los paneles traseros de las placas de servidores los conectores de red son de bajas prestaciones.
     - ( ) Verdadero.
     - (x) Falso.
-46. En un test ANOVA, si Fexp es menor que el grado de significatividad rechazamos la hipótesis nula y concluiremos que el factor a considerar sí que influye en la variable respuesta.
+46. El puente sur del chipset se encarga de la comunicación con la RAM. 
     - ( ) Verdadero.
     - (x) Falso.
-47. El puente sur del chipset se encarga de la comunicación con la RAM. 
+47. La productividad de un servidor nunca podrá ser superior a \\(\frac{1}{D_b}\\).
     - ( ) Verdadero.
     - (x) Falso.
-48. La productividad de un servidor nunca podrá ser superior a \\(\frac{1}{D}\\).
-    - ( ) Verdadero.
-    - (x) Falso.
-49. Intel Xeon es la familia de microprocesadores de Intel especializada en servidores.
+48. Intel Xeon es la familia de microprocesadores de Intel especializada en servidores.
     - (x) Verdadero.
     - ( ) Falso.
-50. Los procesadores AMD Opteron Serie A están basados en microprocesadores de ARM.
+49. Los procesadores AMD Opteron Serie A están basados en microprocesadores de ARM.
     - (x) Verdadero.
     - ( ) Falso.
-51. \\(\lambda_i = \frac{Q_i}{w_i}\\)
+50. \\(\lambda_i = \frac{Q_i}{W_i}\\)
     - (x) Verdadero.
     - ( ) Falso.
-52. \\(S_i = \frac{C_i}{B_i}\\)
+51. \\(S_i = \frac{C_i}{B_i}\\)
     - ( ) Verdadero.
     - (x) Falso.
-53. Es la media aritmética y no el índice SPEC el que nos ayuda a saber qué computadora ejecuta el conjunto total de programas de un benchmark en menos tiempo.
+52. Es la media aritmética y no el índice SPEC el que nos ayuda a saber qué computadora ejecuta el conjunto total de programas de un benchmark en menos tiempo.
     - (x) Verdadero.
     - ( ) Falso.
-54. `sar` al igual que `top` es un monitor software por eventos.
+53. `sar` al igual que `top` es un monitor software por eventos.
     - ( ) Verdadero.
     - (x) Falso.
-55. Las pistas de una placa base están hechas de una resina no conductora y no inflamable.
+54. Las pistas de una placa base están hechas de una resina no conductora y no inflamable.
     - ( ) Verdadero.
     - (x) Falso.
-56. Frotándose las manos se elimina la electricidad estática.
+55. Frotándose las manos se elimina la electricidad estática.
     - ( ) Verdadero.
     - (x) Falso.
-57. La memoria caché L3 se comparte por todos los cores de un microprocesador. 
+56. La memoria caché L3 se comparte por todos los cores de un microprocesador. 
     - (x) Verdadero.
     - ( ) Falso.
-58. Conforme aumenta la generación de memorias DDR aumenta el ancho de banda y disminuye el voltaje.
+57. Conforme aumenta la generación de memorias DDR aumenta el ancho de banda y disminuye el voltaje.
     - (x) Verdadero.
     - ( ) Falso.
-59. La transmisión DDR4 \\(\rightarrow\\)CPU es full-duplex.
+58. Los VGA de un servidor son de altas prestaciones.
     - ( ) Verdadero.
     - (x) Falso.
-60. Los VGA de un servidor son de altas prestaciones.
+59. El puente sur se encarga del PCIe x16.
     - ( ) Verdadero.
     - (x) Falso.
-61. El puente sur se encarga del PCIe x16.
+60. El conjunto de instrucciones POST se encuentra en la RAM.
     - ( ) Verdadero.
     - (x) Falso.
-62. El conjunto de instrucciones POST se encuentra en la RAM.
+61. Una fuente de alimentación convierte corriente continua en corriente alterna para usarla en la placa base.
     - ( ) Verdadero.
     - (x) Falso.
-63. Una fuente de alimentación convierte corriente continua en corriente alterna para usarla en la placa base.
+62. \\(Z=N_z\cdot R_0\\)
     - ( ) Verdadero.
     - (x) Falso.
-64. \\(Z=N_z\cdot R_0\\)
-    - ( ) Verdadero.
-    - (x) Falso.
-65. La carga del sistema es el conjunto de tareas que ha de realizar.
+63. La carga de un sistema se puede definir como el conjunto de tareas que ha de realizar.
     - (x) Verdadero.
     - ( ) Falso.
-66. La carga de un sistema se puede definir como el conjunto de tareas que ha de realizar.
+64. La interfaz Serial ATA es compatible con SAS. Dicho de otra manera, si tengo una placa con conectores Serial ATA voy a poder pinchar en ella unidades SAS.
+    - ( ) Verdadero.
+    - (x) Falso.
+65. La expresión \\(N_i=X_i\cdot R_i\\) solo es válida si el servidor está saturado. 
+    - ( ) Verdadero.
+    - (x) Falso.
+66. La placa base de la figura admite un único microprocesador y 4 módulos de memoria DRAM.<br><img src="./Images/placabase2.png" width="400" alt="Placa Base">
     - (x) Verdadero.
     - ( ) Falso.
-67. El tiempo medio de respuesta de un servidor es la suma de los tiempos medios de respuesta de todos sus componentes.
-    - ( ) Verdadero.
-    - (x) Falso.
-68. La interfaz Serial ATA es compatible con SAS. Dicho de otra manera, si tengo una placa con conectores Serial ATA voy a poder pinchar en ella unidades SAS.
-    - ( ) Verdadero.
-    - (x) Falso.
-69. La expresión \\(N_i=X_i\cdot R_i\\) solo es válida si el servidor está saturado. 
-    - ( ) Verdadero.
-    - (x) Falso.
-70. La placa base de la figura admite un único microprocesador y 4 módulos de memoria DRAM.<br><img src="./Images/placabase2.png" width="400" alt="Placa Base">
+67. La placa base de la figura tiene 4 ranuras PCIe y 6 conectores SATA.<br><img src="./Images/placabase2.png" width="400" alt="Placa Base">
     - (x) Verdadero.
     - ( ) Falso.
-71. La placa base de la figura tiene 4 ranuras PCIe y 6 conectores SATA.<br><img src="./Images/placabase2.png" width="400" alt="Placa Base">
+68. Los paneles traseros de placas de servidores suelen tener conectores de audio y video de altas prestaciones.
+    - ( ) Verdadero.
+    - (x) Falso.
+69. Un microprocesador puede acceder simultáneamente a 2 módulos de memoria DRAM solo si están en canales diferentes.
     - (x) Verdadero.
     - ( ) Falso.
-72. Los paneles traseros de placas de servidores suelen tener conectores de audio y video de altas prestaciones.
+70. Tanto PCI como PCIe definen un protocolo de comunicación serie punto a punto.
     - ( ) Verdadero.
     - (x) Falso.
-73. Un microprocesador puede acceder simultáneamente a 2 módulos de memoria DRAM solo si están en canales diferentes.
+71. La expresión \\(N_0 = X_0 \cdot R_0\\) solo es válida si el servidor no está saturado. 
     - (x) Verdadero.
     - ( ) Falso.
-74. Tanto PCI como PCIe definen un protocolo de comunicación serie punto a punto.
+72. La expresión \\(U_i = X_i \cdot S_i\\) solo es válida si el servidor no está saturado.
     - ( ) Verdadero.
     - (x) Falso.
-75. La expresión \\(N_0 = X_0 \cdot R_0\\) solo es válida si el servidor no está saturado. 
-    - (x) Verdadero.
-    - ( ) Falso.
-76. La expresión \\(U_i = X_i \cdot S_i\\) solo es válida si el servidor no está saturado.
+73. El resultado de un benchmark siempre se expresa como el tiempo necesario para ejecutar una cantidad pre-establecida de tareas.
     - ( ) Verdadero.
     - (x) Falso.
-77. El resultado de un benchmark siempre se expresa como el tiempo necesario para ejecutar una cantidad pre-establecida de tareas.
-    - ( ) Verdadero.
-    - (x) Falso.
-78. El contratante es el proponente que resulta adjudicatario de una licitación y quien finalmente se encargara de llevar a cabo los trabajos contratados.
+74. El contratante es el proponente que resulta adjudicatario de una licitación y quien finalmente se encargara de llevar a cabo los trabajos contratados.
     - ( ) Verdadero.
     - (x) Falso.
 
@@ -770,7 +750,7 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - ( ) Verdadero
     - (x) Falso
 
-80. Si el servidor A es el doble de rápido que el servidor B para todos los programas de un benchmark cuyo rendimiento se calcula según el criterio SPEC, entonces ese índice SPEC del servidor A será mayor que el del servidor B, independientemente de la maquina de referencia elegida.
+80. Si el servidor A es el doble de rápido que el servidor B para todos los programas de un benchmark cuyo rendimiento se calcula según el criterio SPEC, entonces ese índice SPEC del servidor A será mayor que el del servidor B, independientemente de la máquina de referencia elegida.
     - (x) Verdadero
     - ( ) Falso
 
