@@ -305,7 +305,7 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - (x) Verdadero
     - ( ) Falso
 
-20. Un zócalo PGA tiene agujeritos para que entren las palillas del procesador.
+20. Un zócalo PGA tiene agujeritos para que entren las patillas del procesador.
     - (x) Verdadero
     - ( ) Falso
 
@@ -843,7 +843,7 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - (x) Verdadero
     - ( ) Falso
 
-133. Después de instrumentar un programa con la herramienta `gprof`, se ha obtenido el perfil plano (flat profile) que aparece en la siguiente tabla (note que hay algunas columnas que faltan y que el orden de las filas ha podido ser alterado). Se deduce que \\(X_3=40\ \text{ms}\\).<br><img src="./Images/gprof.png" alt="gprof flat profile" width="600">
+133. Después de instrumentar un programa con la herramienta `gprof`, se ha obtenido el perfil plano (flat profile) que aparece en la siguiente tabla (note que hay algunas columnas que faltan y que el orden de las filas ha podido ser alterado). Se deduce que \\(X_3=40\\).<br><img src="./Images/gprof.png" alt="gprof flat profile" width="600">
     - (x) Verdadero
     - ( ) Falso
 
@@ -851,6 +851,28 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - ( ) Verdadero
     - (x) Falso
 
-134. En Google están intentando mejorar la técnica de distribución de carga de sus servidores de YouTube. Para ello, han realizado 100 medidas de la productividad media de los servidores durante un número determinado, pero fijo, de horas para las 2 configuraciones principales de distribución de carga: `conf1` y `conf2`. Como los experimentos se han realizado en presencia de aleatoriedad, han realizado un test-t. De los resultados, deducimos que para un \\(99\%\\) de nivel de confianza no hay diferencias significativas entre las productividades medias obtenidas por ambas configuraciones.<br><img src="./Images/testt.png" alt="Test t" width="600">
+135. En Google están intentando mejorar la técnica de distribución de carga de sus servidores de YouTube. Para ello, han realizado 100 medidas de la productividad media de los servidores durante un número determinado, pero fijo, de horas para las 2 configuraciones principales de distribución de carga: `conf1` y `conf2`. Como los experimentos se han realizado en presencia de aleatoriedad, han realizado un test-t. De los resultados, deducimos que para un \\(99\%\\) de nivel de confianza no hay diferencias significativas entre las productividades medias obtenidas por ambas configuraciones.<br><img src="./Images/testt.png" alt="Test t" width="600">
     - (x) Verdadero
     - ( ) Falso
+
+
+20. Un zócalo PGA tiene patillas para que se conecte el procesador.
+    - ( ) Verdadero
+    - (x) Falso
+
+47. Intel Core es la familia de microprocesadores de Intel especializada en PC.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+47. PCI-X es una versión de PCI-Express.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+48. Linpack y Dhrystone miden el rendimiento de operaciones con coma flotante, mientras que Whetstone mide el rendimiento de operaciones con enteros.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+49. En los benchmarks de SPEC, se evalúa tan solo el rendimiento del procesador.
+    - ( ) Verdadero.
+    - (x) Falso.
+
