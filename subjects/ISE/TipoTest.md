@@ -626,8 +626,8 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - (x) Verdadero.
     - ( ) Falso.
 39. La expresión \\(Q_i = \lambda_i\cdot W_i \\) es válida, aunque el servidor esté saturado.
-    - (x) Verdadero.
-    - ( ) Falso.
+    - ( ) Verdadero.
+    - (x) Falso.
 40. Las unidades SSD tienen mayor latencia que los discos duros debido a que no tienen que esperar a que el cabezal se posicione sobre la pista a leer/escribir.
     - ( ) Verdadero.
     - (x) Falso.
@@ -646,7 +646,7 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 45. En los paneles traseros de las placas de servidores los conectores de red son de bajas prestaciones.
     - ( ) Verdadero.
     - (x) Falso.
-46. La productividad de un servidor nunca podrá ser superior a \\(\frac{1}{D_b}\\).
+46. La productividad de un servidor nunca podrá ser superior a \\(\frac{1}{D}\\).
     - ( ) Verdadero.
     - (x) Falso.
 47. Intel Xeon es la familia de microprocesadores de Intel especializada en servidores.
@@ -682,7 +682,7 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 57. Los VGA de un servidor son de altas prestaciones.
     - ( ) Verdadero.
     - (x) Falso.
-58. El conjunto de instrucciones POST se encuentra en la RAM.
+58. El conjunto de instrucciones `POST` se encuentra en la RAM.
     - ( ) Verdadero.
     - (x) Falso.
 59. Una fuente de alimentación convierte corriente continua en corriente alterna para usarla en la placa base.
@@ -790,7 +790,7 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - (x) Verdadero
     - ( ) Falso
 
-124. Si la ganancia en velocidad (speedup o aceleración) entre dos servidores para un determinado programa es mayor que 0, es razonable concluir que uno de los servidores es más rápido que el otro para ese programa.
+124. Si la ganancia en velocidad (speedup o aceleración) entre dos servidores para un determinado programa es mayor que \\(0\\), es razonable concluir que uno de los servidores es más rápido que el otro para ese programa.
     - ( ) Verdadero
     - (x) Falso
 
@@ -834,3 +834,23 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
 88. La familia AMD Opteron X Series usa microprocesadores de ARM.
     - ( ) Verdadero
     - (x) Falso
+
+14. `sar` es un monitor software por muestreo. 
+    - (x) Verdadero.
+    - ( ) Falso.
+
+132. Después de instrumentar un programa con la herramienta `gprof`, se ha obtenido el perfil plano (flat profile) que aparece en la siguiente tabla (note que hay algunas columnas que faltan y que el orden de las filas ha podido ser alterado). Se deduce que \\(X_2\geq 10\ \text{ms}\\).<br><img src="./Images/gprof.png" alt="gprof flat profile" width="600">
+    - (x) Verdadero
+    - ( ) Falso
+
+133. Después de instrumentar un programa con la herramienta `gprof`, se ha obtenido el perfil plano (flat profile) que aparece en la siguiente tabla (note que hay algunas columnas que faltan y que el orden de las filas ha podido ser alterado). Se deduce que \\(X_3=40\ \text{ms}\\).<br><img src="./Images/gprof.png" alt="gprof flat profile" width="600">
+    - (x) Verdadero
+    - ( ) Falso
+
+134. En Google están intentando mejorar la técnica de distribución de carga de sus servidores de YouTube. Para ello, han realizado 100 medidas de la productividad media de los servidores durante un número determinado, pero fijo, de horas para las 2 configuraciones principales de distribución de carga: `conf1` y `conf2`. Como los experimentos se han realizado en presencia de aleatoriedad, han realizado un test-t. De los resultados, deducimos que para un \\(80\%\\) de nivel de confianza podemos afirmar que hay diferencias significativas y que la mejor configuración, según el criterio de la medida aritmética es `conf1`.<br><img src="./Images/testt.png" alt="Test t" width="600">
+    - ( ) Verdadero
+    - (x) Falso
+
+134. En Google están intentando mejorar la técnica de distribución de carga de sus servidores de YouTube. Para ello, han realizado 100 medidas de la productividad media de los servidores durante un número determinado, pero fijo, de horas para las 2 configuraciones principales de distribución de carga: `conf1` y `conf2`. Como los experimentos se han realizado en presencia de aleatoriedad, han realizado un test-t. De los resultados, deducimos que para un \\(99\%\\) de nivel de confianza no hay diferencias significativas entre las productividades medias obtenidas por ambas configuraciones.<br><img src="./Images/testt.png" alt="Test t" width="600">
+    - (x) Verdadero
+    - ( ) Falso
