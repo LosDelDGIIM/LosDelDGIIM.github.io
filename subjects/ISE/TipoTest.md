@@ -872,7 +872,82 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - ( ) Verdadero.
     - (x) Falso.
 
-49. En los benchmarks de SPEC, se evalúa tan solo el rendimiento del procesador.
-    - ( ) Verdadero.
-    - (x) Falso.
 
+
+
+
+49. NVMe es un protocolo para conectar dispositivos SSD por PCIe.
+    - (x) Verdadero
+    - ( ) Falso
+
+50. USB 3.0 es Full-duplex
+    - (x) Verdadero
+    - ( ) Falso
+
+51. En SoC nos podemos comunicar directamente con la memoria RAM.
+    - (x) Verdadero
+    - ( ) Falso
+
+52. Los monitores de actividad por muestreo muestran informacion exacta
+    - ( ) Verdadero
+    - (x) Falso
+
+53. `sar` solo mide párametros relativos a CPU
+    - ( ) Verdadero
+    - (x) Falso
+
+54. `MIPS` es una medida de rendimiento fiable: si un equipo presenta valor mayor de `MIPS` que otro, rendirá mejor en todos los programas.
+    - ( ) Verdadero
+    - (x) Falso
+
+55. El microbenchmark SPEC CPU 2017 mide las prestaciones de CPU, sistema de memoria y de compilador (C, C++, Fortran).
+    - (x) Verdadero
+    - ( ) Falso
+
+56. La ley de Little establece que el número promedio de clientes en un sistema estacionario es igual a la tasa promedio de llegada multiplicada por el tiempo promedio que pasa en el sistema y es válida si está en equilibrio de flujo.
+    - (x) Verdadero
+    - ( ) Falso
+
+57. La latencia es la cantidad de trabajo de un equipo, es decir, el número de trabajos completados entre el tiempo dedicado.
+    - ( ) Verdadero
+    - (x) Falso
+
+58. El zócalo de la figura es LGA.<br><img src="./Images/zocalo_cpu_pga.png" alt="Zócalo LGA" width="200">
+    - ( ) Verdadero
+    - (x) Falso
+
+59. Las frecuencias de los procesadores se han estabilizado desde la primera década del siglo XXI.
+    - (x) Verdadero
+    - ( ) Falso
+
+60. Las memorias de los PCs tienen ECC, a diferencia de las de los servidores.
+    - ( ) Verdadero
+    - (x) Falso
+
+61. EPYC es un procesador de Intel.
+    - ( ) Verdadero
+    - (x) Falso
+
+62. Una memoria dual-ranked puede tener hasta 4 rangos.
+    - ( ) Verdadero
+    - (x) Falso
+
+63. En un análisis estadístico como el de t Student, si el \\(p-value\\) es menor que el nivel de significatividad (alpha), entonces podemos rechazar la hipótesis nula.
+    - (x) Verdadero
+    - ( ) Falso
+
+64. SO-DIMM tiene un menor número de contactos que DIMM.
+    - (x) Verdadero
+    - ( ) Falso
+
+65. Cada LANE de PCIe está formada por 4 cables.
+    - (x) Verdadero
+    - ( ) Falso
+
+66. Los SSDs están hechos de condensadores.
+    - ( ) Verdadero
+    - (x) Falso
+
+67. La carga de sistema en Linux, que se muestra en `uptime`, entre otros comandos, está formada únicamente por los procesos en estado `running` y `runnable`.
+    - ( ) Verdadero
+    - (x) Falso
