@@ -3,7 +3,7 @@
 **Autor:** Arturo Olivares Martos
 ***
 
-- **Asignatura:** Programacición y Diseño Orientado a Objetos.
+- **Asignatura:** Programación y Diseño Orientado a Objetos.
 - **Curso Académico:** 2019-20.
 - **Grado:** Doble Grado en Ingeniería Informática y Matemáticas.
 - **Grupo:** Único.
