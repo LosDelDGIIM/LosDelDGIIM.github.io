@@ -4,6 +4,8 @@
 
 - **Autor:** Arturo Olivares Martos
 - **Descripción:** Recopilación de preguntas Tipo Test de la asignatura de Inteligencia Artificial. Se han obtenido de fuentes diversas, por lo que si faltasen, sobrasen o estuviesen mal formuladas, por favor, se ruega nos lo hagan saber para corregirlo.
+- **Exámenes Garantizados:**
+    - Convocatoria Ordinaria DGIIM 2024-2025.
 
 ---
 
@@ -11,6 +13,7 @@
     - (x) Algoritmo A*.
     - ( ) Búsqueda en profundidad.
     - ( ) Algortimo genético.
+    - ( ) El algoritmo de búsqueda en profundidad retroactiva.  
 
 2. ¿El uso de una función heurística garantiza que un método de búsqueda consiga la solución óptima?:
     - ( ) Siempre.
@@ -298,7 +301,7 @@
     - ( ) Máximos locales.
     - (x) Mesetas y Máximos Locales.
 
-58. Qué tipo de aprendizaje aprende una función a partir de ejemplos de sus entradas y salidas?:
+58. ¿Qué tipo de aprendizaje aprende una función a partir de ejemplos de sus entradas y salidas?:
     - ( ) Aprendizaje por refuerzo.
     - ( ) Aprendizaje no supervisado.
     - (x) Aprendizaje supervisado.
@@ -353,7 +356,7 @@
     - ( ) estados mejores que el actual.
     - (x) estados peores que el actual.
 
-69. ¿El algoritmo de escalada estocástico selecciona el siguiente estado?:
+69. El algoritmo de escalada estocástico selecciona el siguiente estado...
     - ( ) Aleatoriamente entre todos los descendientes.
     - ( ) Aleatoriamente entre todos los descendientes que mejoran al actual y con una probabilidad constante.
     - (x) Aleatoriamente entre todos los descendientes que mejoran al actual y con una probabilidad descendiente proporcional al valor de la heurística del mismo.
@@ -635,7 +638,9 @@
 
 120. La cota beta es:
     - ( ) una cota inferior.
-    - (x) una cota superior.
+    - (x) una cota superior.  
+    - ( ) la representación del último movimiento realizado.  
+    - ( ) una aproximación heurística de la jugada media según partidas anteriores.  
 
 121. En un juego con componente aleatoria los valores de los estados se propagan hacia arriba en las capas aleatorias usando:
     - ( ) una variación de la función heurística.
@@ -791,7 +796,7 @@
     - ( ) Proactivo
     - ( ) Ninguno de los anteriores
 
-150. ¿Para una partida de ajedrez, por ejemplo, cuál es el agente mas idóneo para realizarla?
+150. Para una partida de ajedrez, por ejemplo, ¿cuál es el agente mas idóneo para realizarla?
     - ( ) Reactivo
     - (x) Deliberativo
     - ( ) Ninguno de los anteriores
@@ -1327,6 +1332,7 @@
     - ( ) Es capaz de interactuar con la realidad de forma autónoma.
     - ( ) No necesita a un ser humano para su mantenimiento.
     - (x) No se puede diferenciar su comportamiento del de un ser humano.
+    - ( ) Puede resolver problemas difíciles sin la intervención humana.
 
 9.  En un sistema multiagente (SMA), ¿tiene sentido que todos los agentes tengan información completa de todo su entorno?:
     - ( ) Verdadero.
@@ -1394,4 +1400,74 @@
 
 23. Además de cooperación y negociación, ¿cuál es la interacción entre agentes que falta?:  
     - ( ) Impresión.  
-    - (x) Coordinación.  
+    - (x) Coordinación. 
+
+
+1. Un árbol del juego es  
+    - (x) una representación explícita de todas las formas de jugar a un juego para los dos jugadores.  
+    - ( ) una representación explícita de la forma de ganar el juego para `MIN`.  
+    - ( ) una representación explícita de la forma de ganar el juego para `MAX`.  
+
+2. ¿Por qué es importante considerar la ética en el desarrollo y la implementación de la inteligencia artificial?  
+    - ( ) Para minimizar los costos asociados con el desarrollo de sistemas de IA.  
+    - ( ) Porque garantiza la máxima eficiencia en los algoritmos de IA.  
+    - (x) Para abordar preocupaciones sobre la privacidad, la equidad y el impacto social de la IA.  
+
+
+3. ¿Funcionaría correctamente un algoritmo minimax para un juego del tres en raya que utilizara la siguiente función heurística \\(f(T)=\\)(número de filas, columna o diagonales aún libres para el jugador `MAX`) para un cierto tablero \\(T\\)?  
+    - ( ) Sí, pero la estimación de los tableros que benefician al primer jugador se podría mejorar usando más información.  
+    - (x) No, esta función no permitiría realizar buenas jugadas al primer jugador.  
+    - ( ) Sí, ya que representa una buena forma de estimar tableros que benefician al primer jugador.  
+
+4. ¿Qué frase describe mejor el algoritmo de escalada estocástico?  
+    - ( ) Es una versión del algoritmo de escalada simple que elige cambiar a un estado vecino mejor que el actual de forma probabilística y teniendo en cuenta la heurística de los nodos vecinos.  
+    - (x) Es una versión del algoritmo de escalada por la máxima pendiente que elige cambiar a un estado vecino mejor que el actual de forma probabilística y teniendo en cuenta la heurística de los nodos vecinos.
+   - ( ) Es una versión del algoritmo de escalada por la máxima pendiente en el que el orden de los vecinos a explorar se elige de forma aleatoria.
+   - ( ) Es una versión del algoritmo de escalada simple en el que el orden de los vecinos a explorar se elige de forma aleatoria.
+
+5. ¿Qué se consigue con el aprendizaje automático?  
+    - ( ) Encontrar la mejor solución posible.  
+    - ( ) Optimizar una solución aproximada dada por los datos.  
+    - ( ) Mejorar la descripción del problema.  
+    - (x) El perfeccionamiento de la habilidad y la adquisición del conocimiento.  
+
+
+6. ¿Cuál de estas características es propia de un agente deliberativo?  
+    - ( ) Colabora con otros agentes.  
+    - (x) Se propone metas y trata de alcanzarlas.  
+    - ( ) Responde a los estímulos con acciones.  
+
+
+7. ¿En qué influye el factor de ramificación en un proceso de búsqueda?  
+    - (x) En la complejidad del espacio de estados.  
+    - ( ) En la completitud del algoritmo de búsqueda.  
+    - ( ) En la posibilidad de encontrar la solución óptima del algoritmo de búsqueda.  
+
+
+8. Los agentes deliberativos se diferencian de los agentes reactivos en que los primeros disponen de:  
+    - ( ) un mapa del mundo en el que habita.  
+    - ( ) memoria.  
+    - (x) un modelo de los efectos de sus acciones en el mundo.  
+    - ( ) un conjunto de sensores para reconocer el mundo.
+
+9. Un conjunto de reglas de inferencia es sólido si  
+    - ( ) si toda fórmula que se sigue lógicamente de un conjunto de fórmulas se puede demostrar a partir de las reglas de inferencia.  
+    - (x) todo teorema que se puede obtener a partir de un conjunto es una consecuencia lógica de ese conjunto.  
+    - ( ) todo lo que puede ser demostrado se puede obtener de una forma eficiente.
+
+10. En el proceso de construcción de un árbol de decisión, ¿qué técnica se utiliza para reducir la complejidad del modelo y evitar el sobreajuste?  
+    - ( ) Aumentar la profundidad del árbol.  
+    - ( ) Incrementar el número de nodos de decisión.  
+    - ( ) Realizar una búsqueda heurística.  
+    - (x) Aplicar podas sobre el árbol.  
+
+11. Cuando un juego no es de información perfecta  
+    - ( ) se utiliza la poda alfa beta y se puede obtener la mejor jugada.  
+    - ( ) no se puede obtener la mejor jugada.  
+    - (x) es necesario adaptar los algoritmos para que representen la incertidumbre y/o la falta de información.
+
+12. ¿Cuál de las siguientes características es la que mejor representa a los problemas que incluimos dentro de la Inteligencia Artificial?  
+    - ( ) Problemas que no tienen una solución exacta.  
+    - ( ) Problemas que sí tienen una solución exacta, pero aún no se ha implementado.  
+    - (x) Problemas que no tienen una solución exacta y que sea eficiente.  
+    - ( ) Problemas con una descripción compleja que requieren mucho tiempo para ser resueltos.
