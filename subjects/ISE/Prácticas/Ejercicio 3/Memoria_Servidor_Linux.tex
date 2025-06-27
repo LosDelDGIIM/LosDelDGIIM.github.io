@@ -1,0 +1,172 @@
+\documentclass[a4paper,12pt]{article}
+\input{../../_assets/preambulo.tex}
+\usepackage{fvextra}
+\setminted{
+  breaklines=true,
+  breakanywhere=true,
+  linenos=false,
+  breakindent=8em  % Puedes ajustar la sangría aquí
+}
+\title{Memoria Prácticas ISE.\\Monitorización de un Servidor Linux}
+\author{Arturo Olivares Martos}
+\date{\today}
+
+% Footer con fancyhdr
+\fancyhead[L]{Monitorización de un Servidor Linux}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+    En esta pequeña memoria, se incluirán lan capturas más relevantes que pongan de manifiesto la monitorización de un servidor Linux, empleando para ello el software Node Exporter de Prometheus.
+\end{abstract}
+
+
+\tableofcontents
+\newpage
+
+\section{Node Exporter}
+
+En la presente sección, describiremos cómo hemos instalado y configurado el software Node Exporter de Prometheus en la Máquina Virtual Rocky Linux.
+\begin{enumerate}
+    \item En primer lugar, hemos de descargar y descomprimir el \verb|node_exporter|, y guardarlo en \verb|/usr/local/bin/|.
+    \begin{minted}{shell}
+        $ cd /tmp
+        $ curl -LO https://github.com/prometheus/node_exporter/releases/download/v0.18.1/node_exporter-0.18.1.linux-amd64.tar.gz
+        $ tar -xvf node_exporter-0.18.1.linux-amd64.tar.gz
+        $ sudo mv node_exporter-0.18.1.linux-amd64/node_exporter /usr/local/bin/
+    \end{minted}
+
+    Este proceso se muestra en la Figura~\ref{fig:1-Node_Exporter}.
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=\textwidth]{Images/1-Node_Exporter.png}
+        \caption{Descarga y descompresión de Node Exporter}
+        \label{fig:1-Node_Exporter}
+    \end{figure}
+
+
+    \item A continuación, hemos de crear un usuario específico para ejecutar el \verb|node_exporter|, de forma que no se ejecute con permisos de \verb|text|. Esto es una buena práctica de seguridad, ya que limita los permisos del servicio. También cambiamos los permisos del binario para que el usuario creado sea el propietario.
+    \begin{minted}{shell}
+        $ sudo useradd -rs /bin/false node_exporter
+        $ sudo chown node_exporter:node_exporter /usr/local/bin/node_exporter
+    \end{minted}
+
+
+    También le indicamos a SELinux que este fichero es un ejecutable:
+    \begin{minted}{shell}
+        $ sudo chcon -t bin_t /usr/local/bin/node_exporter
+    \end{minted}
+
+    \item Ahora, hemos de crear un archivo de configuración para el servicio \verb|node_exporter|. Este archivo se encuentra en \verb|/etc/systemd/system/node_exporter.service| y contiene la configuración del servicio. El contenido del archivo es el siguiente:
+    \begin{minted}{ini}
+    [Unit]
+    Description=Node Exporter
+    After=network.target
+
+    [Service]
+    User=node_exporter
+    Group=node_exporter
+    Type=simple
+    ExecStart=/usr/local/bin/node_exporter --collector.systemd --collector.processes
+
+    [Install]
+    WantedBy=multi-user.target
+    \end{minted}
+
+
+    \item A continuación, hemos de abrir el puerto 9100 en el firewall para permitir el acceso al servicio \verb|node_exporter| (puesto que, por defecto, este servicio escucha en el puerto 9100). Recordamos que también debemos hacer uso de \verb|SELinux| para evitar problemas de permisos. Para ello, ejecutamos los siguientes comandos:
+    \begin{minted}{shell}
+        $ sudo firewall-cmd --add-port=9100/tcp --permanent
+        $ sudo firewall-cmd --reload
+        $ sudo semanage port -a -t http_port_t -p tcp 9100
+    \end{minted}
+    La Figura~\ref{fig:2-Node_Exporter} muestra el proceso de apertura del puerto 9100 en el firewall.
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=\textwidth]{Images/2-Node_Exporter.png}
+        \caption{Apertura del puerto 9100 en el firewall}
+        \label{fig:2-Node_Exporter}
+    \end{figure}
+
+    \item Ahora, hemos de recargar el demonio \verb|systemd| para que reconozca el nuevo servicio y luego iniciar el servicio \verb|node_exporter|. Comprobamos que el servicio se ha iniciado correctamente y que está escuchando en el puerto 9100:
+    \begin{minted}{shell}
+        $ sudo systemctl daemon-reload
+        $ sudo systemctl start node_exporter
+        $ sudo systemctl status node_exporter
+    \end{minted}
+    La Figura~\ref{fig:3-Node_Exporter} muestra el estado del servicio \verb|node_exporter|.
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=\textwidth]{Images/3-Node_Exporter.png}
+        \caption{Estado del servicio Node Exporter}
+        \label{fig:3-Node_Exporter}
+    \end{figure}
+    Habilitamos el servicio para que se inicie automáticamente al arrancar la máquina:
+    \begin{minted}{shell}
+        $ sudo systemctl enable node_exporter
+    \end{minted}
+
+    Una vez realizado todo, podemos comprobar que el servicio \verb|node_exporter| está funcionando correctamente accediendo desde un navegador a la dirección dada por \verb|http://<IP Maquina Virtual>:9100/metrics|. Aquí vemos una lista de métricas en formato texto, que son las que \verb|node_exporter| está exponiendo. La Figura~\ref{fig:4-Node_Exporter} muestra un ejemplo de estas métricas.
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=\textwidth]{Images/4-Node_Exporter.png}
+        \caption{Métricas expuestas por Node Exporter}
+        \label{fig:4-Node_Exporter}
+    \end{figure}
+
+    También podemos comprobar que el servicio funciona correctamente desde Prometheus, comprobando que funciona correctamente. La Figura~\ref{fig:5-Node_Exporter} muestra cómo se ve el servicio en la interfaz de Prometheus.
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=\textwidth]{Images/5-Node_Exporter.png}
+        \caption{Node Exporter en Prometheus}
+        \label{fig:5-Node_Exporter}
+    \end{figure}
+\end{enumerate}
+
+\section{Panel de Servicios}
+
+En el siguiente panel, mostramos si dos servicios (en este caso \verb|SSHD| y \verb|HTTPD|) están activos o no. Varias pruebas se ven en las Figuras~\ref{fig:Grafana-Services_1} y~\ref{fig:Grafana-Services_2}.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{Images/Grafana-Services_1.png}
+    \caption{Panel de Servicios. SSHD activo y HTTPD desinstalado.}
+    \label{fig:Grafana-Services_1}
+\end{figure}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{Images/Grafana-Services_2.png}
+    \caption{Panel de Servicios. SSHD inactivo y HTTPD activo.}
+    \label{fig:Grafana-Services_2}
+\end{figure}
+
+\section{Uso de la CPU}
+
+En el siguiente panel, mostramos el uso de la CPU del servidor. Añadimos también el hecho de poner una alerta si el uso de la CPU supera el 75\% durante más de 5 minutos.
+
+\subsection{Lanzamiento Carga CPU}
+
+El lanzamiento de carga en la CPU se ha realizado con el siguiente comando:
+\begin{minted}{shell}
+    $ stress-ng --cpu 4 --timeout 1000s
+\end{minted}
+
+La Figura~\ref{fig:Grafana-CPU_1} muestra el uso de la CPU antes y después de lanzar la carga. Además, en la parte inferior del panel, se muestra el comando que se ha ejecutado para lanzar la carga en la CPU.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{Images/Grafana-CPU_1.png}
+    \caption{Uso de la CPU antes y después de lanzar la carga.}
+    \label{fig:Grafana-CPU_1}
+\end{figure}
+\subsection{Alerta de Uso de la CPU}
+La Figura~\ref{fig:Grafana-CPU_2} muestra el disparo de alerta que se ha generado al superar el 75\% de uso de la CPU durante más de 5 minutos. Como vemos, se detectó rápidamente el uso elevado de la CPU y se generó una alerta pendiente. Cuando está por encima del 75\% durante más de 5 minutos, se genera una alerta pendiente.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{Images/Grafana-CPU_2.png}
+    \caption{Alerta de uso elevado de la CPU.}
+    \label{fig:Grafana-CPU_2}
+\end{figure}
+
+
+
+\end{document}

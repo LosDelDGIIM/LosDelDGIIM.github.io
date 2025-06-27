@@ -1,0 +1,123 @@
+---
+- name: Instalación Servidor Apache
+  hosts: apache_server
+  tasks:
+    - name: Abrir el puerto HTTP en el firewall
+      ansible.posix.firewalld:
+        port: "{{ port_to_listen }}/tcp"
+        permanent: true
+        state: enabled
+        immediate: true
+      become: true
+
+    - name: Instalar el servidor HTTP
+      ansible.builtin.package:
+        name: "{{ service }}"
+        state: present
+      become: true
+
+    - name: Puerto en el que está escuchando el servidor HTTP
+      ansible.builtin.lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        regexp: '^Listen'
+        line: "Listen\t{{ port_to_listen }}"
+        state: present
+      become: true
+
+    - name: Instalar el servicio policycoreutils-python-utils
+      ansible.builtin.package:
+        name: "policycoreutils-python-utils"
+        state: present
+      become: true
+
+    - name: Aplicamos el comando semanage
+      community.general.seport:
+        ports: "{{ port_to_listen }}"
+        proto: tcp
+        setype: http_port_t
+        state: present
+      become: true
+
+    - name: Ubicación del DocumentRoot
+      ansible.builtin.lineinfile:
+        path: "{{ conf }}"
+        regexp: '^DocumentRoot'
+        line: "DocumentRoot \"{{ root }}\""
+        state: present
+      become: true
+
+    - name: Iniciar el servicio HTTP
+      ansible.builtin.service:
+        name: "{{ service }}"
+        state: reloaded
+        enabled: true
+      become: true
+
+    - name: Crear el archivo index.html
+      ansible.builtin.copy:
+        dest: "{{ root }}index.html"
+        src: "{{ servers_folder }}{{ service }}.html"
+        mode: preserve
+      become: true
+
+- name: Instalación Servidor Nginx
+  hosts: nginx_server
+  tasks:
+    - name: Abrir el puerto HTTP en el firewall
+      ansible.posix.firewalld:
+        port: "{{ port_to_listen }}/tcp"
+        permanent: true
+        state: enabled
+        immediate: true
+        offline: true
+      become: true
+
+    - name: Instalar el servidor nginx
+      ansible.builtin.package:
+        name: "{{ service }}"
+        state: present
+      become: true
+
+    - name: Puerto en el que está escuchando el servidor nginx
+      ansible.builtin.lineinfile:
+        path: /etc/nginx/nginx.conf
+        regexp: "^\\s*listen\\s+[^[\\s].*$"
+        line: "\tlisten\t{{ port_to_listen }};"
+        state: present
+      become: true
+
+    - name: Instalar el servicio policycoreutils-python-utils
+      ansible.builtin.package:
+        name: "policycoreutils-python-utils"
+        state: present
+      become: true
+
+    - name: Aplicamos el comando semanage
+      community.general.seport:
+        ports: "{{ port_to_listen }}"
+        proto: tcp
+        setype: http_port_t
+        state: present
+      become: true
+
+    - name: Ubicación del root
+      ansible.builtin.lineinfile:
+        path: "{{ conf }}"
+        regexp: "^\\s*root\\s+"
+        line: "\troot\t {{ root }};"
+      become: true
+
+    - name: Iniciar el servicio nginx
+      ansible.builtin.service:
+        name: "{{ service }}"
+        state: reloaded
+        enabled: true
+      become: true
+
+    - name: Crear el archivo index.html
+      ansible.builtin.copy:
+        dest: "{{ root }}index.html"
+        src: "{{ servers_folder }}{{ service }}.html"
+        mode: preserve
+      become: true
+...

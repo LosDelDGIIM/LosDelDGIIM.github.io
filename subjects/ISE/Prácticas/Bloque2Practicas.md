@@ -2,6 +2,7 @@
 
 - **Autor**: Arturo Olivares Martos
 - **Autor**: Miguel Ángel de la Vega Rodríguez
+- **Autor**: José Juan Urrutia Milán
 
 
 ## Introducción

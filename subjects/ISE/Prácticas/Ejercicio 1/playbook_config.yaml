@@ -1,0 +1,77 @@
+---
+- name: Configuracion Inicial
+  hosts: all
+  tasks:
+    - name: Crear el usuario admin
+      ansible.builtin.user:
+        name: "{{ admin.name }}"
+        state: present
+        password: "{{ lookup('ansible.builtin.file', pass_folder + admin.name + '.pass') | password_hash('sha512') }}"
+
+    - name: Permitir al usuario admin ejecutar comandos con privilegios de superusuario sin contraseña
+      community.general.sudoers:
+        name: "{{ admin.name }}"
+        state: present
+        user: "{{ admin.name }}"
+        commands: ALL
+        nopassword: true
+
+    - name: Asegurarnos que el archivo de las claves autorizadas es el por defecto
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        line: "AuthorizedKeysFile\t.ssh/authorized_keys"
+        regex: '^AuthorizedKeysFile\s+'
+        validate: "sshd -t -f %s"  # Valida la sintaxis del archivo sshd_config.
+
+    - name: Añadir la clave pública del usuario admin al archivo authorized_keys
+      ansible.posix.authorized_key:
+        user: "{{ admin.name }}"
+        state: present
+        key: "{{ lookup('ansible.builtin.file', keys_folder + admin.name + '.pub') }}"
+
+    - name: Creamos el grupo Wheel
+      ansible.builtin.group:
+        name: wheel
+        state: present
+
+    - name: Permitir que wheel ejecute comandos sudo con contraseña
+      community.general.sudoers:
+        name: wheel
+        state: present
+        group: wheel
+        commands: ALL
+        nopassword: false
+
+    - name: Creamos los usuarios, añadiéndolos al grupo wheel
+      ansible.builtin.user:
+        name: "{{ item.name }}"
+        groups: wheel
+        append: true      # Añade el usuario al grupo wheel, pero no lo elimina de otros grupos
+        password: "{{ lookup('ansible.builtin.file', pass_folder + item.name + '.pass') | password_hash('sha512') }}"
+        state: present
+      loop: "{{ users }}"
+
+    - name: Permitir que los usuarios se conecten por SSH sin contraseña
+      ansible.posix.authorized_key:
+        user: "{{ item.name }}"
+        state: present
+        key: "{{ lookup('ansible.builtin.file', './keys/' + item.name + '.pub') }}"
+      loop: "{{ users }}"
+
+    - name: Deshabilitar el acceso SSH para root
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        line: "PermitRootLogin\tprohibit-password"
+        regex: '^PermitRootLogin\s+'
+        validate: "sshd -t -f %s"  # Valida la sintaxis del archivo sshd_config.
+
+
+    - name: Reiniciamos el servicio SSH
+      ansible.builtin.service:
+        name: sshd
+        state: restarted
+        enabled: true
+
+...
