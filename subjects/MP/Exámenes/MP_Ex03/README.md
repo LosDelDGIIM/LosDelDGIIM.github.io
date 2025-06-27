@@ -1,6 +1,6 @@
 # Metodología de la Programación. Examen III (Prácticas).
 
-**Autor:** victryx
+**Autor:** [victryx](https://github.com/victryx)
 ***
 
 - **Asignatura:** Metodología de la Programación.
@@ -12,7 +12,6 @@
 <!-- - **Fecha:** 9 de mayo de 2023. -->
 <!-- - **Duración:** -->
 
-- Compilar con `cd examen_resuelto`, `make`
-- Ejecutar con `make run`
-- La nota obtenida fue de 10 sobre 10, en principio la resolución es correcta
-- Para descargar, está disponible el archivo [`MP_Ex03.zip`](./MP_Ex03.zip)
+
+Compilar con `cd examen_resuelto`, `make`. Ejecutar con `make run`
+Para descargar, está disponible el archivo [`MP_Ex03.zip`](./MP_Ex03.zip)
