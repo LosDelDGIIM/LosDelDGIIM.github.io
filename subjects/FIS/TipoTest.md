@@ -7,6 +7,8 @@
 - **Autor:** Laura Mandow Fuentes
 - **Autor:** José Juan Urrutia Milán
 - **Descripción:** Recopilación de preguntas Tipo Test de la asignatura de FIS. Se han obtenido de fuentes diversas, por lo que si faltasen, sobrasen o estuviesen mal formuladas, por favor, se ruega nos lo hagan saber para corregirlo.
+- **Exámenes Garantizados:**
+    - Convocatoria Ordinaria DGIIM 2024/2025.
 
 ---
 
@@ -70,7 +72,7 @@
     - (x) Verdadero
     - ( ) Falso
 
-1. Una de las funciones de la relación de inclusión en los casos de uso es descomponer un caso de uso complejo y largo en varios, para facilitar su comprensión.
+16. Una de las funciones de la relación de inclusión en los casos de uso es descomponer un caso de uso complejo y largo en varios, para facilitar su comprensión.
     - (x) Verdadero
     - ( ) Falso
 
@@ -107,43 +109,39 @@
     - (x) Verdadero
     - ( ) Falso
 
-10. El análisis de requisitos permite descubrir los conflictos existentes entre los requisitos.
+10. Durante el análisis no se estudia la solución que se va a proponer al problema planteado, eso se deja a la fase de diseño.
+    - ( ) Verdadero
+    - (x) Falso
+
+11. Con el análisis orientado a objetos sólo se modelan las propiedades estáticas del ámbito del problema.
+    - ( ) Verdadero
+    - (x) Falso
+
+12. Los casos de uso “esenciales” son los procedimientos comunes más importantes del sistema.
+    - ( ) Verdadero
+    - (x) Falso
+
+13. No se deben usar atributos de un concepto como clave de acceso desde otro concepto.
     - (x) Verdadero
     - ( ) Falso
 
-11. Durante el análisis no se estudia la solución que se va a proponer al problema planteado, eso se deja a la fase de diseño.
+14. El modelo conceptual se representa usando un diagrama de clases que contiene las clases con sus atributos, métodos y asociaciones.
     - ( ) Verdadero
     - (x) Falso
 
-12. Con el análisis orientado a objetos sólo se modelan las propiedades estáticas del ámbito del problema.
+15. En un diagrama de secuencia del sistema pueden aparecer tantos objetos como se necesiten para modelar la interacción entre ellos.
     - ( ) Verdadero
     - (x) Falso
 
-13. Los casos de uso “esenciales” son los procedimientos comunes más importantes del sistema.
-    - ( ) Verdadero
-    - (x) Falso
-
-14. No se deben usar atributos de un concepto como clave de acceso desde otro concepto.
+16. Un caso de uso puede generar más de una operación en el diagrama de secuencia del sistema.
     - (x) Verdadero
     - ( ) Falso
 
-15. El modelo conceptual se representa usando un diagrama de clases que contiene las clases con sus atributos, métodos y asociaciones.
+17. Los patrones de diseño para la asignación de responsabilidades a objetos ayudan a obtener el diagrama de clases del diseño.
     - ( ) Verdadero
     - (x) Falso
 
-16. En un diagrama de secuencia del sistema pueden aparecer tantos objetos como se necesiten para modelar la interacción entre ellos.
-    - ( ) Verdadero
-    - (x) Falso
-
-17. Un caso de uso puede generar más de una operación en el diagrama de secuencia del sistema.
-    - (x) Verdadero
-    - ( ) Falso
-
-18. Los patrones de diseño para la asignación de responsabilidades a objetos ayudan a obtener el diagrama de clases del diseño.
-    - ( ) Verdadero
-    - (x) Falso
-
-19. Una asociación es una conexión significativa y relevante entre conceptos.
+18. Una asociación es una conexión significativa y relevante entre conceptos.
     - (x) Verdadero
     - ( ) Falso
 
@@ -901,3 +899,35 @@ multicapas.
 11. Obligatoriamente uno de los atributos que debe incluir un concepto es su identificador que permita identificar al objeto de forma única.
     - ( ) Verdadero
     - (x) Falso
+
+
+
+
+12. En un diagrama de comunicación, todos los enlaces estereotipados con `<<P>>` estarán en el diagrama de clases del diseño como una dependencia.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+13. Una técnica es un instrumento que permite la representación de modelos.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+14. Una característica de los métodos ágiles es la abundante documentación que se genera durante el proceso.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+15. La detección de conflictos entre los requisitos no es una de las principales actividades del diseño arquitectónico.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+
+16. Un diagrama de secuencia del sistema es un diagrama de secuencia de UML en el que se muestran los eventos generados por el sistema.
+    - ( ) Verdadero.
+    - (x) Falso.
+
+17. Para obtener un buen diseño, entre otras cosas, cada módulo debe presentar un alto nivel de cohesión.
+    - (x) Verdadero.
+    - ( ) Falso.
+
+18. En el proceso de desarrollo del software, una tarea se centra en un objetivo pequeño, pero bien definido que no produce un resultado tangible.
+    - ( ) Verdadero.
+    - (x) Falso.
