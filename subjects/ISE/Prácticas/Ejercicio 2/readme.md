@@ -1,0 +1,4 @@
+# Ingeniería de Servidores. Ejercicio 2. JMeter
+
+- **Autor:** Arturo Olivares Martos
+- **Descripción:** Realización del Ejercicio 2 de la asignatura Ingeniería de Servidores, que consiste en la monitorización de una API REST utilizando JMeter. El enunciado de la práctica se encuentra en el PDF del Bloque 2 de las prácticas de la asignatura. La API web se encuentra en [este repositorio](https://github.com/davidPalomar-ugr/iseP4JMeter), y el archivo de JMeter se encuentra en [./ETSII Alumnos API.jmx](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/ISE/Pr%C3%A1cticas/Ejercicio%202/ETSII%20Alumnos%20API.jmx).
