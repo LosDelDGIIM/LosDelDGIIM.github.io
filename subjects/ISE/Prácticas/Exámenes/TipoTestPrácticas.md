@@ -2349,7 +2349,7 @@
     - ( ) Con el frontend en el puerto 27017 y con el backend en el 27017
 
 391. ¿Es posible ajustar el comportamiento del sistema modificando los parámetros del kernel en tiempo de ejecución?
-    - (x) Sí, con el comando sysctl
+    - (x) Sí, con el comando `sysctl`
     - ( ) Hay que recompilar el kernel
     - ( ) Podríamos modificarlas al arrancar la imagen en el GRUB
     - ( ) No, habría que reiniciar el S.O.
@@ -2360,453 +2360,604 @@
     - ( ) mediante LDAP
     - ( ) mediante OAuth
 
-394. ¿Qué debemos tener instalado en los hosts para usar ansible?
+394. ¿Qué debemos tener instalado en los hosts para usar `ansible`?
     - ( ) SSH server y el agente
     - ( ) SSH y LAMP
     - ( ) Un agente
     - (x) SSH server
 
-395. ¿Por qué no hemos usado Im-sensors en las prácticas?
+395. ¿Por qué no hemos usado `Im-sensors` en las prácticas?
     - ( ) Porque hemosido engañado por un virus informático malicioso.
-    - ( ) Porque Im-sensors es incompatible con los sistemas raid que hemos usado.
-    - (x) Porque Im-sensors no detectaría sensores en la máquina virtual.
+    - ( ) Porque `Im-sensors` es incompatible con los sistemas raid que hemos usado.
+    - (x) Porque `Im-sensors` no detectaría sensores en la máquina virtual.
     - ( ) Porque necesitamos privilegios root y no siempre están disponibles.
 
-396. Dado este fragmento del archivo de configuración del agente, indique la linea que deberia continuar:
-                
-    ### Option: Server
-    # List of comma delimited IP addresses, optionally in CIDR notation, or DNS names of Zabbix servers and Zabbix proxies.
-    # Incoming connections will be accepted only from the hosts listed here.
-    # If IPv6 support is enabled then '127.0.0.1', '::127.0.0.1', '::ffff:127.0.0.1' are treated equally
-    # and '::/0' will allow any IPv4 or IPv6 address.
-    # 0.0.0.0/0 can be used to allow any IPv4 address.
-    # Example: Server=127.0.0.1,192.168.1.0/24,::1,2001:db8::/32,zabbix.example.com
-    #
-    # Mandatory: yes, if StartAgents is not explicitly set to 0.
-    # Default:
-    Server=
-    - ( ) Server=UbuntuServer
-    - ( ) Server=192.168.56.15
-    - ( ) server=192.168.56.105
-    - (x) Server=192.168.56.105
-
-397. ¿Qué hace el comando dmesg?
+396. ¿Qué hace el comando `dmesg`?
     - ( ) Muestra los mensajes de los módulos
     - ( ) Muestra los mensajes de error del core
     - ( ) Muestra los mensajes directos
     - (x) Muestra los mensajes del kernel
 
-398. ¿Qué es Naemon?
-    - ( ) La API de Zabbix
-    - ( ) Un daemon para Nautilus
-    - (x) Un monitor de sistema con Nagios como origen
+397. ¿Qué es *Naemon*?
+    - ( ) La API de *Zabbix*
+    - ( ) Un daemon para *Nautilus*
+    - (x) Un monitor de sistema con *Nagios* como origen
     - ( ) Un monitor específico para hardware
 
-399. ¿Qué archivos de configuración en Zabbix hay que modificar en las prácticas?
-    - ( ) /etc/zabbix/zabbix_agent.conf
-    - ( ) /etc/zabbix/zabbix_agent.conf y /etc/zabbix/zabbix_server.conf
-    - (x) /etc/zabbix/zabbix_agentd.conf y /etc/zabbix/zabbix_server.conf
-    - ( ) /etc/zabbix/zabbix-agent.conf y /etc/zabbix/zabbix-server.conf
+398. ¿Qué archivos de configuración en *Zabbix* hay que modificar en las prácticas?
+    - ( ) `/etc/zabbix/zabbix_agent.conf`
+    - ( ) `/etc/zabbix/zabbix_agent.conf y /etc/zabbix/zabbix_server.conf`
+    - (x) `/etc/zabbix/zabbix_agentd.conf y /etc/zabbix/zabbix_server.conf`
+    - ( ) `/etc/zabbix/zabbix-agent.conf y /etc/zabbix/zabbix-server.conf`
 
-400. ¿Para que se usa el comando grep?
+399. ¿Para que se usa el comando `grep`?
     - ( ) Para reemplazar cadenas dado un patrón de entrada
     - (x) Para filtrar información dado un patrón de entrada
     - ( ) Para procesar un fichero de texto
-    - ( ) Para cambiar variables del SELinux
+    - ( ) Para cambiar variables del `SELinux`
 
-401. ¿A qué opción nos debemos ir si queremos empezar a monitorizar una nueva maquina desde el panel de Zabbix?
-    - ( ) Menu-> Config -> Add host
-    - ( ) Configuration -> New host
-    - (x) Configuration -> Hosts -> Create Host
-    - ( ) Dashboard -> Hosts-> Add host
+400. ¿A qué opción nos debemos ir si queremos empezar a monitorizar una nueva maquina desde el panel de *Zabbix*?
+    - ( ) `Menu-> Config -> Add host`
+    - ( ) `Configuration -> New host`
+    - (x) `Configuration -> Hosts -> Create Host`
+    - ( ) `Dashboard -> Hosts-> Add host`
 
-402. ¿Por qué es necesario tener la pila LAMP instalada para usar Zabbix server?
+401. ¿Por qué es necesario tener la pila LAMP instalada para usar Zabbix server?
     - (x) Porque usa PHP para el frontend, MySQL para la BBDD y Apache para alojar la información propia del servidor
     - ( ) Solo Apache y PHP, la BBDD esta con MongoDB
     - ( ) Solo MySQL para la BBDD y Apache para alojar la información propia del servidor, para el front se usa Python
     - ( ) No es necesario, no usa ninguna de las tecnologias incluidas en LAMP
 
-403. ¿Cómo se denominan los archivos de scripts de ansible?
-    - ( ) Ansible Books
-    - ( ) Ansible Scripts
-    - ( ) Playrooms
-    - (x) Playbooks
+402. ¿Con que comando podemos consultar la salida de un `timer` como el del guión?
+    - ( ) `journalctl mon_raid --since="tomorrow"`
+    - (x) `journalctl -u mon_raid --since="yesterday"`
+    - ( ) `systemctl status mon_raid`
+    - ( ) `systemctl -u mon_raid --since="yesterday"`
 
-404. ¿Con que comando podemos consultar la salida de un timer como el del guión?
-    - ( ) journalctl mon_raid --since="tomorrow"
-    - (x) journalctl -u mon_raid --since="yesterday"
-    - ( ) systemctl status mon_raid
-    - ( ) systemctl -u mon_raid --since="yesterday"
+403. ¿Cual de las siguientes afirmaciones es correcta?
+    - ( ) *Zabbix* solo tiene monitorización pasiva
+    - ( ) *Zabbix* usa la arquitectura cliente-cliente
+    - (x) *Zabbix* usa la pila LAMP
+    - ( ) *Zabbix* siempre requiere la conexión cifrada
 
-405. ¿Cual de las siguientes afirmaciones es correcta?
-    - ( ) Zabbix solo tiene monitorización pasiva
-    - ( ) Zabbix usa la arquitectura cliente-cliente
-    - (x) Zabbix usa la pila LAMP
-    - ( ) Zabbix siempre requiere la conexión cifrada
-
-406. ¿Qué le ocurre a Ubuntu Server cuando quitamos uno de los dos discos virtuales?
+405. ¿Qué le ocurre a Ubuntu Server cuando quitamos uno de los dos discos virtuales?
     - ( ) El initramfs no nos permite continuar con el arranque del sistema
     - ( ) No tenemos GRUB instalado en el disco que hemos dejado puesto
-    - ( ) /boot no se puede activar
+    - ( ) `/boot` no se puede activar
     - (x) No es capaz de arrancar porque el RAID está inactivo
 
-407. ¿Para que sirve el fichero create.sql.gz de Zabbix?
+406. ¿Para que sirve el fichero create.sql.gz de Zabbix?
     - (x) Para importar la base de datos necesaria para Zabbix
     - ( ) Ninguna de las anteriores
     - ( ) Para instalar Zabbix junto con sus dependencias
     - ( ) Para instalar MySQL o MariaDB
 
-408. ¿Qué significa cuando vemos en el prompt initramfs?
+407. ¿Qué significa cuando vemos en el prompt initramfs?
     - ( ) El arranque necesita una configuración manual
     - ( ) Estamos en varias consolas cargadas en el inicio
     - ( ) Ninguna de las otras es correcta
     - (x) Estamos en un sistema de archivos cargado en RAM durante el inicio
 
-409. ¿En qué puerto escucha el agente de Zabbix por defecto?
+408. ¿En qué puerto escucha el agente de Zabbix por defecto?
     - ( ) 10500
     - (x) 10050
     - ( ) 10510
     - ( ) 10501
 
-410. ¿Qué significa "[2/1][U_]" dentro del archivo de estado del md?
+409. ¿Qué significa "[2/1][U_]" dentro del archivo de estado del md?
     - (x) El raid tiene dos discos y sólo el primero está funcionando
     - ( ) El raid tiene dos discos y sólo el segundo está funcionando
     - ( ) Hay dos discos disponibles pero el raid se creó con un disco
     - ( ) Para conocer el nivel RAID habría que ver la "personalities line"
 
-411. ¿Dónde hemos especificado los nombres de los servidores o hosts en ansible?
+410. ¿Dónde hemos especificado los nombres de los servidores o hosts en ansible?
     - (x) /ansible_platform/hosts
     - ( ) ~/ansible_platform/config/hosts
     - ( ) /ansible_platform/config.hosts
     - ( ) ~/ansible_platform/hosts_config
 
-412. ¿Es necesario tener el servicio SSH para que Ansible funcione?
+411. ¿Es necesario tener el servicio SSH para que Ansible funcione?
     - ( ) No, usa su propio protocolo
     - (x) Si en las máquinas a automatizar
     - ( ) Si, pero solo si es por el puerto 22
     - ( ) Tanto en las máquinas a automatizar como en la que tiene Ansible
 
-413. ¿Con qué comando arreglamos finalmente la situación que detenía el arranque?
+412. ¿Con qué comando arreglamos finalmente la situación que detenía el arranque?
     - (x) mdadm -R /dev/md1
     - ( ) mdadm --activate /dev/md0
     - ( ) mdadm --norun /dev/md1
     - ( ) cat /proc/mdstat
 
-414. ¿Qué cabecera del protocolo http devuelve el servidor web para informar que el contenido está comprimido?
+413. ¿Qué cabecera del protocolo http devuelve el servidor web para informar que el contenido está comprimido?
     - ( ) Content-Length: zipped
     - ( ) Content-Type: text/html-zip
     - ( ) Content-Type: bin/zip
     - (x) Content-Encoding: gzip
 
-415. ¿Cómo se busca un paquete en apt?
+414. ¿Cómo se busca un paquete en apt?
     - ( ) hack hotmail
     - (x) apt-cache search nombre-del-paquete
     - ( ) apt-get search nombre-del-paquete
     - ( ) apt-search nombre-del-paquete
 
-416. ¿Qué compañía es la actual propietaria del SO Solaris?
+415. ¿Qué compañía es la actual propietaria del SO Solaris?
     - ( ) HP
     - ( ) IBM
     - (x) Oracle
     - ( ) Microsoft
 
-417. ¿Qué tipo de partición NO permite tamaño de archivos mayor de 4GB?
+416. ¿Qué tipo de partición NO permite tamaño de archivos mayor de 4GB?
     - (x) vfat
     - ( ) ntfs
     - ( ) ext4
     - ( ) ext2
 
-418. ¿Qué distribución es derivada de Red Hat?
+417. ¿Qué distribución es derivada de Red Hat?
     - (x) Fedora
     - ( ) Ubuntu
     - ( ) Open Suse
     - ( ) Linux Mint
 
-419. Sobre la compresión del contenido Http:
+418. Sobre la compresión del contenido Http:
     - ( ) Siempre es conveniente y debe ser activada para todos los tipos de contenidos y tamaños de archivos.
     - (x) Aumenta el uso de CPU en el servidor web al tener que comprimir los contenidos.
     - ( ) Reduce el uso de CPU en el cliente web ya que tiene que procesar menos información.
     - ( ) Es admitida por todos los servidores y clientes web actuales.
 
-420. ¿Qué es cierto para Apache Httpd?
+419. ¿Qué es cierto para Apache Httpd?
     - ( ) Todo es cierto
     - ( ) Es el segundo web más empleado en Internet detrás de IIS
     - ( ) No puede instalarse en Windows
     - (x) Es un servidor Http de código abierto y desarrollo comunitario
 
-421. ¿Cuál de los siguientes programas es un editor de textos?
+420. ¿Cuál de los siguientes programas es un editor de textos?
     - ( ) noteplus
     - (x) vim
     - ( ) telnet
     - ( ) dmesg
 
-422. la opción -X de ssh sirve para:
+421. la opción -X de ssh sirve para:
     - ( ) Establecer una conexión cruzada
     - ( ) Para conectarse anónimamente a un servidor.
     - (x) Mostrar la interfaz de programas de la máquina remota.
     - ( ) Para cerrar una conexión remota.
 
-423. REG_DWORD es un
+422. REG_DWORD es un
     - ( ) Un parámetro modificable mediante el comando sysctl.
     - (x) Tipo de dato de registro de Windows
     - ( ) Estructura de datos del Kernel de Linux
     - ( ) Comando para abrir el editor del registro de Windows.
 
-424. ¿Con qué opción de phoronix puedes comprobar el tamaño de un benchmark antes de descargarlo?
+423. ¿Con qué opción de phoronix puedes comprobar el tamaño de un benchmark antes de descargarlo?
     - ( ) phoronix-test-suit check
     - (x) phoronix-test-suit info
     - ( ) phoronix-test-suit install info
     - ( ) phoronix-test-suit benchmark
 
-425. ¿Con qué programa accedemos a la información de los monitores hw en Linux?
+424. ¿Con qué programa accedemos a la información de los monitores hw en Linux?
     - (x) lmsensors
     - ( ) top
     - ( ) Munin
     - ( ) Perfmon
 
-426. MaxClients es un...
+425. MaxClients es un...
     - (x) parámetro para optimizar en Apache.
     - ( ) ninguna de las anteriores
     - ( ) parámetro para optimizar ssh
     - ( ) parámetro que muestra la carga de clientes.
 
-427. Lynx es:
+426. Lynx es:
     - ( ) Lanza la interfaz gráfica de linux (XWindow)
     - ( ) El gestor de paquetes por defecto de Linux
     - ( ) Un editor de textos similar a vi pero más fácil de usar
     - (x) Un cliente web por linea de comandos.
 
-428. ¿Qué archivo de auth.log contiene entradas más antiguas?
+427. ¿Qué archivo de auth.log contiene entradas más antiguas?
     - ( ) Ninguno, no hay archivos de logs que acaben en gz
     - ( ) auth.log.1.gz
     - ( ) auth.log.2.gz
     - (x) auth.log.3.gz
 
-429. ¿En qué path del sistema de fichero linux tenemos acceso a modificar los parámetros del kernel?
+428. ¿En qué path del sistema de fichero linux tenemos acceso a modificar los parámetros del kernel?
     - ( ) /var/sys
     - (x) /proc/sys
     - ( ) /boot/Kernel
     - ( ) /proc/Kernel
 
-430. ¿Qué comando emplearía en CentOS para comprobar si hay procesos del servidor web ejecutándose?
+429. ¿Qué comando emplearía en CentOS para comprobar si hay procesos del servidor web ejecutándose?
     - (x) ps -ax | grep httpd
     - ( ) top apache
     - ( ) start apache
     - ( ) ps -ax | less apache
 
-431. ¿Qué editor de textos tiene modo edición y modo comandos?
+430. ¿Qué editor de textos tiene modo edición y modo comandos?
     - (x) vi
     - ( ) nano
     - ( ) emacs
     - ( ) pico
 
-432. ¿Qué hay que pulsar para matar un proceso desde top?
+431. ¿Qué hay que pulsar para matar un proceso desde top?
     - ( ) Q + PID del proceso
     - ( ) K + PID del proceso
     - ( ) m + PID del proceso
     - (x) k + PID del proceso
 
-433. ¿Cual de las siguientes afirmaciones es cierta sobre la Fundación Apache?
+432. ¿Cual de las siguientes afirmaciones es cierta sobre la Fundación Apache?
     - ( ) Es una fundación para promover el desarrollo en comunidad de software abierto.
     - (x) Todas son ciertas
     - ( ) Es la responsable del desarrollo del contenedor de Servlets Tomcat.
     - ( ) Es responsable del desarrollo del servidor Web Apache Httpd.
 
-434. ¿Cuál de los siguientes comandos de Linux te permite averiguar la IP del equipo?
+433. ¿Cuál de los siguientes comandos de Linux te permite averiguar la IP del equipo?
     - (x) ifconfig
     - ( ) ifup
     - ( ) lynx
     - ( ) ipconfig
 
-435. ¿Qué significa el parámetro `-c` en `ab`?
+434. ¿Qué significa el parámetro `-c` en `ab`?
     - ( ) limita el porcentaje de CPU a usar.
     - ( ) Ninguna es correcta
     - (x) Especifica el nivel de concurrencia
     - ( ) Indica que las peticiones son ciclicas.
 
-436. ¿Qué comando instala el programa `midnight-commander`?
+435. ¿Qué comando instala el programa `midnight-commander`?
     - ( ) `apt-get installation mc`
     - ( ) `apt get install midnight-commander`
     - ( ) Ninguna de las anteriores
     - (x) `yum install mc`
 
-437. ¿Cuál de los siguientes no es un monitor?
+436. ¿Cuál de los siguientes no es un monitor?
     - (x) *Monperd*
     - ( ) *Nagios*
     - ( ) *Ganglia*
     - ( ) *Munin*
 
-438. ¿Dónde está el archivo de configuración de SSH?
+437. ¿Dónde está el archivo de configuración de SSH?
     - ( ) `/var/ssh/conf`
     - (x) `/etc/ssh/sshd_config`
     - ( ) `/var/ssh/sshd_config`
     - ( ) `/home/ssh/sshd_config`
 
-439. Munin es un monitor que:
+438. Munin es un monitor que:
     - (x) Muestra información a través de un navegador web
     - ( ) muestra la información a través de una interfaz local
     - ( ) muestra información a través de una GUI remota
     - ( ) muestra la información a través de la consola.
 
-440. ¿En qué directorio se sitúan por defecto los ficheros de registro de actividad de Linux?
+439. ¿En qué directorio se sitúan por defecto los ficheros de registro de actividad de Linux?
     - ( ) `/proc/sys`
     - ( ) `/etc/init.d`
     - ( ) `/tmp/log`
     - (x) `/var/log`
 
-441. ¿Qué empresa es responsable de VirtualBox?
+440. ¿Qué empresa es responsable de VirtualBox?
     - ( ) MySQL
     - ( ) PostgreSQL
     - (x) Oracle
     - ( ) Apache
 
-442. ¿Cuál de las siguientes afirmaciones es cierta?
+441. ¿Cuál de las siguientes afirmaciones es cierta?
     - (x) Para hacer permanentes los cambios en `/proc/sys/` debo fijarlos en el archivo `/etc/sysctl.conf`
     - ( ) Los cambios realizados con sysctl se conservan tras reiniciar el sistema
     - ( ) los cambios realizados en `/proc/sys/` son permanentes aun tras reiniciar el sistema
     - ( ) Para hacer permanentes los cambios de los parámetros de los módulos del sistema debo recompilar el kernel con los módulos modificados.
 
-443. ¿Cuál de los siguientes es un servidor web?
+442. ¿Cuál de los siguientes es un servidor web?
     - (x) *Lighttpd*
     - ( ) *Mapache*
     - ( ) *Skynet*
     - ( ) *midnight-commander*
 
-444. Las siglas *LAMP* hacen referencia a:
+443. Las siglas *LAMP* hacen referencia a:
     - ( ) Ninguna de las anteriores
     - (x) *Linux + Apache + MySQL + PHP*
     - ( ) *Linux + Apache + Mystic + Perl*
     - ( ) *Linux + Apache + MySQL + Python*
 
-445. ¿Cuáles son soluciones de virtualización?
+444. ¿Cuáles son soluciones de virtualización?
     - ( ) *Virtualbox* e *hipervisor*
     - ( ) *Xen* y *VirtualPC*
     - (x) *vmware* y *VirtualBox*
     - ( ) *vmware* e *Hipervisor*
 
-446. *LVM* es el acrónimo de:
+445. *LVM* es el acrónimo de:
     - ( ) *Logical Virtual Machine*
     - (x) *Logical Volume Manager*
     - ( ) *Low-cost Virtualization Mechanism*
     - ( ) *Local Volume Management*
 
-447. ¿Cuál de los siguientes programas no es un benchmark de sistema?
+446. ¿Cuál de los siguientes programas no es un benchmark de sistema?
     - ( ) `ab`
     - ( ) `phoronix`
     - (x) `sysctl`
     - ( ) `aida64`
 
-448. ¿Qué significan las siglas *JFS* del sistema de ficheros empleado en prácticas?
+447. ¿Qué significan las siglas *JFS* del sistema de ficheros empleado en prácticas?
     - ( ) *Jam Format Session*
     - ( ) *Java File System*
     - ( ) *Journaled Format Structure*
     - (x) *Journaled File System*
 
-449. ¿Qué beneficio puede tener usar LVM?
+448. ¿Qué beneficio puede tener usar LVM?
     - ( ) Permite instalar un gestor de arranque
     - ( ) Ninguna de las anteriores
     - (x) Modificación dinámica de particiones
     - ( ) Aumenta las prestaciones del sistema de archivos
 
-450. ¿Qué es Tomcat?
+449. ¿Qué es Tomcat?
     - ( ) Un servidor MySQL en Java
     - ( ) Un servidor PHP
     - (x) Un servidor de aplicaciones web
     - ( ) Un servidor de ASP
 
-451. ¿Qué herramienta de gestión de paquetes está disponible en Centos?
+450. ¿Qué herramienta de gestión de paquetes está disponible en Centos?
     - (x) `yum`
     - ( ) `Lynx`
     - ( ) `apt`
     - ( ) `wget`
 
-452. Sobre la utilidad ab (Apache Benchmark)
+451. Sobre la utilidad ab (Apache Benchmark)
     - ( ) Se emplea para generar test de carga http
     - ( ) Se instala junto con el servidor web apache httpd
     - (x) Todo lo anterior es cierto
     - ( ) Su uso no está limitado al servidor web apache httpd
 
-453.  ¿Qué comando emplearía en Linux para revisar los mensajes que ha generado el SO durante su arranque?
+452.  ¿Qué comando emplearía en Linux para revisar los mensajes que ha generado el SO durante su arranque?
     - ( ) `boot`
     - (x) `dmesg`
     - ( ) `htop`
     - ( ) `top`
 
-454.  ¿Qué es cierto para Nagios?
+453.  ¿Qué es cierto para Nagios?
     - ( ) Presenta una interfaz centralizada sobre el estado de toda la infraestructura monitorizada
     - (x) Todo lo anterior es cierto
     - ( ) Es una herramienta para monitorizar recursos de servidores como: memoria, uso de cpu.
     - ( ) Permite detectar caídas de servicios como http o ssh
 
-455.  En Munin ¿es posible mostrar gráficas en función del tiempo?
+454.  En Munin ¿es posible mostrar gráficas en función del tiempo?
     - ( ) Sí, pero solo en tiempo real.
     - ( ) Sí, se pueden mostrar en función de horas, min y segs.
     - (x) Sí, se pueden mostrar en función de días, semanas, meses y años.
     - ( ) Sí, pero hay que activar la opción en el menú Graphics -> Main Handlers -> Display Options
 
-456.  ¿Qué aporta ssh respecto a Telnet?
+455.  ¿Qué aporta ssh respecto a Telnet?
     - ( ) Telnet sólo se ejecuta en Windows
     - ( ) Telnet es de pago
     - (x) ssh va encriptado
     - ( ) ssh permite manejar un ordenador de forma remota
 
-457.  ¿Qué puerto es el usado por defecto por los servidores web y debe ser abierto en el firewall para permitir su acceso público?
+456.  ¿Qué puerto es el usado por defecto por los servidores web y debe ser abierto en el firewall para permitir su acceso público?
     - ( ) 8080
     - ( ) 88
     - (x) 80
     - ( ) 8888
 
-458.  ¿Qué archivo hay que consultar para ver quien se ha autorizado como su en Debian/Ubuntu?
+457.  ¿Qué archivo hay que consultar para ver quien se ha autorizado como su en Debian/Ubuntu?
     - ( ) `/etc/authentication.log`
     - ( ) `/var/log/login.log`
     - ( ) `/var/user/login.log`
     - (x) `/var/log/auth.log`
 
-459.  ¿Qué es un Servlet?
+458.  ¿Qué es un Servlet?
     - ( ) Un archivo PHP compilado
     - ( ) Un servidor de web services
     - (x) Un objeto Java que proporciona páginas web dinámicas
     - ( ) Un servidor web que proporciona datos heterogéneos
 
-460.  ¿Cuál es la diferencia entre top y htop?
+459.  ¿Cuál es la diferencia entre top y htop?
     - ( ) No hay diferencias, ya que la "h" es muda.
     - ( ) htop no es un comando válido
     - ( ) top esta arriba
     - (x) Ninguna de las anteriores
 
-461.  ¿Qué comando emplearía para establecer una conexión cifrada con un equipo remoto?
+460.  ¿Qué comando emplearía para establecer una conexión cifrada con un equipo remoto?
     - ( ) rcp
     - ( ) sshd
     - (x) ssh
     - ( ) telnet
 
-462.  ¿Cuál es el tamaño por defecto a partir del cual IIS empieza a comprimir las páginas?
+461.  ¿Cuál es el tamaño por defecto a partir del cual IIS empieza a comprimir las páginas?
     - (x) 256 bytes
     - ( ) 1 byte
     - ( ) 1 mbyte
     - ( ) 1000 bytes
 
-463.  ¿Cuál es la ruta principal del archivo de configuración de `logrotate` en la mayoría de los sistemas Linux?
+462.  ¿Cuál es la ruta principal del archivo de configuración de `logrotate` en la mayoría de los sistemas Linux?
     - (x) `/etc/logrotate.conf`
     - ( ) `/var/log/logrotate.conf`
     - ( ) `/usr/local/etc/logrotate.conf`
     - ( ) `/etc/logrotate.d/`
 
-464.  ¿Cuál es la ruta del archivo de configuración principal y global de cron (system-wide crontab) en la mayoría de los sistemas Linux?
+463.  ¿Cuál es la ruta del archivo de configuración principal y global de cron (system-wide crontab) en la mayoría de los sistemas Linux?
     - (x) `/etc/crontab`
     - ( ) `/var/spool/cron/crontabs/`
     - ( ) `/etc/cron.allow`
     - ( ) `/usr/bin/crontab`
 
-465.  Al configurar un RAID por software en Linux, ¿cuál es un paso crucial que generalmente precede al montaje del dispositivo RAID (por ejemplo, `/dev/md0`) en el sistema de archivos?
+464.  Al configurar un RAID por software en Linux, ¿cuál es un paso crucial que generalmente precede al montaje del dispositivo RAID (por ejemplo, `/dev/md0`) en el sistema de archivos?
     - (x) Crear un sistema de archivos en el dispositivo RAID.
     - ( ) Añadir el dispositivo RAID directamente a /etc/fstab sin formatear.
     - ( ) Reiniciar el servidor inmediatamente después de crear el array.
     - ( ) Ejecutar fsck en los discos físicos individuales.
 
-466.  Considerando el entorno completo (nodo de control y nodos gestionados), ¿qué se necesita fundamentalmente para ejecutar playbooks de Ansible y que estos operen sobre los nodos gestionados?
+465.  Considerando el entorno completo (nodo de control y nodos gestionados), ¿qué se necesita fundamentalmente para ejecutar playbooks de Ansible y que estos operen sobre los nodos gestionados?
     - ( ) Solo SSH.
     - ( ) SSH y Python.
     - (x) SSH, Python y Ansible.
     - ( ) Ninguna es correcta.
+
+
+1. RAID significa
+    - ( ) Rapid Access Indexed Disks 
+    - ( ) Random Access Index Disks
+    - ( ) Redundant and Inexpensive Disks
+    - (x) Redundant Array of Independent Disks
+
+2. Si combino 4 discos de 1TB en un RAID5, el volumen resultante tiene un tamaño de 
+    - ( ) 1TB
+    - ( ) 2TB
+    - (x) 3TB
+    - ( ) 4TB
+
+3. Indique la secuencia de pasos correcta para disponer de volumen que puede ser montado en el sistema de ficheros.
+    - ( ) Crear Volúmenes con LVM, crear RAID, crear Sistema de Ficheros.
+    - ( ) Crear Sistema de Ficheros, crear Volúmenes LVM, crear RAID.
+    - (x) Crear RAID, crear volúmenes LVM, crear Sistema de Ficheros.
+    - ( ) Crear RAID, crear Sistema de Ficheros, crear Volúmenes LVM.
+
+4. ¿Qué dispositivo representa la segunda partición del primer disco SATA?
+    - ( ) `/dev/sda1`
+    - ( ) `/dev/sdb1`
+    - (x) `/dev/sda2`
+    - ( ) `/dev/sdb2`
+
+5. ¿Qué afirmación sobre RAID Hardware es correcta?
+    - ( ) El SO gestiona su funcionamiento.
+    - (x) El Administrador lo puede acceder como una unidad más de almacenamiento.
+    - ( ) El Administrador puede acceder a los dispositivos individuales que lo conforman.
+    - ( ) Todas las anteriores son ciertas.
+
+6. ¿Qué afirmación es la correcta para un Grupo de VOlumen (VG) de LVM?
+    - ( ) No permite añadir dispositivos RAID.
+    - ( ) No permite combinar dispositivos RAID de distintio nivel.
+    - ( ) Permite combinar RAID de distintos niveles siempre que sea para mejorar la robustez. 
+    - (x) Permite combinar RAID de distintos niveles, pero no es conveniente hacerlo, para garantizar la coherencia tecnológica.
+
+7. ¿Qué archivo contiene los volúmenes de almacenamiento que el SO monta automáticamente al arrancar?
+    - ( ) `/dev/fstab`
+    - ( ) `/etc/mount`
+    - ( ) `/var/fstab`
+    - (x) `/etc/fstab`
+
+8. ¿Qué comando es correcto para crear un volumen lógico `home` de 2GB del grupo de volumen `isehdd`?
+    - ( ) `lvmcreate -S 2G -g isehdd home`
+    - (x) `lvcreate -L 2G -n home isehdd`
+    - ( ) `lvm-create -L 2G -n isehdd home`
+    - ( ) `lvcreate +2G isehdd home`
+
+9. ¿Qué variable de entorno nos permite personalizar el Prompt de la shell?
+    - ( ) `SHL`
+    - (x) `PS1`
+    - ( ) `PROMPT`
+    - ( ) `SSH`
+
+10. ¿Qué comando instalado por defecto en Rocky nos permite consultar las interfaces de red?
+    - ( ) `nmcli e info`
+    - (x) `ip a`
+    - ( ) `ifconfig -a`
+    - ( ) `ether all`
+
+11. ¿Qué orden de capas es el correcto para describir el apilado típico de la virtualización hardware completa?
+    - ( ) SO Anfitrión, HW invitado, SO invitado, Hipervisor, APP
+    - ( ) HW Anfitrión, Hipervisor, SO Anfitrión, HW invitado, SO invitado, APP
+    - (x) HW Anfitrión, SO Anfitrión, Hipervisor, HW invitado, SO invitado, APP
+    - ( ) HW Anfitrión, SO Anfitrión, HW invitado, SO invitado, APP
+
+12. Para pasar a modo de mantenimiento empleamos el comando
+    - ( ) `systemctl isolate runlevel3`
+    - ( ) `systemctl runlevel5.target`
+    - ( ) `init 0`
+    - (x) `systemctl isolate runlevel1.target`
+
+13. ¿Cómo determina SSHD la identidad de un usuario que accede sin contraseña?
+    - (x) Pidiéndole que cifre un fragmento de información con su llave privada.
+    - ( ) Pidiéndole que descifre un fragmento de información con su llave pública.
+    - ( ) Pidiéndole que cifre un fragmento de información con su llave pública.
+    - ( ) Pidiéndole que descifre un fragmento de información con la llave pública del servidor.
+
+14. En la instalación por defecto de SSHD de Rocky en acceso de root por SSH estaba 
+    - ( ) Permitido siempre
+    - ( ) Permitido por contraseña
+    - (x) Permitido por Llave Pública
+    - ( ) No permitido
+
+15. El nombre por defecto del fichero que almacena las llaves públicas de los servidores remotos en los que se confía es 
+    - (x) `authorized_keys`
+    - ( ) `authorized_hosts`
+    - ( ) `hosts.pub`
+    - ( ) `known_hosts`
+
+16. ¿Qué opción configura Apache Httpd para arrancar con el sistema Rocky?
+    - (x) `systemctl enable httpd`
+    - ( ) `systemctl start httpd`
+    - ( ) `systemctl permanent apache`
+    - ( ) `systemctl enable apache`
+
+17. ¿Qué opcion del firewall nos informa sobre las reglas activas?
+    - (x) `firewall-cmd --list-all`
+    - ( ) `firewall-cmd --info`
+    - ( ) `firewall-cmd --rules`
+    - ( ) `firewall-cmd --zone-info`
+
+18. ¿Los cambios en la configuración del firewall de Rocky realizados por línea de comenado están activos tras reiniciar?
+    - ( ) Si, siempre
+    - ( ) Solo si se emplea la opción `--fix`
+    - ( ) No, siempre hay que aplicarlos al reiniciar
+    - (x) Si, si se emplea la opción `--permanent`
+
+19. Ansible emplea una configuración declarativa. Por ello, los comandos deben ser idempotenetes. Esto significa:
+    - ( ) Que deben tener los mismos privilegios de ejecución.
+    - ( ) Que se pueden ejecutar en cualquier servidor administrativo.
+    - (x) Que su ejecución reiterada lleva siempre al servidor al mismo estado.
+    - ( ) Que solo pueden ejecutarse una vez en cada servidor.
+
+20. ¿Cómo se denominan los archivos de scripts de ansible?
+    - ( ) Ansible Books
+    - ( ) Ansible Scripts
+    - ( ) Playrooms
+    - (x) Playbooks
+  
+21. ¿Qué comando se conecta al puerto 2222 como el usuario remoto 'martajl'?
+    - ( ) `ssh 192.168.56.20:2222 -l martajl`
+    - (x) `ssh martajl@192.168.56.20 -p 2222`
+    - ( ) `ssh martajl@192.168.56.20 2222`
+    - ( ) `ssh martajl@192.168.56.20 -l martajl 2222`
+
+22. Rocky Linux surge como la continuación Open Source de la distribución Linux
+    - ( ) Fedora.
+    - (x) CentOS.
+    - ( ) Debian.
+    - ( ) Ubuntu.
+
+23. ¿Qué componenetes necesita tener instalados un Nodo Controlador en Ansible?
+    - ( ) ninguno.
+    - ( ) sshd.
+    - (x) ssh y python.
+    - ( ) ssh, python y ansible.
+
+24. Los contenedores y las máquinas virtuales emplean un Hipervisor para virtualizar la infraestructura sobre la que se ejecutan.
+    - ( ) Verdadero.
+    - (x) Falso, los contenedores no virtualizan infraestructura.
+    - ( ) Verdadero, pero solo si la imagen del contenedor es para un SO distinto del anfitrión.
+    - ( ) Falso, los Hipervisores solo se emplean en virtualización completa.
+
+25. ¿Cómo puedo consultar el uso de memoria de un equipo?
+    - ( ) Con el comando `memfree`
+    - (x) Consultando el contenido de `/proc/meminfo`
+    - ( ) Con el comando `uptime`
+    - ( ) Todas las opciones son correctas
+
+26. ¿Cuál es el significado de un valor de `0.5` en un procesador de 2 cores para el `load average`?
+    - ( ) La CPU ha sido utilizada al 50%.
+    - ( ) La CPU ha sido utilizada 0.5 segundos.
+    - ( ) La CPU ha sido utilizada un 0.5%.
+    - (x) La CPU ha sido utilizada al 25%.
+
+27. ¿Cómo podemos programar tareas de cron sin ser superusuario (`root`)?
+    - ( ) Editando el fichero `~/.crontab`
+    - ( ) No se puede, solo el administrador (`root`) de un sistema puede programar tareas con `cron`.
+    - (x) Empleando la utilidad `crontab -e`
+    - ( ) Indicando el nombre de usuario en la programación del fichero `/etc/crontab`
+
+28. ¿A qué archivo de Rocky van los logs emitidos por el comando `logger` empleado en prácticas?
+    - ( ) `/etc/log/logger`
+    - ( ) `/var/log/messages`
+    - ( ) `/opt/logger`
+    - (x) `/var/log/syslog`
+
+29. ¿Qué opción de Phoronix TS muestra información detallada sobre un benchmark?
+    - (x) `info`
+    - ( ) `detail`
+    - ( ) `benchmark-detail`
+    - ( ) `benchmark-info`
 
