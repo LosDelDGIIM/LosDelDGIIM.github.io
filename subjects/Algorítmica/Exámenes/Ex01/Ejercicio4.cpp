@@ -93,7 +93,8 @@ bool esKSobre2_DyV(int n, int ini, int fin){
  * @note Eficiencia: Logarítmica en n, O(log(n))
  */
 bool esKSobre2_DyV(int n){
-    return esKSobre2_DyV(n, 1, n);
+    // Posibilidades: desde k=1 hasta n+1
+    return esKSobre2_DyV(n, 1, n+1);
 }
 
 
