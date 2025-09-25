@@ -1,6 +1,12 @@
 #!/bin/bash
 
-# Función para compilar un archivo con latexmk (silenciosa)
+# Script para compilar archivos LaTeX en un proyecto grande
+# Maneja glosarios, errores y limpieza de archivos auxiliares
+# Uso: ./script_todos.sh errores_compilacion.log [lista_archivos.txt]
+# Si no se proporciona lista_archivos.txt, compila todos los .tex con \begin{document}
+# Requiere: latexmk, makeglossaries
+
+# Funciones (idénticas a la versión anterior)
 compilar_latex_silencioso() {
     local file="$1"
     local dir base
@@ -9,49 +15,33 @@ compilar_latex_silencioso() {
 
     (
         cd "$dir" || exit 1
-        # stdout y stderr a /dev/null para evitar mensajes de archivos faltantes
-        latexmk \
-            -synctex=1 \
-            -interaction=nonstopmode \
-            -file-line-error \
-            -pdf \
-            -outdir="." \
-            -shell-escape \
-            "$base" \
-            > /dev/null 2>&1
+        latexmk -synctex=1 -interaction=nonstopmode -file-line-error -pdf -outdir="." -shell-escape "$base" > /dev/null 2>&1
     )
 }
 
-# Función para compilar un archivo con latexmk
 compilar_latex() {
     local file="$1"
     local error_log="$2"
-    local dir base
+    local dir base exit_code
     dir="$(dirname "$file")"
     base="$(basename "$file")"
 
     (
         cd "$dir" || exit 1
-        # stdout a /dev/null, stderr queda en pantalla
-        if ! latexmk \
-            -synctex=1 \
-            -interaction=nonstopmode \
-            -file-line-error \
-            -pdf \
-            -outdir="." \
-            -shell-escape \
-            "$base" \
-            > /dev/null; then
-            # Si hay error y se proporcionó un archivo de log, añadir el archivo
-            if [ -n "$error_log" ]; then
-                echo "$file" >> "$error_log"
-            fi
-            return 1
-        fi
+        latexmk -synctex=1 -interaction=nonstopmode -file-line-error -pdf -outdir="." -shell-escape "$base" > /dev/null
     )
+    
+    # Capturar el código de salida del subshell
+    exit_code=$?
+    
+    if [ $exit_code -ne 0 ]; then
+        [ -n "$error_log" ] && echo "$file" >> "$error_log"
+        return 1
+    fi
+    
+    return 0
 }
 
-# Función para generar glosarios
 make_glossaries() {
     local file="$1"
     local dir base file_sin_ext
@@ -65,7 +55,6 @@ make_glossaries() {
     )
 }
 
-# Función para limpiar carpetas _minted
 clean_minted() {
     local file="$1"
     local dir base file_sin_ext
@@ -75,11 +64,10 @@ clean_minted() {
 
     (
         cd "$dir" || exit 1
-        [ -d "_minted-$file_sin_ext" ] && rm -r "_minted-$file_sin_ext"
+        [ -d "_minted-$file_sin_ext" ] && rm -rf "_minted-$file_sin_ext"
     )
 }
 
-# Función para eliminar archivos auxiliares generados por latexmk
 limpiar_aux() {
     local file="$1"
     local dir base file_sin_ext
@@ -89,62 +77,49 @@ limpiar_aux() {
 
     (
         cd "$dir" || exit 1
-        rm -f \
-            "$file_sin_ext".aux \
-            "$file_sin_ext".bbl \
-            "$file_sin_ext".blg \
-            "$file_sin_ext".idx \
-            "$file_sin_ext".ind \
-            "$file_sin_ext".lof \
-            "$file_sin_ext".lot \
-            "$file_sin_ext".out \
-            "$file_sin_ext".toc \
-            "$file_sin_ext".acn \
-            "$file_sin_ext".acr \
-            "$file_sin_ext".alg \
-            "$file_sin_ext".glg \
-            "$file_sin_ext".glo \
-            "$file_sin_ext".gls \
-            "$file_sin_ext".fls \
-            "$file_sin_ext".log \
-            "$file_sin_ext".fdb_latexmk \
-            "$file_sin_ext".snm \
-            "$file_sin_ext".synctex.gz \
-            "$file_sin_ext".synctex.gz\(busy\) \
-            "$file_sin_ext".vrb \
-            "$file_sin_ext".ist \
-            *.aux \
-            *.cpt
+        rm -f "$file_sin_ext".{aux,bbl,blg,idx,ind,lof,lot,out,toc,acn,acr,alg,glg,glo,gls,fls,log,fdb_latexmk,snm,synctex.gz,vrb,ist} *.aux *.cpt
     )
 }
 
-# Verificar si se proporcionó el archivo de errores como parámetro
+# Parámetros
 ERROR_LOG="$1"
+LISTA_ARCHIVOS="$2"
 
 if [ -z "$ERROR_LOG" ]; then
-    echo "Uso: $0 <archivo_errores.log>"
+    echo "Uso: $0 <archivo_errores.log> [archivo_lista.txt]"
     echo "Ejemplo: $0 errores_compilacion.log"
+    echo "         $0 errores_compilacion.log lista_archivos.txt"
     exit 1
 fi
 
-# Crear o limpiar el archivo de errores
 > "$ERROR_LOG"
-
 echo "Registrando errores en: $ERROR_LOG"
 
-# Recorre todos los .tex con \begin{document}
-find ../ -name '*.tex' -exec grep -l '\\begin{document}' {} + | sort | while read -r file; do
+# Determinar archivos a compilar
+if [ -n "$LISTA_ARCHIVOS" ]; then
+    if [ ! -f "$LISTA_ARCHIVOS" ]; then
+        echo "Archivo de lista '$LISTA_ARCHIVOS' no encontrado."
+        exit 1
+    fi
+    ARCHIVOS=$(grep -E '\.tex$' "$LISTA_ARCHIVOS" | sort)
+else
+    # Buscar todos los .tex con \begin{document}
+    ARCHIVOS=$(find ../ -name '*.tex' -exec grep -l '\\begin{document}' {} + | sort)
+fi
+
+# Compilación
+echo "$ARCHIVOS" | while read -r file; do
+    [ -z "$file" ] && continue
+
     if grep -q '\\printglossary' "$file"; then
-        # Caso 1: contiene \begin{document} y \printglossary
         echo "Compilando con glosarios $file..."
-        compilar_latex_silencioso "$file"  # Primera compilación silenciosa
+        compilar_latex_silencioso "$file"
         compilar_latex "$file" "$ERROR_LOG"
         make_glossaries "$file"
         compilar_latex "$file" "$ERROR_LOG"
     else
-        # Caso 2: contiene \begin{document} pero NO \printglossary
         echo "Compilando $file..."
-        compilar_latex_silencioso "$file"  # Primera compilación silenciosa
+        compilar_latex_silencioso "$file"
         compilar_latex "$file" "$ERROR_LOG"
     fi
 
@@ -152,14 +127,11 @@ find ../ -name '*.tex' -exec grep -l '\\begin{document}' {} + | sort | while rea
     limpiar_aux "$file"
 done
 
-# Mostrar resumen al final
+# Resumen final
 if [ -s "$ERROR_LOG" ]; then
-    echo ""
-    echo "=== ARCHIVOS CON ERRORES ==="
+    echo -e "\n=== ARCHIVOS CON ERRORES ==="
     cat "$ERROR_LOG"
-    echo ""
     echo "Total de archivos con errores: $(wc -l < "$ERROR_LOG")"
 else
-    echo ""
-    echo "✓ Todos los archivos se compilaron correctamente"
+    echo -e "\n✓ Todos los archivos se compilaron correctamente"
 fi
