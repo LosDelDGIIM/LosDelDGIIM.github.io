@@ -1,0 +1,328 @@
+\chapter{Introducción}
+\section{Comenzando}
+\subsection{Insertion Sort}
+
+\noindent
+\textit{Insertion Sort} resuelve el problema típico de ordenación:
+\begin{center}
+    Dado un vector de $n$ elementos: $(a_1, \ldots, a_n)$, buscamos generar una permutación del mismo: $(b_1, \ldots, b_n)$ de forma que:
+    \begin{equation*}
+        b_1 \leq b_2 \leq \ldots \leq b_{n-1} \leq b_n
+    \end{equation*}
+\end{center}
+
+El algoritmo sigue la filosofía que seguimos los humanos para ordenar una mano de cartas que vamos cogiendo de una mesa; es decir, imaginemos que tenemos un mazo de cartas boca abajo en la mesa, y que tenemos que ir cogiendo cartas de una en una que vamos ordenando en nuestra mano, que inicialmente está vacía.
+
+Inicialmente no tenemos cartas en la mano y cogemos una del mazo. Ahora, nuestra mano de cartas está ordenada, ya que solo contiene una carta; seguimos cogiendo otra carta, que procedemos a colocar antes o después de la nuestra en función del número de la carta. Nuestra mano vuelve a estar ordenada. Repetiremos este proceso hasta que todo el mazo que hay sobre la mesa esté ya ordenado.
+
+Podemos programar este procedimiento en \texttt{C++}, pensando que recibimos como parámetros:
+\begin{itemize}
+    \item \texttt{v}, vector de enteros.
+    \item \texttt{n}, el tamaño del vector.
+\end{itemize}
+
+\begin{minted}{c++}
+void insertion_sort(int* v, int n){
+    for(int i = 1; i < n; i++){
+        int key = v[i];
+
+        // Inserta key en la posición adecuada
+        int h = i-1;
+        while(h >= 0 && v[h] > key){    // Mientras que el anterior sea mayor
+            v[h+1] = v[h];  // Lo rota a la derecha
+            h--;
+        }
+        v[h+1] = key;       // Coloca la clave en el sitio correcto
+    }
+}
+\end{minted}
+
+\subsubsection{Análisis}
+Como podemos ver en el código, el bucle de la línea 2 se ejecuta un total de $n-1$ veces, por lo que el tiempo de ejecución del algoritmo tendrá un factor $n$. Por otra parte, el bucle \texttt{while} de la línea 7 no tiene un número de iteraciones fijado, sino que depende de la entrada del algoritmo: del vector \texttt{v}. Veamos varios ejemplos:
+\begin{itemize}
+\item Si el vector \texttt{v} está previamente ordenado antes de la entrada al algoritmo, entonces la condición \texttt{v[h] >} \texttt{key} será falsa tras la inicialización \texttt{h = i-1}, por lo que el bucle \texttt{while} no se ejecutará, con lo que el tiempo de ejecución del algoritmo es de la forma:
+        \begin{equation*}
+            an + b
+        \end{equation*}
+        para ciertas constantes $a,b,c$. Este es el \textit{mejor caso} de ejecución del algoritmo, puesto que es el que menos iteraciones del bucle \texttt{while} provoca, dando un menor tiempo de ejecución.
+    \item Si el vector \texttt{v} está ordenado en orden decreciente, entonces el bucle \texttt{while} se ejecuta el mayor número de veces posible, es decir, un total de \texttt{i} veces en la iteración \texttt{i}-ésima del bucle \texttt{for} exterior, de donde:
+        \begin{equation*}
+            \sum_{i=1}^{n-1} i = \dfrac{n(n-1)}{2}
+        \end{equation*}
+        Por lo que la ejecución del bucle \texttt{while} anidado en el \texttt{for} hace que el algoritmo se ejecute en un tiempo de ejecución de la forma:
+        \begin{equation*}
+            an^2 + bn + c
+        \end{equation*}
+        Este caso es el \textit{peor caso} de ejecución del algoritmo, puesto que es el que más iteraciones del bucle \texttt{while} provoca, maximizando el tiempo de ejecución.
+    \item Si el vector \texttt{v} es uno cualquiera. Para calcular el tiempo de ejecución, podemos pensar que, de media, la mitad de las veces se cumplirá que la mitad de los elementos de la parte ya ordenada del vector serán mayores que el elemento \texttt{key} y que la otra mitad serán menores que el elemento \texttt{key}, por lo que podemos pensar que el bucle \texttt{while} realizará $\nicefrac{\texttt{i}}{2}$ iteraciones en la iteración \texttt{i}-ésima del bucle \texttt{for}. Si realizamos las cuentas obtendremos un tiempo muy similar al del peor caso:
+        \begin{equation*}
+            \sum_{i=1}^{n-1} \frac{i}{2} = \frac{1}{2}\sum_{i=1}^{n-1} i = \dfrac{n(n-1)}{4}
+        \end{equation*}
+        Obteniendo un tiempo de la forma
+        \begin{equation*}
+            an^2 + bn + c
+        \end{equation*}
+        Llamaremos a este caso \textit{caso promedio}.
+\end{itemize}
+
+En la mayoría de los casos no calcularemos estos tres tipos de tiempos, sino que simplemente calcularemos el tiempo del peor caso de ejecución, ya que:
+\begin{itemize}
+    \item Este tiempo acota cualquier ejecución del programa, por lo que nos da una estimación máxima del tiempo de ejecución que este requiere.
+    \item El peor tiempo de ejecución se da en algunos casos de manera muy frecuente. Por ejemplo, a la hora de buscar un dato en una base de datos, el peor tiempo de ejecución se da cuando el dato no está presente en la base de datos, ya que obliga a comprobar todos los datos de la base de datos; y que un dato no se encuentre en una base de datos puede resultar muy frecuente en algunos casos.
+    \item En muchas ocasiones el tiempo de ejecución del caso promedio es muy similar (o del mismo orden) que el tiempo de ejecución del peor caso, tal y como sucede con \textit{Insertion Sort}.
+\end{itemize}
+
+Aunque anteriormente dijimos que el tiempo de ejecución de \textit{Insertion Sort} es de la forma
+\begin{equation*}
+    an^2 + bn + c
+\end{equation*}
+en la mayoría de los casos nos quedaremos con el sumando de dicha expresión que más rápido crezca conforme $n$ crece (en este caso, $an^2$), puesto que su aportación a la suma es el que más importa para tamaños de $n$ suficientemente grandes. Además, nos olvidaremos de las constantes que acompañan a dicho sumando (es decir, pensaremos simplemente en $n^2$), puesto que el valor de dichas constantes es de menor relevancia en comparación con el ``orden'' de creciemiento. 
+
+Tomando estas consideraciones, diremos que el tiempo de ejecución de \textit{Insertion Sort} en el peor caso es del orden de $n^2$.
+
+\subsection{Selection Sort}
+Este algoritmo también resuelve el problema típico de ordenación, pero de otra forma distinta a como lo hacía \textit{Insertion Sort}. Para ello, lo que hace el algoritmo es, dado un vector de elementos a ordenar, busca el mínimo del vector y lo intercambia con el elemento que ocupa la primera posición. Una vez hecho esto, busca el segundo elemento mínimo del vector y lo intercambia con el elemento que ocupa la segunda posición. El procedimiento se repite hasta buscar el segundo mayor elemento del vector, que se intercambia con el que ocupa la penúltima posición del vector.
+
+Bajo las mismas precondiciones que el algoritmo para \textit{Insertion Sort}, una posible implementación de \textit{Selection Sort} es:
+\begin{minted}{c++}
+// Devuelve el indice del primer menor elemento
+// comprendido en [start, start + end)
+int minimo(int* v, int start, int end){
+    int i = start;
+    for(int j = start+1; j < start + end; j++){
+        if(v[j] < v[i]){
+            i = j;
+        }
+    }
+    return i;
+}
+
+void selection_sort(int* v, int n){
+    for(int i = 0; i < n-1; i++){
+        // Busca el minimo
+        int h = minimo(v, i, n-i);
+        // Lo intercambia
+        swap(v[i], v[h]);
+    }
+}
+\end{minted}
+
+\subsubsection{Análisis}
+El bucle \texttt{for} de la línea 14 realiza $n-1$ iteraciones independientemente de la entrada \texttt{v}. Además, cada llamada al procedimiento \texttt{minimo(v,i,n-i)} realiza unas \texttt{n-i-1} número de iteraciones, por lo que el tiempo de ejecución del algoritmo será:
+\begin{equation*}
+    \sum_{i=0}^{n-2} n-i-1 = \sum_{i=0}^{n-2}n - \sum_{i=0}^{n-2}i - \sum_{i=0}^{n-2}1 = n(n-1) - \dfrac{(n-1)(n-2)}{2}-(n-1)
+\end{equation*}
+Que podemos expresarlo en la forma
+\begin{equation*}
+    an^2 + bn + c
+\end{equation*}
+para ciertas constantes $a,b,c$, por lo que el tiempo de ejecución de \textit{Selection Sort} es del orden $n^2$, tanto en el mejor como en el peor caso (no hemos hecho ninguna asunción sobre la entrada, puesto que el número de iteraciones de los bucles no depende de dicha entrada, sino que son fijos).\\
+
+\noindent
+Si comparamos \textit{Insertion Sort} con \textit{Selection Sort} vemos que el orden de ejecución de los algoritmos es el mismo en los casos peor y promedio, por lo que el tiempo de ejecución de ambos será parecido para valores grandes de $n$ y la diferencia entre ellos dependerá generalmente de los valores de las constantes que estamos despreciando al analizar los órdenes.
+
+Por otra parte, en el mejor caso de ejecución, \textit{Insertion Sort} tiene un tiempo de ejecución lineal, por lo que en dicho caso es preferible frente a \textit{Selection Sort}. Por esta última razón, puede ser preferible usar \textit{Insertion Sort} frente a \textit{Selection Sort}, puesto que su tiempo de ejecución puede reducirse en relación a la distribución de los valores de entrada. 
+
+Comentamos finalmente que aunque sobre la teoría esto se vea muy claro, en la práctica habría que medir la eficacia de \textit{Insertion Sort} frente a \textit{Selection Sort}, puesto que sus tiempos promedios dependen del ámbito de uso de los mismos.
+
+\subsection{Diseñando algoritmos: Divide y vencerás y Merge Sort}
+Algunos problemas tienen una estructura recursiva, que nos permite aplicar la estructura divide y vencerás. Esta estructura de diseño de algoritmos se basa en 3 pasos que se realizan en cada nivel de recursión:
+\begin{itemize}
+    \item \textbf{Dividir} el problema en otros varios de la misma naturaleza pero de menor tamaño.
+    \item \textbf{Vencer} el problema de forma recursiva. Si el tamaño del problema es suficientemente pequeño, resolverlo directamente por el primer algoritmo que se nos ocurra.
+    \item \textbf{Combinar} la soluciones de los distintos subproblemas para obtener la solución general al problema..
+\end{itemize}
+El algoritmo \textit{Merge Sort} sigue esta forma de estructura de un algoritmo:
+\begin{itemize}
+    \item \textbf{Divide} la secuencia de $n$ datos a ordenar en dos subsecuencias de tamaño $\nicefrac{n}{2}$ cada una.
+    \item \textbf{Vence} cada uno de los subproblemas de forma recursiva.
+    \item \textbf{Combina} las dos subsecuencias ya ordenadas en una secuencia final ordenada.
+\end{itemize}
+La recursión se acaba cuando la secuencia a ordenar es de tamaño 1, en cuyo caso ya tenemos una secuencia ordenada. Comenzamos describiendo la parte del \textbf{combinado} de las soluciones, que puede llevarse a cabo por la siguiente función:
+\begin{minted}{c++}
+// Siendo p <= q < r:
+// Supuesto que v[p,q] y v[q+1,r] son dos subvectores ordenados
+// Genera la combinacion de ellos en el vector v[p,r], ordenado
+void merge(int* v, int p, int q, int r){
+    long long int MAX = 9999999999999;
+
+    int n_1 = q-p+1;   //nº de elementos en v[p,q]
+    int n_2 = r-q; //nº de elementos en v[q+1,r]
+
+    // Se crean copias de v[p,q] y v[q+1,r]
+    int left[n_1+1];
+    int right[n_2+1];
+    for(int i = 0; i < n_1; i++){
+        left[i] = v[p+i];
+    }
+    left[n_1] = MAX;
+    for(int j = 0; j < n_2; j++){
+        right[j] = v[q+1+j];
+    }
+    right[n_2] = MAX;
+
+    // Se juntan
+    int i = 0;
+    int j = 0;
+    for(int k = p; k <= r; k++){
+        if(left[i] <= right[j]){
+            v[k] = left[i];
+            i++;
+        }else{
+            v[k] = right[j];
+            j++;
+        }
+    }
+}
+\end{minted}
+Este algoritmo tarda un tiempo de orden de $n$, donde $n = r-p+1$, puesto que los bucles de copia en \texttt{left} y \texttt{right} son despreciables respecto al último bucle \texttt{for}.\\
+
+\noindent
+Una vez discutido este proceso, estamos en condiciones de crear el proceso \texttt{merge\_sort}, que dado un vector y dos posiciones \texttt{p} y \texttt{r} con $p\leq r$, ordenará dicho vector. El proceso será el siguiente: Si $p \geq r$, entonces la secuencia ya está ordenada por contener un elemento ($p=r$). En caso contrario, se calcula un índice \texttt{q} de forma que al final tengamos:
+\begin{itemize}
+    \item Una secuencia \texttt{v[p,q]} conteniendo $\lceil \nicefrac{n}{2}\rceil$ elementos.
+    \item Una secuencia \texttt{v[q+1,r]} conteniendo $\lfloor \nicefrac{n}{2}\rfloor$ elementos.
+\end{itemize}
+De esta forma, el procedimiento tendrá el siguiente código:
+\begin{minted}{c++}
+// Siendo p <= r, ordena el vector v[p,r]
+// Si p >= r, el vector ya está ordenado
+void merge_sort(int* v, int p, int r){
+    if(p < r){
+        int q = (p+r)/2;    // se coge el suelo
+        merge_sort(v, p, q);
+        merge_sort(v, q+1, r);
+        merge(v, p, q, r);
+    }
+}
+\end{minted}
+El tiempo de ejecución de un algoritmo del tipo divide y vencerás suele ser de la siguiente forma, donde $T(n)$ indica el tiempo que tarda el algoritmo para resolver un problema de tamaño $n$:
+\begin{equation*}
+    T(n) = \left\{\begin{array}{ll}
+            \Theta(1) & \text{si\ } n \leq c \\
+            aT(\nicefrac{n}{b}) + D(n) + C(n) & \text{si\ } n > c
+    \end{array}\right.
+\end{equation*}
+Donde \texttt{a} es el número de subproblemas que se consiguen en la parte de ``dividir'', \texttt{b} determina el tamaño de los subproblemas, \texttt{c} determina a partir de qué tamaño del problema se aplica el algoritmo de resolución del caso base. $D(n)$ y $C(n)$ determinan los tiempos de dividir y el problema y de combinar las distintas soluciones para un problema de tamaño $n$.
+
+\subsubsection{Análisis de Merge Sort}
+Aunque el algoritmo funciona perfectamente para cualquier número $n$, supondremos para simplificar el análisis del tiempo de ejecución que $n$ es una potencia de $2$. De esta forma, el tiempo de ejecución de \textit{Merge Sort} puede calcularse por la recurrencia:
+\begin{equation*}
+    T(n) = \left\{\begin{array}{ll}
+            \Theta(1) & \text{si\ } n=1 \\
+            2T(\nicefrac{n}{2}) + \Theta(n) & \text{si\ } n > 1
+    \end{array}\right.
+\end{equation*}
+Ya que en cada paso dividimos el problema en 2 subproblemas de tamaño $\nicefrac{n}{2}$, el caso base es en $n=1$, dividir el problema requiere un tiempo constante (se desprecia) y combinar las soluciones requiere un tiempo del orden de $\Theta(n)$.
+
+Próximamente veremos que este tiempo de ejecución es $\Theta(n\log n)$. Aunque no sepamos calcularlo de forma analítica, sí que podemos intuir el por qué de esta solución, ya que lo que hacemos es en cada nivel de recursión realizar un trabajo de tamaño $n$ y realizar aproximadamente $\log n$ niveles de recursión, por lo que acabaremos con un tiempo del orden $n\log n$.
+
+\subsection{Búsqueda binaria}
+Suponiendo que tenemos un vector \texttt{v} ordenado, la búsqueda binaria devuelve el índice en dicho vector de la primera aparición de dicho elemento. Si el elemento no se encuentra en el vector \texttt{v}, devuelve la posición \texttt{-1}. El código es el siguiente:
+\begin{minted}{c++}
+// Devuelve el índice del valor k dentro del vector v[p,q], con p <= q
+// Supone que v está ordenado de menor a mayor
+// Si k no se encuentra en v, devuelve -1
+int busqueda_binaria(int* v, int p, int q, int k){
+    if(p >= q){ // Tamaño 1
+        return (v[p] == k)? p : -1 ;
+    }else{
+        // Dividimos el vector en dos
+        int r = (p+q)/2;
+
+        if(v[r] == k)
+            return r;
+        else if(v[r] > k)
+            return busqueda_binaria(v, p, r-1, k);
+        else
+            return busqueda_binaria(v, r+1, q, k);
+    }
+}
+\end{minted}
+Este tiene un orden de eficiencia $\log n$ donde $n = q-p+1$, ya que en el peor de los casos tenemos que dividir el vector todas las veces posibles, y un vector de tamaño $n$ solo puede ir dividiéndose en mitades hasta alcanzar un tamaño 1 en $\log n$ pasos.
+
+\begin{ejercicio}
+    Determina un algoritmo con orden de eficiencia $n\log n$ que dados un conjunto $S$ de $n$ enteros y otro entero $x$, determine si existen dos elementos en $S$ cuya suma sea exactamente $x$.\\
+
+    \noindent
+    Este ejercicio podemos resolverlo aplicando un proceso similar a la búsqueda binaria: Dado un vector \texttt{v}, primero lo ordenamos por \textit{Merge Sort} en tiempo $n\log n$ y posteriormente aplicamos el siguiente proceso: por cada elemento del conjunto, buscamos por búsqueda binaria un segundo elemento del conjunto que sumado con este primer elemento sume $x$. De esta forma, este procedimiento tiene un coste $n\log n$, que sumado al coste del \textit{Merge Sort} nos da un coste total $n\log n$.
+    \begin{minted}{c++}
+// Busca un indice en el vector S[p,q] de forma que S[k] + S[indice] = x
+int busca_sumar(int *S, int p, int q, int k, int x){
+    if(p >= q){ // Tamaño 1
+        return (S[p] + S[k] == x)? p : -1 ;
+    }else{
+        int r = (p+q)/2;
+
+        if(S[r] + S[k] == x)
+            return r;
+        else if(S[r] + S[k] > x)
+            return busca_sumar(S, p, r-1, k, x);
+        else
+            return busca_sumar(S, r+1, q, k, x);
+    }
+}
+
+// Busca dos indices en el vector S[p,q] que sumen x
+pair<int, int> busca_suma(int *S, int n, int x){
+    // Ordenamos el vector
+    merge_sort(S, 0, n-1);
+
+    int i = 0;
+    while(i < n){
+        int k = busca_sumar(S, 0, n-1, i, x);
+        if(k != -1)
+            return pair<int, int>(S[i], S[k]);
+        i++;
+    }
+    return pair<int, int>(-1, -1);
+}
+    \end{minted}
+\end{ejercicio}
+
+\subsection{Bubble Sort}
+\textit{Bubble Sort} es un algoritmo popular pero ineficiente de ordenación, que funciona intercambiando repetidamente las posiciones de los elementos que están fuera de orden:
+\begin{minted}{c++}
+// Ordena el vector v
+void bubble_sort(int* v, int n){
+    for(int i = 0; i < n; i++){
+        for(int j = n-1; j > i; j--){
+            if(v[j] < v[j-1]){
+                // Intercambio
+                swap(v[j], v[j-1]);
+            }
+        }
+    }
+}
+\end{minted}
+
+\subsection{Algoritmo de Horner}
+Dado un polinomio $P$ de grado $n$:
+\begin{equation*}
+    P(x) = \sum_{k=0}^{n} a_k x^k 
+\end{equation*}
+Si tratamos de evaluzarlo en un punto $b$, tenemos que realizar $\sum\limits_{k=0}^{n} k = \frac{n(n+1)}{2}$ multiplicaciones y $n-1$ sumas. En definitiva, un algoritmo del orden de $n^2$ operaciones, siendo $n$ el grado del polinomio $P$. Sin embargo, podemos ver la evaluación del polinomio como:
+\begin{equation*}
+    P(a) = \sum_{k=0}^{n} a_k b^k  = a_0 + a_1\cdot b + a_2\cdot b^2 + \ldots + a_n\cdot b^n
+\end{equation*}
+Si sacamos $b$ factor común, reducimos un cierto número de operaciones, y podemos sacar $b$ como factor común un cierto número de veces:
+\begin{align*}
+    P(a) = \sum_{k=0}^{n} a_k b^k  &= a_0 + a_1\cdot b + a_2\cdot b^2 + \ldots + a_n\cdot b^n \\
+                                   &= a_0 + b(a_1 + a_2\cdot b + \ldots + a_n \cdot b^{n-1}) \\
+                                   &= a_0 + b(a_1 + b(a_2 + \ldots + a_n \cdot b^{n-2})) \\
+                                   &\vdots \\
+                                   &= a_0 + b(a_1 + b(a_2 + \ldots + b(a_{n-1} + ba_n)))
+\end{align*}
+En definitiva, este procedimiento nos permite realizar la misma cuenta pero mediante $n$ sumas y $n$ productos, con lo que la eficiencia final del algoritmo es del orden de $n$. El código que reproduce este comportamiento es el llamado \underline{Algoritmo de Horner}, que viene dado por:
+\begin{minted}{c++}
+// Evalúa el polinomio de grado n y coeficientes a[0], a[1], ..., a[n] en b
+int evaluar_horner(int* a, int n, int b){
+   int y = 0;
+   for(int i = n; i >= 0; i--){
+      y = a[i] + b * y;
+   }
+   return y;
+}
+\end{minted}
+
+% // TODO: Inversiones
