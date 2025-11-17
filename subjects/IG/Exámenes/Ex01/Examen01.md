@@ -1,5 +1,6 @@
 # Informática Gráfica. Examen I de Prácticas
 
+- **Autor:** José Juan Urrutia Milán
 ***
 
 - **Asignatura:** Informática Gráfica.

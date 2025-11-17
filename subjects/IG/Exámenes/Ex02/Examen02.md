@@ -1,5 +1,6 @@
 # Informática Gráfica. Examen I de Prácticas
 
+- **Autor:** José Juan Urrutia Milán
 ***
 
 - **Asignatura:** Informática Gráfica.
@@ -38,4 +39,4 @@ Añadir, además una animación de tal forma que el cubo de abajo escale periód
 ***
 La solución al examen puede encontrarla en:
 - Solución en [OpenGL](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/IG/Exámenes/Ex02/solucionOpenGL).
-<!-- - Solución en [Godot](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/IG/Exámenes/Ex02/solucionGodot). % // TODO: Añadir cuando se haga-->
+- Solución en [Godot](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/IG/Exámenes/Ex02/solucionGodot).
