@@ -5,9 +5,9 @@
 - **Asignatura:** Informática Gráfica.
 - **Curso Académico:** 2025-26.
 - **Grado:** DGIIM + DGIIADE.
-- **Grupo:** A3.
+- **Grupo:** A1 y A3.
 - **Profesor:** Carlos Ureña.
-- **Descripción:** Parcial I de Prácticas del Grupo A3, Prácticas 1-3.
+- **Descripción:** Parcial I de Prácticas de los grupos A1 y A3, Prácticas 1-3.
 
 Para el presente examen, era necesario que el alumno llevase implementadas ya las prácticas 1 a 3 del la asignatura.
 ***
@@ -37,3 +37,9 @@ Añade al nodo los hijos necesarios para un árbol de escena como el de la figur
 Usa 5 instancias de la clase `MeshInstance3D` de godot, 4 para las patas y la otra para el tablero superior. Todas ellas comparten el objeto mcubo como malla. Las 4 patas tienen un material de color rojo y el tablero de color azul. Declara 4 constantes: ancho y alto de las patas, y ancho y alto del tablero.
 
 ![Figura a realizar](./img/foto3.png)
+
+
+
+***
+La solución al examen puede encontrarla en:
+- Solución en [Godot](https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/IG/Exámenes/Ex03/solucionGodot).
