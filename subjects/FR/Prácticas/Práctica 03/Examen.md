@@ -199,7 +199,7 @@ ______
 
 31. Considerando la siguiente traza capturada con Wireshark, ¿cuál de las siguientes afirmaciones es correcta?<br><img src="Img_Examenes/P23.png" alt="Traza de Wireshark"><br>
     - ( ) Un cliente con IP pública `65.208.228.223` accede mediante el navegador Mozilla Firefox al recurso `www.ethereal.com`.
-    - ( ) El dominio del sitio web accedido por el cliente es `ethereal.com`.
+    - (x) El dominio del sitio web accedido por el cliente es `ethereal.com`.
     - ( ) Un cliente con IP pública `145.254.160.237` accede al recurso `http://www.ethereal.com/download.html` servido por un servidor HTTP Apache escuchando en el puerto 3372.
     - ( ) El recurso `http://www.ethereal.com/download.html` tiene un tamaño de 18364 bytes y es servido por un servidor HTTP Apache escuchando en el puerto 3372.
 
