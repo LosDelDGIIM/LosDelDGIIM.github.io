@@ -50,7 +50,7 @@ ______
     - ( ) nadie pasa.
     - ( ) se atiende por orden de llegada.
 
-6. ¿Qué función cumple la operación c.wait() en un monitor?
+6. ¿Qué función cumple la operación `c.wait()` en un monitor?
     - ( ) Bloquear el monitor hasta que se libere.
     - ( ) Disminuir el valor de la variable protegida.
     - (x) Bloquear al proceso que llama al procedimiento que la ejecuta hasta que se cumpla una condición.
@@ -106,7 +106,7 @@ ______
     - ( ) Reducen el riesgo de errores en el programa.
     - ( ) Facilitan la depuración debido a su comportamiento coherente.
 
-14. Si en Dijkstra se cambia (6) por if $flag[turno]!=enSC$ el algoritmo... (algoritmo, página 10):
+14. Si en Dijkstra se cambia (6) por `if flag[turno]!=enSC` el algoritmo... (algoritmo, página 10):
     - ( ) mejora equidad.
     - (x) pierde corrección (seguridad).
     - ( ) mantiene EM pero pierde progreso.
@@ -141,7 +141,7 @@ ______
     - ( ) Requerir planificación en tiempo real.
     - ( ) Propagar errores transitorios de forma controlada.
 
-19. En el esquema s[i] (problema 74, relación 2-2), la estructura implementa...
+19. En el esquema `s[i]` (problema 74, relación 2-2), la estructura implementa...
     - (x) un anillo token que garantiza equidad por rotación.
     - ( ) prioridad fija del proceso 0.
     - ( ) acceso aleatorio.
@@ -253,16 +253,16 @@ ______
     - ( ) Garantiza que las precondiciones y poscondiciones de las instrucciones no se vean modificadas por otros procesos.
     - ( ) Garantiza que todos los procesos accedan a los recursos compartidos al mismo tiempo.
 
-35. En la versión (b): por orden de llegada al banco del problema 66 (relación 2-1), si el primero pide 300 y saldo = 200:
-    - ( ) se atiende al segundo si pide $\le 200$.
+35. En la versión (b): por orden de llegada al banco del problema 66 (relación 2-1), si el primero pide 300 y `saldo = 200`:
+    - ( ) se atiende al segundo si pide \\(\leq 200\\).
     - (x) todos esperan hasta que el primero pueda cobrar.
     - ( ) se divide el saldo entre los dos.
     - ( ) se atiende al segundo y se mantiene al primero esperando.
     - ( ) cancela la petición del primero.
 
 36. En un monitor, aunque la exclusión mutua está garantizada, se exige que los procedimientos sean reentrantes porque:
-    - ( ) la semántica SU prohíbe signal() dentro del monitor.
-    - (x) los procesos pueden bloquearse y reentrar al monitor tras un wait()/signal().
+    - ( ) la semántica SU prohíbe `signal()` dentro del monitor.
+    - (x) los procesos pueden bloquearse y reentrar al monitor tras un `wait()/signal()`.
     - ( ) la entrada al monitor es no determinista.
     - ( ) se permite invocar el mismo procedimiento desde llamadas asíncronas.
     - ( ) reentrancia evita el interbloqueo por definición.
@@ -283,8 +283,8 @@ ______
 
 39. La extensión del protocolo de la exclusión mutua con "como mucho n procesos en SC", una solución correcta se basa en:
     - ( ) un ticket lock clásico.
-    - (x) un semáforo contador inicializado a n.
-    - ( ) una variable booleana turn.
+    - (x) un semáforo contador inicializado a `n`.
+    - ( ) una variable booleana `turn`.
     - ( ) dos flags por proceso.
     - ( ) un árbol binario de Peterson.
 
@@ -299,8 +299,8 @@ ______
     - ( ) correcta.
     - (x) incorrecta.
     - ( ) correcta sólo si se cumple equidad (fairness) fuerte.
-    - ( ) correcta si $c_0, c_1$ boolean.
-    - ( ) correcta si turno = -1.
+    - ( ) correcta si \\(c_0, c_1\\) boolean.
+    - ( ) correcta si \\(turno = -1\\).
 
 42. ¿Qué sucede con un proceso en cola cuando se usa signal en una semántica SC?
     - ( ) Se despierta y sale inmediatamente.
@@ -309,14 +309,14 @@ ______
     - ( ) Compite por entrar a la cola del monitor.
     - ( ) Ignora la operación signal.
 
-43. ¿Qué significa el triple $\{P\}C\{Q\}$ en el contexto de la lógica de Hoare?
-    - ( ) Si el programa C se ejecuta, siempre terminará.
-    - (x) Si el programa C comienza en un estado en el que P es verdadero, entonces Q será verdadero después de que C termine de ejecutarse.
-    - ( ) P y Q son variables que representan el estado antes y después de C.
-    - ( ) Garantiza que en la ejecución de varios procesos contenidos en C no existen interferencias.
-    - ( ) Si el programa C se ejecuta con la máxima velocidad, P siempre será igual a Q.
+43. ¿Qué significa el triple \\(\\{P\\}C\\{Q\\}\\) en el contexto de la lógica de Hoare?
+    - ( ) Si el programa \\(C\\) se ejecuta, siempre terminará.
+    - (x) Si el programa \\(C\\) comienza en un estado en el que \\(P\\) es verdadero, entonces \\(Q\\) será verdadero después de que \\(C\\) termine de ejecutarse.
+    - ( ) \\(P\\) y \\(Q\\) son variables que representan el estado antes y después de \\(C\\).
+    - ( ) Garantiza que en la ejecución de varios procesos contenidos en \\(C\\) no existen interferencias.
+    - ( ) Si el programa \\(C\\) se ejecuta con la máxima velocidad, \\(P\\) siempre será igual a \\(Q\\).
 
-44. En el algoritmo de tickets $n1/n2$ (problema 75, relación 2-2) con desempate a favor de P1, garantiza...
+44. En el algoritmo de tickets \\(n1/n2\\) (problema 75, relación 2-2) con desempate a favor de P1, garantiza...
     - (x) EM, ausencia de interbloqueo y equidad.
     - ( ) sólo EM y vivacidad.
     - ( ) sólo ausencia de interbloqueo.
@@ -344,21 +344,21 @@ ______
     - ( ) se alternan.
     - ( ) nadie pasa hasta que se vacíe, pero pasa antes el chico que espera.
 
-48. Por qué no se puede demostrar la corrección del siguiente fragmento concurrente a menos que se cumpla $\{x==0 \wedge y==0 \wedge z==0\} <x=z+a> || <y=x+b> \{x==a \wedge (y==b \vee y==a+b) \wedge z==0\}$:
-    - ( ) $b=0 \vee a=0$.
-    - ( ) $b=0 \wedge a=0$.
-    - (x) $a=0$.
+48. Por qué no se puede demostrar la corrección del siguiente fragmento concurrente a menos que se cumpla \\(\\{x==0 \wedge y==0 \wedge z==0\\}\\) `<x=z+a> || <y=x+b>` \\(\\{x==a \wedge (y==b \vee y==a+b) \wedge z==0\\}\\):
+    - ( ) \\(b=0 \vee a=0\\).
+    - ( ) \\(b=0 \wedge a=0\\).
+    - (x) \\(a=0\\).
     - ( ) para cualquier valor de las variables.
     - ( ) es siempre indemostrable.
 
-49. Seleccionar el valor correcto de las 2 variables (x e y) tras: int x=5, y=2; cobegin <x=x+y>; <y=x*y>; <x=x-y>; coend;
-    - [ ] $x==7, y==14$.
-    - [x] $x==5, y==10$.
-    - [x] $x==-7, y==14$.
-    - [ ] $x==-3, y==10$.
+49. Seleccionar el valor correcto de las 2 variables (\\(x\\) e \\(y\\)) tras: `int x=5, y=2; cobegin <x=x+y>; <y=x*y>; <x=x-y>; coend;`:
+    - [ ] \\(x==7, y==14\\).
+    - [x] \\(x==5, y==10\\).
+    - [x] \\(x==-7, y==14\\).
+    - [ ] \\(x==-3, y==10\\).
 
-50. ¿Por qué el código $\{x==0\}$ cobegin <x=x+a>; <x=x+a> coend; $\{x==2*a\}$ no puede ser demostrado directamente con LP?
-    - ( ) Porque la poscondición propuesta $(x==2*a)$ es falsa.
-    - ( ) Porque falta incluir la posibilidad de que el valor final sea $\{x==a\}$.
+50. ¿Por qué el código \\(\\{x==0\\}\\) cobegin <x=x+a>; <x=x+a> coend; \\(\\{x==2*a\\}\\) no puede ser demostrado directamente con LP?
+    - ( ) Porque la poscondición propuesta \\(\\{x==2*a\\}\\) es falsa.
+    - ( ) Porque falta incluir la posibilidad de que el valor final sea \\(\\{x==a\\}\\).
     - (x) Porque al aplicar la regla de inferencia utilizo pre y post-condiciones demasiado débiles.
     - ( ) Porque tengo que incluir en los asertos el valor del contador de programa.
