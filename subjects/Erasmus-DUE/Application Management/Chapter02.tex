@@ -1,0 +1,200 @@
+\chapter{Version Control System (VCS)}
+
+\begin{definicion}[Version Control System (VCS)]
+    A Version Control System (VCS) is a software tool that helps to manage changes to source code over time. It keeps track of every modification made to the code, also allowing to revert to previous versions if needed.
+\end{definicion}
+
+\section{Types of VCS}
+
+There are three main types of VCS:
+\begin{itemize}
+    \item Local VCS: It stores all the changes in a local database on the developer's computer. It is simple to use, but it does not provide collaboration features. One example is GNU RCS (Revision Control System).
+    \item Centralized VCS: It uses a central server to store all the changes. Follows a client-server architecture.
+    \begin{description}
+        \item[Advantages]: Clear control access, correct backup of big files and locking mechanism.
+        \item[Disadvantages]: Single point of failure, limited offline capabilities and the possibility of forgetting to release the locks. 
+    \end{description}
+
+    Only the original file and then each specific changes (deltas) are stored, not every version of the file. This saves space but depends on the whole set of deltas to reconstruct a specific version. One example is Subversion (SVN).
+    \item Distributed VCS: It allows every developer to have a complete copy (including history) of the repository on their local machine. This provides better collaboration features and allows developers to work offline.
+\end{itemize}
+
+In the following section, we will focus on Distributed VCS, and specially on one of the most popular ones: Git.
+
+\section{Git}
+
+Git is a distributed version control system that is widely used in the software development industry. Opposite to the delta-based approach of the centralized VCS, Git uses a \emph{snapshot-based} approach. It keeps a list of the whole snapshots of the filesystem at specific points in time. Almost every operation in Git is performed \emph{locally}, which makes it really fast. Given that the history is stored locally, it allows to work and to restore previous versions even when offline. It uses \emph{Hashing} (SHA-1) to identify every single commit, ensuring the integrity of the codebase.\\
+
+Git has some diffeent states for each file, which are stored in three different areas:
+\begin{itemize}
+    \item \ul{Modified} (Stored in the working directory): The file has been changed but not yet staged for commit (not registered in the repository).
+    \item \ul{Staged} (Stored in the staging area): The file has been modified and is marked to be included in the next commit.
+    \item \ul{Committed} (Stored in the local repository, \verb|.git| folder): The file has been saved in the local repository.
+\end{itemize}
+
+Some important Git commands are the following ones:
+\begin{itemize}
+    \item \verb|git init|: Initializes a new Git repository (creates the \verb|.git| folder).
+    \item \verb|git clone <repo_url>|: Clones an existing repository from a remote server to the local machine.
+    \item \verb|git add <file>|: Stages a file for commit. It also lets tracking new files and indicating when a file conflict has been resolved.
+    
+    Using the option \verb|-A| stages all the changes (new, modified and deleted files).
+    \item \verb|git commit -m "message"|: Commits the staged changes to the local repository with a descriptive message.
+    \item \verb|git status|: Shows the current status of the working directory and staging area. Indicates which files are untracked, modified, deleted or staged for commit.
+    \begin{observacion}
+        All the files that are not tracked will always appear in red when using \verb|git status|. Sometimes they are intended to be untracked (e.g., temporary files, build artifacts, etc). In that case, they can be added to the \verb|.gitignore| file to avoid them appearing in the status. That will make Git ignore them.
+    \end{observacion}
+    \item \verb|git diff|: Shows the differences between files in different states (working directory, staging area, last commit). Has different options to compare specific states:
+    \begin{itemize}
+        \item \verb|git diff|: Working directory vs Staging area.
+        \item \verb|git diff --staged|: Staging area vs Last commit.
+        \item \verb|git diff HEAD|: Working directory vs Last commit.
+    \end{itemize}
+
+    \item \verb|git log|: Displays the commit history of the repository. Using the option \verb|-p| shows the differences introduced in each commit.
+\end{itemize}
+
+\subsection{Git LSF}
+
+Git Large File Storage (Git LFS) is an extension for Git that is designed to handle large files more efficiently. Given that Git is based on snapshots, storing large files directly in the repository can lead to repeated storage of the same file in different commits, which can quickly bloat the repository size. Git LFS solves this problem by replacing large files with lightweight references in the Git repository. Instead of storing the actual file content in the repository, Git LFS stores a pointer to the file in the Git repository and keeps the actual file content in a separate storage location. It is especially useful for binary files (e.g., images, videos, audio files, \verb|pptx|, etc).\\
+
+Some important Git LFS commands are the following ones:
+\begin{itemize}
+    \item \verb|git lfs install|: Installs Git LFS in the local repository.
+    \item \verb|git lfs track "<file_pattern>"|: Tracks files matching the specified pattern with Git LFS.
+    \item \verb|git lfs ls-files|: Lists the files that are being tracked by Git LFS.
+\end{itemize}
+
+\subsection{Branching}
+
+Branching is a powerful feature in Git that allows developers to create separate lines of development within a repository. This enables multiple developers to work on different features or bug fixes simultaneously without interfering with each other's work. Each branch represents an independent line of development, allowing changes to be made in isolation. Once the changes in a branch are complete and tested, they can be merged back into the main branch (usually called \verb|main| or \verb|master|).\\
+
+
+In order to explain branching, we need to define the concept of \emph{HEAD}.
+\begin{definicion}[\emph{HEAD} Pointer]
+    The \verb|HEAD| pointer is a reference to the current commit that the working directory is based on. It indicates the current position in the repository's history.
+\end{definicion}
+
+Some important commands related to branching are the following ones:
+\begin{itemize}
+    \item \verb|git branch <branch_name>|: Creates a new branch with the specified name that points to the current commit. With the option \verb|-d|, it deletes the specified branch (if it has been merged).
+    \item \verb|git checkout <branch_name>|: Switches to the specified branch, updating the working directory to reflect the state of that branch. It then also updates the \verb|HEAD| pointer to point to the new branch (the latest commit of that branch).
+\end{itemize}
+
+\subsection{Branch Integration}
+When the development in a branch is complete, it is often necessary to integrate the changes back into another branch (usually the \verb|main| or \verb|master| branch). There are two main methods for integrating branches in Git: merging and rebasing.
+\subsubsection{Merging}
+
+The main command is the following one:
+\begin{itemize}
+    \item \verb|git merge <branch_name>|: Merges the specified branch into the current branch. It combines the changes from both branches, creating a new commit that represents the merged state.
+\end{itemize}
+
+There are two main strategies for merging branches:
+\begin{itemize}
+    \item Fast-Forward Merge: If the current branch has not diverged from the branch being merged, Git simply moves the \verb|HEAD| pointer forward to the latest commit of the merged branch. No new commit is created in this case.
+    \item Recursive Merge: If the branches have diverged, Git creates a new commit that combines the changes from both branches. This new commit has two parent commits: one from each branch.
+\end{itemize}
+
+In the latter strategy, conflicts may arise if the same lines of code have been modified in both branches. Git will mark these conflicts in the affected files, and it is the developer's responsibility to resolve them manually before completing the merge. They can use \verb|git status| to see which files have conflicts and need to be resolved. After resolving the conflicts, the developer can stage the changes and complete the merge by committing the changes.
+
+\subsubsection{Rebasing}
+
+This strategy uses the following command:
+\begin{itemize}
+    \item \verb|git rebase <branch_name>|: Reapplies the commits from the current branch on top of the specified branch. It effectively moves the entire branch to start from the latest commit of the specified branch. With the option \verb|--continue|, it continues the rebase process after resolving conflicts.
+\end{itemize}
+
+After rebasing, the commit history appears linear, and therefore a simple fast-forward merge can be performed to integrate the changes into the target branch.\\
+
+When rebasing, the commit history is rewritten, which can make it appear cleaner and more linear. However, the details about the mistakes committed during the development in the feature branch may be lost. In addition, it is dangerous to rebase branches that have already been pushed to a remote repository, as it can lead to confusion and conflicts for other developers working on the same branch, as their local copies will have a different history than the rebased branch.
+
+
+\section{Distributed Git}
+
+Until this point, we have only talked about local operations. To collaborate with other developers, it is necessary to use remote repositories.
+\subsection{Remote Repositories}
+
+A remote repository is a version of the repository that is hosted on a remote server. It allows multiple developers to collaborate on the same codebase. All developers should synchronize their local repositories with the remote repository to share changes and keep their code up to date. When more than one developer is working on the same codebase, conflicts may arise if two developers modify the same lines of code in different ways. Some important commands to interact with remote repositories are the following ones:
+\begin{itemize}
+    \item \verb|git remote add <name> <url>|: Adds a new remote repository with a specific name (e.g., \verb|origin|).
+    \item \verb|git push <remote> <branch>|: Pushes the local commits to the specified remote repository and branch.
+    \item \verb|git fetch <remote>|: Fetches the latest changes from the specified remote repository without merging them into the local branch.
+    \item \verb|git pull <remote> <branch>|: Fetches and merges changes from the specified remote repository and branch into the local branch.
+\end{itemize}
+
+\subsection{Collaboration Workflows}
+
+There are different collaboration workflows that teams can follow when using Git, depending on their preferences and project requirements. In the following, we describe three common workflows.
+
+\subsubsection{Centralized Workflow}
+The repository has a single central shared repository. All developers clone this repository, make changes in their local copies, and then push their changes back to the central repository. When more than one developer changes the same lines of code, conflicts may arise during the push operation, which need to be resolved before the changes can be successfully pushed.\\
+This workflow is simple and easy to understand, making it suitable for small teams or projects with straightforward collaboration needs.
+
+\subsubsection{Integration Manager Workflow}
+
+In this workflow, there are two types of developers:
+\begin{itemize}
+    \item \ul{Integration Manager}: He is the responsible and manteiner of the project.
+    \item \ul{Contributors}: They suggest the integration managers the changes they want to make to the codebase.
+\end{itemize}
+
+As well as the two types of developers, there are also two types of repositories:
+\begin{itemize}
+    \item \ul{Blessed Repository}: It is maintained by the integration manager. It is the main repository where all the changes are eventually integrated, and it is considered the authoritative source of the codebase.
+    \item \ul{Developper Repositories}: They are maintained by the contributors. Each contributor has their own repository where they can make changes and experiment with new features. Each developper has their public repository and its local copy.
+\end{itemize}
+
+The workflow works as follows:
+\begin{enumerate}
+    \item The integration manager creates the blessed repository, and make it public.
+    \item Each contributor clones the blessed repository to create their own developper repository (that is, a fork of the blessed repository).
+    \item Contributors make changes in their local copies and push them to their developper repositories.
+    \item When a contributor wants to suggest changes to the blessed repository, they email the integration manager asking him to make those changes (this is typically done through a pull request).
+    \item The integration manager adds the contributor's repository as a remote, fetches the changes, reviews them, and if everything is fine, merges them into their local blessed repository.
+    \item Finally, the integration manager pushes the updated blessed repository to the remote server, so that all contributors can access the latest changes.
+\end{enumerate}
+
+This workflow allows for better control and review of changes, as the integration manager can carefully evaluate each contribution before integrating it into the main codebase. It is suitable for larger projects with multiple contributors.
+
+\subsubsection{Dictator and Lieutenants Workflow}
+
+This workflow is similar to the Integration Manager Workflow, but with a hierarchical structure. In this case, a new upper role is introduced: there are more than one integration managers, called \emph{lieutenants}, and they report to a single \emph{dictator} (the main integration manager). Each lieutenant is responsible for a specific area of the codebase and manages contributions related to that area.\\
+
+The workflow works as follows:
+\begin{enumerate}
+    \item Each contributor works on their own branch created for their feature or bug fix.
+    \item When needed, the lieutenants merge the branches of the contributors into their own master's branches.
+    \item When needed, the dictator merges the master's branches of the lieutenants into his own master's branch.
+    \item Finally, the dictator pushes the updated blessed repository to the remote server, so that all contributors can access the latest changes.
+\end{enumerate}
+
+This workflow allows for better organization and management of contributions, as each lieutenant can focus on their specific area of expertise. It is suitable for large projects with multiple teams working on different aspects of the codebase. For instance, the Linux kernel development follows this workflow.
+
+\section{Git Internals}
+
+Git is built around a few fundamental concepts that enable its powerful version control capabilities. Understanding these concepts can help developers use Git more effectively and troubleshoot issues when they arise.
+
+\subsection{Objects}
+
+Git stores all its data in a simple key-value database, where the key is a SHA-1 hash of the content, and the value is the actual content. There are four main types of objects in Git:
+\begin{itemize}
+    \item \ul{Blob}: It represents the content of a file. It does not contain any metadata (e.g., filename, permissions, etc).
+    \item \ul{Tree}: It represents a directory. It contains references to blobs (files) and other trees (subdirectories), along with their names and permissions.
+    \item \ul{Commit}: It represents a snapshot of the repository at a specific point in time. It contains:
+    \begin{itemize}
+        \item A reference to a tree object that represents the state of the repository at that commit (the root tree).
+        \item References to parent commit(s) (the previous commit(s) in the history).
+        \item Metadata such as the author, committer, timestamp, and commit message.
+    \end{itemize}
+\end{itemize}
+
+All of the objects are stored in the \verb|.git/objects| directory. There, you can find subdirectories named with the first two characters of the SHA-1 hash, and inside those subdirectories, you can find files named with the remaining 38 characters of the hash. Git uses a combination of compression and delta encoding to store these objects efficiently, minimizing disk space usage. To see the objects stored in a Git repository, some useful commands are:
+\begin{itemize}
+    \item \verb|git cat-file -t <object_hash>|: Displays the type of the specified object (blob, tree, commit, etc).
+    \item \verb|git cat-file -p <object_hash>|: Displays the content of the specified object.
+    \item \verb|git ls-tree <tree_hash>|: Lists the contents of the specified tree object.
+    \item \verb|git show <commit_hash>|: Displays the details of the specified commit, including the commit message, author, date, and the changes introduced in that commit.
+\end{itemize}
+
+In all the cases, the \verb|<object_hash>| is the SHA-1 hash of the object you want to inspect. Normally the first few characters of the hash are enough to uniquely identify the object.
