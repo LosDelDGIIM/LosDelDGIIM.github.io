@@ -22,5 +22,72 @@ One important aspect of build engineering is the security of the build process. 
     \item \textbf{Secure Trusted Base}: In the event of cyberattacks, it is crucial to accurately identify the software that has been compromised. This includes knowing which version of the software was deployed and whether it was deployed correctly. Methods for achieving this include using version numbers, hash functions, and creating a Manifest file that contains all configuration parameters.
 \end{itemize}
 
+\subsection{GitHub Actions}
+
+In thuis building process, CI tools are used to automate the build and testing of code changes. One popular CI tool is GitHub Actions, which allows developers to create custom workflows that are triggered by specific events in a GitHub repository. In a repository, workflows are defined in YAML files located in the \verb|.github/workflows/| directory. These workflows can include various jobs, such as building the code, running tests, and deploying the application. An example of a simple GitHub Actions workflow that builds and tests a \verb|C++| project using \verb|CMake| is shown in the Source Code~\ref{code:github-actions-cpp}.
+\begin{listing}
+    \centering
+    \begin{minted}[fontsize=\small,breaklines,tabsize=4]{yaml}
+name: C++ CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up CMake
+      uses: jwlawson/actions-setup-cmake@v1
+      with:
+        cmake-version: '3.18.4'
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        cmake --build .
+    - name: Test
+        run: |
+            cd build
+            ctest --output-on-failure
+    -
+    \end{minted}
+    \caption{Example of a GitHub Actions workflow for building and testing a C++ project using CMake.}
+    \label{code:github-actions-cpp}
+\end{listing}
 
 \section{Continuous Integration (CI)}
+
+The concept of Continuous Integration (CI) revolves around the idea of frequently integrating code changes into a shared repository. During the normal development process, this integration is not done frequently enough, leading to integration problems and conflicts when multiple developers work on the same codebase. The aim is to continuously integrate code changes with every commit, ensuring that the code is compilable and that the executable passes all tests.\\
+
+In order to achieve CI, apart from the agreement among developers to follow this practice, the following are required:
+\begin{itemize}
+    \item A version control system (e.g., Git) to manage code changes and facilitate collaboration among developers.
+    \item An automated build script that compiles the code and runs tests.
+    \item CI server (e.g., Jenkins, Bamboo) that monitors the version control system for changes, triggers the build process, and stores the results.
+    \item An automated deployment of the software to a test environment.
+\end{itemize}
+
+A lot of the stakeholders in a software project benefit from CI, including developers (who get immediate feedback on their changes), QA teams (who can run automated tests) and project managers (who can get stadistics on build health and code quality).\\
+
+For a good CI practice, really frequent commits are necessary. With CI, with each commit, the code is integrated, built, and tested automatically\footnote{This can mean an overload in the early stages. A possible solution is ``Nightly Builds'', where the build process is run once a day, usually at night.}. This helps to identify and fix integration issues early, reducing the risk of conflicts and bugs. A good practice is to firstly pull the latest changes from the main branch, resolve any conflicts locally, and then push the changes to the shared repository. In addition, the changes should be small and with a low complexity, making it easier for the other developers to solve the possible conflicts.\\
+
+All this building process should be carried out in the ``Build Farm'', which is a dedicated environment for building and testing the software. It should be administrated separately from the development environment to ensure consistency and reliability. The build farm should also be scalable to handle multiple builds simultaneously, especially in large projects with many developers. If desired, developers should also be allowed to build and test their changes locally to reduce the load on the build farm and get faster feedback.
+
+\subsection{CI and Branches}
+
+CI and branching strategies do not fit well together, as branches are by nature changes in the code that should not yet be integrated into the main codebase. In order to mitigate this, the number of branches should be minimized and the changes in the master branch should at least once a day be merged into the feature branches. In addition, the lifetime of branches should be considered:
+\begin{itemize}
+    \item Most branches should be short-lived, lasting only a few days to a week. This minimizes the risk of conflicts and integration issues.
+    \item However, sometimes long-lived branches are necessary, for example, when it is not still clear which features will be included in the software release, and one will be later merged into the main branch. It should be clear from the beginning that late-binding always carries risks.
+\end{itemize}
+
+\subsection{Testing}
+
+Without testing, CI can only ensure that the code compiles successfully. To ensure that the code behaves as expected, automated tests should be included in the CI process. Appart from specific types of tests (e.g. code quality tests, security tests), there are three main types of tests that should be considered:
+\begin{description}
+    \item[Unit Tests]: These tests focus on small units of code, such as functions or methods, to ensure they work correctly in isolation. No database or external systems should be involved. The whole application should not be started. Usually less than 10 minutes are required to run all unit tests.
+    \item[Component Tests]: More than one unit is tested together, possibly involving databases or external systems. The whole application is still not started.
+    \item[Acceptance Tests]: These tests validate the entire application against the requirements. The whole application is started. Usually more than a day is required to run all acceptance tests.
+\end{description}
+
+The CI process should also consider the time all this testing takes. If it takes too long, developers may have to wait too much time to get feedback on their changes, or while the tests are running, they may continue working on other tasks, leading to more integration issues later. A possible solution is to have a ``Smoke Test Suite'' that runs a subset of the tests that can give quick feedback on the most critical functionalities of the application, and only run the full test suite at specific times (e.g., nightly).
