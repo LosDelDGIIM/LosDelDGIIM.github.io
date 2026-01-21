@@ -1,0 +1,191 @@
+\chapter{Deployment Strategies and DevOps}
+
+To deploy an application means to make it available for use. This process is critical, as it ensures that the application is accessible to users in a reliable and efficient manner.\\
+
+Afterwards we will explore the Deployment Pipeline, but first it should be considered the risky \emph{first deployment}, because it has some particularities that will not be present in the rest of deployments. As it has already been explained in previous chapters, only a small prototype should be deployed at this stage, to show the basic functionality of the application to the users. An IT-environment should be prepared for this deployment, being as similar as possible to the final production environment (same operating system, same installed software, similar hardware, etc.). This will help to identify potential issues that may arise during the deployment process.\\
+
+As it was with the integration phase, \emph{automatization} is key to ensure a smooth and efficient deployment process. Every step should be scripted and with self-testing capabilities, to minimize human errors and ensure consistency across deployments. Documentation and verification that the deployment process is working as expected is also crucial. Therefore, some aspects to avoid are:
+\begin{itemize}
+    \item Manually performing deployment steps.
+    \item Deploying only when the entire development is complete.
+    \item Manual configuration management of production environments.
+\end{itemize}
+
+\section{Disaster Planning}
+
+Despite all the precautions taken, there is always a risk of failure during deployment. Therefore, it is essential to be able to roll back to a previous stable version of the application in case of issues (as debugging in production is not a good practice). It is important to firstly backup the status (database, data systems, etc.) that the application has changed before rolling back, in order to avoid data loss. To minimize the impact of failures and ensure service continuity, modern deployment strategies aim to reduce or completely eliminate downtime while enabling fast rollback mechanisms.
+
+\subsection{Zero-Downtime Releases}
+
+Zero-downtime releases, also known as Hot Deployment, should change instantly between application versions without interrupting the service for users. Easyly changing the resources (Databases, Servers, etc.) that the application is using is key to achieve this, which can be achieved by changing the URI (Uniform Resource Identifier) that the application is pointing to. Some strategies to achieve zero-downtime releases are the following.
+
+\subsubsection{Blue-Green Deployment}
+
+There are two versions of the application: the current production (green) and the new version to be deployed (blue). These can be hosted on separate environments (e.g., different servers or cloud instances) or in the same environment (e.g. two different processes running on the same server). Switching between versions is done by simply switching in the router (in less than a second).\\
+
+Problems can however be caused by databases, because the new version may require a different database schema. To avoid this, during the migration the application is set to read-only.
+
+\subsubsection{Canary Releasing}
+
+In this strategy, the new version of the application is gradually rolled out to a small subset of users (the canary group) while the majority of users continue to use the old version. This allows for monitoring the performance and stability of the new version in a real-world environment before fully deploying it to all users. If any issues are detected, the deployment can be halted or rolled back without affecting the entire user base. It also allows to gather information about the new version from real users (e.g. if it generates more revenue).
+
+
+\subsection{Emergency fixes}
+
+Despite the amount of testing and precautions taken, it is possible that some bugs or vulnerabilities are discovered after deployment. In such cases, the fixes should also go through the deployment pipeline to ensure that they are properly tested and validated before being released to production. This is usually not done, just fixing the issue directly in production, but this can lead to:
+\begin{itemize}
+    \item Introducing new bugs while fixing the issue, known as Regression Bugs.
+    \item The system could be in an unknown state after the fix (e.g., inconsistent data), as it was not tested or committed properly.
+\end{itemize}
+Therefore, having short deployment times is even more important. In addition, when a bug is detected the severity of the issue should be evaluated, and rolling back to a previous version should also be considered.
+
+\section{Deployment Pipeline}
+
+A Deployment Pipeline is an automated process that takes code changes from development to production. Before analysing its phases, it is important to explain some good practices that should be followed when implementing a deployment pipeline.
+
+\subsection{Guidelines for a Deployment Pipeline}
+Some guidelines to follow when implementing a deployment pipeline are the following:
+\begin{enumerate}
+    \item Binary files should only be built once and then promoted through the different stages of the pipeline (e.g., from testing to staging to production). They should be secured with hashes.
+    \item The deployment process should be similar in every environment (development, testing, staging, production).
+    \item Smoke-Tests which verify that the application, database, and external services are running correctly should be performed after each deployment.
+    \item Testing environments should closely resemble the production environment.
+    \item Each code change should go through the entire pipeline to avoid regression bugs.
+    \item If any phase in the pipeline fails, the entire process should stop and the team should address the issue immediately.
+\end{enumerate}
+
+
+\subsection{Phases of a Deployment Pipeline}
+
+A typical deployment pipeline consists of the following phases:
+\begin{enumerate}
+    \item Commit Stage.
+    \item Automated Acceptance Test Stage.
+    \item Manual Test Stage.
+    \item Release Stage.
+\end{enumerate}
+
+\subsubsection{Commit Stage}
+
+In this phase, where the code is builded and some automated tests are performed (usually unit tests and some acceptance tests), the principles of Continuous Integration (CI) are applied. It should ideally last 5-10 minutes. This phase is crucial, and its implementation leads to significant improvements in software quality and team productivity.
+
+\subsubsection{Automated Acceptance Test Stage}
+
+The unit tests are usually not enough, and therefore more extensive automated acceptance tests should be performed in this phase. They should be described without technical details or terms, but from the user's perspective. They have an specific structure:
+\begin{itemize}
+    \item \textbf{Given} some initial context (the preconditions).
+    \item \textbf{When} an event occurs (the user action).
+    \item \textbf{Then} ensure some outcomes (the postconditions).
+\end{itemize}
+
+\subsubsection{Manual Test Stage}
+
+Some tests cannot be automated, and therefore they should be performed manually in this phase. Examples of such tests are the following:
+\begin{itemize}
+    \item Look \& Feel Testing: Ensures that the application meets the desired aesthetic and usability standards.
+    \item Worst Case Testing: Evaluates the application's performance and stability under extreme conditions (e.g., for instance, the application is closed while performing a critical operation).
+\end{itemize}
+
+\subsubsection{Release Stage}
+
+In this final phase, the application is deployed to the production environment. It should be as automated and as easy as possible, to minimize human errors and ensure consistency across deployments. Monitoring and alerting mechanisms should be in place to detect any issues that may arise after deployment.
+
+
+\subsection{Deployment of User-Installed Software}
+
+This process differs from the one described above, as the software is installed and updated by the users themselves. Some important aspects to consider are the following:
+\begin{itemize}
+    \item Crash Reporting from the users should be implemented.
+    \item Roll back should be also possible.
+    \item Mantaining old versions is time-consuming, so ideally everyone should have the same version. In order to achieve that, updates should be downloaded and installed in the background automatically.
+\end{itemize}
+
+
+
+\subsection{Modern Deployment Practices}
+
+In these last years, new practices have emerged to improve the deployment process even further. Some of these practices are the following:
+\begin{itemize}
+    \item \ul{Progressive Delivery}: This practice involves gradually (1\%, 5\%, 25\%, 50\%, 100\%) rolling out new features to users, allowing for monitoring and feedback at each stage before a full release. Canary Releasing and Blue-Green Deployment are combined, and the deployment is automatically paused or rolled back according to the monitoring results.
+    \item \ul{Feature Flags}: This technique allows developers to enable or disable specific features in an application without deploying new code. It allows dark launches (where a feature is deployed but not yet visible to users) and A/B testing (where different users see different versions of a feature to evaluate its performance) while minimizing risks. The \emph{Flag debt} (the accumulation of unused or outdated feature flags) should be managed properly to avoid code complexity. There are some variations:
+    \begin{itemize}
+        \item Release Flags: Used to control the release of new features.
+        \item Kill Switches: Used to quickly disable a feature in case of issues.
+        \item Permission Flags: Used to enable features for specific user groups.
+        \item Experiment Flags: Used for A/B testing.
+    \end{itemize}
+
+    \item \ul{GitOps}: This practice is based on the fact that the entire system's desired state is stored in a Git repository (\emph{Git is the single source of truth}). Instead of deploying (manually or automatically) the application, the server directly pulls the changes from the Git repository and deployes them.
+    
+    \item \ul{Monitory and Observability}: 
+    Appart from the typical monitoring (tracking predefined metrics as CPU, RAM, etc.), observability focuses on understanding the internal state of the system based on the data it produces (logs, metrics, traces). This allows not only to understand that an error has occurred, but also why it has occurred and, hopefully, how to fix it.
+\end{itemize}
+
+\section{Continuous Deployment (CD)}
+
+Continuous Deployment (CD) is a software development practice that let's the software to be constantly deployed to production automatically, without human intervention. In order to achieve CD, CI is required, and a robust deployment pipeline with extensive automated testing is essential to ensure that only high-quality code reaches production. As happened with CI, CD prefers the changes to be small and incremental, as they are easier to test and deploy.\\
+
+Some of its benefits include an increased reliability, fast deployment times and major competitiveness, as time is usually a critical factor in the software industry.
+
+\subsection{Continuous Delivery}
+
+Although CD is useful, it focuses on deploying every change to production, which may not be suitable or desired in all scenarios. Therefore, Continuous Delivery is often preferred, where software sould always be in a deployable state, but the actual deployment to production is a manual decision. This allows for more control over when and how changes are released, allowing Feature Toggles to be used to enable or disable features as needed.
+
+\begin{observacion}
+    Both CD and Continuous Delivery focus on automating the deployment process on the production environment, while CI focuses on automating the build and testing processes in the earlier stages of development, in a test environment.
+\end{observacion}
+
+
+% // TODO: Qué es Rapid Incremental Deployment
+
+
+\section{DevOps}
+
+DevOps is a set of practices that combines software development (Dev) and IT operations (Ops) to shorten the development lifecycle and provide continuous delivery with high software quality. It aims to improve collaboration and communication between development and operations teams\footnote{This is usually used to justify bad practices, as letting developers manage the production environment.}.\\
+
+This approach is needed, because both teams have different goals and viewpoints.
+\begin{itemize}
+    \item \textbf{Development Team}: Focuses on delivering new features and updates quickly to meet user needs and stay competitive in the market.
+    \item \textbf{Operations Team}: Prioritizes system stability, reliability, security...
+\end{itemize}
+
+DevOps practices are based on the following principles:
+\begin{itemize}
+    \item \textbf{Two Pizza Theory}: Teams should be small enough to be fed with two pizzas (8-10 people), to enhance communication and collaboration. This is not always possible, and it should also be taken into account that too many small teams can lead to coordination issues.
+    \item \textbf{Experts Silos are eliminated}: Instead of having separate teams for development, testing, deployment, and operations, cross-functional teams are formed where members have diverse skills and responsibilities. This promotes collaboration and shared ownership of the entire software lifecycle. This way, bottlenecks caused by waiting for expert teams to perform specific tasks are avoided.
+    \item \textbf{Avoiding Volleyball Games}: In traditional development processes, tasks are often passed between the development and operations teams, blaming each other for issues. In DevOps, the focus is on collaboration and shared responsibility, avoiding this back-and-forth blaming.
+    \item \textbf{Employees are trusted and empowered}: Team members are given the autonomy to make decisions and take ownership of their work, not having to ask for permission for every little change and avoiding delays.
+\end{itemize}
+
+
+\section{Deployment with Containers Technology}
+
+During the last years, containers have become a popular technology for deploying applications. A \emph{container} is a process that runs in a host operating system, isolated from other processes and containers, with its own filesystem, network interfaces, and resource limits. 
+In a container, the application and its dependencies are packaged together, ensuring that it runs consistently across different environments. This increases the portability of applications and helps developping software, as no Virtual Machines (VMs) are needed. Some of the most popular containerization platforms are Docker and Kubernetes.
+
+\subsection{Isolation Measures}
+
+In this section, topics as \verb|chroot|, namespaces, or \verb|cgroups| will be briefly explained, as they are the basis of containerization technology.
+
+\subsubsection{\texttt{chroot}}
+
+The Unix \verb|chroot| command changes the apparent root directory for the current running process and its children. This creates a confined space (a \emph{chroot jail}) where the process can operate, isolating it from the rest of the file system. However, it is not a complete isolation mechanism, as they can still see all the processes running in the host system, no network isolation is provided, and if the process has root privileges, it can escape the jail.
+
+\subsubsection{Namespaces}
+
+Namespaces are a feature of the Linux kernel that provides isolation for various system resources. There are several types of namespaces, each isolating a specific resource:
+\begin{itemize}
+    \item \textbf{PID Namespace}: Isolates process IDs, allowing processes in different namespaces to have the same PID. A child namespace will have its PID in its father namespace and a different one in its own namespace.
+\end{itemize}
+
+\subsubsection{Control groups - \texttt{cgroups}}
+
+Control Groups (\verb|cgroups|) is a Linux kernel feature that limits, accounts for, and isolates the resource usage (CPU, memory, disk I/O, network, etc.) of a collection of processes. It is needed in a containerization environment to ensure that containers do not consume more resources than allocated, which could lead to performance degradation or system instability.
+
+\subsection{Docker}
+
+Docker is a popular containerization platform that simplifies the process of creating, deploying, and managing containers. It has become a standard tool in the DevOps world due to its ease of use and powerful features. Some aspects are different in the integration and deployment phases when using Docker:
+\begin{itemize}
+    \item After the CI server, an app would normally just be deployed as explained in this chapter.
+    \item With Docker, after the CI server builds and tests the application, it creates a Docker image that is pushed to a Docker registry (e.g., Docker Hub, Amazon ECR). In the deployment phase, the Docker image is pulled from the registry and run as a container in the target environment.
+\end{itemize}
