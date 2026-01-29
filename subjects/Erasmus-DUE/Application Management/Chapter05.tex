@@ -1,0 +1,168 @@
+\chapter{Secure Deployment and CA Case Study}
+
+As it has already been explained in the previous chapters, testing is a key
+part of the software development lifecycle. However, it is useless if an atacker
+can easily compromise the deployed application. Therefore, it is essential to 
+ensure that the deployment process is secure and that the application is
+protected against common threats. There are two main types of threats that
+need to be considered:
+\begin{itemize}
+    \item \textbf{Malicious Adversaries:} They are whether malicious insiders
+    or external attackers that impersonate legitimate users to gain unauthorized
+    access to the system. They are indeed malicious.
+    \item \textbf{Benign Insiders:} They are legitimate users that may
+    unintentionally compromise the system's security due to lack of knowledge
+    or carelessness. They are not malicious, but their actions can still pose a threat to the system.
+\end{itemize}
+
+There are some best practices that can be followed to ensure a secure deployment:
+\begin{itemize}
+    \item \ul{Code Reviews}: The code should be reviewed by multiple developers to
+    ensure that it is secure and free of vulnerabilities. It also helps to share the knowledge and improve the overall quality of the code. Moreover, the concept ``treat configuration as code'' should be applied, so configuration files are also reviewed.
+    \item \ul{Secrets}: Secrets such as passwords, cryptographic keys, and authorization tokens should be stored securely using Key Management Systems (KMS), and should never be hardcoded in the source code or pushed to version control systems.
+    \item \ul{Automatization}: It should be done in order to remove human error from the deployment process. It also improves security, as helps avoiding attackers to introduced malicious code during the deployment.
+    \item \ul{Builds}: The process of building the application should have three main properties:
+    \begin{itemize}
+        \item Hermetic: All the inputs (source code, compiler, libraries, etc.) should be specified and controlled. The external dependencies should be fetched from trusted sources and should be versioned and hashed to ensure their integrity.
+        \item Reproducible: The same inputs should always produce the same (bit by bit)outputs. Hermetic builds help achieving this property, and it helps verifying the origins of the deployed code.
+        \item Verifiable: The origin of the build should be verifiable, ensuring that it was built from the intended source code.
+    \end{itemize}
+\end{itemize}
+
+\section{Binary Provenance}
+
+In order to achieve builds with these properties, the concept of ``binary provenance'' is used. It lets to trace back the binary to its source code, build process, and environment. A first aproach to achieve this is:
+\begin{itemize}
+    \item There is a build system that, after building the application, produces a \emph{build recipe} that contains all the information needed to reproduce the build, including the source code version, compiler version, build flags, and dependencies. The build recipe is then signed with a private key to ensure its authenticity and integrity, and the output is both the binary and the signed build recipe.
+\end{itemize}
+
+However, in some organizations the build system may execute all types of commands, so attackers could exploit this to introduce malicious code during the build process. To mitigate this risk, user-commands should be executed in an environment with limited privileges (no access to the keys) and a secured HTTP connection should be used to avoid man-in-the-middle attacks. Therefore, a more robust aproach to achieve binary provenance is:
+\begin{itemize}
+    \item The build system is divided into two parts: a \emph{orchestrator} and a \emph{worker}. The orchestrator is responsible for issuing a top-level command to the worker, which is in charge of executing the build commands. The worker outputs the binary data and returns the artifact identifier to the orchestrator, which then produces the signed build recipe (if the artifact identifier matches the expected one).
+\end{itemize}
+
+\section{Certificate Authorities (CA)}
+
+For asymetric cryptography, a proof of the authenticity of the public key is needed. This is done through certificates, which are mode of:
+\begin{itemize}
+    \item The Public key of the entity with its identity information.
+    \item All that signed by a trusted third party, called Certificate Authority (CA).
+\end{itemize}
+
+The public key of the CA is widely distributed and trusted by all parties, and are usually pre-installed in web browsers and operating systems. A PKI (Public Key Infrastructure) is a system that manages the issuance, revocation, and validation of digital certificates.
+
+\subsection{CA Creation}
+
+Google wanted to have their own CA to issue certificates for their internal services. That way, they did not have to rely on external CAs, which could be compromised or unavailable. They also decided to use their own software because of the flexibility and control it provided. Even though they obviously had to use third-party libraries for some parts, they tested them thoroughly and made sure they were secure.
+
+\subsubsection{Programming Languages}
+They used two programming languages:
+\begin{itemize}
+    \item Go: It is memory-safe, important to work with unknown inputs such as certificate signing requests.
+    \item C++: offers more interoperability with existing Google infrastructure, and offers a sandboxed environment to run untrusted code.
+    \item They were both used because of performance reasons and the amount of good and safe libraries available.
+\end{itemize}
+
+\subsubsection{Complexity vs Understandability and Ease of Use}
+
+Most comercial CA are really complex, as they have to offer a lot of features and support a wide range of use cases. However, Google wanted to have a CA with the minimum set of features needed for their internal use cases, so they could have a better understanding of the system and make it easier to use and maintain. It is continously improved, as they realised that they initially used too many microservices.
+
+\subsubsection{Security of their Private Keys}
+
+A great risk for a CA is the compromise of its private keys, as it would allow an attacker to issue fraudulent certificates. To mitigate this risk, Google uses Hardware Security Modules (HSM) to store their private keys. HSMs are tamper-resistant devices that provide a secure environment for key storage and cryptographic operations. They also use multi-factor authentication and strict access controls to limit access to the HSMs, which are offline most of the time to prevent remote attacks. Intermediate Keys are also used, so the root key is only used to sign the intermediate keys, which are then used to sign the certificates. This way, if an intermediate key is compromised, the root key remains secure.
+
+
+
+\section{Human Factors in Secure Deployment}
+
+In order to avoid human errors during the deployment process, there are some general guidelines available in internet:
+\begin{itemize}
+    \item \textbf{NIST}: National Institute of Standards and Technology (NIST) provides the ``Secure Software Development Framework'', which includes guidelines for secure deployment and references to other relevant standards.
+    \item \textbf{OWASP SAMM}: Open Web Application Security Project (OWASP) provides the ``Software Assurance Maturity Model'' (SAMM), which are some open-source guidelines for secure software development, including deployment. They propose that a company should be divided into 5 business functions:
+    \begin{itemize}
+        \item \ul{Governance}: Strategy and metrics.
+        \item \ul{Design}: Threat modeling and secure architecture.
+        \item \ul{Implementation}: Secure coding and code review.
+        \item \ul{Verification}: Security testing and vulnerability management.
+        \item \ul{Operations}: Incident detection and response.
+    \end{itemize}
+    \item \textbf{BSIMM}: Building Security In Maturity Model (BSIMM) provides anual reports of security activities and trends. It is based on the observation of around 130 companies.
+\end{itemize}
+
+\subsection{Vulnerability Management}
+
+Vulnerability management is the process of identifying, assessing, and mitigating vulnerabilities in software applications. To do so, it should be noted that it is impossible to fix all vulnerabilities at once, so they should be prioritized based on their severity and impact. This can be beasured by several metrics (or even combining them):
+\begin{itemize}
+    \item \textbf{CVSS}, Common Vulnerability Scoring System.
+    \item \textbf{EPSS}, Exploit Prediction Scoring System.
+    \item Known Exploited Vulnerabilities (KEV) catalog from CISA.
+    \item Business impact / Asset criticality.
+\end{itemize}
+
+
+\subsection{Security Champion}
+
+When developing secure software, a common problem is the lack of organization. A common solution to this problem is to have a \emph{security champion} in each development team. In addition, all security champions should form a community to share knowledge and best practices, so the whole company is improved. A security champion should at least have the following responsibilities:
+\begin{itemize}
+    \item Being the source of security knowledge in the team. They should increase security awareness and promote best practices.
+    \item Identify security risks and vulnerabilities in the team's code and processes.
+    \item Review and escalation.
+\end{itemize}
+
+However, security champions must also be organized and supported by the company, as they cannot do everything alone. Some of the problems that may arise are:
+\begin{itemize}
+    \item Shift in responsibilities: Developers may think that the security champion is responsible for all security-related tasks, leading to a lack of ownership and accountability among team members.
+    \item Lack of time: Security champions may struggle to balance their security responsibilities with their regular development tasks, leading to burnout and decreased effectiveness.
+    \item Insufficient training: Security champions may not have the necessary skills or knowledge to effectively identify and mitigate security risks. They all wish they had a security team backing them up.
+    \item Selection: Choosing the right person for the role is crucial, and sometimes no one from the team wants to take the responsibility.
+    \item Security Champion Skills: They need to have both technical and soft skills, such as communication and leadership. The Fogg Behavior Model (figure~\ref{fig:fogg}) explains that only when the three factors (motivation, ability and trigger) are present, a behavior will occur.
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+
+            % Ejes
+            \draw[-Stealth, ultra thick] (0,0) -- (0,7) node[midway, above=0.5cm, align=center, rotate=90, font=\sffamily\bfseries\Large, color=blue!70] {Motivation};
+            \draw[-Stealth, ultra thick] (0,0) -- (7,0) node[midway, below=0.5cm, font=\sffamily\bfseries\Large, color=blue!70] {Ability};
+
+            % Etiquetas de los ejes
+            \node[left, font=\sffamily\bfseries] at (0,6.8) {High};
+            \node[left, font=\sffamily\bfseries] at (0,0.2) {Low};
+            \node[below, font=\sffamily\bfseries] at (0.5,0) {Hard to do};
+            \node[below, font=\sffamily\bfseries] at (6.2,0) {Easy to do};
+
+            % Action Line (Curve)
+            \draw[ultra thick, green!60!black] (0.3,6.5) .. controls (0.5,3) and (3,0.5) .. (6.5,0.3) 
+                node[midway, above=0.3cm, sloped, font=\sffamily\bfseries, color=green!60!black] {\small Action Line};
+
+            % Regions and Texts
+            % Success Region
+            \node[align=center, font=\sffamily\bfseries\Huge, color=blue!50] at (5.5,5.5) {$B=MAP$};
+
+            \node[align=center, font=\sffamily\bfseries\Large, color=blue!60] at (4.5,3.5) {Success};
+
+            \node[align=center, font=\sffamily\bfseries\Large, color=blue!60] at (1.3,1) {Failure};
+
+        \end{tikzpicture}
+        \caption{Fogg Behavior Model}
+        \label{fig:fogg}
+    \end{figure}
+
+    \item Communication with PM: They need to effectively communicate security issues and risks to project managers and other stakeholders, as security is not always a priority for them.
+    
+\end{itemize}
+
+In order to address these challenges, in the OWASP Security Champions Guide there is a manifesto that outlines the principles and values that security champions should uphold:
+\begin{itemize}
+    \item Be passionate about security.
+    \item Start with a clear vision.
+    \item Secure management support.
+    \item Nominate a dedicated captain.
+    \item Trust your champions.
+    \item Create a community.
+    \item Promote knowledge sharing.
+    \item Reward responsibility.
+    \item Invest in your champions.
+    \item Anticipate personnel changes.
+\end{itemize}
+
+As previously explained, Security Champions should promote knowledge sharing within the organization. With that aim is the OWASP Juice Shop, which ``is probably the most modern and sophisticated insecure web application''. It is an intentionally insecure web application for security training purposes, as it can be used in security trainings or awareness demos.
