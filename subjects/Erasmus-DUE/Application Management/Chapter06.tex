@@ -1,34 +1,94 @@
 \chapter{Software Testing}
 
+As discussed in previous chapters, testing is a crucial aspect of software development and maintenance. It is known that in complex systems, usually more time is needed to write the tests than to write the actual code.  However, even with the best coding practices, bugs and issues are inevitable. Unexpected inputs may lead to:
+\begin{itemize}
+    \item \ul{Confidentiality Violations}: Unauthorized access to sensitive data.
+    \item \ul{Integrity Violations}: Unauthorized modification of data.
+    \item \ul{Availability Violations}: Disruption of service.
+\end{itemize}
 
 
 \section{Test Types}
 
+There are two main categories of tests: unit tests and acceptance tests. In this section, we will explore these types of tests in detail.
+
 \subsection{Unit Tests}
 
+An unit test is a type of software test that focuses on verifying the functionality of a specific section of code, typically at the function or method level. The main goal of unit testing is to ensure that individual components of the software work as intended in isolation, without dependencies on other parts of the system. There are a lot of tools for unit testing, as \verb|xUnit| or \verb|GoogleTest|. There are two main approaches to develop the unit tests:
+\begin{itemize}
+    \item \ul{Classic Approach}: Write the code first, then create unit tests to verify its functionality. Code and tests should be commited together, and when the code is reviewed, the tests should be reviewed as well.
+    \item \ul{Test-Driven Development (TDD)}: Write the unit tests before writing the actual code. The tests will fail until the code is implemented correctly. This approach encourages developers to think about the requirements and design of the code before implementation.
+\end{itemize}
+
+It should also be noted that unit tests may sometimes require refactoring of the code to make it more testable. This can lead to better code quality and maintainability.
+
 \subsection{Acceptance Tests}
+
+Acceptance tests, also known as end-to-end tests or functional tests, are designed to verify that a software application meets the specified requirements and behaves as expected from the user's perspective. These tests focus on validating the overall functionality of the system, ensuring that all components work together seamlessly to deliver the desired user experience. They usually need much more time to be developed and run than unit tests, but they are crucial to ensure that the software meets the user's needs. If an acceptance test fails but all of the unit tests pass, the error is usually difficult to locate.
+
+Regarding the acceptance tests, it should be noted that \emph{flakiness} is more common than in unit tests. A flaky test is a test that can pass or fail non-deterministically, without any changes to the code being tested. This can be due to various factors, such as timing issues, external dependencies, or environmental factors. Flaky tests can lead to false positives or false negatives, making it difficult to determine the actual state of the software. Therefore, it is important to identify and address flaky tests to ensure the reliability of the testing process.
 
 
 
 \section{Program Analysis}
 
-Static y dynamic analysis.
+Analyzing code can help to identify potential issues and improve code quality. There are two main types of program analysis: static analysis (analyzing code without executing it) and dynamic analysis (analyzing code during execution).\\
 
-\subsection{Sanitizers}
+When analyzing code, both the source and the binary code can be considered. There are two aspects that should be taken into account:
+\begin{itemize}
+    \item \ul{Dynamic Binary Instrumentation (DBI)}: Using kind of a virtual machine to analyze the binary code during execution. Examples of DBI tools are \verb|Valgrind| or \verb|Intel Pin|.
+    \item \ul{Dynamic Analysis based on compiler support}: The compiler inserts additional code to perform the analysis during execution. They are often required to detect memory errors.
+\end{itemize}
 
+In order to analyze code during execution, it is common to use \verb|sanitizers|, which are tools that detect various types of errors at runtime. A really common sanitizer is \verb|Address Sanitizer|, which is described in the next section.
+
+
+
+
+
+\subsection{Adress Sanitizer}
+
+\verb|Address Sanitizer (ASan)| is a fast memory error detector. It usually detects:
+\begin{itemize}
+    \item \ul{Use-after-free}: Accessing memory after it has been freed.
+    \item \ul{Out-of-bounds access}: Accessing memory outside the allocated bounds.
+\end{itemize}
+
+ASan uses a technique called \emph{shadow memory} to keep track of the state of each byte of memory. For each 8 bytes of application memory, ASan maintains 1 byte of shadow memory. The shadow memory is used to store metadata about the state of the corresponding application memory. When a programm is compiled with ASan, additional instrumentation code is added with two main aims:
+\begin{itemize}
+    \item Before every memory access, ASan checks the corresponding shadow memory to determine if that memory adress is ``poisoned'' (i.e., invalid or unsafe to access).
+    \item When memory is allocated, 32 bytes of ``red zones'' are added before and after the allocated memory to detect out-of-bounds accesses.
+\end{itemize}
+
+An important aspect to consider when using ASan is that it increases both memory usage and execution time. Typically, ASan increases memory usage by about 2-3 times and slows down program execution by a factor of 2-3. Given that overhead, ASan is primarily used during development and testing phases rather than in production environments.
 
 
 
 \section{The Quest for Coverage}
 
-Scaling Testing
+The goal of testing is to cover as much code as possible, in order to detect potential bugs and issues. This should be done with the minimum number of test cases, to reduce the time and effort needed to run the tests. Typically, one test case explores one path through the program. In order to achieve this goal, several techniques can be used, such as symbolic execution and fuzzing.
 
 \subsection{Symbolic Execution}
 
+Symbolic execution is a program analysis technique that explores program paths by treating input values as symbolic variables rather than concrete values. This allows the analysis to reason about multiple execution paths simultaneously, enabling the detection of potential bugs and vulnerabilities that may not be easily discovered through traditional testing methods.
+
+When the symbolic execution engine finishes, all the possible paths through the program have been explored, and a set of path constraints has been generated for each path. These path constraints can be used to generate test inputs that will exercise specific paths through the program, helping to achieve better code coverage and identify potential issues.\\
+
+However, symbolic execution has some limitations in practice, as systems can be really complex:
+\begin{itemize}
+    \item \ul{Path Explosion}: The number of possible execution paths can grow exponentially with the size of the program, making it infeasible to explore all paths.
+    \item \ul{Handling of External Dependencies}: Symbolic execution may struggle to accurately model interactions with external libraries, system calls, hardware components, or user inputs.
+\end{itemize}
+
+Therefore, the scope is usually limited to small and critical parts of the code, or it is combined with other techniques, such as fuzzing.
+
+
+
 \subsection{Fuzzing}
 
-
-
-\section{Testing in Practice}
-
-CI/CD, Enterprises, Security
+Fuzzing is an automated software testing technique that involves providing different types of inputs to a program in order to identify potential bugs, vulnerabilities, or unexpected behavior. The main goal of fuzzing is to explore the program's input space and uncover edge cases that may not have been considered during development. There are several types of fuzzing techniques, including the following:
+\begin{itemize}
+    \item \ul{Random Fuzzing}: Randomly generates inputs without any specific knowledge of the program's structure or behavior. The inputs for the following test cases are also generated randomly. This technique is simple to implement but may not be very effective in finding deep or complex bugs.
+    \item \ul{Mutation-based Fuzzing}: Starts with a set of valid inputs, and the inputs for the following test cases are generated by making small modifications (mutations) to these valid inputs.
+    \item \ul{Cover-guided Fuzzing}: Starts with a set of initial inputs and, after running each test case, it analyzes the code coverage achieved. If new paths are discovered, the inputs that led to those paths are mutated to generate new test cases, and if no new paths are found, that input is discarded. This technique is more effective in exploring the program's input space and finding bugs.
+\end{itemize}
