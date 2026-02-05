@@ -5,15 +5,18 @@
         minimum size=1.2cm, 
         font=\small\ttfamily
     },
+    % Estilo base para refs
     git/ref/.style={
-        rectangle split, 
-        rectangle split parts=2, 
-        draw, 
+        draw,
+        rectangle split,
+        rectangle split parts=#1, 
         minimum width=1.5cm,
         font=\small\ttfamily,
         align=center,
-        fill=white % Para que no se transparente si pasa sobre una línea
+        fill=white
     },
+    % Valor por defecto para el argumento #1
+    git/ref/.default=1,
     git/history/.style={
         -{Stealth}, 
         thick
@@ -30,6 +33,101 @@
 
 \begin{ejercicio}
     In Aufgaben~\ref{ej:git-branching}.\ref{itm:git-branching-merge} und \ref{ej:git-prepare-mr} des vorherigen Aufgabenblatts sollten Sie die Änderungen des master-Branches in den aktuellen Feature-Branch übernehmen. Überlegen Sie sich eine weitere Möglichkeit, die Änderungen zu übernehmen.
+    \begin{enumerate}
+        \item Aufgabe~\ref{ej:git-branching}.\ref{itm:git-branching-merge}
+        
+        After committing the new changes to the \verb|cool_stuff|-Branch, the git graph is the one shown in Listing~\ref{lst:git-branching-merge-graph}. The other proposed solution is to rebase the \verb|cool_stuff|-Branch on top of the \verb|master|-Branch. The code needed to do that is shown in Listing~\ref{lst:git-branching-rebase}. The result of the rebase is a linear history, which can be seen in the git graph shown in Listing~\ref{lst:git-branching-rebase-graph}.
+        \begin{listing}
+            \begin{minted}[breaklines=true,fontsize=\small]{shell}
+$ git log --graph --oneline --all
+* e777451 (HEAD -> cool_stuff) New Commit
+* fbdb062 new motivating phrases
+| * a5fdf5d (master) updated main.py
+|/  
+* 41da045 added new text generation
+* 87c476b initial commit
+            \end{minted}
+            \caption{Git-Graph nach dem Committen der Änderungen im \texttt{cool\_stuff}-Branch.}
+            \label{lst:git-branching-merge-graph}
+        \end{listing}
+        \begin{listing}
+            \begin{minted}[breaklines=true,fontsize=\small]{shell}
+$ git rebase master 
+Successfully rebased and updated refs/heads/cool_stuff.
+$ git checkout master ; git merge cool_stuff 
+Switched to branch 'master'
+Updating a5fdf5d..baae187
+Fast-forward
+ text.py | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+            \end{minted}
+            \caption{Lösung zu Übung~\ref{ej:git-branching}.\ref{itm:git-branching-merge} mit Rebase.}
+            \label{lst:git-branching-rebase}
+        \end{listing}
+        \begin{listing}
+            \begin{minted}[breaklines=true,fontsize=\small]{shell}
+$ git log --graph --oneline --all
+* baae187 (HEAD -> master, cool_stuff) New Commit
+* 9c087cd new motivating phrases
+* a5fdf5d updated main.py
+* 41da045 added new text generation
+* 87c476b initial commit
+            \end{minted}
+            \caption{Git-Graph nach dem Rebase des \texttt{cool\_stuff}-Branches auf den \texttt{master}-Branch.}
+            \label{lst:git-branching-rebase-graph}
+        \end{listing}
+
+        \item Aufgabe~\ref{ej:git-prepare-mr}
+        
+        The initial git graph is the one shown in Listing~\ref{lst:git-prepare-mr-graph}. When trying to rebase the \verb|other_cool_stuff|-Branch on top of the \verb|master|-Branch, a conflict is generated. After manually solving the conflict, the code shown in Listing~\ref{lst:git-prepare-mr-rebase} is executed. The result of the rebase is a linear history, which can be seen in the git graph shown in Listing~\ref{lst:git-prepare-mr-rebase-graph}.
+        \begin{listing}
+            \begin{minted}[breaklines=true,fontsize=\small]{shell}
+$ git log --graph --oneline --all
+* ff02d9a (HEAD -> other_cool_stuff) fixed unterminated string literal and added text2 to main
+* 13061d3 new text2
+| * 07216d8 (master) finalized cool stuff
+| * 36e8466 new motivating phrases
+|/  
+* a5fdf5d updated main.py
+* 41da045 added new text generation
+* 87c476b initial commit
+            \end{minted}
+            \caption{Git-Graph vor dem Rebase des \texttt{other\_cool\_stuff}-Branches auf den \texttt{master}-Branch.}
+            \label{lst:git-prepare-mr-graph}
+        \end{listing}
+        \begin{listing}
+            \begin{minted}[breaklines=true,fontsize=\small]{shell}
+$ git add text.py 
+$ git rebase --continue
+[detached HEAD fe644de] new text2
+ 1 file changed, 4 insertions(+), 9 deletions(-)
+Successfully rebased and updated refs/heads/other_cool_stuff.
+$ git checkout master ; git merge other_cool_stuff 
+Switched to branch 'master'
+Updating 07216d8..7027614
+Fast-forward
+ main.py |  4 ++--
+ text.py | 13 ++++---------
+ 2 files changed, 6 insertions(+), 11 deletions(-)
+        \end{minted}
+            \caption{Lösung zu Übung~\ref{ej:git-prepare-mr} mit Rebase.}
+            \label{lst:git-prepare-mr-rebase}
+        \end{listing}
+        \begin{listing}
+            \begin{minted}[breaklines=true,fontsize=\small]{shell}
+$ git log --graph --oneline --all
+* 7027614 (HEAD -> master, other_cool_stuff) fixed unterminated string literal and added text2 to main
+* fe644de new text2
+* 07216d8 finalized cool stuff
+* 36e8466 new motivating phrases
+* a5fdf5d updated main.py
+* 41da045 added new text generation
+* 87c476b initial commit
+            \end{minted}
+            \caption{Git-Graph nach dem Rebase des \texttt{other\_cool\_stuff}-Branches auf den \texttt{master}-Branch.}
+            \label{lst:git-prepare-mr-rebase-graph}
+        \end{listing}
+    \end{enumerate}
 \end{ejercicio}
 
 
@@ -46,8 +144,27 @@
     Der Chef des Teams, zuständig für die Entwicklung der Echtzeit-Messaging-App hat wenig Ahnung von Softwareentwicklung. Er hat damals einfach irgendwelche Regeln bezüglich des Merge-Prozesses festgelegt, weiß aber nicht wirklich, was diese bedeuten, und bittet Sie, einen sinnvollen Workflow für das Projekt zu wählen. Wählen Sie einen passenden Workflow aus und begründen Sie Ihre Wahl.
 \end{ejercicio}
 
-\begin{ejercicio}
-    Ihr Kollege bittet Sie erneut um Hilfe. Dieses mal sei es ernst, er hat all seine Arbeit der letzten Wochen verloren. Da er sich nicht gut mit Git auskennt, committet er selten. Als er fertig war, wollte er committen. Dafür hat er seine Änderungen mit \verb|git add -A| in den Staging-Bereich gepackt. Doch da ist ihm eingefallen, dass er vorher noch Änderungen vom Remoteserver herunterladen muss. Also führt er git fetch aus und sieht, dass Remote-Änderungen übernommen wurden. Doch als er die Änderungen dann endlich in seinem lokalen Branch hat, sind alle seine eigenen Änderungen verschwunden. Helfen Sie Ihm die verlorenen Dateien wiederherzustellen, nutzen Sie dafür das im Moodle bereitgestellte Repository.
+Zu den folgenden Aufgaben finden Sie \myhref{https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Erasmus-DUE/Application\%20Management/Blatt_Material/blatt03_material.zip}{hier} ein \verb|zip|-Datei mit den notwendigen Ressourcen.
+\begin{ejercicio}\label{ej:git-fsck-lost-found}
+    Ihr Kollege bittet Sie erneut um Hilfe. Dieses mal sei es ernst, er hat all seine Arbeit der letzten Wochen verloren. Da er sich nicht gut mit Git auskennt, committet er selten. Als er fertig war, wollte er committen. Dafür hat er seine Änderungen mit \verb|git add -A| in den Staging-Bereich gepackt. Doch da ist ihm eingefallen, dass er vorher noch Änderungen vom Remoteserver herunterladen muss. Also führt er git fetch aus und sieht, dass Remote-Änderungen übernommen wurden. Doch als er die Änderungen dann endlich in seinem lokalen Branch hat, sind alle seine eigenen Änderungen verschwunden. Helfen Sie Ihm die verlorenen Dateien wiederherzustellen.\\
+
+    The solution to this exercise involves using the Git command \verb|git fsck --lost-found| to recover lost objects. The solution is shown in Listing~\ref{lst:git-fsck-lost-found}.
+    \begin{listing}
+        \begin{minted}[breaklines=true,fontsize=\small]{shell}
+$ git fsck --lost-found
+Checking object directories: 100% (256/256), done.
+Checking objects: 100% (28/28), done.
+dangling blob acbc45bdb82b84a3df80a69659ad672c2791f632
+Verifying commits in commit graph: 100% (8/8), done.
+$ git cat-file -p acbc > lost.py
+$ git add lost.py ; git commit -m "File recovered"
+[master c00c6ec] File recovered
+ 1 file changed, 16 insertions(+)
+ create mode 100644 lost.py
+        \end{minted}
+        \caption{Lösung zu Übung~\ref{ej:git-fsck-lost-found} mit dem Befehl \texttt{git fsck --lost-found}.}
+        \label{lst:git-fsck-lost-found}
+    \end{listing}
 \end{ejercicio}
 
 
@@ -60,7 +177,7 @@
             \node[git/commit] (c2) [right=1.5cm of c1] {402a33};
             \node[git/commit] (c3) [right=1.5cm of c2] {8dd752};
 
-            \node[git/ref] (head) [above=0.8cm of c3] {
+            \node[git/ref=2] (head) [above=0.8cm of c3] {
                 HEAD
                 \nodepart{second} master
             };
@@ -73,22 +190,242 @@
         \label{fig:git-repo-initial}
     \end{figure}
     \begin{enumerate}
-        \item \verb|git checkout HEAD~1|
-        \item \verb|git checkout -b 'feature_branch'|
-        \item \verb|git commit -m 'new feature'|
+        \item \verb|git checkout HEAD~1|\label{itm:git-graphs-a}
+        
+        The result of this command is shown in the git graph in Figure~\ref{fig:git-graphs-a}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \node[git/commit] (c1) {4b6f56};
+                \node[git/commit] (c2) [right=1.5cm of c1] {402a33};
+                \node[git/commit] (c3) [right=1.5cm of c2] {8dd752};
+
+                \node[git/ref] (head) [above=0.8cm of c2] {
+                    HEAD
+                };
+                \node[git/ref] (master) [above=0.8cm of c3] {
+                    master
+                };
+
+                \draw[git/history] (c2) -- (c1);
+                \draw[git/history] (c3) -- (c2);
+                \draw[git/pointer] (head) -- (c2);
+                \draw[git/pointer] (master) -- (c3);
+            \end{tikzpicture}
+            \caption{Git-Graph after the command of the Exercise~\ref{ej:git-graphs}.\ref{itm:git-graphs-a}.}
+            \label{fig:git-graphs-a}
+        \end{figure}
+        \item \verb|git checkout -b 'feature_branch'|\label{itm:git-graphs-b}
+        
+        The result of this command is shown in the git graph in Figure~\ref{fig:git-graphs-b}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \node[git/commit] (c1) {4b6f56};
+                \node[git/commit] (c2) [right=1.5cm of c1] {402a33};
+                \node[git/commit] (c3) [right=1.5cm of c2] {8dd752};
+
+                \node[git/ref=2] (head) [above=0.8cm of c2] {
+                    HEAD
+                    \nodepart{second} feature\_branch
+                };
+                \node[git/ref] (master) [above=0.8cm of c3] {
+                    master
+                };
+
+                \draw[git/history] (c2) -- (c1);
+                \draw[git/history] (c3) -- (c2);
+                \draw[git/pointer] (head) -- (c2);
+                \draw[git/pointer] (master) -- (c3);
+            \end{tikzpicture}
+            \caption{Git-Graph after the command of the Exercise~\ref{ej:git-graphs}.\ref{itm:git-graphs-b}.}
+            \label{fig:git-graphs-b}
+        \end{figure}
+        \item \verb|git commit -m 'new feature'|\label{itm:git-graphs-c}
+        
+        The result of this command is shown in the git graph in Figure~\ref{fig:git-graphs-c}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                \node[git/commit] (c1) {4b6f56};
+                \node[git/commit] (c2) [right=1.5cm of c1] {402a33};
+                \node[git/commit] (c3) [right=1.25cm of c2, yshift=1.5cm] {8dd752};
+                \node[git/commit] (c4) [right=1.25cm of c2, yshift=-1.5cm] {d1e8f3};
+
+                \node[git/ref=2] (head) [right=0.8cm of c4] {
+                    HEAD
+                    \nodepart{second} feature\_branch
+                };
+                \node[git/ref] (master) [right=0.8cm of c3] {
+                    master
+                };
+
+                \draw[git/history] (c2) -- (c1);
+                \draw[git/history] (c3) -- (c2);
+                \draw[git/history] (c4) -- (c2);
+                \draw[git/pointer] (head) -- (c4);
+                \draw[git/pointer] (master) -- (c3);
+            \end{tikzpicture}
+            \caption{Git-Graph after the command of the Exercise~\ref{ej:git-graphs}.\ref{itm:git-graphs-c}.}
+            \label{fig:git-graphs-c}
+        \end{figure}
         \item Zeichnen Sie bitte beide Graphen
         \begin{enumerate}
-            \item \verb|git merge master|
-            \item \verb|git rebase master|
+            \item \verb|git merge master|\label{itm:git-graphs-d1}
+            
+                The result of this command is shown in the git graph in Figure~\ref{fig:git-graphs-d1}.
+                \begin{figure}
+                    \centering
+                    \begin{tikzpicture}
+                        \node[git/commit] (c1) {4b6f56};
+                        \node[git/commit] (c2) [right=1.5cm of c1] {402a33};
+                        \node[git/commit] (c3) [right=1.25cm of c2, yshift=1.5cm] {8dd752};
+                        \node[git/commit] (c4) [right=1.25cm of c2, yshift=-1.5cm] {d1e8f3};
+                        \node[git/commit] (c5) [right=1.25cm of c3, yshift=-1.5cm] {e4f9a1};
+
+                        \node[git/ref=2] (head) [right=0.8cm of c5] {
+                            HEAD
+                            \nodepart{second} feature\_branch
+                        };
+                        \node[git/ref] (master) [right=0.8cm of c3] {
+                            master
+                        };
+
+                        \draw[git/history] (c2) -- (c1);
+                        \draw[git/history] (c3) -- (c2);
+                        \draw[git/history] (c4) -- (c2);
+                        \draw[git/history] (c5) -- (c3);
+                        \draw[git/history] (c5) -- (c4);
+                        \draw[git/pointer] (head) -- (c5);
+                        \draw[git/pointer] (master) -- (c3);
+                    \end{tikzpicture}
+                    \caption{Git-Graph after the command of the Exercise~\ref{ej:git-graphs}.\ref{itm:git-graphs-d1}.}
+                    \label{fig:git-graphs-d1}
+                \end{figure}
+            \item \verb|git rebase master|\label{itm:git-graphs-d2}
+            
+                The result of this command is shown in the git graph in Figure~\ref{fig:git-graphs-d2}.
+                \begin{figure}
+                    \centering
+                    \begin{tikzpicture}
+                        \node[git/commit] (c1) {4b6f56};
+                        \node[git/commit] (c2) [right=1.5cm of c1] {402a33};
+                        \node[git/commit] (c3) [right=1.5cm of c2] {8dd752};
+                        \node[git/commit] (c4) [right=1.5cm of c3] {c00c6e};
+
+                        \node[git/ref=2] (head) [above=0.8cm of c4] {
+                            HEAD
+                            \nodepart{second} feature\_branch
+                        };
+                        \node[git/ref] (master) [above=0.8cm of c3] {
+                            master
+                        };
+
+                        \draw[git/history] (c2) -- (c1);
+                        \draw[git/history] (c3) -- (c2);
+                        \draw[git/history] (c4) -- (c3);
+                        \draw[git/pointer] (head) -- (c4);
+                        \draw[git/pointer] (master) -- (c3);
+                    \end{tikzpicture}
+                    \caption{Git-Graph after the command of the Exercise~\ref{ej:git-graphs}.\ref{itm:git-graphs-d2}.}
+                    \label{fig:git-graphs-d2}
+                \end{figure}
         \end{enumerate}
-        \item Führen Sie abschließend für beide Graphen einen Merge von \texttt{feature\_branch} in den \texttt{master} aus und löschen Sie den obsoleten Branch.
+        \item Führen Sie abschließend für beide Graphen einen Merge von \texttt{feature\_branch} in den \texttt{master} aus und löschen Sie den obsoleten Branch.\label{itm:git-graphs-e}
+        
+        In both cases, the command needed to merge the \texttt{feature\_branch} into the \texttt{master} branch and delete the \texttt{feature\_branch} is shown in Listing~\ref{lst:git-graphs-merge}.
+        \begin{listing}
+            \begin{minted}[breaklines=true,fontsize=\small]{shell}
+$ git checkout master ; git merge feature_branch ; git branch -d feature_branch
+            \end{minted}
+            \caption{Command to merge the \texttt{feature\_branch} into the \texttt{master} branch and delete the \texttt{feature\_branch} for the graph in Figure~\ref{fig:git-graphs-d1}.}
+            \label{lst:git-graphs-merge}
+        \end{listing}
+        \begin{enumerate}
+            \item For the graph in Figure~\ref{fig:git-graphs-d1}, after applying the command in Listing~\ref{lst:git-graphs-merge}, the resulting graph is the one shown in Figure~\ref{fig:git-graphs-d1-merge}.
+            \begin{figure}
+                \centering
+                \begin{tikzpicture}
+                    \node[git/commit] (c1) {4b6f56};
+                    \node[git/commit] (c2) [right=1.5cm of c1] {402a33};
+                    \node[git/commit] (c3) [right=1.25cm of c2, yshift=1.5cm] {8dd752};
+                    \node[git/commit] (c4) [right=1.25cm of c2, yshift=-1.5cm] {d1e8f3};
+                    \node[git/commit] (c5) [right=1.25cm of c3, yshift=-1.5cm] {e4f9a1};
+
+                    \node[git/ref=2] (head) [right=0.8cm of c5] {
+                        HEAD
+                        \nodepart{second} master
+                    };
+
+                    \draw[git/history] (c2) -- (c1);
+                    \draw[git/history] (c3) -- (c2);
+                    \draw[git/history] (c4) -- (c2);
+                    \draw[git/history] (c5) -- (c3);
+                    \draw[git/history] (c5) -- (c4);
+                    \draw[git/pointer] (head) -- (c5);
+                \end{tikzpicture}
+                \caption{Git-Graph after merging the \texttt{feature\_branch} into the \texttt{master} branch and deleting the \texttt{feature\_branch} for the graph in Figure~\ref{fig:git-graphs-d1}.}
+                \label{fig:git-graphs-d1-merge}
+            \end{figure}
+
+            \item For the graph in Figure~\ref{fig:git-graphs-d2}, after applying the command in Listing~\ref{lst:git-graphs-merge}, the resulting graph is the one shown in Figure~\ref{fig:git-graphs-d2-merge}.
+            \begin{figure}
+                \centering
+                \begin{tikzpicture}
+                    \node[git/commit] (c1) {4b6f56};
+                    \node[git/commit] (c2) [right=1.5cm of c1] {402a33};
+                    \node[git/commit] (c3) [right=1.5cm of c2] {8dd752};
+                    \node[git/commit] (c4) [right=1.5cm of c3] {c00c6e};
+
+                    \node[git/ref=2] (head) [above=0.8cm of c4] {
+                        HEAD
+                        \nodepart{second} master
+                    };
+
+                    \draw[git/history] (c2) -- (c1);
+                    \draw[git/history] (c3) -- (c2);
+                    \draw[git/history] (c4) -- (c3);
+                    \draw[git/pointer] (head) -- (c4);
+                \end{tikzpicture}
+                \caption{Git-Graph after merging the \texttt{feature\_branch} into the \texttt{master} branch and deleting the \texttt{feature\_branch} for the graph in Figure~\ref{fig:git-graphs-d2}.}
+                \label{fig:git-graphs-d2-merge}
+            \end{figure}
+        \end{enumerate}
     \end{enumerate}
 \end{ejercicio}
 
-\begin{ejercicio}
-    Nutzen Sie das Git-Repository aus Moodle.
+\begin{ejercicio}~\label{ej:git-amend}
     \begin{enumerate}
-        \item Angenommen, Sie haben gerade Ihre neuesten Änderungen committet und möchten vor dem Pushen testen, ob alles noch funktioniert. Dabei fällt Ihnen auf, dass ein Anführungszeichen fehlt. Sie haben es bereits hinzugefügt, finden es jedoch unnötig, dafür einen neuen Commit anzulegen. Fügen Sie die Änderung Ihrem lokalen Commit hinzu.
-        \item Nachdem Sie die Änderung vorgenommen haben, stellen Sie fest, dass die Commit-Nachricht nicht alle Änderungen widerspiegelt. Sie möchten der Nachricht hinzufügen, dass die neue Funktion auch in \verb|main.py| aufgenommen wurde.
+        \item\label{itm:git-amend-a}
+        Angenommen, Sie haben gerade Ihre neuesten Änderungen committet und möchten vor dem Pushen testen, ob alles noch funktioniert. Dabei fällt Ihnen auf, dass ein Anführungszeichen fehlt. Sie haben es bereits hinzugefügt, finden es jedoch unnötig, dafür einen neuen Commit anzulegen. Fügen Sie die Änderung Ihrem lokalen Commit hinzu.
+
+            The command needed to add the change to the last commit is shown in Listing~\ref{lst:git-amend}.
+            \begin{listing}
+                \begin{minted}[breaklines=true,fontsize=\small]{shell}
+$ git add text.py
+$ git commit --amend --no-edit
+[other_cool_stuff e9274fd] new text2
+ Date: Thu Oct 26 14:38:02 2023 +0200
+ 2 files changed, 8 insertions(+), 3 deletions(-)
+                \end{minted}
+                \caption{Lösung zu Übung~\ref{ej:git-amend}.\ref{itm:git-amend-a}.}
+                \label{lst:git-amend}
+            \end{listing}
+        
+
+        \item\label{itm:git-amend-b}
+        Nachdem Sie die Änderung vorgenommen haben, stellen Sie fest, dass die Commit-Nachricht nicht alle Änderungen widerspiegelt. Sie möchten der Nachricht hinzufügen, dass die neue Funktion auch in \verb|main.py| aufgenommen wurde.
+        
+            The command needed to change the commit message of the last commit is shown in Listing~\ref{lst:git-amend-message}.
+            \begin{listing}
+                \begin{minted}[breaklines=true,fontsize=\small]{shell}
+$ git commit --amend -m "new text2 and added it to main"
+[other_cool_stuff 9c087cd] new text2 and added it to main
+ Date: Thu Oct 26 14:38:02 2023 +0200
+ 2 files changed, 8 insertions(+), 3 deletions(-)
+                \end{minted}
+                \caption{Lösung zu Übung~\ref{ej:git-amend}.\ref{itm:git-amend-b}.}
+                \label{lst:git-amend-message}
+            \end{listing}
     \end{enumerate}
 \end{ejercicio}

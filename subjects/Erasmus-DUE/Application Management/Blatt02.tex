@@ -5,7 +5,7 @@
     Beschreiben Sie die grundlegenden Unterschiede zwischen Git und SVN hinsichtlich ihrer Arbeitsweise und ihres Datenmodells. Erläutern Sie, was ein verteiltes Versionskontrollsystem (Git) und ein zentrales Versionskontrollsystem (SVN) sind.
 \end{ejercicio}~\\
 
-Zu den Aufgaben finden Sie \href{https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Erasmus-DUE/Application%20Management/Blatt_Material/blatt02_material.zip}{hier} ein \verb|zip|-Datei mit den notwendigen Ressourcen.
+Zu den folgenden Aufgaben finden Sie \myhref{https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Erasmus-DUE/Application\%20Management/Blatt_Material/blatt02_material.zip}{hier} ein \verb|zip|-Datei mit den notwendigen Ressourcen.
 \begin{ejercicio}~\label{ej:git-branching}
     \begin{enumerate}
         \item \label{itm:git-branching-commit}
@@ -28,7 +28,6 @@ $ git add text.py
 $ git commit -m "New Feature"
 [cool_stuff 00c5b2a] New Feature
  1 file changed, 3 insertions(+), 2 deletions(-)
-$ 
             \end{minted}
             \caption{Lösung zu Übung~\ref{ej:git-branching}.\ref{itm:git-branching-commit}}
             \label{lst:git-branching-commit}
@@ -40,17 +39,75 @@ $
         MRs nur dann akzeptiert werden, wenn sie mit dem master aktuell sind und keine Konflikte
         erzeugen. Sorgen Sie dafür, dass der Feature-Branch \verb|cool_stuff| mit dem master-Branch aktuell
         ist.
+
+        The code needed to solve this exercise is shown in Listing~\ref{lst:git-branching-merge}.
+        \begin{listing}
+            \begin{minted}[breaklines=true,fontsize=\small]{shell}
+$ git branch
+* cool_stuff
+  master
+$ git checkout master 
+Switched to branch 'master'
+$ git merge cool_stuff 
+Merge made by the 'ort' strategy.
+ text.py | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+            \end{minted}
+            \caption{Lösung zu Übung~\ref{ej:git-branching}.\ref{itm:git-branching-merge}}
+            \label{lst:git-branching-merge}
+        \end{listing}
+
+
     \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}\label{ej:git-prepare-mr}
-    Ihr MR wurde akzeptiert und das neue Feature ist im master. Parallel dazu haben Sie im \verb|other_cool_stuff|
-    -Branch noch an einem ähnlichen Feature gearbeitet. Bereiten Sie auch diesen Branch für den MR in den
+    Ihr MR wurde akzeptiert und das neue Feature ist im master. Parallel dazu haben Sie im \verb|other_cool_stuff|-Branch noch an einem ähnlichen Feature gearbeitet. Bereiten Sie auch diesen Branch für den MR in den
     master vor.
+
+    At first it is needed to execute the code shown in Listing~\ref{lst:git-prepare-mr}. After manually solving the conflict, the code shown in Listing~\ref{lst:git-prepare-mr-2} is executed.
+    \begin{listing}
+        \begin{minted}[breaklines=true,fontsize=\small]{shell}
+$ git branch
+  master
+* other_cool_stuff
+$ git checkout master 
+Switched to branch 'master'
+$ git merge other_cool_stuff 
+Auto-merging text.py
+CONFLICT (content): Merge conflict in text.py
+Automatic merge failed; fix conflicts and then commit the result.
+        \end{minted}
+        \caption{Erster Teil der Lösung zu Übung~\ref{ej:git-prepare-mr}.}
+        \label{lst:git-prepare-mr}
+    \end{listing}
+    \begin{listing}
+        \begin{minted}[breaklines=true,fontsize=\small]{shell}
+$ git add text.py 
+$ git commit
+[master 9abac85] Merge branch 'other_cool_stuff'
+        \end{minted}
+        \caption{Zweiter Teil der Lösung zu Übung~\ref{ej:git-prepare-mr}.}
+        \label{lst:git-prepare-mr-2}
+    \end{listing}
 \end{ejercicio}
 
 \begin{ejercicio}
-    Ein Kollege von Ihnen ist erst seit Kurzem im Team und bittet Sie um Hilfe, da er lokale Änderungen
-    vorgenommen hat, die er jedoch nicht committen kann. Helfen Sie ihm, alle geänderten und neu
-    hinzugefügten Dateien zu committen.
+    Ein Kollege von Ihnen ist erst seit Kurzem im Team und bittet Sie um Hilfe, da er lokale Änderungen vorgenommen hat, die er jedoch nicht committen kann. Helfen Sie ihm, alle geänderten und neu hinzugefügten Dateien zu committen.
+
+    The problem here lies in the fact that there is a \verb|pre-commit| hook, the shown in Listing~\ref{lst:git-pre-commit-hook}, that prevents committing new files. The solution is just to delete that hook from the \verb|.git/hooks| directory.
+    \begin{listing}
+        \begin{minted}[breaklines=true,fontsize=\small]{bash}
+#!/bin/sh
+
+git diff --cached --name-only --diff-filter=A \
+| while read -r name; do
+    git rm --cached "$name" > /dev/null 2> /dev/null
+done
+
+exit 0
+        \end{minted}
+        \caption{\texttt{pre-commit} Hook that prevents committing new files.}
+        \label{lst:git-pre-commit-hook}
+    \end{listing}
 \end{ejercicio}

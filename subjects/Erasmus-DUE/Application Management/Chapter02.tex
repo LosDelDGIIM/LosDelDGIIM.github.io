@@ -11,8 +11,8 @@ There are three main types of VCS:
     \item Local VCS: It stores all the changes in a local database on the developer's computer. It is simple to use, but it does not provide collaboration features. One example is GNU RCS (Revision Control System).
     \item Centralized VCS: It uses a central server to store all the changes. Follows a client-server architecture.
     \begin{description}
-        \item[Advantages]: Clear control access, correct backup of big files and locking mechanism.
-        \item[Disadvantages]: Single point of failure, limited offline capabilities and the possibility of forgetting to release the locks. 
+        \item[Advantages] Clear control access, correct backup of big files and locking mechanism.
+        \item[Disadvantages] Single point of failure, limited offline capabilities and the possibility of forgetting to release the locks. 
     \end{description}
 
     Only the original file and then each specific changes (deltas) are stored, not every version of the file. This saves space but depends on the whole set of deltas to reconstruct a specific version. One example is Subversion (SVN).
@@ -40,6 +40,9 @@ Some important Git commands are the following ones:
     
     Using the option \verb|-A| stages all the changes (new, modified and deleted files).
     \item \verb|git commit -m "message"|: Commits the staged changes to the local repository with a descriptive message.
+    \begin{itemize}
+        \item \verb|git commit --amend|: It modifies the last commit by adding the currently staged changes to it. It is useful when you forget to stage some changes before committing, or when you want to fix a mistake in the last commit (e.g., a typo in the code, a missing file, etc). It should be noted that the hash of the last commit will change after amending it. It should be used with the option \verb|--no-edit| if you want to keep the same commit message, or with the option \verb|-m "new message"| if you want to change the commit message.
+    \end{itemize}
     \item \verb|git status|: Shows the current status of the working directory and staging area. Indicates which files are untracked, modified, deleted or staged for commit.
     \begin{observacion}
         All the files that are not tracked will always appear in red when using \verb|git status|. Sometimes they are intended to be untracked (e.g., temporary files, build artifacts, etc). In that case, they can be added to the \verb|.gitignore| file to avoid them appearing in the status. That will make Git ignore them.
@@ -52,6 +55,14 @@ Some important Git commands are the following ones:
     \end{itemize}
 
     \item \verb|git log|: Displays the commit history of the repository. Using the option \verb|-p| shows the differences introduced in each commit.
+    
+    \item \verb|git checkout <commit_hash>|: Switches to a specific commit, allowing to view the state of the repository at that point in time.
+\end{itemize}
+
+In addition, when referencing a commit, Git allows to use some special notations:
+\begin{itemize}
+    \item \verb|<commit_hash>^[<n>] |: Refers to the $n$-th parent of the specified commit (for instance, when merging, more than a parent may appear). If $n$ is not provided, it defaults to 1, referring to the first parent.
+    \item \verb|<commit_hash>~[<n>] |: Refers to the $n$-th ancestor of the specified commit. It follows the first parent of each commit, so it is useful to refer to commits in a linear history. If $n$ is not provided, it defaults to 1, referring to the immediate parent.
 \end{itemize}
 
 \subsection{Git LSF}
@@ -72,14 +83,21 @@ Branching is a powerful feature in Git that allows developers to create separate
 
 In order to explain branching, we need to define the concept of \emph{HEAD}.
 \begin{definicion}[\emph{HEAD} Pointer]
-    The \verb|HEAD| pointer is a reference to the current commit that the working directory is based on. It indicates the current position in the repository's history.
+    The \verb|HEAD| pointer is a reference to the current commit that the working directory is based on (therefore, it allows modifiers such as \verb|HEAD^| or \verb|HEAD~|). It indicates the current position in the repository's history. Some important aspects about the \verb|HEAD| pointer are the following ones:
+    \begin{itemize}
+        \item \verb|@| alone is a shorthand for \verb|HEAD|, so it can be used interchangeably.
+        \item \verb|HEAD@{n}| refers to the position of \verb|HEAD| $n$ moves ago. For instance, \verb|HEAD@{1}| refers to the previous position of \verb|HEAD| before the last change (e.g., before the last checkout, merge, rebase, etc).
+    \end{itemize}
 \end{definicion}
 
 Some important commands related to branching are the following ones:
 \begin{itemize}
     \item \verb|git branch <branch_name>|: Creates a new branch with the specified name that points to the current commit. With the option \verb|-d|, it deletes the specified branch (if it has been merged).
-    \item \verb|git checkout <branch_name>|: Switches to the specified branch, updating the working directory to reflect the state of that branch. It then also updates the \verb|HEAD| pointer to point to the new branch (the latest commit of that branch).
+    \item \verb|git checkout <branch_name>|: Switches to the specified branch, updating the working directory to reflect the state of that branch. It then also updates the \verb|HEAD| pointer to point to the new branch (the latest commit of that branch). With the option \verb|-b|, it creates a new branch and switches to it in a single command.
 \end{itemize}
+
+As explained with the \verb|HEAD| pointer, the names of branches are just pointers to specific commits (the latest commit of that branch). Therefore, modifiers such as \verb|<branch_name>^| or \verb|<branch_name>~| can be used to refer to commits in the history of that branch. \verb|<branch_name>@{n}| can also be used to refer to the position of the branch pointer $n$ moves ago.
+
 
 \subsection{Branch Integration}
 When the development in a branch is complete, it is often necessary to integrate the changes back into another branch (usually the \verb|main| or \verb|master| branch). There are two main methods for integrating branches in Git: merging and rebasing.
@@ -112,6 +130,16 @@ After rebasing, the commit history appears linear, and therefore a simple fast-f
 
 When rebasing, the commit history is rewritten, which can make it appear cleaner and more linear. However, the details about the mistakes committed during the development in the feature branch may be lost. In addition, it is dangerous to rebase branches that have already been pushed to a remote repository, as it can lead to confusion and conflicts for other developers working on the same branch, as their local copies will have a different history than the rebased branch.
 
+\subsection{Git Hooks}
+
+Git hooks are scripts that are automatically executed by Git before or after certain events, such as committing changes, merging branches, or pushing to a remote repository. They allow developers to customize and automate various aspects of their Git workflow. Git hooks are stored in the \verb|.git/hooks| directory of a Git repository. Each hook is a separate script file that corresponds to a specific event. Some common Git hooks include:
+\begin{itemize}
+    \item \ul{pre-commit}: Executed before a commit is created. It can be used to perform checks on the code (e.g., run tests, check code style, etc) and prevent the commit if any issues are found.
+    \item \ul{post-commit}: Executed after a commit is created. It can be used to send notifications, update documentation, or trigger other actions.
+    \item \ul{pre-push}: Executed before changes are pushed to a remote repository. It can be used to run tests or perform other checks to ensure that the code being pushed meets certain criteria.
+\end{itemize}
+As a useful aspect, if any of the scripts ends with a non-zero exit code (denoting an error), if it was a pre- hook, the action that triggered the hook will be aborted. It garantees that certain conditions are met before proceeding with the action.
+
 
 \section{Distributed Git}
 
@@ -127,6 +155,7 @@ A remote repository is a version of the repository that is hosted on a remote se
 \end{itemize}
 
 \subsection{Collaboration Workflows}
+% // TODO: Memorizar
 
 There are different collaboration workflows that teams can follow when using Git, depending on their preferences and project requirements. In the following, we describe three common workflows.
 
@@ -201,3 +230,12 @@ All of the objects are stored in the \verb|.git/objects| directory. There, you c
 \end{itemize}
 
 In all the cases, the \verb|<object_hash>| is the SHA-1 hash of the object you want to inspect. Normally the first few characters of the hash are enough to uniquely identify the object.
+
+\subsection{Git Filesystem-Check}
+
+In the following section, a new command is presented, \verb|git fsck|, which is used to verify the integrity of the Git repository. It checks the connectivity and validity of the objects in the repository, ensuring that there are no corrupted or missing objects. An important option is the following:
+\begin{itemize}
+    \item \verb|git fsck --lost-found|: Sometimes, files may be accidentally deleted or become unreachable due to various reasons (e.g., a commit is removed, a branch is deleted, etc). However, if those files were sometime staged, they are not completely lost, as their blob is still located in the \verb|.git/objects| directory. However, detecting them can be difficult (there may be many objects in that folder).
+    
+    This option allows to find those lost objects and recover them. It creates two new directories, \verb|.git/lost-found/commit| and \verb|.git/lost-found/other|, where it places the lost commits and other objects (e.g., blobs), respectively. The files in those directories are named with their SHA-1 hash, and they can be inspected using the commands described in the previous section.
+\end{itemize}
