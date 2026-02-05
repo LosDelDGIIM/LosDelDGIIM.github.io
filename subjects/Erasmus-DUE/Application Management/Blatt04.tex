@@ -1,7 +1,108 @@
 \section{Continuous Integration}
 
-\begin{ejercicio}
-    Ihre Tests zeigen, dass eine Funktion nicht mehr korrekt funktioniert. Identifizieren Sie den Commit, ab dem der Fehler eingeführt wurde.
+ZuZu den folgenden Aufgaben finden Sie \myhref{https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Erasmus-DUE/Application\%20Management/Blatt_Material/blatt04_material.zip}{hier} ein \verb|zip|-Datei mit den notwendigen Ressourcen.
+\begin{ejercicio}\label{ex:git_bisect}
+    Ihre Tests zeigen, dass eine Funktion nicht mehr korrekt funktioniert. Identifizieren Sie den Commit, ab dem der Fehler eingeführt wurde.\\
+
+    As we can see when executing \verb|get_pi.py|, the output is not correct. We will use \verb|git bisect| to find the commit that introduced the error. First of all we need to detect a commit where the output is correct (a good commit). We will check out to some of the first commits and execute the script to check that the output is correct. In this case, commit \verb|b6763c2| is a good commit. Then, the Listing~\ref{lst:git_bisect_start} shows how to start the bisecting process by marking the current commit as bad and the good commit as good.
+    \begin{listing}
+        \begin{minted}{bash}
+$ git bisect start
+status: waiting for both good and bad commits
+$ git bisect bad
+status: waiting for good commit(s), bad commit known
+$ git bisect good b6763c2
+Bisecting: 184 revisions left to test after this (roughly 8 steps)
+[45d0499cacc9082b426292f53b63e24f5cb87a1e] Commit 215
+        \end{minted}
+        \caption{Starting the bisecting process}
+        \label{lst:git_bisect_start}
+    \end{listing}
+
+    At this point, Git has automatically checked out to a commit in the middle of the history (in this case, commit \verb|45d0499|). The checking process is shown in the Listing~\ref{lst:git_bisect_check}. After the checking process, we can see that the first bad commit is \verb|46917b5| (commit 173), which is the commit that introduced the error.
+    \begin{listing}
+        \begin{minted}{bash}
+            $ python3 get_pi.py 
+2.77
+$ git bisect bad
+Bisecting: 91 revisions left to test after this (roughly 7 steps)
+[0ed8e90afea45388b98e7caa74475cf1da7ba614] Commit 123
+$ python3 get_pi.py 
+3.14
+$ git bisect good
+Bisecting: 45 revisions left to test after this (roughly 6 steps)
+[534ee36e8acfa1e8112b21c559cc4e390455113d] Commit 169
+$ ...   # We continue the process by checking out to the next commit suggested by Git and executing the script to check the output. We repeat this process until we find the first bad commit.
+$ git bisect bad
+Bisecting: 0 revisions left to test after this (roughly 0 steps)
+[53b336b7d7cbfc0069951d7cf1988b3c44c603f9] Commit 172
+$ python3 get_pi.py 
+3.14
+$ git bisect good
+46917b552f8df592e2d86becbba6a26d7be1da36 is the first bad commit
+commit 46917b552f8df592e2d86becbba6a26d7be1da36
+Author: Alice <alice@example.com>
+Date:   Mon Dec 9 18:25:28 2024 +0100
+
+    Commit 173
+
+ get_pi.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+        \end{minted}
+        \caption{Bisecting process}
+        \label{lst:git_bisect_check}
+    \end{listing}
+
+    Finally, we can see that the first bad commit is \verb|46917b5| (commit 173), which is the commit that introduced the error. In the Listing~\ref{lst:git_bisect_end} we can see the details of the bad commit.
+    \begin{listing}
+        \begin{minted}{bash}
+$ git bisect reset
+Previous HEAD position was 53b336b Commit 172
+Switched to branch 'master'
+$ git show 46917b5
+commit 46917b552f8df592e2d86becbba6a26d7be1da36
+Author: Alice <alice@example.com>
+Date:   Mon Dec 9 18:25:28 2024 +0100
+
+    Commit 173
+
+diff --git a/get_pi.py b/get_pi.py
+index 3325ae8..9b12bce 100644
+--- a/get_pi.py
++++ b/get_pi.py
+@@ -5,7 +5,7 @@ def berechne_pi(n_terms):
+     for i in range(2, 2 + 2 * n_terms, 2):
+         term = 4.0 / (i * (i + 1) * (i + 2))
+         if add:
+-            pi += term  # Berechnungsschritt 172
++            pi -= term  # Berechnungsschritt 172
+         else:
+             pi -= term  # Berechnungsschritt 172
+         add = not add
+        \end{minted}
+        \caption{Details of the bad commit}
+        \label{lst:git_bisect_end}
+    \end{listing}
+
+    The checking process can be automated using the \verb|git bisect run <script>| command, where \verb|<script>| is the shown in the Listing~\ref{lst:git_bisect_script}. That way, Git will automatically execute the script in each commit and determine if it is good or bad based on the exit code of the script (0 for good, 1 for bad), simplifying the bisecting process.
+    \begin{listing}
+        \begin{minted}{bash}
+#!/bin/bash
+
+RESULT=$(python3 get_pi.py)
+
+if [ "$RESULT" == "3.14" ]; then
+  exit 0
+else
+  exit 1
+fi
+        \end{minted}
+        \caption{Script to automate the bisecting process}
+        \label{lst:git_bisect_script}
+    \end{listing}
+
+    
+
 \end{ejercicio}
 
 \begin{ejercicio}

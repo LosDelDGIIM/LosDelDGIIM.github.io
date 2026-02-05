@@ -65,6 +65,43 @@ In addition, when referencing a commit, Git allows to use some special notations
     \item \verb|<commit_hash>~[<n>] |: Refers to the $n$-th ancestor of the specified commit. It follows the first parent of each commit, so it is useful to refer to commits in a linear history. If $n$ is not provided, it defaults to 1, referring to the immediate parent.
 \end{itemize}
 
+\subsection{Git Bisect}
+
+In this section, we introduce a new command, \verb|git bisect|, which is used to find the specific commit that introduced a bug or issue in the codebase. A whole section is needed, as it is a really useful command that can save a lot of time when debugging. It uses a binary search algorithm ($O(\log n)$) to efficiently narrow down the range of commits that may have introduced the bug. The workflow for using \verb|git bisect| is as follows:
+\begin{enumerate}
+    \item Initialize the bisect process.
+    \begin{enumerate}[label=\arabic{enumi}.\arabic*]
+        \item \verb|git bisect start|: Initializes the bisect process.
+        \item \verb|git bisect bad|: Marks the current commit as bad (the commit where the bug is present).
+        \item \verb|git bisect good <commit_hash>|: Marks a specific commit as good (a commit where the bug is not present).
+    \end{enumerate}
+
+    \item Locate the commit that introduced the bug.
+    \begin{enumerate}
+        \item Git will automatically check out a commit in the middle of the range between the good and bad commits. The developer needs to test this commit to determine if it is good or bad.
+        \item Based on the test result, the developer will mark the commit:
+        \begin{itemize}
+            \item \verb|git bisect good|: If the commit is good, it will narrow down the search to the range between this commit and the bad commit.
+            \item \verb|git bisect bad|: If the commit is bad, it will narrow down the search to the range between this commit and the good commit.
+        \end{itemize}
+        \item This process is repeated until Git identifies the specific commit that introduced the bug.
+    \end{enumerate}
+
+    During the whole process, the following command are useful:
+    \begin{itemize}
+        \item \verb|git bisect log|: Shows the log of the bisect process, including the commits that have been marked as good or bad.
+        \item \verb|git bisect visualize --oneline|: Visualizes the bisect process, showing the commits that are still not tested, and where the \verb|HEAD| is currently located.
+    \end{itemize}
+    \item End the bisect process.
+    \begin{itemize}
+        \item \verb|git bisect reset|: After finding the bad commit, this command is used to end the bisect process and return to the original state of the repository (the branch and commit that were checked out before starting the bisect). It is important to use this command to clean up the bisect state and avoid any confusion in future operations.
+        
+        \item \verb|git bisect run <script>|: This command automates the bisecting process by running a specified script that tests each commit. The script should return a zero exit code if the commit is good and a non-zero exit code (normally 1) if the commit is bad. This allows to quickly identify the bad commit without manual intervention.
+    \end{itemize}
+\end{enumerate}
+
+This command is used in the Exercise~\ref{ex:git_bisect}, so we refer to that exercise for a practical example of how to use \verb|git bisect|.
+
 \subsection{Git LSF}
 
 Git Large File Storage (Git LFS) is an extension for Git that is designed to handle large files more efficiently. Given that Git is based on snapshots, storing large files directly in the repository can lead to repeated storage of the same file in different commits, which can quickly bloat the repository size. Git LFS solves this problem by replacing large files with lightweight references in the Git repository. Instead of storing the actual file content in the repository, Git LFS stores a pointer to the file in the Git repository and keeps the actual file content in a separate storage location. It is especially useful for binary files (e.g., images, videos, audio files, \verb|pptx|, etc).\\
@@ -146,7 +183,7 @@ As a useful aspect, if any of the scripts ends with a non-zero exit code (denoti
 Until this point, we have only talked about local operations. To collaborate with other developers, it is necessary to use remote repositories.
 \subsection{Remote Repositories}
 
-A remote repository is a version of the repository that is hosted on a remote server. It allows multiple developers to collaborate on the same codebase. All developers should synchronize their local repositories with the remote repository to share changes and keep their code up to date. When more than one developer is working on the same codebase, conflicts may arise if two developers modify the same lines of code in different ways. Some important commands to interact with remote repositories are the following ones:
+A remote repository is a version of the repository that is hosted on a remote server (GitHub, GitLab, Bitbucket, etc.). It allows multiple developers to collaborate on the same codebase. All developers should synchronize their local repositories with the remote repository to share changes and keep their code up to date. When more than one developer is working on the same codebase, conflicts may arise if two developers modify the same lines of code in different ways. Some important commands to interact with remote repositories are the following ones:
 \begin{itemize}
     \item \verb|git remote add <name> <url>|: Adds a new remote repository with a specific name (e.g., \verb|origin|).
     \item \verb|git push <remote> <branch>|: Pushes the local commits to the specified remote repository and branch.
