@@ -21,6 +21,7 @@ There are some best practices that can be followed to ensure a secure deployment
     ensure that it is secure and free of vulnerabilities. It also helps to share the knowledge and improve the overall quality of the code. Moreover, the concept ``treat configuration as code'' should be applied, so configuration files are also reviewed.
     \item \ul{Secrets}: Secrets such as passwords, cryptographic keys, and authorization tokens should be stored securely using Key Management Systems (KMS), and should never be hardcoded in the source code or pushed to version control systems.
     \item \ul{Automatization}: It should be done in order to remove human error from the deployment process. It also improves security, as helps avoiding attackers to introduced malicious code during the deployment.
+    \item \ul{Shift Left}: Security should be integrated into the development process from the very beginning, rather than being an afterthought. This will save time and money.
     \item \ul{Builds}: The process of building the application should have three main properties:
     \begin{itemize}
         \item Hermetic: All the inputs (source code, compiler, libraries, etc.) should be specified and controlled. The external dependencies should be fetched from trusted sources and should be versioned and hashed to ensure their integrity.
@@ -91,11 +92,48 @@ In order to avoid human errors during the deployment process, there are some gen
 
 \subsection{Vulnerability Management}
 
-Vulnerability management is the process of identifying, assessing, and mitigating vulnerabilities in software applications. To do so, it should be noted that it is impossible to fix all vulnerabilities at once, so they should be prioritized based on their severity and impact. This can be beasured by several metrics (or even combining them):
+Vulnerability management is the process of identifying, assessing, and mitigating vulnerabilities in software applications. Before addressing how are they identified, some concepts should be explained:
+\begin{itemize}
+    \item Bug: General term for a flaw in the software that can cause it to behave unexpectedly or incorrectly. Not all bugs are security-related, but they can still have an impact on the security of the application.
+    \item Weakness: A type of bug that, under certain conditions, can lead to a vulnerability. A weakness is a potential security issue that may or may not be exploitable, depending on the context and the presence of other factors.
+    
+    The CWE (Common Weakness Enumeration) is the world's most widely adopted list of weaknesses types. It is developed by the community. 
+    \item Vulnerability: An specific instance of a weakness that has been identified in a particular application. A vulnerability implies that the system can be exploited by an attacker to cause harm. It is similar to an exposure.
+    
+    The CVE (Common Vulnerabilities and Exposures) is a list of publicly disclosed vulnerabilities and exposures. It is maintained by MITRE Corporation, and each vulnerability is assigned a unique identifier (CVE ID) and a description of the vulnerability, its impact, and its severity.
+\end{itemize}
+
+\subsubsection{Identifying Bugs: Bug Bounty Programs}
+
+Appart from using the CWE and CVE databases, companies can also identify vulnerabilities through bug bounty programs, which are crowed-sourced systems whose aim is discovering vulnerabilities in their applications. Vulnerability huters find vulnerabilities and report them to the company, which then rewards them with money/credit/reputation. Some important Bug Bounty Programs are \verb|bugcrowd| and \verb|hackerone|. Some important questions arise:
+\begin{itemize}
+    \item \ul{Why should bug hunters be paid?}:
+    
+    There are several reasons for this:
+    \begin{itemize}
+        \item The ``zero price'' fallacy: If they were not paid, researchers would have zero opportunity cost, so they would not have any incentive to find vulnerabilities.
+        \item Competing with the black market: If they are not paid, they may sell the vulnerabilities to the dark web, where they can get a lot of money for them.
+        \item Professionalism: Paying bug hunters is a way to recognize their work and encourage them to continue finding vulnerabilities.
+        \item Incentiving Depth: If they are not paid, they may only look for low-hanging fruit, while if they are paid, they may be incentivized to look for more complex and critical vulnerabilities.
+        \item Safe Harbor: It provides a legal framework for researchers to report vulnerabilities without fear of legal repercussions.
+    \end{itemize}
+
+    \item \ul{What benefits do bug hunters get?}:
+    
+    Apart from money, they can get several benefits as learning, reputation, enjoyment, legal safe harbor, and even job opportunities.
+
+    \item \ul{What challenges do bug hunters face?}:
+    
+    They may face several challenges, such as poor communication with the company, duplicated reports...
+\end{itemize}
+
+\subsubsection{Adressing Bugs}
+
+Once the bugs are identified, they need to be addressed. However, it is impossible to fix all vulnerabilities at once, so they should be prioritized based on their severity and impact. This can be beasured by several metrics (or even combining them):
 \begin{itemize}
     \item \textbf{CVSS}, Common Vulnerability Scoring System.
     
-    Each vulnerability is scored from $0$ (least severe) to $10$ (most severe) based on several factors, and then they are categorized into four severity levels:
+    Method used to supply a qualitative measure of severity (not risk). Each vulnerability is scored from $0$ (least severe) to $10$ (most severe) based on several factors, and then they are categorized into four severity levels:
     \begin{itemize}
         \item Critical ($9.0-10.0$): $< \unit[3]{h}$.
         \item High ($7.0-8.9$): $< \unit[3]{day}$.
@@ -103,8 +141,25 @@ Vulnerability management is the process of identifying, assessing, and mitigatin
         \item Low ($0.1-3.9$): $< \unit[3]{month}$.
     \end{itemize}
     \item \textbf{EPSS}, Exploit Prediction Scoring System.
+    
+    It uses the chance of a vulnerability being exploited in the wild, and the most likely to be exploited are the ones that should be fixed first.
     \item Known Exploited Vulnerabilities (KEV) catalog from CISA.
     \item Business impact / Asset criticality.
+\end{itemize}
+
+\subsubsection{Supply Chain Security}
+
+Modern software is dependent on many different components. Each dependency
+has the potential to introduce security risks into the end-product. When a vulnerability is found, most of the time a solution to it is reached in just a few days: the problem is finding all the systems that are vulnerable.
+
+To solve this problem, an idea from the automotive industry is used: the Bill of Materials (BOM), which is a list of all the components used in a car, so that when a component is defective, all the cars that are affected can be easily identified. In software, a Software Bill of Materials (SBOM) is used, which is a list of all the components used in a software application, including their versions and licenses. Some important standards for SBOM are:
+\begin{itemize}
+    \item \ul{NTIA's minimum elements (2021)}: It defines the minimum set of information that should be included in an SBOM, such as the component name, version and supplier. The current ``minimum'' requirements are higher than this initial proposal.
+    \item \ul{CycloneDX (OWASP)}
+    
+    It also provides a tool (OWASP Dependency Track) to make SBOM part of the software development lifecycle. When the source code is finished, the SBOM is generated and signed, and then it is sent to an analytics server that checks for vulnerabilities and license compliance. It also provides a standard format for SBOMs, which makes it easier to share and analyze them.
+    \item \ul{SPDX (Linux Foundation)}
+    \item \ul{SWID (NIST)}
 \end{itemize}
 
 
