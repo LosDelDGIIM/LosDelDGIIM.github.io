@@ -1,31 +1,242 @@
 \section{Fuzzing \& Z3 2}
 
-Fur die nachsten Aufgaben müssen Sie ein paar Python-Pakete installieren. Sie finden \verb|z3|-Beispiele in Moodle.
+Zu den folgenden Aufgaben finden Sie \myhref{https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Erasmus-DUE/Application\%20Management/Blatt_Material/blatt11_material.zip}{hier} ein \verb|zip|-Datei mit den notwendigen Ressourcen. Sie müssen auch ein paar Python-Pakete installieren, um die Aufgaben zu lösen.
 \begin{enumerate}
     \item Öffnen Sie das Terminal (\verb|ctrl + Alt + T|)
-    \item Installieren Sie den Package Installer for Python ( \verb|$ sudo apt install python3-pip python3-venv| )
-    \item Erstellen Sie ein neues Virtual Environment ( \verb|$ python3 -m venv ./venv| )
-    \item Konfigurieren Sie die aktuelle Shell, damit sie das \verb|venv| verwendet. ( \verb|$ source ./venv/bin/activate| )
-    \item Installieren Sie \verb|z3| ( \verb|$ pip3 install z3-solver| )
-    \item Atheris können Sie in einem Ubuntu 24.04 Container installieren ( \verb|$ pip3 install atheris| )
+    \item Installieren Sie den Package Installer for Python\\(\verb|$ sudo apt install python3-pip python3-venv|)
+    \item Erstellen Sie ein neues Virtual Environment\\(\verb|$ python3 -m venv ./venv|)
+    \item Konfigurieren Sie die aktuelle Shell, damit sie das \verb|venv| verwendet.\\(\verb|$ source ./venv/bin/activate|)
+    \item Installieren Sie \verb|z3|\\(\verb|$ pip3 install z3-solver|)
+    \item Atheris können Sie in einem Ubuntu 24.04 Container installieren\\(\verb|$ pip3 install atheris|)
 \end{enumerate}
 
 \begin{ejercicio}~
     \begin{enumerate}
         \item Nutzen Sie \verb|atheris| und instrumentieren Sie die \verb|validate|-Funktion in \verb|fuzz.py|.
+        
+        The new code should look like Listing~\ref{lst:atheris}.
+        \begin{listing}
+\begin{minted}[fontsize=\small]{python}
+#!./venv/bin/python3
+
+from typing import List
+import atheris
+import sys
+
+# PASSCODE = [getrandombits(8) for _ in range(4)]
+PASSCODE = [64, 63, 121, 119]
+
+
+def validate(data: List[int]):
+    if len(data) != 4:
+        return
+
+    if PASSCODE[0] == data[0]:
+        if PASSCODE[1] == data[1]:
+            if PASSCODE[2] == data[2]:
+                if PASSCODE[3] == data[3]:
+                    raise RuntimeError("passcode match")
+    return
+
+
+atheris.instrument_func(validate)
+atheris.Setup(sys.argv, validate)
+atheris.Fuzz()
+            \end{minted}
+            \caption{Fuzzing mit Atheris}
+            \label{lst:atheris}
+        \end{listing}
         \item Zeichnen Sie einen Kontrollflussgraphen für die Funktion. Nutzen Sie als Knotennamen die Zeilen-nummern.
+        
+        The control flow graph for the \verb|validate| function is shown in Figure~\ref{fig:cfg2}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}[
+                    node distance=1cm,
+                    block/.style={rectangle, draw, fill=blue!10, text width=3cm, align=center, rounded corners, minimum height=1cm},
+                    pathConstraint/.style={rectangle, draw, fill=green!10, text width=3cm, align=center, rounded corners, minimum height=1cm},
+                    decision/.style={diamond, draw, fill=yellow!10, aspect=3.5, text width=6cm, align=center, inner sep=0pt},
+                    error/.style={rectangle, draw, fill=red!20, text width=3cm, align=center, rounded corners},
+                    arrow/.style={thick, -{Stealth[scale=1.2]}}
+                ]
+
+                % Nodos
+                \node (start) [block] {Start};
+                \node (if0) [decision, below= of start] {12:\\\texttt{len(data) != 4}};
+                \node (if0F_if1) [decision, below= of if0] {15:\\\texttt{PASSCODE[0] == data[0]}};
+                \node (if0F_if1T_if2) [decision, below= of if0F_if1] {16:\\\texttt{PASSCODE[1] == data[1]}};
+                \node (if0F_if1T_if2T_if3) [decision, below= of if0F_if1T_if2] {17:\\\texttt{PASSCODE[2] == data[2]}};
+                \node (if0F_if1T_if2T_if3T) [decision, below= of if0F_if1T_if2T_if3] {18:\\\texttt{PASSCODE[3] == data[3]}};
+                \node (error) [error, below= of if0F_if1T_if2T_if3T] {\textbf{RuntimeError:} passcode match};
+
+                % Flechas
+                \draw [arrow] (start) -- (if0);
+                \draw [arrow, color=red] (if0) -- node[anchor=east] {\color{red} F} (if0F_if1);
+                \draw [arrow, color=green] (if0F_if1) -- node[anchor=east] {\color{green} T} (if0F_if1T_if2);
+                \draw [arrow, color=green] (if0F_if1T_if2) -- node[anchor=east] {\color{green} T} (if0F_if1T_if2T_if3);
+                \draw [arrow, color=green] (if0F_if1T_if2T_if3) -- node[anchor=east] {\color{green} T} (if0F_if1T_if2T_if3T);
+                \draw [arrow, color=green] (if0F_if1T_if2T_if3T) -- node[anchor=east] {\color{green} T} (error);
+            \end{tikzpicture}
+            \caption{Kontrollflussgraph für das \texttt{validate}-Programm}
+            \label{fig:cfg2}
+        \end{figure}
+
+        % // TODO: Así está bien?
         \item Bestimmen Sie die prozentuale Coverage, wenn der Code mit \verb|[246,63,103,121]| aufgerufen wird. Markieren Sie außerdem die erreichten Knoten im Kontrollflussgraphen.
+        
+        % // TODO: Cómo calcular el numero total de nodos?
         \item Instrumentieren Sie die \verb|validate|-Funktion in \verb|fuzz2.py|
+        
+        The new code should look like Listing~\ref{lst:atheris2}.
+        \begin{listing}
+            \begin{minted}[fontsize=\small]{python}
+#!./venv/bin/python3
+from typing import List
+import atheris
+import sys
+
+# PASSCODE = [getrandombits(8) for _ in range(4)]
+PASSCODE = [64, 63, 121, 119]
+
+
+def validate(data: List[int]):
+    if len(data) != 4:
+        return
+
+    if PASSCODE[0] == data[0]:
+        if PASSCODE[1] % 3 == data[1]:
+            if PASSCODE[2] * 2 + 4 == data[2]:
+                if PASSCODE[3] + PASSCODE[0] == data[3]:
+                    raise RuntimeError("passcode match")
+    return
+
+
+atheris.instrument_func(validate)
+atheris.Setup(sys.argv, validate)
+atheris.Fuzz()
+            \end{minted}
+            \caption{Fuzzing mit Atheris (veränderte \texttt{validate}-Funktion)}
+            \label{lst:atheris2}
+        \end{listing}
         \item Suchen Sie mittels \verb|z3| nach einer Lösung für \verb|validate|.
+        
+        The solution for the \verb|validate| function is shown in Listing~\ref{lst:z3}. It should be noted that the code has been ``translated'' so that \verb|z3| can know the constraints that need to be satisfied.
+        \begin{listing}
+            \begin{minted}[fontsize=\small]{python}
+#!./venv/bin/python3
+from typing import List
+import z3
+
+# PASSCODE = [getrandombits(8) for _ in range(4)]
+PASSCODE = [64, 63, 121, 119]
+
+solver = z3.Solver()
+data = [z3.Int(f"data_{i}") for i in range(4)]
+
+solver.add(len(data) == 4)
+solver.add(PASSCODE[0] == data[0])
+solver.add(PASSCODE[1] % 3 == data[1])
+solver.add(PASSCODE[2] * 2 + 4 == data[2])
+solver.add(PASSCODE[3] + PASSCODE[0] == data[3])
+
+if solver.check() == z3.sat:
+    model = solver.model()
+    solution = [model[data[i]].as_long() for i in range(4)]
+    print("Solution found:", solution)
+else:
+    print("No solution found.")
+            \end{minted}
+            \caption{Lösungssuche mit Z3}
+            \label{lst:z3}
+        \end{listing}
+        % // TODO: Necesario traducir el código para que z3 pueda entender las restricciones?
     \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
 Manche Programmierer nutzen Bit-Tricks, um auf spezifische Hardware zu optimieren. Nutzen Sie \verb|z3|, um zu zeigen, dass die Tricks auf einem 64-Bit-System dasselbe Verhalten haben wie eine naive Implementierung.
     \begin{enumerate}
-        \item Tauschen zweier Variablen mit XOR (Swapping Values with XOR)
-        \item Tauschen zweier Variablen mit Subtraktion und Addition (Swapping values with subtraction and addition)
-        \item Die Bitreihenfolge innerhalb eines Bytes umkehren (Reverse the bits in a byte with 4 operations)
+        \item Tauschen zweier Variablen mit \verb|XOR|
+        
+        The code for swapping two variables using XOR is shown in Listing~\ref{lst:xor}, while the output of the code is shown in Listing~\ref{lst:xor_output}.
+        \begin{listing}
+            \begin{minted}[fontsize=\small]{python}
+#!./venv/bin/python3
+
+import z3
+
+x, y = z3.BitVecs('x y', 64)
+x0, y0 = x, y
+
+x = x ^ y
+y = x ^ y
+x = x ^ y
+
+solver = z3.Solver()
+solver.add(z3.Not(z3.And(x == y0, y == x0)))
+
+if solver.check() == z3.sat:
+    model = solver.model()
+    print("Counterexample found:", model)
+elif solver.check() == z3.unsat:
+    print("No counterexample found, the property holds.")
+else:
+    print("Solver returned unknown result.")
+            \end{minted}
+            \caption{Tauschen zweier Variablen mit XOR}
+            \label{lst:xor}
+        \end{listing}
+        \begin{listing}
+            \begin{minted}[fontsize=\small]{shell}
+$ ./test_xor.py 
+No counterexample found, the property holds.
+            \end{minted}
+            \caption{Output des XOR-Codes}
+            \label{lst:xor_output}
+        \end{listing}
+
+        
+        \item Tauschen zweier Variablen mit Subtraktion und Addition
+        
+        The code for swapping two variables using subtraction and addition is shown in Listing~\ref{lst:add_sub}, while the output of the code is shown in Listing~\ref{lst:add_sub_output}.
+        \begin{listing}
+            \begin{minted}[fontsize=\small]{python}
+#!./venv/bin/python3
+
+import z3
+
+x, y = z3.BitVecs('x y', 64)
+x0, y0 = x, y
+
+x = x - y
+y = x + y
+x = y - x
+
+solver = z3.Solver()
+solver.add(z3.Not(z3.And(x == y0, y == x0)))
+
+if solver.check() == z3.sat:
+    model = solver.model()
+    print("Counterexample found:", model)
+elif solver.check() == z3.unsat:
+    print("No counterexample found, the property holds.")
+else:
+    print("Solver returned unknown result.")
+            \end{minted}
+            \caption{Tauschen zweier Variablen mit Subtraktion und Addition}
+            \label{lst:add_sub}
+        \end{listing}
+        \begin{listing}
+            \begin{minted}[fontsize=\small]{shell}
+$ ./test_add_sub.py 
+No counterexample found, the property holds.
+            \end{minted}
+            \caption{Output des Subtraktion-Addition-Codes}
+            \label{lst:add_sub_output}
+        \end{listing}
+        \item Die Bitreihenfolge innerhalb eines Bytes umkehren
+        
+        % // TODO: Ayuda para esta parte?
     \end{enumerate}
 \end{ejercicio}
 
@@ -35,8 +246,12 @@ Nutzen Sie \verb|z3|, um generische Sudokus zu lösen.
 \begin{observacion}
     Sollten Sie nicht weiterkommen, kann eine Internetsuche weiterhelfen.
 \end{observacion}
+
+The code for solving generic Sudokus using \verb|Z3| is available \myhref{https://github.com/ppmx/sudoku-solver/tree/master}{in this repository}.
 \end{ejercicio}
 
 \begin{ejercicio}
 Ein Freund von Ihnen behauptet, dass er sein eigenes sicheres Krypto-System entwickelt hat. Zum System gehören zwei Komponenten: eine asymmetrische und eine symmetrische Chiffre. Zeigen Sie, dass beide Verfahren nicht sicher sind.
+
+% // TODO: Ayuda
 \end{ejercicio}

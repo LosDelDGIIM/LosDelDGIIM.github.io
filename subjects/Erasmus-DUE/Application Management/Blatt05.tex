@@ -1,11 +1,100 @@
 \section{Docker}
 
+Zu den folgenden Aufgaben finden Sie \myhref{https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Erasmus-DUE/Application\%20Management/Blatt_Material/blatt05_material.zip}{hier} ein \verb|zip|-Datei mit den notwendigen Ressourcen.
+
 \begin{ejercicio}
-    In Moodle finden Sie eine ZIP-Datei, die ausführbare Dateien für verschiedene Architekturen enthält. Wenn Sie die Ubuntu-VM nutzen, ist die Datei \texttt{server\_linux\_x86\_64} die richtige. Alle anderen Dateien sind ungetestet und nicht garantiert zu funktionieren. Sie können die Datei mit \texttt{\$ ./server\_linux\_x86\_64} ausführen und den Webserver im Browser unter \texttt{localhost:8080} erreichen. Ihre Aufgabe ist es, zwei Instanzen des Webservers parallel auf Ihrem System auszuführen.
+    Das \verb|zip|-Datei enthält ausführbare Dateien für verschiedene Architekturen. Wenn Sie die Ubuntu-VM nutzen, ist die Datei \texttt{server\_linux\_x86\_64} die richtige. Alle anderen Dateien sind ungetestet und nicht garantiert zu funktionieren. Sie können die Datei mit \texttt{\$ ./server\_linux\_x86\_64} ausführen und den Webserver im Browser unter \texttt{localhost:8080} erreichen. Ihre Aufgabe ist es, zwei Instanzen des Webservers parallel auf Ihrem System auszuführen.
+
+    The problem here is that the server always run on port 8080. The first instance will start without problems, but the second one will fail because the port is already in use. To solve this problem, Docker will be used to create an isolated environment for the second instance of the server, allowing it to run on the same port without conflicts. The Dockerfile used is shown in the Listing~\ref{lst:Dockerfile}. The code executed in the terminal to build and run the Docker container is shown in the Listing~\ref{lst:terminal}.
+    \begin{listing}
+        \begin{minted}[fontsize=\small]{Dockerfile}
+FROM ubuntu:22.04
+COPY server_linux_x64 /server
+RUN chmod +x /server
+CMD ["/server"]
+EXPOSE 8080
+        \end{minted}
+        \caption{Dockerfile used to create the Docker image for the second instance of the server.}
+        \label{lst:Dockerfile}
+    \end{listing}
+    \begin{listing}
+        \begin{minted}[fontsize=\small]{bash}
+$ docker build -t server .
+# ...
+ => => naming to docker.io/library/server                                  0.0s
+$ docker run -p 8081:8080 server
+Starting Webserver at: localhost:8080
+        \end{minted}
+        \caption{Terminal commands to build the Docker image and run the Docker container for the second instance of the server.}
+        \label{lst:terminal}
+    \end{listing}
+
+
+
 \end{ejercicio}
 
 \begin{ejercicio}
-    Sie sind Teil des Entwicklerteams für die Echtzeit-Messaging-App der „Universität der Zukunft“. Da Ihr Team in einer heterogenen Umgebung arbeitet und sicherstellen muss, dass das entwickelte Python-Skript unter verschiedenen Python-Versionen ordnungsgemäß ausgeführt wird, ist es Ihre Aufgabe, Docker-Container für diese Tests zu erstellen. Ihr Manager hat Sie gebeten, zu testen, ob die App mit allen offiziell unterstützten Python-Versionen ausführbar ist.
+    Sie sind Teil des Entwicklerteams für die Echtzeit-Messaging-App der ``Universität der Zukunft''. Da Ihr Team in einer heterogenen Umgebung arbeitet und sicherstellen muss, dass das entwickelte Python-Skript unter verschiedenen Python-Versionen ordnungsgemäß ausgeführt wird, ist es Ihre Aufgabe, Docker-Container für diese Tests zu erstellen. Ihr Manager hat Sie gebeten, zu testen, ob die App mit allen offiziell unterstützten Python-Versionen ausführbar ist.
+
+    In order to accomplish this task, different Docker images for each Python version will be created, and they will be used to run the Python script in an isolated environment. In order to automate this process, the Dockerfile with recieve the Python version as a build argument, and a script will be created to build and run the Docker containers for each Python version. The Dockerfile used is shown in the Listing~\ref{lst:DockerfilePython}. The script used to automate the process is shown in the Listing~\ref{lst:script}. The executed commands in the terminal to run the script are shown in the Listing~\ref{lst:terminalPython}.
+    \begin{listing}
+        \begin{minted}[fontsize=\small]{Dockerfile}
+# Slim -> Optimized image with only the necessary dependencies to run Python
+
+ARG PYTHON_VERSION=3.12
+FROM python:${PYTHON_VERSION}-slim
+WORKDIR /app
+COPY prime.py .
+ENTRYPOINT ["python", "prime.py"]
+CMD ["512"]
+        \end{minted}
+        \caption{Dockerfile used to create the Docker images for each Python version.}
+        \label{lst:DockerfilePython}
+    \end{listing}
+    \begin{listing}
+        \begin{minted}[fontsize=\small]{bash}
+#!/bin/bash
+VERSIONS=("3.9" "3.10" "3.11" "3.12" "3.13")
+
+for VER in "${VERSIONS[@]}"; do
+    echo "------------------------------------------------"
+    echo "Testing Python version: $VER"
+    echo "------------------------------------------------"
+    
+    docker build --build-arg PYTHON_VERSION=$VER -t "test-python-$VER" . -q
+    docker run --rm "test-python-$VER" 512
+    
+    echo -e "Test completed for $VER\n"
+done
+        \end{minted}
+        \caption{Script used to automate the building and running of Docker containers for each Python version.}
+        \label{lst:script}
+    \end{listing}
+    \begin{listing}
+        \begin{minted}[fontsize=\small]{bash}
+$ chmod +x versions.sh ; ./versions.sh
+$ ./versions.sh 
+------------------------------------------------
+Testing Python version: 3.9
+------------------------------------------------
+sha256:4085d618dbeb1044b7eabcc8caa11805c27b681f5c31374931ddc9112eb0fb32
+Traceback (most recent call last):
+  File "/app/prime.py", line 4, in <module>
+    from typing import Self
+ImportError: cannot import name 'Self' from 'typing' (/usr/local/lib/python3.9/typing.py)
+Test completed for 3.9
+# ...
+# ...
+------------------------------------------------
+Testing Python version: 3.13
+------------------------------------------------
+sha256:7a4f73d714b81124ea19168bde4f6f39922aa0b679bbc5565e64ef8d09f0e885
+Found prime number: 8609485375174705614708523748725808733598995700938607245574...188797
+Test completed for 3.13
+        \end{minted}
+        \caption{Terminal commands to run the script that tests the Python script with different Python versions using Docker containers.}
+        \label{lst:terminalPython}
+    \end{listing}
 \end{ejercicio}
 
 \begin{ejercicio}~
@@ -18,16 +107,57 @@
 \end{ejercicio}
 
 \begin{ejercicio}
-    In dieser Aufgabe lernen Sie einen der Grundmechanismen der \emph{historischen} Containerisolierung kennen. Dazu verwenden Sie das UNIX-Werkzeug \texttt{chroot}, das den sichtbaren Root-Ordner eines Prozesses ändert. In der ZIP-Datei aus Moodle finden Sie die Datei \texttt{alpine-rootfs.tar}. Diese Datei enthält ein minimales Linux-Dateisystem, das ursprünglich aus einem Docker-Container (\texttt{alpine}) exportiert wurde.
+    In dieser Aufgabe lernen Sie einen der Grundmechanismen der \emph{historischen} Containerisolierung kennen. Dazu verwenden Sie das UNIX-Werkzeug \texttt{chroot}, das den sichtbaren Root-Ordner eines Prozesses ändert. In der \verb|zip|-Datei finden Sie die Datei \texttt{alpine-rootfs.tar}. Diese Datei enthält ein minimales Linux-Dateisystem, das ursprünglich aus einem Docker-Container (\texttt{alpine}) exportiert wurde.
     \begin{enumerate}
-        \item Entpacken Sie das Root-Dateisystem in ein Verzeichnis Ihrer Wahl (z.B. \texttt{\$HOME/alpine-rootfs}).
+        \item Entpacken Sie das Root-Dateisystem in ein Verzeichnis Ihrer Wahl.
         \item Starten Sie eine Shell innerhalb dieses Dateisystems mithilfe von \texttt{chroot}.
+        
+        After unzipping the root filesystem, the command shown in the Listing~\ref{lst:chroot} is used to start a shell within the chroot environment.
+        \begin{listing}
+            \begin{minted}[fontsize=\small]{bash}
+$ sudo chroot . /bin/sh
+/ # ls
+bin    etc    lib    mnt    proc   run    srv    tmp    var
+dev    home   media  opt    root   sbin   sys    usr
+/ # pwd
+/
+/ # ps
+PID   USER     TIME  COMMAND
+/ #
+            \end{minted}
+            \caption{Command used to start a shell within the chroot environment.}
+            \label{lst:chroot}
+        \end{listing}
         \item Untersuchen Sie das Verhalten innerhalb der Umgebung:
         \begin{itemize}
             \item Führen Sie Befehle wie \texttt{ls}, \texttt{pwd} und \texttt{ps} aus. Was fällt Ihnen auf?
-            \item Starten Sie in einem separaten Terminal \texttt{ps -ef} aus. Können Sie den Prozess aus der chroot-Umgebung sehen?
+            
+            As observed in the Listing~\ref{lst:chroot}, the root directory is now the chroot environment, and given that there are no other processes running within the chroot, the \texttt{ps} command shows no processes.
+            \item Starten Sie in einem separaten Terminal \texttt{ps -ef} aus. Können Sie den Prozess aus der \verb|chroot|-Umgebung sehen?
+            
+            Yes, the process running within the \verb|chroot| environment can be seen from the host system using the \texttt{ps -ef} command.
         \end{itemize}
-        \item Schreiben Sie ein kleines Programm/Script, das die Schritte des Entpackens sowie das Starten eines Befehls in der Chroot-Umgebung automatisiert.
+        \item Schreiben Sie ein kleines Programm/Script, das die Schritte des Entpackens sowie das Starten eines Befehls in der \verb|chroot|-Umgebung automatisiert.
+        
+        The script used to automate the process is shown in the Listing~\ref{lst:chroot_script}.
+        \begin{listing}
+            \begin{minted}[fontsize=\small]{bash}
+#!/bin/bash
+
+ROOTFS="$HOME/alpine-rootfs"
+ARCHIVE="alpine-rootfs.tar"
+
+mkdir -p $ROOTFS
+tar -xf $ARCHIVE -C $ROOTFS
+
+echo "Entering chroot environment..."
+sudo chroot $ROOTFS /bin/sh -c "echo 'Inside chroot: '; pwd; ls; exec /bin/sh"
+            \end{minted}
+            \caption{Script used to automate the process of unzipping the root filesystem and starting a shell within the chroot environment.}
+            \label{lst:chroot_script}
+        \end{listing}
         \item Begründen Sie, warum \texttt{chroot} \emph{keine vollständige Isolation} bietet.
+        
+        This command only changes the apparent root directory for the process, but it does not provide isolation in terms of processes, network, or users. The process running within the \verb|chroot| environment can still see all the processes running in the host system, no network isolation is provided, and if the process has root privileges, it can escape the jail.
     \end{enumerate}
 \end{ejercicio}

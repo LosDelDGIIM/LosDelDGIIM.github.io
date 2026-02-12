@@ -1,7 +1,7 @@
 \section{Fuzzing \& Z3}
 
 \begin{ejercicio}
-    Schauen Sie sich das Fuzzingbook an. Sie können den benötigten Code mittels \verb|$ pip install fuzzingbook| installieren. Beschreiben Sie die folgenden Ansätze und erklären Sie die Unterschiede sowie die Vor- und Nachteile.
+    Schauen Sie sich das \myhref{https://www.fuzzingbook.org}{Fuzzingbook} an. Sie können den benötigten Code mittels \verb|$ pip install fuzzingbook| installieren. Beschreiben Sie die folgenden Ansätze und erklären Sie die Unterschiede sowie die Vor- und Nachteile.
     \begin{enumerate}
         \item Random Fuzzing
         \item Mutation Fuzzing
@@ -29,8 +29,7 @@
 \begin{ejercicio}\label{ex:z3}
     Schauen Sie sich das folgende Python-Programm an (Abbildung~\ref{lst:z3-example}).
     \begin{listing}
-        \centering
-\begin{minted}{python}
+        \begin{minted}{python}
 def func(a, b):
     x = 0
     y = 0
@@ -39,13 +38,65 @@ def func(a, b):
     if b == 0:
         y = 2
     assert x + y != 3
-\end{minted}
+        \end{minted}
         \caption{Beispielcode für Übung~\ref{ex:z3}}
         \label{lst:z3-example}
     \end{listing}
     \begin{enumerate}
         \item Zeichnen Sie den Kontrollflussgraphen.
+        
+        The graphic can be seen in the Figure~\ref{fig:cfg}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}[
+                    node distance=1.5cm,
+                    block/.style={rectangle, draw, fill=blue!10, text width=3cm, align=center, rounded corners, minimum height=1cm},
+                    pathConstraint/.style={rectangle, draw, fill=green!10, text width=3cm, align=center, rounded corners, minimum height=1cm},
+                    decision/.style={diamond, draw, fill=yellow!10, aspect=2, text width=2cm, align=center, inner sep=0pt},
+                    error/.style={rectangle, draw, fill=red!20, text width=3cm, align=center, rounded corners},
+                    arrow/.style={thick, -{Stealth[scale=1.2]}}
+                ]
+
+                % Nodos
+                \node (start) [block] {$x=0,\ y=0$};
+                \node (if1) [decision, below= of start] {$a > 0$};
+                \node (if1_T) [block, below left=1cm and 2.0cm of if1] {$x = 1,\ y=0$};
+                \node (if1_F) [block, below right=1cm and 2.0cm of if1] {$x = 0,\ y=0$};
+                \node (if2_1T) [decision, below= of if1_T] {$b == 0$};
+                \node (if2_1F) [decision, below= of if1_F] {$b==0$};
+                \node (if2_1T_T) [block, below left=1cm and 0cm of if2_1T] {$x=1,\ y=2$};
+                \node (if2_1T_F) [block, below right=1cm and 0cm of if2_1T] {$x=1,\ y=0$};
+                \node (if2_1F_T) [block, below left=1cm and 0cm of if2_1F] {$x=0,\ y=2$};
+                \node (if2_1F_F) [block, below right=1cm and 0cm of if2_1F] {$x=0,\ y=0$};
+
+                \node (if_2_1T_T_path) [pathConstraint, below of=if2_1T_T] {$a > 0 \land b == 0$};
+                \node (if_2_1T_F_path) [pathConstraint, below of=if2_1T_F] {$a > 0 \land b \neq 0$};
+                \node (if_2_1F_T_path) [pathConstraint, below of=if2_1F_T] {$a \leq 0 \land b == 0$};
+                \node (if_2_1F_F_path) [pathConstraint, below of=if2_1F_F] {$a \leq 0 \land b \neq 0$};
+
+                \node (fail) [error, below of= if_2_1T_T_path] {\textbf{AssertionError:} $x + y == 3$};
+
+                % Flechas
+                \draw [arrow] (start) -- (if1);
+                \draw [arrow, color=green] (if1) -| node[anchor=east] {\color{green} T} (if1_T);
+                \draw [arrow, color=red] (if1) -| node[anchor=west] {\color{red} F} (if1_F);
+                \draw [arrow] (if1_T) -- (if2_1T);
+                \draw [arrow] (if1_F) -- (if2_1F);
+                \draw [arrow, color=green] (if2_1T) -| node[anchor=east] {\color{green} T} (if2_1T_T);
+                \draw [arrow, color=red] (if2_1T) -| node[anchor=west] {\color{red} F} (if2_1T_F);
+                \draw [arrow, color=green] (if2_1F) -| node[anchor=east] {\color{green} T} (if2_1F_T);
+                \draw [arrow, color=red] (if2_1F) -| node[anchor=west] {\color{red} F} (if2_1F_F);
+                \draw [arrow] (if_2_1T_T_path) -- (fail);
+
+            \end{tikzpicture}
+            \caption{Kontrollflussgraph für das Beispielprogramm}
+            \label{fig:cfg}
+        \end{figure}
         \item Leite alle möglichen Pfadbedingungen her.
+        
+        This can also be seen in the Figure~\ref{fig:cfg}, where the path constraints are shown in green boxes.
         \item Gibt es eine Belegung von \verb|a| und \verb|b|, die das Assert verletzt? Wenn ja: Welche?
+        
+        As shown in Figure~\ref{fig:cfg}, there is a path that leads to the assertion failure, which is the path where \verb|a > 0| and \verb|b == 0|. Therefore, any values of \verb|a| and \verb|b| that satisfy these conditions will violate the assertion. For example, \verb|a = 1| and \verb|b = 0| would lead to the assertion failure.
     \end{enumerate}
 \end{ejercicio}

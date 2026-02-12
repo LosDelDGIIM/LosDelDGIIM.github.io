@@ -11,13 +11,36 @@ As it was with the integration phase, \emph{automatization} is key to ensure a s
     \item Manual configuration management of production environments.
 \end{itemize}
 
-\section{Disaster Planning}
+\section{Deployment Strategies}
 
-Despite all the precautions taken, there is always a risk of failure during deployment. Therefore, it is essential to be able to roll back to a previous stable version of the application in case of issues (as debugging in production is not a good practice). It is important to firstly backup the status (database, data systems, etc.) that the application has changed before rolling back, in order to avoid data loss. To minimize the impact of failures and ensure service continuity, modern deployment strategies aim to reduce or completely eliminate downtime while enabling fast rollback mechanisms.
+There are different strategies for deploying applications, and the choice of strategy depends on various factors such as the size and complexity of the application, the frequency of updates, and the tolerance for downtime. There are two important metrics that should be taken into account:
+\begin{itemize}
+    \item \ul{Down Time}: The period during which the application is unavailable to users due to deployment activities. It is important to minimize downtime to ensure a good user experience and maintain service availability.
+    \item \ul{Rollback Time}: The time it takes to revert to a previous stable version of the application in case of issues during deployment. A fast rollback time is crucial to minimize the impact of failures and ensure service continuity (disaster planning).
+    
+    It is important to firstly backup the status (database, data systems, etc.) that the application has changed before rolling back, in order to avoid data loss.
+\end{itemize}
+
+
+The deployment strategies can be categorized based on their approach to downtime during the deployment process.
+
+\subsection{Non-Zero Downtime Releases}
+
+In this strategy, the application is taken offline during the deployment process, resulting in downtime for users.
+
+\subsubsection{Recreate Deployment}
+
+In this strategy, the existing version of the application is completely stopped and removed before deploying the new version. This approach is simple and straightforward, but it results in downtime for users during the deployment process.
+
+
 
 \subsection{Zero-Downtime Releases}
 
 Zero-downtime releases, also known as Hot Deployment, should change instantly between application versions without interrupting the service for users. Easyly changing the resources (Databases, Servers, etc.) that the application is using is key to achieve this, which can be achieved by changing the URI (Uniform Resource Identifier) that the application is pointing to. Some strategies to achieve zero-downtime releases are the following.
+
+\subsubsection{Ramped Deployment}
+
+The new version is gradually deployed in every server, one by one. The old version is still running in the servers that have not been updated yet, and therefore there is no downtime for users. Once the new version is deployed in a server, the old version is stopped and removed from that server. This process continues until all servers are updated to the new version.
 
 \subsubsection{Blue-Green Deployment}
 
@@ -27,7 +50,15 @@ Problems can however be caused by databases, because the new version may require
 
 \subsubsection{Canary Releasing}
 
-In this strategy, the new version of the application is gradually rolled out to a small subset of users (the canary group) while the majority of users continue to use the old version. This allows for monitoring the performance and stability of the new version in a real-world environment before fully deploying it to all users. If any issues are detected, the deployment can be halted or rolled back without affecting the entire user base. It also allows to gather information about the new version from real users (e.g. if it generates more revenue).
+In this strategy, the new version of the application is rolled out to a small subset of users (the canary group) while the majority of users continue to use the old version. This allows for monitoring the performance and stability of the new version in a real-world environment before fully deploying it to all users. If any issues are detected, the deployment can be halted or rolled back without affecting the entire user base. It also allows to gather information about the new version from real users (e.g. if it generates more revenue).
+
+\subsubsection{A/B Testing}
+
+This strategy involves deploying two different versions of the application (version A and version B) to different subsets of users. This allows for testing and comparing the performance, user experience, and other metrics of the two versions in a real-world environment. Based on the results, the better-performing version can be fully deployed to all users. This strategy differs from canary releasing in the way the users are selected, as in A/B testing the users are carefully selected (depending on country, age, etc.) to ensure that the results are statistically significant, while in canary releasing the users are randomly selected.
+
+\subsubsection{Shadow Deployment}
+
+The new version of the application is deployed alongside the old version, but it does not receive any user traffic. Instead, it receives a copy of the user traffic that the old version is receiving, allowing for testing and monitoring the new version in a real-world environment without affecting users. This strategy allows to gather information about the new version from real users, while minimizing risks.
 
 
 \subsection{Emergency fixes}
@@ -157,19 +188,40 @@ DevOps practices are based on the following principles:
     \item \textbf{Employees are trusted and empowered}: Team members are given the autonomy to make decisions and take ownership of their work, not having to ask for permission for every little change and avoiding delays.
 \end{itemize}
 
+\subsection{RACI Method}
+
+The RACI method is a responsibility assignment matrix that helps to clarify roles and responsibilities within a project or organization. It has four categories:
+\begin{itemize}
+    \item \textbf{Responsible}: The person or team responsible for completing a task or making a decision.
+    \item \textbf{Accountable}: The person who is ultimately accountable for the task or decision (specially in the comercial or juridical aspects). Only one person can be accountable for each task or decision, and without the accountable person, the task or decision will not be completed.
+    \item \textbf{Consulted}: The person or team that provides input or expertise for a task or decision. They are usually consulted before a decision is made or a task is completed.
+    \item \textbf{Informed}: The person or team that needs to be kept informed about the progress or outcome of a task or decision. They are usually informed after a decision is made or a task is completed.
+\end{itemize}
+
+There are usually two matrices, the initial matrix (that covers the first configuration of the system) and the ongoing matrix (that covers the maintenance and updates of the system). Usually the four categories are divided between the Clients, the Development Team and the Operations Team.
+
 
 \section{Deployment with Containers Technology}
 
 During the last years, containers have become a popular technology for deploying applications. A \emph{container} is a process that runs in a host operating system, isolated from other processes and containers, with its own filesystem, network interfaces, and resource limits. 
-In a container, the application and its dependencies are packaged together, ensuring that it runs consistently across different environments. This increases the portability of applications and helps developping software, as no Virtual Machines (VMs) are needed. Some of the most popular containerization platforms are Docker and Kubernetes.
+In a container, the application and its dependencies are packaged together, ensuring that it runs consistently across different environments. This increases the portability of applications and helps developping software. Some of the most popular containerization platforms are Docker and Kubernetes.
+\subsection{Containers VS Virtual Machines}
+
+Containers and virtual machines (VMs) are both technologies that provide isolation and resource management for applications, but they do so in different ways. VMs run a full operating system on top of a hypervisor, which abstracts the underlying hardware. Each VM has its own kernel and resources, making them more resource-intensive and slower to start compared to containers. On the other hand, containers share the host operating system's kernel and resources, allowing them to be more lightweight and faster to start.
+
 
 \subsection{Isolation Measures}
 
 In this section, topics as \verb|chroot|, namespaces, or \verb|cgroups| will be briefly explained, as they are the basis of containerization technology.
 
-\subsubsection{\texttt{chroot}}
+\subsubsection{Command \texttt{chroot}}
 
-The Unix \verb|chroot| command changes the apparent root directory for the current running process and its children. This creates a confined space (a \emph{chroot jail}) where the process can operate, isolating it from the rest of the file system. However, it is not a complete isolation mechanism, as they can still see all the processes running in the host system, no network isolation is provided, and if the process has root privileges, it can escape the jail.
+The Unix \verb|chroot| command changes the apparent root directory for the current running process and its children. This creates a confined space (a \emph{chroot jail}) where the process can operate, isolating it from the rest of the file system. However, it is not a complete isolation mechanism, as they can still see all the processes running in the host system, no network isolation is provided, and if the process has root privileges, it can escape the jail. It is used as follows: \verb|chroot <new_root_directory> <command>|. For example, \verb|chroot /home/user/jail /bin/bash| would start a bash shell with the root directory set to \texttt{/home/user/jail}.
+
+
+\subsubsection{Command \texttt{pivot\_root}}
+
+The \verb|pivot\_root| command is a Linux system call similar to \verb|chroot|, but it provides a more complete isolation mechanism. It moves the current root filesystem to a new location and mounts a new root filesystem in its place. This allows for better isolation, as the process cannot see the original root filesystem. It is what Docker uses. It is used as follows: \verb|pivot\_root <new\_root\_directory> <put\_old\_root\_here>|. For example, \verb|pivot\_root /home/user/new\_root /home/user/old\_root| would move the current root filesystem to \texttt{/home/user/old\_root} and set \texttt{/home/user/new\_root} as the new root filesystem.
 
 \subsubsection{Namespaces}
 
@@ -180,12 +232,51 @@ Namespaces are a feature of the Linux kernel that provides isolation for various
 
 \subsubsection{Control groups - \texttt{cgroups}}
 
-Control Groups (\verb|cgroups|) is a Linux kernel feature that limits, accounts for, and isolates the resource usage (CPU, memory, disk I/O, network, etc.) of a collection of processes. It is needed in a containerization environment to ensure that containers do not consume more resources than allocated, which could lead to performance degradation or system instability.
+Control Groups (\verb|cgroups|) is a Linux kernel feature that limits, accounts for, and isolates the resource usage (CPU, memory, disk I/O, network, etc.) of a collection of processes. It is needed in a containerization environment to ensure that containers do not consume more resources than allocated, which could lead to performance degradation or system instability. Let's remark some important folders and files related to \verb|cgroups|:
+\begin{itemize}
+    \item \verb|/sys/fs/cgroup/|: This is the main directory where \verb|cgroups| are organized. Inside this directory, apart from some general files, there are subdirectories for each type of processes. The two main subdirectories are:
+    \begin{itemize}
+        \item \verb|/sys/fs/cgroup/system.slice/|: This directory contains \verb|cgroups| for system services managed by the init system (e.g., systemd). For instance, the \verb|docker.service| \verb|cgroup| is located in \verb|/sys/fs/cgroup/system.slice/docker.service|, and it defines the resource limits for the Docker service.
+        \item \verb|/sys/fs/cgroup/user.slice/|: This directory contains \verb|cgroups| for user processes.
+    \end{itemize}
+
+    \item \verb|cpu.max|: This file defines the maximum CPU time that a \verb|cgroup| can use. It consists of two values: the first one is the quota (the total amount of CPU time that the \verb|cgroup| can use in a given period), and the second one is the period (the length of the time period in microseconds). For example, if \verb|cpu.max| contains ``50000 100000'', it means that the \verb|cgroup| can use up to 50\% of the CPU time.
+    
+    \item \verb|memory.max|: This file defines the maximum amount of memory that a \verb|cgroup| can use. If the processes in the \verb|cgroup| exceed this limit, they will be killed by the kernel. For example, if \verb|memory.max| contains ``512M'', it means that the \verb|cgroup| can use up to 512 megabytes of memory.
+\end{itemize}
 
 \subsection{Docker}
 
-Docker is a popular containerization platform that simplifies the process of creating, deploying, and managing containers. It has become a standard tool in the DevOps world due to its ease of use and powerful features. Some aspects are different in the integration and deployment phases when using Docker:
+Docker is a popular containerization platform that simplifies the process of creating, deploying, and managing containers. It has become a standard tool in the DevOps world due to its ease of use and powerful features. Some important aspects should be defined:
+\begin{itemize}
+    \item \textbf{Docker Image}: A Docker image is a lightweight, standalone, and executable package that includes everything needed to run a piece of software, including the code, runtime, libraries, environment variables, and configuration files.
+    \item \textbf{Docker Container}: A Docker container is a runtime instance of a Docker image. It is an isolated environment where the application runs, sharing the host operating system's kernel but with its own filesystem and resources.
+    \item \textbf{Docker Registry}: A Docker registry is a storage and distribution system for Docker images. It allows users to store and share their images with others. The most popular public registry is Docker Hub, but there are also private registries available.
+    \item \textbf{Dockerfile}: A Dockerfile is a text file that contains a set of instructions to build a Docker image. It defines the base image, the application code, dependencies, and any necessary configuration.
+    % // TODO: Do we have to explain how to create a Dockerfile?
+    \item \textbf{Docker Compose}: Docker Compose is a tool for defining and running multi-container Docker applications. It allows you to use a YAML file to configure your application's services, networks, and volumes, making it easier to manage complex applications with multiple containers.
+    % // TODO: Do we have to explain how to create a Docker Compose file?
+\end{itemize}
+
+Some important Docker commands are the following:
+\begin{itemize}
+    \item \verb|docker build <path>|: Builds a Docker image from a Dockerfile. With the \verb|-t| option, a name can be given to the image.
+    \item \verb|docker run <image>|: Runs a Docker container from a specified image.
+    \begin{itemize}
+        \item \verb|-d|: Runs the container in detached mode (in the background).
+        \item \verb|-p <host_port>:<container_port>|: Maps a port from the host to a port in the container, allowing access to the application running inside the container.
+        \item \verb|--name <container_name>|: Assigns a name to the container for easier management.
+        \item \verb|--rm|: Automatically removes the container when it exits, keeping the system clean.
+    \end{itemize}
+    \item \verb|docker ps|: Lists all running containers. With the \verb|-a| option, it lists all containers, including those that are stopped.
+    \item \verb|docker stop <container_id>|: Stops a running container.
+    \item \verb|docker rm <container_id>|: Removes a stopped container.
+    \item \verb|docker rmi <image_id>|: Removes a Docker image.
+\end{itemize}
+
+
+Some aspects are different in the integration and deployment phases when using Docker:
 \begin{itemize}
     \item After the CI server, an app would normally just be deployed as explained in this chapter.
-    \item With Docker, after the CI server builds and tests the application, it creates a Docker image that is pushed to a Docker registry (e.g., Docker Hub, Amazon ECR). In the deployment phase, the Docker image is pulled from the registry and run as a container in the target environment.
+    \item With Docker, after the CI server builds and tests the application, it creates a Docker image that is pushed to a Docker registry. In the deployment phase, the Docker image is pulled from the registry and run as a container in the target environment.
 \end{itemize}
