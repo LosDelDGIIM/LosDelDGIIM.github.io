@@ -68,6 +68,8 @@ atheris.Fuzz()
                 \node (if0F_if1T_if2T_if3) [decision, below= of if0F_if1T_if2] {17:\\\texttt{PASSCODE[2] == data[2]}};
                 \node (if0F_if1T_if2T_if3T) [decision, below= of if0F_if1T_if2T_if3] {18:\\\texttt{PASSCODE[3] == data[3]}};
                 \node (error) [error, below= of if0F_if1T_if2T_if3T] {\textbf{RuntimeError:} passcode match};
+                \node (return1) [block, left= of error, xshift=-2cm] {return};
+                \node (return2) [block, right= of error, xshift=2cm] {return};
 
                 % Flechas
                 \draw [arrow] (start) -- (if0);
@@ -76,6 +78,12 @@ atheris.Fuzz()
                 \draw [arrow, color=green] (if0F_if1T_if2) -- node[anchor=east] {\color{green} T} (if0F_if1T_if2T_if3);
                 \draw [arrow, color=green] (if0F_if1T_if2T_if3) -- node[anchor=east] {\color{green} T} (if0F_if1T_if2T_if3T);
                 \draw [arrow, color=green] (if0F_if1T_if2T_if3T) -- node[anchor=east] {\color{green} T} (error);
+
+                \draw [arrow, color=green] (if0) -| node[anchor=east] {\color{green} T} (return1);
+                \draw [arrow, color=red] (if0F_if1) -| node[anchor=west] {\color{red} F} (return2);
+                \draw [arrow, color=red] (if0F_if1T_if2) -| node[anchor=west] {\color{red} F} (return2);
+                \draw [arrow, color=red] (if0F_if1T_if2T_if3) -| node[anchor=west] {\color{red} F} (return2);
+                \draw [arrow, color=red] (if0F_if1T_if2T_if3T) -| node[anchor=west] {\color{red} F} (return2);
             \end{tikzpicture}
             \caption{Kontrollflussgraph für das \texttt{validate}-Programm}
             \label{fig:cfg2}
@@ -149,7 +157,6 @@ else:
             \caption{Lösungssuche mit Z3}
             \label{lst:z3}
         \end{listing}
-        % // TODO: Necesario traducir el código para que z3 pueda entender las restricciones?
     \end{enumerate}
 \end{ejercicio}
 
@@ -236,7 +243,62 @@ No counterexample found, the property holds.
         \end{listing}
         \item Die Bitreihenfolge innerhalb eines Bytes umkehren
         
-        % // TODO: Ayuda para esta parte?
+        The code for reversing the bit order within a byte is shown in Listing~\ref{lst:reverse_bits}, while the output of the code is shown in Listing~\ref{lst:reverse_bits_output}.
+        \begin{listing}
+            \begin{minted}[fontsize=\small]{python}
+#!./venv/bin/python3
+
+import z3
+
+def reverse_naive(n):
+    # Your loop implementation adapted for Z3 symbolic execution
+    result = z3.BitVecVal(0, 64)
+    for i in range(64):
+        # Move result left and add the last bit of n
+        result = (result << 1) | (n & 1)
+        # Logical Shift Right (LShR) to bring the next bit to the front
+        n = z3.LShR(n, 1)
+    return result
+
+def reverse_optimized(n):
+    # Optimized divide and conquer bit-swap
+    # 1. Swap adjacent 32-bit blocks
+    n = (z3.LShR(n, 32) & 0x00000000FFFFFFFF) | ((n << 32) & 0xFFFFFFFF00000000)
+    # 2. Swap adjacent 16-bit blocks
+    n = (z3.LShR(n, 16) & 0x0000FFFF0000FFFF) | ((n << 16) & 0xFFFF0000FFFF0000)
+    # 3. Swap adjacent 8-bit blocks (bytes)
+    n = (z3.LShR(n, 8)  & 0x00FF00FF00FF00FF) | ((n << 8)  & 0xFF00FF00FF00FF00)
+    # 4. Swap adjacent 4-bit blocks (nibbles)
+    n = (z3.LShR(n, 4)  & 0x0F0F0F0F0F0F0F0F) | ((n << 4)  & 0xF0F0F0F0F0F0F0F0)
+    # 5. Swap adjacent 2-bit blocks
+    n = (z3.LShR(n, 2)  & 0x3333333333333333) | ((n << 2)  & 0xCCCCCCCCCCCCCCCC)
+    # 6. Swap adjacent bits
+    n = (z3.LShR(n, 1)  & 0x5555555555555555) | ((n << 1)  & 0xAAAAAAAAAAAAAAAA)
+    return n
+
+x = z3.BitVec('x', 64)
+solver = z3.Solver()
+
+solver.add(reverse_naive(x) != reverse_optimized(x))
+
+if solver.check() == z3.unsat:
+    print("No counterexample found, the property holds.")
+elif solver.check() == z3.sat:
+    print("Counterexample found:", solver.model())
+else:
+    print("Solver returned unknown result.")
+            \end{minted}
+            \caption{Tauschen zweier Variablen mit Subtraktion und Addition}
+            \label{lst:reverse_bits}
+        \end{listing}
+        \begin{listing}
+            \begin{minted}[fontsize=\small]{shell}
+$ ./test_reverse_bits.py 
+No counterexample found, the property holds.
+            \end{minted}
+            \caption{Output des Bit-Reverse-Codes}
+            \label{lst:reverse_bits_output}
+        \end{listing}
     \end{enumerate}
 \end{ejercicio}
 
@@ -252,6 +314,159 @@ The code for solving generic Sudokus using \verb|Z3| is available \myhref{https:
 
 \begin{ejercicio}
 Ein Freund von Ihnen behauptet, dass er sein eigenes sicheres Krypto-System entwickelt hat. Zum System gehören zwei Komponenten: eine asymmetrische und eine symmetrische Chiffre. Zeigen Sie, dass beide Verfahren nicht sicher sind.
+\begin{enumerate}
+    \item Asymetric Cryptography:
+    
+    First of all, in the Source Code~\ref{lst:asymetric} we can see the \verb|main| function of the asymetric cryptography system. First of all, we should find the value of \verb|p| and \verb|q|, which are the prime numbers used in the RSA algorithm. In order to do so,in the \verb|ExtraSecureRsa| class, we can see the code shown in Listing~\ref{lst:extra_secure_rsa}. Therefore, we use the Z3 code shown in Listing~\ref{lst:z3_rsa} to find the values of \verb|p| and \verb|q|. The output is shown in Listing~\ref{lst:z3_rsa_output}.
+    \begin{listing}
+        \begin{minted}[fontsize=\small]{python}
+def main():
+secret =  # hidden
+rsa = ExtraSecureRsa(secret['p'], secret['q'])
+plaintext =  # hidden
+ciphertext = rsa.encrypt(plaintext)
+assert ciphertext == 0x108fa52dfb76719... # In the .py file, the full value is shown
+decrypted_plaintext = rsa.decrypt(ciphertext)
+print(f'{plaintext}, {ciphertext:x}, {decrypted_plaintext}')
+        \end{minted}
+        \caption{Main function of the asymetric cryptography system}
+        \label{lst:asymetric}
+    \end{listing}
+    \begin{listing}
+        \begin{minted}[fontsize=\small]{python}
+# verify that only my keypair can be used
+w = 2596546088... # In the .py file, the full value is shown
+x = p + 1328
+y = p + 1329
+z = q - 1
+assert w*(x*z + y*z - x*y) == 4*x*y*z
+        \end{minted}
+        \caption{Code for finding the prime numbers used in the RSA algorithm}
+        \label{lst:extra_secure_rsa}
+    \end{listing}
+    \begin{listing}
+        \begin{minted}[fontsize=\small]{python}
+        #!./venv/bin/python3
+import z3
 
-% // TODO: Ayuda
+p, q = z3.Ints('p q')
+w = 2596546088474... # In the .py file, the full value is shown
+x = p + 1328
+y = p + 1329
+z = q - 1
+
+s = z3.Solver()
+s.add(w * (x*z + y*z - x*y) == 4*x*y*z)
+s.add(p > 1, q > 1) # p & q should be positive (they are primes)
+
+if s.check() == z3.sat:
+m = s.model()
+val_p = m[p]
+val_q = m[q]
+
+print(f"P: {val_p}\nQ: {val_q}")
+else:
+print("No solution found.")
+        \end{minted}
+        \caption{Z3 code for finding the prime numbers used in the RSA algorithm}
+        \label{lst:z3_rsa}
+    \end{listing}
+    \begin{listing}
+        \begin{minted}[fontsize=\small]{shell}
+$ ./p_q_z3.py 
+P: 129827304... # In the shell, the full value is shown
+Q: 437651192... # In the shell, the full value is shown
+        \end{minted}
+        \caption{Output of the Z3 code for finding the prime numbers used in the RSA algorithm}
+        \label{lst:z3_rsa_output}
+    \end{listing}
+    
+    Once the values of \verb|p| and \verb|q| are found, and given that in the Listing~\ref{lst:asymetric} the value of \verb|ciphertext| is shown, we just decode it using the code shown in Listing~\ref{lst:decode_rsa}. The output is shown in Listing~\ref{lst:decode_rsa_output}.
+    \begin{listing}
+        \begin{minted}[fontsize=\small]{python}
+def main():
+    secret =  {
+        'p': 12982730442... # The full value of p is used
+        'q': 43765119208... # The full value of q is used
+    }
+    rsa = ExtraSecureRsa(secret['p'], secret['q'])
+    ciphertext = 0x108fa52dfb76... # The full value of the ciphertext is used
+    decrypted_plaintext = rsa.decrypt(ciphertext)
+    print(f'Decrypted plaintext: {decrypted_plaintext}')
+        \end{minted}
+        \caption{Code for decoding the RSA ciphertext}
+        \label{lst:decode_rsa}
+    \end{listing}
+    \begin{listing}
+        \begin{minted}[fontsize=\small]{shell}
+$ ./decode_rsa.py 
+Decrypted plaintext: This is a not so secure rsa implementation.
+        \end{minted}
+        \caption{Output of the RSA decoding code}
+        \label{lst:decode_rsa_output}
+    \end{listing}
+
+
+
+
+    \item Symmetric Cryptography:
+    
+    This one is more difficult to break. In order to break it, the code shown in Listing~\ref{lst:symmetric} is used to find the key used for the symmetric encryption. The output is shown in Listing~\ref{lst:symmetric_output}.
+    \begin{listing}
+        \begin{minted}[fontsize=\small]{python}
+from z3 import *
+
+# The captured ciphertext from the exercise
+ciphertext = [7, 29, #... The full ciphertext is used here]
+
+solver = Solver()
+
+# 1. Define the Unknowns
+key = [BitVec(f'key_{i}', 8) for i in range(4)]
+plaintext = [BitVec(f'p_{i}', 8) for i in range(len(ciphertext))]
+
+for i_block in range((len(ciphertext) + 3) // 4):
+    for p in range(4):
+        idx = i_block * 4 + p   # Real index in the ciphertext and plaintext arrays
+        if idx < len(ciphertext):
+            c_val = ciphertext[idx]
+            k_val = key[p]
+            p_val = plaintext[idx]
+            
+            solver.add(p_val == (c_val ^ k_val) - i_block)  # Use the decryption formula to relate plaintext, ciphertext, and key
+
+            # 3. Apply Language Constraints
+            solver.add(Or(
+                And(p_val >= ord('a'), p_val <= ord('z')), # Lowercase
+                And(p_val >= ord('A'), p_val <= ord('Z')), # Uppercase
+                p_val == ord(' '),                         # Space
+                p_val == ord('.'),                         # Period
+                p_val == ord(',')                         # Comma
+            ))
+
+if solver.check() == sat:
+    model = solver.model()
+    decrypted_msg = "".join([chr(model[p].as_long()) for p in plaintext])
+    discovered_key = "".join([chr(model[k].as_long()) for k in key])
+    
+    print("Success!")
+    print(f"Secret Key: {discovered_key}")
+    print(f"Hidden Message: {decrypted_msg}")
+else:
+    print("No legible solution found. Check the constraints or ciphertext.")
+        \end{minted}
+        \caption{Z3 code for breaking the symmetric cryptography system}
+        \label{lst:symmetric}
+    \end{listing}
+    \begin{listing}
+        \begin{minted}[fontsize=\small]{shell}
+$ ./break_symmetric.py 
+Success!
+Secret Key: Sup3
+Hidden Message: This is a not so secure encryption.
+        \end{minted}
+        \caption{Output of the Z3 code for breaking the symmetric cryptography system}
+        \label{lst:symmetric_output}
+    \end{listing}
+\end{enumerate}
 \end{ejercicio}

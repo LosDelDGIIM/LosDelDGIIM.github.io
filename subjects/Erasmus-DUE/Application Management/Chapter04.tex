@@ -254,9 +254,63 @@ Docker is a popular containerization platform that simplifies the process of cre
     \item \textbf{Docker Container}: A Docker container is a runtime instance of a Docker image. It is an isolated environment where the application runs, sharing the host operating system's kernel but with its own filesystem and resources.
     \item \textbf{Docker Registry}: A Docker registry is a storage and distribution system for Docker images. It allows users to store and share their images with others. The most popular public registry is Docker Hub, but there are also private registries available.
     \item \textbf{Dockerfile}: A Dockerfile is a text file that contains a set of instructions to build a Docker image. It defines the base image, the application code, dependencies, and any necessary configuration.
-    % // TODO: Do we have to explain how to create a Dockerfile?
+    
+    An example of a simple Dockerfile is shown in the Source Code~\ref{code:dockerfile}. The basic structure of a Dockerfile includes:
+\begin{itemize}
+    \item \texttt{FROM}: Specifies the base image to use for the Docker image. In this example, it uses the official Python 3.8 slim image.
+    \item \texttt{WORKDIR}: Sets the working directory inside the container. 
+    \item \texttt{COPY}: Copies files from the host machine to the container. 
+    \item \texttt{RUN}: Executes commands to install dependencies or perform other setup tasks. These are just used during the build process and are not executed when the container is running.
+    \item \texttt{EXPOSE}: Specifies the port that the application will listen on when the container is running.
+    \item \texttt{CMD}: Defines the command to run when the container starts. In this example, it runs the Python application using \texttt{python app.py}. They can be modified at runtime, allowing for flexibility in how the container is executed.
+    \item \texttt{ENTRYPOINT}: Similar to \texttt{CMD}, but it is used to define the main command that will always be executed when the container starts, regardless of any additional arguments passed at runtime.
+\end{itemize}
+    \begin{listing}
+        \begin{minted}[fontsize=\small,breaklines,tabsize=4]{dockerfile}
+FROM python:3.8-slim
+WORKDIR /app
+COPY . /app
+RUN pip install -r requirements.txt
+EXPOSE 5000
+CMD ["python", "app.py"]
+        \end{minted}
+        \caption{Example of a simple Dockerfile for a Python application.}
+        \label{code:dockerfile}
+    \end{listing}
     \item \textbf{Docker Compose}: Docker Compose is a tool for defining and running multi-container Docker applications. It allows you to use a YAML file to configure your application's services, networks, and volumes, making it easier to manage complex applications with multiple containers.
-    % // TODO: Do we have to explain how to create a Docker Compose file?
+    
+    An example of a simple \texttt{docker-compose.yml} file is shown in the Source Code~\ref{code:docker-compose}. The basic structure of a \texttt{docker-compose.yml} file includes:
+\begin{itemize}
+    \item \texttt{version}: Specifies the version of the Docker Compose file format.
+    \item \texttt{services}: Defines the services that make up the application. Each service corresponds to a container that will be run. In this example, there are two services: \texttt{web} and \texttt{redis}.
+    \item For each service, you can specify various configuration options, such as:
+    \begin{itemize}
+        \item \texttt{build}: Specifies the path to the Dockerfile to build the image for the service.
+        \item \texttt{image}: Specifies the name of the Docker image to use for the service. In this example, the \texttt{redis} service uses the official Redis image from Docker Hub.
+        \item \texttt{ports}: Maps ports from the host machine to the container, allowing access to the application running inside the container.
+        \item \texttt{volumes}: Mounts directories from the host machine into the container, allowing for data persistence and sharing files between the host and the container.
+        \item \texttt{environment}: Sets environment variables for the service, which can be used to configure the application running inside the container.
+    \end{itemize}
+\end{itemize}
+    \begin{listing}
+        \begin{minted}[fontsize=\small,breaklines,tabsize=4]{yaml}
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_ENV=development
+  redis:
+    image: "redis:alpine"
+        \end{minted}
+        \caption{Example of a simple \texttt{docker-compose.yml} file for a Python web application that uses Redis as a database.}
+        \label{code:docker-compose}
+    \end{listing}
+
 \end{itemize}
 
 Some important Docker commands are the following:
