@@ -1,0 +1,194 @@
+\newtcolorbox{principio}{
+  colback=gray!10,
+  colframe=black,
+  boxrule=0.5pt,
+  arc=3pt,
+  left=6pt,
+  right=6pt,
+  top=6pt,
+  bottom=6pt
+}
+
+\chapter{Mid-level Software Design}
+
+In this course, aour aim is to design good quality software, and to do that we need to know how to design it. The following are smells of bad design:
+\begin{itemize}
+    \item \ul{Rigidity}: the software is hard to change because every change affects too many other. Everything that \emph{depends} on the changed thing needs to be changed too.
+    \item \ul{Fragility}: when you change something, it breaks something else that you didn't expect to break. There are hidden \emph{dependencies}.
+    \item \ul{Immobility}: the software is hard to reuse because it's too entangled with the current application. The desired design is highly \emph{dependent} on undesired parts of the software.
+\end{itemize}
+
+As the reader may have noticed, the common main root cause of all these smells is \emph{dependencies}. Therefore, the solution to these problems is to design software with low dependencies. In order to do so, keeping a \emph{simple} design is key. Only the code that is required should be written, with a structure that keeps it simplest, smallest and most expressive. In order to do so, the following rules should be followed (in this order):
+\begin{enumerate}
+    \item Pass all the tests
+    \item Reveal the intent
+    \item Remove duplication
+    \item Decrease elements of the software
+\end{enumerate}~\\
+
+In this chapter, we will focus on the mid-level design of software. There are $4$ levels:
+\begin{enumerate}
+    \item Functions: already covered in Section~\ref{sec:functions}.
+    \item Classes
+    \item Components
+    \item System or Architecture
+\end{enumerate}
+
+Therefore, in this chapter we will cover the design of classes.
+\begin{definicion}[Class]
+    Coupled grouping of functions and data.
+\end{definicion}
+\begin{observacion}
+    Even though that is the definition, there are a lot of programming languages that call \emph{classes} to things that are not classes; and also there are a lot of programming languages that give other names to things that are classes (for instance, \emph{structs} in \verb|C++|).
+\end{observacion}
+
+Regarding the dependencies mentioned before, and given that classes are connected to others, there are two types of dependencies:
+\begin{itemize}
+    \item \ul{Compile-time dependencies}: they are the ones that are created when the software is being compiled. They are produced when one class mentions another class (or its functions or data) in its code.
+    \item \ul{Runtime dependencies}: they are the ones that are created when the software is running. They are produced when one class transfers control to another's functions or reads/writes data from another class.
+    
+    One example of runtime dependency that is not a compile-time dependency is the case of \emph{interfaces} (or \emph{abstract classes}). A class $A$ may have a compile-time dependency on an interface $I$, but then at runtime it may have a runtime dependency on a class $B$ that implements $I$, without having a compile-time dependency on $B$.
+\end{itemize}
+
+Duting the following section, we will cover some important principles for designing good classes.
+
+\section{The SOLID Principles}
+
+The SOLID principles are a set of five design principles that are intended to make software more maintainable and flexible. Applying them too often/early can lead to over-engineering and unnecessary complexity, but they are very useful when applied in the right way.
+
+\subsection{Single-Responsibility Principle (SRP)}
+
+\begin{principio}
+    A class should have only one reason to change.
+\end{principio}
+
+If a class has more than one responsibility (reason to change), they become coupled, so changes in one responsibility may affect the other. Ideally, each responsibility should be encapsulated in a separate class, but if not, at least they should be separated in different interfaces.
+
+The SRP may lead to \emph{temporary duplication}, as the same code may be needed in two different classes, but if it is due to different responsibilities (reasons to change), then this duplication may eventually disappear as the two classes evolve in different ways.
+
+Another common symptom of a violation of the SRP is the presence of \emph{merge conflicts}, as two different developers may be working on the same class for different reasons, and therefore merge conflicts may appear.
+
+One example of a violation of the SRP is the class \texttt{Employee} described in Figure~\ref{fig:employee}. This class has three responsibilities, which may lead to three different reasons to change. A possible solution to this problem is to split the class into three different classes, each one with a single responsibility, as shown in Figure~\ref{fig:employee-srp}. The three responsibilities are:
+\begin{itemize}
+    \item Calculating the pay of the employee (possible used by the finance department).
+    \item Reporting the hours worked by the employee (possible used by the HR department).
+    \item Saving the employee data (possible used by the IT department).
+\end{itemize}
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{class}[text width=5cm]{Employee}{0,0}
+            % Atributos (puedes dejarlos vacíos si solo quieres los métodos)
+            \attribute{} 
+            
+            % Métodos Públicos (+)
+            \operation{+ calculatePay()}
+            \operation{+ reportHours()}
+            \operation{+ save()}
+        \end{class}
+    \end{tikzpicture}
+    \caption{Example of a class that violates the Single-Responsibility Principle.}
+    \label{fig:employee}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        % 1. Clase de Datos (Entidad)
+        \begin{class}[text width=4cm]{Employee}{5.7,0}
+            \attribute{+ employeeId}
+            \attribute{+ name}
+
+            \operation{}
+        \end{class}
+
+        % 2. Clase para Finanzas
+        \begin{class}[text width=6cm]{PayCalculator}{12.2,-4}
+            \attribute{}
+            \operation{+ calculatePay(emp: Employee)}
+            \operation{- regularHours()}
+        \end{class}
+
+        % 3. Clase para Operaciones
+        \begin{class}[text width=5.8cm]{HourReporter}{5.7,-4}
+            \attribute{}
+            \operation{+ reportHours(emp: Employee)}
+            \operation{- regularHours()}
+        \end{class}
+
+        % 4. Clase para Persistencia
+        \begin{class}[text width=4.5cm]{EmployeeRepository}{0,-4}
+            \attribute{}
+            \operation{+ save(emp: Employee)}
+        \end{class}
+
+        % Relaciones de dependencia (opcional)
+        \draw[-Stealth] (PayCalculator) -- (Employee);
+        \draw[-Stealth] (HourReporter) -- (Employee);
+        \draw[-Stealth] (EmployeeRepository) -- (Employee);
+
+    \end{tikzpicture}
+    \caption{Example of a design that follows the Single-Responsibility Principle.}
+    \label{fig:employee-srp}
+\end{figure}
+
+
+\subsection{Open-Closed Principle (OCP)}
+
+\begin{principio}
+    Software entities (classes, modules, functions, etc.) should be open for extension, but closed for modification.
+\end{principio}
+
+They should open for extension, as new requirements may mean new behavior that needs to be added to the software. However, they should be closed for modification, as changing existing code may introduce bugs and break existing functionality.
+
+An example of a violation of the OCP is the design shown in Figure~\ref{fig:ocp-violation}, as trying to connect the \texttt{Client} to a new \texttt{NewServer} would require modifying the \texttt{Client} class. A possible solution to this problem is to introduce an interface \texttt{Connection} that both \texttt{Server} and \texttt{NewServer} implement, as shown in Figure~\ref{fig:ocp-follow}. This way, the \texttt{Client} can connect to any class that implements the \texttt{Connection} interface without needing to be modified.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{class}[text width=5cm]{Client}{0,0}
+        \end{class}
+
+        \begin{class}[text width=5cm]{Server}{7,0}
+        \end{class}
+
+        \draw[-Stealth] (Client) -- (Server);
+    \end{tikzpicture}
+    \caption{Example of a design that violates the Open-Closed Principle.}
+    \label{fig:ocp-violation}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{class}[text width=5cm]{Client}{0,-0.3}
+        \end{class}
+
+        \begin{interface}[text width=5cm]{Connection}{7,0}
+        \end{interface}
+
+        \begin{class}[text width=5cm]{Server}{4, -2}
+            \implement{Connection}
+        \end{class}
+
+        \begin{class}[text width=5cm]{NewServer}{10, -2}
+            \implement{Connection}
+        \end{class}
+
+        \draw[-Stealth] (Client) -- (Connection);
+    \end{tikzpicture}
+    \caption{Example of a design that follows the Open-Closed Principle.}
+    \label{fig:ocp-follow}
+\end{figure}
+
+
+There will always some kind of change against which a module is not closed, so deciding which changes to be closed against is a matter of judgment. As many data as available should be collected (asking customers or domain experts, using personal experience, etc.) to make an educated guess. A common practice is considering that no changes will happen and, when a change happens:
+\begin{enumerate}
+    \item We first implement the abstractions needed to make the change possible.
+    \item Then we implement the change itself.
+\end{enumerate}
+
+
+\subsection{Liskov Substitution Principle (LSP)}
+\begin{principio}
+    Subtypes must be substitutable for their base types.
+\end{principio}
