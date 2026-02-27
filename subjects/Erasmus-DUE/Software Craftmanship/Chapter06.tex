@@ -1,0 +1,231 @@
+\chapter{Design Patterns}
+
+A design pattern is a general, reusable solution to a commonly occurring problem within a given context in software design. It is not a finished design that can be transformed directly into code, but rather a template for how to solve a problem that can be used in many different situations.
+
+The learning cycle of design patterns usually has two stages:
+\begin{enumerate}
+    \item \ul{The Phase of Enthusiasm}: In this phase, developers are excited about the design patterns learnt and try to squeeze as many patterns as possible into their code, even when they are not necessary.
+    \item \ul{The Phase of Disillusionment}: In this phase, developers realize that not all design patterns are suitable for every situation and that overusing them can lead to unnecessarily complex code. They learn to apply design patterns judiciously, using them only when they provide a clear benefit.
+\end{enumerate}
+
+Therefore, it is important to understand the context in which a design pattern is applicable and to use it appropriately to solve specific problems in software design. Their bad consequences should also be taken into account.
+
+The pattern can be classified into different categories, which will be developed in the following sections.
+
+\begin{comment}
+
+\section{Architectural Patterns}
+
+These patterns are concerned with the overall structure of a software system and how its components interact with each other. They provide a high-level blueprint for organizing the system's components and their relationships.
+
+\subsection{Model-View-Controller (MVC)}
+
+The Model-View-Controller (MVC) pattern is a software architectural pattern that separates an application with an user interface into three interconnected components, shown in Figure~\ref{fig:mvc}.
+\begin{itemize}
+    \item \ul{Model}: The model represents the data and the business logic of the application. It is responsible for managing the data, processing user input, and performing any necessary calculations or operations.
+    \item \ul{View}: The view is responsible for displaying the data to the user. It receives data from the model and renders it in a format that is suitable for the user interface.
+    \item \ul{Controller}: The controller is responsible for handling user input and interactions. It receives input from the user, processes it, and updates the model accordingly.
+\end{itemize}
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{class}[text width=3cm]{Model}{0,0}
+        \end{class}
+        \begin{class}[text width=3cm]{View}{3,-2}
+        \end{class}
+        \begin{class}[text width=3cm]{Controller}{-3,-2}
+        \end{class}
+        \draw[-Stealth] (Model) -- (View) node[midway, right, xshift=0.5cm] {updates};
+        \draw[-Stealth] (Controller) -- (Model) node[midway, left, xshift=-0.5cm] {modifies};
+    \end{tikzpicture}
+    \caption{Model-View-Controller (MVC) pattern.}
+    \label{fig:mvc}
+\end{figure}
+
+\subsection{Multi-Tier}
+
+The Multi-Tier pattern is a software architectural pattern that separates an application into multiple layers or tiers, each with a specific responsibility. The most common tiers, which are shown in Figure~\ref{fig:multi-tier}, are:
+\begin{itemize}
+    \item \ul{Presentation Tier}: This tier is responsible for handling the user interface and user interactions. It receives input from the user and displays output to the user.
+    \item \ul{Application Tier}: This tier is responsible for processing the business logic of the application. It receives input from the presentation tier, performs any necessary calculations or operations, and returns the results to the presentation tier.
+    \item \ul{Data Tier}: This tier is responsible for managing the data of the application. It receives requests from the application tier, interacts with the database or other data sources, and returns the results to the application tier.
+\end{itemize}
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{class}[text width=3cm]{Presentation}{0,0}
+        \end{class}
+        \begin{class}[text width=3cm]{Application}{5, 0.05}
+        \end{class}
+        \begin{class}[text width=3cm]{Data}{10, 0}
+        \end{class}
+        \draw[-Stealth] 
+        ([yshift=3pt]Presentation.east) -- 
+        ([yshift=3pt]Application.west);
+        \draw[-Stealth] 
+        ([yshift=-3pt]Application.west) -- 
+        ([yshift=-3pt]Presentation.east);
+        
+        \draw[-Stealth] 
+        ([yshift=3pt]Application.east) -- 
+        ([yshift=3pt]Data.west);
+        \draw[-Stealth] 
+        ([yshift=-3pt]Data.west) -- 
+        ([yshift=-3pt]Application.east);
+    \end{tikzpicture}
+    \caption{Multi-Tier pattern.}
+    \label{fig:multi-tier}
+\end{figure}
+
+\end{comment}
+
+\section{Creational Patterns}
+
+Creational patterns are concerned with the process of object creation.
+
+\subsection{Dependency Injection}
+
+Dependency Injection is sometimes considered a design pattern. It allows a class to receive its dependencies from an external source rather than creating them itself. This promotes loose coupling and makes the code more modular and testable. For instance, instead of a class creating an instance of a dependency, it can receive it through its constructor or through a setter method. This approach is shown in Listing~\ref{lst:dependency-injection}.
+\begin{listing}
+    \begin{minted}{java}
+public class Client {
+    private Connection connection;
+    public Client(Connection connection) {
+        this.connection = connection;
+    }
+}
+    \end{minted}
+    \caption{Dependency Injection example.}
+    \label{lst:dependency-injection}
+\end{listing}
+
+However, if multiple new objects were needed (maybe iteraing over a \texttt{for} loop), then the dependency injection would not be suitable. We would need to actually create the objects, which would lead to a tight coupling between the classes. This is where the following creational patterns come into play.
+
+\subsection{Factory Method}
+
+This pattern is used when a class needs to create objects, but does not know the exact class of the object that will be created. It uses inheritance to allow subclasses to decide which class to instantiate.
+
+The main application is usually called the \texttt{Creator} class, which has to use a product, which is any class that implements a common interface \texttt{Product}. The \texttt{Creator} is a abstract class that defines the factory method, which is responsible for creating the product. The concrete subclasses of \texttt{Creator} implement the factory method to create specific products. This pattern is shown in Figure~\ref{fig:factory-method}.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{abstractclass}[text width=5cm]{Creator}{0,0}
+            \attribute{- aProduct: Product}
+            \operation{- factoryMethod()}
+            \operation{+ someOperation()}
+        \end{abstractclass}
+        \begin{class}[text width=5cm]{ConcreteCreator1}{-6,-3}
+            \inherit{Creator}
+            \operation{- factoryMethod()}
+        \end{class}
+        \begin{class}[text width=5cm]{ConcreteCreator2}{6,-3}
+            \inherit{Creator}
+            \operation{- factoryMethod()}
+        \end{class}
+        \begin{interface}[text width=5cm]{Product}{0,-5}
+        \end{interface}
+        \begin{class}[text width=5cm]{ConcreteProduct1}{-6,-7}
+            \implement{Product}
+        \end{class}
+        \begin{class}[text width=5cm]{ConcreteProduct2}{6,-7}
+            \implement{Product}
+        \end{class}
+        \draw[-Stealth] (Creator) -- (Product);
+        \draw[-Stealth] (ConcreteCreator1) -- (ConcreteProduct1);
+        \draw[-Stealth] (ConcreteCreator2) -- (ConcreteProduct2);
+    \end{tikzpicture}
+    \caption{Factory Method pattern.}
+    \label{fig:factory-method}
+\end{figure}
+\begin{observacion}
+    It should be noted that this can also be used to better name the constructors of the products, since they can be named according to the product they create. The name \texttt{factoryMethod} can be replaced by a more descriptive name, such as \texttt{createProduct1} or \texttt{createProduct2}, which can make the code more readable and easier to understand.
+\end{observacion}
+
+A possible implementation for this is when an application needs to notify users about certain events, but the way to notify them can vary (e.g., email, SMS, push notifications). The \texttt{Creator} class would be the application, the \texttt{Product} interface would define the method for sending notifications, the concrete products would be the different notifiers (e.g., \texttt{EmailNotifier}, \texttt{SMSNotifier}, \texttt{PushNotifier}), and the concrete creators would be the classes responsible for creating the specific notifiers based on the user's preferences or the context of the notification. However, almost the whole implementation would be the in the \texttt{Creator} class.
+
+
+\subsection{Abstract Factory}
+
+This pattern is used when a class needs to create families of related or dependent objects without specifying their concrete classes. Two ideas should appear:
+\begin{itemize}
+    \item There are different products, and each product has different subtypes. In the Figure~\ref{fig:abstract-factory}, the products and their subtypes are represented using letters.
+    \item The subtypes are organized into families. In the Figure~\ref{fig:abstract-factory}, the families are represented using numbers.
+\end{itemize}
+
+The main application has to use all the products, but each one of them is an abstract class from which all subtypes inherit. In order to use all the subtypes from the same family, the main application also has to use an abstract factory (an abstract class) for creating the products. The concrete factories (concrete classes) implement the abstract factory to create specific products from the same family. This pattern is shown in Figure~\ref{fig:abstract-factory}.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{abstractclass}[text width=5cm]{AbstractFactory}{0,0}
+            \operation{+ createProductA()}
+            \operation{+ createProductB()}
+        \end{abstractclass}
+        \begin{class}[text width=5cm]{ConcreteFactory1}{-4, -3}
+            \inherit{AbstractFactory}
+            \operation{+ createProductA()}
+            \operation{+ createProductB()}
+        \end{class}
+        \begin{class}[text width=5cm]{ConcreteFactory2}{4, -3}
+            \inherit{AbstractFactory}
+            \operation{+ createProductA()}
+            \operation{+ createProductB()}
+        \end{class}
+        \begin{abstractclass}[text width=4cm]{ProductA}{-6, -6}
+        \end{abstractclass}
+        \begin{abstractclass}[text width=4cm]{ProductB}{6, -6}
+        \end{abstractclass}
+        \begin{class}[text width=3cm]{ProductA1}{-7, -10}
+            \inherit{ProductA}
+        \end{class}
+        \begin{class}[text width=3cm]{ProductA2}{-3, -10}
+            \inherit{ProductA}
+        \end{class}
+        \begin{class}[text width=3cm]{ProductB1}{3, -10}
+            \inherit{ProductB}
+        \end{class}
+        \begin{class}[text width=3cm]{ProductB2}{7, -10}
+            \inherit{ProductB}
+        \end{class}
+
+        \begin{class}[text width=4.1cm]{Client}{0, -6}
+            \attribute{- productA: ProductA}
+            \attribute{- productB: ProductB}
+            \operation{+ Client(factory: AbstractFactory)}
+        \end{class}
+
+        \draw[-Stealth] (Client) -- (ProductA);
+        \draw[-Stealth] (Client) -- (ProductB);
+        \draw[-Stealth] (Client) -- (AbstractFactory);
+    
+    \end{tikzpicture}
+    \caption{Abstract Factory pattern.}
+    \label{fig:abstract-factory}
+\end{figure}
+
+The idea may be better understood with an example. Consider the client to be a software application that needs to create user interfaces for different platforms (e.g., Windows, macOS, Linux). The products would be the different UI components (e.g., buttons, text fields, checkboxes), with its subtypes being the specific implementations for each platform (e.g., \texttt{WindowsButton}, \texttt{MacOSButton}, \texttt{LinuxButton} for the button product). The families would be the different platforms, with the concrete factories being the classes responsible for creating the specific UI components for each platform (e.g., \texttt{WindowsFactory}, \texttt{MacOSFactory}, \texttt{LinuxFactory}). The client application would use the abstract factory to create the UI components without needing to know the specific classes of the products it is using.\\
+
+In this pattern, concrete classes names only appear in the concrete factories, which are the only ones that know about the specific products they create. This leads to the following advantages:
+\begin{itemize}
+    \item Easy to add new varieties of products without changing the client code (just adding a new family).
+    \item Easy to assure consistent usage of products from the same family (the client only uses one factory).
+    \item Easy to exchange whole families of products (the client can use a different factory).
+\end{itemize}
+
+However, the complexity of the code increases and adding just one new product requires creating one version of the product for each family, which can lead to a large number of classes.
+
+\subsection{Prototype}
+
+\subsection{Builder}
+
+\subsection{Singleton}
+
+\subsection{Monostate object}
+
+
+\section{Structural Patterns}
+
+
+\section{Behavioral Patterns}
+
+- how to control / adapt the behavior of
+(collections of) objects

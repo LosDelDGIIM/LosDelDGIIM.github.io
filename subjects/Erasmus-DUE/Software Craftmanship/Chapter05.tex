@@ -192,3 +192,180 @@ There will always some kind of change against which a module is not closed, so d
 \begin{principio}
     Subtypes must be substitutable for their base types.
 \end{principio}
+
+This principle is really important for the polymorphism. If a subtype violates this principle, then the code using the base type must be aware of the specific subtype it is using, which leads to code that is more difficult to maintain and extend. This principle enforces:
+\begin{itemize}
+    \item Preconditions cannot be strengthened in a subtype.
+    \item Postconditions cannot be weakened in a subtype.
+    \item Invariants of the base type must be preserved in a subtype.
+    \item A latter history contraint is also considered.
+    
+    Given that a subtype may have more methods than the base type, new changes of states may appear in the subtype that are not present in the base type. This should be avoided: only the the changes of state allowed by the base type should be allowed in the subtype.
+\end{itemize}
+
+Examples of violations of the LSP include throwing exceptions that the base type does not throw, degenerate functions (functions without any code).\\
+
+LSP should not be confused with Strongly-typed OO. The latter force the \emph{structure} to be consistent (resulting in a compile-time error if it is not), while LSP force the \emph{behavior} to be consistent (resulting in a runtime error if it is not). Therefore, violating LSP may not be detected until runtime, making it much more dangerous.
+
+
+\subsection{Interface Segregation Principle (ISP)}
+\begin{principio}
+    Clients should not be forced to depend on interfaces they do not use.
+\end{principio}
+
+This principle is intended to prevent the creation of \emph{fat interfaces}, which are interfaces that have more methods than the clients need. This leads to clients depending on methods that they do not use, which can lead to code that is more difficult to maintain and extend.
+
+As always, over-engineering should be avoided in order to not have a class implementing dozens of interfaces. Interfaces grouping different interfaces together may help to avoid this problem.
+
+This principle should not be confused with the SRP, as the SRP is about the responsibilities of a class, while the ISP is about the responsibilities of an interface.\\
+
+An example of a violation of the ISP is the design shown in Figure~\ref{fig:isp-violation}, where a normal printer would have to implement the \texttt{Office Printer} interface, which has methods that it does not need. A possible solution to this problem is shown in Figure~\ref{fig:isp-follow}, where two different interfaces are created, one for printing and one for scanning, and the \texttt{Office Printer} implements both interfaces, while the normal printer only implements the printing interface.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{interface}[text width=5cm]{OfficePrinter}{0,0}
+            \operation{+ print()}
+            \operation{+ scan()}
+        \end{interface}
+        \begin{class}[text width=5cm]{NormalPrinter}{7,-0.8}
+            \implement{OfficePrinter}
+        \end{class}
+    \end{tikzpicture}
+    \caption{Example of a design that violates the Interface Segregation Principle.}
+    \label{fig:isp-violation}
+\end{figure}
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{interface}[text width=5cm]{Printer}{0,0}
+            \operation{+ print()}
+        \end{interface}
+        \begin{interface}[text width=5cm]{Scanner}{0,-2}
+            \operation{+ scan()}
+        \end{interface}
+        \begin{interface}[text width=5cm]{OfficePrinter}{7,-2}
+            \implement{Printer}
+            \implement{Scanner}
+        \end{interface}
+        \begin{class}[text width=5cm]{NormalPrinter}{7,-0.5}
+            \implement{Printer}
+        \end{class}
+    \end{tikzpicture}
+    \caption{Example of a design that follows the Interface Segregation Principle.}
+    \label{fig:isp-follow}
+\end{figure}
+
+
+\subsection{Dependency Inversion Principle (DIP)}
+
+\begin{principio}
+    The code that implements high-level policy should not depend on the code that implements low-level details. Rather, details should depend on policies.
+\end{principio}
+
+In a software programm, usually there are high-level modules (policies), middle-level modules (mechanisms) and low-level modules (details). Usually, each level depends on the level below it, as we can see in Figure~\ref{fig:dip-violation}. The solution proposed by the DIP is to invert these dependencies, so that the high-level modules do not depend on the low-level modules, but on abstractions (interfaces) that the low-level modules implement. This way, the high-level modules are not affected by changes in the low-level modules. This approach is displayed in Figure~\ref{fig:dip-follow}.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{class}[text width=5cm]{Policy}{0,0}
+        \end{class}
+        \begin{class}[text width=5cm]{Mechanism}{3, -1}
+        \end{class}
+        \begin{class}[text width=5cm]{Detail}{6, -2}
+        \end{class}
+        \draw[-Stealth] (Policy) -| (Mechanism);
+        \draw[-Stealth] (Mechanism) -| (Detail);
+    \end{tikzpicture}
+    \caption{Example of a design that violates the Dependency Inversion Principle.}
+    \label{fig:dip-violation}
+\end{figure}
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{package}{Policy}
+            \begin{class}[text width=2.7cm]{Policy Class}{0,-0.25}
+            \end{class}
+            \begin{interface}[text width=3.5cm]{Policy Interface}{5, 0}
+            \end{interface}
+            \draw[-Stealth] (Policy Class) -- (Policy Interface);
+        \end{package}
+
+        \begin{package}{Mechanism}
+            \begin{class}[text width=3cm]{Mechanism Class}{3.5, -3.25}
+                \implement{Policy Interface}
+            \end{class}
+            \begin{interface}[text width=3.5cm]{Mechanism Interface}{8.5, -3}
+            \end{interface}
+            \draw[-Stealth] (Mechanism Class) -- (Mechanism Interface);
+        \end{package}
+
+        \begin{package}{Detail}
+            \begin{class}[text width=3cm]{Detail Class}{7.5, -6.75}
+                \implement{Mechanism Interface}
+            \end{class}
+        \end{package}
+    \end{tikzpicture}
+    \caption{Example of a design that follows the Dependency Inversion Principle.}
+    \label{fig:dip-follow}
+\end{figure}
+
+
+A specific example of a violation of the DIP is the one shown in Figure~\ref{fig:dip-violation-ex}, where the \texttt{UserService} (policy) depends on the \texttt{SQLDatabase} (detail), which is a low-level module. In case that another database is needed, the \texttt{UserService} would need to be modified, making it more difficult to maintain and extend. A possible solution to this problem is to introduce an interface \texttt{Database} that the \texttt{SQLDatabase} implements, and then the \texttt{UserService} depends on the \texttt{Database} interface instead of the \texttt{SQLDatabase} class. This way, the \texttt{UserService} is not affected by changes in the database implementation, and it can work with any database that implements the \texttt{Database} interface. This approach is shown in Figure~\ref{fig:dip-follow-ex}.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{class}[text width=5cm]{UserService}{0,-0.4}
+            \attribute{}
+            \operation{+ getUser(id: int)}
+        \end{class}
+        \begin{class}[text width=5cm]{SQLDatabase}{7,0}
+            \attribute{}
+            \operation{+ connect()}
+            \operation{+ query(sql: string)}
+        \end{class}
+        \draw[-Stealth] (UserService) -- (SQLDatabase);
+    \end{tikzpicture}
+    \caption{Specific example of a design that violates the DIP.}
+    \label{fig:dip-violation-ex}
+\end{figure}
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{package}{Policy}
+            \begin{class}[text width=3.5cm]{UserService}{0,-0.5}
+                \operation{+ getUser(id: int)}
+            \end{class}
+            \begin{interface}[text width=4cm]{Database Interface}{5, 0}
+                \operation{+ connect()}
+                \operation{+ query(sql: string)}
+            \end{interface}
+            \draw[-Stealth] (UserService) -- (Database Interface);
+        \end{package}
+        \begin{package}{Detail}
+            \begin{class}[text width=5cm]{SQLDatabase}{2,-4.5}
+                \implement{Database Interface}
+                \operation{+ connect()}
+                \operation{+ query(sql: string)}
+            \end{class}
+            \begin{class}[text width=5cm]{SQLiteDatabase}{8, -4.5}
+                \implement{Database Interface}
+                \operation{+ connect()}
+                \operation{+ query(sql: string)}
+            \end{class}
+        \end{package}
+    \end{tikzpicture}
+    \caption{Specific example of a design that follows the DIP.}
+    \label{fig:dip-follow-ex}
+\end{figure}
+
+
+\section{Further Principles}
+
+There are much more principles that can be applied to the design of software, but they are not as widely known as the SOLID principles. Some of them are:
+\begin{itemize}
+    \item \ul{KISS} (Keep It Simple, Stupid): the design should be as simple as possible. Complexity should be avoided, as it makes the software more difficult to understand, maintain and extend.
+    \item \ul{YAGNI} (You Ain't Gonna Need It): only the code that is required should be written. Adding code that is not currently needed may lead to over-engineering and unnecessary complexity.
+    \item \ul{DRY} (Don't Repeat Yourself): duplication should be avoided, as it makes the software more difficult to maintain and extend.
+    \item \ul{SoC} (Separation of Concerns): different concerns should be separated, as it makes the software more modular and easier to maintain and extend.
+    \item \ul{APO} (Avoid Premature Optimization): optimization should be avoided until it is necessary, as it may lead to over-engineering and unnecessary complexity.
+    \item \ul{LoD} (Law of Demeter): a class should only depend on its direct collaborators, and not on the collaborators of its collaborators. This principle is intended to reduce the coupling between classes and to make the software more maintainable and extendable.
+\end{itemize}
