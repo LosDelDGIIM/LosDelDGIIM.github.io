@@ -10,7 +10,7 @@ The learning cycle of design patterns usually has two stages:
 
 Therefore, it is important to understand the context in which a design pattern is applicable and to use it appropriately to solve specific problems in software design. Their bad consequences should also be taken into account.
 
-The pattern can be classified into different categories, which will be developed in the following sections.
+The patterns can be classified into different categories, which will be developed in the following sections. They are all explained in detail in \myhref{https://refactoring.guru/design-patterns}{this website}.
 
 \begin{comment}
 
@@ -215,17 +215,669 @@ However, the complexity of the code increases and adding just one new product re
 
 \subsection{Prototype}
 
+This pattern is used when a class needs to create new objects by copying existing ones, rather than creating new instances from scratch. It allows for the creation of new objects based on a prototype instance, which can be cloned to create new objects with the same properties and behavior. There is a \texttt{Prototype} interface that defines the method for cloning itself, and concrete classes that implement this interface to create specific prototypes. It it really important that the cloning method creates a \emph{deep copy} of the object, meaning that all the properties and references of the object are also copied, rather than just copying the reference to the original object. This ensures that the cloned object is independent of the original object and can be modified without affecting it. This pattern is shown in Figure~\ref{fig:prototype}.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{interface}[text width=5cm]{Prototype}{0,-0.35}
+            \operation{+ clone(): Prototype}
+        \end{interface}
+        \begin{class}[text width=5cm]{ConcretePrototype1}{0, -3}
+            \implement{Prototype}
+            \operation{+ clone(): Prototype}
+        \end{class}
+        \begin{class}[text width=6cm]{Client}{8, 0}
+            \attribute{- prototype: Prototype}
+            \operation{+ Client(prototype: Prototype)}
+            \operation{+ someOperation()}
+        \end{class}
+        \draw[-Stealth] (Client) -- (Prototype);
+    \end{tikzpicture}
+    \caption{Prototype pattern.}
+    \label{fig:prototype}
+\end{figure}
+
+This approach has different advantages, because it is simpler than factories and allows getting rid of repeated initialization code. It is also useful when the creation of an object is expensive (e.g., it requires a lot of resources or time) and we want to avoid creating new instances from scratch. However, it can be difficult to implement correctly, especially when the objects being cloned have complex structures or contain references to other objects.
+
 \subsection{Builder}
+
+This pattern is used when a class needs to create complex objects step by step, rather than creating them in a single step. It allows separating the construction process from the representation of the object. The code shown in Listing~\ref{lst:bad-builder} is an example of the necessity of this pattern, because the constructor of the \texttt{Computer} class has too many parameters, which can lead to confusion and errors when creating instances of the class.
+\begin{listing}
+    \begin{minted}{java}
+public class Computer {
+    private String CPU;
+    private String GPU;
+    private int RAM;
+    private int storage;
+    private String operatingSystem;
+    public Computer(String CPU, String GPU, int RAM, int storage, String operatingSystem);
+}
+    \end{minted}
+    \caption{Example of a class with a constructor that has too many parameters.}
+    \label{lst:bad-builder}
+\end{listing}
+
+As we saw, injecting so many dependencies through the constructor leads to a confusing and error-prone code. In order to avoid it, an additional class called \texttt{Builder} can be created, which is responsible for constructing the complex object step by step. The \texttt{Builder} class has methods for setting each property of the complex object, and a method for building the final object. This pattern would be used as shown in Listing~\ref{lst:builder}. It is really important that each setter method in the \texttt{Builder} class returns the builder itself, which allows for method chaining and makes the code more readable and easier to understand. This approach also allows for more flexibility in the construction process, as it allows for optional parameters and different configurations of the complex object to be created without needing to create multiple constructors with different parameter combinations.
+\begin{listing}
+    \begin{minted}{java}
+public class Builder {
+    private Computer computer;
+    public Builder() {
+        computer = new Computer();
+    }
+    public Builder setCPU(String CPU) {
+        computer.setCPU(CPU);
+        return this;
+    }
+    // Other setter methods for RAM, storage, and operatingSystem
+    public Computer build() {
+        return computer;
+    }
+}
+
+public static void main(String[] args) {
+    Computer computer = new Builder()
+        .setCPU("Intel Core i7")
+        .setGPU("NVIDIA GeForce RTX 3080")
+        .setRAM(16)
+        .setStorage(512)
+        .setOperatingSystem("Windows 10")
+        .build();
+}
+    \end{minted}
+    \caption{Example of using the Builder pattern to create a complex object.}
+    \label{lst:builder}
+\end{listing}
+
+\subsubsection{Using a Dictator}
+
+The general builder pattern includes also the idea of a \emph{dictator}, which is a class that controls the construction process and ensures that the complex object is built correctly. This class contains the extact knowledge about the steps (the order of the setter methods) that need to be followed to create a valid complex object.
+
+The first apprach is the shown in Listing~\ref{lst:builder-director-1}, where the client code just uses the director to create the complex object. The director knows the exact steps that need to be followed to create a valid complex object (whether because they are hard coded, or just retrieved from a configuration file or database). This approach has the advantage of keeping the client code simple and easy to understand, as it only needs to interact with the director to create the complex object.
+\begin{listing}
+    \begin{minted}{java}
+public class Director {
+    private Builder builder;
+    public Director() {
+        builder = new Builder();
+    }
+
+    public Computer constructGamerComputer() {
+        return builder
+            .setCPU("Intel Core i7")
+            .setGPU("NVIDIA GeForce RTX 3080")
+            .setRAM(16)
+            .setStorage(512)
+            .setOperatingSystem("Windows 10")
+            .build();
+    }
+
+    public Computer constructOfficeComputer() {
+        return builder
+            .setCPU("Intel Core i5")
+            .setRAM(8)
+            .setStorage(256)
+            .setOperatingSystem("Windows 10")
+            .build();
+            // No GPU for office computer
+    }
+}
+    \end{minted}
+    \caption{Example of using a Director class to control the construction process of complex objects.}
+    \label{lst:builder-director-1}
+\end{listing}
+
+However, in this approach, the director class has too much control over the construction process, which can lead to a rigid and inflexible design, and may be violating the OCP (in case we want to modify the specifications of the complex objects being created). An alternative approach is shown in Figure~\ref{fig:builder-director-2}, where all the exact information is stored in concrete builder classes (all of them implementing a common builder interface), and the director just uses the builder interface to create the complex objects. 
+This allows for a more flexible and extensible design, as new complex objects can be created by simply adding new concrete builder classes that implement the builder interface, without needing to modify the director class. In addition, and given that the product obtained is only managed by the concrete builders, the director class does not need to know about the specific products being created and those products do not need to implement any common interface (as opposed to the abstract factory approach), which promotes loose coupling and makes the code more modular and easier to maintain. For instance, one concrete builder could return a \texttt{Computer} object, while another concrete builder could return a \texttt{String} object representing the specifications of a computer.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{class}[text width=5.5cm]{Director}{-3,-0.25}
+            \attribute{- builder: Builder}
+            \operation{+ Director(builder: Builder)}
+            \operation{+ construct()}
+        \end{class}
+        \begin{interface}[text width=5cm]{Builder}{6, 0}
+            \operation{+ buildPartA(): Builder}
+            \operation{+ buildPartB(): Builder}
+            \operation{+ buildPartC(): Builder}
+        \end{interface}
+        \begin{class}[text width=5cm]{ConcreteBuilder1}{6, -4}
+            \implement{Builder}
+            \operation{+ buildPartA(): Builder}
+            \operation{+ buildPartB(): Builder}
+            \operation{+ buildPartC(): Builder}
+            \operation{}
+            \operation{+ getResult()}
+        \end{class}
+
+        \begin{class}[text width=5cm]{Client}{-3, -5.4}
+        \end{class}
+
+            \draw[-Stealth] (Director) -- (Builder);
+            \draw[-Stealth] (Client) -- (Director);
+            \draw[-Stealth] (Client) -- (ConcreteBuilder1);
+    \end{tikzpicture}
+    \caption{Example of using a Director class with a Builder interface to control the construction process of complex objects.}
+    \label{fig:builder-director-2}
+\end{figure}
+
+Some of the advantages of this approach are the construction of different complex objects using the same construction process (the director class), and the ability to create complex objects with different representations (the concrete builder classes can create different products). However, it can lead to a large number of classes and must handle cases where the construction process is not finished (calling the \texttt{getResult} method too soon).
 
 \subsection{Singleton}
 
+This pattern is used when a class needs to ensure that only one instance of itself is created and provides a global point of access to that instance. It is often used for managing shared resources, such as database connections or configuration settings. The singleton class has a private constructor to prevent other classes from creating instances of it, and a static method that returns the single instance of the class. This pattern is shown in Listing~\ref{lst:singleton}.
+\begin{listing}
+    \begin{minted}{java}
+public class Singleton {
+    private static Singleton instance;
+    private Singleton() {
+        // Private constructor to prevent instantiation
+    }
+    public static Singleton getInstance() {
+        if (instance == null) {
+            instance = new Singleton();
+        }
+        return instance;
+    }
+}
+    \end{minted}
+    \caption{Example of a Singleton class.}
+    \label{lst:singleton}
+\end{listing}
+
 \subsection{Monostate object}
+
+This pattern is used when a class needs to have only one possible state, but multiple instances of the class can exist. It is similar to the singleton pattern, but instead of ensuring that only one instance of the class is created, it allows for multiple instances while ensuring that they all share the same state. The monostate class uses static variables to store the shared state, and all instances of the class access and modify this shared state.
 
 
 \section{Structural Patterns}
 
+Structural patterns are concerned with the composition of classes and objects, and how to combine objects into bigger parts. They provide a way to create relationships between classes and objects to form larger structures while keeping the code flexible and maintainable.
+
+\subsection{Adapter}
+
+Also known as Wrapper, this pattern is used when a class needs to work with another class that has an incompatible interface. It allows for the conversion of one interface into another, so that the two classes can work together. A main class (the client) uses a target interface, but the adaptee class (the one that should be used) cannot implement the target interface directly. Therefore, an adapter class is created, which implements the target interface and contains an instance of the adaptee class. The adapter class translates the requests from the client into calls to the adaptee class, allowing them to work together. This pattern is shown in Listing~\ref{lst:adapter}.
+\begin{listing}
+    \begin{minted}{java}
+public interface Target {
+    void operation();
+}
+public class Adaptee {
+    public void specificOperation() {
+        // Implementation of the specific operation
+    }
+}
+public class Adapter implements Target {
+    private Adaptee adaptee;
+    public Adapter(Adaptee adaptee) {
+        this.adaptee = adaptee;
+    }
+    @Override
+    public void operation() {
+        adaptee.specificOperation();
+    }
+}
+    \end{minted}
+    \caption{Example of the Adapter pattern.}
+    \label{lst:adapter}
+\end{listing}
+
+This should be avoided when possible, as making the interfaces compatible can lead to a better design and a more maintainable code. However, there are cases where the adapter pattern can be useful, such as when working with third-party libraries that cannot be modified to fit the desired interface. For instance, the client could be a shopping cart application, and the interface could define a method for making a payment. Different payment gateways (e.g., PayPal, Stripe, Square) may have different APIs for processing payments, and each one may need an adapter class to translate the client's payment requests into the specific API calls required by each payment gateway.
+
+\subsection{Decorator}
+
+This pattern, also known as Wrapper\footnote{The name Wrapper is also used for the Adapter pattern, they should not be confused.}, is used when a class needs to add new functionality to an existing class without modifying its structure. It allows for the dynamic addition of behavior to an object, not affecting the behavior of other objects of the same class. The object that is being decorated is called the \texttt{ConcreteComponent}, which is wrapped by an interface with the same methods as the component, called \texttt{Component}. The decorator class also implements the \texttt{Component} interface and contains an instance of the \texttt{Component} that it decorates. All the methods of the decorator class call the corresponding methods of the decorated component. However, different concrete decorator classes inherit from the decorator class and can add new behavior before or after calling the methods of the decorated component. This pattern is shown in Figure~\ref{fig:decorator}.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{interface}[text width=5cm]{Component}{0,0}
+            \operation{+ operation()}
+        \end{interface}
+        \begin{class}[text width=5cm]{ConcreteComponent}{-4, -3}
+            \implement{Component}
+            \operation{+ operation()}
+        \end{class}
+        \begin{class}[text width=7cm]{Decorator}{3, -3}
+            \implement{Component}
+            \attribute{- component: Component}
+            \operation{+ Decorator(component: Component)}
+            \operation{+ operation()}
+        \end{class}
+        \begin{class}[text width=5cm]{ConcreteDecoratorA}{-1, -6}
+            \inherit{Decorator}
+            \operation{+ operation()}
+            \operation{+ addedBehaviorA()}
+        \end{class}
+        \begin{class}[text width=5cm]{ConcreteDecoratorB}{5, -6}
+            \inherit{Decorator}
+            \operation{+ operation()}
+            \operation{+ addedBehaviorB()}
+        \end{class}
+    \end{tikzpicture}
+    \caption{Decorator pattern.}
+    \label{fig:decorator}
+\end{figure}
+
+This way, new behavior can be added to an object dynamically at runtime, without affecting the behavior of other objects of the same class. Multiple decorators can also be combined to add multiple layers of behavior to an object, using for instance \texttt{new ConcreteDecoratorA(new ConcreteDecoratorB(component))}. Removing also the last decorator from the stack of decorators is also possible just returning the decorated component. However, it can lead to a large number of classes and the big limitation is the order of the decorator sequence, as decorators should not depend on the order in which they are applied to the component.
+
+\subsection{Proxy}
+
+This pattern is used when a class needs to control access to another class, which is called the \texttt{RealSubject}. The \texttt{RealSubject} is wrapped by an interface called \texttt{Subject} with the same methods as the real subject. Lastly, a proxy class implements the \texttt{Subject} interface and contains an instance of the real subject. The proxy class controls access to the real subject by implementing the same methods as the real subject, but adding additional behavior before or after calling the corresponding methods of the real subject. This pattern is shown in Figure~\ref{fig:proxy}.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{interface}[text width=5cm]{Subject}{0,0}
+            \operation{+ operation()}
+        \end{interface}
+        \begin{class}[text width=5cm]{RealSubject}{-4, -3}
+            \implement{Subject}
+            \operation{+ operation()}
+        \end{class}
+        \begin{class}[text width=7cm]{Proxy}{3, -3}
+            \implement{Subject}
+            \attribute{- realSubject: RealSubject}
+            \operation{+ Proxy(realSubject: RealSubject)}
+            \operation{+ operation()}
+        \end{class}
+    \end{tikzpicture}
+    \caption{Proxy pattern.}
+    \label{fig:proxy}
+\end{figure}
+
+This pattern can be used for various purposes, such as controlling access to a resource (e.g., a database or a file), adding additional functionality to an object (e.g., logging or caching), etc. This helps separating the concerns of the real subject and the additional behavior added by the proxy, making the code more modular and easier to maintain. However, latency is possibly added to the calls, and when the subject is not reachable should be taken into account.
+
+
+
+\subsection{Composite}
+
+This pattern is used when a class needs to represent a part-whole hierarchy, where individual objects and compositions of objects are treated uniformly. It allows for the creation of complex structures by combining simple objects into tree-like structures. The main component of this pattern is the \texttt{Component} interface, which defines the common methods for both individual objects (called \texttt{Leaf}) and compositions of objects (called \texttt{Composite}). Both classes implement the \texttt{Component} interface, allowing them to be treated uniformly by clients. The methods in the \texttt{Composite} class typically recursively run the method on all its children, which can be either \texttt{Leaf} or other \texttt{Composite} objects. This pattern is shown in Figure~\ref{fig:composite}.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{class}[text width=3cm]{Client}{-5, -0.55}
+        \end{class}
+        \begin{interface}[text width=5cm]{Component}{0, 0}
+            \operation{+ operation()}
+        \end{interface}
+        \begin{class}[text width=5cm]{Leaf}{-4, -3}
+            \implement{Component}
+            \operation{+ operation()}
+        \end{class}
+        \begin{class}[text width=7cm]{Composite}{4, -3}
+            \implement{Component}
+            \attribute{- children: Component[ ]}
+            \operation{+ operation()}
+            \operation{+ add(component: Component)}
+            \operation{+ remove(component: Component)}
+            \operation{+ getChild(index: int): Component}
+        \end{class}
+        \draw[-Stealth] (Client) -- (Component);
+    \end{tikzpicture}
+    \caption{Composite pattern.}
+    \label{fig:composite}
+\end{figure}
+
+Regarding where are the methods for adding, removing, and getting children defined, there are two common approaches:
+\begin{itemize}
+    \item Design for transparency: These methods are defined in the \texttt{Component} interface, which means that both \texttt{Leaf} and \texttt{Composite} classes must implement them. Transparency here is respected, as clients can treat both individual objects and compositions of objects uniformly, without needing to know whether they are dealing with a leaf or a composite. However, this approach leads to LSP violation and possible ISP violation, as the \texttt{Leaf} class may not need to implement these methods and may throw exceptions if they are called.
+    \item Design for safety: These methods are defined only in the \texttt{Composite} class, which means that only composite objects can have children. This approach respects LSP and ISP, but the client will have to check whether it is dealing with a leaf or a composite before calling these methods, which can lead to more complex and less maintainable code.
+\end{itemize}
+
+\subsection{Bridge}
+
+This pattern is used when a main class needs to be developped in $2$ independent dimensions\footnote{A higher number of dimensions is also possible just adding more bridges, but the most common case is when there are $2$ dimensions.}, and each dimension has different variations. usually, there is a main dimension (called the abstraction) and a secondary dimension (called the implementation). In a single hierarchy with $n$ abstractions and $m$ implementations, there would be $n \times m$ classes. However, by using the bridge pattern, we can reduce this to $1$ abstract main class (the abstraction), $1$ interface (the implementor), $n$ concrete abstractions, and $m$ concrete implementors, resulting in a total of $n + m + 2$ classes. The abstraction class contains a reference to the implementor interface, and the concrete abstractions and concrete implementors can be developed independently of each other. This pattern is shown in Figure~\ref{fig:bridge}.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{abstractclass}[text width=8cm]{Abstraction}{-1,0}
+            \attribute{- implementor: Implementor}
+            \operation{+ Abstraction(implementor: Implementor)}
+            \operation{+ operation()}
+        \end{abstractclass}
+        \begin{interface}[text width=4cm]{Implementor}{7, -0.5}
+            \operation{+ operationImpl()}
+        \end{interface}
+        \begin{class}[text width=5cm]{RefinedAbstraction}{-1, -4}
+            \inherit{Abstraction}
+            \operation{+ specOperation()}
+        \end{class}
+        \begin{class}[text width=3.5cm]{ConcreteImpA}{4.5, -4}
+            \implement{Implementor}
+            \operation{+ operationImpl()}
+        \end{class}
+        \begin{class}[text width=3.5cm]{ConcreteImpB}{9, -4}
+            \implement{Implementor}
+            \operation{+ operationImpl()}
+        \end{class}
+
+        \draw[-Stealth] (Abstraction) -- (Implementor);
+    \end{tikzpicture}
+    \caption{Bridge pattern.}
+    \label{fig:bridge}
+\end{figure}
+
+A possible example of this pattern is when we have a software application that needs to support multiple platforms (e.g., Windows, macOS, Linux) and multiple user interfaces (e.g., graphical, command-line). The abstraction would be the user interface, with its concrete abstractions being the different types of user interfaces (e.g., \texttt{GraphicalUI}, \texttt{CommandLineUI}), and the implementor would be the platform, with its concrete implementors being the different platforms (e.g., \texttt{WindowsPlatform}, \texttt{MacOSPlatform}, \texttt{LinuxPlatform}). This way, we can develop the user interfaces and the platform implementations independently of each other, and easily add new user interfaces or platforms without needing to modify existing code.
+
+Some of the advantages of this pattern are the separation of concerns between the abstraction and the implementation, the ease of adding new abstractions and implementations without modifying existing code, and the ability to change the implementation at runtime by changing the reference to the implementor in the abstraction.
+
+
+\subsection{Façade}
+
+A façade is a design pattern that provides a simplified interface to a complex system (usually a library or a set of classes\footnote{Usually not a replacement for a single class. That would be more similar to an adapter.}). It acts as a front-facing interface that hides the complexities of the underlying system and provides a more user-friendly interface for clients to interact with. The façade class typically contains methods that wrap the functionality of the underlying system, allowing clients to access the features of the system without needing to understand its internal workings. This pattern is useful for reducing coupling between clients and complex systems, and for providing a clear and concise interface for clients to use.
+
+
+
+\subsection{Flyweight}
+
+This pattern is used when saving RAM is esential, and it is done by sharing common parts of the state between multiple objects, rather than storing the same data in each object. In order to do so, the common parts of the state are separated from the unique parts of the state:
+\begin{itemize}
+    \item The common parts of the state are called the \emph{intrinsic state}, and they are stored in a shared object called the \texttt{Flyweight}.
+    \item The unique parts of the state are called the \emph{extrinsic state}, and they are stored in the client objects that use the flyweight objects. They are passed to the flyweight objects when they are needed, rather than being stored in the flyweight objects themselves.
+\end{itemize}
+
+This is really used in text editors, where each character can be represented as a flyweight object that contains the intrinsic state (e.g., the character code, font, size) and the extrinsic state (e.g., the position of the character in the document) is stored in the client objects that use the flyweight objects. This way, we can save a lot of memory by sharing the intrinsic state between multiple characters, while still allowing for unique extrinsic state for each character. However, it is really complex to implement correctly, as it requires careful management of the shared state and the extrinsic state, and it can lead to performance issues if not used properly.
 
 \section{Behavioral Patterns}
 
-- how to control / adapt the behavior of
-(collections of) objects
+Behavioral patterns are concerned with the control and the adaptation of the behavior of objects.
+
+\subsection{Template method}
+
+This pattern is used to separate a generic algorithm from its detailed context using \emph{inheritance}. The generic algorithm is defined in a method called the \texttt{template method}, which is implemented in an abstract class. The detailed context is provided by concrete subclasses that implement the specific steps of the algorithm. This pattern allows for the reuse of the generic algorithm while allowing for flexibility in the specific steps of the algorithm, as different concrete subclasses can provide different implementations for those steps. A concrete example of this pattern is shown in Figure~\ref{fig:template-method}.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{abstractclass}[text width=7cm]{BubbleSorter}{0,0}
+            \attribute{- length: int}
+            \operation{+ doSort()}
+            \operation{\# swap(i: int)}
+            \operation{\# outOfOrder(i: int): boolean}
+        \end{abstractclass}
+        \begin{class}[text width=5cm]{IntBubbleSorter}{-4, -4}
+            \inherit{BubbleSorter}
+            \attribute{- array: int[ ]}
+            \operation{+ sort(data: int[ ])}
+        \end{class}
+        \begin{class}[text width=5cm]{DoubleBubbleSorter}{4, -4}
+            \inherit{BubbleSorter}
+            \attribute{- array: double[ ]}
+            \operation{+ sort(data: double[ ])}
+        \end{class}
+    \end{tikzpicture}
+    \caption{Example of the Template Method pattern.}
+    \label{fig:template-method}
+\end{figure}
+
+\subsection{Strategy}
+
+This pattern is used to solve the same problem as the template method pattern, but using \emph{composition} instead of inheritance. The main class has a dependency injection to an interface (called handler) that contains the details. An example is shown in Figure~\ref{fig:strategy}.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{class}[text width=5cm]{BubbleSorter}{-1.2,-0.55}
+            \attribute{- handler: Handler}
+            \operation{+ BubbleSorter(handler: Handler)}
+            \operation{+ sort()}
+        \end{class}
+        \begin{interface}[text width=5.7cm]{Handler}{6, 0}
+            \operation{+ swap(i: int)}
+            \operation{+ outOfOrder(i: int): boolean}
+            \operation{+ getLength(): int}
+            \operation{+ getData(): Object[ ]}
+            \operation{+ setData(data: Object[ ])}
+        \end{interface}
+        \begin{class}[text width=5cm]{IntHandler}{3, -4.5}
+            \implement{Handler}
+            \attribute{- array: int[ ]}
+        \end{class}
+        \begin{class}[text width=5cm]{DoubleHandler}{9, -4.5}
+            \implement{Handler}
+            \attribute{- array: double[ ]}
+        \end{class}
+
+        \draw[-Stealth] (BubbleSorter) -- (Handler);
+    \end{tikzpicture}
+    \caption{Example of the Strategy pattern.}
+    \label{fig:strategy}
+\end{figure}
+
+Although both patterns solve the same problem, the strategy pattern is more flexible and promotes better code reuse, as it allows to reuse the same handler for other generic algorithms (in this case, it could be used in other sorting algorithms), whereas the template method pattern binds the specific implementation to the generic algorithm, which can lead to code duplication if we want to use the same specific implementation in different generic algorithms. However, the template method pattern can be simpler to implement and understand in some cases.
+
+\subsection{Null object}
+
+This pattern is used to hide the absence of an object without using null references (which can lead to multiple checks for null and code more difficult to understand). With this aim, a null object is created, which is an instance of a class that implements the same interface as the real object, but with empty or default behavior. The client code can then use the null object instead of checking for null references, which can lead to cleaner and more maintainable code. However, it can lead to hiding errors when they should be exposed.
+
+\subsection{Command}
+
+This pattern is used to decouple initiating an action from executing it (for instance, queuing a request or executing them remotely). It also allows to redo or undo an action. The main components of this pattern are:
+\begin{itemize}
+    \item The \texttt{Invoker} class, which is responsible for initiating the request (not the action). They typically have a method for setting the command to be executed and a method for executing the command. For instance, they could represent buttons in a UI.
+    \item The \texttt{Command} interface, which defines the method for executing the command. If undo functionality is needed, it can also store the state of the system before executing the command and define a method for undoing the command.
+    \item The \texttt{ConcreteCommand} classes, which implement the \texttt{Command} interface and define the specific actions to be executed. It does not execute the action itself, but rather calls the corresponding methods on the receiver object to perform the action. In case that the command needs parameters, they should be configured by the client and stored here.
+    \item The \texttt{Receiver} class, which is the object that performs the actual action when the command is executed. It typically has methods that correspond to the actions that can be performed.
+\end{itemize}
+
+As already explained, this pattern can be used in several ways, given that there is an object (\texttt{Command}) that represents the action itself that should be taken.
+\begin{itemize}
+    \item In order to queue requests: a list can be stored with the commands to be executed later.
+    \item In order to execute requests remotely: the command object can be serialized and sent over the network to be executed on a different machine.
+    \item In order to implement undo functionality: the command object can store the state of the system before executing the command, and define a method for undoing the command that restores the previous state.
+    \item In order to correctly implement undo/redo functionality: an stack can be used to keep track of the executed commands, allowing for multiple levels of undo and redo.
+    \item In order to implement logging functionality: the command object can log the details of the command being executed, such as the parameters and the time of execution, which can be useful for debugging and auditing purposes.
+    \item In order to implement macros: a macro command can be created, which is a command that contains a list of other commands to be executed in sequence. This allows for the creation of complex commands that can be executed with a single action.
+\end{itemize}
+
+
+This pattern is shown in Figure~\ref{fig:command}. An important disavantage of this pattern is that it may be difficult to detect who and why started an action. However, it allows an elegant approach to different problems, al already explained. In addition, the OCP is respected by simply adding new command classes, and the SRP is also respected decoupling classes that invoke the action from the classes that actually perform them.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{class}[text width=8cm]{Invoker}{0, 0}
+            \attribute{- command: Command}
+            \operation{+ setCommand(command: Command)}
+            \operation{+ executeCommand()}
+        \end{class}
+        \begin{interface}[text width=4cm]{Command}{7.5, -0.3}
+            \operation{+ execute()}
+        \end{interface}
+        \begin{class}[text width=8cm]{ConcreteCommand}{7.5, -3}
+            \implement{Command}
+            \attribute{- receiver: Receiver}
+            \operation{+ ConcreteCommand(receiver: Receiver)}
+            \operation{+ execute()}
+        \end{class}
+        \begin{class}[text width=4cm]{Receiver}{0, -3.6}
+            \operation{+ action()}
+        \end{class}
+        \draw[-Stealth] (Invoker) -- (Command);
+        \draw[-Stealth] (ConcreteCommand) -- (Receiver);
+    \end{tikzpicture}
+    \caption{Command pattern.}
+    \label{fig:command}
+\end{figure}
+
+\subsection{Observer}
+
+This pattern is used when a class (called the \texttt{Subject}) needs to notify other classes (called \texttt{Observers}) about changes in its state. This is for example used in the MVC pattern by the \texttt{Model} class, which notifies the \texttt{View} classes when its state changes. The main components of this pattern are:
+\begin{itemize}
+    \item The \texttt{Subject} class (also called \texttt{Publisher}), which maintains a list of its observers and provides methods for attaching, detaching, and notifying observers. This is usually an abstract class, as the specific implementation of the subject may vary.
+    \item The \texttt{Observer} class (also called \texttt{Subscriber}), which defines the method for receiving notifications from the subject. This is usually an interface.
+\end{itemize}
+
+It also has an alternative approach: if the subject needs to notify the observers really often, it can be more efficient to use a polling mechanism, where the observers periodically check the state of the subject for changes, rather than the subject actively notifying the observers. This approach can reduce the overhead of notifications, but it can also lead to increased latency in detecting changes and may not be suitable for all use cases.
+
+This pattern is shown in Figure~\ref{fig:observer}. Some of its advantages are that the OCP is respected, as dinamically changing the observers is allowed. However, the notification order is not guaranteed.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{abstractclass}[text width=7cm]{Subject}{0, 0}
+            \attribute{- observers: Observer[ ]}
+            \operation{+ subscribe(observer: Observer)}
+            \operation{+ unsubscribe(observer: Observer)}
+            \operation{+ notifyObservers()}
+        \end{abstractclass}
+
+        \begin{interface}[text width=4cm]{Observer}{7, -0.7}
+            \operation{+ update()}
+        \end{interface}
+
+        \begin{class}[text width=5cm]{ConcreteSubject}{0, -4.3}
+            \inherit{Subject}
+            \operation{+ getState()}
+            \operation{+ setState()}
+        \end{class}
+
+        \begin{class}[text width=5cm]{ConcreteObserver}{7, -4}
+            \implement{Observer}
+            \operation{+ update()}
+        \end{class}
+
+        \draw[-Stealth] (Subject) -- (Observer);
+    \end{tikzpicture}
+    \caption{Observer pattern.}
+    \label{fig:observer}
+\end{figure}
+
+\subsection{Visitor}
+
+This pattern is used to separate an algorithm from the objects on which it operates. It allows to perform an operation on all element of a collection (for example, a tree) but want to separate the operation from the elements. For instance, in a Composite Tree (where not all the nodes have the same type), we may want to perform an operation on all the nodes, but we want to separate the operation from the nodes.
+
+The main components of this pattern are:
+\begin{itemize}
+    \item The \texttt{Visitor} interface defines a \texttt{visit} method for each type of element in the object structure. This allows the visitor to perform different operations on different types of elements. If the programming language does not support method overloading, different methods can be defined for each type of element.
+    \item Each concrete visitor class represents a specific operation to be performed on the elements of the object structure. It implements the \texttt{Visitor} interface and provides the implementation for each \texttt{visit} method, defining the specific behavior for each type of element.
+    \item The \texttt{Element} interface defines an \texttt{accept} method that takes a visitor as an argument. 
+    \item Each concrete element class implements the \texttt{Element} interface and provides the implementation for the \texttt{accept} method. The \texttt{accept} method typically calls the corresponding \texttt{visit} method on the visitor, passing itself as an argument. This allows the visitor to perform the operation on the corresponding element.
+\end{itemize}
+
+This pattern is shown in Figure~\ref{fig:visitor}. Some of its advantages are that it allows to add new operations without modifying the existing element classes, which respects the OCP. However, every operation needs to know about every data structure, which can lead to a data structure difficult to extend. In addition, visitors typically need a lot of information about visited objects, possibly breaking encapsulation.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{interface}[text width=6cm]{Visitor}{0, 0}
+            \operation{+ visit(element: ElementA)}
+            \operation{+ visit(element: ElementB)}
+        \end{interface}
+        \begin{class}[text width=5cm]{ConcreteVisitor1}{-4, -3}
+            \implement{Visitor}
+            \operation{+ visit(element: ElementA)}
+            \operation{+ visit(element: ElementB)}
+        \end{class}
+        \begin{class}[text width=5cm]{ConcreteVisitor2}{4, -3}
+            \implement{Visitor}
+            \operation{+ visit(element: ElementA)}
+            \operation{+ visit(element: ElementB)}
+        \end{class}
+
+        \begin{interface}[text width=5cm]{Element}{0, -5}
+            \operation{+ accept(visitor: Visitor)}
+        \end{interface}
+
+        \begin{class}[text width=5cm]{ConcreteElementA}{-4, -7.5}
+            \implement{Element}
+            \operation{+ accept(visitor: Visitor)}
+        \end{class}
+
+        \begin{class}[text width=5cm]{ConcreteElementB}{4, -7.5}
+            \implement{Element}
+            \operation{+ accept(visitor: Visitor)}
+        \end{class}
+
+    \end{tikzpicture}
+    \caption{Visitor pattern.}
+    \label{fig:visitor}
+\end{figure}
+
+
+\subsection{State}
+
+This pattern is used to separate the behavior of an object from its state. It allows an object to change its behavior when its internal state changes, without needing to modify the object's class. This avoids case distinction in the code, which leads to cleaner code.
+
+The main class is usually called \texttt{Context}, and it has a reference to an interface called \texttt{State}, which represents the different states of the object. The \texttt{Context} class is programmed as usual, and the methods that depend on the state are added to the \texttt{State} interface. Each concrete state should implement the \texttt{State} interface and provide the specific behavior for that state. Two aspects should be taken into account:
+\begin{itemize}
+    \item Changing the state should be possible. Whether the state change is triggered by the context or by the state itself, the context should have a method for changing the current state.
+    \item The context is usually passed to the state' methods so that they can access variables with lifetimes longer than state objects.
+\end{itemize}
+
+This pattern is shown in Figure~\ref{fig:state}. Some of its advantages are that it allows to add new states without modifying the existing code, which respects the OCP. In addition, it can lead to cleaner code by avoiding case distinction based on the state; and state transitions are explicit.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{class}[text width=5.5cm]{Context}{0, 0}
+            \attribute{- state: State}
+            \operation{+ Context(state: State)}
+            \operation{+ request()}
+            \operation{+ changeState(state: State)}
+        \end{class}
+        \begin{interface}[text width=5.5cm]{State}{7, -0.5}
+            \operation{+ handle(context: Context)}
+        \end{interface}
+        \begin{class}[text width=5.5cm]{ConcreteStateA}{3, -4}
+            \implement{State}
+            \operation{+ handle(context: Context)}
+        \end{class}
+        \begin{class}[text width=5.5cm]{ConcreteStateB}{9, -4}
+            \implement{State}
+            \operation{+ handle(context: Context)}
+        \end{class}
+        \draw[-Stealth] (Context) -- (State);
+    \end{tikzpicture}
+    \caption{State pattern.}
+    \label{fig:state}
+\end{figure}
+
+
+\subsection{Iterator}
+
+The iterator pattern is used to provide a way to access the elements of an aggregate object sequentially without exposing its underlying representation. It allows for the traversal of a collection of objects without needing to know the details of how the collection is implemented.
+
+An interface called \texttt{Iterable} defines a method for creating an iterator object, which is responsible for traversing the collection. Every collection class that implements the \texttt{Iterable} interface must provide an implementation for this method, which typically returns an instance of a class that implements the \texttt{Iterator} interface. The \texttt{Iterator} interface defines methods for checking if there are more elements to traverse (e.g., \texttt{hasNext()}) and for retrieving the next element in the collection (e.g., \texttt{next()}). This pattern allows for a consistent way to traverse different types of collections, and it promotes encapsulation by hiding the internal structure of the collection from the client code. This pattern is shown in Figure~\ref{fig:iterator}.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{interface}[text width=5cm]{Iterable}{0, -0.2}
+            \operation{+ createIterator(): Iterator}
+        \end{interface}
+        \begin{interface}[text width=5cm]{Iterator}{8, 0}
+            \operation{+ hasNext(): boolean}
+            \operation{+ next(): Object}
+        \end{interface}
+        \begin{class}[text width=5cm]{ConcreteCollection}{0, -4.4}
+            \implement{Iterable}
+            \operation{+ createIterator(): Iterator}
+        \end{class}
+        \begin{class}[text width=9.3cm]{ConcreteIterator}{8, -4}
+            \implement{Iterator}
+            \operation{+ ConcreteIterator(collection: ConcreteCollection)}
+            \operation{+ hasNext(): boolean}
+            \operation{+ next(): Object}
+        \end{class}
+
+        \draw[-Stealth] (Iterable) -- (Iterator);
+        \draw[-Stealth] (ConcreteCollection) -- (ConcreteIterator);
+    \end{tikzpicture}
+    \caption{Iterator pattern.}
+    \label{fig:iterator}
+\end{figure}
+
+Some aspects that should be taken into account are:
+\begin{itemize}
+    \item Using proxies, a Lazy Evaluation is possible. It is useful when the collection is large and we want to avoid loading all the elements into memory at once.
+    \item When a Null Object is needed to denote that there are no elements in a collection, it can be implemented as a special case of the iterator that always returns false for \texttt{hasNext()} and throws an exception for \texttt{next()}.
+\end{itemize}
+
+Some advantages of this pattern are that it promotes encapsulation by hiding the internal structure of the collection from the client code, and it allows for a consistent way to traverse different types of collections. However, depending on the programming language it can be difficult to implement correctly.
+
+
+
+
+\subsection{Other behavioral patterns}
+
+Other behavioral patterns include:
+\begin{itemize}
+    \item Chain of Responsibility
+    \item Interpreter
+    \item Mediator
+    \item Memento
+\end{itemize}
