@@ -8,9 +8,9 @@ The learning cycle of design patterns usually has two stages:
     \item \ul{The Phase of Disillusionment}: In this phase, developers realize that not all design patterns are suitable for every situation and that overusing them can lead to unnecessarily complex code. They learn to apply design patterns judiciously, using them only when they provide a clear benefit.
 \end{enumerate}
 
-Therefore, it is important to understand the context in which a design pattern is applicable and to use it appropriately to solve specific problems in software design. Their bad consequences should also be taken into account.
+Therefore, it is important to understand the context in which a design pattern is applicable and to use it appropriately to solve specific problems in software design. Their bad consequences should also be taken into account.\\
 
-The patterns can be classified into different categories, which will be developed in the following sections. They are all explained in detail in \myhref{https://refactoring.guru/design-patterns}{this website}.
+The most famous patterns are the ones described in the book \myhref{https://www.amazon.com/gp/product/0201633612/}{Design Patterns: Elements of Reusable Object-Oriented Software}, which are known as the \emph{Gang of Four} (GoF) design patterns (the authors of the book). However, there are many other design patterns that have been developed since then, and new ones are still being created as software design evolves. In the following sections, we will cover some of the most commonly used design patterns (esentially the GoF patterns, but also some others). They are also explained in detail in \myhref{https://refactoring.guru/design-patterns}{this website}.
 
 \begin{comment}
 
@@ -397,14 +397,14 @@ Structural patterns are concerned with the composition of classes and objects, a
 
 \subsection{Adapter}
 
-Also known as Wrapper, this pattern is used when a class needs to work with another class that has an incompatible interface. It allows for the conversion of one interface into another, so that the two classes can work together. A main class (the client) uses a target interface, but the adaptee class (the one that should be used) cannot implement the target interface directly. Therefore, an adapter class is created, which implements the target interface and contains an instance of the adaptee class. The adapter class translates the requests from the client into calls to the adaptee class, allowing them to work together. This pattern is shown in Listing~\ref{lst:adapter}.
+Also known as Wrapper, this pattern is used when a class needs to work with another class that has an incompatible interface. It allows for the conversion of one interface into another, so that the two classes can work together. A main class (the client) uses a target interface, but the adaptee class (the one that should be used) cannot implement the target interface directly. Therefore, an adapter class is created, which implements the target interface and contains an instance of the adaptee class. The adapter class translates the requests (both the data and the methods) from the client into calls to the adaptee class, allowing them to work together. This pattern is shown in Listing~\ref{lst:adapter}.
 \begin{listing}
     \begin{minted}{java}
 public interface Target {
-    void operation();
+    void operation(data);
 }
 public class Adaptee {
-    public void specificOperation() {
+    public void specificOperation(specialData) {
         // Implementation of the specific operation
     }
 }
@@ -414,8 +414,14 @@ public class Adapter implements Target {
         this.adaptee = adaptee;
     }
     @Override
-    public void operation() {
-        adaptee.specificOperation();
+    public void operation(data) {
+        // Translate the data and call the specific operation of the adaptee
+        specialData = translateData(data);
+        adaptee.specificOperation(specialData);
+    }
+
+    private SpecialData translateData(Data data) {
+        // Implementation of the data translation
     }
 }
     \end{minted}
@@ -427,7 +433,7 @@ This should be avoided when possible, as making the interfaces compatible can le
 
 \subsection{Decorator}
 
-This pattern, also known as Wrapper\footnote{The name Wrapper is also used for the Adapter pattern, they should not be confused.}, is used when a class needs to add new functionality to an existing class without modifying its structure. It allows for the dynamic addition of behavior to an object, not affecting the behavior of other objects of the same class. The object that is being decorated is called the \texttt{ConcreteComponent}, which is wrapped by an interface with the same methods as the component, called \texttt{Component}. The decorator class also implements the \texttt{Component} interface and contains an instance of the \texttt{Component} that it decorates. All the methods of the decorator class call the corresponding methods of the decorated component. However, different concrete decorator classes inherit from the decorator class and can add new behavior before or after calling the methods of the decorated component. This pattern is shown in Figure~\ref{fig:decorator}.
+This pattern, also known as Wrapper\footnote{The name Wrapper is also used for the Adapter pattern, they should not be confused.}, is used when a class needs to add new functionality to an existing class without modifying its structure. It allows for the dynamic addition of behavior to an object, not affecting the behavior of other objects of the same class. The object that is being decorated is called the \texttt{ConcreteComponent}, which is wrapped by an interface with the same methods as the component, called \texttt{Component}. The \texttt{Decorator} class also implements the \texttt{Component} interface and contains an instance of the \texttt{Component} that it decorates. All the methods of the decorator class call the corresponding methods of the decorated component. However, different concrete decorator classes inherit from the decorator class and can add new behavior before or after calling the methods of the decorated component. This pattern is shown in Figure~\ref{fig:decorator}.
 \begin{figure}
     \centering
     \begin{tikzpicture}
@@ -485,7 +491,27 @@ This pattern is used when a class needs to control access to another class, whic
     \label{fig:proxy}
 \end{figure}
 
-This pattern can be used for various purposes, such as controlling access to a resource (e.g., a database or a file), adding additional functionality to an object (e.g., logging or caching), etc. This helps separating the concerns of the real subject and the additional behavior added by the proxy, making the code more modular and easier to maintain. However, latency is possibly added to the calls, and when the subject is not reachable should be taken into account.
+This pattern can be used for various purposes, such as:
+\begin{itemize}
+    \item Controlling access to a resource (Protection Proxy).
+    
+    This can be used to restrict access to a resource (database, file, etc.) based on certain conditions, such as user permissions or network availability. The proxy can check the conditions before allowing access to the real subject, and can deny access if the conditions are not met.
+    \item Lazy initialization (Virtual Proxy)
+    
+    In this case, the proxy is used to delay the creation of the real subject until it is actually needed, improving performance and reducing resource usage. If an object is only used in certain conditions, the proxy can create the real subject only when those conditions are met, rather than creating it at the time of the proxy's instantiation.
+
+    \item Logging or monitoring (Logging Proxy)
+    
+    \item Caching request results (Caching Proxy)
+    
+    This can be used to cache the results of expensive operations, so that subsequent calls to the same operation return the cached result instead of re-executing the operation.
+
+    \item Reference management
+    
+    The proxy can keep track of clients that obtained a reference to a heavyweight object or its results. From time to time, the proxy may go over the clients and check whether they are still active. If the client list gets empty, the proxy might dismiss the service object and free the underlying system resources.
+\end{itemize}
+
+This helps separating the concerns of the real subject and the additional behavior added by the proxy, making the code more modular and easier to maintain. However, latency is possibly added to the calls, and when the subject is not reachable should be taken into account.
 
 
 
@@ -526,7 +552,7 @@ Regarding where are the methods for adding, removing, and getting children defin
 
 \subsection{Bridge}
 
-This pattern is used when a main class needs to be developped in $2$ independent dimensions\footnote{A higher number of dimensions is also possible just adding more bridges, but the most common case is when there are $2$ dimensions.}, and each dimension has different variations. usually, there is a main dimension (called the abstraction) and a secondary dimension (called the implementation). In a single hierarchy with $n$ abstractions and $m$ implementations, there would be $n \times m$ classes. However, by using the bridge pattern, we can reduce this to $1$ abstract main class (the abstraction), $1$ interface (the implementor), $n$ concrete abstractions, and $m$ concrete implementors, resulting in a total of $n + m + 2$ classes. The abstraction class contains a reference to the implementor interface, and the concrete abstractions and concrete implementors can be developed independently of each other. This pattern is shown in Figure~\ref{fig:bridge}.
+This pattern is used when a main class needs to be developped in two independent dimensions\footnote{A higher number of dimensions is also possible just adding more bridges, but the most common case is when there are $2$ dimensions.}, and each dimension has different variations. usually, there is a main dimension (called the abstraction) and a secondary dimension (called the implementation). In a single hierarchy with $n$ abstractions and $m$ implementations, there would be $n \times m$ classes. However, by using the bridge pattern, we can reduce this to one abstract main class (the abstraction), one interface (the implementor), $n$ concrete abstractions, and $m$ concrete implementors, resulting in a total of $n + m + 2$ classes. The abstraction class contains a reference to the implementor interface, and the concrete abstractions and concrete implementors can be developed independently of each other. This pattern is shown in Figure~\ref{fig:bridge}.
 \begin{figure}
     \centering
     \begin{tikzpicture}
@@ -562,9 +588,9 @@ A possible example of this pattern is when we have a software application that n
 Some of the advantages of this pattern are the separation of concerns between the abstraction and the implementation, the ease of adding new abstractions and implementations without modifying existing code, and the ability to change the implementation at runtime by changing the reference to the implementor in the abstraction.
 
 
-\subsection{Façade}
+\subsection{Facade}
 
-A façade is a design pattern that provides a simplified interface to a complex system (usually a library or a set of classes\footnote{Usually not a replacement for a single class. That would be more similar to an adapter.}). It acts as a front-facing interface that hides the complexities of the underlying system and provides a more user-friendly interface for clients to interact with. The façade class typically contains methods that wrap the functionality of the underlying system, allowing clients to access the features of the system without needing to understand its internal workings. This pattern is useful for reducing coupling between clients and complex systems, and for providing a clear and concise interface for clients to use.
+A facade is a design pattern that provides a simplified interface to a complex system (usually a library or a set of classes\footnote{Usually not a replacement for a single class. That would be more similar to an adapter.}). It acts as a front-facing interface that hides the complexities of the underlying system and provides a more user-friendly interface for clients to interact with. The facade class typically contains methods that wrap the functionality of the underlying system, allowing clients to access the features of the system without needing to understand its internal workings. This pattern is useful for reducing coupling between clients and complex systems, and for providing a clear and concise interface for clients to use.
 
 
 
@@ -615,12 +641,12 @@ This pattern is used to solve the same problem as the template method pattern, b
 \begin{figure}
     \centering
     \begin{tikzpicture}
-        \begin{class}[text width=5cm]{BubbleSorter}{-1.2,-0.55}
+        \begin{class}[text width=7cm]{BubbleSorter}{-1.2,-0.65}
             \attribute{- handler: Handler}
             \operation{+ BubbleSorter(handler: Handler)}
             \operation{+ sort()}
         \end{class}
-        \begin{interface}[text width=5.7cm]{Handler}{6, 0}
+        \begin{interface}[text width=5.7cm]{Handler}{7, 0}
             \operation{+ swap(i: int)}
             \operation{+ outOfOrder(i: int): boolean}
             \operation{+ getLength(): int}
@@ -642,15 +668,15 @@ This pattern is used to solve the same problem as the template method pattern, b
     \label{fig:strategy}
 \end{figure}
 
-Although both patterns solve the same problem, the strategy pattern is more flexible and promotes better code reuse, as it allows to reuse the same handler for other generic algorithms (in this case, it could be used in other sorting algorithms), whereas the template method pattern binds the specific implementation to the generic algorithm, which can lead to code duplication if we want to use the same specific implementation in different generic algorithms. However, the template method pattern can be simpler to implement and understand in some cases.
+Although both patterns solve the same problem, the strategy pattern is more flexible and promotes better code reuse, as it allows to reuse the same handler for other generic algorithms (in this case, it could be used in other sorting algorithms), whereas the template method pattern binds the specific implementation to the generic algorithm, which can lead to code duplication. In addition, the strategy pattern allows for changing the behavior of the algorithm at runtime by changing the handler, while the template method pattern requires creating new subclasses to change the behavior of the algorithm. However, the template method pattern can be simpler to implement and understand in some cases.
 
 \subsection{Null object}
 
-This pattern is used to hide the absence of an object without using null references (which can lead to multiple checks for null and code more difficult to understand). With this aim, a null object is created, which is an instance of a class that implements the same interface as the real object, but with empty or default behavior. The client code can then use the null object instead of checking for null references, which can lead to cleaner and more maintainable code. However, it can lead to hiding errors when they should be exposed.
+This pattern is used to hide the absence of an object without using null references (which can lead to multiple checks for null and code more difficult to understand). With this aim, a null object is created, which is an instance of a class that implements the same interface as the real object, but with empty or default behavior. The client code can then use the null object instead of checking for null references, leading to cleaner and more maintainable code. However, it can ease the hiding of errors when they should be exposed.
 
 \subsection{Command}
 
-This pattern is used to decouple initiating an action from executing it (for instance, queuing a request or executing them remotely). It also allows to redo or undo an action. The main components of this pattern are:
+This pattern is used to decouple initiating an action from executing it (for instance, to queue a request or execute it remotely). It also allows to redo or undo an action. The main components of this pattern are:
 \begin{itemize}
     \item The \texttt{Invoker} class, which is responsible for initiating the request (not the action). They typically have a method for setting the command to be executed and a method for executing the command. For instance, they could represent buttons in a UI.
     \item The \texttt{Command} interface, which defines the method for executing the command. If undo functionality is needed, it can also store the state of the system before executing the command and define a method for undoing the command.
@@ -707,7 +733,7 @@ This pattern is used when a class (called the \texttt{Subject}) needs to notify 
 
 It also has an alternative approach: if the subject needs to notify the observers really often, it can be more efficient to use a polling mechanism, where the observers periodically check the state of the subject for changes, rather than the subject actively notifying the observers. This approach can reduce the overhead of notifications, but it can also lead to increased latency in detecting changes and may not be suitable for all use cases.
 
-This pattern is shown in Figure~\ref{fig:observer}. Some of its advantages are that the OCP is respected, as dinamically changing the observers is allowed. However, the notification order is not guaranteed.
+This pattern is shown in Figure~\ref{fig:observer}. Some of its advantages are that the OCP is respected, as dinamically changing the observers is allowed. However, the notification order is not guaranteed, which may lead to problems if observers need to consume any data.
 \begin{figure}
     \centering
     \begin{tikzpicture}
@@ -742,7 +768,6 @@ This pattern is shown in Figure~\ref{fig:observer}. Some of its advantages are t
 \subsection{Visitor}
 
 This pattern is used to separate an algorithm from the objects on which it operates. It allows to perform an operation on all element of a collection (for example, a tree) but want to separate the operation from the elements. For instance, in a Composite Tree (where not all the nodes have the same type), we may want to perform an operation on all the nodes, but we want to separate the operation from the nodes.
-
 The main components of this pattern are:
 \begin{itemize}
     \item The \texttt{Visitor} interface defines a \texttt{visit} method for each type of element in the object structure. This allows the visitor to perform different operations on different types of elements. If the programming language does not support method overloading, different methods can be defined for each type of element.
@@ -863,7 +888,7 @@ An interface called \texttt{Iterable} defines a method for creating an iterator 
 
 Some aspects that should be taken into account are:
 \begin{itemize}
-    \item Using proxies, a Lazy Evaluation is possible. It is useful when the collection is large and we want to avoid loading all the elements into memory at once.
+    \item Using proxies, a Lazy Evaluation is possible by creating an iterator that only retrieves the next element when the \texttt{next()} method is called, rather than retrieving all elements at once. This can be useful for large collections or for collections that are expensive to retrieve.
     \item When a Null Object is needed to denote that there are no elements in a collection, it can be implemented as a special case of the iterator that always returns false for \texttt{hasNext()} and throws an exception for \texttt{next()}.
 \end{itemize}
 
