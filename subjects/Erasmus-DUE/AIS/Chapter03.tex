@@ -1,0 +1,75 @@
+\chapter{Transparency}
+
+During this chapter, we will discuss the concept of transparency in the context of Image Synthesis. Transparency is a crucial aspect of computer graphics that allows for the creation of images with varying levels of opacity. It enables the blending of different layers and the creation of complex visual effects.\\
+
+Usually, we render with the depth test enabled, resulting in a final image where only the closest fragments are visible. In order to allow transparency, this test is disabled and the fragments are blended together. The blending process is controlled by the blending function and the blending factors, as explained in Section~\ref{sec:blending}.
+\begin{itemize}
+    \item The \emph{Blending Function} is the addition.
+    \item The source blending factor is the alpha value of the fragment, and the destination blending factor is one minus the alpha value of the fragment. This allows for the creation of semi-transparent effects, where the color of the fragment is blended with the color of the background based on the alpha value of the fragment in front of it.
+\end{itemize}
+
+Therefore, the blending operation can be expressed as in Equation~\ref{eq:blending}, and the code needed is shown in Listing~\ref{lst:blending-code}.
+\begin{equation}\label{eq:blending}
+    C_{\text{final}} = \alpha_\text{source} \cdot C_{\text{source}} + (1 - \alpha_\text{source}) \cdot C_{\text{destination}}
+\end{equation}
+\begin{listing}
+    \centering
+    \begin{minted}{c++}
+glEnable(GL_BLEND);
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+glBlendEquation(GL_FUNC_ADD);
+    \end{minted}
+    \caption{Code for enabling blending with the specified blending function and factors.}
+    \label{lst:blending-code}
+\end{listing}
+
+
+However, this has a big problem: \emph{blending is not commutative}. This means that the order in which the fragments are blended together matters, and it can lead to incorrect results if the fragments are not blended in the correct order. To solve this problem, we need to sort the fragments based on their depth values before blending them together. Therefore, the general approach is:
+\begin{enumerate}
+    \item Render all opaque objects first, with the depth test enabled and blending disabled.
+    \item Disable the test buffer updates, but enable the depth test and blending.
+    \item Render all transparent objects, sorted from farthest to nearest, with blending enabled.
+\end{enumerate}
+
+However, this approach has a big problem: the sorting step can be computationally expensive (or even not possible) in scenes with a large number of transparent objects or with complex geometry. For instance, in a situation where three transparent objects are intersecting each other, it may not be possible to determine a clear sorting order for the fragments. In such cases, alternative techniques such as depth peeling can be used to achieve correct blending results without the need for sorting.
+
+\section{Depth Peeling}
+
+Depth peeling is a technique used to achieve correct blending results for transparent objects without the need for sorting. It works by rendering the scene multiple times, each time peeling away the closest layer of fragments. This allows for the correct blending of fragments based on their depth values, even in cases where sorting is not possible. The DP algorithm uses two depth buffers: one for storing the depth values of the closest fragments (reference), and another for storing the depth values of the next closest fragments (the one used in each layer). The algorithm can be summarized as follows:
+\begin{enumerate}
+    \item In the first pass, render the scene with the depth test enabled and blending disabled, and store the depth values of the closest fragments in the reference depth buffer.
+    
+    This first layer of fragments is stored.
+
+    \item In the following passes, the depth buffer from the previous pass is used to peel away fragments with depth values less than or equal to the stored depth values. This allows to ignore the fragments that have already been rendered in the previous passes.
+    
+    All other fragments are rendered using the working depth buffer, and the depth values of the next closest fragments are stored in the reference depth buffer.
+
+    Each layer of fragments is also stored.
+\end{enumerate}
+
+This process is repeated until all layers of fragments have been rendered and blended together. The final result is a correctly blended image of the transparent objects, without the need for sorting. However, obtaining the Depth Complexity (number of layers) is not trivial.
+\subsection{Depth Complexity}
+
+There are several techniques to obtain the depth complexity of a scene, which is the number of layers that need to be rendered in the depth peeling algorithm. Some of these techniques include:
+\begin{itemize}
+    \item The ``logic'' approach. Rendering the scene with the depth test disabled and incrementing the stencil buffer for each fragment. The maximum value in the stencil buffer will give the depth complexity of the scene.
+    
+    In order to make it more efficient, the maximum value in the stencil buffer can be obtained using a reduction operation, which is a parallel algorithm that obtains the maximum value in a buffer by recursively dividing the buffer into smaller sub-buffers and comparing the values in each sub-buffer to find the maximum value.
+
+    \item Using \emph{Occlusion Queries}. This technique involves using occlusion queries to ask the GPU how many fragments were rasterized into pixels in the last \texttt{draw} call.
+    
+    We just use the algorithm described in the previous section, but each time we ask the GPU if any fragments were rasterized in the last pass. If no fragments were rasterized, we can stop the algorithm, as we have already rendered all the layers of fragments in the scene.
+\end{itemize}
+
+\subsection{Abuse of the MSAA}
+
+An important drawback of the depth peeling algorithm is that it requires multiple rendering passes, which can be computationally expensive. However, the MSAA can be abused to achieve a the same effect requiring much less rendering passes.\\
+
+Multisample Anti-Aliasing (MSAA) is a technique used to improve the quality of rendered images by reducing aliasing artifacts. It works by sampling multiple points within each pixel and averaging the results to produce a smoother final image. However, MSAA can also be used to extract multiple layers of fragments in a single rendering pass. Instead of saving multiple samples per pixel, we can save multiple layers of fragments in the samples.\\
+
+The stencil buffer is used to control which layer of fragments is being stored in each sample. We set the stencil buffer associated with the sample $0$ to $2$, the stencil buffer associated with the sample $1$ to $3$, and so on. Then, for each layer of fragments, it is written to the sample whose stencil buffer value is $2$, and then the stencil buffer value is decremented by $1$ for every sample.\\
+
+The initial stencil buffer values start from $2$ in order to control that no more layers are stored than the number of samples available. When all the samples have been used, the stencil buffer values will $0$ for all the examples but the last one, which will have a stencil buffer value of $1$. If all the values are $0$, it means that an overflow has occurred.\\
+
+Lastly, if more layers are needed than the number of samples available, multiple rendering passes are required. The initial stencil buffer values can be set to $kn+2$, where $k$ is the number of samples available and $n$ is the number of rendering passes already performed. This way, we can skip the first $kn$ layers of fragments, which have already been rendered in the previous passes, and start rendering the next layers of fragments directly in the samples. This is limited by the maximum value of the stencil buffer, which is $255$ in most implementations, so the maximum number of layers that can be rendered using this technique is $255$.

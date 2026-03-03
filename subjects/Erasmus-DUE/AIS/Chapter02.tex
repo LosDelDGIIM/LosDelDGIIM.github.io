@@ -1,18 +1,206 @@
 \chapter{Reflection}
 
+During this chapter, we will discuss how can reflections be simulated in computer graphics. We will start with the simplest case of planar reflections, and then we will move to more complex cases of non-planar reflections and refraction.
+
 \section{Planar Reflection}
+
+A planar reflection is a reflection that occurs on a flat surface, such as a mirror or a calm body of water. Let's first approach it from a mathematical perspective, and then we will see how it can be implemented in computer graphics. Let $p$ be a point in a surface with normal vector $N$, and let $q$ be the point that we want to reflect over the surface, obtaining the reflected point $q_m$. Let $\alpha$ be the angle between the vector $\vec{pq}$ and the normal vector $N$. Our aim is to find the coordinates of $q_m$ given the coordinates of $p$, $q$, and $N$. The situation is illustrated in the Figure~\ref{fig:planar_reflection}.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        % Draw the surface
+        \draw[thick] (-4,0) -- (4,0);
+
+        \draw[fill] (0,0) circle (2pt) node[below] {$p$};
+        \draw[-Stealth] (0,0) -- (0,2) node[above] {$N$};
+
+        \draw[-Stealth, blue] (0,0) -- (-2,1) node[above] {\color{blue}$q$};
+        \draw[Stealth-Stealth, dashed, red] (-2,1) -- (-2,-1) node[below] {\color{red}$q_m$};
+
+        \node (P) at (0,0) {};
+        \node (Q) at (-2,1) {};
+        \node (N) at (0,2) {};
+        \draw pic[
+            -Stealth,
+            angle radius=7mm,
+            angle eccentricity=1.3,
+            pic text={$\alpha$}
+        ] {angle=N--P--Q};
+
+    \end{tikzpicture}
+
+    \caption{Planar reflection.}
+    \label{fig:planar_reflection}
+\end{figure}
+
+Given that the surface is planar, we can $q_m$ as:
+\begin{equation*}
+    q_m = q - 2N \cdot \text{distance}(q, \text{plane})
+\end{equation*}
+
+In order to find that distance, we have:
+\begin{multline*}
+    \left.\begin{array}{c}
+        N\cdot \vec{pq} = \|N\|\cdot \|\vec{pq}\| \cdot \cos(\alpha) = 1\cdot \|\vec{pq}\| \cdot \cos(\alpha)\\ \\
+        \cos(\alpha) = \dfrac{\text{adjacent}}{\text{hypotenuse}} = \dfrac{\text{distance}(q, \text{plane})}{\|\vec{pq}\|}
+    \end{array}\right\} \implies \\ \implies \text{distance}(q, \text{plane}) = \cos(\alpha) \cdot \|\vec{pq}\| = N\cdot \vec{pq}
+\end{multline*}
+
+Therefore, we can express $q_m$ as:
+\begin{align*}
+    q_m &= q - 2N (N\cdot \vec{pq})\\
+    &= q - 2N  (N\cdot (q-p))\\
+    &= q - 2N  (N_x(q_x-p_x) + N_y(q_y-p_y) + N_z(q_z-p_z))
+\end{align*}
+
+We should take into account that this formula is valid in $3D$. Therefore, the coordinates of $q_m$ can be expressed as:
+\begin{align*}
+    q_{m_x} &= q_x - 2N_x  (N_x(q_x-p_x) + N_y(q_y-p_y) + N_z(q_z-p_z))\\
+    &= (1-2N_x^2)q_x + (-2N_xN_y)q_y + (-2N_xN_z)q_z + 2N_x(N_xp_x +N_yp_y + N_zp_z)\\
+    q_{m_y} &= q_y - 2N_y  (N_x(q_x-p_x) + N_y(q_y-p_y) + N_z(q_z-p_z))\\
+    &= (-2N_yN_x)q_x + (1-2N_y^2)q_y + (-2N_yN_z)q_z + 2N_y(N_xp_x +N_yp_y + N_zp_z)\\
+    q_{m_z} &= q_z - 2N_z  (N_x(q_x-p_x) + N_y(q_y-p_y) + N_z(q_z-p_z))\\
+    &= (-2N_zN_x)q_x + (-2N_zN_y)q_y + (1-2N_z^2)q_z + 2N_z(N_xp_x +N_yp_y + N_zp_z)
+\end{align*}
+
+Using $k=N\cdot p$ (treating $p$ as a vector), we can express $q_m$ as:
+\begin{align*}
+    q_{m_x} &= (1-2N_x^2)q_x + (-2N_xN_y)q_y + (-2N_xN_z)q_z + 2N_xk\\
+    q_{m_y} &= (-2N_yN_x)q_x + (1-2N_y^2)q_y + (-2N_yN_z)q_z + 2N_yk\\
+    q_{m_z} &= (-2N_zN_x)q_x + (-2N_zN_y)q_y + (1-2N_z^2)q_z + 2N_zk
+\end{align*}
+
+Therefore, we have the following matrix representation of the planar reflection:
+\begin{equation*}
+    \begin{pmatrix}
+        q_{m_x}\\
+        q_{m_y}\\
+        q_{m_z}\\
+        1
+    \end{pmatrix} =
+    \begin{pmatrix}
+        1-2N_x^2 & -2N_xN_y & -2N_xN_z & 2N_xk\\
+        -2N_yN_x & 1-2N_y^2 & -2N_yN_z & 2N_yk\\
+        -2N_zN_x & -2N_zN_y & 1-2N_z^2 & 2N_zk\\
+        0 & 0 & 0 & 1
+    \end{pmatrix}
+    \begin{pmatrix}
+        q_x\\
+        q_y\\
+        q_z\\
+        1
+    \end{pmatrix}
+\end{equation*}
+
+This matrix can be used to perform the planar reflection in computer graphics. We can apply this transformation to the vertices of the objects that we want to reflect, and then we can render the reflected objects as usual.\\
+
+One first approach to implement planar reflections in computer graphics would be:
+\begin{enumerate}
+    \item Render the reflected objects using the planar reflection transformation.
+    \item Disable color buffer writing, so that the mirror surface is not rendered (just the depth buffer is updated).
+    \item Render the mirror surface.
+    \item Enable color buffer writing.
+    \item Render the original objects.
+\end{enumerate}
+
+However, this approach has some issues, such as the fact that the reflected objects are not clipped by the mirror surface. The stencil buffer can be used to solve this issue, by marking the pixels that belong to the mirror surface and then using this information to clip the reflected objects. In addition, a clip plane is used to avoid rendering the parts of the reflected objects that are in front of the mirror surface.
+% // TODO: Add more details about the implementation of planar reflections using the stencil buffer and clip planes.
+
+    
 
 \subsection{Recursive Reflections}
 
+Recursive reflections occur when an object is reflected in a mirror, and then this reflection is reflected again in another mirror, and so on. This can lead to an infinite number of reflections, which can be computationally expensive to render. One way to handle recursive reflections is to limit the number of reflections that are rendered, which will reduce the computational cost while still providing a visually appealing result. However, this approach can lead to artifacts, such as the fact that the reflections will not be accurate after a certain number of reflections. This leads to the need of finding alternative solutions to handle recursive reflections which can provide a more accurate result while still being computationally efficient.
+
 \subsubsection{Alternative Solution}
+An
+ alternative solution to handle planar reflections is to use a technique called ``render-to-texture''. This technique involves reflecting the camera across the mirror surface (not only the position, but also the direction), and then rendering the reflected scene from there. This rendered image can then be used as a texture to apply to the mirror surface, which will give the illusion of a reflection. This technique is more efficient than rendering every reflection recursively, as it only requires rendering the scene once. 
 
 
 \section{Non-Planar Reflection}
 
+Non-planar reflections occur when the reflecting surface is not flat, such as a curved mirror or a body of water with waves. In this case, the reflection is more complex to calculate, as the normal vector at each point of the surface can vary. One way to handle non-planar reflections is to use a technique called ``environment mapping'', which uses ``cube maps'' to store the reflection information for each direction.
+
+A cube map is a texture that consists of six square images, each representing the reflection in a different direction (positive and negative x, y, and z). In order to generate the cube map, the camera is placed at the center of the reflecting surface, and the scene is rendered six times, each time with a different view direction corresponding to one of the faces of the cube map. Once the cube map is generated, it can be used to sample the reflection information for each pixel on the reflecting surface. The cube map has two important properties:
+\begin{itemize}
+    \item It is view-independent, meaning that the reflection information is the same regardless of the position of the viewer. It only has to be updated when the reflecting surface moves or the scene changes.
+    \item It is an approximation of the reflection, as it is only phisically perfect at the center of the reflecting surface.
+\end{itemize}
+
+The texture coordinates for sampling the cube map are however easy to calculate.
+\begin{enumerate}
+    \item First of all, the reflexion vector is calculated. Let $p$ be the point on the reflecting surface whose reflection we want to calculate, and let $N$ be the normal vector at point $p$. Let $V$ be the vector from point $p$ to the viewer (camera). The reflection vector $R$ can be calculated as:
+\begin{equation*}
+    R = 2(N \cdot V)N - V
+\end{equation*}
+
+    \item Once we have the reflection vector $R$, the largest absolute component of $R$ represents the direction of the reflection. For example, if $|R_x|$ is the largest component, then the reflection is in the x direction. Then, the sign of that component determines whether the reflection is in the positive or negative direction. For example, if $R_x$ is positive, then the reflection is in the positive x direction, and if $R_x$ is negative, then the reflection is in the negative x direction. This information allows us to determine which face of the cube map we need to sample from.
+    
+    \item Finally, the other two components of the reflection vector $R$ are divided by the largest component to obtain the 2D texture coordinates for sampling the cube map in a range of $[-1, 1]$.
+\end{enumerate}
+
 \section{Refraction}
 
-\subsection{Fresnel Equations}
+The refraction of light occurs when light passes from one medium to another, such as from air to water. This causes the light to bend, which can create interesting visual effects. The amount of bending depends on the angle of incidence and the refractive indices of the two media. The refractive index is a measure of how much a material slows down light compared to vacuum. The relationship between the angle of incidence, the angle of refraction, and the refractive indices is given by Snell's Law:
+\begin{equation*}
+    n_i \sin(\theta_i) = n_r \sin(\theta_r)
+\end{equation*}
+where $n_i$ and $n_r$ are the refractive indices of the first and second media, respectively, and $\theta_i$ and $\theta_r$ are the angles of incidence and refraction, respectively. The situation is illustrated in the Figure~\ref{fig:refraction}.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        % Draw the interface between the two media
+        \draw[thick] (-4,0) -- (4,0);
 
-...
+        \draw[fill] (0,0) circle (2pt) node[below left] {$p$};
+        \draw[-Stealth] (0,0) -- (0,2) node[above] {$N$};
 
-Aproximations
+        \draw[-Stealth, blue] (0,0) -- (-2,1) node[above] {\color{blue}$L$};
+        \draw[-Stealth, red] (0,0) -- (2,1) node[below] {};
+
+        \node (P) at (0,0) {};
+        \node (L) at (-2,1) {};
+        \node (N) at (0,2) {};
+        \node (R) at (2,1) {};
+        \draw pic[
+            -Stealth,
+            draw=blue,
+            angle radius=7mm,
+            angle eccentricity=1.3,
+            pic text={\color{blue}$\theta_i$}
+        ] {angle=N--P--L};
+        \draw pic[
+            -Stealth,
+            draw=red,
+            angle radius=7mm,
+            angle eccentricity=1.3,
+            pic text={\color{red}$\theta_i$}
+        ] {angle=R--P--N};
+
+        \draw[thick, olive, -Stealth] (0,0) -- (1,-2) node[right] {\color{olive}$R$};
+
+        \draw[thick, dashed] (0,0) -- (0,-2);
+
+        \node (R2) at (1,-2) {};
+        \node (N2) at (0,-2) {};
+        \draw pic[
+            -Stealth,
+            draw=olive,
+            angle radius=12mm,
+            angle eccentricity=1.3,
+            pic text={\color{olive}$\theta_r$}
+        ] {angle=N2--P--R2};
+
+
+        \node at (3, 0.25) {$n_i$};
+        \node at (3, -0.25) {$n_r$};
+    \end{tikzpicture}
+    \caption{Refraction of light.}
+    \label{fig:refraction}
+\end{figure}
+
+\section{Fresnel Effects}
+
+The Fresnel effects describes the attenuation of reflected light depending on the angle of incidence, the frequency of the light, and the material properties. The equations for calculating the Fresnel effects are difficult to solve, but they are usually approximated.
+
+% // TODO: Add more details about the Fresnel effects?

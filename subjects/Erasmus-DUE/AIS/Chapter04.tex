@@ -1,0 +1,220 @@
+\chapter{Shadows}
+
+Shadows are an essential aspect of computer graphics that contribute to the realism and depth of a scene. They provide visual cues about the spatial relationships between objects and the light sources in the scene. In this chapter, we will discuss various techniques for generating shadows in computer graphics.
+
+\section{Projective Shadows}
+
+This technique involves projecting the geometry of the shadow-casting object onto a plane that represents the surface on which the shadow will be cast. Let's fist approach this technique from a mathematical perspective. Consider a point light source located at position $l$, a point $q$ whose shadow we want to calculate, and a plane defined by a point $p$ and a normal vector $N$. This situation is illustrated in Figure~\ref{fig:projective-shadow}. The goal is to find the point $q_s$ on the plane where the shadow of point $q$ will be cast.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        % Define points
+        \coordinate (l) at (3, 3);
+        \coordinate (p) at (-2, 0);
+        \coordinate (q) at (2, 2);
+        \coordinate (qs) at (0, 0);
+        \coordinate (N) at (-1, 3);
+
+        \draw[-Stealth] (-1,0) -- (N) node[above] {$N$};
+        \draw[fill=black] (p) circle (2pt) node[below] {$p$};
+        \draw[fill=black] (q) circle (2pt) node[below] {$q$};
+        \draw[fill=black] (qs) circle (2pt) node[below] {$q_s$};
+        \draw[fill=yellow] (l) circle (2pt) node[above] {$l$};
+
+        \draw[dashed, red] (l) -- (qs);
+
+        % Draw the plane
+        \draw (-3, 0) -- (3, 0); % Plane representation
+    \end{tikzpicture}
+    \caption{Projective shadow calculation.}
+    \label{fig:projective-shadow}
+\end{figure}
+
+Given the normal vector $N=(A,B,C)$ of the plane and the point $p$ on the plane, we can derive the equation of the plane as follows:
+\begin{equation*}
+    Ax + By + Cz + D = 0,\qquad D=-(Ap_x + Bp_y + Cp_z).
+\end{equation*}
+
+The shadow point $q_s$ can be expressed, for certain $t\in \mathbb{R}$, as:
+\begin{equation*}
+    q_s = q + t\cdot (\vec{lq})
+    = q + t\cdot (q-l)
+\end{equation*}
+
+One approach could be to substitute $q_s$ into the plane equation and solve for $t$. However, a more efficient method is to make firstly an assumption about the position of the light source.
+\begin{itemize}
+    \item Let's firstly suppose that the light source is located at the origin, i.e., $l=(0,0,0)$. In this case, the shadow point can be expressed as $q_s = t\cdot q$. Substituting this into the plane equation gives us:
+    \begin{equation*}
+        A(tq_x) + B(tq_y) + C(tq_z) + D = 0 \implies t = -\frac{D}{Aq_x + Bq_y + Cq_z} = -\frac{D}{\vec{N}\cdot q}
+    \end{equation*}
+
+    Therefore, the shadow point can be calculated as:
+    \begin{equation*}
+        q_s = -\frac{D}{\vec{N}\cdot q} \cdot q
+    \end{equation*}
+
+    Given that we work with homogeneous coordinates and that the perspective division will be applied, we have that the shadow point can be calculated as:
+    \begin{equation*}
+        \begin{pmatrix}
+            -D & 0 & 0 & 0 \\
+            0 & -D & 0 & 0 \\
+            0 & 0 & -D & 0 \\
+            A & B & C & 0
+        \end{pmatrix}
+        \cdot
+        \begin{pmatrix}
+            q_x \\
+            q_y \\
+            q_z \\
+            1
+        \end{pmatrix}
+        \equiv 
+        \begin{pmatrix}
+            q_{s_x} \\
+            q_{s_y} \\
+            q_{s_z} \\
+            1
+        \end{pmatrix}
+    \end{equation*}
+
+    \item Now, let's consider the general case where the light source is located at an arbitrary position $l=(l_x,l_y,l_z)$. In this case, let $T$ be the translation matrix for the $\vec{l}$ vector. Therefore, the shadow point can be calculated as:
+    \begin{equation*}
+        T\cdot \begin{pmatrix}
+            -D & 0 & 0 & 0 \\
+            0 & -D & 0 & 0 \\
+            0 & 0 & -D & 0 \\
+            A & B & C & 0
+        \end{pmatrix}
+        \cdot
+        T^{-1}\cdot \begin{pmatrix}
+            q_x \\
+            q_y \\
+            q_z \\
+            1
+        \end{pmatrix}
+        \equiv 
+        \begin{pmatrix}
+            q_{s_x} \\
+            q_{s_y} \\
+            q_{s_z} \\
+            1
+        \end{pmatrix}
+    \end{equation*}
+\end{itemize}
+
+In both cases, we obtain a matrix that can be used to project the shadow of any point $q$ onto the plane defined by $p$ and $N$. This is then used in the rendering pipeline to create the visual effect of shadows in the scene. After rendering the scene, we can render it again with the shadow projection matrix applied to the geometry of the shadow-casting objects, and the resulting colors will be blended with the background to create the final shadow effect.
+
+Lastly, a bias can be applied to the shadow projection to prevent z-fighting artifacts, which occur when the shadow geometry has the same depth as the surface it is projected onto, causing flickering or other visual artifacts. This bias can be implemented by slightly offsetting the shadow geometry closer to the camera, ensuring that it is rendered in front of the surface and thus avoiding z-fighting.\\
+
+This technique is relatively simple and efficient, but it has some limitations, because it only works well for flat surfaces and can produce artifacts when the shadow-casting object is close to the surface. Additionally, it does not account for self-shadowing or shadows cast by other objects in the scene.
+
+\section{Shadow Volumes}
+
+Shadow volumes are a more advanced technique for generating shadows that can handle complex scenes with multiple light sources and self-shadowing. The idea is to create a volume that represents the region of space that is in shadow, and then use this volume to determine which parts of the scene are in shadow.
+
+\subsection{Volumes Generation}
+
+The first step in the shadow volume technique is to generate the shadow volume for each possible shadow-casting object in the scene. This is done by extruding the silhouette of the object away from the light source to create a volume that represents the region of space that is in shadow. This is done in three steps:
+\begin{itemize}
+    \item Possible silhouette edges are extruded to infinity away from the light source, creating the walls of the shadow volume.
+    \item The back-facing occlder's triangles (with respect to the light source) are extruded to infinity, creating the back cap of the shadow volume.
+    \item The front-facing occlder's triangles (with respect to the light source) are ``slightly'' extruded away from the light source, creating the front cap of the shadow volume.
+\end{itemize}
+
+This process results in a closed volume that represents the region of space that is in shadow. Once the shadow volumes are generated, they can be used in the rendering pipeline to determine which parts of the scene are in shadow.
+
+\subsection{Rendering with Shadow Volumes}
+
+Here, there are two main approaches to render the scene with shadow volumes: the $z$-pass and $z$-fail methods. Both methods involve using the stencil buffer to keep track of which pixels are in shadow.
+
+\subsubsection{The $z$-pass method}
+
+First of all, the unlit scene is rendered. Then, for each light source, the following steps are performed:
+\begin{enumerate}
+    \item The stencil buffer is cleared to zero, color write and depth write are disabled, but the depth test is enabled. It means that it will only update the stencil buffer.
+    \item Render the front-facing polygons of the shadow volume (with respect to the camera). For each fragment that \emph{passes} the depth test, the stencil buffer of the corresponding pixel is incremented by one. It represents the fact that the ray from the camera to the pixel has entered the shadow volume.
+    
+    The stencil buffer is only updated when the depth test passes, which means that only the fragments that are not ocluded by other real geometry of the scene will affect.
+    \item Render the back-facing polygons of the shadow volume (with respect to the camera). For each fragment that \emph{passes} the depth test, the stencil buffer of the corresponding pixel is decremented by one. It represents the fact that the ray from the camera to the pixel has exited the shadow volume.
+    
+    \item Finally, render the lit scene, but only for the pixels where the stencil buffer is equal to zero.
+    \begin{itemize}
+        \item  If it was greater than zero, it means that the ray from the camera to the pixel is still inside a shadow volume, and thus the pixel is in shadow.
+        \item If it was less that zero it would mean that the ray from the camera to the pixel has exited more shadow volumes than it has entered, which would mean that the camera is inside a shadow volume. However, this would simply not happen because of overflow issues of the stencil buffer, which is typically implemented as an unsigned integer.
+    \end{itemize}
+\end{enumerate}
+
+As I mentioned before, the $z$-pass method can produce artifacts when the camera is inside a shadow volume, because the stencil buffer will not be updated correctly. This happens because the near plane clips the shadow volume, causing the front-facing polygons to be clipped and thus not updating the stencil buffer when they should. To solve this issue, the $z$-fail method can be used.
+
+\subsubsection{The $z$-fail method}
+
+The $z$-fail method is similar to the $z$-pass method, but instead of counting from the camera to the real-scene geometry, it counts from the infinity to the real-scene geometry. As it happened with the $z$-pass method, the unlit scene is rendered first. Then, for each light source, the following steps are performed:
+\begin{enumerate}
+    \item The stencil buffer is cleared to zero, color write and depth write are disabled, but the depth test is enabled.
+    \item Render first the back-facing polygons of the shadow volume (with respect to the camera). For each fragment that \emph{fails} the depth test, the stencil buffer of the corresponding pixel is incremented by one. It represents the fact that the ray, after the real-scene geometry, has exited the shadow volume.
+    \item Render then the front-facing polygons of the shadow volume (with respect to the camera). For each fragment that \emph{fails} the depth test, the stencil buffer of the corresponding pixel is decremented by one. It represents the fact that the ray, after the real-scene geometry, has entered the shadow volume.
+    \item Render the lit scene, but only for the pixels where the stencil buffer is equal to zero.
+    \begin{itemize}
+        \item  If it was greater than zero, it means that the ray, after the real-scene geometry, has exited more shadow volumes than it has entered. It means that the real-scene geometry was in shadow, and thus the pixel is in shadow.
+        \item If it was less that zero it would mean that the ray, after the real-scene geometry, has entered more shadow volumes than it has exited. It would mean that the shadow volumes are not closed (because perspective lets you moving the far plane to infinity), which would be a bug in the shadow volume generation process. In addition, this would not be possible because of overflow issues of the stencil buffer, which is typically implemented as an unsigned integer.
+    \end{itemize}
+\end{enumerate}
+
+As we can see, the $z$-fail method solves the problems that the $z$-pass method had, but this technique is still computationally expensive, because it requires rendering the shadow volume geometry multiple times. In addition, volumes have to be regenerated every frame if the light source or the shadow-casting objects are moving, which can further increase the computational cost.
+
+
+\section{Shadow Mapping}
+
+Shadow mapping is the most widely used technique for generating shadows in real-time applications, such as video games. The idea is to render the scene from the perspective of the light source to create a depth map, which is then used to determine which parts of the scene are in shadow when rendering from the camera's perspective. The process of shadow mapping can be broken down into two main steps: creating the shadow map and rendering the scene with shadows.
+
+\subsection{Creating the Shadow Map}
+
+The first step in shadow mapping is to create the shadow map. This is done by rendering the scene from the perspective of the light source, using a depth buffer to store the distance from the light source to the closest surface at each pixel. The resulting depth map is called the shadow map. The shadow map is typically stored as a texture, where each texel contains the depth value corresponding to the distance from the light source to the closest surface in that direction. The steps in detail to create the shadow map are as follows:
+\begin{enumerate}
+    \item Render the scene from the perspective of the light source.
+    
+    First of all, the coordinates of the vertices of the scene are transformed to world space (using the inverse of the matrixes needed). Once in world space, we have to multiply the vertices by the following matrixes:
+    \begin{itemize}
+        \item Instead of the usual ``view matrix'' that transforms the vertices from world space to camera space, we use a ``light view matrix'' that transforms the vertices from world space to light space.
+        \item A projection matrix that transforms the vertices from light space also has to be used.
+    \end{itemize}
+
+    At this point, the scene is rendered from the perspective of the light source, and the depth values are then stored in the depth buffer.
+
+    \item The depth buffer is then saved as a texture, which will be used as the shadow map in the next step.
+    
+    Before doing so, and given that the coordinates in the clip space are in the range $[-1,1]$, we have to transform them to the range $[0,1]$ to be able to store them in a texture. This can be done by multiplying all of the coordinates by $\nicefrac{1}{2}$ and then adding $\nicefrac{1}{2}$ to all of the coordinates. Once done so, the depth buffer can be saved as a texture, which will be used as the shadow map in the next step.
+\end{enumerate}
+
+\subsection{Rendering the Scene with Shadows}
+
+The second step in shadow mapping is to render the scene from the camera's perspective, using the shadow map to determine which parts of the scene are in shadow. When rendering the scene as usual, the following steps are performed for each fragment:
+\begin{enumerate}
+    \item The world coordinates of the fragment are transformed to light space using the same light view and projection matrixes that were used to create the shadow map. Also the same transformation to the range $[0,1]$ is applied to the coordinates. This gives us the corresponding texture coordinates in the shadow map.
+    \item The depth value stored in the shadow map at the corresponding texture coordinates is retrieved. This depth value represents the distance from the light source to the closest surface in that direction.
+    \item The depth value of the fragment being rendered is compared to the depth value retrieved from the shadow map. Two things may happen:
+    \begin{itemize}
+        \item If the depth value of the fragment is greater than the depth value retrieved from the shadow map, it means that the light does not reach the fragment, and thus the fragment is in shadow. In this case, the fragment is shaded accordingly.
+        \item If the depth value of the fragment is less than or equal to the depth value retrieved from the shadow map, it means that the light reaches the fragment, and thus the fragment is not in shadow. In this case, the fragment is shaded as usual.
+    \end{itemize}
+\end{enumerate}
+
+In this case, a bias can be applied to the depth value of the fragment being rendered to prevent shadow acne, which is a common artifact in shadow mapping that occurs when the depth values of the fragments being rendered are very close to the depth values stored in the shadow map, causing weird patterns of shadow to appear on the surfaces. This bias can be implemented by adding a small constant value to the depth value of the fragment being rendered, ensuring that it is slightly further away from the light source than the depth values stored in the shadow map, thus preventing shadow acne.
+
+\subsubsection{Resolution of the Shadow Map}
+
+One of the main issues with shadow mapping is that the resolution of the shadow map can affect the quality of the shadows. If the shadow map has a low resolution, it can result in blocky or pixelated shadows. The quality is specially significant in shadows closer to the camera, because just one texel covers a larger area of the scene and much more fragments will be affected by the same depth value stored in the shadow map. To mitigate this issue, some techniques can be used, such as:
+\begin{itemize}
+    \item Increasing the resolution of the shadow map, which can improve the quality of the shadows, but it also increases the computational cost and memory usage.
+    \item Cascaded shadow maps
+    
+    This technique involves using multiple shadow maps with different resolutions for different parts of the scene. For example, a high-resolution shadow map can be used for the area close to the camera, while a lower-resolution shadow map can be used for the area further away from the camera. This allows for better quality shadows in the areas where it is most noticeable, while still keeping the computational cost and memory usage manageable.
+
+    \item Trapezoidal shadow maps
+    
+    This idea is based on the observation that the area of the scene that is visible from the light source is often not a square, but rather a trapezoid. By using a trapezoidal shadow map instead of a square one, we can better fit the shadow map to the visible area of the scene, which can improve the quality of the shadows while still keeping the resolution manageable.
+\end{itemize}
+
+It should be noted that all the shadows we have created are hard shadows, which means that they have a sharp edge. In reality, shadows often have soft edges due to the size of the light source and the distance from the shadow-casting object to the surface on which the shadow is cast. To create soft shadows, additional techniques can be used, but they are beyond the scope of this chapter. Physics Based Rendering (PBR) techniques can also be used to create more realistic shadows by simulating the physical properties of light and materials. This will be covered in more detail in next chapters.
+    
+
