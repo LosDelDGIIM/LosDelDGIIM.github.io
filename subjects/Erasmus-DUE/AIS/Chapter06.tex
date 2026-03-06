@@ -1,0 +1,150 @@
+\chapter{Precomputed Radiance Transfer (PRT)}
+
+In the previous chapter, we introduced the Rendering Equation~\eqref{eq:rendering_equation} but realized that it is almost impossible to solve in real-time. Some approaches to simulate the idea that that equation introduced were discussed, as Recursive Ray Tracing and Path Tracing. However, these methods are computationally expensive and do not actually solve the equation. In this chapter, we will introduce a method that allows us to solve the Rendering Equation in real-time, but with some limitations. This method is called Precomputed Radiance Transfer (PRT). The main idea behind PRT is to precompute as much of the lighting information as possible, so that at runtime we can quickly evaluate the lighting for a given scene.
+
+\section{Assumptions and Simplifications}
+
+To make the problem of solving the Rendering Equation tractable, we need to make some assumptions and simplifications. The three main simplifications we will make are:
+\begin{itemize}
+    \item Lambertian reflector
+    
+    A lambertian reflector is a surface that reflects light equally in all directions. This means that the BRDF for a Lambertian reflector is constant and does not depend on the incoming or outgoing directions. This simplification allows us to ignore the directional dependence of the BRDF, which makes the problem easier to solve. It is defined by the material's albedo $\rho$, which is the fraction of incoming light that is reflected by the surface. The BRDF for a Lambertian reflector can be expressed as:
+\begin{equation*}
+    f_r(x, \omega, \omega', \lambda) = \frac{\rho}{\pi}
+\end{equation*}
+    where the factor of $\pi$ is included to ensure energy conservation, as the reflected light is distributed uniformly over the hemisphere.
+
+
+    \item Only first van Neumann Term
+    
+    The Rendering Equation itself hides recursive terms, as the incoming radiance $L_i$ can be expressed is itself the outgoing radiance from another point in the scene. This means that to solve the equation, we would need to evaluate it recursively. Each level in the recursion is called a van Neumann term, and represents the contribution of light that has bounced a certain number of times in the scene. The first van Neumann term represents the direct lighting, which is the contribution of light that comes directly from the light sources to the point being shaded. By only considering the first van Neumann term, we are ignoring any indirect lighting, which is the contribution of light that has bounced off other surfaces in the scene before reaching the point being shaded.
+
+    \item Distant Lighting
+    
+    Distant lighting is a simplification that assumes that the light sources in the scene are infinitely far away. This means that the incoming light can be treated as parallel rays, and the direction of the incoming light does not change across the scene.
+
+    This simplification, along with the previous one, allows us to simplify the incoming radiance term in the Rendering Equation as:
+\begin{equation*}
+    L_i(x, \omega', \lambda) = L_{\text{env}}(\omega')\cdot V(x, \omega')
+\end{equation*}
+    where $L_{\text{env}}(\omega')$ is the radiance coming from the environment in the direction $\omega'$, and $V(x, \omega')$ is a visibility term represents whether the point $x$ is visible from the direction $\omega'$.
+\end{itemize}
+
+Therefore, with these simplifications, the Rendering Equation can be rewritten as the Equation~\eqref{eq:rendering_equation_prt}:
+\begin{equation}
+    L_o(x, \omega, \lambda) = L_e(x, \omega, \lambda) + \frac{\rho}{\pi} \int_{\Omega} L_{\text{env}}(\omega')\cdot V(x, \omega') \cdot (\omega' \cdot N)\ d\omega'
+    \label{eq:rendering_equation_prt}
+\end{equation}
+
+The term $V(x, \omega')\cdot (\omega' \cdot N)$ is called the transfer function, and it represents how much of the incoming light from the environment is transferred to the outgoing radiance at the point $x$ in the direction $\omega$.
+\begin{equation*}
+    T(x, \omega') = V(x, \omega')\cdot \max(0,\omega' \cdot N)
+\end{equation*}
+
+\section{Converting the Integral into a Dot Product}
+
+The idea that PRT introduces is project the possible integrals onto a basis, so that we can simply convert the integral into a dot product. Let's consider the space of all the possible functions with domain $A$ and range $B$. Given that this space is infinite-dimensional, every basis will have an infinite number of elements. Chosen a basis $\{b_i\}$, we can express any function $f: A \to B$ as a linear combination of the basis elements:
+\begin{equation*}
+    f(x) = \sum_{i=0}^{\infty} c_i b_i(x)
+\end{equation*}
+where $c_i$ are the coefficients of the linear combination:
+\begin{equation*}
+    c_i = \langle f(x), b_i(x) \rangle = \int_{A} f(x) b_i(x) \ dx
+\end{equation*}
+
+For the PRT to really simplify the problem, we need to choose an specific type of basis, called an orthogonal basis.
+\begin{definicion}[Orthogonal Basis]
+    A basis $\{b_i\}$ is orthogonal if for any two different elements $b_i$ and $b_j$, the inner product $\langle b_i, b_j \rangle$ is zero. This means:
+\begin{equation*}
+    \langle b_i(x), b_j(x) \rangle = \int_{A} b_i(x) b_j(x) \ dx = \delta_{ij} = \begin{cases}
+        0 & \text{if } i \neq j \\
+        1 & \text{if } i = j
+    \end{cases}
+\end{equation*}
+\end{definicion}
+
+In order to understand the idea that lies behind PRT, let's consider two functions $f$ and $g$, and an orthogonal basis $\{b_i\}$. Given that we are only interested in approximating the integral of the product of $f$ and $g$, only the first $N$ coefficients of the linear combination will be relevant. Let's then assume that the projection of $f,g$ onto the basis $\{b_i\}$ is given by:
+\begin{equation*}
+    f(x) \approx \sum_{i=0}^{N} c_i b_i(x) \qquad g(x) \approx \sum_{i=0}^{N} d_i b_i(x)
+\end{equation*}
+Then, the integral of the product of $f$ and $g$ can be approximated as:
+\begin{align*}
+    \int_{A} f(x) g(x) \ dx &\approx \int_{A} \left( \sum_{i=0}^{N} c_i b_i(x) \right) \left( \sum_{j=0}^{N} d_j b_j(x) \right) \ dx = \sum_{i=0}^{N}
+    \sum_{j=0}^{N} c_i d_j \int_{A} b_i(x) b_j(x) \ dx
+    \AstIg\\&\AstIg \sum_{i=0}^{N} c_i d_i\int_{A} b_i(x) b_i(x) \ dx = \sum_{i=0}^{N} c_i d_i
+\end{align*}
+where in $(\ast)$ we used the fact that the basis is orthogonal. Therefore, we have approximated the integral of the product of $f$ and $g$ as a dot product of their coefficients in the ortogonal basis.
+
+\subsection{Spherical harmonics (SH)}
+
+The choice of the basis is crucial for the success of PRT. The most common choice for the basis in PRT is the Spherical Harmonics (SH). Spherical Harmonics are a set of \emph{orthogonal} functions defined on the surface of a unit sphere and with possible complex values. However, and given that we are only using real functions, we will only consider the real spherical harmonics. The fact that they are defined on the surface of a unit sphere makes them ideal for representing functions that depend on directions, using just \emph{two coordinates} (the azimuth $\theta$ and the inclination $\phi$; the radius is fixed to 1). Spherical Harmonics are a family with two parameters:
+\begin{itemize}
+    \item Band: $l\in \bb{N}$
+    \item Mode: $m\in \bb{Z}\cap \left[-l, l\right]$
+\end{itemize}
+
+Therefore, they are usually referred to as $Y_l^m(\theta, \phi)$, where $\theta$ is the azimuth and $\phi$ is the inclination. The number of coefficients needed to represent a function using Spherical Harmonics up to band $L$ is given by:
+\begin{equation*}
+    N = \sum_{l=0}^{L} (2l + 1) = L+1 + 2\cdot \frac{L(L+1)}{2} = L+1 + L(L+1) = (L+1)^2
+\end{equation*}
+\begin{observacion}
+    It should not be confused how many bands are going to be used with up to which band we are going to use.
+    \begin{itemize}
+        \item Up to band $L$: we are going to use all the bands from $0$ to $L$, which means that we are going to use $L+1$ bands, and therefore $(L+1)^2$ coefficients.
+        \item $L$ bands: we are going to use the bands from $0$ to $L-1$, which means that we are going to use $L$ bands, and therefore $L^2$ coefficients.
+    \end{itemize}
+\end{observacion}
+
+\subsection{Monte Carlo Integration}
+
+The coefficients of the projection of a function $f$ onto the Spherical Harmonics basis have to be computed using an integral over the unit sphere. To compute these integrals, Monte Carlo Integration is usually used.
+
+
+Monte Carlo Integration is a numerical method for approximating integrals using random sampling. The idea is to sample points from the domain of the function and use the average value of the function at those points to approximate the integral. The more samples we take, the better the approximation will be.
+\begin{itemize}
+    \item Monte Carlo Integration is particularly useful for high-dimensional integrals, where traditional numerical methods may struggle.
+    \item It is an abstraction of the Riemann sum, where instead of using a regular grid of points, we use random samples.
+\end{itemize}
+
+Therefore, to compute the coefficients of the projection of a function $f$ onto the Spherical Harmonics basis, we can use Monte Carlo Integration and just sample the function at random points on the unit sphere.
+
+\section{PRT Pipeline}
+
+The PRT pipeline consists of two main stages: the precomputation stage and the rendering stage. The idea is that as much as possible should be precomputed in the first stage, so that the rendering stage can be as fast as possible.
+
+\subsection{Precomputation Stage}
+
+In order to be able to solve the Rendering Equation in real-time, we need to precompute the following information (assuming that we use $L$ bands for approximating):
+\begin{enumerate}
+    \item The values of the $L^2$ SH in each direction. These are no integrals, but they are needed to project the other functions.
+    \item The projection of the term $L_{\text{env}}(\omega')$ onto the SH basis, which gives us $L^2$ coefficients for each color channel (R, G, B). For each of the sample directions for the Monte Carlo Integration, we need:
+    \begin{itemize}
+        \item The value of the environment map in that direction, which can be obtained by sampling the environment map.
+        \item The value of the SH basis functions in that direction, which can be obtained from the precomputed values of the SH basis functions.
+    \end{itemize}
+    \item For each vertex $x$ in the scene, the projection of the transfer function $T(x, \omega')$ onto the SH basis, which gives us $L^2$ coefficients for each vertex. For each of the sample directions for the Monte Carlo Integration, we need to compute the following terms:
+    \begin{itemize}
+        \item The visibility term $V(x, \omega')$ can be computed using ray tracing, which is a computationally expensive process. However, given that this is done in the precomputation stage, it is not a problem. Depending how far the ray collides, this term will have a higher or lower value.
+        \item The term $(\omega' \cdot N)$ can be computed using the normal of the vertex and the direction of the incoming light.
+        \item The value of the SH basis functions in that direction, which can be obtained from the precomputed values of the SH basis functions.
+    \end{itemize}
+\end{enumerate}
+
+This way, we have precomputed all the information needed to evaluate the Rendering Equation in real-time. The precomputation stage can be computationally expensive, especially for the third step, where we need to compute the visibility term for each vertex and each sample direction. However, this is done offline, so it does not affect the real-time performance of the rendering stage. In this point, we have:
+\begin{equation*}
+    L_{\text{env}}(\omega') \approx \sum_{i=0}^{(L-1)^2} l_i b_i(\omega') \qquad T(x, \omega') \approx \sum_{i=0}^{(L-1)^2} t_{x,i} b_i(\omega')
+\end{equation*}
+
+\subsection{Rendering Stage}
+
+In the rendering stage, we can now evaluate the Rendering Equation in real-time using the precomputed information. Given a point $x$ and a direction $\omega$, we can compute the outgoing radiance as:
+\begin{align*}
+    L_o(x, \omega, \lambda) &= L_e(x, \omega, \lambda) + \frac{\rho}{\pi} \int_{\Omega} L_{\text{env}}(\omega')\cdot V(x, \omega') \cdot (\omega' \cdot N)\ d\omega'
+    =\\&= L_e(x, \omega, \lambda) + \frac{\rho}{\pi} \int_{\Omega} L_{\text{env}}(\omega')\cdot T(x, \omega')\ d\omega'
+    \approx\\&\approx L_e(x, \omega, \lambda) + \frac{\rho}{\pi} \int_{\Omega} \left( \sum_{i=0}^{(L-1)^2} l_i b_i(\omega') \right) \left( \sum_{j=0}^{(L-1)^2} t_{x,j} b_j(\omega') \right) \ d\omega'
+    \AstIg\\&\AstIg L_e(x, \omega, \lambda) + \frac{\rho}{\pi} \sum_{i=0}^{(L-1)^2} l_i t_{x,i} \int_{\Omega} b_i(\omega') b_i(\omega') \ d\omega'
+    = \\&= L_e(x, \omega, \lambda) + \frac{\rho}{\pi} \sum_{i=0}^{(L-1)^2} l_i t_{x,i}
+\end{align*}
+where in $(\ast)$ we used the fact that the basis is orthogonal. Therefore, we have approximated the integral of the product of $L_{\text{env}}$ and $T$ as a dot product of their coefficients in the SH basis. This allows us to evaluate the Rendering Equation in real-time, as we only need to compute a dot product of two vectors of size $L^2$ for each color channel.\\
+
+One important thing to note is that the SH are rotationally invariant. That means that if we rotate the scene, the coefficients of the projection of the functions onto the SH basis will change, but the values of the functions themselves will not change. This allows us to, instead of recomputing all the coefficients when the scene is rotated, we can just rotate the coefficients of the projection of the functions onto the SH basis. This is done using a rotation matrix. Therefore, we can achieve real-time rendering of the scene even when the scene is rotated, without having to recompute all the coefficients. However, PRT can't be used when the objects in the scene are moving, as the visibility term will change, and therefore we would need to recompute all the coefficients for each vertex, which is not feasible in real-time. Therefore, PRT is only suitable for \emph{static scenes}, where the objects are not moving.

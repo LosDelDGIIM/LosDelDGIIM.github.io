@@ -1,0 +1,136 @@
+\chapter{Radiance Transfer}
+
+During this chapter, we will introduce the two differet types of illumination, local and indirect illumination, to end up developping the global illumination. In order to explain these concepts, we first have to introduce some radiometric quantities. Radiometry is the science of measuring electromagnetic radiation, including visible light. It provides a set of quantities that are used to describe the properties of light and how it interacts with surfaces.
+\begin{definicion}[Radiant Energy]
+Radiant energy is the total amount of energy that is carried by a beam of light.
+\begin{equation*}
+    Q\qquad [J]
+\end{equation*}
+\end{definicion}
+
+\begin{definicion}[Radiant Flux]
+    Also known as Radiant Power, it is the rate at which radiant energy is transferred or emitted. It is defined as the amount of radiant energy per unit time.
+\begin{equation*}
+    \Phi = \frac{dQ}{dt} \qquad [W=\nicefrac{J}{s}]
+\end{equation*}
+\end{definicion}
+
+\begin{definicion}[Irradiance]
+Irradiance is the amount of radiant flux that is incident on a surface per unit area.
+\begin{equation*}
+    E = \frac{d\Phi}{dA} \qquad [\nicefrac{W}{m^2}]
+\end{equation*}
+\end{definicion}
+
+For the next measures, the solid angle is needed. It is a measure of the amount of space that an object occupies in the field of view of an observer. It is defined as the area of the projection of the object onto a unit sphere centered at the observer. More generally, if the sphere used for the projection has a radius $r$, and the surface area of the projection is $A$, the solid angle $\Omega$ is defined as:
+\begin{equation*}
+    \Omega = \frac{A}{r^2} \qquad [sr]
+\end{equation*}
+The unit of solid angle is the steradian ($sr$) (an adimensional unit), which is defined as the solid angle subtended by an area of $r^2$ on the surface of a sphere of radius $r$. It is the three-dimensional equivalent of the two-dimensional radian.
+
+\begin{definicion}[Radiant Intensity]
+Radiant intensity is the amount of radiant flux that is emitted by a source in a particular direction per unit solid angle.
+\begin{equation*}
+    I = \frac{d\Phi}{d\vec{\omega}} \qquad [\nicefrac{W}{sr}]
+\end{equation*}
+\end{definicion}
+
+\begin{definicion}[Radiance]
+Radiance is the amount of radiant flux that is emitted, reflected, transmitted or received by a surface per projected unit area and per unit solid angle.
+\begin{equation*}
+    L = \frac{d^2\Phi}{dA \cdot \cos(\theta) \cdot d\vec{\omega}} \qquad [\nicefrac{W}{m^2 \cdot sr}]
+\end{equation*}
+where $\theta$ is the angle between the normal of the surface and the direction of the incoming light. The term $\cos(\theta)$ is used to account for the fact that the effective area of the surface that is illuminated by the light decreases as the angle of incidence increases.
+\end{definicion}
+Radiance is the most used quantity in computer graphics, because it is the one that is conserved\footnote{In fact, it only happens in vacuum.} along a ray of light. This means that the radiance of a ray of light does not change as it travels through space, unless it interacts with a surface. This property makes it easier to compute the illumination of a scene, because we can trace rays of light from the camera to the scene and compute the radiance at each point of intersection.
+
+\begin{observacion}
+    So many measures may be confusing. The basic one is the radiant energy, and then the radiant flux is the rate of change of the radiant energy. All of the other measures are derived from the flux energy connecting it with other quantities:
+\begin{itemize}
+    \item Irradiance: Flux per unit area.
+    \item Radiant Intensity: Flux per unit solid angle.
+    \item Radiance: Flux per unit area and per unit solid angle.
+\end{itemize}
+\end{observacion}
+
+\section{Local Illumination}
+
+The local illumination model is the simplest one, and it only takes into account the direct light that hits a surface. It does not consider any light that is reflected or refracted by other surfaces. It is explained in the Equation~\ref{eq:local_illumination}.
+\begin{equation}
+L_O = \rho \cdot L_I \cdot \cos(\theta) = \rho \cdot L_I \cdot N\cdot L
+\label{eq:local_illumination}
+\end{equation}
+Where $L_O$ is the outgoing radiance, $L_i$ is the incoming radiance, $\theta$ is the angle between the normal of the surface and the direction of the incoming light, $N$ is the normal of the surface and $L$ is the direction of the incoming light. The term $\rho$ is the reflectance of the surface, which is a measure of how much light is reflected by the surface. It is a value between 0 and 1.
+
+\section{Indirect Illumination}
+
+Light is not only emitted by light sources as the local illumination model assumes, but it can also be reflected or refracted by other surfaces. This aspects are the ones addressed by the indirect illumination model, which is more accurate than the local illumination model, but also more computationally expensive. When an observer looks at a point on a surface, three types of rays should be taken into account to determine the illumination of that point:
+\begin{itemize}
+    \item Shadow ray: it is traced from the point of intersection to the light source, and it is used to determine if the point is in shadow or not.
+    \item Reflection ray: if the surface is reflective, a reflection ray is traced in the direction of the reflected light, and it is used to determine which object is visible in the reflection.
+    \item Refraction ray: if the surface is transparent, a refraction ray is traced in the direction of the refracted light, and it is used to determine which object is visible through the transparent surface.
+\end{itemize}
+
+
+\section{Global Illumination}
+
+The global illumination model unifies the local and indirect illumination models, and it represents how light really is. It is usually called Physically Based Rendering (PBR), because it takes into account all the light that is emitted, reflected, transmitted or received by a surface. It is the most accurate model, but it is also the most computationally expensive. It is based on the Rendering Equation~\ref{eq:rendering_equation}, which is an integral equation that describes the equilibrium of light in a scene.
+% // TODO: Memorizar
+\begin{equation}
+L_O(x, \omega, \lambda) = L_E(x, \omega, \lambda) + \int_{\Omega} f_r(x, \omega, \omega', \lambda) \cdot L_I(x, \omega', \lambda) \cdot (\omega' \cdot N) \ d\omega'
+\label{eq:rendering_equation}
+\end{equation}
+where $L_O(x, \omega, \lambda)$ is the outgoing radiance at point $x$ in direction $\omega$ and wavelength $\lambda$, $L_E$ is the emitted radiance, $f_r$ is the BRDF, $L_I$ is the incoming radiance, $N$ is the normal of the surface and $\Omega$ is the hemisphere of directions above the surface. The integral term represents the contribution of all the incoming light that is reflected by the surface, and it is computed by integrating over all the directions in the hemisphere.
+\begin{observacion}
+    It should be noted that $\max(0,\omega'\cdot N)$ is not needed, as the domain of integration is the hemisphere of directions above the surface, which means that $\omega'\cdot N$ is always non-negative. However, if the domain of integration were the entire sphere, then the term $\max(0,\omega'\cdot N)$ would be needed to ensure that only the directions above the surface contribute to the integral.
+\end{observacion}
+
+\subsection{Bidirectional Reflectance Distribution Function (BRDF)}
+
+The BRDF is a function that describes how light is reflected by a surface. It is defined as the fraction of light from an incoming direction $\omega'$ that is reflected in an outgoing direction $\omega$ at a point $x$ on the surface, for a given wavelength $\lambda$. It is denoted as $f_r(x, \omega, \omega', \lambda)$ and it has the following properties:
+% // TODO: Memorizar BRDF properties
+\begin{itemize}
+    \item $f_r(x, \omega, \omega', \lambda) \geq 0$: the BRDF is always non-negative.
+    \item Helmholtz Reciprocity, which states that the BRDF is symmetric with respect to the incoming and outgoing directions. This means that the light may be inverted.
+    \begin{equation*}
+f_r(x, \omega, \omega', \lambda) = f_r(x, \omega', \omega, \lambda)
+    \end{equation*}
+    \item Energy Conservation, which states that the total amount of light reflected by a surface cannot exceed the amount of light that is incident on it.
+    \begin{equation*}
+\int_{\Omega} f_r(x, \omega, \omega', \lambda) \cdot (\omega' \cdot N)\ d\omega' \leq 1\qquad \forall x, \omega, \lambda
+    \end{equation*}
+\end{itemize}
+
+\subsection{Algorithms for Global Illumination}
+
+As the user may expect, actually computing the global illumination is a very complex task, because it requires solving the rendering equation, which is an integral equation. There are several algorithms that, taking the rendering equation as a base, try to compute the global illumination in a more efficient way. In the next sections, we will introduce some of the most popular algorithms for global illumination.
+
+\subsubsection{Recursive Ray Tracing}
+
+Recursive ray tracing is a simple algorithm that traces rays of light from the camera to the scene. For each object that is intersected by a ray, two new rays are traced:
+\begin{itemize}
+    \item Reflection ray: if the surface is reflective, a reflection ray is traced in the direction of the reflected light.
+    \item Refraction ray: if the surface is transparent, a refraction ray is traced in the direction of the refracted light.
+\end{itemize}
+
+The algorithm continues tracing rays until:
+\begin{itemize}
+    \item A ray does not intersect any object
+    \item A ray intersects a light source
+    \item A ray reaches a maximum recursion depth
+    \item A ray contributes less than a certain threshold to the final image
+\end{itemize}
+
+This algorithm, which may appear that does not produce good results, is actually the basis of many other algorithms for global illumination.
+
+\subsubsection{Path Tracing}
+
+As recursive ray tracing, path tracing is an algorithm that traces rays of light from the camera to the scene. However, for each object that is intersected by a ray, only one new ray is traced, which is chosen randomly according to the BRDF of the surface. As happened with recursive ray tracing, the algorithm continues tracing rays until:
+\begin{itemize}
+    \item A ray does not intersect any object
+    \item A ray intersects a light source
+    \item A ray reaches a maximum recursion depth
+    \item A ray contributes less than a certain threshold to the final image
+\end{itemize}
+
+Path tracing is a more efficient algorithm than recursive ray tracing, and it may produce better results, because it takes into account the BRDF of the surface. However, it is still a very computationally expensive algorithm because it requires tracing a large number of rays to produce a good image.
