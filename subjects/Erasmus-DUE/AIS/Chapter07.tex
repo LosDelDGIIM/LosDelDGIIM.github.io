@@ -1,0 +1,143 @@
+\chapter{Ambient Occlusion}
+
+Ambient occlusion is a shading method that calculates how much ambient light can reach a point on a surface. It is used to add depth and realism to 3D scenes by simulating the soft shadows that occur in areas where light is partially blocked by nearby geometry. However, it should be noted that ambient occlusion is not a shadowing technique in the traditional sense, as it does not account for direct light sources or cast shadows. Instead, it focuses on the occlusion of ambient light, which is the diffuse light that is scattered in all directions.\\
+
+The idea that lays behind ambient occlusion is that points on a surface that are close to other geometry will receive less ambient light and therefore appear darker. This is because the nearby geometry blocks some of the ambient light from reaching those points. Everything is calculated based on the Ambient Occlusion Factor of Equation~\eqref{eq:ao}, which is a value between 0 and 1 that represents the amount of ambient light that can reach a point on a surface. A value of 0 means that the point is completely occluded and receives no ambient light, while a value of 1 means that the point is fully exposed and receives all ambient light.
+\begin{equation}
+    k_a(p) = \frac{1}{\pi} \int_{\Omega^+} V(\vec{\omega}_i) \cos \theta_i d\vec{\omega}_i
+    \label{eq:ao}
+\end{equation}
+where:
+\begin{itemize}
+    \item $\Omega^+$ is the normal-oriented hemisphere above the point $p$.
+    \item $V(\vec{\omega}_i)$ is the visibility function, which is 1 if the direction $\vec{\omega}_i$ is not occluded by any geometry and 0 if it is occluded. This is calculated by casting a ray from the point $p$ in the direction $\vec{\omega}_i$ and checking for intersections with other geometry in the scene.
+    \item $\cos \theta_i$ is the cosine of the angle between the normal at point $p$ and the direction $\vec{\omega}_i$. This term accounts for the fact that light arriving at a grazing angle contributes less to the ambient illumination than light arriving directly.
+    \item The factor of $\nicefrac{1}{\pi}$ is used to normalize the result, because the integral of the cosine term over the hemisphere is equal to $\pi$; this ensures that the ambient occlusion factor is properly scaled to the range $[0, 1]$.
+\end{itemize}
+
+Therefore, AO is described as follows: ``Trace rays through the normal-oriented unit hemisphere, and return the cosine-weighted percentage of rays that do not hit any geometry.'' This method is computationally expensive, as it requires casting many rays for each point on the surface to accurately estimate the ambient occlusion factor. However, there are various techniques to approximate ambient occlusion.
+
+\section{Raytracing AO}
+
+The idea behind raytracing AO is to preprocess everything for the static geometries in the scene, and store the results in a occlusion map, which essentially is a texture. This method is very efficient for static objects, as the ambient occlusion can be calculated once and reused for each frame. However, it does not help with dynamic objects.
+
+\section{Object Space AO}
+
+Object space AO is a method that calculates ambient occlusion in the object space of a 3D model. This technique represents each vertex of the model as a circle with the same normal as the vectex and with an area equal to one third of the the sum of the areas of the triangles that share the vertex\footnote{That way, the area of each triangle is distributed equally among its three vertices.}. 
+This representation can be fastly calculated, as the lenght of the sides of the triangles are just an square root, and then there are just some simple calculations to find the area of the triangle known the length of its sides:
+\begin{itemize}
+    \item Half of the cross product of the two edges of the triangle.
+    \item Heron's formula~\eqref{eq:heron}. If the lengths of the sides of the triangle are $a$, $b$, and $c$, then:
+    \begin{equation}\label{eq:heron}
+        A = \sqrt{s(s-a)(s-b)(s-c)}\qquad \text{where } s = \frac{a + b + c}{2}
+    \end{equation}
+\end{itemize}
+
+Once the circles are created, the key aspect of this technique is that, in order to calculate the AO factor for a vertex, no ray casting is needed. Instead, the integrand of Equation~\eqref{eq:ao} is approximated by the Equation~\eqref{eq:ao_object_space}, which represent's the accessibility of the vertex $E$ (emitter point) from the vertex $R$ (receiver point):
+\begin{equation}\label{eq:ao_object_space}
+    \text{accessibility}(R, E) = 1- \frac{\max(0, \cos(\theta_E)) \cdot \max(0, 4\cos(\theta_R))}{\sqrt{\frac{A_R}{\pi}+r^2}}
+\end{equation}
+The Figure~\ref{fig:object_space_ao} represents the terms used in the Equation~\eqref{eq:ao_object_space}. Therefore, the Equation~\eqref{eq:ao_object_space_factor} is the final formula to calculate the AO factor for a vertex $E$ using the object space AO method, where $N$ is the number of vertices in the model:
+\begin{equation}\label{eq:ao_object_space_factor}
+    k_a(E) = \frac{1}{N} \sum_{R=1}^{N} \text{accessibility}(R, E)
+\end{equation}
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[
+    scale=1.5,
+    vector/.style={-Stealth, thick, gray},
+    surface/.style={fill=blue!60!black, opacity=0.8}
+]
+
+    % --- Definición de Puntos ---
+    \coordinate (R) at (0,0);
+    \coordinate (E) at (1.5,2.5);
+
+    % --- Superficie R (Abajo) ---
+    \draw[surface] (R) ellipse (1 and 0.25);
+    \node[below=8pt] at (R) {$R$};
+
+    % --- Superficie E (Arriba, rotada) ---
+    \begin{scope}[shift={(E)}, rotate=20]
+        \draw[surface] (0,0) ellipse (0.3 and 1.2);
+        \node[right=12pt] at (0,0) {$E$};
+    \end{scope}
+
+    % --- Línea de conexión (Vector r) ---
+    \draw[orange, thick] (R) -- (E) node[midway, right, black] {$r$};
+
+    % --- Normal en R y Ángulo theta_R ---
+    \coordinate (R_up) at (0,1.5);
+    \draw[vector] (R) -- (R_up) coordinate (nR);
+    
+    % Dibujar ángulo theta_R
+    \draw pic[
+            -Stealth,
+            draw=black,
+            angle radius=9mm,
+            angle eccentricity=1.6,
+            pic text={$\theta_R$}
+        ] {angle = E--R--R_up};
+
+    % --- Normal en E y Ángulo theta_E ---
+    % Calculamos un vector normal "hacia afuera" de la superficie inclinada
+    \coordinate (E_norm) at ($(E) + (-1, -0.4)$); 
+    \draw[vector] (E) -- (E_norm) coordinate (nE);
+
+    % Dibujar ángulo theta_E
+    % Usamos un punto auxiliar en la línea r para definir el ángulo
+    \draw pic[
+            -Stealth,
+            draw=black,
+            angle radius=9mm,
+            angle eccentricity=1.3,
+            pic text={$\theta_E$}
+        ] {angle = nE--E--R};
+
+\end{tikzpicture}
+    \caption{Object Space AO: Schematic representation of the accessibility of the vertex $E$ (emitter point) from the vertex $R$ (receiver point).}
+    \label{fig:object_space_ao}
+\end{figure}
+
+This method is really efficient, as no ray casting is needed. In addition, in order to increase the performance, the accessibility can be stored and only recalculated for the vertices that have changed their position or normal. This way, it also works for dynamic objects.
+
+\subsubsection{Shadowed Occluders}
+
+This approach faces a problem with the already shadowed occluders, which are the occluders that are themselves in shadow. For example: a point on the surface may have an object nearby that blocks light, but if that object is in turn covered by another geometry, we should not add both shadows. If we did, the point would appear artificially dark. Only the main occlusion should determine the final lighting.
+
+In order to solve this problem, the shadowed occluders should have less influence on the final AO factor. Multiple passes can be used to calculate the AO factor, and in each pass, the AO factor should be updated by multiplying the previous AO factor with the new one calculated in the current pass. This way, the influence of shadowed occluders is reduced, as their contribution to the AO factor will be multiplied by a value less than 1 in subsequent passes.
+
+\section{Bent Normals}
+
+Bent normals are a technique used in ambient occlusion to account for the directionality of light. Instead of just calculating the amount of ambient light that reaches a point on a surface, the normal shading is applied. However, the usual normal is not used, but a bent normal is calculated, which points in the direction of the most unoccluded path from the point on the surface. This allows for more accurate shading, as it takes into account the fact that light may be coming from a specific direction, rather than being uniformly distributed.
+
+This technique obviously faces problems where more than one path is unoccluded, as it only considers the most unoccluded path. Therefore, it does not always provide the most accurate results, especially in complex scenes with multiple light sources and occluders.
+
+
+\section{Screen Space AO}
+
+Screen Space Ambient Occlusion (SSAO) is a real-time technique used in computer graphics to approximate ambient occlusion effects. It operates in screen space, meaning it firstly renders the scene to a depth buffer and then uses that information to calculate the ambient occlusion for each pixel on the screen\footnote{This is achieved using Deferred Shading, see Section~\ref{sec:deferred_shading}.}. This makes this technique more efficient, as only what is visible on the screen is processed, rather than the entire scene.
+
+For each pixel, SSAO samples the surrounding pixels (creating an sphere around the pixel) and checks the depth values to determine how much of the surrounding geometry is in front of the current pixel. The more geometry that is in front, the higher the occlusion factor, which results in a darker pixel. The reader may think that this method introduces a lot of noise, as in the edges between the occluded and non-occluded areas weird patterns may appear. However, this technique produces really good results, and is widely used in real-time applications given that it only processes what is visible on the screen, which makes it much faster than other methods that require processing the entire scene.
+
+\subsection{Deferred Shading}\label{sec:deferred_shading}
+
+As mentioned in the previous section, SSAO usually uses deferred shading, which is a rendering technique that separates the rendering process into two main stages: geometry pass and lighting pass.
+\begin{enumerate}
+    \item In the geometry pass, the scene is rendered and each of the necessary attributes (such as normals, depth, color, etc.) are stored in different textures, collectively known as the G-buffer. This allows for the storage of all the information needed for lighting calculations without having to re-render the geometry for each light source.
+    \item In the lighting pass, only the visible pixels are processed. The whole image is covered using just two triangles, and for each pixel, the information stored in the G-buffer is used to calculate the lighting, including the ambient occlusion using SSAO. This way, the lighting calculations are performed only on the pixels that are visible on the screen, which significantly improves performance compared to traditional forward rendering techniques where lighting is calculated for every object in the scene regardless of visibility.
+\end{enumerate}
+
+\subsection{SSAO Extensions}
+
+There are various extensions to the basic SSAO technique that aim to improve the quality of the results or to add additional features. Some of them also include using the normals stored in the G-buffer to take into account the directionality of light, which can help to reduce the noise and improve the overall appearance of the ambient occlusion. 
+
+
+\subsubsection{Horizon-Based Ambient Occlusion (HBAO)}
+
+Horizon-Based Ambient Occlusion (HBAO) is an extension of the SSAO technique that aims to provide higher quality results. Using the same precomputed data in the G-buffer, HBAO calculates the AO factor by considering how much of the surrounding geometry is visible from the current pixel, taking into wide is the horizon.
+\begin{equation*}
+    AO = \sin(h) - \sin(t)
+\end{equation*}
+where $h$ is the angle between the first occluder in a given direction (called horizon vector) and the reference, and $t$ is the angle between the tangent vector and the reference. This method provides better results than basic SSAO, as it takes into account the geometry of the scene more accurately, but it is also more computationally expensive.
+This method also faces problems at the edges of the screen, as the horizon vector may not be properly calculated due to the lack of surrounding pixels.
