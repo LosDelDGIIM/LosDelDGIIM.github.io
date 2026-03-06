@@ -118,7 +118,7 @@ This technique obviously faces problems where more than one path is unoccluded, 
 
 Screen Space Ambient Occlusion (SSAO) is a real-time technique used in computer graphics to approximate ambient occlusion effects. It operates in screen space, meaning it firstly renders the scene to a depth buffer and then uses that information to calculate the ambient occlusion for each pixel on the screen\footnote{This is achieved using Deferred Shading, see Section~\ref{sec:deferred_shading}.}. This makes this technique more efficient, as only what is visible on the screen is processed, rather than the entire scene.
 
-For each pixel, SSAO samples the surrounding pixels (creating an sphere around the pixel) and checks the depth values to determine how much of the surrounding geometry is in front of the current pixel. The more geometry that is in front, the higher the occlusion factor, which results in a darker pixel. The reader may think that this method introduces a lot of noise, as in the edges between the occluded and non-occluded areas weird patterns may appear. However, this technique produces really good results, and is widely used in real-time applications given that it only processes what is visible on the screen, which makes it much faster than other methods that require processing the entire scene.
+For each pixel, SSAO samples the surrounding pixels (creating an sphere around the pixel) and checks the depth values to determine how much of the surrounding geometry is in front of the current pixel, using therefore the \verb|z|-buffer to recreate the profile. The more geometry that is in front, the higher the occlusion factor, which results in a darker pixel. The reader may think that this method introduces a lot of noise, as in the edges between the occluded and non-occluded areas weird patterns may appear. However, this technique produces really good results, and is widely used in real-time applications given that it only processes what is visible on the screen, which makes it much faster than other methods that require processing the entire scene.
 
 \subsection{Deferred Shading}\label{sec:deferred_shading}
 
@@ -135,9 +135,16 @@ There are various extensions to the basic SSAO technique that aim to improve the
 
 \subsubsection{Horizon-Based Ambient Occlusion (HBAO)}
 
-Horizon-Based Ambient Occlusion (HBAO) is an extension of the SSAO technique that aims to provide higher quality results. Using the same precomputed data in the G-buffer, HBAO calculates the AO factor by considering how much of the surrounding geometry is visible from the current pixel, taking into wide is the horizon.
+Horizon-Based Ambient Occlusion (HBAO) is an extension of the SSAO technique that aims to provide higher quality results. For every pixel, HBAO also uses an integral approach to calculate the ambient occlusion factor, but instead of integrating over the hemisphere, it integrates over the circle that encloses the pixel. For each direction $\theta$ in the circle, calculates:
+\begin{itemize}
+    \item The tangent angle $T(\theta)$: the angle between the tangent vector and the $x$ axis.
+    \item The horizon angle $H(\theta)$: the angle between the horizon vector and the $x$ axis. The horizon vector is the vector that points to the first occluder in a given direction, which is calculated by sampling the depth buffer along that direction until an occluder is found.
+\end{itemize}
+
+Therefore, the ambient occlusion factor in the pixel $p$ is:
 \begin{equation*}
-    AO = \sin(h) - \sin(t)
+    AO(p) = 1 - \int_{-\pi}^{\pi} \left(\sin(H(\theta)) - \sin(T(\theta))\right) W(\theta) d\theta
 \end{equation*}
-where $h$ is the angle between the first occluder in a given direction (called horizon vector) and the reference, and $t$ is the angle between the tangent vector and the reference. This method provides better results than basic SSAO, as it takes into account the geometry of the scene more accurately, but it is also more computationally expensive.
-This method also faces problems at the edges of the screen, as the horizon vector may not be properly calculated due to the lack of surrounding pixels.
+where $W(\theta)$ is just a factor needed so that $AO\in [0,1]$. Even though it is slower because of the integral, this method is still really efficient because it also uses Deferred Shading. It provides better results than basic SSAO, as it takes into account the geometry of the scene more accurately, but it is also more computationally expensive.\\
+
+This method also faces problems at the edges of the screen, as the horizon vector may not be properly calculated due to the lack of surrounding pixels. In order to solve this problem, the image is usually rendered in a quite larger scene, and then the edges are cropped to fit the screen. This way, the horizon vector can be calculated properly even at the edges of the screen, which improves the overall quality of the ambient occlusion effect.
