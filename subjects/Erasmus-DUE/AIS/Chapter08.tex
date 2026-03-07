@@ -1,0 +1,183 @@
+\chapter{Terrain Rendering}
+
+Terrain rendering is the process of rendering a 3D representation of real terrain (as opposite to terrain synthesis, which is the process of generating a 3D representation of a terrain). It is a crucial aspect of computer graphics, as it is used in several different applications with different requirements:
+\begin{itemize}
+    \item Games: High, constant frame rate. The quality is desired to be as good as possible, but it is not the most important aspect.
+    \item Simulators: Constraint frame rate, and a high level of realism and accuracy is required.
+    \item Geographical Information Systems (GIS): The quality and accuracy of the terrain is the most important aspect, and the frame rate is not a concern.
+\end{itemize}
+
+However, all these applications face the same challenge: the data set is usually large to gigantic (terabytes) and increasingly detailed. Working with such large data sets is a challenge, and it is usually not possible to load the entire data set into memory.
+
+\section{Techniques for Terrain Rendering}
+
+Usuall, the terrain is represented using two different textures:
+\begin{itemize}
+    \item Height map: A 2D texture that stores the height of the terrain at each point. It is usually a grayscale image, where the intensity of each pixel represents the height of the terrain at that point.
+    \item Color map: A 2D texture that stores the color of the terrain at each point. It is usually a RGB image, where the color of each pixel represents the color of the terrain at that point.
+\end{itemize}
+However, more information can be stored, such as the normal map, cloud coverage map, etc. Having all this information would allow us to render the terrain as we have seen in previous chapters, but it would not be efficient. Therefore, we need to use different techniques to render the terrain efficiently.
+
+\subsection{Terrain Ray Tracing}
+
+Terrain ray tracing is a technique that allows us to render the terrain efficiently by tracing rays from the camera to the terrain. However, detecting the intersection of the rays with the terrain is really computationally expensive, and it is not possible to do it in real time. Therefore, a hierarchical data structure is used to accelerate the ray tracing process.
+\begin{itemize}
+    \item A \emph{quadtree} is a hierarchical data structure that divides the 2D space into four quadrants. Each quadrant can (but is not required to) be further subdivided into four quadrants, and so on.
+    \item A \emph{octree} is the generalization of a quadtree to 3D space. It divides the 3D space into eight octants, and each octant can (but is not required to) be further subdivided into eight octants, and so on.
+    \item A \emph{kD tree} is another hierarchical data structure that divides the space into two halves at each level. It is a binary tree, where each node represents a splitting plane that divides the space into two halves.
+\end{itemize}
+
+Therefore, the ray tracing process can be accelerated by using an \emph{octree} or a \emph{kD tree} to store the terrain data, where large bounding boxes are used to represent the space where there is no terrain, and smaller bounding boxes are used to represent the space where there is terrain, so that it encloses the terrain as tightly as possible. This way, and given that the intersaction of a ray with a bounding box is much cheaper than the intersection of a ray with the terrain, we can quickly discard large portions of the terrain that are not visible, and only check for intersections with the terrain in the areas that are visible.
+
+
+
+\subsection{Rendering Polygonal Models}
+
+Another technique to render the terrain is to use a polygonal model, where the terrain is represented as a mesh of triangles.
+\begin{itemize}
+    \item The first implementation that the reader might think of is to use triangles (the \texttt{GL\_TRIANGLES} primitive) to represent the terrain, where each triangle represents a small portion of the terrain. However, this approach is not efficient with regards to memory. A vertex is not usually used by only one triangle, but by several triangles (usually 6), and therefore, we would need to store the same vertex multiple times, which is a waste of memory.
+    \item A better approach is to use triangle strips (the \texttt{GL\_TRIANGLE\_STRIP} primitive), where each triangle shares two vertices with the previous triangle. This way, we can reduce the amount of memory needed to store the terrain, as we only need to store each vertex once, and we can reuse it for multiple triangles.
+\end{itemize}
+
+This technique has different optimizations that can be applied to improve the performance of the rendering process, as the following ones.
+
+\subsubsection{Mesh decimation}
+
+Mesh decimation is a technique that allows us to reduce the number of triangles in the mesh, while preserving the overall shape of the terrain. This can be applied in flat regions, where the terrain does not change much, and therefore, we can use fewer larger triangles to represent the terrain. This technique is not suitable for areas with a lot of detail, as it would result in a loss of detail, but it can be used in flat regions to reduce the number of triangles and improve the performance of the rendering process.
+
+\subsubsection{Level of detail (LOD)}
+
+Level of detail (LOD) is a technique that allows us to use different levels of detail for different parts of the terrain, depending on the distance from the camera. For example, we can use a high level of detail (with more triangles) for the parts of the terrain that are close to the camera, and a low level of detail (with fewer triangles) for the parts of the terrain that are far from the camera, as they will not be visible in much detail. This way, we can reduce the number of triangles that need to be rendered, and therefore, improve the performance of the rendering process.
+
+\subsubsection{Real-time Optimally Adapting Mesh (ROAM)}
+
+Real-time Optimally Adapting Mesh (ROAM) is a technique that allows us to adapt the mesh in real time, depending on the distance from the camera and the level of detail required. The mesh is continously split until no contribution is added. This technique implements both the mesh decimation and the level of detail techniques:
+\begin{itemize}
+    \item \ul{Mesh decimation}:
+
+    In order to decide if a division contributes, the difference between the height of the new vertex and the height of the vertexes that surround it is calculated, and if the difference is greater than a certain threshold, then the division is performed, otherwise, it is not performed.
+    \item \ul{Level of detail (LOD)}:
+
+    That treshold can be calculated as a function of the distance from the camera, so that the closer the vertex is to the camera, the smaller the threshold is, and therefore, the more likely it is that the division will be performed; and the farther the vertex is from the camera, the larger the threshold is, and therefore, the less likely it is that the division will be performed.
+\end{itemize}
+
+As we can see, this technique allows us to adapt the mesh in real time, and therefore, it can be used to render the terrain efficiently, as it reduces the number of triangles that need to be rendered, while preserving the overall shape of the terrain. This technique uses a \emph{Triangle Binary Tree} to store the mesh, where each node represents a triangle, and the children of a node represent the triangles that are created by splitting the parent triangle. This way, we can easily perform the mesh decimation and the level of detail techniques, as we can easily access the triangles that need to be split or merged.\\
+
+A problem that can arise when splitting the triangles is the $T$-junction problem, which occurs when a triangle is split, and the new vertex is not shared by any other triangle, which can result in visual artifacts. This is a problem, because:
+\begin{itemize}
+    \item Given floating point precision, the new vertex might not be exactly on the edge of the triangle, and therefore, holes can appear in the mesh, which can result in visual artifacts.
+    \item Interpolation problems can arise, as the new vertex might not be shared by any other triangle, and therefore, the interpolated color next to the new vertex might not be correct, which can result in visual artifacts.
+\end{itemize}
+
+In order to solve this problem, two different techniques can be used:
+\begin{itemize}
+    \item \ul{Recursive splits}: When a triangle is split, as many successive splits as necessary are performed, until no $T$-junctions are created.
+    \item \ul{Geomorphing}: When a triangle is split, the new vertex is slightly moved to the inside of the triangle, so that instead of creating a $T$-junction, a small triangle is created, which can be rendered without visual artifacts.
+\end{itemize}
+
+Even though the ROAM technique produces good results, dynamic real-time mesh adaptation is too expensive for modern graphics hardware, and therefore, it is not so used in practice.
+
+\section{GPU-Friendly Terrain Rendering}
+
+The techniques that we have seen so far are not very GPU-friendly, as they require a lot of CPU-GPU communication, and they are not suitable for modern graphics hardware. Therefore, we need to use different techniques that are more suitable for modern graphics hardware, such as the following ones.
+
+\subsection{Geometry Clipmaps}
+
+Geometry clipmaps is a technique that allows us to render the terrain efficiently by using a hierarchical data structure that is stored in the GPU. The terrain is represented as a set of \emph{nested grids}, similar to a pyramid mipmap, where each grid represents a different LoD of the terrain. Each level covers much more area than the previous one, but with less detail. The grid is centered around the camera.
+
+When the camera moves, only some information needs to be updated, as the grid is centered around the camera, and therefore, only the information that is outside the grid needs to be updated. This way, not the entire terrain needs to be updated, but only a small portion of it, which can be done efficiently in the GPU.
+
+Some of its advantages are that, given that the structure of the nested grids is regular, it enables fast rendering using triangle strips. In addition, only regular and continuous chunks of memory have to be read, which is also efficient. However, only LoD and no mesh decimation depending the hight of the terrain is implemented, so more triangles than necessary are rendered.
+
+
+\subsection{Tile-based, restricted Quadtree}
+
+% // TODO: Duda
+
+Tile-based, restricted quadtree is a technique that allows us to render the terrain efficiently by using a quadtree data structure that is stored in the GPU. The original terrain (which is a texture) is split into tiles. The root node of the quadtree represents the entire terrain, and each child node represents a quadrant of the parent node, but with a higher level of detail.
+
+This way, a regular mesh is created. To store this mesh on the GPU efficiently, vertex compression via linearization of the restricted quadtree can be used. This technique stores the mesh in a compact form, reducing the amount of memory required. The mesh is linearized by depth-first traversing the quadtree and generating a continuous triangle strip, where each new triangle only requires adding one additional vertex.
+
+\subsection{S3TC (DXT*)}
+
+S3 Texture Compression (S3TC) is a technique that allows us to compress textures. It is a lossy compression technique (it reduces the quality of the texture), but it decoding is very fast, and it can be done in the GPU. The texture is divided into blocks of 4x4 texels, and each block is compressed independently.
+\begin{itemize}
+    \item Originally, in a texture that uses $8$ bits per channel, each texel would require $3\cdot 8 = 24$ bits.
+    \item With S3TC, each block of 4x4 texels (16 texel) is compressed into 64 bits, which means that each texel requires only $\nicefrac{64}{16} = 4$ bits, which is a compression ratio of 6:1.
+\end{itemize}
+
+For each block, only four colors are considered, two of them are representative colors, and the other two are obtained by interpolating the two representative colors.
+\begin{itemize}
+    \item $c_0 (00)$: One of the representative colors.
+    \item $c_1 (01)$: The other representative color.
+    \item $c_2 (10)$: An interpolated color, which is closer to $c_0$.
+    \item $c_3 (11)$: Another interpolated color, which is closer to $c_1$.
+\end{itemize}
+
+For each of the 16 texels, one of the four colors is chosen, and therefore, we need 2 bits to store the color of each texel. This means that we need $16\cdot 2 = 32$ bits to store the color of the 16 texels. In addition, each of the representative colours is represented using 16 bits\footnote{The RGB 565 format is used, where 5 bits are used for the red channel, 6 bits for the green channel, and 5 bits for the blue channel. This format is used because the human eye is more sensitive to green than to red and blue.}, which means that the they require the other 32 bits.
+
+The remaining challenge is how to choose the representative colors, and how to decide which of the four colors to use for each texel. Two different techniques can then be used to compress the texture.
+
+\subsubsection{Range fit}
+
+All the colors in the block are represented in a 3D color space (where each axis represents one of the color channels).
+\begin{enumerate}
+    \item First of all, a main axis is calculated, which is the axis that best fits the distribution of the colors in the block.
+    \item Then, the colors are projected onto the main axis, so now we have a 1D distribution of the colors.
+    \item The representative colors are chosen as the two colors whose projections are the farthest apart, so that they can represent the colors in the block as well as possible. They are then two of the colors that the block contains.
+    \item A line is drawn between the two representative colors, and the other two colors are obtained by interpolating the two representative colors, so that they are equally spaced on the line. This way, the four colors are equally spaced on the line, and therefore, they can represent the colors in the block as well as possible. It should be noted that these two new colors might not be colors that the block contains, but they are still good representative colors for the block.
+    \item Finally, for each of the 16 texels, the color that is closest to the color of the texel is chosen.
+\end{enumerate}
+
+This technique is simple and fast, but it does not always produce good results. If a color is an outlier, it can affect the main axis and the representative colors, which can result in a poor representation of the colors in the block.
+
+\subsubsection{Cluster fit}
+
+Cluster fit is a technique that allows us to find the representative colors by clustering the colors in the block. As happens with the range fit technique, the colors are represented in a 3D color space.
+\begin{enumerate}
+    \item First of all, a main axis is calculated, which is the axis that best fits the distribution of the colors in the block.
+    \item Each of the colors in the block is projected onto the main axis, so now we have a 1D distribution of the colors.
+    \item The part of the main axis where there are projections is divided into four equal parts, which represents four different clusters. For each of the 16 colors, one of the four clusters is chosen, depending on which of the four parts of the main axis the projection of the color falls into.
+    \item The representative color of each cluster is calculated as the average of the colors in the cluster, so that it can represent the colors in the cluster as well as possible. It should be noted that the representative colors might not be colors that the block contains, but they are still good representative colors for the block.
+\end{enumerate}
+
+This technique is more complex and slower than the range fit technique, but it can produce better results, as it is less affected by outliers, as the representative colors are calculated as the average of the colors in the cluster.
+
+
+
+
+\section{Rendering Execution Methods}
+
+There are two different rendering execution methods that can be used to render the terrain: \emph{rastering} and \emph{ray casting}.
+
+\subsection{Rastering}
+
+Rastering is the traditional rendering method, where the terrain is represented as a mesh of triangles, and the triangles are rasterized to produce the final image. This method is efficient for rendering polygonal models. The time complexity of this method, where $T$ is the number of triangles and $F$ is the number of fragments, is:
+\begin{equation*}
+    t_{\text{Rasterizer}}(T, F) = O(T) + O(F)
+\end{equation*}
+
+However, usually the fragment processing is not considered, as no interpolation is needed (everything is stored in textures), and therefore, the time complexity is usually considered to be $O(T)$:
+\begin{equation*}
+    t_{\text{Rasterizer}}(T) \approx O(T)
+\end{equation*}
+
+Therefore, this method is efficient when the number of triangles is not too large.
+
+\subsection{Ray Casting}
+
+Ray casting is a rendering method where rays are cast from the camera to the terrain, and the color of each pixel is determined by the intersection of the ray with the terrain. This method is efficient when a Quadtree or an Octree is used to store the terrain data, as it allows us to quickly discard large portions of the space where there is no terrain, and therefore, no intersection can occur. The time complexity of this method, where $P$ is the number of pixels and $S$ is the number of steps taken to find the intersection of a ray with the terrain, is:
+\begin{equation*}
+    t_{\text{RayCaster}}(P, S) = O(P\cdot S)
+\end{equation*}
+
+However, usually the number of steps is considered to be constant, so the time complexity is usually considered to be $O(P)$:
+\begin{equation*}
+    t_{\text{RayCaster}}(P) \approx O(P)
+\end{equation*}
+
+Therefore, this method is efficient when the number of pixels is not too large.
+
+\subsection{Hybrid Method}
+
+The hybrid method is a rendering method that combines the rastering and ray casting methods, using the one that is more efficient for each part of the terrain. For example, representing a forest might involve a small part of the scene (low number of pixels) but a big number of triangles, so ray casting would be more efficient; while representing a flat terrain might involve a big part of the scene (high number of pixels) but a small number of triangles, so rastering would be more efficient. This way, we can take advantage of the strengths of both methods, and therefore, we can render the terrain efficiently.
