@@ -1,1 +1,64 @@
 \chapter{Terrain Synthesis}
+
+Terrain synthesis is the process of generating realistic terrain models for various applications, such as video games, simulations, and virtual reality. The goal is to create visually appealing and believable landscapes that can be used in a variety of contexts. The proterties that the generated terrain should have include:
+\begin{itemize}
+    \item Non-repetitive: The terrain should not have obvious repeating patterns.
+    \item Infinite extent: The terrain should be able to extend indefinitely in all directions.
+    \item Interactive frame rates: The terrain should be generated and rendered efficiently to allow for real-time interaction.
+    \item Real-time editing: The terrain should be editable in real-time, allowing users to modify the landscape as needed. Since the terrain is generated, the programmer should be able to modify the terrain generation parameters in real-time, allowing for dynamic changes to the landscape.
+\end{itemize}
+
+All of these properties can be achieved through \emph{fractal terrain synthesis}. This is a method of generating terrain using fractal algorithms. Fractals are mathematical objects that exhibit self-similarity at different scales, making them ideal for modeling natural phenomena such as mountains, valleys, and coastlines. The fractal terrain synthesis process is known as \emph{Rescale-and-add}.
+
+\section{Rescale-and-add}
+
+The rescale-and-add process is a method of generating terrain by repeatedly rescaling and adding a base image. This process creates a fractal-like structure that can produce realistic terrain features. The process is iterative and involves the following steps:
+\begin{enumerate}
+    \item Start with a simple base, such as simple noise of some filter.
+    \item Rescale the base to half the size of the original.
+    \item Rescale the rescaled base to half its size.
+    \item ...
+    \item The smaller the size, the more detail is added to the terrain. This process is repeated until the desired level of detail is achieved.
+    \item The final terrain is obtained by summing all the rescaled versions, but the smaller will have more influence on the final terrain than the larger ones. This is because the smaller versions add more detail to the terrain, while the larger versions provide a rough outline of the landscape.
+\end{enumerate}
+
+The rescale-and-add process can be implemented using the Equation~\eqref{eq:rescale-and-add}, which represents the height of the terrain at a given point $(x, y)$ as a sum of rescaled versions of the base image:
+\begin{equation}
+    H(x, y) = \sum_{i=0}^{n} \frac{1}{2^{n-i}} \cdot F\left( \frac{1}{2^i} x, \frac{1}{2^{n-i}}\cdot y \right)
+    \label{eq:rescale-and-add}
+\end{equation}
+
+The function $F$ represents the base image, which can be generated using various different functions, such as filtered white noise, Perlin noise, images... The choice of the base image will affect the final appearance of the terrain, as it determines the overall structure and features of the landscape.
+
+\subsection{Parameters and their effects}
+
+In fact, the rescale-and-add process has four parameters that can be adjusted to achieve different types of terrain:
+\begin{itemize}
+    \item Base function $F$.
+    \item Roughness $r$: This parameter controls the influence of the smaller rescaled versions on the final terrain.
+    \item Octaves $o$: This parameter determines the number of rescaled versions that are added together to create the final terrain.
+    \item Lacunarity $l$: This parameter controls the rescaling factor between successive octaves.
+\end{itemize}
+
+Using those parameters, we can create a wide variety of terrains, from smooth rolling hills to rugged mountains and deep valleys. The Equation~\eqref{eq:rescale-and-add-parameters} represents the height of the terrain at a given point $(x, y)$ with the parameters included:
+\begin{equation}
+    H(x, y) = \sum_{i=0}^{o} \frac{1}{2}\cdot r^{i-1} \cdot F\left( \frac{1}{l^{o-i}} x, \frac{1}{l^{o-i}} y \right)
+    \label{eq:rescale-and-add-parameters}
+\end{equation}
+
+We can observe that the Equation~\eqref{eq:rescale-and-add} is a special case of the Equation~\eqref{eq:rescale-and-add-parameters} when $r = 0.5$, $o = n$ and $l = 2$.
+
+\subsection{Multifractals}
+
+Multifractals are a generalization of fractals that can model more complex and heterogeneous structures. In the context of terrain synthesis, multifractals can be used to create terrains with varying degrees of roughness and detail across different regions. In order to achieve this, we can have different base functions $F_i(x,y)$, each one with its own weight $a_i(x,y)$, which determines the influence of each base function on each point of the terrain. The functions $a_i$ have to satisfy the following conditions forall point $(x,y)$:
+\begin{enumerate}
+    \item $a_i(x,y) \geq 0\qquad \forall i$, which means that the weights must be non-negative.
+    \item $\sum\limits_{i} a_i(x,y) = 1$, which means that the weights must sum to 1 at each point.
+\end{enumerate}
+
+Under these conditions, the function $F$ of the Equation~\eqref{eq:rescale-and-add-parameters} can be defined as a weighted sum of the base functions:
+\begin{equation}
+    F(x,y) = \sum_{i} a_i(x,y) \cdot F_i(x,y)
+\end{equation}
+
+This allows for the creation of different types of terrain in different regions, as the weights can be adjusted to give more influence to certain base functions in specific areas.
