@@ -1,2 +1,98 @@
 \chapter{Fur}
 
+Plenty of different objects in our real world are made of fur: animals, carpets, coats... even people's hair is considered fur. Rendering fur is a challenging problem in computer graphics, as it requires simulating the complex interactions of light with the individual strands of fur. In this chapter, we will explore various techniques for rendering fur.
+
+\section{Geometric Representation of Fur}
+
+One common approach to rendering fur is to represent it using geometric primitives. The most common primitives used for this purpose are lines and cylinders or cones.
+\begin{itemize}
+    \item \ul{Cones/Cylinders}: Each strand of fur can be represented as a cone or cylinder, with the base at the root of the fur and the tip at the end. This allows for a more realistic representation of the fur's thickness and tapering. However, this approach is computationally expensive on current hardware. Taking into account the large number of strands required to create a realistic fur effect, rendering each strand as a cone or cylinder can be very resource-intensive.
+    \item \ul{Lines}: It creates a more interactive representation, used specially with sparse fur. However, it has poor filtering and the collision tests are expensive.
+\end{itemize}
+
+\section{Texture-Based Fur Rendering}
+
+Another approach to rendering fur is to use texture-based techniques. Two main approaches are the \emph{volume textures} and the \emph{shell textures}.
+
+\subsection{Volume Textures}
+
+Volume textures are 3D textures that store information about the fur's density and color. They can be used to create a representation of fur. However, the result is not very realistic, as it does not capture the individual strands of fur and their interactions with light; it is just a sticked-on texture.
+
+\subsection{Shell Textures}
+
+Shell textures are a more advanced technique that involves layering multiple textures to create a more realistic representation of fur. A base shell texture is created to represent the overall shape and density of the fur, and then multiple layers are added on top (regularly spaced) to add detail and depth. This technique can produce more realistic results than volume textures, as it allows for the simulation of individual strands of fur and their interactions with light. The process of generating the shell texture has the following steps:
+\begin{enumerate}
+    \item Seed the surface with curl starting points.
+    \item Simulate the curl growth by using a physics-based model to determine how the strands of fur will grow and curl over time.
+    \item Interpolation is used to create more strands of fur between the seed points, resulting in a denser and more realistic fur effect. Hair-to-hair collisions are ignored.
+    \item The volume is sampled to obtain the color, opacity and the normal of the fur at each point, which are then used to create the final shell texture.
+\end{enumerate}
+
+However, three main issues arise with this technique:
+\begin{itemize}
+    \item \ul{Surface Parameterization}: Given an arbitrary surface, it is not always easy to find a good parameterization for the fur. In 2D, it is easy to find a parameterization for a surface, but in 3D, it can be more difficult to find a parameterization that works well for the fur.
+    \item \ul{Texture memory usage}: Several shells are used, over the entire surface, and at hair resolution, which can lead to high memory usage.
+    \item \ul{Poor Silhouettes}: The silhouette of the fur can look unrealistic, as the shells break apart at oblique angles, creating a jagged and unnatural appearance instead of a smooth silhouette.
+\end{itemize}
+
+\subsubsection{Lapped volume textures}
+
+This solution solves two problems: the surface parameterization and the memory usage. It should be noted that this solution is notonly for shell texture, but it can be applied to any volume texture. This approach has the following steps:
+\begin{enumerate}
+    \item Firstly, a texture patch is created. A texture patch is a small representative section of the volume texture.
+    \item Then, the local orientation of the surface is computed. This involves determining the direction of the surface (usually using the normal and tangent vector), in order to know how to orient the texture patch on the surface.
+    \item Once the local orientation is computed, the texture patch is applied to the surface, repeating it as necessary to cover the entire surface. The texture patch is oriented according to the local orientation of the surface, ensuring that it aligns correctly with the surface's features.
+\end{enumerate}
+
+Everything is stored in a \emph{texture atlas}, which is a large 2D texture that contains all the surface. This way, two different points on the surface will not share the same texture coordinates, which allows for a more efficient use of memory and better performance. This way, the parameterization problem is solved and the memory usage is reduced, as only a small representative section of the volume texture is stored in the texture atlas, rather than the entire volume texture.
+
+\subsubsection{Fin textures}
+
+This solution solves the silhouette problem. It is a technique that involves using a series of fin-like structures to create a more realistic silhouette for the fur. The fins are created by extruding the textures but in a perpendicular direction to the surface, rather than parallel to it. Depending on the viewing angle, the fins can be faded out to create a more realistic appearance. This allows for a more natural and smooth silhouette.
+
+\subsubsection{Rendering}
+
+In order to render the fur using this technique and the solutions mentioned above, the rendering order is as follows:
+\begin{enumerate}
+    \item Render the skin. This is the base layer of the fur, and it provides the underlying color and texture for the fur.
+    \item Render the fin textures.
+    \item Render the shell textures.
+\end{enumerate}
+
+Both the fin textures and the shell textures should be rendered with alpha blending (in order to create a more realistic appearance), and with the depth write disabled.
+
+\section{Hair Simulation}
+
+In order to simulate human hair, a constrained particle-based hair simulation is used. These are the needed steps:
+\begin{enumerate}
+    \item Some guided hair strands are created, which are used to define the overall shape of the hair. They are defined as bezier curves, which allows for a smooth and natural appearance.
+    \item The guide strands are then tessellated into a set of stright lines (which is the primitive used for rendering the hair). Tessellation is the process of breaking down the guide strands into smaller segments, which can be rendered.
+    \item The hair strands are then interpolated between the guide strands, creating a dense and realistic hair effect. This involves using the guide strands as a reference to create new strands of hair that are similar in shape and direction to the guide strands.
+\end{enumerate}
+
+\subsection{Grid-based fluid simulation}
+
+In order to simulate correct hair dynamics, a grid-based fluid simulation is used. Two ping-pong volumes are used, which means that two volumes are used to store the hair simulation data, and they are alternately read from and written to during the simulation process. This allows for efficient memory usage and better performance.\\
+
+First of all, a (precomputed) mesh collision volume (or analytic body description) is created, which is used to detect collisions between the hair and the body in an easy and efficient way. After that, the guide hairs are voxelized (converted into a grid-based representation). For each voxel, the following forces are computed:
+\begin{itemize}
+    \item Wind forces
+    \item Gravity forces
+    \item If the voxel is colliding with the body, then a collision response force is computed so that the hair does not penetrate the body.
+\end{itemize}
+
+However, and given that no hair-to-hair collisions are simulated, the hair strands can pass through each other and may appear too dense or tangled. To address this issue, a last artificial force is added to the simulation in the \emph{negative direction of the hair density gradient}. This force helps to spread the hair strands apart and create a more natural and realistic appearance, perserving the hair volume.
+
+
+\section{Example: Ratatouille}
+
+Ratatouille is an example of a movie that used the techniques described in this chapter to create realistic fur for the characters. They used cylinders to represent the fur with the following techniques:
+\begin{itemize}
+    \item \ul{Perfect Bounding Boxes}: They used perfect bounding boxes to optimize the rendering of the fur, which allowed them to efficiently detect collisions and occlusions.
+    \item \ul{Level of Detail (LOD)}: They used LOD techniques to reduce the complexity of the fur rendering depending on:
+    \begin{itemize}
+        \item Distance: The further the character is from the camera, the less detail is needed for the fur.
+        \item Motion blur: When the character is moving quickly, less detail is needed for the fur, as it will be blurred in the final image.
+        \item Depth of field: When the character is out of focus, less detail is needed for the fur, as it will be blurred in the final image.
+    \end{itemize}
+\end{itemize}
