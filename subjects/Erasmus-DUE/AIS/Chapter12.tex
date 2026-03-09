@@ -1,9 +1,158 @@
 \chapter{REYES}
 
-``Render Everything You Ever Saw'' (REYES) is a rendering algorithm developed by Pixar Animation Studios and described in the paper \myhref{https://dl.acm.org/doi/epdf/10.1145/37402.37414}{``The Reyes Image Rendering Architecture''}. It was used in many of Pixar's films, and in order to present it, they used the well known ``The Road to Point Reyes'' image\footnote{Point Reyes is actually a national park in California, where this algorithm was developed.}, which is shown in the Figure~\ref{fig:reyes}. Even though it may appear to be unrealistic, it was really impresive at the time.
+``Render Everything You Ever Saw'' (REYES) is a rendering algorithm developed by Lucasfilm Graphics group in the 80s, used by PIXAR, and described in the paper \myhref{https://losdeldgiim.github.io/subjects/Erasmus-DUE/AIS/aux/REYES.pdf}{``The Reyes Image Rendering Architecture''}. It was used in many of Pixar's films, and in order to present it, they used the well known ``The Road to Point Reyes'' image\footnote{Point Reyes is actually a national park in California, where this algorithm was developed.}, which is shown in the Figure~\ref{fig:reyes}. Even though it may appear to be unrealistic, it was really impresive at the time.
 \begin{figure}
     \centering
     \includegraphics[width=0.7\textwidth]{./img/pointreyes.jpg}
     \caption{The Road to Point Reyes, rendered using the REYES algorithm.}
     \label{fig:reyes}
+\end{figure}
+
+REYES is an architecture optimized for fast high-quality rendering of complex animated scenes.
+\begin{itemize}
+    \item Fast: being able to compute a feature-length film in approximately a year. This is still valid today, as the computational power has increased significantly but the complexity of the scenes has also increased.
+    \item High-quality: virtually indistinguishable from live action motion picture photography.
+    \item Complex: visually rich as real scenes.
+\end{itemize}
+
+The REYES architecture has some assumptions and goals that are worth mentioning:
+\begin{itemize}
+    \item \ul{Model complexity}: given that the scenes are complex, they expected the scenes to have hundreds of thousands of geometric primitives.
+    \item \ul{Model diversity}: it was needed support for a large variety of geometric primitives, especially data amplification primitives such us procedural models (for instance, as happens with hair, obtaining everything just from a couple of guide hairs), fractals and particle systems.
+    \item \ul{Shading complexity}: a programmable shader was needed.
+    \item \ul{Minimal Ray Tracing}: many non-local lighting effects can be approximated with texture maps. Few objects in natural scenes would seem to require ray tracing.
+    \item \ul{Speed}: assuming $\unit[24]{fps}$, in order to render a $\unit[2]{h}$ film in a year, the rendering time per frame should be around $\unit[3]{min}$.
+    \item \ul{Image Quality}: aliasing and faceting artifacts should be avoided.
+    \item \ul{Flexibility}: given that new techniques were going to be discovered, this architecture should be flexible enough to accomodate them.
+\end{itemize}
+
+\section{Design Principles}
+The assumptions previously described led us to a set of architectural design principles.
+\begin{itemize}
+    \item \ul{Natural Coordinates}: Each calculation should be done in a coordinate system that is natural for that calculation. For instance, texture mapping should be done in the coordinate system of the local surface geometry, while the visible surface calculations are most naturally done in pixel coordinates (screen space).
+    \item \ul{Vectorization}: The architecture should be able to exploit vectorization, parallelism and pipelining. Calculations that are similar should be done together. For instance, shading calculations are usually similar at all points on a surface, so an entire surface should be shaded at the same time.
+    \item \ul{Common Representation}: Most of the algorithm should work with a single type of basic geometric object. All geometric primitives are turned into micropolygons\footnote{Nowadays, they are called fragments.}, which are flat-shaded subpixel-sized quadrilaterals. All of the shading and visibility calculations are performed exclusively on micropolygons.
+    \item \ul{Locality}: Paging and data thrashing (when the data is too big to fit in memory) should be minimized.
+    \begin{itemize}
+        \item \ul{Geometric Locality}: Calculations for a geometric primitive should be performed without reference to other geometric primitives. Procedural models should be computed only once and should not be kept in their expanded form any longer than necessary.
+        \item \ul{Texture Locality}: Only the textures currently needed should be in memory, and textures should be read off the disk only once.
+    \end{itemize}
+    \item \ul{Linearity}: The rendering time should grow linearly with the size of the model.
+    \item \ul{Large models}: There should be no limit to the number of geometric primitives in a model.
+    \item \ul{Back door}: There should be a back door in the architecture so that other programs can be used to render some of the objects. This give us a very general way to incorporate any new technique (though not necessarily efficiently).
+    \item \ul{Texture maps}: Texture map access should be efficient, as we expect to use several textures on every surface.
+\end{itemize}
+
+\section{Algorithm}
+
+The REYES algorithm is described in Figure~\ref{fig:reyes-algorithm}. Each primitive is read from the model, and for each of them:
+\begin{enumerate}
+    \item The primitive is bounded (for instance, with a bounding box).
+    \item If the primitive is not on screen, it is culled, which means that it is discarded and not processed anymore.
+    \item If part of the primitive is on screen, then the diceable test is performed. Some primitives can be diced directly (converted into micropolygons), while others need to be split into smaller primitives until they are diceable. If the primitive is not diceable, it is split into smaller primitives, and introduced back into the start of the model processing pipeline.
+    
+    It should be noted that a geometric primitive that spans the $\veps$ and near planes may cause problems, because the $z$ coordinate is too small and can therefore result in problems regarding the perspective division. Therefore, those primitives are marked as not diceable, and therefore split, until their pieces can be culled or processed.
+\end{enumerate}
+
+Once the primitive is diced into micropolygons, the following steps are performed:
+\begin{enumerate}
+    \item The micropolygons are shaded. This is done by evaluating the shader at the center of each micropolygon, and then assigning the resulting color to the entire micropolygon. Here is where the textures are accessed, and where the programmable shader is executed.
+    \item After that, sampling is performed. Each micropolygon is sampled with 16 samples per pixel, avoiding therefore aliasing artifacts.
+    \item Then, visibility is computed. This is done by projecting the micropolygons onto the screen, and then determining which one is visible at each sample point. This is done with a z-buffer, which stores the depth of the closest micropolygon at each sample point. Here is where the back door is used.
+    \item Finally, the samples are filtered to produce the final pixel colors, which are stored in the picture.
+\end{enumerate}
+
+After all the primitives have been processed, the picture is complete and can be output to a file or displayed on the screen.
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.5cm and 1.5cm,
+        font=\small\sffamily,
+        thick,
+        block/.style={
+            draw=black!70, 
+            fill=white, 
+            align=center, 
+            inner sep=6pt, 
+            rounded corners=2pt,
+            line width=0.8pt,
+            minimum width=2cm,
+            drop shadow={opacity=0.2} 
+        },
+        main/.style={
+            block,
+            fill=blue!5,
+            draw=blue!60!black},
+        input/.style={
+            block,
+            fill=gray!10, dashed},
+        decision/.style={
+            diamond,
+            draw=orange!80!black,
+            fill=orange!5, 
+            aspect=2,
+            inner sep=2pt,
+            minimum width=2.5cm, font=\footnotesize\bfseries
+        }
+    ]
+
+        % NODOS
+        \node [main] (model) {\textbf{MODEL}};
+        \node [block, below=0.7cm of model] (read) {read model};
+        \node [block, below=of read] (bound) {bound};
+        
+        \node [decision, below=0.8cm of bound] (onscreen) {on screen?};
+        \node [block, right=1.2cm of onscreen, fill=red!5] (cull) {cull};
+        
+        \node [block, left=1.2cm of onscreen, fill=red!5] (split) {split};
+        
+        \node [decision, below=1.2cm of onscreen] (diceable) {diceable?};
+        
+        \node [block, below=1.2cm of diceable] (dice) {dice};
+        \node [block, below=of dice] (shade) {shade};
+        \node [block, below=of shade] (sample) {sample};
+        \node [block, below=of sample] (visibility) {visibility};
+        \node [block, below=of visibility] (filter) {filter};
+        \node [main, below=0.7cm of filter] (picture) {\textbf{PICTURE}};
+
+        % Entradas laterales
+        \node [input, left=2cm of shade] (textures) {TEXTURES};
+        \node [input, left=2cm of visibility] (backdoor) {BACK DOOR};
+
+        % CONEXIONES
+        \draw [-Stealth] (model) -- (read);
+        \draw [-Stealth] (read) -- (bound);
+        \draw [-Stealth] (bound) -- (onscreen);
+        
+        % On screen? N / Y
+        
+        \draw [-Stealth] (onscreen.east) -- (cull);
+        \node [yshift=0.25cm, xshift=0.4cm] at (onscreen.east) {\small N};
+        \draw [-Stealth, rounded corners] (split.north) |- (bound.west);
+        
+        \draw [-Stealth] (onscreen) -- (diceable);
+        \node [xshift=0.3cm, yshift=-0.4cm] at (onscreen.south) {\small Y};
+
+        % Diceable? N / Y
+        \draw [-Stealth, rounded corners] (diceable.west) -| (split.south);
+        \node [yshift=0.25cm, xshift=-0.4cm] at (diceable.west) {\small N};
+        
+        \draw [-Stealth] (diceable) -- (dice);
+        \node [xshift=0.3cm, yshift=-0.4cm] at (diceable.south) {\small Y};
+
+        % Flujo principal
+        \draw [-Stealth] (dice) -- (shade);
+        \draw [-Stealth] (shade) -- (sample);
+        \draw [-Stealth] (sample) -- (visibility);
+        \draw [-Stealth] (visibility) -- (filter);
+        \draw [-Stealth] (filter) -- (picture);
+
+        % Entradas
+        \draw [-Stealth, gray] (textures) -- (shade);
+        \draw [-Stealth, gray] (backdoor) -- (visibility);
+
+    \end{tikzpicture}
+    \caption{REYES algorithm.}
+    \label{fig:reyes-algorithm}
 \end{figure}
