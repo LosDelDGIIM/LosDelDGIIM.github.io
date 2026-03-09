@@ -335,7 +335,7 @@ Regarding JPEG compression, the DCT is applied to each block of $8\times 8$ pixe
 \begin{itemize}
     \item Increasing the value of $i$ corresponds to increasing the horizontal frequency, resulting in more precise representation of horizontal details/patterns in the image.
     \item Increasing the value of $j$ corresponds to increasing the vertical frequency, resulting in more precise representation of vertical details/patterns in the image.
-    \item The $DCT(0,0)$ component, also known as the DC coefficient, represents the average value of the block.
+    \item The $DCT(0,0)$ component, also known as the DC coefficient, represents the average value of the block. The other components are known as AC.
     \item If $n$ is the maximum value of $i$ and $j$, the $DCT(n,n)$ component represents the highest frequency component in the block, which corresponds to the finest details in the image.
 \end{itemize}
 
@@ -398,8 +398,43 @@ Once the quantized DCT coefficients are obtained, they need to be serialized in 
     \label{fig:zigzag}
 \end{figure}
 
-In addition, the serialized coefficients are not stored directly, but they are stored as a difference between the current coefficient and the previous one, which leads to more repetitive patterns in the data, which can be more efficiently compressed using Huffman encoding.
-
 
 
 \subsubsection{Coefficient encoding}
+
+After the coefficients are serialized, they need to be compressed. However, the DC coefficient is encoded differently than the AC coefficients.
+\begin{description}
+    \item[DC coefficient encoding]
+    
+    Given that the DC coefficient represents the average value of the block, it is likely to have similar values in adjacent blocks. Therefore, instead of encoding the DC coefficient directly, the difference between the DC coefficient of the current block and the DC coefficient of the previous block (the one to the left of the current block) is encoded. This way, if the DC coefficients of adjacent blocks are similar, the difference will be small.
+
+    In order to encode the difference, two values are calculated:
+    \begin{itemize}
+        \item \ul{Size}: It is the number of bits that are required to represent the unsigned value of the difference. For instance, if the difference is $-5$, the size is $3$ because $5$ can be represented in $3$ bits as $101$.
+        
+        In order to encode the size, Huffman Encoding is used where smaller sizes have more probability that bigger sizes. A predifined Huffman tree is used.
+        
+        \item \ul{Amplitude}: It represents the actual value of the difference, and it is always represented using the number of bits specified by the size. For instance, if the difference is $-5$ and the size is $3$, the amplitude will have $3$ bits. The size $m$ represents values in the range $[-(2^{m}-1), 2^{m}-1]$, but the values in the range $[-(2^{m-1}-1), 2^{m-1}-1]$ belong to the previous size, so they are not include. Therefore, a mapping is performed: $-(2^{m}-1)$ is mapped to $0$, $-(2^{m}-1)+1$ is mapped to $1$, and so on. For instance, if the difference is $-5$ and the size is $3$, the amplitude will be $2$ because $-5$ is mapped to $2$ in the range of size $3$.
+    \end{itemize}
+
+    As stated, the size is encoded using Huffman encoding (which is deterministic given the prefix-free property), and therefore how many bits are used to encode the amplitude is determined by the size, so there is no need to encode the size of the amplitude separately.
+
+    \item[AC coefficient encoding]
+    
+    The AC coefficients follow a different approach, as there may be many consecutive zero coefficients after quantization, especially for higher frequencies. Two symbols are used:
+    \begin{itemize}
+        \item \ul{Symbol 1}: It is a pair that represents:
+        \begin{itemize}
+            \item The number of consecutive zero coefficients before the current non-zero coefficient (using therefore RLE).
+            \item The size of the current non-zero coefficient, which is calculated in the same way as the size of the DC coefficient difference.
+        \end{itemize}
+        This pair is encoded using Huffman encoding using some predefined tables. Two important pairs should be noted:
+        \begin{itemize}
+            \item $(0,0)$: It represents the end of the block, and it is used when all the remaining coefficients in the block are zero. It can also be written as \texttt{EOB} (End Of Block).
+            \item $(15,0)$: It represents a run of $16$ consecutive zero coefficients, and it is used when there are more than $15$ consecutive zero coefficients before a non-zero coefficient. It can also be written as \texttt{ZRL} (Zero Run Length).
+        \end{itemize}
+        \item \ul{Symbol 2}: It represents the actual value of the current non-zero coefficient, and it is encoded in the same way as the amplitude of the DC coefficient difference, using the size of the current non-zero coefficient to determine how many bits are used to encode the value.
+    \end{itemize}
+
+    The encoding of the AC coefficients is done by first encoding the symbol 1 using Huffman encoding, and then encoding the symbol 2 using the size of the current non-zero coefficient to determine how many bits are used to encode the value.
+\end{description}
