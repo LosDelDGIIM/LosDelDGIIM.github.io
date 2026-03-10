@@ -9,6 +9,7 @@ The fixed-function pipeline is a traditional graphics pipeline that was widely u
 
 During this stage, the 3D models are created and defined. This includes defining the vertices, normals, texture coordinates, and other attributes of the 3D objects. In order to create the 3D models, the following primitives are used:
 \begin{itemize}
+    % // TODO: Memorizar primitivas
     \item \texttt{GL\_POINTS}
     \item \texttt{GL\_LINES}: A series of disconnected straight lines.
     \item \texttt{GL\_LINE\_STRIP}: A series of connected lines.
@@ -115,11 +116,11 @@ When a transformation $M$ is applied to a vertex $P$, the normal vector $N$ of t
 \end{equation*}
 \begin{proof}
 To understand why the normal vector should be transformed using the inverse transpose of the transformation matrix, we need to consider how transformations affect the geometry of the surface. Let $n$ be the normal vector of a surface at a point $P$ and $t$ be the tangent vector at the same point. For clarity, let's use $T_O$ to denote the transformation applied to the points (the tangent) and $T_N$ to denote the transformation applied to the normal vector. We want to ensure that after applying the transformations, the normal vector remains perpendicular to the tangent vector, which means:
-\begin{equation*}
+\begin{multline*}
     (T_N \cdot n) \perp (T_O \cdot t)
-    \iff (T_N \cdot n) \cdot (T_O \cdot t) = 0\iff (T_N \cdot n)^t \cdot (T_O \cdot t) = 0
+    \iff (T_N \cdot n) \cdot (T_O \cdot t) = 0\iff (T_N \cdot n)^t \cdot (T_O \cdot t) = 0 \iff\\
     \iff n^t \cdot T_N^t \cdot T_O \cdot t = 0
-\end{equation*}
+\end{multline*}
 
 Given that $n$ is perpendicular to $t$, we have $n^t \cdot t = 0$. Therefore, for the transformed normal vector to remain perpendicular to the transformed tangent vector, we need:
 \begin{equation*}
@@ -132,18 +133,16 @@ This should always be taken into account when applying transforming normals, \em
 \subsubsection{View Transformation}
 
 The view transformation is the transformation that takes the vertices from world space to camera/eye space. It is used to position the camera in the scene and to define the view direction. In OpenGL, the camera is always positioned at the origin of the coordinate system, looking in the $z$ direction. As the camera can't move, the view transformation is achieved by applying the inverse of the camera's transformation to the vertices.
-
-
 Let's say that we want to position the camera at a point $C$ in world space, looking at a direction $D$. We can define the view transformation using the following steps:
 \begin{enumerate}
     \item First of all, as we want to position the camera at point $C$, we need to apply a translation transformation that moves the world in the opposite direction of $C$. This can be represented using a translation matrix $T$ that translates by $-C$.
     \item Next, we need to align the camera's view direction with the $z$ axis. To do this, we only know the direction $D$ that the camera is looking at.
     \begin{enumerate}
-        \item We can calculate the right vector $R$ of the camera using the cross product of the view direction $D$ and the up vector $U'$ (which is usually defined as $(0, 1, 0)$). This can be represented as $R = D \times U$.
+        \item We can calculate the right vector $R$ of the camera using the cross product of the view direction $D$ and the up vector $U'$ (which is usually defined as $(0, 1, 0)$). This can be represented as $R = D \times U'$.
         \item Then, we can calculate the up vector $U$ of the camera using the cross product of the right vector $R$ and the view direction $D$. This can be represented as $U = R \times D$.
     \end{enumerate}
 
-    This way, the matrix $[R, U, D]$ maps this orthogonal basis to the standard basis of the camera space. Therefore, the inverse of this transformation is:
+    This way, the matrix $[R, U, D]$ maps this orthogonal basis to the standard basis of the camera space. Therefore, the inverse of this transformation, which aligns the camera space with the standard basis, is:
     \begin{equation*}
         [R, U, D]^{-1}
     \end{equation*}
@@ -153,6 +152,8 @@ Therefore, the view transformation can be represented as the product of the tran
 \begin{equation*}
     M_{\text{view}} = [R, U, D]^{-1} \cdot T
 \end{equation*}
+
+The order of the transformations is important, as the translation should be applied before the rotation to ensure that the camera is correctly positioned and oriented in the scene.
 
 \subsubsection{Lighting and Shading}
 
@@ -166,7 +167,7 @@ The notation used in the Phong Lighting Model is shwon in Figure~\ref{fig:phong-
     \item $V$ is the unitary vector from point $X$ to the viewer (camera).
     \item $R$ is the reflection of the light vector $L$ around the normal vector $N$, calculated as $R = 2(N \cdot L)N - L$.
     
-    This calculation is valid because $N\cdot L=\cos (\theta)$ gives the projection of $L$ onto $N$ (as the cosine is the adjacent side of the triangle formed by $L$ and $N$).
+    This calculation is valid because $N\cdot L=\cos (\theta)$ gives the projection of $L$ onto $N$ (as the cosine is the adjacent side of the triangle formed by $L$ and $N$, and $\|L\|=1$).
 \end{itemize}
 \begin{figure}
     \centering
@@ -255,7 +256,7 @@ Two type of frustrums can be defined:
     This type of frustum looks like a rectangular box, with the near and far planes being the same size. This type of projection is often used for 2D rendering or for technical drawings where accurate measurements are important. It represents that the viewer is at the infinity.
 \end{itemize}
 
-The perspective transformation is then used to transform the vertices from camera/eye space to clip space. It is represented as a matrix that prepares the vertices for perspective division. The exact form of the perspective transformation matrix depends on the parameters of the view frustum (how was it given), but it generally includes terms that account for the field of view, aspect ratio, and the near and far planes. We will simply consider the $M_{\text{projection}}$ matrix as the one that transforms the vertices from camera/eye space to clip space, without going into the details of its construction. Therefore, what the programmer should implement in OpenGL is:
+As already explained, the perspective transformation is used to transform the vertices from camera/eye space to clip space. It is represented as a matrix that prepares the vertices for perspective division. The exact form of the perspective transformation matrix depends on the parameters of the view frustum (how was it given), but it generally includes terms that account for the field of view, aspect ratio, and the near and far planes. We will simply call it $M_{\text{projection}}$, without going into the details of its construction. Therefore, what the programmer should implement in OpenGL is:
 \begin{equation*}
     P_{\text{clip}} = M_{\text{projection}}\cdot M_{\text{view}} \cdot M_{\text{model}} \cdot P_{\text{object}}
 \end{equation*}
@@ -275,9 +276,9 @@ The rasterization stage is the process of converting the vertices and primitives
 
 \subsubsection{Data Interpolation}
 
-Given $n+1$ points $\vec{x}_i\in \bb{R}^k$ with their corresponding values $f_i\in \bb{R}$, $i\in \{0, \ldots, n\}$, interpolating is finding a function $f:\bb{R}^k\to \bb{R}$ such that $f(\vec{x}_i) = f_i$ for all $i\in \{0, \ldots, n\}$. When achieved, the function $f$ can be used to estimate the value of $f$ at any point $\vec{x}\in \bb{R}^k$ by evaluating $f(\vec{x})$.
+Given $n+1$ points $\vec{x}_i\in \bb{R}^k$ with their corresponding values $f_i\in \bb{R}$, $i\in~\{0, \ldots, n\}$, interpolating is finding a function $f:\bb{R}^k\to \bb{R}$ such that $f(\vec{x}_i) = f_i$ for all $i\in \{0, \ldots, n\}$. When achieved, the function $f$ can be used to estimate the value of $f$ at any point $\vec{x}\in \bb{R}^k$ by evaluating $f(\vec{x})$.
 
-Linear interpolation is a simple method of interpolation that only considers the linear functions $f$, which can be represented as $f(\vec{x}) = \vec{a}\cdot \vec{x} + b$ for some $\vec{a}\in \bb{R}^k$ and $b\in \bb{R}$. Given that we have $n+1$ constraints (one for each point) and $k+1$ unknowns (the components of $\vec{a}$ and $b$), we can solve for the coefficients of the linear function $f$ if $n+1 \leq k+1$. In our case, we are interested in interpolating the attributes of the vertices across the primitives, which means that we have $3$ vertices (for triangles) and two dimensions (the screen coordinates), so $k=2$. Therefore, our aim is to find $a,b,c\in \bb{R}$ such that $f(x,y) = ax + by + c$ and $f(\vec{x}_i) = f_i$ for $i\in \{0, 1, 2\}$. This can be achieved by solving the system of equations of Equation~\eqref{eq:interpolation}.
+Linear interpolation is a simple method of interpolation that only considers the linear functions $f$, which can be represented as $f(\vec{x}) = \vec{a}\cdot \vec{x} + b$ for some $\vec{a}\in \bb{R}^k$ and $b\in \bb{R}$. Given that we have $n+1$ constraints (one for each point) and $k+1$ unknowns (the components of $\vec{a}$ and $b$), we can solve for the coefficients of the linear function $f$ if $n+1 \leq k+1$. In our case, we are interested in interpolating the attributes of the vertices across the primitives, which means that we have $3$ vertices (for triangles) and two dimensions (the screen coordinates), so $k=2$. Therefore, our aim is to find $a,b,c\in \bb{R}$ such that $f(x,y) = ax + by + c$ and $f(\vec{x}_i) = f_i$ for $i\in~\{0, 1, 2\}$. This can be achieved by solving the system of equations of Equation~\eqref{eq:interpolation}.
 \begin{equation}
     \begin{cases}
         ax_0 + by_0 + c = f_0\\
@@ -324,8 +325,9 @@ The fragment processing stage is almost the final stage of the graphics pipeline
 
 A texture map is a discretely sampled multi-dimensional function containing material properties, like color or normals. Texture mapping is the process of applying a texture map to a 3D model to add detail and realism to the rendered image. During fragment processing, the texture coordinates of each fragment are used to sample the corresponding attribute from the texture map, which can then be used. Some concepts about textures are:
 \begin{itemize}
-    \item \ul{Wrapping}: Texture coordinates usually are planned to be in the range of $[0, 1]$, but sometimes they can be outside this range. Wrapping is the process of determining how to handle texture coordinates that are outside the $[0, 1]$ range. Common wrapping modes include:
+    \item \ul{Wrapping}: Texture coordinates are usually planned to be in the range of $[0, 1]$, but sometimes they can be outside this range. Wrapping is the process of determining how to handle texture coordinates that are outside the $[0, 1]$ range. Common wrapping modes include:
     \begin{itemize}
+        % // TODO: Memorizar WRAP
         \item \texttt{GL\_REPEAT}: The texture is repeated when the texture coordinates are outside the $[0, 1]$ range.
         \item \texttt{GL\_MIRRORED\_REPEAT}: The texture is repeated and mirrored when the texture coordinates are outside the $[0, 1]$ range.
         \item \texttt{GL\_CLAMP\_TO\_EDGE}: The texture coordinates are clamped to the edge of the texture when they are outside the $[0, 1]$ range. This means that the texture will be stretched to fill the area outside the $[0, 1]$ range.
@@ -333,8 +335,8 @@ A texture map is a discretely sampled multi-dimensional function containing mate
     One mode should be selected for each texture coordinate (e.g., $s$ and $t$).
     \item \ul{Filtering}: Usually, the texture maps are of a different resolution than the rendered image, which means that the texture needs to be filtered to determine the color of each pixel. There are two types of filtering:
     \begin{itemize}
-        \item \texttt{Minification}: The process of determining the color of a fragment when the texels (texture pixels) are smaller than the screen pixels.
-        \item \texttt{Magnification}: The process of determining the color of a fragment when the texels are larger than the screen pixels.
+        \item \ul{Minification}: The process of determining the color of a fragment when the texels (texture pixels) are smaller than the screen pixels.
+        \item \ul{Magnification}: The process of determining the color of a fragment when the texels are larger than the screen pixels.
     \end{itemize}
 
     Common filtering modes include:
@@ -342,8 +344,49 @@ A texture map is a discretely sampled multi-dimensional function containing mate
         \item \texttt{GL\_NEAREST}: The color of the fragment is determined by the color of the nearest texel. In minification, this can lead to aliasing artifacts, while in magnification, it can lead to a blocky appearance.
         \item \texttt{GL\_LINEAR}: The color of the fragment is determined by the bilinear interpolation of the colors of the $4$ nearest texels. In minification it does not make a big difference (considering $4$ texels when the pixel may be covered by $100$ texels does not improve the quality), but in magnification it can improve the appearance of the texture, making it appear smoother.
         
-        In order to achieve bilinear interpolation, it is simply interpolated in both dimensions.
-        % // TODO: Bilinear Interpolation? 109-112
+        In order to achieve bilinear interpolation in a rectangle, it is simply interpolated in both dimensions. Firstly, $\alpha$ is used to interpolate between in the $x$ direction, and then $\beta$ is used to interpolate between the results in the $y$ direction. Let's suppose $4$ points $(x_i, y_i)$, $(x_{i+1}, y_i)$, $(x_i, y_{i+1})$, and $(x_{i+1}, y_{i+1})$ with their corresponding values $f_{i,j}$, $f_{i+1,j}$, $f_{i,j+1}$, and $f_{i+1,j+1}$. The situacion is shown in Figure~\ref{fig:bilinear-interpolation}.
+        \begin{figure}
+            \centering
+            \begin{tikzpicture}
+                % Draw the grid
+                \draw[thick] (0,0) rectangle (4,2);
+                % Draw the points
+                \filldraw[black] (0,0) circle (4pt) node[below left] {$f_{i,j}$};
+                \filldraw[black] (4,0) circle (4pt) node[below right] {$f_{i+1,j}$};
+                \filldraw[black] (0,2) circle (4pt) node[above left] {$f_{i,j+1}$};
+                \filldraw[black] (4,2) circle (4pt) node[above right] {$f_{i+1,j+1}$};
+                
+                
+                % Draw the interpolation lines
+                \draw[thick, dashed] (0,1) -- (4,1);
+                \draw[thick, dashed] (1.3,0) -- (1.3,2);
+
+                % Alpha and beta
+                \node[below] (alpha) at (1.3,0) {$\alpha$};
+                \node[left] (beta) at (0,1) {$\beta$};
+
+                % Draw the interpolation point
+                \filldraw[red] (1.3,1) circle (4pt) node[above right] {$f(x,y)$};
+            \end{tikzpicture}
+            \caption{Bilinear interpolation in a rectangle.}
+            \label{fig:bilinear-interpolation}
+        \end{figure}
+
+        Therefore, the value of $f(x,y)$ can be calculated as follows:
+        \begin{align*}
+            f(x,y) &= (1-\beta)\left[(1-\alpha)f_{i,j} + \alpha f_{i+1,j}\right] + \beta\left[(1-\alpha)f_{i,j+1} + \alpha f_{i+1,j+1}\right]\\
+            &= (1-\beta)f_j + \beta f_{j+1}
+        \end{align*}
+        where:
+        \begin{align*}
+            f_j &= (1-\alpha)f_{i,j} + \alpha f_{i+1,j}\\
+            f_{j+1} &= (1-\alpha)f_{i,j+1} + \alpha f_{i+1,j+1}
+        \end{align*}
+
+        The values of $\alpha,\beta\in [0, 1]$ are calculated based on the position of the fragment relative to the texels.
+        \begin{equation*}
+            \alpha = \frac{x - x_i}{x_{i+1} - x_i}, \quad \beta = \frac{y - y_j}{y_{j+1} - y_j}
+        \end{equation*}
     \end{itemize}
 
     \item \ul{MIP Mapping}: MIP mapping is a technique used to improve the quality of textures when they are minificated. It involves creating multiple levels of detail for a texture, where each level is a downscaled version of the original texture. During rendering, the appropriate level of detail is selected based on the distance and angle of the fragment being rendered. This can help to reduce aliasing artifacts and improve the overall appearance of the texture, as no minification is applied when the appropriate level of detail is selected.
@@ -355,7 +398,7 @@ A texture map is a discretely sampled multi-dimensional function containing mate
 After the fragment processing stage, several tests can be performed on the fragments to determine whether they should be rendered on the screen or discarded. Before performing these tests, the content of each pixel should be explained. Each pixel (not fragment) on the screen has a buffer that stores:
 \begin{itemize}
     \item \ul{Color}: The color of the pixel, usually represented as RGBA (red, green, blue, alpha).
-    \item \ul{Depth}: The depth value of the current pixel, which is the depth value of the fragment that is currently rendered at that pixel (the closest fragment to the camera).
+    \item \ul{Depth}: The depth value of the current pixel, which is the depth value of the fragment that is currently rendered at that pixel (the closest fragment to the camera). It is stored in the depth buffer.
     \item \ul{Stencil}: The stencil value of the pixel, which is used for stencil testing. The programmer can define the stencil value for each pixel and store it in the stencil buffer.
 \end{itemize}
 
@@ -363,8 +406,8 @@ After the fragment processing stage, several tests can be performed on the fragm
 Once this has been explained, some common fragment tests include:
 \begin{itemize}
     \item \ul{Alpha Test}: This test discards fragments based on their alpha value. It consists of a comparison between the alpha value of the fragment and a reference value, using a specified comparison function (e.g., less than, greater than, equal to). If the comparison fails, the fragment is discarded and not rendered on the screen.
+    \item \ul{Depth Test}: This test discards fragments based on their depth value. It compares the depth value of the fragment with the depth value of the corresponding pixel in the depth buffer. Different comparison functions can be used (e.g., less than, greater than, equal to) to determine whether the fragment should be discarded or rendered. However, the most common comparison function is ``less than'', (\texttt{GL\_LESS}), which means that a fragment will only be rendered if it is closer to the camera than the existing pixel. If that is the case, it passes the depth test and is rendered on the screen, and the depth buffer is updated with the new depth value. If the fragment is farther from the camera than the existing pixel, it fails the depth test and is discarded.
     \item \ul{Stencil Test}: This test discards fragments based on their stencil value. It compares the stencil value of the pixel where the fragment would be rendered with a reference value, using a specified comparison function. If the comparison fails, the fragment is discarded and not rendered on the screen. The stencil test can be used for various effects, such as creating shadows, outlining objects, or implementing complex masking operations.
-    \item \ul{Depth Test}: This test discards fragments based on their depth value. It compares the depth value of the fragment with the depth value of the corresponding pixel in the depth buffer. If the fragment is closer to the camera than the existing pixel, it passes the depth test and is rendered on the screen, and the depth buffer is updated with the new depth value. If the fragment is farther from the camera than the existing pixel, it fails the depth test and is discarded.
 \end{itemize}
 \subsubsection{Blending}\label{sec:blending}
 
@@ -388,9 +431,18 @@ where:
     \item $\odot$ represents the operator used to combine the source and destination colors. Common operators include addition, subtraction, minimum, and maximum.
 \end{itemize}
 
+
+The well knwon $\alpha$-blending is achieved by using the following blending factors and operator:
+\begin{itemize}
+    \item $F_{\text{source}} = \texttt{GL\_SRC\_ALPHA}$
+    \item $F_{\text{destination}} = \texttt{GL\_ONE\_MINUS\_SRC\_ALPHA}$
+    \item $\odot$ is the addition operator.
+\end{itemize}
+This is a common blending mode used to achieve transparency effects, which will be addressed in more detail in Chapter~\ref{chap:transparency}.
+
 \subsection{Framebuffer}
 
-The framebuffer is the final destination for the rendered image. It is a memory buffer that stores the color, depth, and stencil information for each pixel on the screen. After all the fragment processing and tests have been performed, the final color of each pixel is written to the framebuffer, which is then displayed on the screen. The framebuffer can also be used for off-screen rendering, where the rendered image is stored in a texture or a renderbuffer instead of being displayed on the screen. This allows for various effects and techniques, such as post-processing, shadow mapping, and more.
+The framebuffer is the final destination of the rendered image. It is a memory buffer that stores the color, depth, and stencil information for each pixel on the screen. After all the fragment processing and tests have been performed, the final color of each pixel is written to the framebuffer, which is then displayed on the screen. The framebuffer can also be used for off-screen rendering, where the rendered image is stored in a texture or a renderbuffer instead of being displayed on the screen. This allows for various effects and techniques, such as post-processing, shadow mapping, and more.
 
 \section{Programmable Pipeline}
 

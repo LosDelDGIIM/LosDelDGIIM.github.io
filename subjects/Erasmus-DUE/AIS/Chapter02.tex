@@ -22,6 +22,7 @@ A planar reflection is a reflection that occurs on a flat surface, such as a mir
         \node (N) at (0,2) {};
         \draw pic[
             -Stealth,
+            draw=black,
             angle radius=7mm,
             angle eccentricity=1.3,
             pic text={$\alpha$}
@@ -33,7 +34,7 @@ A planar reflection is a reflection that occurs on a flat surface, such as a mir
     \label{fig:planar_reflection}
 \end{figure}
 
-Given that the surface is planar, we can $q_m$ as:
+Given that the surface is planar, we can calculate $q_m$ as:
 \begin{equation*}
     q_m = q - 2N \cdot \text{distance}(q, \text{plane})
 \end{equation*}
@@ -103,10 +104,13 @@ One first approach to implement planar reflections in computer graphics would be
     \item Render the original objects.
 \end{enumerate}
 
-However, this approach has some issues, such as the fact that the reflected objects are not clipped by the mirror surface. The stencil buffer can be used to solve this issue, by marking the pixels that belong to the mirror surface and then using this information to clip the reflected objects. In addition, a clip plane is used to avoid rendering the parts of the reflected objects that are in front of the mirror surface.
-% // TODO: Add more details about the implementation of planar reflections using the stencil buffer and clip planes.
-
-    
+However, this approach has some issues, such as the fact that the reflected objects are not clipped by the mirror surface. The stencil buffer can be used to solve this issue.
+\begin{itemize}
+    \item Firstly, the mirror surface is rendered but with color buffer and depth buffer writing disabled. Regarding the stencil buffer, it is configured to write a specific value (for example, 1) to the stencil buffer for each pixel that belongs to the mirror surface.
+    \item In addition, a clip plane is used to avoid rendering the parts of the reflected objects that are in front of the mirror surface.
+    \item The reflected objects are rendered with the planar reflection transformation, but only for the pixels that have the specific value in the stencil buffer (for example, 1). This way, only the pixels that belong to the mirror surface will be rendered with the reflected objects, and the rest of the pixels will not be affected.
+    \item Finally, the original objects are rendered as usual, without any special configuration for the stencil buffer or the clip plane.
+\end{itemize}
 
 \subsection{Recursive Reflections}
 
@@ -136,7 +140,7 @@ The texture coordinates for sampling the cube map are however easy to calculate.
 
     \item Once we have the reflection vector $R$, the largest absolute component of $R$ represents the direction of the reflection. For example, if $|R_x|$ is the largest component, then the reflection is in the x direction. Then, the sign of that component determines whether the reflection is in the positive or negative direction. For example, if $R_x$ is positive, then the reflection is in the positive x direction, and if $R_x$ is negative, then the reflection is in the negative x direction. This information allows us to determine which face of the cube map we need to sample from.
     
-    \item Finally, the other two components of the reflection vector $R$ are divided by the largest component to obtain the 2D texture coordinates for sampling the cube map in a range of $[-1, 1]$.
+    \item Finally, the other two components of the reflection vector $R$ are divided by the largest component to obtain the 2D texture coordinates for sampling the cube map in a range of $[-1, 1]$. Given that the cube map is usually stored in a texture with coordinates in the range of $[0, 1]$, the texture coordinates are then transformed to this range firstly by adding 1 to each coordinate, and then by dividing each coordinate by 2.
 \end{enumerate}
 
 \section{Refraction}
