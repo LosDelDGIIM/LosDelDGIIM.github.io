@@ -2,16 +2,17 @@
 
 Ambient occlusion is a shading method that calculates how much ambient light can reach a point on a surface. It is used to add depth and realism to 3D scenes by simulating the soft shadows that occur in areas where light is partially blocked by nearby geometry. However, it should be noted that ambient occlusion is not a shadowing technique in the traditional sense, as it does not account for direct light sources or cast shadows. Instead, it focuses on the occlusion of ambient light, which is the diffuse light that is scattered in all directions.\\
 
-The idea that lays behind ambient occlusion is that points on a surface that are close to other geometry will receive less ambient light and therefore appear darker. This is because the nearby geometry blocks some of the ambient light from reaching those points. Everything is calculated based on the Ambient Occlusion Factor of Equation~\eqref{eq:ao}, which is a value between 0 and 1 that represents the amount of ambient light that can reach a point on a surface. A value of 0 means that the point is completely occluded and receives no ambient light, while a value of 1 means that the point is fully exposed and receives all ambient light.
+The idea that lays behind ambient occlusion is that points on a surface that are close to other geometry will receive less ambient light and therefore appear darker. This is because the nearby geometry blocks some of the ambient light from reaching those points. Everything is calculated based on the Ambient Occlusion Factor (Equation~\ref{eq:ao}), which is a value between 0 and 1 that represents the amount of ambient light that can reach a point on a surface. A value of 0 means that the point is completely occluded and receives no ambient light, while a value of 1 means that the point is fully exposed and receives all ambient light.
+% // TODO: Memorizar AO Factor
 \begin{equation}
-    k_a(p) = \frac{1}{\pi} \int_{\Omega^+} V(\vec{\omega}_i) \cos \theta_i d\vec{\omega}_i
+    k_a(p) = \frac{1}{\pi} \int_{\Omega^+} V\left(\vec{\omega}\right) \cos \theta\ d\vec{\omega}
     \label{eq:ao}
 \end{equation}
 where:
 \begin{itemize}
     \item $\Omega^+$ is the normal-oriented hemisphere above the point $p$.
-    \item $V(\vec{\omega}_i)$ is the visibility function, which is 1 if the direction $\vec{\omega}_i$ is not occluded by any geometry and 0 if it is occluded. This is calculated by casting a ray from the point $p$ in the direction $\vec{\omega}_i$ and checking for intersections with other geometry in the scene.
-    \item $\cos \theta_i$ is the cosine of the angle between the normal at point $p$ and the direction $\vec{\omega}_i$. This term accounts for the fact that light arriving at a grazing angle contributes less to the ambient illumination than light arriving directly.
+    \item $V\left(\vec{\omega}\right)$ is the visibility function, which is 1 if the direction $\vec{\omega}$ is not occluded by any geometry and 0 if it is occluded. This is calculated by casting a ray from the point $p$ in the direction $\vec{\omega}$ and checking for intersections with other geometry in the scene.
+    \item $\cos \theta$ is the cosine of the angle between the normal at point $p$ and the direction $\vec{\omega}$. This term accounts for the fact that light arriving at a grazing angle contributes less to the ambient illumination than light arriving directly.
     \item The factor of $\nicefrac{1}{\pi}$ is used to normalize the result, because the integral of the cosine term over the hemisphere is equal to $\pi$; this ensures that the ambient occlusion factor is properly scaled to the range $[0, 1]$.
 \end{itemize}
 
@@ -26,7 +27,7 @@ The idea behind raytracing AO is to preprocess everything for the static geometr
 Object space AO is a method that calculates ambient occlusion in the object space of a 3D model. This technique represents each vertex of the model as a circle with the same normal as the vectex and with an area equal to one third of the the sum of the areas of the triangles that share the vertex\footnote{That way, the area of each triangle is distributed equally among its three vertices.}. 
 This representation can be fastly calculated, as the lenght of the sides of the triangles are just an square root, and then there are just some simple calculations to find the area of the triangle known the length of its sides:
 \begin{itemize}
-    \item Half of the cross product of the two edges of the triangle.
+    \item Half of the module of the cross product of the two edges of the triangle (the vectors are needed).
     \item Heron's formula~\eqref{eq:heron}. If the lengths of the sides of the triangle are $a$, $b$, and $c$, then:
     \begin{equation}\label{eq:heron}
         A = \sqrt{s(s-a)(s-b)(s-c)}\qquad \text{where } s = \frac{a + b + c}{2}
@@ -95,7 +96,7 @@ The Figure~\ref{fig:object_space_ao} represents the terms used in the Equation~\
         ] {angle = nE--E--R};
 
 \end{tikzpicture}
-    \caption{Object Space AO: Schematic representation of the accessibility of the vertex $E$ (emitter point) from the vertex $R$ (receiver point).}
+    \caption{\centering Object Space AO: Schematic representation of the accessibility of the vertex $E$ (emitter point) from the vertex $R$ (receiver point).}
     \label{fig:object_space_ao}
 \end{figure}
 
@@ -118,14 +119,14 @@ This technique obviously faces problems where more than one path is unoccluded, 
 
 Screen Space Ambient Occlusion (SSAO) is a real-time technique used in computer graphics to approximate ambient occlusion effects. It operates in screen space, meaning it firstly renders the scene to a depth buffer and then uses that information to calculate the ambient occlusion for each pixel on the screen\footnote{This is achieved using Deferred Shading, see Section~\ref{sec:deferred_shading}.}. This makes this technique more efficient, as only what is visible on the screen is processed, rather than the entire scene.
 
-For each pixel, SSAO samples the surrounding pixels (creating an sphere around the pixel) and checks the depth values to determine how much of the surrounding geometry is in front of the current pixel, using therefore the \verb|z|-buffer to recreate the profile. The more geometry that is in front, the higher the occlusion factor, which results in a darker pixel. The reader may think that this method introduces a lot of noise, as in the edges between the occluded and non-occluded areas weird patterns may appear. However, this technique produces really good results, and is widely used in real-time applications given that it only processes what is visible on the screen, which makes it much faster than other methods that require processing the entire scene.
+For each pixel, SSAO samples the surrounding pixels (creating an sphere around the pixel) and checks the depth values to determine how much of the surrounding geometry is in front of the current pixel, using therefore the $z$-buffer to recreate the profile. The more geometry that is in front, the higher the occlusion factor, which results in a darker pixel. The reader may think that this method introduces a lot of noise, as in the edges between the occluded and non-occluded areas weird patterns may appear. However, this technique produces really good results, and is widely used in real-time applications given that it only processes what is visible on the screen, which makes it much faster than other methods that require processing the entire scene.
 
 \subsection{Deferred Shading}\label{sec:deferred_shading}
 
 As mentioned in the previous section, SSAO usually uses deferred shading, which is a rendering technique that separates the rendering process into two main stages: geometry pass and lighting pass.
 \begin{enumerate}
-    \item In the geometry pass, the scene is rendered and each of the necessary attributes (such as normals, depth, color, etc.) are stored in different textures, collectively known as the G-buffer. This allows for the storage of all the information needed for lighting calculations without having to re-render the geometry for each light source.
-    \item In the lighting pass, only the visible pixels are processed. The whole image is covered using just two triangles, and for each pixel, the information stored in the G-buffer is used to calculate the lighting, including the ambient occlusion using SSAO. This way, the lighting calculations are performed only on the pixels that are visible on the screen, which significantly improves performance compared to traditional forward rendering techniques where lighting is calculated for every object in the scene regardless of visibility.
+    \item In the geometry pass, the scene is rendered and each of the necessary attributes (such as normals, depth, color, etc.) are stored in different textures, collectively known as the G-buffer\footnote{Geometry Buffer, as they store information about the geometry.}. This allows for the storage of all the information needed for lighting calculations without having to re-render the geometry for each light source.
+    \item In the lighting pass, only the visible pixels are processed. The whole image is covered using just two triangles, and for each pixel, the information stored in the G-buffer is used to calculate the lighting, including the ambient occlusion using SSAO. This way, the lighting calculations are performed only on the pixels that are visible on the screen, which significantly improves performance compared to traditional forward rendering techniques where lighting is calculated for every object in the scene regardless of its visibility.
 \end{enumerate}
 
 \subsection{SSAO Extensions}
