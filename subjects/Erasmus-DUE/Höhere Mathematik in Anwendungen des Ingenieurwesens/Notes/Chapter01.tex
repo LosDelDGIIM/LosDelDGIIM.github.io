@@ -1,0 +1,133 @@
+\chapter{Introduction to MATLAB}
+
+MATLAB is a high-level programming language and environment used for numerical computing, data analysis, and visualization. It is widely used in engineering, science, and mathematics for tasks such as matrix manipulation, algorithm development, and data visualization. A license is required to use MATLAB, and it is commonly used in academic and research settings. However, there are alternatives to MATLAB, such as Octave and Scilab, which are open-source and free to use.\\
+
+
+The aim of this chapter is not to teach how to use MATLAB, but rather to provide a list of useful commands and aspects that should be noted. In order to learn how to use MATLAB, it is recommended to take a course or read a tutorial on the subject. There are many resources available online, including official documentation and user forums, that can help you get started with MATLAB. Additionally, there are many books and online courses that can provide a more in-depth understanding of the language and its capabilities.
+\begin{itemize}
+    \item MATLAB starts counting from 1.
+    \item To access the last element of a vector, you can use the command \texttt{end}.
+    \item When using vectors, the component-wise operations as \texttt{.*} for multiplication, \texttt{./} for division, and \texttt{.\^} for exponentiation are used.
+    \item Different files can be used. Variables can be kept in \texttt{.mat} files, while functions can be defined in \texttt{.m} files.
+    \item When using a \texttt{switch} statement, if it enters a case, it will not execute the following cases, even if they are true. This is different from other programming languages where the execution continues until a \texttt{break} statement is encountered.
+    \item Vectorization is a powerful technique in MATLAB that allows you to perform operations on entire arrays or matrices without the need for explicit loops.
+    \item In order to count the time taken by a piece of code, you can use the \texttt{tic} and \texttt{toc} commands. The \texttt{tic} command starts a timer, and the \texttt{toc} command stops the timer and returns the elapsed time.
+    \item Comparing vectors can have several effects depending on the context.
+    \begin{itemize}
+        \item When comparing two vectors of the same size and shape, the comparison will be performed element-wise, resulting in a new vector of the same size and shape, where each element is the result of the comparison between the corresponding elements of the original vectors.
+        \item When comparing a vector to a scalar, the comparison will be performed element-wise, resulting in a new vector of the same size and shape as the original vector, where each element is the result of the comparison between the corresponding element of the original vector and the scalar value.
+        \item When comparing two vectors of the same size but opposite directions, the first vector will be compared to the second vector value by value.
+    \end{itemize}
+\end{itemize}
+
+
+\section{Iterative Methods in MATLAB}
+
+\tikzset{
+    start/.style={draw=blue!50!black, fill=blue!10, regular polygon, regular polygon sides=6, inner sep=0pt, minimum width=2.5cm, font=\small\sffamily},
+    process/.style={draw=blue!50!black, fill=blue!10, rectangle, minimum width=3.5cm, minimum height=1.5cm, text width=3.2cm, align=center, font=\small\sffamily},
+    decision/.style={draw=blue!50!black, fill=blue!10, diamond, aspect=2, minimum width=3cm, minimum height=1.5cm, text width=2.2cm, align=center, font=\small\sffamily, inner sep=0pt},
+    data/.style={draw=blue!50!black, fill=blue!10, trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text width=2.5cm, align=center, font=\small\sffamily},
+    arrow/.style={-Stealth, thick, blue!50!black}
+}
+
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[node distance=1cm and 1.5cm]
+
+        % Bloques principales
+        \node (initial) [process] {initial value\\ $x^{(k)}$};
+        
+        \node (procedure) [process, right=of initial] {iteration\\ $x^{(k)}\longrightarrow x^{(k+1)}$};
+        
+        \node (output) [data, right=of procedure] {output value\\ $x^{(k+1)}$};
+        
+        \node (error) [decision, below=of output] {error measure small?};
+        
+        \node (approx) [data, below=of error] {$x^{(k+1)}$ is the approximate solution};
+        
+        \node (max_iter) [decision, left=of error, xshift=0.4cm] {max. $n$ of iterations?};
+        
+        \node (stop) [data, below=of max_iter] {stop and output an error message};
+        
+        \node (new_val) [process, left=of max_iter] {use $x^{(k+1)}$ as the new initial value};
+
+        % Conexiones
+        \draw [arrow] (initial) -- (procedure);
+        \draw [arrow] (procedure) -- (output);
+        \draw [arrow] (output) -- (error);
+        
+        \draw [arrow] (error) -- node[anchor=west, font=\small\sffamily] {yes} (approx);
+        \draw [arrow] (error) -- node[anchor=north, font=\small\sffamily] {no} (max_iter);
+        
+        \draw [arrow] (max_iter) -- node[anchor=west, font=\small\sffamily] {yes} (stop);
+        \draw [arrow] (max_iter) -- node[anchor=north, font=\small\sffamily] {no} (new_val);
+
+        % Línea de retorno
+        \draw [arrow] (new_val.north east) -- ($(initial.east)!0.5!(procedure.west)$);
+
+    \end{tikzpicture}
+    \caption{General structure of an iterative method.}
+    \label{fig:iterative_method}
+\end{figure}
+
+An iterative method is a mathematical procedure that generates a sequence of approximations to the solution of a problem, with the goal of converging to the exact solution. The general structure of an iterative method can be represented as shown in Figure \ref{fig:iterative_method}. 
+
+\subsection{Floating Point Arithmetic}
+
+In order to work with numerical methods, it is important to understand how floating point arithmetic works. Floating point numbers are a way to represent real numbers in a computer with a fixed number of bits, using the representation shown in Equation~\ref{eq:floating_point}.
+\begin{equation}
+    x = \pm m \times 10^e
+    \label{eq:floating_point}
+\end{equation}
+Where:
+\begin{itemize}
+    \item $m$ is the mantissa
+    \item $e$ is the exponent, which is an integer that can be positive or negative.
+    \item The sign of the number is determined by the $\pm$ symbol.
+\end{itemize}
+
+That way, a computer can only represent a finite number of real numbers $\bb{M}\subset \bb{R}$. This leads to several issues, such as:
+\begin{itemize}
+    \item Rounding errors: When $x\in \bb{R}\setminus \bb{M}$, it is approximated by a number in $\bb{M}$, which can lead to rounding errors.
+    \item Catastrophic cancellation: When subtracting two nearly equal numbers, the significant digits can be lost, resulting in a large relative error.
+    \item Overflow and underflow: When the result of a calculation exceeds the maximum representable value, it can lead to overflow, while when the result is smaller than the minimum representable value, it can lead to underflow.
+    
+    This should be taken into account when calculating the error of an iterative method, as it can affect the convergence and accuracy of the method.
+    \item Absorbing elements: When adding a very small number to a very large number, the small number may not affect the result due to the limitations of floating point representation, leading to an absorbing element.
+\end{itemize}
+
+
+\subsection{Iterative Methods for LES}
+
+In this section, we will discuss some methods that can be used to solve linear equations systems (LES). The reader may have thought of using Gaussian elimination or the inverse of the coefficient matrix, but these methods are not suitable for large systems. The MATLAB command \texttt{A\textbackslash b} automatically chooses the best method iterative method to solve the system $Ax=b$. Even though iterative methods usually take longer to calculate the solution, they are ideal for:
+\begin{itemize}
+    \item Sparse systems: When the coefficient matrix $A$ has a large number of zero elements, iterative methods can take advantage of this sparsity to reduce the computational cost.
+    \item Bad conditioned systems: Usual direct methods are really sensitive to errors in the data, while iterative methods can be more robust in these cases.
+\end{itemize}
+
+\subsubsection{Condition Number}
+
+
+
+Given a matrix $A$, if $A$ is singular (i.e., it does not have an inverse), its condition number $\cond(A)$ is defined as $\infty$. If $A$ is non-singular, its condition number is defined as:
+\begin{equation*}
+    \cond(A) = \|A\| \cdot \|A^{-1}\|\geq \|A\cdot A^{-1}\| = \|I\| = 1
+\end{equation*}
+
+The condition number of a matrix is a measure of how sensitive the solution of a linear system is to changes in the input data. If $\cond(A)\approx 1$, the system is well-conditioned, meaning that small changes in the input data will result in small changes in the solution. If $\cond(A)\gg 1$, the system is bad-conditioned, meaning that small changes in the input data can result in large changes in the solution. The condition number can be used to calculate how good a solution is.
+\begin{prop}
+    Let $A$ be a non-singular matrix, and let $x$ be the exact solution of the system $Ax=b$, and $\tilde{x}$ be an approximate solution. Then, the relative error of the solution can be bounded by:
+    \begin{equation*}
+        \frac{\|x-\tilde{x}\|}{\|x\|} \leq \cond(A) \cdot \frac{\|r\|}{\|b\|}
+    \end{equation*}
+    Where $r = b - A\tilde{x}$ is the residual of the approximate solution.
+    \begin{proof}
+        \begin{align*}
+            \|x\|\cdot \|r\|\cdot \cond(A) & = \|x\|\cdot \|r\|\cdot \|A\|\cdot \|A^{-1}\| \geq\\&\geq  \|Ax\|\cdot \|A^{-1}r\| = \|b\|\cdot \|A^{-1}(b - A\tilde{x})\| = \|b\|\cdot \|x-\tilde{x}\|
+        \end{align*}
+
+        Dividing both sides by $\|x\|\cdot \|b\|\geq 0$ gives the desired result.
+    \end{proof}
+\end{prop}
