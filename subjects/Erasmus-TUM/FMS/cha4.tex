@@ -1,0 +1,1262 @@
+\chapter{Exponential Families}
+\label{cha:exp}
+
+Exponential families form a broad and important class of statistical models with many desirable
+theoretical and computational properties. They provide a unifying framework for a wide range of
+commonly used distributions and play a central role in statistical inference.
+
+A key reason for the popularity of exponential family models is their favorable optimization
+structure. In many cases, parameter estimation reduces to maximizing a concave log-likelihood
+(or equivalently, minimizing a convex objective function), which leads to stable and efficient
+numerical algorithms.
+
+Several widely used models arise naturally as members of exponential families. For example,
+logistic regression for binary data is based on a specific parametric form that links predictors
+to event probabilities through log-odds. This formulation is not only interpretable but also
+ensures that estimation involves a convex optimization problem. Similarly, the Poisson
+distribution is a standard choice for modeling count data, partly due to its mathematical
+convenience and tractable likelihood.
+
+More generally, exponential families provide a common structure underlying these models.
+Many results that are traditionally derived on a case-by-case basis can be obtained more
+systematically by working within this general framework. Throughout this course, exponential
+families will serve as an important source of examples and will be revisited in various contexts.
+
+We now introduce the formal definition of exponential families and discuss their main properties.
+
+\section{Definition}%
+\label{sec:Definition}
+
+\begin{definition}[]
+    Let \(\cc{P}=\{\mathsf{P}_{\theta} \::\: \theta\in \Theta\}\) be a statistical model on
+    \((\cc{X},\cc{A})\) that is dominated by a \(\sigma\)--finite measure \(\nu\).
+    The model \(\cc{P}\) is called an \textbf{exponential family} if there exist an integer
+    \(k \in \N\) and functions
+    \begin{align*}
+        B : \Theta \to \R, \quad \quad 
+        &\eta : \Theta \to \R^{k},\\
+        T : \cc{X}\to\R^{k}, \quad \quad 
+        &h:\cc{X}\to[0,\infty),
+    \end{align*}
+    such that each distribution \(\mathsf{P}_{\theta}\) admits a density
+    \(p_{\theta}(x) = \frac{d \mathsf{P}_{\theta}}{d \nu}(x)\) of the form
+    \begin{equation}
+        \label{eq:exp}
+        p_{\theta}(x)
+        =
+        \exp\!\left\{
+            \left\langle \eta(\theta), T(x) \right\rangle
+            - B(\theta)
+        \right\} h(x),
+        \quad x \in \cc{X}
+    \end{equation}
+    where 
+    \[
+        \left<\eta(\theta),T(x) \right> = \sum\limits_{i=1}^{k} \eta_{i}(\theta)T_{i}(x). 
+    \]
+    
+\end{definition}
+
+This representation expresses the log--density as a linear function of the statistic \(T(x)\),
+with coefficients \(\eta(\theta)\) depending on the parameter. In particular,
+\[
+\log p_{\theta}(x)
+=
+\left\langle \eta(\theta), T(x) \right\rangle
+- B(\theta)
++ \log h(x),
+\]
+which simplifies likelihood-based inference by reducing it to linear and convex-analytic
+operations.
+
+The map \(\eta(\theta)\) is called the \textbf{natural parameter}, and \(T\) is the
+\textbf{sufficient statistic} of the family (by Neyman's factorization criterion).
+The function \(B(\theta)\) acts as a normalizing term ensuring that \(p_{\theta}\) integrates
+to one, while \(h(x)\) modifies the dominating measure \(\nu\).
+
+The integer \(k\) is referred to as the \textbf{dimension} of the representation and is, in
+general, not unique (because the dimension of sufficient statistics of a family aren't). A statistical model is a \(k\)--dimensional exponential family if all its
+densities admit a representation of the form \eqref{eq:exp} with the same statistic \(T\).
+
+\begin{ex}[Binomial model]
+    Let \(X \sim \text{Binomial}(n,\theta)\) with \(\theta \in (0,1)\).
+    The distribution of \(X\) admits a density with respect to the counting measure on
+    \(\cc{X}=\{0,1,\dots,n\}\) given by
+    \[
+        p_{\theta}(x)
+        =
+        \binom{n}{x}\theta^{x}(1-\theta)^{n-x}.
+    \]
+
+    Writing the parameter--dependent part on the log scale yields
+    \[
+        p_{\theta}(x)
+        =
+        \binom{n}{x}
+        \exp\!\left\{
+            x \log \theta + (n-x)\log(1-\theta)
+        \right\},
+    \]
+    which is of exponential family form. This representation corresponds to a
+    \(2\)--dimensional exponential family with sufficient statistic
+    \(T(x) = (x, n-x)\) and natural parameters
+    \(\eta(\theta) = (\log\theta, \log(1-\theta))\).
+
+    The representation is, however, redundant since the components of \(T(x)\) satisfy
+    the linear relation \(x + (n-x) = n\). Using this relation, the density can be rewritten as
+    \[
+        p_{\theta}(x)
+        =
+        \binom{n}{x}
+        \exp\!\left\{
+            x \log\frac{\theta}{1-\theta}
+            + n \log(1-\theta)
+        \right\}.
+    \]
+
+    This yields a \(1\)--dimensional representation of the Binomial model, with sufficient
+    statistic \(T(x)=x\) and natural parameter
+    \[
+        \eta(\theta) = \log\frac{\theta}{1-\theta}.
+    \]
+
+The quantity \(\theta/(1-\theta)\) is called the \emph{odds} associated with the success
+probability \(\theta\). More generally, for an event \(A\) with probability
+\(P(A)=\theta\), the odds are defined as the ratio
+\[
+    \frac{P(A)}{P(A^{c})}
+    =
+    \frac{\theta}{1-\theta}.
+\]
+While probabilities take values in \((0,1)\), odds range over \((0,\infty)\).
+Taking logarithms yields the \emph{log--odds}
+\[
+    \log\frac{\theta}{1-\theta},
+\]
+which form the natural parameter \(\eta(\theta)\) of the Binomial exponential family in its
+one--dimensional representation. 
+%This explains why log--odds play a central role
+%in models for binary data, such as logistic regression.
+    This representation highlights the connection between
+    the Binomial model and generalized linear models, in particular logistic regression.
+\end{ex}
+
+\begin{ex}[Multinomial model as an exponential family]
+Consider \(n\) independent repetitions of a random experiment with \(s\) possible outcomes.
+Let \(X_i \ge 0\) denote the number of times outcome \(i\) is observed, and define
+\[
+\bs{X} = (X_1,\dots,X_s), \qquad \sum_{i=1}^s X_i = n.
+\]
+Assume that the probability of outcome \(i\) in a single trial is \(\theta_i>0\), with
+\(\sum\limits_{i=1}^s \theta_i = 1\).
+Then
+\[
+\bs{X} \sim \text{Multinomial}(n,\theta_1,\dots,\theta_s),
+\]
+with probability mass function
+\[
+p_{\bs{\theta}}(x_1,\dots,x_s)
+= \frac{n!}{\prod_{i=1}^s x_i!}\prod_{i=1}^s \theta_i^{x_i}.
+\]
+
+Writing the density in exponential form yields
+\[
+p_{\bs{\theta}}(x_1,\dots,x_s)
+= \exp\!\left\{\sum_{i=1}^s x_i \log(\theta_i)\right\}
+\cdot \frac{n!}{\prod_{i=1}^s x_i!},
+\]
+which shows that the multinomial model is an exponential family with sufficient statistic
+\(T(x)=(x_1,\dots,x_s)\).
+This representation, however, is redundant, since the counts satisfy the linear constraint
+\(\sum_{i=1}^s X_i=n\).
+
+To obtain a minimal representation, write
+\[
+X_s = n - \sum_{i=1}^{s-1} X_i
+\]
+and substitute into the exponent to obtain
+\[
+p_{\bs{\theta}}(x_1,\dots,x_s)
+= \exp\!\left\{
+\sum_{i=1}^{s-1} x_i \log\!\left(\frac{\theta_i}{\theta_s}\right)
++ n \log(\theta_s)
+\right\}
+\cdot \frac{n!}{\prod_{i=1}^s x_i!}.
+\]
+
+This shows that the multinomial model forms an \((s-1)\)-dimensional exponential family with
+sufficient statistic
+\[
+T(x) = (x_1,\dots,x_{s-1})
+\]
+and natural parameter vector
+\[
+\eta(\bs{\theta})
+= \left(
+\log\!\left(\frac{\theta_1}{\theta_s}\right),
+\dots,
+\log\!\left(\frac{\theta_{s-1}}{\theta_s}\right)
+\right).
+\]
+The term \(\frac{n!}{\prod_{i=1}^s x_i!}\) plays the role of the base measure \(h(x)\) and does
+not depend on the parameter \(\bs{\theta}\).
+\end{ex}
+
+\begin{ex}[Gaussian model]
+Let \(X \sim \cc{N}(\mu,\sigma^2)\) with unknown parameter
+\(\bs{\theta}=(\mu,\sigma^2)\in\R\times(0,\infty)\).
+The density on \(\cc{X}=\R\) is
+\[
+p_{\bs{\theta}}(x)
+= \frac{1}{\sqrt{2\pi\sigma^2}}
+\exp\!\left\{-\frac{1}{2\sigma^2}(x-\mu)^2\right\}.
+\]
+
+Expanding the quadratic term yields
+\[
+p_{\bs{\theta}}(x)
+= \frac{1}{\sqrt{2\pi\sigma^2}}
+\exp\!\left\{
+-\frac{1}{2\sigma^2}x^2
++ \frac{\mu}{\sigma^2}x
+- \frac{\mu^2}{2\sigma^2}
+\right\}.
+\]
+The terms depending on the data \(x\) appear linearly as \(x\) and \(x^2\), which allows the
+density to be written in exponential family form. Indeed,
+\[
+p_{\bs{\theta}}(x)
+= \exp\!\left\{
+\left\langle
+\begin{pmatrix} x \\[0.2em] -\frac{x^2}{2} \end{pmatrix},
+\begin{pmatrix} \frac{\mu}{\sigma^2} \\[0.2em] \frac{1}{\sigma^2} \end{pmatrix}
+\right\rangle
+- B(\bs{\theta})
+\right\},
+\]
+where
+\(
+B(\bs{\theta}) = \frac{\mu^2}{2\sigma^2} + \frac{1}{2}\log(2\pi\sigma^2)
+\)
+is the log-normalizing constant.
+
+Hence, the Gaussian model is a two-dimensional exponential family with
+\begin{itemize}
+    \item sufficient statistic \(T(x) = \bigl(x,\,-\tfrac{x^2}{2}\bigr)\),
+    \item natural parameter \(\eta(\bs{\theta}) = \bigl(\tfrac{\mu}{\sigma^2},\,\tfrac{1}{\sigma^2}\bigr)\).
+\end{itemize}
+In this representation the base measure \(h(x)\) is constant, corresponding to Lebesgue measure.
+\end{ex}
+
+\myparagraph{Why is not the Gaussian model one-dimensional?}
+Although a single observation \(X\) uniquely determines the statistic
+\(T(X) = \bigl(X,-\tfrac{X^2}{2}\bigr)\), the Gaussian model cannot be represented
+as a one-dimensional exponential family.
+The reason is geometric: the map
+\[
+x \longmapsto \left(x,-\tfrac{x^2}{2}\right)
+\]
+traces out a nonlinear curve in \(\R^2\).
+Consequently, there is no nontrivial linear functional that recovers both
+components of \(T(X)\) from a single scalar statistic while preserving the
+required inner-product structure of an exponential family.
+
+This contrasts with the binomial case, where the corresponding embedding
+\(
+x \mapsto (x,n-x)
+\)
+lies on an affine one-dimensional subspace, allowing a reduction to a
+one-dimensional representation.
+For the Gaussian model, the quadratic dependence on the data is essential and
+cannot be absorbed into a single sufficient statistic without leaving the
+exponential family framework.
+
+\begin{ex}[Multivariate Gaussian model]
+Let \(\bs{X} \sim \cc{N}_{k}(\bs{\mu},\Sigma)\), where the parameter
+\[
+\theta = (\bs{\mu},\Sigma) \in \R^{k} \times PD(k),
+\]
+and \(PD(k)\) denotes the cone of symmetric positive definite \(k\times k\) matrices.
+The density of \(\bs{X}\) with respect to Lebesgue measure on \(\cc{X}=\R^{k}\) is
+\[
+p_{\theta}(\bs{x})
+= \frac{1}{\sqrt{(2\pi)^{k}\det(\Sigma)}}
+\exp\!\left\{
+-\frac{1}{2}(\bs{x}-\bs{\mu})^{T}\Sigma^{-1}(\bs{x}-\bs{\mu})
+\right\}.
+\]
+
+\medskip
+Expanding the quadratic form and discarding terms that do not depend on \(\bs{x}\) yields
+\[
+p_{\theta}(\bs{x})
+\propto
+\exp\!\left\{
+-\frac{1}{2}\bs{x}^{T}\Sigma^{-1}\bs{x}
++ \bs{\mu}^{T}\Sigma^{-1}\bs{x}
+\right\}.
+\]
+
+\medskip
+The linear term \(\bs{\mu}^{T}\Sigma^{-1}\bs{x}\) is an inner product in \(\R^{k}\) between
+\(\bs{x}\) and the vector \(\Sigma^{-1}\bs{\mu}\).
+To express the quadratic term in inner-product form, write
+\[
+\bs{x}^{T}\Sigma^{-1}\bs{x}
+= \sum_{i=1}^{k}\sum_{j=1}^{k} x_i x_j (\Sigma^{-1})_{ij}.
+\]
+Introducing the outer product \(\bs{x}\bs{x}^{T}\), whose \((i,j)\)-entry equals \(x_i x_j\),
+this can be rewritten as
+\[
+\bs{x}^{T}\Sigma^{-1}\bs{x}
+= \sum_{i,j} (\Sigma^{-1})_{ij} (\bs{x}\bs{x}^{T})_{ij}
+= \tr\!\left( \Sigma^{-1}\bs{x}\bs{x}^{T} \right).
+\]
+
+\medskip
+The trace induces an inner product on the vector space of symmetric \(k\times k\) matrices,
+defined by
+\[
+\langle A,B\rangle := \tr(AB),
+\qquad A,B \in \mathrm{Sym}(k).
+\]
+Since both \(\Sigma^{-1}\) and \(\bs{x}\bs{x}^{T}\) are symmetric, the quadratic term is an
+inner product in this space.
+
+\medskip
+Combining both parts, the density can be written in exponential-family form as
+\[
+p_{\theta}(\bs{x})
+\propto
+\exp\!\left\{
+\left\langle \Sigma^{-1}\bs{\mu},\, \bs{x} \right\rangle
++
+\left\langle \Sigma^{-1},\, -\tfrac12 \bs{x}\bs{x}^{T} \right\rangle
+\right\}.
+\]
+
+\medskip
+Thus, the multivariate Gaussian model is an exponential family with
+\begin{itemize}
+    \item sufficient statistic
+    \(
+    T(\bs{x}) = \left(\bs{x}, -\tfrac12 \bs{x}\bs{x}^{T}\right),
+    \)
+    \item natural parameter
+    \(
+    \eta(\theta) = \left(\Sigma^{-1}\bs{\mu},\, \Sigma^{-1}\right).
+    \)
+\end{itemize}
+
+\medskip
+The dimension of this exponential family equals the dimension of the vector space in which
+\(T(\bs{x})\) takes values.
+The first component \(\bs{x}\) lies in \(\R^{k}\), contributing \(k\) dimensions.
+The second component lies in the space of symmetric \(k\times k\) matrices, whose dimension
+equals the number of free entries:
+\(k\) diagonal elements and \(\frac{k(k-1)}{2}\) off-diagonal elements.
+Hence,
+\[
+\dim \mathrm{Sym}(k) = k + \frac{k(k-1)}{2} = \frac{k(k+1)}{2}.
+\]
+Therefore, the multivariate Gaussian family forms an exponential family of dimension
+\[
+k + \frac{k(k+1)}{2}.
+\]
+\end{ex}
+
+\section{Nonuniqueness of Sufficient Statistics and Natural Parameters}%
+\label{sec:nssnp}
+
+Exponential-family representations of a statistical model are not unique: one can transform the sufficient statistic and the natural parameter without changing the model. 
+
+\medskip
+Let \(T(x)\) be a sufficient statistic and \(\eta(\theta)\) the corresponding natural parameter. For any invertible matrix \(A \in \R^{k \times k}\) and vectors \(\bs{b}, \bs{c} \in \R^k\), define the affine transformations
+\[
+\tilde{T}(x) = A T(x) + \bs{b}, \qquad 
+\tilde{\eta}(\theta) = A^{-T} \eta(\theta) + \bs{c}.
+\]
+
+Then the inner product between the transformed parameter and statistic expands as
+\begin{align*}
+\langle \tilde{\eta}(\theta), \tilde{T}(x) \rangle 
+&= \langle A^{-T}\eta(\theta) + \bs{c}, A T(x) + \bs{b} \rangle \\
+&\overset{(*)}{=} \langle \eta(\theta), T(x) \rangle 
++ \langle A^{-T}\eta(\theta), \bs{b} \rangle 
++ \langle \bs{c}, A T(x) \rangle 
++ \langle \bs{c}, \bs{b} \rangle
+\end{align*}
+where in \((*)\) we have use that for any two vectors \(\bs{u }, \bs{v }\) their inner product is define as 
+\[
+    \left<\bs{u }, \bs{v } \right> = \bs{u }^{T}\bs{v}
+\]
+so 
+\begin{align*}
+    \left<A^{-T}\eta(\theta), AT(x) \right>
+    &= (A^{-T}\eta(\theta))^{T}AT(x)
+    = \eta(\theta)^{T}(A^{-T})^{T}AT(x) 
+    = \eta(\theta)^{T}T(x)
+    \\
+    &= \left<\eta(\theta),T(x) \right>.
+\end{align*}
+
+\medskip
+This implies that the density can be rewritten as
+\[
+p_\theta(x)
+= \exp\Big\{ \langle \tilde{\eta}(\theta), \tilde{T}(x) \rangle - \tilde{B}(\theta) \Big\} 
+  \cdot h(x) \exp\big\{- \langle \bs{c}, A T(x) \rangle\big\},
+\]
+with the new log-partition function
+\[
+\tilde{B}(\theta) = B(\theta) + \langle A^{-T} \eta(\theta), \bs{b} \rangle + \langle \bs{c}, \bs{b} \rangle.
+\]
+
+\medskip
+In other words, an affine transformation of the sufficient statistic \(T(x)\) can be compensated by a corresponding transformation of the natural parameter \(\eta(\theta)\), possibly adjusting the normalizing constant. Linear relations among the coordinates of \(T(x)\) can thus be eliminated by choosing a suitable \(A\) and \(\bs{b}\), leading to a \emph{minimal representation} of the exponential family.  
+
+\medskip
+\begin{definition}[Order of an Exponential Family]
+The \textbf{order of the exponential family} is the dimension of the minimal sufficient statistic after all linear dependencies among its coordinates have been removed. This dimension is unique for a given family. 
+\end{definition}
+
+\medskip
+\begin{remark}[Invertibility and singular cases]
+    \leavevmode
+    \begin{itemize}
+        \item 
+In univariate or multivariate Gaussian models, assuming \(\Sigma\) positive definite (invertible) ensures the density exists in \(\R^k\). If a variance is zero, the distribution degenerates to a point mass; if a covariance matrix is singular, the random vector takes values in a strict subspace of \(\R^k\). Such singular cases are not part of the exponential-family representation as discussed here.  
+\item 
+Affine transformations provide a systematic way to expose linear dependencies among coordinates of \(T(x)\). For example, if some linear combination of coordinates is constant across all observations, one can redefine \(T\) via a suitable matrix \(A\) to eliminate the redundant coordinate. This reduction ensures that only the essential dimensions remain, giving the family its unique order.  
+    \end{itemize}
+\end{remark}
+
+\section{Random Sampling}
+\label{sec:rs}
+
+Let \(\mathsf{P}=\{\mathsf{P}_{\theta} : \theta \in \Theta\}\) be a \(k\)--dimensional exponential family with densities
+\[
+    p_{\theta}(x)
+    = \frac{d \mathsf{P}_{\theta}}{d \nu}(x)
+    = \exp\{\langle \eta(\theta), T(x) \rangle - B(\theta)\} \, h(x),
+    \quad x \in \cc{X}.
+\]
+Let \(X_1,\dots,X_n\) be i.i.d.\ random variables with distribution \(\mathsf{P}_{\theta}\).
+
+The joint distribution of the random vector \(\bs{X}=(X_1,\dots,X_n)\) then has density
+\[
+    p_{\theta}(\bs{x})
+    = \prod\limits_{i=1}^{n} p_{\theta}(x_i)
+    = \exp\left\{
+        \Big\langle \eta(\theta), \sum\limits_{i=1}^{n} T(x_i) \Big\rangle
+        - n B(\theta)
+      \right\}
+      \cdot
+      \prod\limits_{i=1}^{n} h(x_i),
+    \quad \bs{x} \in \cc{X}^n.
+\]
+
+Thus, the family of joint distributions of \(\bs{X}\) is again a \(k\)--dimensional exponential family.
+The natural parameter \(\eta(\theta)\) remains unchanged, while the sufficient statistic becomes
+\[
+    \sum\limits_{i=1}^{n} T(X_i).
+\]
+In particular, independent sampling preserves the exponential family structure.
+
+\begin{note}
+The dimension of the sufficient statistic
+does not depend on the sample size \(n\).\footnote{This behavior is highly atypical outside the class
+of exponential families; see Hipp (1974). Recall, however, the \(\mathrm{Uniform}(0,\theta)\) model
+as a counterexample without regularity.}
+\end{note}
+
+This property has important consequences. Even for very large samples, all relevant statistical
+information is summarized by a single vector in \(\mathbb{R}^k\). As a result, statistical analysis,
+geometric intuition, and asymptotic arguments for exponential families can be carried out in a fixed
+finite-dimensional space, regardless of the number of observations.
+
+By contrast, for general statistical models, sufficient statistics may grow in dimension with the
+sample size (for example, order statistics). Under mild regularity conditions, the invariance of
+the dimension of sufficient statistics under i.i.d.\ sampling essentially characterizes exponential
+families.
+
+\section{Minimal Sufficiency}
+\label{sec:Minimal Sufficiency}
+
+For exponential families, minimal sufficiency can be characterized in a particularly transparent
+way. The key reason is that likelihood ratios in exponential families reduce to differences of
+linear forms in the sufficient statistic. As a result, the general criterion for minimal sufficiency
+based on proportional likelihoods admits a simple geometric interpretation in terms of the natural
+parameter space; see Corollary~6.16 in Lehmann and Casella (1998).
+
+\begin{corollary}
+    Let \(\mathsf{P}=\{\mathsf{P}_{\theta} : \theta \in \Theta\}\) be a \(k\)--dimensional exponential
+    family with natural parameter mapping \(\eta : \Theta \to \R^k\).
+    If the set
+    \[
+        \eta(\Theta) = \{\eta(\theta) : \theta \in \Theta\} \subseteq \R^k
+    \]
+    contains \(k+1\) points \(\eta^{(0)},\dots,\eta^{(k)}\) such that the vectors
+    \[
+        \eta^{(j)} - \eta^{(0)}, \quad j=1,\dots,k,
+    \]
+    are linearly independent, then the sufficient statistic \(T\) is minimal sufficient.
+\end{corollary}
+
+This result follows directly from the characterization of minimal sufficiency in terms of
+proportional likelihoods. In an exponential family, the ratio of two likelihoods corresponding
+to parameter values \(\theta\) and \(\theta'\) can be written as
+\[
+    \exp\Big\{
+        \big\langle \eta(\theta) - \eta(\theta'),\, T(x) \big\rangle
+        - \big(B(\theta) - B(\theta')\big)
+    \Big\},
+\]
+so equality of likelihood ratios across all parameter values is determined entirely by linear
+constraints on \(T(x)\). If the set of possible difference vectors
+\(\eta(\theta) - \eta(\theta')\) spans \(\R^k\), then no nontrivial reduction of \(T\) can preserve
+these ratios, and \(T\) is therefore minimal sufficient.
+
+An equivalent geometric formulation of the condition in the corollary is the following.
+The sufficient statistic \(T\) is minimal sufficient if and only if the affine hull of
+\(\eta(\Theta)\) has dimension \(k\).
+The affine hull of a set \(A \subseteq \R^k\) is defined as
+\[
+    \left\{
+        \sum\limits_{j=0}^{k} \alpha_j \eta^{(j)} :
+        \eta^{(j)} \in A,\;
+        \alpha_j \in \R,\;
+        \sum\limits_{j=0}^{k} \alpha_j = 1
+    \right\}.
+\]
+
+In many standard examples, this condition is easily verified.
+
+\paragraph{Univariate Gaussian family.}
+Consider the normal distribution with unknown mean \(\mu \in \R\) and variance
+\(\sigma^2 > 0\).
+The parameter space \(\Theta = \R \times (0,\infty)\) is the open upper half--plane.
+The corresponding natural parameter space \(\eta(\Theta)\) is also an open subset of
+\(\R^2\), hence its affine hull has dimension \(2\).
+Therefore, the canonical sufficient statistic is minimal sufficient.
+
+\paragraph{Multivariate Gaussian family.}
+For the multivariate normal distribution with mean vector \(\mu \in \R^k\) and covariance
+matrix \(\Sigma\) positive definite, the natural parameter space is
+\(\R^k \times \mathcal{S}_{++}^k\), where \(\mathcal{S}_{++}^k\) denotes the cone of positive
+definite matrices.
+This set is open and full--dimensional in the corresponding Euclidean space, implying minimal
+sufficiency of the usual sufficient statistic.
+
+\paragraph{Binomial family and logistic regression.}
+For the binomial model, the original parameter \(\theta\) lies in the open unit interval
+\((0,1)\).
+The natural parameter is given by the log--odds transformation
+\[
+    \eta(\theta) = \log\frac{\theta}{1-\theta},
+\]
+which maps \((0,1)\) onto all of \(\R\).
+Consequently, \(\eta(\Theta) = \R\), whose affine hull has dimension \(1\).
+This explains both the minimal sufficiency of the binomial sufficient statistic and the
+central role of the log--odds parameterization in logistic regression, where linear predictors
+naturally take values in \(\R\).
+
+In summary, for exponential families, minimal sufficiency is governed entirely by the geometry
+of the natural parameter space.
+If \(\eta(\Theta)\) is full--dimensional (or equivalently, has an affine hull of dimension \(k\)),
+then the canonical sufficient statistic is automatically minimal sufficient.
+
+%For instance, in the Gaussian location--scale family, the natural parameter space is an open
+%subset of \(\R^2\); in the binomial model, the natural parameter (log--odds) ranges over all of
+%\(\R\).
+%In such cases, the affine hull of \(\eta(\Theta)\) is full--dimensional, and the canonical
+%sufficient statistic is automatically minimal sufficient.
+%
+%Thus, under mild regularity conditions, minimal sufficiency in exponential families is governed
+%entirely by the geometry of the natural parameter space.
+
+\section{Canonical Form}
+\label{sec:Canonical Form}
+
+By re--parametrizing an exponential family in terms of its natural parameters, the model can be
+written in \textbf{canonical form}. Specifically, a \(k\)--dimensional exponential family admits
+a representation
+\[
+    p_{\eta}(x)
+    = \exp\{\langle \eta, T(x) \rangle - A(\eta)\} \, h(x),
+    \quad x \in \cc{X},
+\]
+where \(\eta \in \R^k\) is the natural parameter and \(T(x) \in \R^k\) is the sufficient statistic.
+We write \(\mathsf{P}_{\eta}\) for the distribution with density \(p_{\eta}\).
+
+Passing to the canonical form amounts to abandoning the original parameterization
+(e.g.\ means, variances, probabilities, rates) in favor of the natural parameters.
+For instance, instead of indexing a Gaussian distribution by its mean and variance,
+or a binomial distribution by a success probability, we index these distributions by
+inverse variances, mean--variance ratios, or log--odds.
+This is purely a re--parametrization: the underlying distributions do not change, only the
+coordinates used to describe them.
+
+\subsection{Natural Parameter Space}
+
+The density \(p_{\eta}(x)\) is well defined only for those values of \(\eta\) for which the
+normalizing constant is finite.
+This leads to the definition of the \textbf{natural parameter space}
+\[
+    \cc{H}
+    =
+    \left\{
+        \eta \in \R^k :
+        \int_{\cc{X}} \exp\{\langle \eta, T(x) \rangle\} h(x) \, d\nu(x) < \infty
+    \right\}.
+\]
+For every \(\eta \in \cc{H}\), a valid probability density is obtained by setting
+\[
+    A(\eta)
+    =
+    \log
+    \int_{\cc{X}}
+        \exp\{\langle \eta, T(x) \rangle\} h(x) \, d\nu(x).
+\]
+The function \(A(\eta)\) is called the \textbf{cumulant generating function} or
+\textbf{log--Laplace transform} of the family.
+
+The role of \(\cc{H}\) is fundamental.
+Any nonnegative function with finite integral can be normalized to obtain a probability
+density, but if the integral diverges, no normalization is possible.
+Thus, \(\cc{H}\) is the largest set of natural parameters for which the exponential
+representation yields a well-defined statistical model.
+
+\subsection*{Examples}
+
+\paragraph{Gaussian family.}
+For the univariate Gaussian distribution, a natural sufficient statistic is
+\(T(x) = (x, x^2)\).
+Only certain choices of \(\eta\) lead to integrable densities:
+the coefficient multiplying \(x^2\) must be negative.
+This restriction corresponds exactly to the requirement that the variance be positive.
+If the quadratic term had the wrong sign, the exponential would not be integrable over
+\(\R\), and no probability density could be defined.
+
+\paragraph{Binomial family and logistic regression.}
+For the binomial model with success probability \(\theta \in (0,1)\), the natural parameter is
+the log--odds
+\[
+    \eta = \log\frac{\theta}{1-\theta},
+\]
+which ranges over all of \(\R\).
+Thus, the natural parameter space is unconstrained, even though the original parameter
+\(\theta\) lies in a bounded interval.
+This re--parametrization explains why logistic regression works with linear predictors:
+the natural parameter lives on the entire real line, making linear combinations natural
+and unconstrained.
+
+\paragraph{Multinomial and symmetry considerations.}
+In multinomial models, it is sometimes convenient to retain a redundant representation of
+the sufficient statistic in order to preserve symmetry.
+While redundant coordinates may later be removed to obtain a minimal representation,
+keeping them can simplify calculations and notation without affecting the underlying
+statistical structure.
+
+\paragraph{Exponential random graph models.}
+The exponential family framework can also be used constructively to define models.
+For example, when modeling random graphs, the observation \(X\) is a graph, and one may
+choose a sufficient statistic \(T(X)\) that counts features such as the number of edges
+and the number of triangles.
+Given parameters \(\eta_1,\eta_2\), the probability of observing a particular graph is
+proportional to
+\[
+    \exp\{\eta_1 T_1(X) + \eta_2 T_2(X)\}.
+\]
+Provided the graph space is finite, the normalizing constant \(A(\eta)\) always exists.
+Varying \(\eta\) yields a flexible family of distributions that can encode complex
+network structure beyond independent edge formation.
+
+\subsection*{Convexity and Likelihood Optimization}
+
+A key advantage of the canonical form emerges when studying likelihood functions.
+In general statistical models, likelihoods may be highly non--convex and multimodal.
+In contrast, for exponential families in canonical form, the log--likelihood is a concave
+function of \(\eta\) over the natural parameter space \(\cc{H}\).
+
+This explains a common empirical observation:
+for many standard models (binomial, multinomial, Poisson, Gaussian, gamma),
+maximum likelihood estimators are unique and easy to compute.
+Although this fact may appear model--specific when working in the original parameters,
+it has a unified explanation in the canonical parameterization.
+
+\subsection*{Moment and Cumulant Generating Functions}
+
+Finally, note that without the logarithm, the integral defining \(A(\eta)\) corresponds to
+a moment generating function.
+For a random variable \(X\), the moment generating function is
+\(\mathsf{E}[e^{tX}]\);
+for a random vector, it becomes
+\(\mathsf{E}[\exp(\langle t, X \rangle)]\).
+Taking the logarithm yields the cumulant generating function, whose derivatives generate
+moments and cumulants of the sufficient statistic.
+
+Thus, the canonical form not only simplifies likelihood theory and optimization, but also
+provides a natural bridge between exponential families, convex analysis, and moment theory.
+
+\subsection{Convexity Properties}
+\label{sub:Convexity Properties}
+
+One of the most powerful structural features of exponential families is their built--in
+convexity. This convexity governs both the geometry of the parameter space and the shape of
+likelihood functions, and it explains why maximum likelihood estimation is particularly
+well behaved in these models.
+
+Recall that in canonical form an exponential family has densities
+\[
+    p_{\eta}(x)
+    =
+    \exp\{\langle \eta, T(x) \rangle - A(\eta)\} h(x),
+    \quad \eta \in \cc{H},
+\]
+where the natural parameter space \(\cc{H}\) consists precisely of those \(\eta\) for which
+\(A(\eta) < \infty\).
+
+\begin{theo}[Convexity Properties]
+\label{theo:Convexity}
+\leavevmode
+\begin{enumerate}[label=(\roman*)]
+    \item The natural parameter space \(\cc{H}\) is a convex subset of \(\R^k\).
+    \item The cumulant generating function \(A(\eta)\) is convex on \(\cc{H}\).
+        \label{ite:2}
+    It is strictly convex if
+    \(\mathsf{P}_{\eta} \neq \mathsf{P}_{\eta'}\) for all
+    \(\eta,\eta' \in \cc{H}\) with \(\eta \neq \eta'\).
+    \item For fixed data \(x\), the log--likelihood function
+        \label{ite:3}
+    \[
+        \ell_x(\eta) = \log p_{\eta}(x)
+    \]
+    is concave on \(\cc{H}\).
+    It is strictly concave if
+    \(\mathsf{P}_{\eta} \neq \mathsf{P}_{\eta'}\) for all
+    \(\eta,\eta' \in \cc{H}\) with \(\eta \neq \eta'\).
+\end{enumerate}
+\end{theo}
+
+\myparagraph{Comments:}
+Convexity is the mathematical reason why maximum likelihood estimation in exponential
+families rarely exhibits pathologies such as multiple local optima.
+In contrast to general statistical models, likelihood optimization here is a convex
+optimization problem.
+
+Recall the basic facts:
+\begin{itemize}
+    \item Every local maximum of a concave function is a global maximum.
+    \item A strictly concave function has at most one maximizer.
+\end{itemize}
+Consequently, in the \emph{full} exponential family indexed by all
+\(\eta \in \cc{H}\), the maximum likelihood estimator (if it exists) is unique.
+
+Existence, however, is not guaranteed: a strictly concave function may fail to attain its
+supremum (for example, the logarithm on \((0,\infty)\)).
+Nevertheless, uniqueness follows automatically once existence is established.
+
+If one restricts \(\eta\) to an arbitrary subset of \(\cc{H}\), convexity and concavity
+may be destroyed.
+An important exception occurs when the restriction is a linear subspace of \(\cc{H}\):
+in that case, the model remains an exponential family of lower dimension, and the theorem
+continues to apply.
+
+\begin{proof}[]
+We begin with convexity of the natural parameter space and of the function \(A\).
+Let \(\eta, \eta' \in \cc{H}\) and \(\alpha \in [0,1]\).
+By definition,
+\begin{align*}
+    \exp\{A(\alpha \eta + (1-\alpha)\eta')\}
+    &=
+    \int
+        \exp\{\langle \alpha \eta + (1-\alpha)\eta', T(x) \rangle\}
+        h(x)\, d\nu(x) \\
+    &=
+    \int
+        \left( \exp\{\langle \eta, T(x) \rangle\} \right)^{\alpha}
+        \left( \exp\{\langle \eta', T(x) \rangle\} \right)^{1-\alpha}
+        h(x)\, d\nu(x).
+\end{align*}
+This expression is exactly of the form to which Hölder's inequality applies.
+Using Hölder's inequality yields
+\begin{align*}
+    \exp\{A(\alpha \eta + (1-\alpha)\eta')\}
+    &\le
+    \left(
+        \int \exp\{\langle \eta, T(x) \rangle\} h(x)\, d\nu(x)
+    \right)^{\alpha}
+    \left(
+        \int \exp\{\langle \eta', T(x) \rangle\} h(x)\, d\nu(x)
+    \right)^{1-\alpha} \\
+    &=
+    \exp\{\alpha A(\eta) + (1-\alpha) A(\eta')\}.
+\end{align*}
+Taking logarithms gives
+\begin{equation}
+    \label{eq:convex}
+    A(\alpha \eta + (1-\alpha)\eta')
+    \le
+    \alpha A(\eta) + (1-\alpha) A(\eta').
+\end{equation}
+
+This inequality has two immediate consequences.
+First, if \(A(\eta)\) and \(A(\eta')\) are finite, then
+\(A(\alpha \eta + (1-\alpha)\eta')\) is finite as well.
+Hence, \(\cc{H}\) is convex.
+Second, inequality \eqref{eq:convex} is precisely the definition of convexity of the function
+\(A\).
+
+Equality in Hölder's inequality occurs if and only if the two functions inside the integral
+are proportional.
+Here, this would require the existence of a constant \(c > 0\) such that
+\[
+    \exp\{\langle \eta, T(x) \rangle\}
+    =
+    c \cdot \exp\{\langle \eta', T(x) \rangle\}
+    \quad \text{for all } x.
+\]
+After normalization, this implies
+\(\mathsf{P}_{\eta} = \mathsf{P}_{\eta'}\).
+Therefore, if distinct natural parameters always correspond to distinct distributions,
+the inequality in \eqref{eq:convex} is strict for \(\alpha \in (0,1)\), and \(A\) is strictly
+convex, proving \ref{ite:2}.
+
+Finally, for fixed data \(x\),
+\[
+    \ell_x(\eta)
+    =
+    \log p_{\eta}(x)
+    =
+    \langle \eta, T(x) \rangle - A(\eta) + \log h(x).
+\]
+The term \(\langle \eta, T(x) \rangle\) is linear in \(\eta\), while \(-A(\eta)\) is concave
+because \(A\) is convex.
+Adding a linear function does not affect concavity.
+Hence, \(\ell_x(\eta)\) is concave on \(\cc{H}\), and strictly concave whenever \(A\) is
+strictly convex, proving \ref{ite:3}.
+\end{proof}
+
+The convexity of the natural parameter space and the cumulant generating function provides a
+unified explanation for the uniqueness of maximum likelihood estimators in exponential
+families such as the Gaussian, Poisson, binomial, and multinomial models.
+What appears as a collection of model--specific calculations is, in fact, a single geometric
+phenomenon.
+
+
+\begin{ex}[Gaussian model and convexity of the cumulant function]
+Let \(X_1,\dots,X_n\) be i.i.d.\ random variables with
+\[
+X_i \sim \mathcal{N}(\mu,\sigma^2),
+\]
+where both the mean \(\mu\) and the variance \(\sigma^2\) are unknown.  
+We represent this model as a full exponential family by introducing the natural
+parameters
+\[
+\eta_1 = \frac{\mu}{\sigma^2},
+\qquad
+\eta_2 = \frac{1}{\sigma^2}.
+\]
+
+With this parametrization, the log-likelihood function can be written in the
+canonical exponential-family form
+\[
+\ell_x(\eta)
+= \eta_1 \sum_{i=1}^n x_i
+  + \eta_2 \left(-\frac{1}{2}\sum_{i=1}^n x_i^2 \right)
+  - A(\eta),
+\]
+where the cumulant generating function (log-partition function) is given by
+\[
+A(\eta)
+= \frac{n}{2}\frac{\mu^2}{\sigma^2}
+  + \frac{n}{2}\log(2\pi\sigma^2)
+= \frac{n}{2}\left(
+    \frac{\eta_1^2}{\eta_2}
+    - \log \eta_2
+    + \log(2\pi)
+  \right).
+\]
+
+The gradient of \(A\) coincides with the vector of expectations of the sufficient
+statistics. A direct calculation yields
+\[
+\nabla A(\eta)
+=
+\begin{pmatrix}
+\displaystyle n\,\frac{\eta_1}{\eta_2} \\[0.6em]
+\displaystyle -\frac{n}{2}\left(
+  \frac{\eta_1^2}{\eta_2^2} + \frac{1}{\eta_2}
+\right)
+\end{pmatrix}
+=
+\begin{pmatrix}
+n\mu \\[0.4em]
+-\frac{n}{2}\bigl(\mu^2+\sigma^2\bigr)
+\end{pmatrix}
+=
+\begin{pmatrix}
+\mathsf{E}_\eta\!\left[\sum\limits_{i=1}^n X_i\right] \\[0.6em]
+\mathsf{E}_\eta\!\left[-\frac{1}{2}\sum\limits_{i=1}^n X_i^2\right]
+\end{pmatrix}.
+\]
+Thus, as predicted by the general theory of exponential families, the gradient of
+the cumulant function returns the expectations of the sufficient statistics.
+
+To verify the convexity of \(A\) directly, we compute its Hessian matrix:
+\[
+\nabla^2 A(\eta)
+=
+\begin{pmatrix}
+\displaystyle \frac{n}{\eta_2}
+&
+\displaystyle -\,\frac{n\eta_1}{\eta_2^2}
+\\[0.8em]
+\displaystyle -\,\frac{n\eta_1}{\eta_2^2}
+&
+\displaystyle n\!\left(
+  \frac{\eta_1^2}{\eta_2^3}
+  + \frac{1}{2\eta_2^2}
+\right)
+\end{pmatrix}.
+\]
+Since \(\eta_2>0\) (it is the inverse variance), the upper-left entry is positive.
+Moreover, the determinant is
+\[
+\det\bigl(\nabla^2 A(\eta)\bigr)
+= \frac{n^2}{2\eta_2^3} > 0.
+\]
+By Sylvester’s criterion, the Hessian is positive definite for all admissible
+\(\eta\), and hence \(A\) is strictly convex.
+
+This explicit calculation illustrates the general convexity result for cumulant
+functions in exponential families, which in theory follows from Hölder’s
+inequality but in this Gaussian case can be verified directly by elementary
+calculus.
+\end{ex}
+
+\subsection{Analytic Properties}
+\label{sub:ap}
+
+\begin{theo}[Analyticity of exponential-family integrals]
+\label{theo:ap}
+Let \(\eta\) be a point in the interior of the natural parameter space \(\cc{H}\).
+Let \(f : \cc{X} \to \R\) be a measurable function that is integrable with respect
+to \(\mathsf{P}_{\eta}\).
+
+Then the mapping
+\[
+\eta \longmapsto
+\int_{}^{} f(x)\,
+\exp\!\bigl\{\langle \eta, T(x) \rangle\bigr\}
+\, h(x)\, d\nu(x)
+\]
+admits continuous partial derivatives of all orders. Moreover, all derivatives
+can be computed by differentiating under the integral sign. In particular, the
+function is analytic on the interior of \(\cc{H}\).
+\end{theo}
+
+\begin{remark}
+The expression above represents (up to normalization) the expectation of the
+statistic \(f(X)\) when \(X\) is drawn from an exponential family distribution
+with natural parameter \(\eta\). The theorem therefore shows that expectations
+with respect to exponential family models depend smoothly on the natural
+parameters, as long as \(\eta\) lies in the interior of the parameter space.
+\end{remark}
+
+\begin{remark}[Idea of the proof]
+The result follows from an application of Lebesgue’s dominated convergence
+theorem to difference quotients arising in the definition of partial
+derivatives. Since derivatives are limits of difference quotients, the key step
+is to justify the interchange of differentiation and integration. The
+exponential structure of the density allows the difference quotients to be
+dominated by an integrable function, ensuring the validity of this
+interchange. A detailed proof can be found in Lehmann and Romano (2005,
+Theorem~2.7.1).
+\end{remark}
+
+\subsection{Cumulant Generating Transform}
+\label{sub:cgt}
+
+A central object in the theory of exponential families is the cumulant generating
+function \(A(\eta)\). Beyond its role as a normalizing constant, \(A\) encodes the
+first- and second-order moments of the sufficient statistic through
+differentiation.
+
+\begin{corollary}[Derivatives of the cumulant function]
+\label{cor:cgt}
+Let \(\{ \mathsf{P}_\eta : \eta \in \cc{H} \}\) be an exponential family in canonical
+form with sufficient statistic
+\(
+T = (T_1,\dots,T_d)
+\)
+and cumulant generating function \(A\).
+For all \(\eta\) in the interior of \(\cc{H}\),
+\[
+\frac{\partial}{\partial \eta_j} A(\eta)
+= \mathsf{E}_\eta\!\left[T_j(X)\right],
+\qquad
+\frac{\partial^2}{\partial \eta_j \partial \eta_k} A(\eta)
+= \mathsf{Cov}_\eta\!\left[T_j(X),T_k(X)\right].
+\]
+Equivalently,
+\[
+\nabla A(\eta) = \mathsf{E}_\eta[T(X)],
+\qquad
+\nabla^2 A(\eta) = \mathsf{Cov}_\eta[T(X)].
+\]
+\end{corollary}
+
+\begin{proof}
+By definition of the exponential family in canonical form, the density integrates
+to one:
+\[
+\int_{\cc{X}}
+\exp\!\left\{
+\langle \eta, T(x) \rangle - A(\eta)
+\right\}
+h(x)\, d\nu(x)
+= 1,
+\qquad \forall\, \eta \in \cc{H}.
+\]
+Although the right-hand side is constant, the left-hand side is a function of
+\(\eta\). Since \(\eta\) lies in the interior of \(\cc{H}\), we may differentiate
+under the integral sign.
+
+Taking the partial derivative with respect to \(\eta_j\) yields
+\[
+\int_{\cc{X}}
+\exp\!\left\{
+\langle \eta, T(x) \rangle - A(\eta)
+\right\}
+\left(
+T_j(x) - \frac{\partial}{\partial \eta_j} A(\eta)
+\right)
+h(x)\, d\nu(x)
+= 0.
+\]
+Recognizing the integrand as an expectation under \(\mathsf{P}_\eta\) proves the
+first identity.
+
+
+
+Differentiating once more with respect to \(\eta_k\) 
+and differentiating under the
+integral sign, yields
+\begin{align*}
+0
+&=
+\int_{\cc{X}}
+\exp\!\left\{
+\langle \eta, T(x) \rangle - A(\eta)
+\right\}
+\Bigl(
+T_k(x) - \frac{\partial}{\partial \eta_k} A(\eta)
+\Bigr)
+\Bigl(
+T_j(x) - \frac{\partial}{\partial \eta_j} A(\eta)
+\Bigr)
+h(x)\, d\nu(x)
+\\
+&\qquad
+-
+\int_{\cc{X}}
+\exp\!\left\{
+\langle \eta, T(x) \rangle - A(\eta)
+\right\}
+\frac{\partial^2}{\partial \eta_j \partial \eta_k} A(\eta)
+\, h(x)\, d\nu(x).
+\end{align*}
+Since the density integrates to one, the second integral equals
+\(\frac{\partial^2}{\partial \eta_j \partial \eta_k} A(\eta)\), and we obtain
+\[
+\int_{\cc{X}}
+\exp\!\left\{
+\langle \eta, T(x) \rangle - A(\eta)
+\right\}
+\Bigl(
+T_j(x) - \mathsf{E}_\eta[T_j(X)]
+\Bigr)
+\Bigl(
+T_k(x) - \mathsf{E}_\eta[T_k(X)]
+\Bigr)
+h(x)\, d\nu(x)
+=
+\frac{\partial^2}{\partial \eta_j \partial \eta_k} A(\eta).
+\]
+Recognizing the left-hand side as a covariance under \(\mathsf{P}_\eta\), we
+conclude that
+\[
+\mathsf{Cov}_\eta\!\left[T_j(X),T_k(X)\right]
+=
+\frac{\partial^2}{\partial \eta_j \partial \eta_k} A(\eta).
+\]
+
+\end{proof}
+
+\begin{remark}[Interpretation]
+The function \(A\) is called the cumulant generating function because its
+derivatives generate cumulants of the sufficient statistic. In particular, the
+gradient of \(A\) yields the mean vector, while the Hessian yields the covariance
+matrix. This provides a direct and efficient way to compute moments in exponential
+families by differentiation rather than integration.
+\end{remark}
+
+\subsection{Random Vectors}
+\label{sub:rv}
+
+Let
+\[
+X = \begin{pmatrix}
+X_1 \\ \vdots \\ X_d
+\end{pmatrix}
+\]
+be a random vector, viewed equivalently as a vector of \(d\) real-valued random
+variables or as a random element of \(\R^d\) equipped with its Borel
+\(\sigma\)-algebra.
+
+\begin{definition}[Expectation of a random vector]
+The expectation (mean vector) of \(X\) is defined componentwise by
+\[
+\mathsf{E}[X]
+=
+\begin{pmatrix}
+\mathsf{E}[X_1] \\ \vdots \\ \mathsf{E}[X_d]
+\end{pmatrix},
+\]
+whenever all component expectations exist.
+\end{definition}
+
+\begin{definition}[Variance matrix]
+The variance matrix of \(X\) is the \(d \times d\) matrix
+\[
+\mathsf{Var}[X]
+=
+\bigl(\mathsf{Cov}(X_i,X_j)\bigr)_{1 \le i,j \le d},
+\]
+whose diagonal entries are the variances of the coordinates of \(X\) and whose
+off-diagonal entries are the pairwise variances.
+\end{definition}
+
+\begin{remark}
+Expectations of vector- or matrix-valued random quantities are always understood
+entrywise. In particular, whenever \(\mathsf{E}[X]\) or \(\mathsf{Var}[X]\) is
+written, all relevant moments are assumed to exist.
+\end{remark}
+
+\begin{remark}[Positive semidefiniteness]
+The covariance matrix \(\mathsf{Var}[X]\) is always positive semidefinite. 
+\end{remark}
+
+In the context of exponential families, the sufficient statistic \(T(X)\) is a
+random vector. Applying the results of
+Section~\ref{sub:cgt}, the gradient and Hessian of the cumulant generating function
+\(A\) admit a direct probabilistic interpretation:
+\[
+\nabla A(\eta)
+=
+\mathsf{E}_\eta[T(X)],
+\qquad
+D_2 A(\eta)
+=
+\mathsf{Var}_\eta[T(X)].
+\]
+Thus, the first derivative of \(A\) yields the mean vector of the sufficient
+statistic, while the second derivative yields its variance matrix.
+
+\section{Mean Parametrization}
+\label{sec:mp}
+
+Let \(\{\mathsf{P}_\eta : \eta \in \cc{H}'\}\) be an exponential family in canonical
+form, where the natural parameter space \(\cc{H}' \subset \R^d\) is open and
+convex. The associated cumulant generating function \(A : \cc{H}' \to \R\) is
+strictly convex on \(\cc{H}'\).
+
+As a consequence, the gradient mapping
+\[
+\eta \longmapsto \nabla A(\eta)
+=
+\mathsf{E}_\eta[T(X)]
+\]
+is injective. Hence, each value of the natural parameter \(\eta\) corresponds to
+a unique value of the expectation of the sufficient statistic. This establishes a
+one--to--one correspondence between the natural parameter \(\eta\) and the
+\emph{mean parameter}
+\[
+\theta \;\coloneqq\; \mathsf{E}_\eta[T(X)].
+\]
+
+This alternative parametrization of the exponential family is called the
+\emph{mean parametrization}. While the natural parametrization is particularly
+well-suited for studying convexity and optimization properties, the mean
+parametrization provides a direct probabilistic interpretation in terms of
+expected sufficient statistics.
+
+\begin{ex}[Gaussian model]
+Consider the Gaussian exponential family with unknown mean \(\mu\) and variance
+\(\sigma^2\), and natural parameters
+\[
+\eta
+=
+\begin{pmatrix}
+\eta_1 \\ \eta_2
+\end{pmatrix}
+=
+\begin{pmatrix}
+\mu / \sigma^2 \\ 1 / \sigma^2
+\end{pmatrix}.
+\]
+The corresponding mean parameters are given by
+\[
+\nabla A(\eta)
+=
+\mathsf{E}_\eta[T(X)]
+=
+\begin{pmatrix}
+\mu \\[0.4em]
+-\frac{1}{2}(\mu^2 + \sigma^2)
+\end{pmatrix}
+=
+\begin{pmatrix}
+\displaystyle \frac{\eta_1}{\eta_2} \\[0.8em]
+\displaystyle -\frac{1}{2}\left(
+\frac{\eta_1^2}{\eta_2^2} + \frac{1}{\eta_2}
+\right)
+\end{pmatrix}.
+\]
+This mapping is one--to--one, illustrating explicitly the equivalence between the
+natural and mean parametrizations in this model.
+\end{ex}
+
+\begin{remark}
+The injectivity of the gradient map follows from strict convexity of \(A\): the
+gradient of a strictly convex function is injective on any convex domain.
+Consequently, distributions in an exponential family may be uniquely identified
+either by their natural parameters or by the mean values of their sufficient
+statistics.
+\end{remark}
+
+\section{A Terminological Remark on Exponential Families}
+
+Before turning to estimation, we make a brief remark on terminology. An
+\emph{exponential family} is not a single probability distribution but a
+\emph{statistical model}, that is, a collection of probability distributions
+indexed by a parameter. Typical examples include the Gaussian distributions with
+varying mean and variance, the Poisson distributions with varying rate parameter,
+or the binomial distributions with varying success probability.
+
+In the literature—particularly in machine learning—it is common to encounter
+phrases such as “the Poisson distribution is in the exponential family.” Such
+formulations should be interpreted with care. More precisely, one should say
+that a \emph{family} of Poisson distributions, indexed by their rate parameter,
+\emph{forms} or \emph{constitutes} an exponential family when written in
+canonical form.
+
+Throughout these notes, we will therefore avoid referring to individual
+distributions as belonging to “the” exponential family. Instead, we emphasize
+that exponential families are collections of distributions that admit a common
+representation in exponential-family form.
+
+We now proceed to the problem of statistical estimation for exponential family
+models.

@@ -1,0 +1,688 @@
+\chapter{Sufficiency}
+\label{cha:Sufficiency}
+
+\section{Sufficient Statistics}%
+\label{sec:Sufficient Statistics}
+
+\paragraph{Setting.}
+\begin{itemize}
+    \item Sample space: $\cc{X} \subset \R^{n}$, equipped with its Borel $\sigma$--algebra.
+    \item Observation: a random element $\bs{X}$ taking values in $\cc{X}$ with distribution
+    $\bs{X} \sim \mathsf{P}_{\theta}$.
+    \item Statistic: a measurable mapping $T : \cc{X} \to \cc{Y}$, where
+    $\cc{Y} \subseteq  \R^{k}$ is equipped with its Borel $\sigma$--algebra.
+\end{itemize}
+
+\begin{definition}[Sufficient statistic]
+A statistic $T$ is called \textbf{sufficient} for the model $\cc{P} = \{ \mathsf{P}_{\theta} : \theta \in \Theta \}$
+if there exists a version of the conditional distribution of $\bs{X}$ given $T(\bs{X}) = t$
+that does \emph{not} depend on the parameter $\theta$.
+
+Equivalently, once the value $T(\bs{X})$ is known, the remaining randomness in $\bs{X}$
+has a distribution that is the same for all $\theta \in \Theta$.
+\end{definition}
+
+\paragraph{Interpretation and motivation.}
+Sufficiency is a property of a statistic relative to a given statistical model.
+Intuitively, a statistic is sufficient if it retains all information in the data
+that is relevant for inference about the parameter $\theta$.
+In other words, no additional knowledge of the full data set beyond $T(\bs{X})$
+can improve estimation, testing, or the construction of confidence intervals for $\theta$.
+
+A useful way to think about this is through a thought experiment.
+Suppose the original data set $\bs{X}$ is lost, but the value of the statistic $T(\bs{X})$
+is retained.
+If $T$ is sufficient, then one can generate a new random data set
+$\widetilde{\bs{X}}$ by sampling from the conditional distribution of $\bs{X}$
+given $T(\bs{X})$.
+Because this conditional distribution does not depend on $\theta$,
+the reconstructed data $\widetilde{\bs{X}}$ has the same distribution as the original data $\bs{X}$
+under \emph{every} $\mathsf{P}_{\theta} \in \cc{P}$.
+Thus, although the original data cannot be recovered exactly,
+it can be reconstructed in a probabilistic sense without loss of information
+about the parameter.
+
+From this perspective, sufficiency can be viewed as a form of information reduction:
+the statistic $T(\bs{X})$ may be lower dimensional than the full data,
+yet it contains all information relevant for inference within the specified model.
+This notion is related to, but distinct from, ideas such as data compression or storage efficiency.
+
+%The restriction to Euclidean sample spaces ensures that conditional distributions
+%are well defined in the usual sense.
+%In more general spaces, additional technical assumptions are required,
+%but all examples considered in this course will fall within this framework.
+
+\paragraph{Further reading.}
+See Casella and Berger (2002, Section~6.2) for additional discussion and examples.
+
+\begin{ex}[Bernoulli distribution]
+    \label{ex:ch3_bd}
+Let $X_1,\dots,X_n$ be i.i.d.\ Bernoulli$(\theta)$ r.v. with $\theta \in (0,1)$.
+We interpret $X_i=1$ as a success (e.g.\ heads) and $X_i=0$ as a failure (tails).
+The sample space is therefore $\cc{X} = \{0,1\}^n$.
+
+A natural statistic in this setting is the total number of successes,
+\[
+T(X_1,\dots,X_n) \;=\; \sum_{i=1}^n X_i,
+\]
+which counts how often the outcome $1$ is observed.
+Intuitively, if the goal is to learn about $\theta$, the probability of success in a single trial,
+then only the total number of successes should matter, not the specific order in which they occur.
+We now verify that this intuition is correct.
+\end{ex}
+
+\begin{claim}
+The statistic $T(X_1,\dots,X_n)=\sum\limits_{i=1}^n X_i$ is sufficient for the Bernoulli$(\theta)$ model.
+\end{claim}
+
+\begin{proof}
+Consider the conditional distribution of the full data $(X_1,\dots,X_n)$ given that
+$T(X_1,\dots,X_n)=t$.
+This conditional probability is nonzero only for sequences $(x_1,\dots,x_n)\in\{0,1\}^n$
+satisfying $\sum\limits_{i=1}^n x_i = t$.
+For such a sequence, we have
+\[
+\mathsf{P}_{\theta}\!\left(
+X_1=x_1,\dots,X_n=x_n \Big| \sum_{i=1}^n X_i = t
+\right)
+=
+\frac{\mathsf{P}_{\theta}(X_1=x_1,\dots,X_n=x_n)}
+     {\mathsf{P}_{\theta}\!\left(\sum_{i=1}^n X_i = t\right)}.
+\]
+
+Since the $X_i$ are i.i.d.\ Bernoulli$(\theta)$,
+\[
+\mathsf{P}_{\theta}(X_1=x_1,\dots,X_n=x_n)
+= \prod_{i=1}^n \theta^{x_i}(1-\theta)^{1-x_i}
+= \theta^{t}(1-\theta)^{n-t}.
+\]
+Moreover, $\sum\limits_{i=1}^n X_i$ has a Binomial$(n,\theta)$ distribution, so
+\[
+\mathsf{P}_{\theta}\!\left(\sum_{i=1}^n X_i = t\right)
+= \binom{n}{t}\theta^{t}(1-\theta)^{n-t}.
+\]
+Dividing yields
+\[
+\mathsf{P}_{\theta}\!\left(
+X_1=x_1,\dots,X_n=x_n \mid \sum_{i=1}^n X_i = t
+\right)
+= \frac{1}{\binom{n}{t}},
+\]
+which does not depend on $\theta$.
+
+Thus, conditional on $T(\bs{X})=t$, all sequences in $\{0,1\}^n$ containing exactly $t$
+ones are equally likely (uniform distribution).
+The conditional distribution of $(X_1,\dots,X_n)$ given $T(\bs{X})$ is therefore independent
+of $\theta$, so $T$ is sufficient.
+\end{proof}
+
+\paragraph{Interpretation.}
+Knowing only the total number of successes $t$, one can probabilistically reconstruct
+a data set by placing $t$ ones uniformly at random among the $n$ positions.
+This reconstructed data has the same distribution as the original sample under any
+$\mathsf{P}_{\theta}$.
+Hence, for inference about $\theta$ in the i.i.d.\ Bernoulli model,
+the statistic $T=\sum\limits_{i=1}^n X_i$ retains all relevant information in the data.
+
+
+\begin{ex}[Poisson model and sufficiency]
+    \label{ex:ch3_pms}
+Let $X_1,\dots,X_n$ be i.i.d.\ Poisson$(\theta)$ r.v. with $\theta>0$.
+The sample space is $\cc{X}=\N_0^n$.
+A typical interpretation is that $X_i$ counts the number of events
+(e.g.\ earthquakes, arrivals, failures) observed in the $i$th time period or region.
+
+A natural statistic in this model is the total count
+\[
+T(X_1,\dots,X_n) = \sum\limits_{i=1}^n X_i,
+\]
+which aggregates all observed events across the $n$ independent observations.
+Intuitively, if the goal is to learn the underlying rate $\theta$,
+only the total number of events should matter, not how they are distributed
+across the individual observations.
+\end{ex}
+
+\begin{claim}
+The statistic $T(X_1,\dots,X_n)=\sum_{i=1}^n X_i$ is sufficient for the Poisson$(\theta)$ model.
+\end{claim}
+
+\begin{proof}
+Since the sum of independent Poisson r.v. is again Poisson,
+\[
+T(X_1,\dots,X_n) \sim \text{Poisson}(n\theta).
+\]
+Consider the conditional distribution of $(X_1,\dots,X_n)$ given $T(X_1,\dots,X_n)=t$.
+This conditional probability is nonzero only for vectors $(x_1,\dots,x_n)\in\N_0^n$
+satisfying $\sum\limits_{i=1}^n x_i = t$.
+For such a vector,
+\begin{align*}
+\mathsf{P}_{\theta}\!\left(
+X_1=x_1,\dots,X_n=x_n \,\middle|\, \sum_{i=1}^n X_i=t
+\right)
+&=
+\frac{\prod\limits_{i=1}^n e^{-\theta}\cdot \theta^{x_i}/x_i!}
+     {e^{-n\theta}\cdot (n\theta)^t/t!} \\
+&=
+\frac{t!}{x_1!\cdots x_n!}\left(\frac{1}{n}\right)^t
+= \binom{t}{x_1,\dots,x_n}\left(\frac{1}{n}\right)^t.
+\end{align*}
+This is the probability mass function of a multinomial distribution with
+parameters $t$ and cell probabilities $(1/n,\dots,1/n)$, and it does not depend on $\theta$.
+Hence, the conditional distribution of $(X_1,\dots,X_n)$ given $T$ is independent of $\theta$,
+so $T$ is sufficient.
+\end{proof}
+
+\paragraph{Interpretation.}
+Given the total count $t$, the individual counts $(X_1,\dots,X_n)$ can be viewed as obtained
+by randomly allocating $t$ events among $n$ categories, each with equal probability.
+Thus, once $T$ is known, the remaining randomness in the data is purely combinatorial
+and unrelated to the unknown rate $\theta$.
+
+\bigskip
+
+\begin{ex}[Continuous i.i.d.\ model and order statistics]
+    \label{ex:ch3_cos}
+Let $X_1,\dots,X_n$ be i.i.d.\ real-valued r.v. with a continuous cdf $F$ on $\R$.
+Here, the parameter of interest is the distribution function itself, $\theta \equiv F$.
+
+Define the \emph{order statistics}
+\[
+T(X_1,\dots,X_n) = (X_{(1)},\dots,X_{(n)}),
+\]
+where $X_{(1)} \le \cdots \le X_{(n)}$ is the sorted version of the data.
+This statistic discards the order in which the observations were collected,
+retaining only their relative magnitudes.
+\end{ex}
+
+\begin{claim}
+The vector of order statistics $(X_{(1)},\dots,X_{(n)})$ is sufficient for the i.i.d.\ model
+with continuous cdf $F$.
+\end{claim}
+
+\begin{proof}
+Fix distinct real numbers $x_1,\dots,x_n$ with order statistics
+$(x_{(1)},\dots,x_{(n)})$.
+Conditioning on the event that the sorted values equal
+$(x_{(1)},\dots,x_{(n)})$, each of the $n!$ possible permutations of these values
+is equally likely.
+Hence,
+\[
+\mathsf{P}_{F}\!\left(
+X_1=x_1,\dots,X_n=x_n \,\middle|\,
+X_{(1)}=x_{(1)},\dots,X_{(n)}=x_{(n)}
+\right)
+= \frac{1}{n!},
+\]
+which does not depend on $F$.
+Therefore, the conditional distribution of $(X_1,\dots,X_n)$ given the order statistics
+is independent of the underlying distribution function, and the order statistics are sufficient.
+\end{proof}
+
+\paragraph{Interpretation.}
+In an i.i.d.\ continuous model, the labeling or order of the observations carries no information
+about the distribution $F$.
+If the original ordering is lost but the sorted data are retained, one can reconstruct
+a probabilistically equivalent data set by randomly permuting the order statistics.
+Thus, all information relevant for inference about $F$ is contained in the order statistics.
+
+\paragraph{Further reading.}
+A formal measure-theoretic treatment of conditioning on order statistics
+can be found in Lehmann and Romano (2005, Example~2.4.1).
+
+\section{Neyman--Fisher Factorization Criterion}
+\label{sec:nfc}
+
+In many statistical models, all distributions admit a density (or probability mass function)
+with respect to a common dominating measure.
+In this setting, sufficiency can be characterized directly from the form of the likelihood,
+without explicit computation of conditional distributions.
+
+\begin{theo}[Neyman--Fisher factorization criterion]
+\label{theo:nfc}
+Let $\cc{P}=\{\mathsf{P}_{\theta}:\theta\in\Theta\}$ be a statistical model dominated by a
+$\sigma$--finite measure $\nu$.
+Denote the corresponding densities by
+\[
+p_{\theta}(x) = \frac{d\mathsf{P}_{\theta}}{d\nu}(x), \qquad \theta\in\Theta.
+\]
+A statistic $T:\cc{X}\to\cc{Y}$ is sufficient for $\cc{P}$ if and only if there exist
+measurable non--negative functions $h:\cc{X}\to\R$ and
+$g_{\theta}:\cc{Y}\to\R$ such that, for all $\theta\in\Theta$,
+\begin{equation}
+\label{eq:nfc}
+p_{\theta}(x) = g_{\theta}(T(x))\,h(x),
+\qquad x\in\cc{X}.
+\end{equation}
+\end{theo}
+
+\paragraph{Interpretation.}
+The factorization \eqref{eq:nfc} separates the dependence on the parameter $\theta$
+from the full data $x$.
+All information about $\theta$ contained in the data appears through the statistic $T(x)$,
+while the remaining factor $h(x)$ depends only on the observed sample.
+Consequently, once $T(x)$ is known, no further information about $\theta$ can be extracted
+from the data.
+
+\begin{remark}[]
+If \eqref{eq:nfc} holds, any likelihood--based procedure depends on the data only through
+$T(x)$.
+In particular, the maximum likelihood estimator satisfies
+\[
+\hat{\theta}(x)
+= \arg\max_{\theta} p_{\theta}(x)
+= \arg\max_{\theta} g_{\theta}(T(x)),
+\]
+and is therefore a function of the sufficient statistic $T$ alone.
+\end{remark}
+
+\begin{proof}[\autoref{theo:nfc}, discrete case]
+We prove the result when $\nu$ is the counting measure.
+Let
+\[
+\mathsf{Q}_{\theta}(t) := \mathsf{P}_{\theta}(T=t)
+= \sum_{x\in\cc{X}\: : \:T(x)=t} p_{\theta}(x),
+\qquad t\in\cc{Y},
+\]
+denote the probability mass function of $T$.
+For $x\in\cc{X}$ with $T(x)=t$, the conditional distribution of $X$ given $T=t$ is
+\[
+p_{\theta}(x\mid T=t)
+= \frac{p_{\theta}(x)}{\mathsf{Q}_{\theta}(t)}.
+\]
+
+\begin{description}
+  \item[\(\Longrightarrow)\)] 
+
+Suppose $T$ is sufficient.
+Then the conditional distribution $p_{\theta}(x\mid T=t)$ does not depend on $\theta$.
+Let's denote this common conditional distribution by $p_{*}(x\mid T=t)$.
+Using the identity
+\[
+p_{\theta}(x)
+= \mathsf{P}_{\theta}(T=t)\, p_{*}(x\mid T=t),
+\qquad t=T(x),
+\]
+we get
+       \begin{align*}
+           p_{\theta}(x)
+           &= \mathsf{P}_{\theta}(X=x)
+         \\&= \mathsf{P}_{\theta}(X=x,T=T(x))
+         \\&
+         = Q_{\theta}(T(x)) \cdot p_{*}(x\mid T=T(x)) 
+         \\&=: g_{\theta}(T(x)) \cdot h(x).
+       \end{align*}
+and so we obtain the factorization
+\[
+p_{\theta}(x)
+= g_{\theta}(T(x))\,h(x),
+\qquad
+g_{\theta}(t):=\mathsf{Q}_{\theta}(t),
+\quad
+h(x):=p_{*}(x\mid T=T(x)).
+\]
+
+  \item[\(\Longleftarrow)\)] 
+Conversely, suppose \eqref{eq:nfc} holds.
+Then
+      \[
+          Q_{\theta}(t) 
+          = \sum\limits_{x\in \cc{X}\: :\: T(x)=t}^{} p_{\theta}(x) 
+          = \sum\limits_{x\in \cc{X}\: :\: T(x)=t}^{} g_{\theta}(T(x)) h(x)
+          = g_{\theta}(t)\sum\limits_{x\in \cc{X}\: :\: T(x)=t}^{} h(x)
+      \]
+     Therefore, for \(x\) and \(t\) with \(T(x)=t\), it holds that
+     \begin{align*}
+         p_{\theta}(x\mid T(x)=t)
+         &= \frac{g_{\theta}(t)h(x)}{g_{\theta}(t)\sum\limits_{x \in \cc{X}\: : \: T(x)=t}^{} h(x) }
+       \\&
+       = \frac{h(x)}{\sum\limits_{x\in \cc{X}\: :\: T(x)=t}^{} h(x) }
+     \end{align*}
+     does not depend on \(\theta\). We conclude that \(T\) is sufficient.
+\end{description}
+\end{proof}
+
+\paragraph{Further reading.}
+The theorem holds for general dominated models.
+A measure--theoretic treatment of conditioning and sufficiency can be found in
+Lehmann and Romano (2005, Sections~1.9 and~2.6).
+
+\begin{ex}[Uniform model and the German tank problem]
+    \label{ex:ch3_um}
+Let \(X_1,\dots,X_n\) be i.i.d.\ random variables with distribution \(\mathrm{Uniform}(0,\theta)\), where \(\theta>0\) is unknown.  
+This model is a continuous analogue of the German tank problem: observing \(n\) labels drawn uniformly from \([0,\theta]\), the goal is to infer the unknown upper endpoint~\(\theta\).
+(How many tanks do the Germans have if they label them in order, and I have observed \(n\) different labels so far?)
+\end{ex}
+
+\begin{claim}
+The statistic
+\[
+T(X_1,\dots,X_n)=\max_{1\le i\le n} X_i
+\]
+is sufficient for~\(\theta\).
+\end{claim}
+
+\begin{proof}
+The joint density of \(X_1,\dots,X_n\) is
+\begin{align*}
+        p_{\theta}(x_1,\dots ,x_{n}) 
+        &= \prod\limits_{i=1}^{n} \frac{1}{\theta}\bs{1}_{[0,\theta]}(x_{i})
+      \\&
+      =\underbrace{\frac{1}{\theta^{n}}\bs{1}_{[0,\theta]}(\max\limits_{i} x_{i})}_{g_{\theta}(T(x))}\underbrace{\bs{1}_{[0,\infty)}(\min\limits_{i} x_{i})}_{h(x)}.
+\end{align*}
+%This factorizes as \(p_\theta(x)=g_\theta(T(x))\,h(x)\), where only \(g_\theta\) depends on~\(\theta\).
+By the Neyman--Fisher factorization theorem, \(T\) is sufficient.
+\end{proof}
+
+\begin{remark}
+\leavevmode
+\begin{itemize}
+\item Intuitively, in the German tank problem only the largest observed label is informative about the unknown maximum; smaller observations carry no additional information about~\(\theta\).
+\item The order statistics are also sufficient in this model. More generally, if a statistic is sufficient for a model \(\mathcal P\), then it is sufficient for any submodel \(\mathcal P'\subset\mathcal P\).
+\item Hence, since order statistics are sufficient for the model of i.i.d.\ observations from an arbitrary continuous distribution, they remain sufficient for the uniform submodel.
+\end{itemize}
+\end{remark}
+
+\section{Many Sufficient Statistics}
+\label{sec:mss}
+
+Sufficiency is generally not unique: a given statistical model typically admits many different
+sufficient statistics.
+This follows from the fact that sufficiency is preserved under suitable transformations.
+
+Suppose $T$ and $T'$ are two statistics such that
+\[
+T(X) = S\bigl(T'(X)\bigr)
+\]
+for some measurable mapping $S$.
+
+\begin{itemize}
+    \item When Neyman's factorization criterion applies, if $T$ is sufficient for the model,
+    then $T'$ is also sufficient.
+    Indeed, if the likelihood depends on the data only through $T(X)$, and $T(X)$ itself
+    can be recovered from $T'(X)$, then all information about the parameter contained in $T$
+    is also contained in $T'$.
+    This agrees with the interpretation of sufficiency given in
+    \autoref{sec:Sufficient Statistics}.
+
+    \item If $S$ is bijective, then $T$ is sufficient if and only if $T'$ is sufficient.
+    In this case, conditioning on $T$ or on $T'$ provides exactly the same information,
+    since each statistic can be reconstructed from the other.
+\end{itemize}
+These principles are illustrated by several earlier examples.
+In \autoref{ex:ch3_bd} and \autoref{ex:ch3_pms}, the sum
+$\sum\limits_{i=1}^n X_i$ was identified as a sufficient statistic.
+Equivalently, one could use the sample mean
+\[
+\overline{X}_n = \frac{1}{n}\sum_{i=1}^n X_i,
+\]
+since it is a one--to--one transformation of the sum.
+More generally, any statistic from which the sum can be recovered is sufficient;
+for instance, the pair
+\[
+\bigl(X_1+X_2,\; \sum_{i=3}^n X_i\bigr)
+\]
+is also sufficient.
+
+In \autoref{ex:ch3_cos}, the vector of order statistics was shown to be sufficient.
+An equivalent sufficient statistic is the empirical distribution function $\widehat{F}_n$,
+since the order statistics determine the jump locations of $\widehat{F}_n$, and conversely
+the empirical distribution function uniquely determines the ordered sample values.
+
+Finally, in \autoref{ex:ch3_um}, note that the sample maximum
+\[
+\max_i X_i = X_{(n)}
+\]
+is a function of the order statistics, and hence inherits sufficiency whenever the full vector
+of order statistics is sufficient.
+
+\medskip
+
+\emph{Question:} Which sufficient statistics provide greatest data reduction?
+
+\subsection{Minimal Sufficiency}
+\label{sub:ms}
+
+Sufficient statistics summarize the data without loss of information about the unknown parameter
+$\theta$. Since sufficiency alone is not unique (for example, the identity map $T(X)=X$ is always
+sufficient), it is natural to ask whether one can reduce the data \emph{as much as possible} while
+still retaining all information about $\theta$.
+This idea leads to the notion of \emph{minimal sufficiency}.
+
+\begin{definition}
+A sufficient statistic $T$ is called \textbf{minimal sufficient} if $T$ is a function of every
+other sufficient statistic $T'$. More precisely, $T$ is minimal sufficient if
+\[
+\exists \text{ a measurable map } S \text{ such that } T(x) = S\bigl(T'(x)\bigr)
+\quad \text{for almost every } x \in \cc{X}.
+\]
+Here, ``almost every'' means that there exists a set $\cc{X}^* \subseteq \cc{X}$ such that
+$\mathsf{P}_\theta(\cc{X}^*) = 1$ for all $\theta \in \Theta$, and the above equality holds for all
+$x \in \cc{X}^*$.
+
+The existence of such a map $S$ is equivalent to the condition
+\begin{equation}
+\label{eq:ms}
+T'(x) = T'(\tilde{x}) \implies T(x) = T(\tilde{x})
+\quad \forall x,\tilde{x} \in \cc{X}^*.
+\end{equation}
+\end{definition}
+
+%\textbf{Interpretation.}
+%Minimal sufficiency formalizes the idea of \emph{greatest possible data reduction}.
+%If one analyst reduces the data using any sufficient statistic $T'$, and a second analyst can
+%always further reduce $T'(X)$ to $T(X)$ without losing sufficiency, then $T$ is minimal sufficient.
+Thus, a minimal sufficient statistic cannot be refined further without losing information about
+$\theta$.
+
+Condition \eqref{eq:ms} shows that minimal sufficiency depends only on how statistics identify
+data sets: whenever two data sets are indistinguishable under a sufficient statistic $T'$, they
+must also be indistinguishable under $T$. In this sense, $T$ induces a coarser classification of
+the data than any other sufficient statistic.
+
+\medskip
+
+\textbf{Partition viewpoint.}
+Any statistic $T$ induces a partition of the sample space,
+\[
+\cc{X} = \bigcup_{t} \{ x \in \cc{X} : T(x) = t \},
+\]
+where two data sets are grouped together if they yield the same value of $T$.
+From this perspective:
+\begin{itemize}
+    \item Minimal sufficient statistics correspond to the \emph{coarsest possible} partitions
+    among all sufficient statistics (up to null sets).
+    \item Any two minimal sufficient statistics $T$ and $T'$ induce the same partition of
+    $\cc{X}$ (up to null sets), and hence satisfy \eqref{eq:ms} with $\iff$.
+    \item One-to-one transformations of a statistic do not affect sufficiency or minimal
+    sufficiency, since they leave the induced partition unchanged.
+\end{itemize}
+
+\subsection{Criterion for Minimal Sufficiency}
+\label{sub:cms}
+
+The definition of minimal sufficiency is abstract, as it quantifies over \emph{all} sufficient
+statistics. In dominated models, however, there is a powerful and practical characterization
+that allows us both to \emph{verify} minimal sufficiency and to \emph{construct} minimal sufficient
+statistics directly from the likelihood.
+
+\begin{theo}[Criterion for minimal sufficiency]
+\label{theo:cms}
+Let $\cc{P} = \{\mathsf{P}_{\theta} : \theta \in \Theta\}$ be dominated by a $\sigma$--finite measure
+$\nu$, with densities
+\[
+p_{\theta}(x) = \frac{d \mathsf{P}_{\theta}}{d \nu}(x).
+\]
+Define the support of the model by
+\[
+\spp(\cc{P}) = \{ x \in \cc{X} : \exists \theta \in \Theta \text{ such that } p_{\theta}(x) > 0 \}.
+\]
+
+Suppose that a statistic $T$ satisfies the following property: for all
+$x, \tilde{x} \in \spp(\cc{P})$,
+\begin{equation}
+\label{eq:cms}
+T(x) = T(\tilde{x})
+\iff
+\exists \, c(x,\tilde{x}) > 0 \text{ such that }
+p_{\theta}(x) = p_{\theta}(\tilde{x}) \cdot c(x,\tilde{x})
+\quad \forall \theta \in \Theta.
+\end{equation}
+Then $T$ is minimal sufficient for $\cc{P}$.
+\end{theo}
+
+\paragraph{Interpretation.}
+The right--hand side of \eqref{eq:cms} states that the likelihood functions corresponding to
+$x$ and $\tilde{x}$ are proportional as functions of $\theta$.
+Thus, two data sets receive the same value of $T$ if and only if they induce the same likelihood
+up to a multiplicative constant.
+This criterion therefore identifies minimal sufficient statistics as those that classify
+data sets exactly according to likelihood equivalence.
+
+\paragraph{Comments}
+\begin{itemize}
+    \item Condition \eqref{eq:cms} provides a constructive way to identify minimal sufficient
+    statistics by analyzing when likelihood functions are proportional.
+    \item The criterion depends only on likelihoods and does not require computing conditional
+    distributions.
+    \item The original result is due to Lehmann and Scheff\'e (1950, Theorem~6.3).
+\end{itemize}
+\medskip
+\begin{proof}[Discrete case]
+We show that $T$ is sufficient and minimal sufficient.
+
+\medskip
+\noindent
+\textbf{Step 1: $T$ is sufficient.}
+For each value $t$ of $T$, choose a representative element
+\[
+x_t \in T^{-1}(\{t\}) = \{ x : T(x) = t \},
+\]
+with $x_t \in \spp(\cc{P})$ whenever
+$T^{-1}(\{t\}) \cap \spp(\cc{P}) \neq \emptyset$.
+
+For any $x \in \cc{X}$, we have $T(x) = T(x_{T(x)})$, so by assumption \eqref{eq:cms},
+\[
+p_{\theta}(x) = p_{\theta}(x_{T(x)}) \, c(x,x_{T(x)}),
+\quad \theta \in \Theta,
+\]
+where we define $c(x,x_{T(x)}) = 0$ if $x \notin \spp(\cc{P})$.
+This representation expresses $p_{\theta}(x)$ as a product of a term depending on $\theta$
+only through $T(x)$ and a term independent of $\theta$.
+Hence, by Neyman's factorization criterion, $T$ is sufficient.
+
+\medskip
+\noindent
+\textbf{Step 2: $T$ is minimal sufficient.}
+Let $T'$ be any other sufficient statistic and let
+$x,\tilde{x} \in \spp(\cc{P})$ satisfy $T'(x) = T'(\tilde{x})$.
+We must show that $T(x) = T(\tilde{x})$.
+
+Since $T'$ is sufficient, the factorization criterion yields
+\begin{align*}
+p_{\theta}(x) &= g'_{\theta}(T'(x)) h'(x), \\
+p_{\theta}(\tilde{x}) &= g'_{\theta}(T'(\tilde{x})) h'(\tilde{x}).
+\end{align*}
+Because $T'(x) = T'(\tilde{x})$, the $g'_{\theta}$ terms coincide, and thus
+\begin{equation}
+\label{eq:ch3_fin}
+p_{\theta}(x) = p_{\theta}(\tilde{x}) \cdot \frac{h'(x)}{h'(\tilde{x})}
+\quad \forall \theta \in \Theta.
+\end{equation}
+Since $\tilde{x} \in \spp(\cc{P})$, we have $h'(\tilde{x}) > 0$, so the ratio is well defined.
+By condition \eqref{eq:cms}, this proportionality implies $T(x) = T(\tilde{x})$.
+
+Therefore, $T$ is a function of every sufficient statistic $T'$, and hence $T$ is minimal
+sufficient.
+\end{proof}
+
+\begin{ex}[Gaussian model]
+Let $X_1,\dots,X_n$ be i.i.d.\ $\cc{N}(\mu,\sigma^2)$ with parameter
+$\theta = (\mu,\sigma^2) \in \Theta = \R \times (0,\infty)$.
+Recall that the maximum likelihood estimators are
+\[
+\hat{\mu} = \overline{X}_n,
+\qquad
+\hat{\sigma}^2 = \frac{1}{n}\sum_{i=1}^n (X_i - \overline{X}_n)^2 .
+\]
+\end{ex}
+
+\begin{claim}
+The statistic $(\hat{\mu},\hat{\sigma}^2)$ is minimal sufficient.
+\end{claim}
+
+\begin{proof}
+The joint density of $\bs{X}=(X_1,\dots,X_n)$ is
+\[
+p_{\theta}(x)
+=
+\left( \frac{1}{\sqrt{2\pi\sigma^2}} \right)^n
+\exp\!\left\{
+-\frac{1}{2\sigma^2}\sum_{i=1}^n (x_i-\mu)^2
+\right\}.
+\]
+Using the identity
+\[
+       \sum\limits_{i=1}^{n} (x_{i}-\mu)^2
+       = \sum\limits_{i=1}^{n} (x_{i} - \bar{x}_{n}+\bar{x}_{n}-\mu)^2
+       = \sum\limits_{i=1}^{n} (x_{i}-\bar{x}_{n})^2 + n(\bar{x}_{n}-\mu)^2,
+\]
+we obtain
+\[
+p_{\theta}(x)
+\propto
+\exp\!\left\{
+-\frac{n}{2\sigma^2}
+\bigl[(\bar{x}_n-\mu)^2 + \hat{\sigma}^2_x\bigr]
+\right\}.
+\]
+
+Let $x,y \in \R^n$ be two data sets. The ratio of likelihoods is
+\begin{align*}
+\frac{p_{\theta}(x)}{p_{\theta}(y)}
+&=
+\exp\!\left\{
+-\frac{n}{2\sigma^2}
+\Bigl[
+(\bar{x}_n-\mu)^2 - (\bar{y}_n-\mu)^2
++ \hat{\sigma}^2_x - \hat{\sigma}^2_y
+\Bigr]
+\right\} \\
+&=
+\exp\!\left\{
+-\frac{n}{2\sigma^2}
+\Bigl[
+(\bar{x}_n^2-\bar{y}_n^2)
+-2\mu(\bar{x}_n-\bar{y}_n)
++ \hat{\sigma}^2_x - \hat{\sigma}^2_y
+\Bigr]
+\right\}.
+\end{align*}
+This ratio is independent of $\theta=(\mu,\sigma^2)$ if and only if
+\[
+\bar{x}_n = \bar{y}_n
+\quad\text{and}\quad
+\hat{\sigma}^2_x = \hat{\sigma}^2_y .
+\]
+By the minimal sufficiency criterion of \autoref{sub:cms},
+$(\hat{\mu},\hat{\sigma}^2)$ is minimal sufficient.
+\end{proof}
+
+\begin{ex}[Uniform location model]
+Let $X_1,\dots,X_n$ be i.i.d.\ $\mathrm{Uniform}(\theta,\theta+1)$ for $\theta \in \R$.
+Applying the minimal sufficiency criterion yields
+\[
+T(x) =
+\Bigl(
+\min\{x_1,\dots,x_n\},
+\max\{x_1,\dots,x_n\}
+\Bigr)
+\]
+as a minimal sufficient statistic; see Casella and Berger (2002,
+Example~6.2.15) for details.
+
+This example is noteworthy because the model is 1--dimensional,
+yet the minimal sufficient statistic is 2--dimensional.
+In fact, there are many low--dimensional models for which the order
+statistics are minimal sufficient; see Lehmann and Casella (1998,
+Example~1.6.15).
+\end{ex}
