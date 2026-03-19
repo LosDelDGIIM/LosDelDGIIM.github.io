@@ -1,0 +1,905 @@
+\chapter{Equivariant Estimation}
+\label{cha:equi}
+
+Sometimes, there is no optimal unbiased estimator. In such cases, instead of insisting on unbiasedness and seeking the estimator with the minimum Mean Squared Error (MSE), we look for alternative criteria. Specifically, we look for \textbf{invariance properties}.
+
+In this chapter, we treat optimal estimation when restricting ourselves to \textbf{equivariant estimators}. In brief, an equivariant estimator has the (desirable) property that an estimate computed from transformed data coincides with an appropriate transformation of the estimate computed from the original data.
+
+\begin{note}
+Unbiasedness is not always a ``super fruitful'' recipe. There are settings that are more naturally dealt with by other considerations. Here, natural invariances (equivariance) replace unbiasedness as the primary guide.
+\end{note}
+
+We will explore this concept in the context of a very specific invariant property: \textbf{Location Models}. In this setting, the natural invariances we respect are \textbf{shifts} in location.
+
+For reading on location models, see Lehmann and Casella (1998, sec.~3.1). For additional reading on more general settings (beyond simple shifts), consider Lehmann and Casella (1998, secs.~3.2--3.4), and Lehmann and Romano (2005, sec.~6.2).
+
+\section{Location Models}
+\label{sec:loc_mod}
+
+In this section, we focus on estimating the location (the center) of a distribution while remaining invariant with respect to shifts.
+
+
+Consider an observation vector \(\bs{X} = (X_1, \dots, X_n)\) taking values in \(\bb{R}^n\).
+
+\begin{definition}[Location Model]
+\label{def:loc_model}
+The location model is defined by the structural equation:
+\begin{equation}
+    X_i = \theta + \epsilon_i, \quad i = 1, \dots, n,
+    \label{eq:loc_model}
+\end{equation}
+where:
+\begin{itemize}
+    \item \(\theta \in \Theta = \bb{R}\) is the unknown parameter (the location).
+    \item \(\epsilon_1, \dots, \epsilon_n\) are i.i.d. error terms with a \textbf{known} distribution \(P_0\).
+\end{itemize}
+\end{definition}
+
+We write \(\mathsf{P}_{\theta}\) for the distribution of \(X_i\) (and \(\cc{P}_{\theta}\) for the joint distribution of \(\bs{X}\)).
+
+\begin{note}[Intuition: Signal plus Noise]
+This setup is analogous to the ``Speed of Light" example. 
+\begin{itemize}
+    \item \(\theta\) represents the constant physical quantity we wish to locate (the signal).
+    \item \(\epsilon_i\) represents the chance measurement error (the noise) that typically fluctuates around zero.
+\end{itemize}
+Crucially, in a location model, the \textit{only} unknown is the location \(\theta\). The shape of the distribution (the density of the errors) is known. Mentally, you can visualize a fixed density curve sliding along the real line; we know exactly what the curve looks like, we just do not know where its peak (or center) is positioned.
+\end{note}
+
+\medskip
+%\subsubsection*{Examples:}
+%\label{par:examples_location}
+\begin{ex}
+We list three standard examples of location models. Note that in all cases, the shape of the distribution is fixed, and only the center shifts.
+\begin{itemize}
+    \item \textbf{Normal:} Taking \(\mathsf{P}_0 = \mathcal{N}(0, 1)\), the location model is
+          \(\{\mathcal{N}(\theta, 1) : \theta \in \mathbb{R}\}\).
+    \item \textbf{Uniform:} Fix an interval length \(a > 0\) and take
+          \(\mathsf{P}_0 = \text{Uniform}(-a/2, a/2)\). Then the location model is
+          \[\{\text{Uniform}(\theta - a/2, \theta + a/2) : \theta \in \mathbb{R}\}.\]
+    \item \textbf{Cauchy:} Taking \(\mathsf{P}_0 = \text{Cauchy}\) gives the model in which \(\mathsf{P}_\theta\) has density
+          \[p_{\theta}(x) = p_0(x - \theta) = \frac{1}{\pi \left[1 + (x - \theta)^2\right]}, \qquad x \in \mathbb{R}.\]
+\end{itemize}
+\end{ex}
+
+\begin{note}[Symmetry and Positive Data]
+You may notice that the examples above (Normal, Uniform, Cauchy) are all symmetric around \(\theta\). 
+
+One might ask: \textit{What if the quantity we are measuring must be positive?} For example, if we are measuring the weight of an animal, an additive error model like \(X = \theta + \epsilon\) is usually inappropriate. An error of 1 kg means something very different when weighing an elephant versus weighing a mouse. In such cases, errors tend to be multiplicative rather than additive.
+
+However, location models remain relevant because we can simply \textbf{take the logarithm} of the data. If the physics suggests a multiplicative structure, working on the log--scale converts it to an additive structure:
+\[ \log(\text{Weight}) = \log(\text{True Value}) + \log(\text{Error}). \]
+This returns us to the location model framework, where the Central Limit Theorem often justifies assuming normality on the log--scale (Log--Normal models).
+\end{note}
+
+\subsection{Changing units}
+\label{subsec:changing_units}
+
+\myparagraph{Additive change of units}
+\label{subsubsec:additive_change}
+Suppose we change units for our observations in an additive way (e.g., Celsius to Kelvin), giving transformed observations:
+\[
+X_i' = X_i + c \quad \text{for } c \in \bb{R}.
+\]
+
+\begin{ex}[Temperature: Kelvin vs. Celsius]
+Consider analyzing temperature data. Suppose a physicist friend sends you a data--set where the units are in Kelvin. You compute an estimate of the temperature (e.g., the sample mean) based on these Kelvin measurements.
+
+Now, imagine a second analyst receives the same data but prefers the Celsius (centigrade) scale. 
+\begin{enumerate}
+    \item They first transform the raw data by subtracting the constant $273.15$ (an additive shift).
+    \item Then, they perform the statistical estimation (e.g., taking the average) on the transformed data.
+\end{enumerate}
+
+Intuitively, the results should be consistent. The estimate derived by the second analyst should simply be the first analyst's estimate minus $273.15$.
+\end{ex}
+
+\begin{note}[Commutativity]
+This concept is the essence of \textbf{equivariance}. We require the following diagram to commute:
+\begin{itemize}
+    \item \textbf{Path A:} Estimate on raw data $\to$ Transform the result.
+    \item \textbf{Path B:} Transform the raw data $\to$ Estimate on transformed data.
+\end{itemize}
+If these two paths yield the same result, the estimator respects the natural invariances of the problem. While the sample mean satisfies this property for additive shifts, not all estimators do. In this chapter, we restrict our search to estimators that satisfy this logical consistency.
+\end{note}
+
+\myparagraph{Invariance of the Location Model}
+\label{par:invariance_model}
+The location model is invariant under additive transformations. This means that if we shift the data, we remain within the same family of distributions; we simply move to a different parameter value.
+
+Mathematically, for any shift \(c \in \mathbb{R}\), the transformed observations \(X'_1, \dots, X'_n\) are still i.i.d. with marginal distribution \(\mathsf{P}_{\theta'}\) for some \(\theta' \in \mathbb{R}\).
+Specifically:
+\[
+X_i' = X_i + c = (\theta + c) + \epsilon_i \sim \mathsf{P}_{\theta'},
+\]
+where the new parameter is \(\theta' = \theta + c\).
+
+\begin{note}
+There is an induced action on the parameter space. By transforming the data (\(X \to X+c\)), we induce a corresponding transformation on the parameter (\(\theta \to \theta+c\)). The set of all distributions \(\cc{P} = \{ \mathsf{P}_\theta : \theta \in \mathbb{R} \}\) remains unchanged as a whole; the distributions are just permuted.
+\end{note}
+
+\section{Location Equivariance}
+\label{sec:location_equivariance}
+
+We now formalize the requirement that our estimator should respect the symmetries of the location model.
+
+\begin{notation}[]
+For a vector \(\bs{x} = (x_1, \dots, x_n) \in \bb{R}^n\) and a scalar \(c \in \bb{R}\), we write \(\bs{x} + c\) to denote the vector where \(c\) is added to every component:
+\[
+\bs{x} + c := (x_1 + c, \dots, x_n + c).
+\]
+\end{notation}
+
+\begin{definition}[Location Equivariance]
+An estimator \(T: \bb{R}^n \to \bb{R}\) is called \textbf{location equivariant} if for all \(\bs{x} \in \bb{R}^n\) and all \(c \in \bb{R}\):
+\[
+T(\bs{x} + c) = T(\bs{x}) + c.
+\]
+\end{definition}
+
+\begin{note}[The Commutative Property]
+Intuitively, this definition implies that the diagram commutes. It should not matter whether you:
+\begin{enumerate}
+    \item Transform the data first (\(\bs{x} + c\)) and then estimate; or
+    \item Estimate first (\(T(\bs{x})\)) and then transform the result (\(+c\)).
+\end{enumerate}
+If this holds, the estimator ``respects'' the shift.
+\end{note}
+
+\begin{ex}[]
+
+Many common statistics satisfy this property.
+\begin{itemize}
+\item \textbf{Sample Mean:} \(T(\bs{X}) = \ol{X}_n\).
+\item \textbf{Sample Median:} \(T(\bs{X}) = \text{med}(\bs{X})\).
+\item \textbf{The Maximum:} \(T(\bs{X}) = X_{(n)} = \max(X_1, \dots, X_n)\).
+\item \textbf{Single Observation:} \(T(\bs{X}) = X_n\) (simply taking the last observation).
+\end{itemize}
+\end{ex}
+
+\medskip
+
+\begin{note}[Equivariance vs. Invariance]
+It is crucial to distinguish between \textit{equivariance} and \textit{invariance}.
+\begin{itemize}
+    \item \textbf{Equivariance:} The output transforms suitably with the input (e.g., input \(+c \implies\) output \(+c\)).
+    \item \textbf{Invariance:} The output does \textit{not} change when the input transforms (e.g., input \(+c \implies\) output unchanged).
+\end{itemize}
+
+\begin{ex}[Estimating Variance]
+    
+Consider the sample variance \(S^2\). If we shift the data by \(c\), the spread of the data does not change. Therefore:
+\[ S^2(\bs{x} + c) = S^2(\bs{x}). \]
+The sample variance is \textbf{location invariant}, not equivariant. This makes sense: we do not want our estimate of the spread to change just because we switched from Kelvin to Celsius (an additive shift). However, for estimating the \textit{location} \(\theta\), we specifically require equivariance.
+\end{ex}
+\end{note}
+
+\begin{note}[Scale Transformations]
+One could also consider scaling transformations (e.g., Fahrenheit to Celsius involves both a shift and a scale factor). While we could define \textit{scale equivariance} (where \(T(a\bs{x}) = aT(\bs{x})\)), in this chapter we restrict our attention strictly to location shifts.
+\end{note}
+
+\section{Judging Estimators by Their Risk}
+\label{sec:judging_estimators}
+
+Consider a model \(\{P_{\theta} : \theta \in \Theta\}\) and a parameter \(\gamma : \Theta \to \Gamma\).
+
+Going beyond MSE, we may evaluate estimators of \(\gamma(\theta)\) using the notions of loss and risk.
+
+\myparagraph{Motivation: Why move beyond MSE?}
+In previous chapters, we focused on unbiased estimators and sought the one with the minimum variance (MSE). Now, we are asking a similar question for \textbf{equivariant estimators}: is there a ``best'' one within this class?
+
+To answer this, we must generalize how we measure quality. MSE is just one specific way to penalize errors (squaring them). However, depending on the scientific or business context, the ``cost'' of an error might be different. For example, is an error of $+10$ equally as bad as $-10$? Is a small error negligible, or does it still incur a cost?
+
+\begin{definition}[Risk Function]
+The \textbf{risk} of an estimator \(T\) of the parameter \(\gamma(\theta)\) is the expected loss:
+\[
+R(\theta, T) = \mathsf{E}_{\theta} \big[ L(\theta, T(X)) \big],
+\]
+where \(L: \Theta \times \Gamma \to [0, \infty)\) is a \textbf{loss function}.
+
+The loss function \(L(\theta, a)\) quantifies the ``price'' paid when the true state of nature is \(\theta\) and the estimate is \(a\). It must satisfy:
+\[
+L(\theta, \gamma(\theta)) = 0 \quad \text{for all } \theta.
+\]
+(i.e., if you estimate the target perfectly, you pay nothing).
+\end{definition}
+
+\medskip
+
+\begin{ex}[]
+\leavevmode
+\begin{itemize}
+\item \textbf{Squared Error Loss:} This leads to the Mean Squared Error (MSE) risk.
+      \[ L(\theta, a) = (a - \gamma(\theta))^2 \implies R(\theta, T) = \mathsf{E}_{\theta} [(T(X) - \gamma(\theta))^2]. \]
+      \textit{Comment:} We often use this because it is mathematically convenient (differentiable, easy to work with), not necessarily because it perfectly reflects the real--world cost of errors.
+      
+\item \textbf{Absolute Error Loss:} This leads to the Mean Absolute Error risk.
+      \[ L(\theta, a) = |a - \gamma(\theta)| \implies R(\theta, T) = \mathsf{E}_{\theta} \big[ |T(X) - \gamma(\theta)| \big]. \]
+      \textit{Comment:} This is less sensitive to outliers than the squared error but harder to differentiate.
+\end{itemize}
+\end{ex}
+
+\myparagraph{Who chooses the Loss Function?}
+Ideally, the loss function should come from the domain expert (the physicist, the business analyst), not the statistician. They know the actual cost of making a mistake. For example, in a Kaggle competition, you must optimize for the specific scoring metric provided (the loss function). 
+
+However, in practice, clients often do not know their specific loss function, so statisticians frequently default to MSE because ``who doesn't love a square?'' It is convenient and generally reasonable. But be aware: the choice of loss function dictates which estimator is optimal.
+
+\subsection{Location Invariant Loss Functions}
+\label{par:loc_inv_loss}
+
+Since we are enforcing equivariance on our estimators (shifting the input shifts the output), we should also require our loss function to respect this symmetry.
+
+\paragraph{Motivation:}%
+\label{par:Motivation}
+Consider the temperature example again. Suppose your estimate \(a\) is in Kelvin, and the true value \(\theta\) is also in Kelvin. You incur some loss \(L(\theta, a)\).
+
+If your colleague converts everything to Centigrade (shifting both the estimate and the true value by \(c\)), the ``price'' of the error should not change. Being off by 1 degree costs the same whether that degree is Kelvin or Centigrade. Therefore, we require:
+\[ L(\theta + c, a + c) = L(\theta, a). \]
+
+\begin{definition}[Location Invariant Loss]
+A loss function \(L: \mathbb{R} \times \mathbb{R} \to [0, \infty)\) is \textbf{location invariant} if
+\[
+L(\theta + c, a + c) = L(\theta, a)
+\]
+for all \(\theta, a, c \in \mathbb{R}\).
+
+This condition holds precisely when the loss depends only on the \textit{difference} between the estimate and the parameter:
+\[ L(\theta, a) = \rho(\theta - a), \]
+where \(\rho\) is a function such that \(\rho(0) = 0\).
+\end{definition}
+
+\begin{ex}
+\leavevmode
+\begin{itemize}
+    \item Squared Error: \(L(\theta, a) = (\theta - a)^2\). Here \(\rho(u) = u^2\).
+    \item Absolute Error: \(L(\theta, a) = |\theta - a|\). Here \(\rho(u) = |u|\).
+\end{itemize}
+\end{ex}
+
+\paragraph{Risk of Equivariant Estimators}
+
+A remarkable property emerges when we combine an equivariant estimator with an invariant loss function: the risk becomes constant. It no longer depends on the true parameter \(\theta\).
+
+\begin{lemma}[Constant Risk]
+\label{lemma:constant_risk}
+Let \(T\) be an equivariant estimator of \(\theta\) in the location model. If the loss \(L\) is location invariant, then the risk \(R(\theta, T)\) does not depend on \(\theta\). That is,
+\[
+R(\theta, T) = R(0, T) \quad \forall \theta \in \Theta = \mathbb{R}.
+\]
+\end{lemma}
+
+\begin{proof}
+The proof follows by utilizing the invariance of the loss and the equivariance of the estimator to shift the problem to \(\theta=0\).
+
+By definition, the risk is the expected loss under \(\mathsf{P}_\theta\):
+\[ R(\theta, T) = \mathsf{E}_{\theta} \big[ L(\theta, T(\bs{X})) \big]. \]
+
+Since the loss \(L\) is location invariant, we can shift both arguments by \(-\theta\) (effectively setting the first argument to 0):
+\[ L(\theta, T(\bs{X})) = L(\theta - \theta, T(\bs{X}) - \theta) = L(0, T(\bs{X}) - \theta). \]
+
+Since the estimator \(T\) is location equivariant, shifting the output by \(-\theta\) is equivalent to shifting the input by \(-\theta\):
+\[ T(\bs{X}) - \theta = T(\bs{X} - \theta). \]
+Substituting this back into the expectation:
+\[ R(\theta, T) = \mathsf{E}_{\theta} \big[ L \big( 0, T(\bs{X} - \theta) \big) \big]. \]
+
+Finally, consider the distribution of the random variable \(\bs{Y} = \bs{X} - \theta\). If \(\bs{X} \sim \mathsf{P}_{\theta}\) (i.e., \(X_i = \theta + \epsilon_i\)), then \(\bs{X} - \theta\) is simply the error term \(\epsilon\), which follows the distribution \(\mathsf{P}_0\). Therefore, taking the expectation of \(f(\bs{X} - \theta)\) under \(\mathsf{P}_{\theta}\) is the same as taking the expectation of \(f(\bs{X})\) under \(\mathsf{P}_0\):
+\[ \mathsf{E}_{\theta} \big[ L \big( 0, T(\bs{X} - \theta) \big) \big] = \mathsf{E}_{0} \big[ L(0, T(\bs{X})) \big] = R(0, T). \]
+\end{proof}
+
+\subsection{Minimum Risk Equivariant (MRE) Estimators}
+\label{sub:mre_estimators}
+
+In general statistical problems, comparing two estimators is difficult. Often, one estimator is better for certain parameter values (e.g., low temperatures) while another is better for others (e.g., high temperatures). Unless we specify a prior (Bayesian approach), we cannot say which is strictly ``better.''
+
+However, for \textbf{equivariant estimators} with \textbf{invariant loss}, the risk is constant across all \(\theta\). This reduces the comparison to a single number: the risk at \(\theta = 0\). Since real numbers are ordered, we can now meaningfully search for a global ``best'' estimator in this class.
+
+\begin{definition}[Minimum Risk Equivariant (MRE)]
+An equivariant estimator \(T\) is \textbf{Minimum Risk Equivariant (MRE)} for a location invariant loss function \(L\) if, for any other equivariant estimator \(T'\), it holds that:
+\[
+R(\theta, T) \le R(\theta, T') \quad \text{for all } \theta \in \Theta = \mathbb{R}.
+\]
+\end{definition}
+
+Since the risk of an equivariant estimator is constant according to \autoref{lemma:constant_risk}, the condition above is equivalent to checking the risk at a single point (conventionally \(\theta=0\)):
+\[
+R(0, T) \le R(0, T').
+\]
+
+\begin{ex}[Squared Error Loss]
+For the squared error loss \(L(\theta, a) = (\theta - a)^2\), minimizing the risk reduces to minimizing the second moment under \(\mathsf{P}_0\):
+\[
+R(0, T) = \mathsf{E}_0 \big[ (T(X) - 0)^2 \big] = \mathsf{E}_0 \big[ T(X)^2 \big].
+\]
+\end{ex}
+
+\paragraph{Optimization Strategy}
+Finding the MRE estimator is a constrained optimization problem: minimize \(R(0, T)\) subject to the constraint that \(T\) is equivariant.
+
+To solve this, we will convert the constrained problem into an unconstrained one. The strategy is to find a way to \textbf{represent} or \textbf{parametrize} the set of \textit{all} equivariant estimators. Once we have a general form, we can optimize over the parameters of that form.
+
+\subsection{Location Invariance and Maximal Invariants}
+\label{par:location_invariance_maximal}
+
+\paragraph{Motivation: Group Actions and Equivalence}
+To systematically represent equivariant estimators, we first look at invariants. Our data sets live in \(\mathbb{R}^n\). The group action encoding our transformations is the addition of a real number \(c\) to the vector. 
+
+The action of \(c \in \mathbb{R}\) on vectors \(\bs{x} \in \mathbb{R}^n\) yields an equivalence relation:
+\[\bs{x} \sim \bs{x}' \iff \exists c \in \mathbb{R} : \bs{x} = \bs{x}' + c.\]
+Intuitively, two data sets are equivalent if one is simply a shifted version of the other (like two columns in a spreadsheet differing by a constant).
+
+\begin{definition}[Location Invariant Statistic]
+
+A statistic \(u: \mathbb{R}^n \to \mathcal{U}\) is (location) invariant if
+\begin{equation*} \label{eq:invariant_def}
+\bs{x} \sim \bs{x}' \implies u(\bs{x}) = u(\bs{x}').
+\end{equation*}
+If the reverse implication also holds, i.e.,
+\begin{equation*} \label{eq:maximal_def}
+u(\bs{x}) = u(\bs{x}') \iff \bs{x} \sim \bs{x}',
+\end{equation*}
+then \(u\) is \textbf{maximal (location) invariant}.
+\end{definition}
+
+\paragraph{Intuition: Partitions}
+An invariant statistic takes the same value for all equivalent inputs. A \textit{maximal} invariant distinguishes between every distinct equivalence class. It provides a ``fine partition'' of the sample space: its values tell you exactly which orbit (equivalence class) the data belongs to.
+
+\begin{pro} \label{prop:maximal_rep}
+If \(u\) is maximal invariant, then any other statistic \(u'\) will be invariant if and only if it is a function of \(u\), i.e., \(u'(\bs{x}) = v(u(\bs{x}))\) for some map \(v\) and all \(\bs{x}\).
+\end{pro}
+
+\begin{proof}
+First, if \(u'(\bs{x}) = v(u(\bs{x}))\) for all \(\bs{x} \in \mathbb{R}^n\), then for any equivalent \(\bs{x}' \sim \bs{x}\):
+\[u'(\bs{x}') = v(u(\bs{x}')) = v(u(\bs{x})) = u'(\bs{x}),\]
+which shows that \(u'\) is invariant. 
+
+Conversely, assume that \(u'\) is invariant. If \(u(\bs{x}) = u(\bs{x}')\), then by the definition of maximal invariance, \(\bs{x} \sim \bs{x}'\) (i.e., \(\bs{x} = \bs{x}' + c\)). Since \(u'\) is invariant, this implies \(u'(\bs{x}) = u'(\bs{x}')\). Thus, \(u'\) is constant on the sets where \(u\) is constant, so we can define \(v\) such that \(u'(\bs{x}) = v(u(\bs{x}))\).
+\end{proof}
+
+\subsubsection{Differences give a maximal invariant}
+\label{subsec:differences_maximal}
+
+\myparagraph{Motivation: Constructing the Invariant}
+How do we find a maximal invariant in our location model? We need a statistic that eliminates the shift \(c\) but preserves all relative information. Differences between coordinates are the natural candidate.
+
+\begin{ex} \label{ex:diff_invariant}
+The statistic \(Y : \mathbb{R}^n \to \mathbb{R}^n\) given by the differences with respect to the last coordinate:
+\[Y(\bs{x}) = \bs{x} - x_n = (x_1 - x_n, \dots, x_{n-1} - x_n, 0)\]
+is clearly invariant. If we shift \(\bs{x}\) by \(c\), both \(x_i\) and \(x_n\) increase by \(c\), so their difference remains constant.
+
+In fact, \(Y\) is maximal invariant because
+\[Y(\bs{x}) = Y(\bs{x}') \implies \bs{x} - x_n = \bs{x}' - x_n' \implies \bs{x} = \bs{x}' + (x_n - x_n').\]
+Since \(x_n - x_n'\) is just a scalar, \(\bs{x}\) and \(\bs{x}'\) differ only by a constant shift.
+\end{ex}
+
+We can generalize this result using any equivariant estimator.
+
+\begin{lemma} \label{lemma:general_diff_invariant}
+For any equivariant estimator \(T\), the difference \(\bs{x} - T(\bs{x})\) is maximal invariant.
+\end{lemma}
+
+\begin{proof}
+First, we check invariance. Let \(c \in \mathbb{R}\).
+\[ (\bs{x} + c) - T(\bs{x} + c) = (\bs{x} + c) - [T(\bs{x}) + c] = \bs{x} - T(\bs{x}). \]
+Thus, the statistic is invariant. 
+
+To show it is maximal invariant, assume \(\bs{x} - T(\bs{x}) = \bs{x}' - T(\bs{x}')\). Rearranging terms gives:
+\[ \bs{x} = \bs{x}' + \underbrace{T(\bs{x}) - T(\bs{x}')}_{c}. \]
+Since \(T(\bs{x})\) and \(T(\bs{x}')\) are scalars, their difference \(c\) is a scalar. Thus, \(\bs{x} = \bs{x}' + c\), which means \(\bs{x} \sim \bs{x}'\).
+\end{proof}
+
+\subsection{Representation of Location Equivariant Estimators}
+\label{subsec:rep_loc_equi}
+
+\myparagraph{Motivation: The Affine Structure}
+We now have a powerful way to generate \textit{all} possible equivariant estimators. The structure is analogous to solving a non--homogeneous linear equation (or a differential equation): the general solution is the sum of a \textbf{particular solution} (a base equivariant estimator \(T_0\)) and the general solution to the \textbf{homogeneous equation} (an invariant term).
+
+Since the difference between any two equivariant estimators is invariant, we can represent any \(T\) by starting with a fixed \(T_0\) and adding an arbitrary invariant function.
+
+
+
+\begin{lemma}[Representation of equivariant estimators]
+\label{lemma:rep_equi_est}
+Let \(T_0\) be a fixed equivariant estimator, and let \(u\) be a maximal invariant statistic.
+For every other equivariant estimator \(T\), there exists a function \(v\) such that
+\begin{equation}
+T(\bs{x}) = T_0(\bs{x}) + v(u(\bs{x})), \quad \bs{x} \in \mathbb{R}^n.
+\label{eq:rep_formula}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+The proof relies on the property that differences of equivariant estimators are invariant.
+
+\begin{enumerate}
+    \item \textbf{The difference is invariant:} Let \(D(\bs{x}) = T(\bs{x}) - T_0(\bs{x})\). We check if \(D\) is invariant under the shift \(\bs{x} \to \bs{x} + c\):
+    \[
+    D(\bs{x} + c) = T(\bs{x} + c) - T_0(\bs{x} + c).
+    \]
+    Since both \(T\) and \(T_0\) are equivariant (i.e., \(T(\bs{x}+c) = T(\bs{x}) + c\)), the shifts cancel out:
+    \[
+    D(\bs{x} + c) = (T(\bs{x}) + c) - (T_0(\bs{x}) + c) = T(\bs{x}) - T_0(\bs{x}) = D(\bs{x}).
+    \]
+    Thus, the difference \(T - T_0\) is an invariant statistic.
+
+    \item \textbf{Representation via Maximal Invariant:} Since \(u\) is a \textbf{maximal invariant}, by \autoref{prop:maximal_rep}, any invariant statistic can be written as a function of \(u\). Therefore, there exists a function \(v\) such that:
+    \[
+    D(\bs{x}) = v(u(\bs{x})).
+    \]
+    Rearranging terms yields \eqref{eq:rep_formula}.
+\end{enumerate}
+\end{proof}
+
+\begin{ex}[Using a specific base estimator]
+\label{ex:rep_specific}
+Let's apply this to a concrete case.
+\begin{enumerate}
+    \item \textbf{Base Estimator:} Choose the simple projection to the last coordinate, \(T_0(\bs{x}) = x_n\).
+    \item \textbf{Maximal Invariant:} Use the difference vector \(Y(\bs{x}) = \bs{x} - x_n\) (from \autoref{ex:diff_invariant}).
+\end{enumerate}
+
+Then, according to \autoref{lemma:rep_equi_est}, \textit{any} equivariant estimator \(T\) can be written as:
+\[
+T(\bs{x}) = T_0(\bs{x}) + v(Y(\bs{x})) = x_n + v(\bs{x} - x_n).
+\]
+Alternatively, we can derive this directly using equivariance:
+\[
+T(\bs{x}) = T(\bs{x} - x_n + x_n) = T(Y(\bs{x}) + x_n).
+\]
+By equivariance, \(T(Y(\bs{x}) + x_n) = T(Y(\bs{x})) + x_n\). In this form, the function \(v\) is simply the estimator \(T\) itself applied to the invariant differences.
+\end{ex}
+
+\section{Construction of MRE Estimators}
+\label{sec:construction_mre}
+
+\myparagraph{Motivation: Decomposing the Risk}
+We have established that any equivariant estimator can be written as \(T(\bs{X}) = T_0(\bs{X}) + v(\bs{Y})\), where \(\bs{Y}\) is a maximal invariant. Finding the best estimator is therefore equivalent to finding the best function \(v\).
+
+How do we find this optimal \(v\)? 
+
+We use the law of iterated expectations (the ``Tower Rule''). The total risk is the expectation of the conditional risk given \(\bs{Y}\):
+\[
+R(0, T) = \mathsf{E}_0 \big[ L(0, T(\bs{X})) \big] = \mathsf{E}_0 \bigg[ \mathsf{E}_0 \big[ L(0, T_0(\bs{X}) + v(\bs{Y})) \mid \bs{Y} \big] \bigg].
+\]
+
+
+Since the outer expectation sums over all possible values of \(\bs{Y}\), we can minimize the total risk by minimizing the inner term \textit{point-wise} for every specific value \(\bs{y}\). Effectively, for each observed difference vector \(\bs{y}\), we find the constant \(c\) that minimizes the loss, and set \(v(\bs{y}) = c\).
+
+\paragraph{Formal Construction}
+For \(\bs{X} = (X_1, ..., X_n)\) from the location model, we define the specific maximal invariant (as discussed in \autoref{ex:rep_specific}):\footnote{Instead of \(Y\) we could consider any other maximal invariant.} 
+\[ \bs{Y} = Y(\bs{X}) = \bs{X} - X_n. \]
+
+\begin{theo}
+\label{thm:mre_construction}
+Suppose \(T_0\) is an equivariant estimator with finite risk \(R(0, T_0) < \infty\) under a location invariant loss \(L\). For any \(\bs{y} \in \mathbb{R}^n\) (where implicitly \(y_n = 0\)), define the function \(v^*\) by:
+\begin{equation}
+v^*(\bs{y}) = \arg\min_{c \in \mathbb{R}} \mathsf{E}_0 \big[ L \big( 0, T_0(\bs{X}) + c \big) \mid \bs{Y} = \bs{y} \big].
+\label{eq:optimal_v}
+\end{equation}
+If \(v^*\) is well-defined, then the estimator
+\[
+T^*(\bs{X}) := T_0(\bs{X}) + v^*(\bs{Y})
+\]
+is a Minimum Risk Equivariant (MRE) estimator of \(\theta\).
+\end{theo}
+
+\begin{proof}
+The proof follows directly from the properties of conditional expectation and the definition of the minimum.
+
+Let \(T\) be any other equivariant estimator. By \autoref{lemma:rep_equi_est}, we can write \(T(\bs{X}) = T_0(\bs{X}) + v(\bs{Y})\) for some function \(v\). The risk at \(\theta=0\) is:
+\begin{align*}
+    R(0, T) &= \mathsf{E}_{0} \big[ L \big( 0, T_{0}(\bs{X}) + v(\bs{Y}) \big) \big] \\
+    &= \mathsf{E}_{0} \bigg[ \mathsf{E}_{0} \big[ L \big( 0, T_{0}(\bs{X}) + v(\bs{Y}) \big) \mid \bs{Y} \big] \bigg] \quad (\text{Tower Rule}).
+\end{align*}
+
+Inside the inner expectation, we condition on \(\bs{Y}\), so \(v(\bs{Y})\) acts as a constant \(c\). By definition, \(v^*(\bs{Y})\) chooses the constant that minimizes this specific inner expectation. Therefore, for every \(\bs{y}\):
+\[
+\mathsf{E}_{0} \big[ L \big( 0, T_{0}(\bs{X}) + v(\bs{y}) \big) \mid \bs{Y}=\bs{y} \big] \geq \mathsf{E}_{0} \big[ L \big( 0, T_{0}(\bs{X}) + v^*(\bs{y}) \big) \mid \bs{Y}=\bs{y} \big].
+\]
+
+Taking the expectation over \(\bs{Y}\) preserves this inequality:
+\[
+\mathsf{E}_{0} \bigg[ \mathsf{E}_{0} \big[ L \big( 0, T_{0}(\bs{X}) + v(\bs{Y}) \big) \mid \bs{Y} \big] \bigg] \geq \mathsf{E}_{0} \bigg[ \mathsf{E}_{0} \big[ L \big( 0, T_{0}(\bs{X}) + v^*(\bs{Y}) \big) \mid \bs{Y} \big] \bigg].
+\]
+
+This simplifies to:
+\[
+R(0, T) \geq R(0, T^*).
+\]
+Thus, \(T^*\) minimizes the risk among all equivariant estimators.
+\end{proof}
+
+\subsection{Existence and Uniqueness}
+\label{subsec:exist_unique}
+
+\paragraph{Motivation: Minimizing the Risk}
+We have reduced the problem of finding the MRE estimator to solving an optimization problem for each value \(\bs{y}\) of the maximal invariant:
+\[
+\min_{c \in \mathbb{R}} \mathsf{E}_0 \big[ L(0, T_0(\bs{X}) + c) \mid \bs{Y} = \bs{y} \big].
+\]
+Does a solution always exist? Is it unique?
+
+Since the loss function is location invariant, it depends only on the difference \(\theta - a\). We can write \(L(\theta, a) = \rho(\theta - a)\) with \(\rho(0) = 0\). The properties of the function \(\rho\) (convexity, monotonicity) will determine whether the optimization problem is well-behaved.
+
+\begin{pro}
+\label{prop:mre_existence}
+Suppose there exists an equivariant estimator \(T_0\) with finite risk \(R(0,T_0)\).
+\begin{enumerate}
+\item If \(\rho\) is convex and not monotone, then an MRE estimator exists.
+\item If \(\rho\) is strictly convex and not monotone, then the MRE estimator is a.e.-unique.\footnote{Here, ``a.e." (almost everywhere) refers to all distributions in the model, similar to the definition for UMVUEs. See also Lehmann and Casella (1998, Theorem 1.7.15).}
+\end{enumerate}
+\end{pro}
+
+\begin{proof}
+The conditional risk function we need to minimize is:
+\[
+f(c) = \mathsf{E}_0 \big[ L \big( 0, T_0(\bs{X}) + c \big) \mid \bs{Y} = \bs{y} \big] = \mathsf{E}_0 \big[ \rho \big( -T_0(\bs{X}) - c \big) \mid \bs{Y} = \bs{y} \big].
+\]
+By the linearity and monotonicity of expectation:
+\begin{itemize}
+    \item If \(\rho\) is convex, then \(f(c)\) is convex (since a linear combination of convex functions is convex).
+    \item If \(\rho\) is not monotone, then \(f(c)\) is not monotone.
+\end{itemize}
+A convex, non-monotone function on \(\mathbb{R}\) must have a global minimum (think of a parabola or a ``U" shape). Thus, a minimizer \(v^*(\bs{y})\) exists for every \(\bs{y}\), making \(v^*\) well--defined. By \autoref{thm:mre_construction}, an MRE estimator exists.
+
+If \(\rho\) is \textit{strictly} convex, then \(f(c)\) is strictly convex, which implies the minimizer is unique. Thus, \(v^*(\bs{y})\) is uniquely determined for almost all \(\bs{y}\).
+\end{proof}
+
+\medskip
+
+\begin{ex}[Gaussian Location Model]
+\label{ex:gaussian_loc}
+
+Let \(X_1, ..., X_n\) be i.i.d. \(\mathcal{N}(\theta, \sigma_0^2)\) with \(\sigma_0^2\) known. We consider the squared error loss \(L(\theta, a) = (\theta - a)^2\), so \(\rho(u) = u^2\).
+
+\paragraph{Candidate Estimator}
+The sample mean \(\overline{X}_n\) is a natural candidate. We know:
+\begin{itemize}
+\item It is the MLE and UMVUE.
+\item It is equivariant (shifting data shifts the mean).
+\item It has constant risk (variance):
+    \[
+        R(0, \overline{X}_n) 
+        = \mathsf{E}_{0}\left[\left( \ol{X}_{n} \right) ^2\right] = \mathsf{Var}_0[\overline{X}_n] = \frac{\sigma_0^2}{n},
+    \]
+    where the equality with the variance holds because \(\mathsf{E}_{0}\left[\ol{X}_{n}\right] =0\).
+\end{itemize}
+
+Is it the MRE estimator?
+
+\begin{claim}
+\(\overline{X}_n\) is the unique MRE estimator (unique up to Lebesgue null sets).
+\end{claim}
+
+\begin{proof}
+We apply \autoref{thm:mre_construction} using \(T_0(\bs{X}) = \overline{X}_n\) as our base estimator. We need to find:
+\[
+v^*(\bs{y}) = \arg\min_{c \in \mathbb{R}} \mathsf{E}_0 \big[ (\overline{X}_n + c)^2 \mid \bs{Y} = \bs{y} \big].
+\]
+
+\textbf{Step 1: Independence.}
+The maximal invariant is \(\bs{Y} = (X_1 - X_n, \dots, X_{n-1} - X_n, 0)\). The joint vector \((\overline{X}_n, \bs{Y})\) is multivariate normal because it consists of linear combinations of independent normal variables \(X_i\).
+
+For joint normals, independence is equivalent to zero covariance. Let's check:
+\[
+\mathsf{Cov}_0[\overline{X}_n, X_i - X_n] = \mathsf{Cov}_0[\overline{X}_n, X_i] - \mathsf{Cov}_0[\overline{X}_n, X_n].
+\]
+We know that \(\mathsf{Cov}_0[\overline{X}_n, X_i] = \frac{\sigma_0^2}{n}\) for any \(i\) (by symmetry). Thus, the difference is zero.
+
+Since \(\overline{X}_n\) is uncorrelated with every component of \(\bs{Y}\), it is independent of \(\bs{Y}\).
+
+\textbf{Step 2: Optimization.}
+Because of independence, the conditional expectation equals the unconditional expectation:
+\[
+v^*(\bs{y}) = \arg\min_{c \in \mathbb{R}} \mathsf{E}_0 \big[ (\overline{X}_n + c)^2 \big].
+\]
+This is the standard problem of minimizing the second moment about a point \(c\). The minimum of \(\mathsf{E}[(Z+c)^2]\) occurs at \(c = -\mathsf{E}[Z]\).
+
+Here, \(\mathsf{E}_0[\overline{X}_n] = 0\) (since the data is centered at 0). Therefore, the optimal shift is:
+\[
+c^* = -\mathsf{E}_0[\overline{X}_n] = 0.
+\]
+
+\textbf{Conclusion:}
+The optimal adjustment function is \(v^*(\bs{y}) = 0\). The MRE estimator is:
+\[
+T^*(\bs{X}) = T_0(\bs{X}) + 0 = \overline{X}_n.
+\]
+\end{proof}
+\end{ex}
+
+\subsection{Squared and absolute error loss}
+\label{par:sq_abs_error_loss}
+
+%\myparagraph{Motivation: Concretizing the Optimization}
+\autoref{thm:mre_construction} is, in a way, the ``end of the story'' for the general theory -- unless we bring in concrete loss functions. The optimization problem defined by $v^*(y)$ changes depending on the choice of $L$.
+
+We now apply the general result to two specific, standard loss functions. The problem reduces to finding the constant $c$ that is ``closest'' to the random variable $T_0(\bs{X})$ (conditional on $\bs{Y}$) under different metrics.
+
+
+
+\paragraph{Squared Error Loss}
+For squared error loss $L(\theta, a) = (\theta - a)^2$, we are looking for the constant that minimizes the expected squared deviation. \autoref{thm:mre_construction} considers:
+\[
+v^{*}(\bs{y}) = \arg\min_{c} \mathsf{E}_{0} \big[ L(0, T_{0}(\bs{X}) + c) \mid \bs{Y}=\bs{y} \big]
+\]
+Substituting the specific loss function:
+\[
+v^{*}(\bs{y})= \arg\min_{c} \mathsf{E}_{0} \big[ (T_{0}(\bs{X}) + c)^{2} \mid \bs{Y}=\bs{y} \big].
+\]
+From basic probability theory (or our earlier discussions), we know that the quantity $\mathsf{E}[(Z - k)^2]$ is minimized when $k = \mathsf{E}[Z]$. Here, we are effectively minimizing expected square distance with respect to $-c$. Thus, the optimal $c$ is the negative of the expectation:
+\[
+v^*(\bs{y}) = -\mathsf{E}_{0} [T_{0}(\bs{X}) \mid \bs{Y}=\bs{y}].
+\]
+The MRE estimator is, thus, the base estimator adjusted by its conditional expectation:
+\begin{equation}
+T^*(\bs{X}) = T_0(\bs{X}) - \mathsf{E}_0[T_0(\bs{X}) \mid \bs{Y}].
+\label{eq:mre_squared_error}
+\end{equation}
+
+\paragraph{Absolute Error Loss}
+If we change to \textbf{absolute error loss} $L(\theta, a) = |\theta - a|$, the optimization problem becomes minimizing the mean absolute deviation:
+\[
+\min_c \mathsf{E}_{0} \big[ |T_{0}(\bs{X}) + c| \mid \bs{Y}=\bs{y} \big].
+\]
+Recall from earlier lectures that the constant minimizing the mean absolute error $\mathsf{E}[|Z - k|]$ is the \textbf{median} of the distribution of $Z$.
+
+Applying this to our conditional setup, we obtain the MRE estimator by subtracting the conditional median:
+\begin{equation}
+T^*(\bs{X}) = T_0(\bs{X}) - \mathrm{median}_0[T_0(\bs{X}) \mid \bs{Y}].
+\label{eq:mre_abs_error}
+\end{equation}
+This explicitly shows how changing the loss function changes the optimal estimator -- different loss functions emphasize different types of errors, and the MRE estimator adapts accordingly.
+
+\section{Pitman Estimator}
+\label{sec:pitman_estimator}
+
+We refer back to the model specification in \autoref{def:loc_model}, with \(X_i = \theta + \epsilon_i\) for additive error \(\epsilon_i\). When we specifically adopt \textbf{squared error loss}, the MRE estimator has a specific form and name: the \textbf{Pitman estimator}.
+
+\begin{theo}[Pitman Estimator]
+\label{thm:pitman}
+Consider squared error loss \(L(\theta, a) = (\theta - a)^2\), and suppose there exists an equivariant estimator with finite risk. Let \(\epsilon_1, \ldots, \epsilon_n\) have joint density \(p_0\) with respect to Lebesgue measure on \(\mathbb{R}^n\). Then the MRE estimator is given by
+\[
+T^*(\bs{X}) = \frac{\int_{\mathbb{R}} z \, p_0(X_1 - z, \dots, X_n - z) \, \mathrm{d}z}{\int_{\mathbb{R}} p_0(X_1 - z, \dots, X_n - z) \, \mathrm{d}z}.
+\]
+In this form, the MRE estimator is known as the \textbf{Pitman estimator}.
+\end{theo}
+
+\begin{proof}
+We use the construction from \autoref{sec:construction_mre} (specifically \autoref{thm:mre_construction}) applied to squared error loss. As derived in \eqref{eq:mre_squared_error}, using the base estimator \(T_0(\bs{X}) = X_n\), the MRE estimator is:\footnote{Here, \(\mathsf{E}_{0}\left[|X_{n}| \mid \bs{Y}\right] < \infty\) by the assumed existence of an equivariant estimator with finite risk; compare Lehmann and Casella (1998, Problem 3.1.21).} 
+\[
+T^*(\bs{X}) = X_n - \mathsf{E}_0[X_n \mid \mathbf{Y}],
+\]
+where \(\bs{Y} = (X_1 - X_n, \dots, X_{n-1} - X_n)\) is the maximal invariant. Note that implicitly \(Y_n = X_{n} - X_{n}= 0\), but the randomness is driven by \(\epsilon_1, \dots, \epsilon_n\).
+
+\textbf{Step 1: Density Transformation.}
+Consider the transformation from errors to the invariant/base statistics:
+\[
+g: (\epsilon_1, \dots, \epsilon_n) \mapsto (Y_1, \dots, Y_{n-1}, \epsilon_n).
+\]
+The Jacobian matrix of this transformation is upper triangular with 1s on the diagonal (since \(Y_i = X_{i}-X_{n}= \epsilon_i - \epsilon_n\)), so the Jacobian determinant is 1. The joint density of \((Y_1, ..., Y_{n-1}, \epsilon_n)\) is simply the original density \(p_0\) evaluated at the pre--images:
+\begin{align*}
+    f(y_1, \dots, y_{n-1}, \epsilon_n) 
+    &= p_0(g^{-1}(y_{1}, \dots, y_{n-1},\eps_{n})) \cdot \frac{1}{|\det(\dot{g}(g^{-1}(y_{1}, \dots, y_{n-1},\eps_{n})))|}\\
+    &= p_0(y_1 + \epsilon_n, \dots, y_{n-1} + \epsilon_n, \epsilon_n).
+\end{align*}
+
+\textbf{Step 2: Conditional Expectation.}
+The conditional density of \(X_n\) (which equals \(\epsilon_n\) under \(\theta=0\)) given \(\bs{Y}\) is the joint density divided by the marginal density of \(\mathbf{Y}\):
+\[
+f(\epsilon_n \mid \bs{Y}) = \frac{p_0(Y_1 + \epsilon_n, \dots, Y_{n-1} + \epsilon_n, \epsilon_n)}{\int_{\mathbb{R}} p_0(Y_1 + u, \dots, Y_{n-1} + u, u) \, \mathrm{d}u}.
+\]
+Now we compute the expectation \(\mathsf{E}_0[X_n \mid \bs{Y}]\):
+\[
+\mathsf{E}_0[X_n \mid \bs{Y}] = \mathsf{E}_{0}\left[\eps_{n}|\bs{Y}\right] = \int_{\mathbb{R}} \epsilon_n \, f(\epsilon_n \mid \mathbf{Y}) \, \mathrm{d}\epsilon_n = \frac{\int u \, p_0(Y_1 + u, \dots, Y_{n-1} + u, u) \, \mathrm{d}u}{\int p_0(Y_1 + u, \dots, Y_{n-1} + u, u) \, \mathrm{d}u}.
+\]
+
+\textbf{Step 3: Substitution.}
+We start with the expression for the conditional expectation derived above. We first substitute the definition of the maximal invariant components, \(Y_i = X_i - X_n\), back into the density arguments. Note that the last argument \(u\) can be written as \(X_n - X_n + u\):
+\[
+p_0(X_1 - X_n + u, \dots, X_{n-1} - X_n + u, X_n - X_n + u).
+\]
+
+Next, we perform a change of variables to simplify the arguments. Let \(z = X_n - u\). This implies:
+\[
+u = X_n - z \quad \text{and} \quad \mathrm{d}u = -\mathrm{d}z.
+\]
+The limits of integration \((-\infty, \infty)\) for \(u\) correspond to \((\infty, -\infty)\) for \(z\). The negative sign from the differential \(\mathrm{d}u\) flips the limits back to \((-\infty, \infty)\).
+
+Now, we transform the arguments inside the density function using this substitution:
+\[
+X_i - X_n + u = X_i - X_n + (X_n - z) = X_i - z.
+\]
+This holds for all coordinates \(i=1, \dots, n\) (including the last one).
+
+We also substitute \(u = X_n - z\) into the linear term in the numerator. The expression becomes:
+\[
+\mathsf{E}_0[X_n \mid \bs{Y}] = \frac{\int (X_n - z) \, p_0(X_1 - z, \dots, X_n - z) \, \mathrm{d}z}{\int p_0(X_1 - z, \dots, X_n - z) \, \mathrm{d}z}.
+\]
+
+Using linearity, the numerator splits: \(X_n \cdot (\text{denominator}) - \int z p_0(\dots) \mathrm{d}z\).
+Thus:
+\[
+\begin{split}
+\mathsf{E}_0[X_n \mid \bs{Y}] &= \frac{X_n \int p_0(X_1 - z, \dots, X_n - z) \, \mathrm{d}z - \int z \, p_0(X_1 - z, \dots, X_n - z) \, \mathrm{d}z}{\int p_0(X_1 - z, \dots, X_n - z) \, \mathrm{d}z} \\
+&= X_n - \frac{\int z \, p_0(X_1 - z, \dots, X_n - z) \, \mathrm{d}z}{\int p_0(X_1 - z, \dots, X_n - z) \, \mathrm{d}z}.
+\end{split}
+\]
+Finally, substituting this back into \(T^{*}(\bs{X})\)
+\[
+T^*(\bs{X}) = X_n - \mathsf{E}_0[X_n \mid \bs{Y}] = \frac{\int z \, p_0(X_1 - z, \dots, X_n - z) \, \mathrm{d}z}{\int p_0(X_1 - z, \dots, X_n - z) \, \mathrm{d}z}.
+\]
+yields the Pitman estimator.
+\end{proof}
+
+\begin{ex}[Uniform Model]
+
+\label{ex:uniform_pitman}
+
+Let \(X_1, \dots, X_n\) be i.i.d. Uniform \((\theta - \frac{1}{2}, \theta + \frac{1}{2})\), \(\theta \in \mathbb{R}\).
+It is known that no UMVUE exists for this model (Lehmann and Casella 1998, Ex. 2.1.9). However, we can find the optimal equivariant estimator.
+
+
+
+The joint density under \(\theta = 0\) is:
+\[
+p_0(x_1,\ldots,x_n)=1_{\{|x_1|<\frac{1}{2},\ldots,|x_n|<\frac{1}{2}\}}.
+\]
+To apply the Pitman formula, we evaluate this density at shifted points \(X_i - z\). The condition for the density to be non-zero is:
+\[
+\left| X_i - z \right| < \frac{1}{2} \quad \forall i.
+\]
+Rearranging this inequality for \(z\):
+\[
+z - \frac{1}{2} < X_i < z + \frac{1}{2} \iff X_i - \frac{1}{2} < z < X_i + \frac{1}{2}.
+\]
+For this to hold for \emph{all} \(i\), \(z\) must be greater than the largest lower bound and smaller than the smallest upper bound. Let \(X_{(1)} = \min(X_i)\) and \(X_{(n)} = \max(X_i)\). The range of integration is:
+\[
+X_{(n)} - \frac{1}{2} < z < X_{(1)} + \frac{1}{2}.
+\]
+
+\textbf{Computing the Estimator:}
+The Pitman estimator is the ratio of two integrals over this interval \([a, b]\), where \(a = X_{(n)} - 1/2\) and \(b = X_{(1)} + 1/2\).
+\begin{itemize}
+\item \textbf{Denominator:} \(\int_a^b 1 \, \mathrm{d}z = b - a\).
+\item \textbf{Numerator:} \(\int_a^b z \, \mathrm{d}z = \left[ \frac{z^2}{2} \right]_a^b = \frac{1}{2}(b^2 - a^2) = \frac{1}{2}(b-a)(b+a)\).
+\end{itemize}
+The ratio is:
+\[
+T^*(\bs{X}) = \frac{\frac{1}{2}(b-a)(b+a)}{b-a} = \frac{a+b}{2}.
+\]
+Substituting \(a\) and \(b\) back:
+\[
+\frac{(X_{(n)} - 1/2) + (X_{(1)} + 1/2)}{2} = \frac{X_{(1)} + X_{(n)}}{2}.
+\]
+Thus, the Pitman estimator is the \textbf{mid-range} of the data.
+\end{ex}
+
+\section{MRE and Unbiasedness}
+\label{sub:mre_unbiasedness}
+
+In the previous section, we saw that for location models like the Uniform distribution, a UMVUE may not exist, yet the Pitman estimator provides a unique optimal solution. This raises a natural question: what is the relationship between this MRE estimator and unbiasedness?
+
+
+
+\begin{pro}
+\label{prop:mre_unbiasedness}
+Fix squared error loss \(L(\theta, a) = (\theta - a)^2\) and suppose there exists an equivariant estimator of finite risk. Then:
+\begin{enumerate}
+    \item[(i)] The bias of any equivariant estimator is constant.
+    \item[(ii)] The MRE estimator is unbiased.
+    \item[(iii)] If an equivariant estimator \(T\) is unbiased and \(T(\bs{X})\) is independent of \(\bs{X} - T(\bs{X})\), then \(T\) is the MRE estimator.
+\end{enumerate}
+\end{pro}
+
+\begin{proof}
+    \leavevmode
+\begin{enumerate}
+    \item[(i)] The bias of an estimator \(T\) is \(b(\theta) = \mathsf{E}_{\theta}[T(\bs{X})] - \theta\). Using the equivariance property \(T(\bs{x} + c) = T(\bs{x}) + c\), we can write:
+    \[
+    \mathsf{E}_{\theta}[T(\bs{X})] - \theta = \mathsf{E}_{\theta}[T(\bs{X}) - \theta] = \mathsf{E}_{\theta}[T(\bs{X} - \theta)].
+    \]
+    When \(\bs{X} \sim \mathsf{P}_\theta\), the shifted variable \(\bs{X} - \theta\) is distributed according to \(\mathsf{P}_0\) (the error distribution). Thus:
+    \[
+    \mathsf{E}_{\theta}[T(\bs{X} - \theta)] = \mathsf{E}_{0}[T(\bs{X})].
+    \]
+    This expectation depends only on the fixed distribution \(\mathsf{P}_0\) and is therefore constant for all \(\theta \in \mathbb{R}\).
+
+    \item[(ii)] Suppose the MRE estimator \(T^*\) has a non--zero bias \(b = \mathsf{E}_0[T^*] \neq 0\). We can construct a new estimator \(T'(\bs{X}) = T^*(\bs{X}) - b\). This estimator is still equivariant (shifting by a constant does not break equivariance).
+    
+    Consider the risk at \(\theta=0\) (which is the constant risk for equivariant estimators). The risk of \(T'\) is:
+    \[
+    R(0, T') = \mathsf{E}_0[(T^* - b)^2] = \mathsf{Var}_0[T^*].
+    \]
+    The risk of the original estimator \(T^*\) is its second moment:
+    \[
+    R(0, T^*) = \mathsf{E}_0[(T^*)^2] = \mathsf{Var}_0[T^*] + (\mathsf{E}_0[T^*])^2 = \mathsf{Var}_0[T^*] + b^2.
+    \]
+    Since \(b \neq 0\), we have \(b^2 > 0\), which implies \(R(0, T') < R(0, T^*)\). This contradicts the assumption that \(T^*\) minimizes the risk. Therefore, the bias \(b\) must be zero.
+
+    \item[(iii)] From the construction in \autoref{thm:mre_construction} (and the squared error derivation), we know that the MRE estimator is unique (a.e.) and is given by adjusting any equivariant estimator \(T\) by its conditional expectation given a maximal invariant.
+    
+    The vector of residuals \(\bs{U} = \bs{X} - T(\bs{X})\) is a maximal invariant. Thus, the MRE estimator \(T^*\) is:
+    \[
+    T^*(\bs{X}) = T(\bs{X}) - \mathsf{E}_0[T(\bs{X}) \mid \bs{X} - T(\bs{X})].
+    \]
+    Therefore, \(T\) is the MRE estimator if and only if the adjustment term is zero:
+    \begin{equation}
+    \label{eq:mre_condition}
+    \mathsf{E}_0\big[T(\bs{X}) \mid \bs{X} - T(\bs{X})\big] = 0.
+    \end{equation}
+    
+    If \(T(\bs{X})\) is independent of \(\bs{X} - T(\bs{X})\), the conditional expectation becomes the unconditional expectation:
+    \[
+    \mathsf{E}_0[T(\bs{X}) \mid \bs{X} - T(\bs{X})] = \mathsf{E}_0[T(\bs{X})].
+    \]
+    Since \(T\) is unbiased, \(\mathsf{E}_0[T(\bs{X})] = 0\). Thus, condition \eqref{eq:mre_condition} is satisfied, and \(T\) is the MRE estimator.
+\end{enumerate}
+\end{proof}
+
+\section{General In--/Equivariance}
+\label{sec:general_in_equivariance}
+
+\myparagraph{Setting:}
+\label{subsec:setting_invar}
+We generalize the location model to general group actions. The setting consists of:
+\begin{itemize}
+    \item \(X\): observation (data).
+    \item \(\mathcal{X}\): sample space.
+    \item \(\mathcal{P} = \{ \mathsf{P}_{\theta} \mid \theta \in \Theta \}\): model with \(\mathsf{P}_{\theta} \neq \mathsf{P}_{\theta'}\) if \(\theta \neq \theta'\) (identifiability).
+    \item \(\mathcal{G}\): a group acting on \(\mathcal{X}\).
+\end{itemize}
+
+
+
+\begin{definition}[Invariant Model]
+\label{def:invariant_model}
+The model \(\mathcal{P}\) is \textbf{invariant} under \(\mathcal{G}\) if for all \(g \in \mathcal{G}\):
+\begin{enumerate}
+    \item If \(X \sim \mathsf{P}_{\theta}\) for \(\theta \in \Theta\), then the transformed data \(gX \sim \mathsf{P}_{\theta'}\) for some \(\theta' \in \Theta\). We denote this induced parameter as \(\theta' := \bar{g}\theta\).
+    \item The mapping on the parameter space is surjective: \(\{\bar{g}\theta \mid \theta \in \Theta\} = \Theta\).
+\end{enumerate}
+\end{definition}
+
+\paragraph{Fact}
+It follows that:
+\begin{itemize}
+    \item The induced map \(\bar{g}: \Theta \to \Theta\) is bijective.
+    \item The collection of induced maps \(\bar{\mathcal{G}} = \{\bar{g} \mid g \in \mathcal{G}\}\) forms a group acting on the parameter space.
+\end{itemize}
+
+\begin{definition}
+    \label{def:equivariant_estimator}
+An estimator \(T: \mathcal{X} \to \Theta\) is \textbf{equivariant} if it preserves the group action structure:
+\[
+T(gx) = \bar{g}T(x) \quad \forall g \in \mathcal{G}, \ \forall x \in \mathcal{X}.
+\]
+A loss function \(L(\cdot, \cdot)\) is \textbf{invariant} if the loss remains unchanged when both the truth and the estimate are transformed:
+\[
+L(\bar{g}\theta, \bar{g}a) = L(\theta, a) \quad \forall a, \theta \in \Theta, \ \bar{g} \in \bar{\mathcal{G}}.
+\]
+\end{definition}
+
+\paragraph{Examples:}
+
+\begin{itemize}
+    \item \textbf{Location--scale model:} The group action on \(\bs{x} \in \mathbb{R}^n\) is given by affine transformations:
+    \[
+    \bs{x} \mapsto a\bs{x} + c \quad \text{for } c \in \mathbb{R}, \ a > 0.
+    \]
+    Here, the group acts by both shifting (location) and scaling (variance). See Lehmann and Casella (1998, Sec. 3.3).
+
+    \item \textbf{Linear regression:} See Lehmann and Casella (1998, Sec. 3.4).
+    
+    
+   \begin{note}[]
+       
+    Linear regression assumes the expectation vector lies in a linear subspace. This subspace is invariant under various coordinate transformations. The standard \textbf{F--test}, which is used globally for hypothesis testing in regression (e.g., testing if coefficients are zero or if two groups share the same slope), can be derived and justified as the optimal invariant procedure under the relevant group of transformations.
+   \end{note} 
+\end{itemize}
+
+\myparagraph{Outlook: Decision Theory}
+This concludes our discussion on uniformly optimal procedures (like UMVUE and MRE). In many general settings, no single estimator is uniformly best for all \(\theta\). The next chapters will focus on \textbf{Decision Theory}, where we summarize performance via:
+\begin{itemize}
+    \item \textbf{Average performance:} Bayes estimators (averaging over a prior).
+    \item \textbf{Worst--case performance:} Minimax estimators.
+\end{itemize}

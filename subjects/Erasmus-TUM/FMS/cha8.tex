@@ -1,0 +1,1723 @@
+\chapter{Decision Theory}
+\label{cha:decision_theory}
+
+Decision theory provides a common framework to discuss different statistical tasks (estimation, testing, confidence sets, etc.). We will adopt this framework to introduce the concepts of Bayes and Minimax optimality.
+
+\medskip
+
+Previously, we restricted ourselves to specific families of estimators (e.g., unbiased or equivariant estimators) and sought \textbf{uniform optimality}. Uniform optimality requires that an estimator \(T^*\) dominates all others for every possible parameter value:
+\[
+R(\theta, T^*) \leq R(\theta, T) \quad \forall \theta \in \Theta.
+\]
+As we have discussed, finding such an estimator without strong restrictions is often impossible.
+
+Now, we shift our perspective. Instead of restricting the class of estimators, we change how we measure ``goodness." We will evaluate procedures based on an \textbf{aggregated risk}:
+\begin{itemize}
+    \item \textbf{Average Risk (Bayes):} Weighting the risk across different \(\theta\) values (using a prior).
+    \item \textbf{Worst--case Risk (Minimax):} Looking at the maximum risk over all \(\theta\).
+\end{itemize}
+
+\section{Decision Rules}
+\label{sec:decision_rules}
+
+\paragraph{Setup}
+\label{subsec:setup_decision}
+
+We begin with the standard statistical setup:
+\begin{itemize}
+    \item \(X\): The observation (data), which could be a vector, matrix, image, etc.
+    \item \(\mathcal{X}\): The sample space (the set of all possible outcomes).
+    \item \(\mathcal{P} = \{ \mathsf{P}_{\theta} : \theta \in \Theta \}\): The statistical model, where \(\theta\) is the unknown parameter.
+\end{itemize}
+
+\paragraph{Actions}
+\label{subsec:actions}
+
+In decision theory, we formally define what we ``do" with the data as an \textbf{action}. Our goal is to unify different statistical tasks (estimation, testing, etc.) under this common terminology.
+
+
+
+%\begin{definition}
+%\label{def:action_space}
+Let \(\mathcal{A}\) denote the \textbf{action space}, the set of all possible actions available to the statistician.
+%\end{definition}
+
+\begin{ex}[]
+    
+This language allows us to unify various statistical tasks:
+
+\begin{enumerate}[label=\roman*.]
+    \item \textbf{Point Estimation:}
+    The action is to return a value (an estimate) for the parameter.
+    \[
+    \mathcal{A} = \Theta \quad (\text{or } \mathcal{A} \subseteq \mathbb{R}^r).
+    \]
+    For example, if we are estimating the speed of light, the action is simply providing a number.
+
+    \item \textbf{Hypothesis Testing:}
+    The goal is to decide between two competing hypotheses which partition the parameter space:
+    \[
+    H_0: \theta \in \Theta_0 \quad \text{vs.} \quad H_1: \theta \in \Theta_1,
+    \]
+    where \(\Theta_0, \Theta_1 \subseteq \Theta\) and \(\Theta_0 \cap \Theta_1 = \emptyset\).
+    
+    
+
+    Possible action spaces include:
+    \begin{itemize}
+        \item \textbf{Deterministic Tests:} \(\mathcal{A} = \{0, 1\}\), where usually \(0\) denotes ``Fail to reject \(H_0\)" (Accept) and \(1\) denotes ``Reject \(H_0\)".
+        \item \textbf{Randomized Tests:} \(\mathcal{A} = [0, 1]\). Here, the action \(a \in \mathcal{A}\) represents the \textit{probability} to reject \(H_0\). If the procedure returns \(0.7\), you flip a biased coin that lands heads with probability \(0.7\) to make the final decision.
+    \end{itemize}
+
+    \item \textbf{Confidence Sets:}
+    The action is to select a subset of the parameter space.
+    \[
+    \mathcal{A} = \{ C \subseteq \Theta : C \text{ is a valid set} \}.
+    \]
+    For interval estimation of a parameter \(\gamma(\theta) \in \mathbb{R}\), the action space is the set of all intervals \((\ell, u)\) with \(-\infty \le \ell \le u \le \infty\).
+\end{enumerate}
+\end{ex}
+
+\medskip
+
+Once we have defined the available actions, we need a rule for choosing one based on the observation.
+
+\begin{definition}
+\label{def:decision_rule}
+A \textbf{decision rule} (or statistical procedure) is a measurable mapping from the sample space to the action space:
+\[
+d: \mathcal{X} \to \mathcal{A}.
+\]
+\end{definition}
+
+In the context of estimation, \(d(X)\) is what we previously called an estimator \(T(X)\). In testing, \(d(X)\) is the test function.
+
+\subsection{Risk of a Decision Rule}
+\label{subsec:risk_decision_rule}
+
+To evaluate decision rules, we must quantify the cost of making a specific decision when the state of nature is \(\theta\).
+
+\paragraph{Loss Function}
+A loss function \(L: \Theta \times \mathcal{A} \to [0, \infty)\) quantifies the ``loss'' or ``price'' of taking an action \(a \in \mathcal{A}\) when nature is in state \(\theta \in \Theta\).
+
+\begin{definition}
+\label{def:risk}
+The \textbf{risk} of a decision rule \(d\) is the expected loss:
+\[
+R(\theta, d) = \mathsf{E}_{\theta} [L(\theta, d(X))], \quad \theta \in \Theta.
+\]
+\end{definition}
+As in earlier chapters, \(\mathsf{E}_{\theta}\) indicates that the expectation is taken with respect to the random observation \(X \sim \mathsf{P}_{\theta}\).
+
+\subsubsection{Optimality?}
+\label{subsec:optimality_approaches}
+
+How do we choose the best rule? There are two main approaches:
+
+\paragraph{Approach I: Uniform Optimality}
+Find a rule \(d^*\) that minimizes the risk for \textit{every} parameter value simultaneously:
+\[
+R(\theta, d^*) \le R(\theta, d) \quad \forall d, \forall \theta \in \Theta.
+\]
+\begin{itemize}
+    \item This corresponds to finding uniformly optimal rules within a restricted class.
+    \item Examples: UMVUE (Unbiasedness restriction), MRE (Equivariance restriction).
+\end{itemize}
+
+\paragraph{Approach II: One-number Summary of Risk}
+Since uniform optimality is often impossible without restrictions, we can instead summarize the risk function \(R(\cdot, d)\) into a single scalar value and minimize that.
+\begin{itemize}
+    \item \textbf{Average-case optimality (Bayes):} We minimize the weighted average of the risk (weighted by a prior).
+    \item \textbf{Worst-case optimality (Minimax):} We minimize the maximum possible risk.
+\end{itemize}
+
+\begin{ex}[continued]
+    \leavevmode
+\begin{enumerate}[label=\roman*.]
+    \item \textbf{Estimation of a parameter} \(\gamma(\theta) \in \mathbb{R}^r\):
+    Consider the squared error loss:
+    \[
+    L(\theta, a) = \|\gamma(\theta) - a\|^2.
+    \]
+    The risk is the Mean Squared Error (MSE):
+    \[
+    R(\theta, d) = \mathsf{E}_{\theta} [\|\gamma(\theta) - d(X)\|^2].
+    \]
+
+    \item \textbf{Hypothesis Testing (Non-randomized)}:
+    Let \(\mathcal{A} = \{0, 1\}\). We test \(H_0: \theta \in \Theta_0\) vs \(H_1: \theta \in \Theta_1\).
+    We can define the ``Neyman-Pearson'' loss function as:
+    \[
+    L(\theta,a) = 
+    \begin{cases} 
+    1, & \text{if } \theta \in \Theta_0 \text{ and } a = 1 \quad (\text{``Type I error''}), \\ 
+    c, & \text{if } \theta \in \Theta_1 \text{ and } a = 0 \quad (\text{``Type II error''}), \\ 
+    0, & \text{otherwise}. 
+    \end{cases}
+    \]
+    Here, \(c > 0\) is a constant that weights the relative severity of the errors. 
+   
+    \begin{note}[]
+    The constant \(c\) allows us to model asymmetric costs. For example, in a clinical trial, approving a harmful drug (Type I error) might be considered more ``grave'' than failing to approve a beneficial one (Type II error), or vice versa depending on the context.
+    \end{note}
+    
+    The risk function becomes the probability of making an error, weighted by the cost:
+    \[
+    R(\theta, d) = 
+    \begin{cases} 
+    \mathsf{P}_{\theta} \big( d(X) = 1 \big), & \text{if } \theta \in \Theta_0, \\ 
+    c \; \mathsf{P}_{\theta} \big( d(X) = 0 \big), & \text{if } \theta \in \Theta_1, \\ 
+    0, & \text{if } \theta \notin \Theta \backslash (\Theta_0 \cup \Theta_1). 
+    \end{cases}
+    \]
+    (The last case is typically not of interest as the hypotheses usually partition the parameter space).
+\end{enumerate}
+\end{ex}
+
+\subsection{Admissibility}
+\label{subsec:admissibility}
+
+We now introduce a property that essentially formalizes the idea of ``don't be stupid." If there exists a decision rule that performs as well as yours in every scenario and strictly better in at least one, there is no justification for keeping your current rule.
+
+\begin{definition}
+\label{def:strictly_better}
+A decision rule \(d'\) is said to be \textbf{strictly better} (or dominates) a decision rule \(d\) if:
+\begin{enumerate}
+    \item \(R(\theta, d') \le R(\theta, d)\) for all \(\theta \in \Theta\);
+    \item There exists at least one \(\theta \in \Theta\) such that \(R(\theta, d') < R(\theta, d)\).
+\end{enumerate}
+%\end{definition}
+
+%\begin{definition}
+%\label{def:admissibility}
+%\leavevmode
+%\begin{itemize}
+    %\item 
+A decision rule \(d\) is \textbf{admissible} if no other rule \(d'\) is strictly better than \(d\).
+
+    %\item 
+If there exists a rule \(d'\) that is strictly better than \(d\), then \(d\) is \textbf{inadmissible}.
+%\end{itemize}
+\end{definition}
+
+
+Admissible rules are those that lie on the ``Pareto frontier" of risk. If you plot the risk functions of two admissible estimators, their curves will typically cross; neither is uniformly better than the other. 
+An inadmissible estimator's risk curve lies strictly above another estimator's curve (or touches it but goes higher elsewhere).
+
+\medskip
+
+\begin{ex}[Gaussian mean]
+    
+Let \(X_1, \dots, X_n\) be i.i.d. observations from the statistical model \(\cc{P} = \{ \mathcal{N}(\mu, \sigma^2) : \theta = (\mu, \sigma^2) \in \mathbb{R} \times (0, \infty) \}\). We consider the estimation of \(\gamma(\theta) = \mu\) under squared error loss.
+
+\begin{enumerate}[label=\alph*)]
+    \item \textbf{Inadmissibility of the ``Partial" Mean:}
+    Suppose someone is lazy and uses only the first \(m\) observations (\(m < n\)) to estimate the mean:
+    \[
+    \overline{X}_m = \frac{1}{m} \sum_{i=1}^m X_i.
+    \]
+    This is clearly inadmissible. Comparing it to the full sample mean \(\overline{X}_n\):
+    \[
+    R(\theta, \overline{X}_m) = \mathsf{Var}_{\theta}[\overline{X}_m] = \frac{\sigma^2}{m} > \frac{\sigma^2}{n} = R(\theta, \overline{X}_n) \quad \forall \theta.
+    \]
+    The risk of \(\overline{X}_n\) is strictly lower for all \(\theta\), so \(\overline{X}_m\) is dominated.
+
+    \item \textbf{Admissibility of the Sample Mean (1D vs 3D):}
+    \begin{itemize}
+        \item In \textbf{1 dimension}, the standard sample mean \(\overline{X}_n\) is admissible. (We will prove this later).
+        \item \textbf{Stein's Paradox:} Surprisingly, if we estimate a vector of means \(\bs{\mu} \in \mathbb{R}^p\) for \(p \ge 3\) (e.g., estimating blood pressure averages for 3 different metrics simultaneously) under the combined squared error loss, the sample mean vector is \textbf{inadmissible}. It is dominated by ``shrinkage estimators" (like the James--Stein estimator).
+    \end{itemize}
+
+    \item \textbf{Admissibility of Constant Estimators:}
+    Consider a trivial estimator that ignores the data and always predicts a constant \(T(X) = \mu_0\) (e.g., ``17").
+
+    Is this admissible? Yes.
+    
+    \textit{Reasoning:}
+    If the true state of nature happens to be \(\theta = (\mu_0, \sigma^2)\), the estimator is perfect:
+    \[
+    R((\mu_0, \sigma^2), T) = \mathsf{E}[(\mu_0 - \mu_0)^2] = 0.
+    \]
+    For another rule \(T'\) to be \textit{strictly better}, it must never have higher risk than \(T\). This means \(T'\) must also have risk \(0\) at \(\theta = (\mu_0, \sigma^2)\). Since risk is variance plus bias squared, a risk of 0 implies \(T'\) must essentially equal \(\mu_0\) with probability 1. Therefore, \(T'\) cannot be different from \(T\), so \(T\) cannot be dominated.
+\end{enumerate}
+\end{ex}
+
+\section{Bayes Rules}
+\label{sec:bayes_rules}
+
+To move beyond the constraints of uniform optimality, we introduce the concept of ``average risk." To compute an average, we must specify how to weight the different parameter values. This weighting is provided by a prior distribution.
+
+Let \(\Pi\) be a probability measure on the parameter space \(\Theta\). We refer to \(\Pi\) as the \textbf{prior distribution}.
+
+\begin{definition}
+\label{def:bayes_risk}
+The \textbf{Bayes risk} of a decision rule \(d\) (with respect to the prior distribution \(\Pi\)) is the weighted average of its risk function:
+\[
+r(\Pi, d) = \int_{\Theta} R(\theta, d) \, \mathrm{d}\Pi(\theta).
+\]
+\end{definition}
+
+\begin{definition}
+\label{def:bayes_rule}
+A decision rule \(d\) is called a \textbf{Bayes rule} (with respect to \(\Pi\)) if it minimizes the Bayes risk:
+\[
+r(\Pi, d) = \inf_{d'} r(\Pi, d').
+\]
+\end{definition}
+Essentially, a Bayes rule achieves the ``smallest average risk.''
+
+
+
+\subsubsection{Densities and Posterior Risk}
+\label{subsec:densities_posterior}
+
+In most practical applications, we work with models where distributions have densities (e.g., with respect to Lebesgue measure).
+
+\paragraph{Setup}
+Assume the following densities exist:
+\begin{itemize}
+    \item \textbf{Sampling density:} \(p_{\theta}(x) = \frac{d \mathsf{P}_{\theta}(x)}{d \nu} \), corresponding to the data--generating distribution \(\mathsf{P}_{\theta}\).
+    \item \textbf{Prior density:} \(\pi(\theta) = \frac{d \Pi(\theta)}{d \mu} \), corresponding to the prior \(\Pi\).
+\end{itemize}
+
+\paragraph{Posterior Distribution}
+Using Bayes' theorem, the \textbf{posterior density} of \(\theta\) given the observation \(X = x\) is:
+\[
+\pi(\theta|x) = \frac{p_{\theta}(x)\pi(\theta)}{\int_{\Theta} p_{\theta}(x)\pi(\theta) \, \mathrm{d}\theta} = \frac{p_{\theta}(x)\pi(\theta)}{m(x)},
+\]
+where \(m(x)\) is the marginal density of \(X\) (sometimes called the \textit{prior predictive density}).
+
+\paragraph{Posterior Risk}
+This framework allows us to define a new type of risk. Instead of averaging over the data \(X\) (as in the frequentist risk \(R(\theta, d)\)), we condition on the observed data \(x\) and average over the parameter \(\theta\).
+
+\begin{definition}
+\label{def:posterior_risk}
+Under the prior \(\Pi\) and having observed \(X = x\), the \textbf{posterior risk} of taking a specific action \(a \in \cc{A}\) is the expected loss with respect to the posterior distribution:
+\[
+\begin{split} 
+\ell(x,a) &:= \mathsf{E} \big[ L(\theta,a) \,|\, X = x \big] \\ 
+&= \int_{\Theta} L(\theta,a) \pi(\theta|x) \, \mathrm{d}\theta. 
+\end{split}
+\]
+\end{definition}
+
+\medskip
+
+    Consider the distinction between the two risks:
+    \begin{itemize}
+        \item \textbf{Frequentist Risk} \(R(\theta, d)\): Fixes \(\theta\) (state of nature) and averages over random \(X\).
+        \item \textbf{Posterior Risk} \(\ell(x, a)\): Fixes \(x\) (observed data) and action \(a\), and averages over random \(\theta\).
+    \end{itemize}
+
+\subsection{Construction of Bayes Rules}
+\label{subsec:construction_bayes}
+
+We now turn to the practical construction of Bayes rules. The following theorem provides a constructive method: to minimize the average risk (Bayes risk), one simply needs to minimize the posterior risk for every observed \(x\).
+
+\begin{theo}
+\label{thm:bayes_construction}
+Let \(\ell(x, a)\) be the posterior risk defined in the previous section. Assume there exists a rule \(d_0\) with finite risk. Then, the decision rule \(d\) defined as the minimizer of the posterior risk,
+\[
+d(x) := \arg\min_{a \in \cc{A}} \ell(x, a), \quad x \in \cc{X},
+\]
+is a Bayes rule.
+\end{theo}
+
+Going forward, we will make the mild assumption that the above construction is well--defined for any prior distribution (i.e., the posterior risk admits a minimizer).
+
+\begin{remark}
+    If \(S\) is a sufficient statistic, then by the Factorization Theorem (Neyman's criterion), we can write \(p_{\theta}(x) = g_{\theta}(S(x))h(x)\). Substituting this into the posterior risk definition:
+    \[
+    \begin{split} 
+    \ell(x,a) &= \int_{\Theta} L(\theta,a) \pi(\theta|x) \, \mathrm{d}\mu(\theta) \\ 
+    &= \int_{\Theta} L(\theta,a) \frac{p_{\theta}(x) \pi(\theta)}{p_{\pi}(x)} \, \mathrm{d}\mu(\theta) \\ 
+    &= \frac{h(x)}{p_{\pi}(x)} \int_{\Theta} L(\theta,a) g_{\theta}(S(x)) \pi(\theta) \, \mathrm{d}\mu(\theta). 
+    \end{split}
+    \]
+    Since the term \(\frac{h(x)}{p_{\pi}(x)}\) does not depend on the action \(a\), minimizing \(\ell(x,a)\) is equivalent to minimizing the integral term, which depends on data only through \(S(x)\). Thus, the constructed Bayes rule depends only on the sufficient statistic \(S\).
+\end{remark}
+
+\begin{proof}
+    The proof relies on Fubini's theorem to swap the order of integration. We want to show that our constructed rule \(d\) has a Bayes risk \(r(\Pi, d)\) that is no larger than that of any other rule \(d'\).
+    
+    For any decision rule \(d'\) with finite risk:
+    \[
+    \begin{split} 
+    r(\Pi, d') &= \int_{\Theta} R(\theta, d') \pi(\theta) \, \mathrm{d}\mu(\theta) \\ 
+    &= \int_{\Theta} \left[ \int_{\cc{X}} L(\theta, d'(x)) p_{\theta}(x) \, \mathrm{d}\nu(x) \right] \pi(\theta) \, \mathrm{d}\mu(\theta) \\ 
+    &\stackrel{\text{Fubini}}{=} \int_{\cc{X}} \left[ \int_{\Theta} L(\theta, d'(x)) \underbrace{p_{\theta}(x) \pi(\theta)}_{=\pi(\theta|x) p_{\pi}(x)} \, \mathrm{d}\mu(\theta) \right] \mathrm{d}\nu(x) \\ 
+    &= \int_{\cc{X}} \left[ \int_{\Theta} L(\theta, d'(x)) \pi(\theta|x) \, \mathrm{d}\mu(\theta) \right] p_{\pi}(x) \, \mathrm{d}\nu(x) \\ 
+    &= \int_{\cc{X}} \ell(x, d'(x)) p_{\pi}(x) \, \mathrm{d}\nu(x).
+    \end{split}
+    \]
+    Since \(d(x)\) is defined as the minimizer of \(\ell(x, a)\) for every \(x\), we have \(\ell(x, d(x)) \le \ell(x, d'(x))\) pointwise. Therefore:
+    \[
+    r(\Pi,d')=\int_{\cc{X}} \ell(x, d'(x)) p_{\pi}(x) \, \mathrm{d}\nu(x) \geq \int_{\cc{X}} \ell(x, d(x)) p_{\pi}(x) \, \mathrm{d}\nu(x) = r(\Pi, d).
+    \]
+\end{proof}
+
+
+
+\begin{ex}
+    The form of the Bayes rule depends entirely on the chosen loss function.
+    
+    \begin{enumerate}[label=\roman*.]
+        \item \textbf{Squared Error Loss} (Estimation of \(\gamma(\theta) \in \mathbb{R}\)):
+        \[ L(\theta, a) = (\gamma(\theta) - a)^2 \]
+        The Bayes rule minimizes the posterior expected squared error:
+        \[
+        d(x) = \arg\min_{a \in \cc{A}} \mathsf{E} \big[ (\gamma(\theta) - a)^2 \,|\, X = x \big].
+        \]
+        As shown in introductory statistics, this is minimized by the expectation:
+        \[ d(x) = \mathsf{E} [\gamma(\theta) \,|\, X = x] \quad \longrightarrow \textbf{ Posterior Mean}. \]
+
+        \item \textbf{Absolute Error Loss} (Estimation of \(\gamma(\theta) \in \mathbb{R}\)):
+        \[ L(\theta, a) = |\gamma(\theta) - a| \]
+        The Bayes rule minimizes the posterior expected absolute deviation:
+        \[
+        d(x) = \arg\min_{a \in \cc{A}} \mathsf{E}[|\gamma(\theta) - a| \,|\, X = x] \quad \longrightarrow \textbf{ Posterior Median}.
+        \]
+
+        \item \textbf{0/1 ``Hit or Miss'' Loss} (Estimation of \(\gamma(\theta) = \theta \in \mathbb{R}\)):
+        Consider a loss that penalizes being further than distance \(c\) from the truth:
+        \[ L(\theta, a) = \bs{1}_{\{|\theta - a| > c\}} \quad \text{for some given } c > 0. \]
+        The posterior risk is the probability of the error being large:
+        \[ \ell(x,a) = \Pi(|\theta - a| > c \,|\, X = x) = 1 - \Pi(|\theta - a| \le c \,|\, X = x). \]
+        Minimizing this risk is equivalent to maximizing the probability of being within the interval \([a-c, a+c]\). If we consider the limit as \(c \downarrow 0\):
+        \[ \frac{1-\ell(x,a)}{2c} = \frac{\Pi(|\theta-a| \le c \,|\, X=x)}{2c} \approx \pi(a|x). \]
+        Hence, for small \(c\), the constructed Bayes rule maximizes the posterior density:
+        \[
+        d_{\text{MAP}}(x) = \arg \max_{\theta} \pi(\theta|x) = \arg \max_{\theta} p_{\theta}(x)\pi(\theta).
+        \]
+        This is known as the \textbf{Maximum A Posteriori (MAP)} estimator.
+
+\begin{remark}
+    If the prior is uniform, \(\pi(\theta) = \text{const}\) (which strictly requires \(\Theta\) to be bounded to integrate to 1), then maximizing the posterior is equivalent to maximizing the likelihood. In this specific case, \(\text{MAP} = \text{MLE}\).
+\end{remark}
+    \end{enumerate}
+\end{ex}
+
+\section{Minimax Decision Rules}
+\label{sec:minimax_rules}
+
+Another major perspective in decision theory is focusing on the ``worst--case" scenario. While Bayes rules optimize for the average case (given a prior), minimax rules optimize for the worst possible state of nature.
+
+\begin{definition}
+\label{def:minimax}
+A decision rule \(d\) is \textbf{minimax} if
+\[
+\sup_{\theta \in \Theta} R(\theta, d) = \inf_{d'} \sup_{\theta \in \Theta} R(\theta, d').
+\]
+In other words, the worst--case risk of \(d\) is the minimal worst--case risk achievable by any rule.
+\end{definition}
+
+\begin{remark}[Not relevant for this course]
+    In asymptotic statistics (where \(n \to \infty\)), strict minimaxity is often hard to derive. You may encounter the following relaxations in research literature:
+    \begin{itemize}
+        \item A sequence of rules \(d_n\) is \textbf{asymptotically minimax} if
+        \[ \sup_{\theta} R_n(\theta, d_n) \sim \inf_{d'} \sup_{\theta} R_n(\theta, d'). \]
+        (Here \(a_n \sim b_n\) denotes \(a_n/b_n \to 1\)).
+        \item A sequence achieves the \textbf{minimax rate} if
+        \[ \sup_{\theta} R_n(\theta, d_n) \asymp \inf_{d'} \sup_{\theta} R_n(\theta, d'). \]
+        (Here \(\asymp\) denotes that the ratio is bounded away from 0 and \(\infty\)).
+    \end{itemize}
+\end{remark}
+
+%\subsection{Examples and Counter-Examples}
+%\label{subsec:minimax_examples}
+
+\begin{ex}[Gaussian Mean]
+    If \(X_1, \dots, X_n \sim \mathcal{N}(\mu, 1)\), then the sample mean \(\overline{X}_n\) \textbf{is} the minimax estimator of \(\mu\) under squared error loss. (We will prove this later).
+\end{ex}
+
+
+
+\begin{ex}[Binomial Proportion: Counter--Intuitive Result]
+    Let \(X \sim \text{Bin}(n, p)\). We wish to estimate \(p \in (0, 1)\) under squared error loss.
+    
+    Consider the natural estimator \(d(X) = \frac{X}{n}\) (which is the MLE and UMVUE). Its risk is:
+    \[
+    R(p,d) = \mathsf{E}_{p}\left[\left( \frac{X}{n}-p \right) ^2\right] = \mathsf{Var}_p \left[ \frac{X}{n} \right] = \frac{p(1-p)}{n}.
+    \]
+    The worst-case risk occurs at \(p = 1/2\):
+    \[
+    \sup_{p \in (0,1)} R(p,d) = \frac{1}{n} \cdot \frac{1}{4} = \frac{1}{4n}.
+    \]
+    Surprisingly, \(d(X) = \frac{X}{n}\) is \textbf{not} minimax under squared error loss. We can construct a rule with a lower worst-case risk.
+\end{ex}
+
+\myparagraph{Demonstration: A Randomized Estimator of a Binomial probability}
+To see why \(X/n\) is not minimax, we can construct a randomized rule that achieves a smaller maximum risk.
+
+Consider two base estimators:
+\begin{enumerate}[]
+\item  \(d(X) = \frac{X}{n}\): Risk is maximal at \(p=1/2\).
+\item  \(d'(X) \equiv \frac{1}{2}\): A constant estimator. Risk is
+    \[
+        R(p, d') = \mathsf{E}_{p}\left[\left( \frac{1}{2}-p \right) ^2\right] = \left(p - \frac{1}{2}\right)^2.
+    \]
+    This risk is zero at \(p=1/2\) and maximal at \(p \in \{0, 1\}\).
+\end{enumerate}
+
+We can create a trade--off by mixing these two. Define a randomized rule \(d_r\) that chooses \(d\) with probability \(1-\epsilon\) and \(d'\) with probability \(\epsilon\).
+Formally, let \(U \sim \text{Uniform}(0, 1)\) independent of \(X\):
+\[
+d_r(X,U) = \frac{X}{n} \mathbf{1}_{(0,1-\epsilon]}(U) + \frac{1}{2} \mathbf{1}_{(1-\epsilon,1)}(U).
+\]
+
+The risk of this randomized rule is the convex combination of the individual risks:
+\[
+\begin{split} 
+R(p,d_r) &= \mathsf{E}_{X,U} \Big[ \big( d_r(X,U) - p \big)^2 \Big] \\
+&= (1 - \epsilon) R(p,d) + \epsilon R(p,d') \\
+&= (1 - \epsilon) \frac{p(1-p)}{n} + \epsilon \left( p - \frac{1}{2} \right)^2.
+\end{split}
+\]
+
+By choosing \(\epsilon = \frac{1}{n+1}\), the risk becomes constant (flat) across all \(p\):
+\[
+R(p, d_r) = \frac{1}{4(n+1)}.
+\]
+Since \(\frac{1}{4(n+1)} < \frac{1}{4n}\), this randomized rule has a strictly lower worst-case risk than \(X/n\). Therefore, \(X/n\) cannot be minimax.
+
+\begin{remark}
+    We used a randomized rule here for intuition. Later, we will derive a deterministic minimax estimator for the Binomial model (the Hodges--Lehmann estimator) which relates closely to this logic.
+\end{remark}
+
+\section{Decision Rules With Constant Risk}
+\label{subsec:constant_risk}
+
+Finding minimax rules directly can be difficult. However, there is a powerful strategy that leverages Bayes rules. If we can find a Bayes rule whose risk function turns out to be constant (flat) across all parameters, we can conclude it is minimax.
+
+\begin{lemma}
+\label{lem:constant_risk}
+
+Suppose a decision rule \(d\) has constant risk, i.e., \(R(\theta, d) \equiv R(d)\) for all \(\theta \in \Theta\). Then:
+\begin{enumerate}
+    \item[(i)] If \(d\) is admissible, then \(d\) is minimax.
+    \item[(ii)] If \(d\) is Bayes (with respect to some prior \(\Pi\)), then \(d\) is minimax.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+    \leavevmode
+    \begin{enumerate}
+        \item[(i)] Let \(d'\) be any other decision rule. Since \(d\) is admissible, \(d'\) cannot be strictly better than \(d\). This implies that either \(d'\) has higher risk for some \(\theta\), or it has equal risk everywhere. In either case:
+        \[ \sup_{\theta} R(\theta, d') \ge R(d) = \sup_{\theta} R(\theta, d). \]
+        Thus, \(d\) minimizes the worst--case risk.
+        
+        \item[(ii)] This is the more practical condition. Let \(d\) be Bayes for prior \(\Pi\). For any rule \(d'\):
+        \[
+        \begin{split}
+            \sup_{\theta} R(\theta, d') &\ge \int_{\Theta} R(\theta, d') \, \mathrm{d}\Pi(\theta) = r(\Pi, d') \quad (\text{Max } \ge \text{ Average}) \\
+            &\ge r(\Pi, d) \quad (\text{Since } d \text{ is Bayes}) \\
+            &= \int_{\Theta} R(d) \, \mathrm{d}\Pi(\theta) = R(d) \quad (\text{Risk is constant}) \\
+            &= \sup_{\theta} R(\theta, d).
+        \end{split}
+        \]
+        Therefore, \(d\) is minimax.
+    \end{enumerate}
+\end{proof}
+
+
+
+\begin{ex}
+    [Binomial Model Minimax Estimator]
+    \label{ex:bmme}
+    
+    Consider \(X \sim \text{Bin}(n, \theta)\). We wish to estimate \(\theta \in [0, 1]\) under squared error loss \(L(\theta, a) = (\theta - a)^2\).
+    
+    We previously saw that the MLE \(X/n\) is not minimax. We will construct a minimax estimator by finding a Bayes rule with constant risk.
+    
+    \textbf{The Bayes Rule Family}
+    Consider the Conjugate Prior \(\Pi = \text{Beta}(\alpha, \beta)\). The Bayes estimator (posterior mean) is:
+    \[ \hat{\theta}_{\alpha,\beta}(X) = \frac{X+\alpha}{n+\alpha+\beta}. \]
+    
+    \textbf{The Risk Function}
+    Using the bias--variance decomposition:
+    \[
+    \begin{split}
+        R(\theta, \hat{\theta}_{\alpha,\beta}) &= \mathsf{E}_{\theta}\left[\left( \hat{\theta}_{\alpha,\beta}(X)-\theta \right) ^2\right] = \mathsf{Var}_{\theta} [\hat{\theta}_{\alpha,\beta}(X)] + (\mathsf{Bias}_{\theta}[\hat{\theta}_{\alpha,\beta}(X)])^2 \\
+        &= \mathsf{Var}_{\theta} \left[ \frac{X}{n+\alpha+\beta} \right] + \left( \mathsf{E} \left[ \frac{X+\alpha}{n+\alpha+\beta} \right] - \theta \right)^2 \\
+        &= \frac{n\theta(1-\theta)}{(n+\alpha+\beta)^2} + \left( \frac{n\theta+\alpha}{n+\alpha+\beta} - \theta \right)^2.
+    \end{split}
+    \]
+    Simplifying the bias term:
+    \[
+        \frac{n\theta+\alpha - \theta(n+\alpha+\beta)}{n+\alpha+\beta} = \frac{\alpha - \theta(\alpha+\beta)}{n+\alpha+\beta}.
+    \]
+    
+    Grouping terms by powers of \(\theta\), the risk becomes:
+    \[
+    R(\theta, \hat{\theta}_{\alpha,\beta}) = \frac{[(\alpha+\beta)^2 - n]\theta^2 + [n - 2\alpha(\alpha+\beta)]\theta + \alpha^2}{(n+\alpha+\beta)^2}.
+    \]
+    
+    \textbf{Enforcing Constant Risk}
+    For the risk to be constant (independent of \(\theta\)), the coefficients of \(\theta^2\) and \(\theta\) must be zero:
+    \begin{enumerate}
+        \item Coefficient of \(\theta^2\): \((\alpha+\beta)^2 - n = 0 \implies \alpha+\beta = \sqrt{n}\).
+        \item Coefficient of \(\theta\): \(n - 2\alpha(\alpha+\beta) = 0 \implies n - 2\alpha\sqrt{n} = 0 \implies \alpha = \sqrt{n}/2\).
+    \end{enumerate}
+    Since \(\alpha + \beta = \sqrt{n}\), it follows that \(\beta = \sqrt{n}/2\).
+    
+    \paragraph{Conclusion}
+    The estimator corresponding to prior parameters \(\alpha = \beta = \frac{\sqrt{n}}{2}\) is:
+    \[ \hat{\theta}_{\sqrt{n}/2,\sqrt{n}/2}(X) = \frac{X + \sqrt{n}/2}{n + \sqrt{n}}. \]
+    This estimator is Bayes and has constant risk. Therefore, by \autoref{lem:constant_risk}, it is minimax.
+    
+    The constant risk value is:
+    \[ R(\hat{\theta}_{\text{minimax}}) = \frac{\alpha^2}{(n+\alpha+\beta)^2} = \frac{n/4}{(n+\sqrt{n})^2} = \frac{1}{4(\sqrt{n}+1)^2}. \]
+    This is strictly smaller than the worst--case risk of the MLE (\(1/4n\)).
+\end{ex}
+
+\section{Least Favorable Distributions}
+\label{subsec:least_favorable}
+
+In \autoref{ex:bmme}, we derived the Bayes rule \(\hat{\theta}_{\alpha,\beta}(X)\) for the Binomial model. We found that for the specific choice \(\alpha = \beta = \frac{\sqrt{n}}{2}\), the risk of the Bayes rule was constant. By \autoref{lem:constant_risk}, this implied that the estimator was minimax.
+
+To apply this strategy generally for determining minimax estimators, we must ask: 
+
+\hspace{1cm}\emph{For which prior distribution is the Bayes rule likely to be minimax?}
+
+A minimax decision rule attempts to minimize the risk in the \emph{worst--case} scenario. Intuitively, we might expect the minimax rule to be the Bayes rule corresponding to the ``worst possible" prior distribution—the one that makes the average risk as high as possible. We characterize this distribution as being \textbf{least favorable}.
+
+\begin{notation}[]
+We use \(d_{\Pi}\) to denote a Bayes rule constructed under a given prior distribution \(\Pi\).
+\end{notation}
+
+\begin{definition}
+\label{def:least_favorable}
+A prior distribution \(\Pi\) is \textbf{least favorable} if
+\[
+r(\Pi, d_{\Pi}) \ge r(\Pi', d_{\Pi'}) \quad \text{for all prior distributions } \Pi'.
+\]
+In other words, the least favorable prior maximizes the minimal achievable Bayes risk.
+\end{definition}
+
+
+
+\begin{ex}
+    [Binomial Model]
+    Let \(X \sim \text{Binomial}(n, \theta)\) with \(\theta \in [0, 1]\).
+    The prior \(\text{Beta}\left(\frac{\sqrt{n}}{2}, \frac{\sqrt{n}}{2}\right)\) is least favorable under squared error loss. This prior puts significant mass where estimation is ``hardest" in an average sense to maximize the Bayes risk.
+\end{ex}
+
+The connection between minimaxity and least favorable priors is formalized in the following lemma.
+
+\begin{lemma}
+\label{lemma:least_favorable_condition}
+Let \(d_{\Pi}\) be a (unique) Bayes rule for prior \(\Pi\). If
+\[ r(\Pi, d_{\Pi}) = \sup_{\theta \in \Theta} R(\theta, d_{\Pi}), \]
+then:
+\begin{enumerate}
+    \item \(d_{\Pi}\) is (unique) minimax.
+    \item \(\Pi\) is a least favorable prior.
+\end{enumerate}
+\end{lemma}
+
+\begin{note}
+    The assumption \(r(\Pi, d_{\Pi}) = \sup_{\theta} R(\theta, d_{\Pi})\) is weaker than requiring constant risk. For example, \(\Pi\) could be a discrete distribution that puts all its mass on the specific values of \(\theta\) where the risk \(R(\theta, d_{\Pi})\) is maximal.
+\end{note}
+
+\begin{proof}
+    \textbf{1. Minimaxity of \(d_{\Pi}\)} \\
+    This follows the same argument as \autoref{lem:constant_risk} (ii). For any competitor rule \(d'\):
+    \[
+    \begin{split} 
+    \sup_{\theta} R(\theta, d') &\geq \int_{\Theta} R(\theta, d') \, \mathrm{d}\Pi(\theta) = r(\Pi, d') \\ 
+    &\stackrel{d_{\Pi} \text{ Bayes}}{\geq} r(\Pi, d_{\Pi}) \\
+    &= \sup_{\theta} R(\theta, d_{\Pi}) \quad (\text{by assumption}).
+    \end{split}
+    \]
+    Thus, \(d_{\Pi}\) has the smallest worst--case risk. If \(d_{\Pi}\) is the unique Bayes rule, strict inequality holds for \(d' \neq d_{\Pi}\) (on a set of positive measure), implying uniqueness.
+
+    \textbf{2. \(\Pi\) is Least Favorable} \\
+    Let \(\widetilde{\Pi}\) be any other prior distribution, and let \(d_{\widetilde{\Pi}}\) be its corresponding Bayes rule. By definition of the Bayes risk for \(\widetilde{\Pi}\):
+    \[
+    r(\widetilde{\Pi}, d_{\widetilde{\Pi}}) = \inf_{d'} r(\widetilde{\Pi}, d') \le r(\widetilde{\Pi}, d_{\Pi}).
+    \]
+    Now, expand the risk of \(d_{\Pi}\) under \(\widetilde{\Pi}\):
+    \[
+    r(\widetilde{\Pi}, d_{\Pi}) = \int_{\Theta} R(\theta, d_{\Pi}) \, \mathrm{d}\widetilde{\Pi}(\theta).
+    \]
+    Since the average of a function cannot exceed its supremum, we have:
+    \[
+    \int_{\Theta} R(\theta, d_{\Pi}) \, \mathrm{d}\widetilde{\Pi}(\theta) \leq \sup_{\theta} R(\theta, d_{\Pi}).
+    \]
+    Using the assumption that \(\sup_{\theta} R(\theta, d_{\Pi}) = r(\Pi, d_{\Pi})\), we combine the inequalities:
+    \[
+    r(\widetilde{\Pi}, d_{\widetilde{\Pi}}) \le r(\widetilde{\Pi}, d_{\Pi}) \le \sup_{\theta} R(\theta, d_{\Pi}) = r(\Pi, d_{\Pi}).
+    \]
+    Therefore, \(r(\Pi, d_{\Pi}) \ge r(\widetilde{\Pi}, d_{\widetilde{\Pi}})\), proving that \(\Pi\) is least favorable.
+\end{proof}
+
+\begin{remark}[]
+\leavevmode    
+\begin{itemize}
+    \item \textbf{Non-uniqueness of Priors:} A least favorable distribution is not unique in general. In the Binomial example, the Bayes estimator (posterior mean) depends only on the first \(n+1\) moments of \(\theta\) under \(\Pi\).
+    \[ d_{\Pi}(x) = \mathsf{E}[\theta|x] = \frac{\int \theta^{x+1} (1-\theta)^{n-x} \, \mathrm{d}\Pi(\theta)}{\int \theta^x (1-\theta)^{n-x} \, \mathrm{d}\Pi(\theta)}. \]
+    Different priors sharing these moments will yield the same estimator and same constant risk, thus qualifying as least favorable.
+    
+    \item \textbf{Dependence on Loss Function:} Minimax rules are highly sensitive to the chosen loss function.
+    \begin{itemize}
+        \item Under \textbf{Squared Error Loss} \(L(\theta, a) = (\theta-a)^2\), the standard MLE \(\frac{X}{n}\) is \textbf{not} minimax.
+        \item However, consider the weighted loss function:
+        \[ L(\theta, a) = \frac{(\theta - a)^2}{\theta(1 - \theta)}. \]
+        This loss penalizes errors near the boundaries (where variance is usually low) more heavily. Under this specific loss, the risk of \(\frac{X}{n}\) becomes constant. Since \(\frac{X}{n}\) is Bayes for the Uniform prior (Beta(1,1)), it implies that \(\frac{X}{n}\) \textbf{is} a minimax estimator for this weighted loss.
+    \end{itemize}
+\end{itemize}
+\end{remark}
+
+\section{Extended Bayes}
+\label{sec:extended_bayes}
+
+A least favorable distribution does not always exist. 
+
+Consider estimating the mean \(\theta\) of a normal distribution \(\mathcal{N}(\theta, 1)\) where \(\theta \in \mathbb{R}\). Intuitively, no value of \(\theta\) is harder to estimate than another, so a least favorable prior should be uniform over \(\mathbb{R}\). However, a uniform distribution on the entire real line is improper (unbounded measure).
+
+To handle such cases, we generalize the concept of a least favorable distribution to a \emph{sequence} of prior distributions.
+
+\begin{definition}
+\label{def:extended_bayes}
+A decision rule \(d\) is \textbf{extended Bayes} if there exists a sequence of prior distributions \((\Pi_m)_{m=1}^{\infty}\) such that
+\[
+\lim_{m \to \infty} \left( r(\Pi_m, d) - \inf_{d'} r(\Pi_m, d') \right) = 0.
+\]
+In simple terms, \(d\) acts like a limit of Bayes rules; the gap between its performance and the optimal Bayes performance vanishes along the sequence.
+\end{definition}
+
+\begin{remark}[]
+    Extended Bayes rules are connected to least favorable sequences of prior distributions. Let \(\left( \Pi_{m} \right) _{m=1}^{\infty}\)
+ be a sequence of priors with minimal average risks \(r_{\Pi_{m}}=\inf_{d'}r(\Pi_{m},d')\). Then, \(\left( \Pi_{m} \right) ^{\infty}_{m=1}\) is
+a least favorable sequence of priors if  \(\lim\limits_{m \to \infty} r_{\Pi_{m}} =: r < \infty\) and 
+\[
+    r \ge r(\Pi',d_{\Pi'})
+\]
+for any prior \(\Pi'\).
+\end{remark}
+
+\begin{lemma}
+\label{lem:extended_bayes_minimax}
+
+Suppose a decision rule \(d\) has constant risk \(R(d)\). If \(d\) is extended Bayes, then \(d\) is minimax.
+\end{lemma}
+
+\begin{proof}
+    By the definition of extended Bayes, for any \(\epsilon > 0\), there exists an \(m\) such that:
+    \[ r(\Pi_m, d) \le \inf_{d'} r(\Pi_m, d') + \epsilon. \]
+    
+    Let \(d'\) be any competitor rule. Since \(d\) has constant risk, its average risk under any prior is just that constant value: \(r(\Pi_m, d) = R(d)\).
+    
+    Using the fact that the average risk of \(d'\) is bounded by its worst-case risk (\(r(\Pi_m, d') \le \sup_\theta R(\theta, d')\)), we have:
+    \[
+    \begin{split}
+        R(d) = \sup\limits_{\theta} R(\theta,d) = r(\Pi_m, d) &\le r(\Pi_m, d') + \epsilon \\
+        &\le \sup_{\theta} R(\theta, d') + \epsilon.
+    \end{split}
+    \]
+    Since this holds for any \(\epsilon > 0\), letting \(\epsilon \to 0\) yields \(R(d) = \sup\limits_{\theta} R(\theta,d)  \le \sup_{\theta} R(\theta, d')\). Thus, \(d\) is minimax.
+\end{proof}
+
+
+
+\begin{ex}[Multivariate Gaussian Means]
+\label{ex:multivariate_gaussian}
+
+Let \(\mathbf{X}_1, \dots, \mathbf{X}_n\) be i.i.d. random vectors in \(\mathbb{R}^p\), distributed as \(\mathcal{N}_p(\boldsymbol{\theta}, \sigma^2 \mathbf{I})\) with \(\sigma^2 > 0\) known.
+
+So here we have multivariate observations \(\bs{X}_{i} = (X_{i1}, \dots, X_{ip})^{T}\) where all \(X_{ij}\) are independent with \(\mathsf{E}_{}\left[X_{ij}\right] =\theta_{j}\) and \(\mathsf{Var}_{}\left[X_{ij}\right] =\sigma^2\).
+
+We wish to estimate the vector \(\boldsymbol{\theta}\) under the squared Euclidean error loss:
+\[ L(\boldsymbol{\theta}, \mathbf{a}) = \|\boldsymbol{\theta} - \mathbf{a}\|^2 = \sum_{j=1}^{p} (\theta_j - a_j)^2. \]
+
+\textbf{Claim:} The sample mean vector \(\overline{\mathbf{X}}_n\) is minimax.
+
+\textbf{Step 1: Verify Constant Risk}
+
+The risk of \(\overline{\mathbf{X}}_n\) is the sum of the variances of its components:
+\[
+R(\boldsymbol{\theta}, \overline{\mathbf{X}}_n) = \mathsf{E}_{X\sim \mathsf{P}_{\theta}} \left[ \sum_{j=1}^p (\overline{X}_{j,n} - \theta_j)^2 \right] = \sum_{j=1}^p \mathsf{Var}(\overline{X}_{j,n}) = \sum_{j=1}^p \frac{\sigma^2}{n} = \frac{p\sigma^2}{n}.
+\]
+This risk is independent of \(\boldsymbol{\theta}\), so it is constant.
+
+\textbf{Step 2: Show it is Extended Bayes}
+
+We construct a sequence of priors \(\Pi_m = \mathcal{N}_p(\mathbf{0}, \tau_m^2 \mathbf{I})\) where \(\tau_m^2 \to \infty\). These priors become ``flatter" and approach a uniform distribution over \(\mathbb{R}^p\).
+
+The Bayes rule for \(\Pi_m\) is the posterior mean (a shrinkage estimator):
+\[
+d_{\Pi_m}(\mathbf{X}) = \mathsf{E}_{X\sim \mathsf{P}_{\theta}}\left[\bs{\theta}|\bs{X}_{1}, \dots, \bs{X}_{n}\right] = \frac{n/\sigma^2}{n/\sigma^2 + 1/\tau_m^2} \overline{\mathbf{X}}_n.
+\]
+The Bayes risk (minimum average risk) for \(\Pi_m\) is the sum of the posterior variances. Since the posterior covariance matrix is diagonal with entries \((n/\sigma^2 + 1/\tau_m^2)^{-1}\), the Bayes risk is, using that \(\mathsf{Var}_{\Pi_{m}}\left[\theta_{j}|\bs{X}_{1}, \dots, \bs{X}_{n}\right] = \left( \frac{n}{\sigma^2}+\frac{1}{\tau ^2_{m}} \right)^{-1}  \) does not depend on the data
+
+\[
+	\begin{split} r(\Pi_m, d_{\Pi_m}) &= \mathsf{E}_{\theta \sim \Pi_m} \Big[ R(\theta, d_{\Pi_m}(\mathbf{X}_1, \dots, \mathbf{X}_n)) \Big] \\ &= \mathsf{E}_{\theta \sim \Pi_m} \Big[ \mathsf{E}_{\mathbf{X} \sim \mathsf{P}_{\theta}} \big[ \| d_{\Pi_m}(\mathbf{X}_1, \dots, \mathbf{X}_n) - \theta \|^2 \, \big] \Big] \\ \overset{(\mathsf{Fubini})}{=} &\; \mathsf{E}_{\mathbf{X} \sim \mathsf{P}_\Pi} \Big[ \mathsf{E}_{\theta \sim \Pi_m(\cdot \mid \mathbf{X})} \big[ \| d_{\Pi_m}(\mathbf{X}_1, \dots, \mathbf{X}_n) - \theta \|^2 \, \big| \, \mathbf{X}_1, \dots, \mathbf{X}_n \big] \Big] \\ &= \mathsf{E}_{\mathbf{X} \sim \mathsf{P}_\Pi} \Big[ \mathsf{E}_{\theta \sim \Pi_m(\cdot \mid \mathbf{X})} \big[ \| \theta - \mathsf{E}[\, \theta \, | \, \mathbf{X}_1, \dots, \mathbf{X}_n] \|^2 \, \big| \, \mathbf{X}_1, \dots, \mathbf{X}_n \big] \Big] \\ &= \mathsf{E}_{\mathbf{X} \sim \mathsf{P}_\Pi} \Bigg[ p \cdot \frac{1}{\frac{n}{\sigma^2} + \frac{1}{\tau_m^2}} \Bigg] = p \cdot \frac{1}{\frac{n}{\sigma^2} + \frac{1}{\tau_m^2}} 
+%        \\&\implies
+%r(\Pi_m, d_{\Pi_m}) = p \cdot \frac{1}{\frac{n}{\sigma^2} + \frac{1}{\tau_m^2}}.
+    \end{split}
+\]
+As \(m \to \infty\) (so \(\tau_m \to \infty\)), the term \(1/\tau_m^2 \to 0\). Thus:
+\[
+\lim_{m \to \infty} r(\Pi_m, d_{\Pi_m}) = p \frac{\sigma^2}{n}.
+\]
+Since the minimum Bayes risk converges to the constant risk of \(\overline{\mathbf{X}}_n\), the sample mean is extended Bayes. 
+
+\[\begin{split} r(\Pi_m, \overline{X}_n) &= \mathsf{E}_{\theta \sim \Pi_m} \big[ \, R(\theta, \overline{X}_n) \, \big] = \mathsf{E}_{\theta \sim \Pi_m} \big[ \mathsf{E}_{X \sim \mathsf{P}_\theta} \big[ \| \overline{X}_n - \theta \|^2 \big] \big] \\ &= \mathsf{E}_{\theta \sim \Pi_m} \Big[ p \frac{\sigma^2}{n} \Big] = p \, \frac{\sigma^2}{n}. \end{split}\]
+
+By \autoref{lem:extended_bayes_minimax}, \(\overline{\mathbf{X}}_n\) is minimax.
+\end{ex}
+
+\begin{ex}[Gaussian Model with unknown variance]
+    
+Suppose \(X_1, \dots, X_n \sim \mathcal{N}(\mu, \sigma^2)\) where both \(\mu \in \R\) and \(\sigma^2 \in (0, \infty)\) are unknown.
+If we estimate \(\mu\) under standard squared error loss \((\mu - a)^2\):
+
+\begin{itemize}
+    \item The risk of \(\overline{X}_n\) is \(\sigma^2/n\).
+    \item Since \(\sigma^2\) can be arbitrarily large, \(\sup_{\mu, \sigma} R((\mu, \sigma), \overline{X}_n) = \infty\).
+    \item In fact, the minimax risk for this problem is infinite; no estimator has a finite worst-case risk over the unbounded variance space.
+\end{itemize}
+
+\textbf{Solutions:}
+\begin{enumerate}[label=(\roman*)]
+    \item \textbf{Bounded Variance:} Assume \(\sigma^2 \le M\). The minimax analysis becomes feasible.
+    \item \textbf{Scaled Loss Function:} Is squared error loss reasonable? Change the loss function to penalize errors relative to the noise level:
+    \[ L((\mu, \sigma), a) = \frac{(\mu - a)^2}{\sigma^2}. \]
+    Under this loss, the risk of \(\overline{X}_n\) is \(1/n\) (constant). It can be shown that \(\overline{X}_n\) is minimax for this specific loss.
+\end{enumerate}
+\end{ex}
+
+\section{Admissibility}
+\label{sec:admissibility}
+
+We have previously discussed strict requirements for estimators, such as being Minimax (best worst-case risk) or Bayes (best average risk). Admissibility is a ``bare minimum" requirement: an estimator is admissible if no other estimator is uniformly strictly better.
+
+This section connects these concepts, providing tools to prove that an estimator is admissible by showing it is Unique Bayes, Unique Minimax, or Extended Bayes.
+
+\subsection{Admissibility of Unique Bayes and Minimax Rules}
+\label{subsec:unique_bayes_minimax}
+
+It is often easier to prove that a rule is Unique Bayes or Unique Minimax than to prove admissibility directly. \autoref{lemma:unique_admissibility} provides the bridge.
+
+\begin{lemma}[]
+\label{lemma:unique_admissibility}
+
+\leavevmode
+\begin{enumerate}
+    \item[(i)] If \(d\) is unique minimax, then \(d\) is admissible.
+    \item[(ii)] If \(d\) is unique Bayes, then \(d\) is admissible.
+\end{enumerate}
+\end{lemma}
+
+\begin{remark}[]
+    \autoref{lemma:least_favorable_condition} gives conditions for a rule to be unique minimax. See the exercises for conditions regarding unique Bayes rules.
+\end{remark}
+
+\begin{proof}
+The proof relies on contradiction. Suppose \(d\) is not admissible. Then there exists a rule \(d'\) that is strictly better than \(d\). This means:
+\[ R(\theta, d') \le R(\theta, d) \quad \forall \theta \in \Theta, \]
+with strict inequality for at least one \(\theta\).
+
+\begin{enumerate}
+    \item[(i)] \textbf{Minimax Case:}
+    If \(R(\theta, d') \le R(\theta, d)\) for all \(\theta\), then the worst-case risks satisfy:
+    \[ \sup_{\theta} R(\theta, d') \le \sup_{\theta} R(\theta, d). \]
+    Since \(d\) is unique minimax, no other rule \(d'\) can match its worst-case risk unless \(d' = d\) almost everywhere. If \(d'\) were strictly better, it would either have a lower max risk (contradicting \(d\)'s optimality) or equal max risk (contradicting \(d\)'s uniqueness).
+    
+    \item[(ii)] \textbf{Bayes Case:}
+    Similarly, integrating the risk inequality with respect to the prior \(\Pi\):
+    \[ r(\Pi, d') = \int R(\theta, d') \, \mathrm{d}\Pi(\theta) \le \int R(\theta, d) \, \mathrm{d}\Pi(\theta) = r(\Pi, d). \]
+    Since \(d\) is unique Bayes, it is the \emph{unique} minimizer of the Bayes risk. Therefore, \(d'\) cannot satisfy this inequality unless \(d' = d\) almost surely. Thus, no strictly better rule \(d'\) can exist.
+\end{enumerate}
+\end{proof}
+
+
+
+\subsection{Admissibility of Bayes Rules}
+\label{subsec:bayes_admissibility}
+
+We can relax the ``uniqueness" requirement if we introduce continuity assumptions on the risk function and the prior.
+
+\begin{theo}
+\label{thm:bayes_admissibility_continuous}
+Consider a model \(\{\mathsf{P}_{\theta} : \theta \in \Theta\}\) with an open parameter space \(\Theta \subset \mathbb{R}^k\). Suppose that:
+\begin{enumerate}
+    \item[(i)] All decision rules \(d\) have a continuous risk function \(\theta \mapsto R(\theta, d)\).
+    \item[(ii)] \(\Pi\) is a prior distribution with \(\Pi(\mathcal{U}) > 0\) for all open subsets \(\mathcal{U} \subseteq \Theta\). (The prior has ``full support").
+\end{enumerate}
+If \(d_{\Pi}\) is a Bayes rule for prior \(\Pi\) with finite Bayes risk \(r(\Pi, d_{\Pi}) < \infty\), then \(d_{\Pi}\) is admissible.
+\end{theo}
+
+\begin{note}
+The continuity assumption (i) holds for exponential families and squared error loss.
+\end{note}
+
+\begin{proof}
+Assume for the sake of contradiction that \(d'\) is strictly better than \(d_{\Pi}\).
+This implies:
+\begin{enumerate}[]
+\item  \(R(\theta, d') \le R(\theta, d_{\Pi})\) for all \(\theta\).
+\item  There exists some \(\theta_0 \in \Theta\) such that \(R(\theta_0, d') < R(\theta_0, d_{\Pi})\).
+\end{enumerate}
+
+Let \(\eta = R(\theta_0, d_\Pi) - R(\theta_0, d') > 0\) be the risk gap at \(\theta_0\).
+
+
+
+By the continuity of the risk functions, this gap must persist in a neighborhood around \(\theta_0\). There exists an \(\epsilon > 0\) such that for all \(\theta\) with \(\|\theta - \theta_0\| < \epsilon\):
+\[ R(\theta, d') \le R(\theta, d_{\Pi}) - \frac{\eta}{2}. \]
+
+Now, consider the Bayes risk of \(d'\):
+\[
+\begin{split} 
+r(\Pi, d') &= \int_{\Theta} R(\theta, d') \, \mathrm{d}\Pi(\theta) \\ 
+&= \int_{\|\theta - \theta_0\| < \epsilon} R(\theta, d') \, \mathrm{d}\Pi(\theta) + \int_{\|\theta - \theta_0\| \ge \epsilon} R(\theta, d') \, \mathrm{d}\Pi(\theta).
+\end{split}
+\]
+Substituting the bounds:
+\begin{itemize}
+    \item Inside the \(\epsilon\)-ball: \(R(\theta, d') \le R(\theta, d_{\Pi}) - \eta/2\).
+    \item Outside the \(\epsilon\)-ball: \(R(\theta, d') \le R(\theta, d_{\Pi})\).
+\end{itemize}
+\[
+\begin{split}
+r(\Pi, d') &\leq \int_{\|\theta - \theta_0\| < \epsilon} \left( R(\theta, d_\Pi) - \frac{\eta}{2} \right) \, \mathrm{d}\Pi(\theta) + \int_{\|\theta - \theta_0\| \ge \epsilon} R(\theta, d_\Pi) \, \mathrm{d}\Pi(\theta) \\
+&= \int_{\Theta} R(\theta, d_\Pi) \, \mathrm{d}\Pi(\theta) - \int_{\|\theta - \theta_0\| < \epsilon} \frac{\eta}{2} \, \mathrm{d}\Pi(\theta) \\
+&= r(\Pi, d_\Pi) - \frac{\eta}{2} \cdot \Pi \big( \{\theta : \|\theta - \theta_0\| < \epsilon \} \big).
+\end{split}
+\]
+By assumption (ii), the prior mass of the open \(\epsilon\)-ball is strictly positive. Therefore:
+\[ r(\Pi, d') < r(\Pi, d_\Pi). \]
+This contradicts the fact that \(d_{\Pi}\) is Bayes (minimizes the Bayes risk). Thus, \(d_{\Pi}\) must be admissible.
+\end{proof}
+
+\subsubsection{Admissibility of Extended Bayes Rules}
+
+We can further relax the requirement to extended Bayes rules. However, we need a condition to ensure the prior mass on open sets does not vanish ``too fast" relative to the convergence of the risk gap.
+
+\begin{theo}
+\label{thm:extended_bayes_admissibility}
+Consider a model \(\{\mathsf{P}_{\theta} \: : \: \theta\in \Theta\} \) with open parameter space \(\Theta \subset \mathbb{R}^k\). Suppose that:
+\begin{enumerate}
+    \item[(i)] All decision rules \(d'\) have continuous risk functions \(\theta \mapsto R(\theta,d') \).
+    \item[(ii)] \(d\) is extended Bayes with respect to a sequence of priors \((\Pi_m)_{m=1}^{\infty}\) such that for all open subsets \(\mathcal{U} \subseteq \Theta\):
+    \[ \lim_{m \to \infty} \frac{r(\Pi_m, d) - \inf_{d'} r(\Pi_m, d')}{\Pi_m(\mathcal{U})} = 0. \]
+\end{enumerate}
+Then \(d\) is admissible.
+\end{theo}
+
+\begin{proof}
+Assume there exists a rule \(\tilde{d}\) that is strictly better than \(d\).
+By the same continuity argument as \autoref{thm:bayes_admissibility_continuous}, there exists an \(\eta > 0\) and an open subset \(\mathcal{U} \subseteq \Theta\) such that the risk gap on \(\mathcal{U}\) is at least \(\eta\). This implies:
+\[ r(\Pi_m, \tilde{d}) \le r(\Pi_m, d) - \eta \cdot \Pi_m(\mathcal{U}) \quad \forall m \ge 1. \]
+Rearranging this inequality:
+\[ r(\Pi_m, d) - r(\Pi_m, \tilde{d}) \ge \eta \cdot \Pi_m(\mathcal{U}). \]
+Dividing by \(\Pi_m(\mathcal{U})\) (assuming it is non-zero):
+\[ \frac{r(\Pi_m, d) - r(\Pi_m, \tilde{d})}{\Pi_m(\mathcal{U})} \ge \eta. \]
+Since the optimal Bayes risk \(\inf_{d'} r(\Pi_m, d')\) is certainly less than or equal to \(r(\Pi_m, \tilde{d})\), we have:
+\[ \frac{r(\Pi_m, d) - \inf_{d'} r(\Pi_m, d')}{\Pi_m(\mathcal{U})} \ge \frac{r(\Pi_m, d) - r(\Pi_m, \tilde{d})}{\Pi_m(\mathcal{U})} \ge \eta. \]
+This contradicts assumption (ii), which states that this ratio must converge to 0. Therefore, \(d\) is admissible.
+\end{proof}
+
+\section{Sample and Shrinkage Estimators}
+\label{sec:sample_shrinkage}
+
+Consider a single observation \(X \sim \mathcal{N}(\theta, 1)\) with known variance.
+(Note: You can think of having \(X_1, \dots, X_n\) i.i.d. normal and reducing to the sufficient and complete statistic \(X \equiv \overline{X}_n\) by the Rao-Blackwell Theorem).
+
+We wish to estimate the mean \(\theta \in \mathbb{R}\) under squared error loss \(L(\theta, a) = (\theta - a)^2\).
+
+\begin{pro}
+\label{prop:affine_admissibility}
+The affine estimator \(d_{a,b}(X) = aX + b\) with \(a,b \in \mathbb{R}\) is admissible if and only if:
+\begin{enumerate}[label=\roman*)]
+    \item \label{ite:pro_1} \(0 \le a < 1\), or
+    \item \(a = 1\) and \(b = 0\) (so \(d_{a,b}(X) = X\)).
+\end{enumerate}
+\end{pro}
+
+\begin{remark}[Shrinkage Estimators]
+    In case \ref{ite:pro_1} where \(a \in [0, 1)\), the estimator can be rewritten as:
+\[ d_{a,b}(X) = aX + b = aX + (1-a) \frac{b}{1-a}. \]
+This is a convex combination of the data \(X\) and a constant \(\theta_0 = \frac{b}{1-a}\). This is known as a \textbf{shrinkage estimator} because it ``shrinks" the observation towards the value \(\theta_0\).
+\end{remark}
+
+
+
+\begin{proof}
+First, we derive the risk function for any affine estimator \(d_{a,b}(X)\).
+\[
+\begin{split}
+R(\theta, d_{a,b}) &= \mathsf{Var}_{\theta}[aX + b] + (\mathsf{bias}_{\theta}(aX + b))^2 \\
+&= a^2 \cdot \mathsf{Var}[X] + (a\theta + b - \theta)^2 \\
+&= a^2 + (b - \theta(1 - a))^2.
+\end{split}
+\]
+
+\textbf{1. Inadmissibility (Necessity)}
+
+We show that if the conditions are not met, the estimator is dominated.
+
+\begin{itemize}
+    \item \textbf{Case \(a > 1\):}
+    The risk is \(R(\theta, d_{a,b}) \ge a^2 > 1\).
+    Since the standard estimator \(X\) (where \(a=1, b=0\)) has constant risk \(1\), \(X\) strictly dominates \(d_{a,b}\).
+    
+    \item \textbf{Case \(a = 1, b \neq 0\):}
+    The risk is \(R(\theta, d_{a,b}) = 1^2 + b^2 > 1\).
+    Again, \(X\) strictly dominates \(d_{a,b}\).
+    
+    \item \textbf{Case \(a < 0\):}
+    Here \(1-a > 1\). Compare \(d_{a,b}\) to the constant estimator \(\tilde{d}(x) \equiv \frac{b}{1-a}\).
+    The risk of \(d_{a,b}\) is:
+    \[ R(\theta, d_{a,b}) > (b - \theta(1-a))^2 = (1-a)^2 \left( \frac{b}{1-a} - \theta \right)^2. \]
+    Since \((1-a)^2 > 1\), this is strictly larger than \((\frac{b}{1-a} - \theta)^2\), which is the risk of the constant estimator \(\tilde{d}\). Thus, \(d_{a,b}\) is inadmissible.
+\end{itemize}
+
+\textbf{2. Admissibility (Sufficiency)}
+
+\textbf{Case} \ref{ite:pro_1}: \(0 \le a < 1\)
+\begin{itemize}
+    \item If \(a=0\), then \(d_{a,b}(X) = b\). This is a constant estimator, which is admissible (it is the unique Bayes rule for a point mass prior at \(b\), or see Example 8.1).
+    \item If \(0 < a < 1\), we show \(d_{a,b}\) is a Bayes estimator. Consider a normal prior \(\Pi = \mathcal{N}(c, \tau^2)\). The Bayes rule is:
+    \[ d_{\Pi}(X) = \frac{\tau^2}{\tau^2 + 1} X + c \frac{1}{\tau^2 + 1}. \]
+    We can match coefficients by setting \(\frac{\tau^2}{\tau^2+1} = a\) (which implies \(\tau^2 = \frac{a}{1-a}\)) and choosing \(c\) such that the intercept matches \(b\).
+    Since \(d_{a,b}\) is a Bayes estimator with finite risk on an open parameter space (with continuous risk), it is admissible by \autoref{thm:bayes_admissibility_continuous} .
+\end{itemize}
+
+\textbf{Case} ii): \(a=1, b=0\) \textbf{(The Sample Mean)}
+
+The estimator \(d_{1,0}(X) = X\) is not Bayes for any proper prior (requires infinite variance). We prove admissibility using \autoref{thm:extended_bayes_admissibility}  by showing it is extended Bayes w.r.t. \((\Pi_{m})^{\infty}_{m=1}\) for \(\Pi_{m} = \cc{N}(0,\tau ^2_{m})\) with \(\tau ^2_{m} \to \infty\); as we have shown when proving minimaxity of the Gaussian sample mean.
+
+Specifically, we take \(\tau ^2_{m}=m\).
+ 
+Consider then the sequence of priors \(\Pi_m = \mathcal{N}(0, m)\).
+The Bayes rule for \(\Pi_m\) is
+\[
+    d_{\Pi_m}(X) = \frac{m}{m+1}X .
+\]
+
+The rule \(d_{\Pi_{m}}\) has risk 
+\[
+    R(\theta,d_{\Pi_{m}}) = \left( \frac{m}{m+1} \right) ^2 \underbrace{\mathsf{Var}_{\theta}\left[X\right]}_{=1} + \underbrace{\left( \frac{m}{m+1}\theta-\theta \right) ^2}_{\text{bias}} = \frac{m^2+\theta^2}{(m+1)^2},
+\]
+and, since \(\mathsf{E}_{\Pi_{m}}\left[\theta^2\right] = \mathsf{Var}_{\Pi_{m}}\left[\theta\right] =m\),
+the Bayes risk for \(d_{\Pi_m}\) is:
+\[
+	r(\Pi_m, d_{\Pi_m}) = \frac{m^2+\mathsf{E}_{\Pi_{m}}\left[\theta^2\right] }{(m+1)^2}= \frac{m^2+m}{(m+1)^2}= \frac{m}{m+1}.
+\]
+The risk of our estimator \(d_{1,0}(X) = X\) is constant \(R(\theta, X) = \mathsf{Var}_{\theta}\left[X\right]  = 1\), so its average risk is also \(r(\Pi_m, X) = 1\) for all \(m\).
+
+We now need to show that 
+\[
+    \frac{r(\Pi_{m},d_{1,0}) - r(\Pi_{m},d_{\Pi_{m}})}{\Pi_{m}(\cc{U })} \underset{m\to \infty}{\longrightarrow} 0 \quad \forall \: \cc{U }\subseteq \R \text{ open}.
+\]
+
+
+The ``risk gap" is:
+\[ r(\Pi_m, X) - r(\Pi_m, d_{\Pi_m}) = 1 - \frac{m}{m+1} = \frac{1}{m+1}. \]
+
+To apply \autoref{thm:extended_bayes_admissibility}, we must show that for any open set \(\mathcal{U} \subseteq \mathbb{R}\):
+\[ \lim_{m \to \infty} \frac{1/(m+1)}{\Pi_m(\mathcal{U})} = 0. \]
+
+It suffices to consider an open interval \(\mathcal{U} = (u, u+h)\) with \(h > 0\).
+
+Let \(\phi(x)\) and \(\Phi(x)\) be the density and d.f. of the standard normal distribution, respectively.
+Then the probability of this interval under \(\Pi_m = \mathcal{N}(0, m)\) is:
+\[ 
+    \begin{split}
+        \Pi_m((u, u+h)) &= \Phi\left(\frac{u+h}{\sqrt{m}}\right) - \Phi\left(\frac{u}{\sqrt{m}}\right)\\
+%                        &= \phi\left( \frac{u}{\sqrt{m} } \right) \cdot \frac{h}{\sqrt{m} }+o \left( \frac{1}{\sqrt{m} } \right) .
+    \end{split}
+\]
+Using a Taylor expansion (or the Mean Value Theorem) around 0 as \(m \to \infty\):
+
+%\[
+%    \phi \left( \frac{u}{\sqrt{m} } \right) \underset{m\to \infty}{\longrightarrow} \phi(0) = \frac{1}{\sqrt{2\pi} }.
+%\]
+%Substituting,
+\[ 
+\Pi_m((u, u+h)) \approx \phi(0) \cdot \left( \frac{u+h}{\sqrt{m}} - \frac{u}{\sqrt{m}} \right) = \frac{1}{\sqrt{2\pi}} \frac{h}{\sqrt{m}}. 
+\]
+Thus, for large \(m\), \(\Pi_m(\mathcal{U})\) behaves like \(C/\sqrt{m}\).
+Substituting this into the limit condition:
+\[ 
+\frac{r(\Pi_m, X) - r(\Pi_m, d_{\Pi_m})}{\Pi_m(\mathcal{U})} \approx \frac{\frac{1}{m+1}}{\frac{C}{\sqrt{m}}} \approx \frac{\sqrt{m}}{m} = \frac{1}{\sqrt{m}} \xrightarrow{m \to \infty} 0. 
+\]
+Therefore, \(X\) is admissible.
+\end{proof}
+
+\subsection{Estimation in Higher Dimensions}
+\label{subsec:higher_dimensions}
+
+Suppose we have a multivariate observation \(\mathbf{X} = (X_1, \dots, X_p)^{\top} \sim \mathcal{N}_p(\boldsymbol{\theta}, \mathbf{I})\) with \(\boldsymbol{\theta} \in \mathbb{R}^p\).
+This implies that the components \(X_1, \dots, X_p\) are independent with \(X_j \sim \mathcal{N}(\theta_j, 1)\).
+
+Consider the estimation of the mean vector \(\boldsymbol{\theta}\) under the squared error loss:
+\[
+L(\boldsymbol{\theta}, \mathbf{a}) = \|\boldsymbol{\theta} - \mathbf{a}\|^2 = \sum_{j=1}^{p} (\theta_j - a_j)^2.
+\]
+
+The natural estimator (which is both the MLE and UMVUE) is simply the observation vector itself, \(\mathbf{X}\). Its risk is the sum of the variances of its components:
+\[
+R(\boldsymbol{\theta}, \mathbf{X}) = \mathsf{E}_{\boldsymbol{\theta}} \big[ \| \mathbf{X} - \boldsymbol{\theta} \|^2 \big] = \sum_{j=1}^p \mathsf{E}_{\theta_j} \big[ (X_j - \theta_j)^2 \big] = \sum_{j=1}^p \mathsf{Var}[X_j] = p.
+\]
+
+We have previously shown that \(\mathbf{X}\) is admissible if \(p = 1\). It turns out that \(\mathbf{X}\) is also admissible if \(p = 2\) (see Lehmann and Casella 1998, Exercise 5.4.5).
+
+\paragraph{Stein's Paradox}
+The situation changes drastically in higher dimensions.
+\begin{center}
+    \textbf{If \(p \ge 3\), then \(\mathbf{X}\) is inadmissable.}
+\end{center}
+
+This result is known as \textbf{Stein's Paradox}. It was considered paradoxical because, for a long time, the Maximum Likelihood Estimator (MLE) was believed to be the optimal estimator in such standard settings. While \(\mathbf{X}\) has desirable properties like unbiasedness, for \(p \ge 3\) there exist estimators that strictly dominate it (i.e., have lower risk for all \(\boldsymbol{\theta}\)).
+
+
+\begin{ex}[Batting averages in baseball]
+\label{ex:baseball}
+
+To illustrate a scenario where independent parameters are estimated simultaneously, consider the 1990 batting averages of 18 Major League Baseball players.
+Let \(Z_i\) be the batting average of player \(i\) after \(n_i\) times at bat. We apply a variance-stabilizing transformation\footnote{This transformation improves the accuracy of the normal approximation for Binomial counts.} to obtain \(X_i\):
+\[
+X_i = \sqrt{n_i} \arcsin(2Z_i - 1).
+\]
+To a good approximation, we can model \(X_i \sim \mathcal{N}(\theta_i, 1)\).
+We treat the true mean \(\theta_i\) as the transformed career batting average \(\pi_i\):
+\[
+\theta_i = \sqrt{n_i} \arcsin(2\pi_i - 1).
+\]
+
+\begin{table}[h]
+\centering
+\label{tab:baseball_data}
+\begin{tabular}{lccc}
+\hline
+\textbf{Player} & {\(n_i\)} & {\(Z_i\)} & {\(\pi_{i}\)} \\
+\hline
+Baines      & 415 & 0.284 & 0.289 \\
+Barfield    & 476 & 0.246 & 0.256 \\
+Bell        & 583 & 0.254 & 0.265 \\
+Biggio      & 555 & 0.276 & 0.287 \\
+Bonds       & 519 & 0.301 & 0.297 \\
+Bonilla     & 625 & 0.280 & 0.279 \\
+Brett       & 544 & 0.329 & 0.305 \\
+Brooks Jr.  & 568 & 0.266 & 0.269 \\
+Browne      & 513 & 0.267 & 0.271 \\
+\hline
+\end{tabular}
+\caption{Batting averages for \(p=9\) baseball players (subset). \(n_i\) is times at bat, \(Z_i\) is 1990 average, \(\pi_i\) is career average.
+Taken from Samworth(2012)}
+\end{table}
+
+In this example, even though the players' performances are independent, Stein's result suggests that estimating their averages jointly (using information from the whole group) can lead to a lower total squared error than estimating each one individually using only their own average \(X_i\).
+\end{ex}
+
+\section{Inadmissibility of the MLE for \texorpdfstring{$p \ge 3$}{p >= 3}}
+
+TODO: Improve this section.
+
+\subsection{Geometric Intuition}
+
+In lower dimensions ($p=1, 2$), the Maximum Likelihood Estimator (MLE) $\bs{X}$ is admissible. However, in higher dimensions ($p \ge 3$), the squared length of the observation vector $\bs{X}$ tends to be significantly larger than the squared length of the true parameter $\bs{\theta}$.
+
+Consider the expectation of the squared norm of $\bs{X}$:
+\[
+\E_{\theta}[\|\bs{X}\|^2] = \E_{\theta}\bigg[\sum_{j=1}^p X_j^2\bigg] = \sum_{j=1}^p \E_{\theta}\big[X_j^2\big] = \sum_{j=1}^p (\theta_j^2 + 1) = \|\bs{\theta}\|^2 + p.
+\]
+The term $+p$ represents a systematic bias in the length. As $p$ grows, $\|\bs{X}\|^2$ becomes an increasingly poor estimate of $\|\bs{\theta}\|^2$ because the ``noise" (variance) accumulates across all dimensions, pushing the vector $\bs{X}$ further away from the origin than $\bs{\theta}$ is.
+
+
+
+\textbf{Idea:} Since $\bs{X}$ is ``too long" on average, we should construct an estimator that shrinks $\bs{X}$ towards the origin (or another target). Consider the shrinkage estimator:
+\[
+T^b(\bs{X}) := \left(1 - \frac{b}{\|\bs{X}\|^2}\right) \bs{X}, \quad \text{for } b > 0.
+\]
+Here, the shrinkage factor $1 - b/\|\bs{X}\|^2$ is data-dependent: we shrink more when $\|\bs{X}\|$ is small and less when it is large.
+
+%\subsection{The James-Stein Theorem}
+
+\begin{theo}[James and Stein, 1961]
+\label{thm:james_stein}
+If \(p \ge 3\) and \(0 < b < 2(p-2)\), then for all \(\bs{\theta} \in \mathbb{R}^p\), the risk under squared error loss is:
+\[
+R(\bs{\theta}, T^b) = p - b\Big(2(p-2) - b\Big) \cdot \E_{\bs{\theta}}\bigg[\frac{1}{\|\bs{X}\|^2}\bigg].
+\]
+Since the term subtracted is strictly positive, $R(\bs{\theta}, T^b) < p = R(\bs{\theta}, \bs{X})$ for all $\bs{\theta}$. Thus, $\bs{X}$ is inadmissible.
+\end{theo}
+
+
+
+%\subsubsection{Proof of the James-Stein Theorem}
+
+\begin{proof}[of \autoref{thm:james_stein}]
+Let \(p \ge 3\) and \(0 < b < 2(p-2)\). Let $\bs{\theta} \in \mathbb{R}^p$.
+Define the helper function \(f(\bs{X}) := \frac{\bs{X}}{\|\bs{X}\|^2}\).
+We can write the estimator as \(T^b(\bs{X}) = \bs{X} - b f(\bs{X})\).
+
+The risk is the expected squared Euclidean distance:
+\begin{align*}
+R(\bs{\theta}, T^b) &= \E_{\bs{\theta}} \big[ \| T^b(\bs{X}) - \bs{\theta} \|^2 \big] \\
+&= \E_{\bs{\theta}} \big[ \| (\bs{X} - \bs{\theta}) - b f(\bs{X}) \|^2 \big] \\
+&= \underbrace{\E_{\bs{\theta}} \big[ \| \bs{X} - \bs{\theta} \|^2 \big]}_{=p} + b^2 \E_{\bs{\theta}} \big[ \| f(\bs{X}) \|^2 \big] - 2b \E_{\bs{\theta}} \big[ (\bs{X} - \bs{\theta})^\top f(\bs{X}) \big].
+\end{align*}
+Note that $\| f(\bs{X}) \|^2 = \frac{\|\bs{X}\|^2}{\|\bs{X}\|^4} = \frac{1}{\|\bs{X}\|^2}$. Thus, the second term is $b^2 \E_{\bs{\theta}} [ \frac{1}{\|\bs{X}\|^2} ]$.
+
+The proof hinges on evaluating the cross term \(\E_{\bs{\theta}}[(\bs{X} - \bs{\theta})^\top f(\bs{X})]\). We use \textbf{Stein's Lemma} (Integration by Parts), which states that for $X \sim \mathcal{N}(\theta, 1)$ and a differentiable function $g$, $\E[(X-\theta)g(X)] = \E[g'(X)]$.
+
+Consider the $j$-th component of the dot product:
+\[
+\E_{\bs{\theta}}\left[(X_j - \theta_j) \frac{X_j}{\|\bs{X}\|^2}\right].
+\]
+Applying Stein's Lemma with respect to $X_j$:
+\[
+\E_{\bs{\theta}} \left[ (X_j - \theta_j) \frac{X_j}{\|\bs{X}\|^2} \right] = \E_{\bs{\theta}} \left[ \frac{\partial}{\partial X_j} \left( \frac{X_j}{\|\bs{X}\|^2} \right) \right].
+\]
+We calculate the partial derivative using the quotient rule (noting $\frac{\partial}{\partial X_j} \|\bs{X}\|^2 = 2X_j$):
+\[
+\frac{\partial}{\partial X_j} \left( \frac{X_j}{\|\bs{X}\|^2} \right) = \frac{1 \cdot \|\bs{X}\|^2 - X_j \cdot 2X_j}{(\|\bs{X}\|^2)^2} = \frac{\|\bs{X}\|^2 - 2X_j^2}{\|\bs{X}\|^4} = \frac{1}{\|\bs{X}\|^2} - \frac{2X_j^2}{\|\bs{X}\|^4}.
+\]
+Now, sum over all indices \(j=1, \dots, p\):
+\begin{align*}
+\E_{\bs{\theta}}\big[(\bs{X} - \bs{\theta})^{\top} f(\bs{X})\big] &= \sum_{j=1}^{p} \E_{\bs{\theta}}\bigg[\frac{1}{\|\bs{X}\|^2} - \frac{2X_j^2}{\|\bs{X}\|^4} \bigg] \\
+&= \E_{\bs{\theta}} \bigg[ \sum_{j=1}^p \frac{1}{\|\bs{X}\|^2} - \frac{2 \sum X_j^2}{\|\bs{X}\|^4} \bigg] \\
+&= \E_{\bs{\theta}} \bigg[ \frac{p}{\|\bs{X}\|^2} - \frac{2 \|\bs{X}\|^2}{\|\bs{X}\|^4} \bigg] \\
+&= \E_{\bs{\theta}} \bigg[ \frac{p - 2}{\|\bs{X}\|^2} \bigg] = (p-2) \E_{\bs{\theta}} \bigg[ \frac{1}{\|\bs{X}\|^2} \bigg].
+\end{align*}
+%Substituting this back into the risk expansion:
+%\begin{align*}
+%R(\bs{\theta}, T^b) &= p + b^2 \E_{\bs{\theta}}\left[\frac{1}{\|\bs{X}\|^2}\right] - 2b(p-2) \E_{\bs{\theta}}\left[\frac{1}{\|\bs{X}\|^2}\right] \\
+%&= p - \left( 2b(p-2) - b^2 \right) \E_{\bs{\theta}}\left[\frac{1}{\|\bs{X}\|^2}\right] \\
+%&= p - b\big(2(p-2) - b\big) \E_{\bs{\theta}}\left[\frac{1}{\|\bs{X}\|^2}\right].
+%\end{align*}
+\end{proof}
+
+\subsubsection{Comments on the Estimator}
+
+\begin{itemize}
+    \item \textbf{Optimal Shrinkage:} The quadratic term $b(2(p-2) - b)$ is maximized at $b = p-2$. This yields the standard \textbf{James-Stein Estimator}:
+    \[
+    d_{JS}(\bs{X}) = \left(1 - \frac{p-2}{\|\bs{X}\|^2}\right)\bs{X}.
+    \]
+    
+    \item \textbf{Risk at the Origin:} The improvement in risk is maximal at $\bs{\theta} = 0$. At this point, $\|\bs{X}\|^2 \sim \chi^2_p$, and it can be shown that $\E_0[1/\|\bs{X}\|^2] = 1/(p-2)$. Thus:
+    \[
+    R(0, d_{JS}) = p - (p-2)^2 \cdot \frac{1}{p-2} = p - (p-2) = 2.
+    \]
+    Comparing this to $R(0, \bs{X}) = p$, the improvement is substantial (e.g., risk of 2 vs 18 for $p=18$).
+    
+    \item \textbf{Positive-Part Estimator:} The factor $(1 - \frac{p-2}{\|\bs{X}\|^2})$ can be negative if the observed $\bs{X}$ is very close to zero. Shrinking ``past" zero reverses the sign, which is geometrically nonsensical and increases error. The \textbf{Positive-Part James-Stein Estimator} fixes this:
+    \[
+    d_{JS}^+(\bs{X}) = \left(1 - \frac{p-2}{\|\bs{X}\|^2}\right)_+ \bs{X}, \qquad (x)_+ := \max\{x, 0\}.
+    \]
+    This estimator strictly dominates the standard James-Stein estimator, though it is still inadmissible (Shao and Strawderman, 1994), because it is not smooth (non-differentiable at the cut-off).
+\end{itemize}
+
+\subsubsection{Choice of Shrinkage Target}
+
+Why shrink to zero? The choice of the origin is arbitrary.
+\begin{enumerate}
+    \item \textbf{Arbitrary Target $\bs{\theta}_0$:} We can shrink towards any vector $\bs{\theta}_0$ (e.g., a theoretical prediction):
+    \[
+    d_{JS}(\bs{X}; \bs{\theta}_0) = \bs{\theta}_0 + \left(1 - \frac{p-2}{\|\bs{X} - \bs{\theta}_0\|^2}\right)(\bs{X} - \bs{\theta}_0).
+    \]
+    \item \textbf{Shrinkage to the Mean (Lindley's Estimator):} In many problems (like the baseball example below), the components $\theta_i$ are conceptually similar. It is reasonable to assume they cluster around a common mean. We can shrink towards the \textit{grand mean} $\overline{X} = \frac{1}{p}\sum X_j$:
+    \[
+    d_j(\bs{X}) = \overline{X} + \left(1 - \frac{p-3}{\sum_{j=1}^p (X_j - \overline{X})^2}\right)(X_j - \overline{X}).
+    \]
+    This is highly effective if the true parameters $\theta_i$ are close to each other.
+\end{enumerate}
+
+\begin{ex}[Baseball Batting Averages]
+We analyze the 1990 batting averages of 18 MLB players ($p=18$). Let $n_i$ be the number of at-bats and $Z_i$ be the batting average. We apply a variance-stabilizing transformation so that the data is approximately normal with variance 1:
+\[
+X_i = \sqrt{n_i} \arcsin(2Z_i - 1).
+\]
+We compare three estimators:
+\begin{enumerate}
+    \item \textbf{Naive MLE:} $X_i$ (using only individual data).
+    \item \textbf{JS to Fixed Target:} Shrinking to $\pi_0 = 0.275$ (a reasonable global average).
+    \item \textbf{JS to Mean:} Shrinking to the observed average of the 18 players.
+\end{enumerate}
+
+\paragraph{R Code Implementation}
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize]{r}
+library(dplyr)
+library(readr)
+
+# Load and transform data
+baseball <- read_csv("data/baseball.txt") %>%
+  mutate(
+    X = sqrt(n_i) * asin(2 * Z_i - 1),
+    theta = sqrt(n_i) * asin(2 * pi_i - 1) # 'Truth' based on career average
+  )
+p <- nrow(baseball) # p = 18
+
+# 1. JS Estimator shrinking towards fixed target (pi_0 = 0.275)
+pi_0 <- 0.275
+t0 <- sqrt(mean(baseball$n_i)) * asin(2 * pi_0 - 1)
+
+baseball <- baseball %>%
+  mutate(
+    JS_t0 = t0 + max(1 - (p - 2) / sum((X - t0)^2), 0) * (X - t0)
+  )
+
+# 2. JS Estimator shrinking towards the group mean
+m <- mean(baseball$X)
+
+baseball <- baseball %>%
+  mutate(
+    JS_mean = m + max(1 - (p - 3) / sum((X - m)^2), 0) * (X - m)
+  )
+
+# Calculate Total Squared Errors (Risk)
+risk_results <- baseball %>%
+  summarize(
+    MSE_MLE = sum((X - theta)^2),
+    MSE_JS_t0 = sum((JS_t0 - theta)^2),
+    MSE_JS_mean = sum((JS_mean - theta)^2)
+  )
+
+print(risk_results)
+\end{minted}
+
+\paragraph{Results}
+The James-Stein estimator shrinking towards the group mean performs best. By ``borrowing strength" from the other players, we reduce the noise inherent in individual observation.
+
+
+The reduction from 2.56 (MLE) to 1.17 (JS-Mean) represents a variance reduction of over 50\%, confirming the inadmissibility of the standard estimator in practice.
+\end{ex}
+
+%\subsection{Inadmissibility of the MLE for \(p \ge 3\)}
+%
+%\subsubsection{Geometric Intuition}
+%In \autoref{subsec:higher_dimensions}, we established that for \(p=1\) and \(p=2\), the Maximum Likelihood Estimator (MLE) \(\mathbf{X}\) is admissible. However, a surprising phenomenon known as \textit{Stein's Paradox} occurs when the dimension \(p \ge 3\).
+%
+%To understand why the MLE fails, consider the squared Euclidean length of the observation vector \(\mathbf{X} \sim \mathcal{N}_p(\boldsymbol{\theta}, \mathbf{I})\). The expected squared length is:
+%\[
+%\mathsf{E}_{\boldsymbol{\theta}}[\|\mathbf{X}\|^2] = \sum_{j=1}^p \mathsf{E}_{\boldsymbol{\theta}}[X_j^2] = \sum_{j=1}^p (\theta_j^2 + 1) = \|\boldsymbol{\theta}\|^2 + p.
+%\]
+%For large \(p\), the observation \(\mathbf{X}\) is, on average, much farther from the origin than the true parameter \(\boldsymbol{\theta}\). The term \(p\) represents a systematic upward bias in the length of the estimator.
+%
+%
+%
+%This intuition suggests that we can improve upon \(\mathbf{X}\) by ``shrinking" it towards the origin. Consider a shrinkage estimator of the form:
+%\[
+%T^b(\mathbf{X}) := \left(1 - \frac{b}{\|\mathbf{X}\|^2}\right) \mathbf{X}, \quad \text{for } b > 0.
+%\]
+%
+%\subsubsection{The James-Stein Theorem}
+%
+%James and Stein (1961) formalized this intuition with the following theorem, which demonstrates that for specific choices of \(b\), the shrinkage estimator strictly dominates the MLE.
+%
+%\begin{theo}[James-Stein, 1961]
+%\label{thm:james_stein}
+%If \(p \ge 3\) and \(0 < b < 2(p-2)\), then for all \(\boldsymbol{\theta} \in \mathbb{R}^p\), the risk under squared error loss is:
+%\[
+%R(\boldsymbol{\theta}, T^b) = p - b\big(2(p-2) - b\big) \cdot \mathsf{E}_{\boldsymbol{\theta}}\left[\frac{1}{\|\mathbf{X}\|^2}\right].
+%\]
+%Since the subtracted term is strictly positive, \(R(\boldsymbol{\theta}, T^b) < p = R(\bs{\theta},\bs{X})\) for all \(\boldsymbol{\theta}\). Consequently, the standard estimator \(\mathbf{X}\) is \textbf{inadmissible}.
+%\end{theo}
+%
+%\subsubsection{The James-Stein Estimator}
+%
+%The risk reduction in \autoref{thm:james_stein} is maximized when \(b = p - 2\). This yields the classic \textbf{James-Stein Estimator}:
+%\[
+%d_{JS}(\mathbf{X}) = \left(1 - \frac{p-2}{\|\mathbf{X}\|^2}\right)\mathbf{X}.
+%\]
+%The risk of this estimator is given by:
+%\[
+%R(\boldsymbol{\theta}, d_{JS}) = p - (p - 2)^2 \mathsf{E}_{\boldsymbol{\theta}} \left[ \frac{1}{\|\mathbf{X}\|^2} \right].
+%\]
+%
+%\subsubsection{Properties of the Risk Function}
+%\begin{enumerate}
+%    \item \textbf{Maximum Improvement:} The improvement \(R(\boldsymbol{\theta}, \mathbf{X}) - R(\boldsymbol{\theta}, d_{JS})\) is maximized at \(\boldsymbol{\theta} = \mathbf{0}\).
+%    Using the fact that for \(\boldsymbol{\theta}=\mathbf{0}\), \(\|\mathbf{X}\|^2 \sim \chi^2_p\)\footnote{Chi--squared distribution with \(p\) degrees of freedom} , we have \(\mathsf{E}_0[1/\|\mathbf{X}\|^2] = 1/(p-2)\). Therefore:
+%    \[
+%    R(\mathbf{0}, \mathbf{X}) = p \quad \text{and} \quad R(\mathbf{0}, d_{JS}) = 2.
+%    \]
+%    \item \textbf{Asymptotic Behavior:} As \(\|\boldsymbol{\theta}\| \to \infty\), the term \(\mathsf{E}[1/\|\mathbf{X}\|^2] \to 0\), meaning the improvement vanishes. The James-Stein estimator effectively reverts to the MLE for large parameter values.
+%\end{enumerate}
+%
+%
+%\subsubsection{The Positive-Part Estimator}
+%A flaw in \(d_{JS}(\mathbf{X})\) is that the shrinkage factor \((1 - \frac{p-2}{\|\mathbf{X}\|^2})\) can be negative if \(\|\mathbf{X}\|^2\) is small. This would reverse the sign of the estimate, crossing zero and increasing error. 
+%
+%A strictly better estimator is the \textbf{Positive-Part James-Stein Estimator}:
+%\[
+%d_{JS}^+(\mathbf{X}) = \left(1 - \frac{p-2}{\|\mathbf{X}\|^2}\right)_+ \mathbf{X}, \quad \text{where } (x)_+ := \max\{x, 0\}.
+%\]
+%\begin{remark}
+%While \(d_{JS}^+\) dominates \(d_{JS}\), it is shown by Shao and Strawderman (1994) to be inadmissible itself (it is not smooth enough). However, no explicit admissible estimator dominating \(d_{JS}^+\) has been found to date.
+%\end{remark}
+%
+%
+%\begin{proof}[of \autoref{thm:james_stein}]
+%Let \(p \ge 3\), \(0 < b < 2(p-2)\), and define \(f(\mathbf{X}) := \frac{\mathbf{X}}{\|\mathbf{X}\|^2}\). We can write the estimator as \(T^b(\mathbf{X}) = \mathbf{X} - b f(\mathbf{X})\).
+%The risk is:
+%\begin{align*}
+%R(\boldsymbol{\theta}, T^b) &= \mathsf{E}_{\boldsymbol{\theta}} \big[ \| \mathbf{X} - \boldsymbol{\theta} - b f(\mathbf{X}) \|^2 \big] \\
+%&= \mathsf{E}_{\boldsymbol{\theta}} \big[ \| \mathbf{X} - \boldsymbol{\theta} \|^2 \big] + b^2 \mathsf{E}_{\boldsymbol{\theta}} \big[ \| f(\mathbf{X}) \|^2 \big] - 2b \mathsf{E}_{\boldsymbol{\theta}} \big[ (\mathbf{X} - \boldsymbol{\theta})^\top f(\mathbf{X}) \big].
+%\end{align*}
+%We know \(\mathsf{E}[\|\mathbf{X} - \boldsymbol{\theta}\|^2] = p\) and \(\|f(\mathbf{X})\|^2 = \frac{1}{\|\mathbf{X}\|^2}\). The proof hinges on evaluating the cross term \(\mathsf{E}[(\mathbf{X} - \boldsymbol{\theta})^\top f(\mathbf{X})]\) using Stein's Lemma (Integration by Parts).
+%
+%For a single component \(j\):
+%\[
+%\mathsf{E}_{\boldsymbol{\theta}}\left[(X_j - \theta_j) \frac{X_j}{\|\mathbf{X}\|^2}\right] = \mathsf{E}_{\boldsymbol{\theta}} \left[ \frac{\partial}{\partial X_j} \left( \frac{X_j}{\|\mathbf{X}\|^2} \right) \right].
+%\]
+%Calculating the partial derivative:
+%\[
+%\frac{\partial}{\partial X_j} \left( \frac{X_j}{\|\mathbf{X}\|^2} \right) = \frac{\|\mathbf{X}\|^2 - X_j \cdot 2X_j}{\|\mathbf{X}\|^4} = \frac{1}{\|\mathbf{X}\|^2} - \frac{2X_j^2}{\|\mathbf{X}\|^4}.
+%\]
+%Summing over all \(j=1, \dots, p\):
+%\begin{align*}
+%\sum_{j=1}^{p} \mathsf{E}_{\boldsymbol{\theta}}\bigg[\frac{X_{j}(X_{j} - \theta_{j})}{\|\mathbf{X}\|^{2}} \bigg] &= \sum_{j=1}^{p} \mathsf{E}_{\boldsymbol{\theta}} \bigg[ \frac{1}{\|\mathbf{X}\|^2} - \frac{2X_j^2}{\|\mathbf{X}\|^4} \bigg] \\
+%&= p \mathsf{E}_{\boldsymbol{\theta}} \bigg[ \frac{1}{\|\mathbf{X}\|^2} \bigg] - 2 \mathsf{E}_{\boldsymbol{\theta}} \bigg[ \frac{\|\mathbf{X}\|^2}{\|\mathbf{X}\|^4} \bigg] \\
+%&= (p-2) \mathsf{E}_{\boldsymbol{\theta}} \bigg[ \frac{1}{\|\mathbf{X}\|^2} \bigg].
+%\end{align*}
+%Substituting this back into the risk expansion yields the theorem.
+%\end{proof}
+%
+%\subsubsection{Alternative Shrinkage Targets}
+%
+%Shrinking toward zero is arbitrary. We may shrink towards any vector \(\boldsymbol{\theta}_0\) or a data-dependent value.
+%
+%\begin{itemize}
+%    \item 
+%\textbf{Shrinkage towards a fixed \(\boldsymbol{\theta}_0\):}
+%\[
+%d_{JS}(\mathbf{X}; \boldsymbol{\theta}_0) = \boldsymbol{\theta}_0 + \left(1 - \frac{p-2}{\|\mathbf{X} - \boldsymbol{\theta}_0\|^2}\right)(\mathbf{X} - \boldsymbol{\theta}_0).
+%\]
+%
+%\item 
+%\textbf{Shrinkage towards the Grand Mean (Lindley's Estimator):}
+%If \(p \ge 4\), we can shrink towards the overall mean \(\overline{X} = \frac{1}{p} \sum X_j\). The estimator for the \(j\)-th component is:
+%\[
+%d_j(\mathbf{X}) = \overline{X} + \left(1 - \frac{p-3}{\sum_{k=1}^p (X_k - \overline{X})^2}\right)(X_j - \overline{X}).
+%\]
+%The resulting estimator \((d_{1}(\bs{X}), \dots, d_{p}(\bs{X})\) can be shown to have risk 3 at vectors \(\bs{\theta}\) with \(\theta_1= \dots = \theta_{p}\). This is larger than the risk 2 for \(d_{JS}(\bs{X};\bs{\theta}_{0})\) at \(\bs{\theta}_{0}\) but is attained on a larger set.
+%
+%This approach is highly effective when the parameters \(\theta_j\) are exchangeable or clustered near a common value.
+%\end{itemize}
+%
+%\section{Example 8.9: Baseball Batting Averages}
+%
+%We analyze the 1990 batting averages of 18 MLB players (\(p=18\)).
+%Let \(Z_i\) be the observed average. We apply a variance-stabilizing transformation \(X_i = \sqrt{n_i} \arcsin(2Z_i - 1)\) such that \(X_i \approx \mathcal{N}(\theta_i, 1)\).
+%
+%We compare three estimators:
+%\begin{enumerate}
+%    \item The Naive MLE (\(\mathbf{X}\)): Using only the player's own 1990 stats.
+%    \item JS shrinking to \(\boldsymbol{\theta}_0\): Using a global guess \(\pi_0 = 0.275\).
+%    \item JS shrinking to the Mean: Shrinking towards the group average of the 18 players.
+%\end{enumerate}
+%
+%\textbf{Results (Total Squared Error):}
+%\begin{itemize}
+%    \item Naive MLE: \textbf{2.56}
+%    \item JS (to \(\pi_0 = 0.275\)): \textbf{1.50}
+%    \item JS (to Mean): \textbf{1.17}
+%\end{itemize}
+%
+%The James-Stein estimator shrinking towards the group mean provides the lowest error, reducing the risk by over 50\% compared to the MLE. This validates the theoretical prediction that "borrowing strength" from independent coordinates reduces overall risk.
+%
+%\hypertarget{inadmissibility-for-p-ge-3}{%
+%	\subsection{\texorpdfstring{\textbf{8.8.2} Inadmissibility for
+%			\(p \ge 3\)}{8.8.2 Inadmissibility for p \textbackslash ge 3}}\label{inadmissibility-for-p-ge-3}}
+%
+%In higher dimensions \(\|\mathbf{X}\|^2\) is expected to be much larger
+%than \(\|\boldsymbol{\theta}\|^2\) :
+%
+%\[\mathsf{E}_{\theta}[\|\mathbf{X}\|^2] = \mathsf{E}_{\theta}\bigg[\sum_{j=1}^p X_j^2\bigg] = \sum_{j=1}^p \mathsf{E}_{\theta}\big[X_j^2\big] = \sum_{j=1}^p (\theta_j^2 + 1) = \|\theta\|^2 + p.\]
+%
+%\textbf{Idea}: Consider a shrinkage-type estimator. Specifically, for b
+%\textgreater{} 0, let
+%
+%\[T^b(\mathbf{X}) := \left(1 - \frac{b}{\|\mathbf{X}\|^2}\right) \mathbf{X}.\]
+%
+%\textbf{Theorem 8.4.} (James and Stein 1961) If \(p \ge 3\) and 0
+%\textless{} b \textless{} 2(p-2), then for all
+%\(\theta \in \mathbb{R}^p\) ,
+%
+%\[R(\boldsymbol{\theta}, T^b) = p - b\Big(2(p-2) - b\Big) \cdot \mathsf{E}_{\boldsymbol{\theta}}\bigg[\frac{1}{\|\mathbf{X}\|^2}\bigg]\]
+%
+%Hence, X is inadmissible.
+%
+%\hypertarget{comments}{%
+%	\paragraph{Comments}\label{comments}}
+%
+%• Taking b = p - 2 minimizes the risk of \(T^b\) (at all \(\theta\) ).
+%This gives the James-Stein estimator
+%
+%\[d_{JS}(\mathbf{X}) = \left(1 - \frac{p-2}{\|\mathbf{X}\|^2}\right)\mathbf{X}\]
+%
+%with risk
+%
+%\[R(\boldsymbol{\theta}, d_{JS}) = p - (p - 2)^2 \mathsf{E}_{\boldsymbol{\theta}} \left[ \frac{1}{\|\mathbf{X}\|^2} \right].\]
+%
+%• The improvement \(R(\theta, \mathbf{X}) - R(\theta, d_{IS})\) is
+%maximal for \(\theta = 0\) :
+%
+%\[R(0, \mathbf{X}) = p\] and \(R(0, d_{IS}) = 2\) ,
+%
+%where we have used that
+%\(\mathsf{E}_0\left[\frac{1}{\|\mathsf{X}\|^2}\right] = \frac{1}{p-2}\)
+%. To derive \(\mathsf{E}_0\left[\frac{1}{\|\mathsf{X}\|^2}\right]\)
+%observe that \(\|\mathsf{X}\|^2 = \sum_j X_j^2\) follows a chi-squared
+%distribution with p degrees of freedom when \(\theta = 0\) . Hence,
+%\(\frac{1}{\|\mathsf{X}\|^2}\) follows an inverse chi-squared
+%distribution with p degrees of freedom.
+%
+%\begin{itemize}
+%	
+%	\item
+%	      The improvement \(R(\theta, \mathbf{X}) R(\theta, d_{JS})\) goes to
+%	      zero as \(\|\theta\| \to \infty\) .
+%	\item
+%	      The James-Stein estimator \(d_{JS}\) is inadmissible. A strictly
+%	      better estimator is the positive part James-Stein estimator
+%\end{itemize}
+%
+%\[d_{JS}^+(\mathbf{X}) = \left(1 - \frac{p-2}{\|\mathbf{X}\|^2}\right)_+ \mathbf{X}, \qquad (x)_+ := \max\{x, 0\}.\]
+%
+%• It can be shown that \(d_{IS}^+(\mathbf{X})\) is also inadmissible.
+%(It is not smooth enough.)
+%
+%\hypertarget{risk-function-of-james-stein-estimator}{%
+%	\subsubsection{Risk function of James-Stein
+%		estimator}\label{risk-function-of-james-stein-estimator}}
+%
+%\includegraphics{_page_109_Figure_2.jpeg}
+%
+%Figure 1: Risks with respect to squared error loss of the usual
+%estimator \(\hat{\theta}^0\) , the James--Stein estimator
+%\(\hat{\theta}^{JS}\) and the positive-part James--Stein estimator
+%\(\hat{\theta}_+^{JS}\) when p=5.
+%
+%Figure 8.2: Taken from Samworth (2012).
+%
+%\hypertarget{further-comments}{%
+%	\paragraph{\texorpdfstring{\textbf{Further
+%				comments}}{Further comments}}\label{further-comments}}
+%
+%\begin{itemize}
+%	
+%	\item
+%	      An explicit estimator strictly better than \(d_{JS}^+(X)\) was found
+%	      by Shao and Strawderman (1994). But the improvement is small.
+%	\item
+%	      Shao and Strawderman's estimator is again inadmissible. No explicit
+%	      admissible estimator that is strictly better than
+%	      \(d_{IS}^+(\mathbf{X})\) has been given so far.
+%\end{itemize}
+%
+%\hypertarget{shrinkage-target}{%
+%	\paragraph{Shrinkage target}\label{shrinkage-target}}
+%
+%• Why shrink to 0? Well, we could instead shrink towards \(\theta_0\)
+%using
+%
+%\[d_{JS}(X; \theta_0) = \theta_0 + \left(1 - \frac{p-2}{\|X - \theta_0\|^2}\right)(X - \theta_0).\]
+%
+%• Let \(\overline{X} = \frac{1}{p} \sum_{j=1}^{p} X_j\) be the overall
+%mean.
+%
+%If \(p \ge 4\) , then we may form an estimator that shrinks towards
+%\(\overline{X}\) by estimating \(\theta_i\) as
+%
+%\[d_j(\mathbf{X}) = \overline{X} + \left(1 - \frac{p-3}{\sum_{j=1}^p (X_j - \overline{X})^2}\right)(X_j - \overline{X}).\]
+%
+%The resulting estimator \((d_1(\mathbf{X}), \dots, d_p(\mathbf{X}))\)
+%can be shown to have risk 3 at vectors \(\boldsymbol{\theta}\) with
+%\(\theta_1 = \dots = \theta_p\) .
+%
+%This is larger than the risk 2 for \(d_{IS}(X; \theta_0)\) at
+%\(\theta_0\) but is attained on a larger set.
+%
+%\hypertarget{proof-of-the-james-stein-theorem}{%
+%	\subsubsection{Proof of the James-Stein
+%		theorem}\label{proof-of-the-james-stein-theorem}}
+%
+%\emph{Proof.} Let \(p \ge 3\) and 0 \textless{} b \textless{} 2(p-2).
+%Let \(\theta \in \mathbb{R}^p\) . Define
+%\(f(\mathbf{X}) := \frac{1}{\|\mathbf{X}\|^2}\mathbf{X}\) . Then
+%
+%\[T^b(\mathbf{X}) = \mathbf{X} - \frac{b}{\|\mathbf{X}\|^2} \cdot \mathbf{X} = : \ \mathbf{X} - b \cdot f(\mathbf{X}).\]
+%
+%Then
+%
+%\[\begin{split} R(\theta, T^b) &= \mathsf{E}_{\theta} \big[ \| T^b - \theta \|^2 \big] = \mathsf{E}_{\theta} \big[ \| \mathbf{X} - \theta - b \cdot f(\mathbf{X}) \|^2 \big] \\ &= \mathsf{E}_{\theta} \big[ \| \mathbf{X} - \theta \|^2 \big] + b^2 \mathsf{E}_{\theta} \big[ \| f(\mathbf{X}) \|^2 \big] - 2b \mathsf{E}_{\theta} \big[ (\mathbf{X} - \theta)^\top f(\mathbf{X}) \big]. \end{split}\]
+%
+%We have
+%\(\mathsf{E}_{\boldsymbol{\theta}} \Big[ \| \mathbf{X} - \boldsymbol{\theta} \|^2 \Big] = p\)
+%and, since
+%\(\| f(\mathbf{X}) \|^2 = \frac{1}{\| \mathbf{X} \|^4} \| \mathbf{X} \|^2 = \frac{1}{\| \mathbf{X} \|^2}\)
+%,
+%
+%\[b^2 \mathsf{E}_{\boldsymbol{\theta}} \big[ \| f(\mathbf{X}) \|^2 \big] = b^2 \cdot \mathsf{E}_{\boldsymbol{\theta}} \bigg[ \frac{1}{\| \mathbf{X} \|^2} \bigg].\]
+%
+%Our claimed formula for \(R(\theta, T^b)\) now follows if we can show
+%that
+%
+%\[\mathsf{E}_{\boldsymbol{\theta}}\big[(\mathbf{X} - \boldsymbol{\theta})^{\top} f(\mathbf{X})\big] = \sum_{j=1}^{p} \mathsf{E}_{\boldsymbol{\theta}}\bigg[\frac{X_{j}}{\|\mathbf{X}\|^{2}} (X_{j} - \theta_{j})\bigg] = (p-2) \cdot \mathsf{E}_{\boldsymbol{\theta}}\bigg[\frac{1}{\|\mathbf{X}\|^{2}}\bigg].\]
+%
+%Apply integration by parts 6 to find
+%
+%\[\begin{split} \mathsf{E}_{\theta} \bigg[ \frac{X_1 (X_1 - \theta_1)}{\|\mathbf{X}\|^2} \bigg] &= \int_{-\infty}^{\infty} \ldots \int_{-\infty}^{\infty} \frac{x_1}{\|\mathbf{x}\|^2} \cdot (x_1 - \theta_1) \prod_{i=1}^p \frac{1}{\sqrt{2\pi}} e^{-\frac{1}{2} (x_i - \theta_i)^2} \mathrm{d}x_1 \ldots \mathrm{d}x_p \\ &= \int_{-\infty}^{\infty} \ldots \int_{-\infty}^{\infty} \frac{\|\mathbf{x}\|^2 - 2x_1^2}{\|\mathbf{x}\|^4} \cdot \prod_{i=1}^p \frac{1}{\sqrt{2\pi}} e^{-\frac{1}{2} (x_i - \theta_i)^2} \mathrm{d}x_1 \ldots \mathrm{d}x_p \\ &= \mathsf{E}_{\theta} \bigg[ \frac{\|\mathbf{X}\|^2 - 2X_1^2}{\|\mathbf{X}\|^4} \bigg] = \mathsf{E}_{\theta} \bigg[ \frac{1}{\|\mathbf{X}\|^2} \bigg] - 2\mathsf{E}_{\theta} \bigg[ \frac{X_1^2}{\|\mathbf{X}\|^4} \bigg]. \end{split}\]
+%
+%\&lt;sup\textgreater6Look up Stein's lemma/Stein's identity for more.
+%
+%By symmetry, the analogous result holds for the indices \(j \ge 2\) ,
+%and we obtain
+%
+%\[\begin{split} \sum_{j=1}^{p} \mathsf{E}_{\theta} \bigg[ \frac{(X_{j} - \theta_{j}) X_{j}}{\|\mathbf{X}\|^{2}} \bigg] &= \sum_{j=1}^{p} \mathsf{E}_{\theta} \bigg[ \frac{1}{\|\mathbf{X}\|^{2}} \bigg] - 2 \mathsf{E}_{\theta} \bigg[ \frac{X_{j}^{2}}{\|\mathbf{X}\|^{4}} \bigg] \\ &= p \mathsf{E}_{\theta} \bigg[ \frac{1}{\|\mathbf{X}\|^{2}} \bigg] - 2 \mathsf{E}_{\theta} \bigg[ \frac{\sum_{j=1}^{p} X_{j}^{2}}{\|\mathbf{X}\|^{4}} \bigg] \\ &= (p-2) \cdot \mathsf{E}_{\theta} \bigg[ \frac{1}{\|\mathbf{X}\|^{2}} \bigg]. \end{split}\]
+%
+%\hypertarget{example-8.9.}{%
+%	\paragraph{Example 8.9.}\label{example-8.9.}}
+%
+%\begin{verbatim}
+%baseball <- readr::read_csv("data/baseball.txt")
+%baseball
+%
+%# # A tibble: 9 x 4
+%
+%# Player n_i Z_i pi_i
+%
+%# <chr>
+%\end{verbatim}
+%
+%\hypertarget{variance-stabilizing-transformation}{%
+%	\paragraph{Variance-stabilizing
+%		transformation}\label{variance-stabilizing-transformation}}
+%
+%\begin{verbatim}
+%library(dplyr)
+%baseball <- baseball |>
+%mutate(
+% X = sqrt(n_i) * asin(2 *Z_i - 1),
+%  theta = sqrt(n_i) * asin(2 * pi_i - 1)
+%p <- nrow(baseball)</pre>
+%baseball
+%# # A tibble: 9 x 6
+%# Player n_i Z_i pi_i X theta
+%# <chr> <dbl> <dbl> <dbl> <dbl> <dbl> <
+%# 1 Baines 415 0.284 0.289 -9.10 -8.87
+%# 2 Barfield 476 0.246 0.256 -11.6 -11.1
+%# 3 Bell 583 0.254 0.265 -12.4 -11.8
+%# 4 Biggio 555 0.276 0.287 -10.9 -10.4
+%# 5 Bonds 519 0.301 0.297 -9.33 -9.52
+%# 6 Bonilla 625 0.28 0.279 -11.4 -11.4
+%# # i 3 more rows
+%\end{verbatim}
+%
+%\hypertarget{james-stein-estimators-and-their-mse}{%
+%	\subsubsection{James-Stein estimators and their
+%		MSE}\label{james-stein-estimators-and-their-mse}}
+%
+%\begin{enumerate}
+%	\def\labelenumi{\arabic{enumi}.}
+%	
+%	\item
+%	      Shrinkage towards
+%	      \(\theta_0 = \sqrt{\overline{n}} \arcsin(2\pi_0 - 1)\) with
+%	      \(\pi_0 = 0.275\) :
+%\end{enumerate}
+%
+%\begin{verbatim}
+%pi_0 <- 0.275
+%t0 <- sqrt(mean(baseball$n_i)) * asin(2 * pi_0 - 1)
+%t0
+%# [1] -10.77724
+%\end{verbatim}
+%
+%Positive-part James-Stein estimator
+%
+%\begin{verbatim}
+%baseball <- baseball |>
+%mutate(
+%    JSplus.t0 = t0 +
+%    max(1 - (p - 2) /sum((X - t0)^2), 0) * (X - t0)
+%)
+%\end{verbatim}
+%
+%with loss
+%
+%\begin{verbatim}
+%summarize(
+%  baseball,
+%  mse = sum((JSplus.t0 - theta)^2)
+%  )
+%# # A tibble: 1 x 1
+%# mse
+%# <dbl>
+%# 1 1.50
+%\end{verbatim}
+%
+%\begin{enumerate}
+%	\def\labelenumi{\arabic{enumi}.}
+%	\setcounter{enumi}{1}
+%	
+%	\item
+%	      Shrinkage towards overall mean:
+%\end{enumerate}
+%
+%\begin{verbatim}
+%m <- mean(baseball$X)
+%\end{verbatim}
+%
+%Positive-part James-Stein estimator
+%
+%\begin{verbatim}
+%baseball <- baseball |>
+%  mutate(
+%    JSplus.mean = m +
+%        max(1 - (p - 3) / sum((X - m)^2), 0) * (X - m)
+%)
+%\end{verbatim}
+%
+%with loss
+%
+%\begin{verbatim}
+%summarize(
+%  baseball,
+%  mse = sum((JSplus.mean - theta)^2)
+%  )
+%# # A tibble: 1 x 1
+%# mse
+%# <dbl>
+%# 1 1.17
+%\end{verbatim}
+%
+%\emph{Remark:} Loss of the natural estimator
+%
+%\begin{verbatim}
+%summarize(
+%  baseball,
+%  mse =sum((X-theta)^2)
+%)
+%# # A tibble: 1 x 1
+%# mse
+%# <dbl>
+%# 1 2.56
+%\end{verbatim}
+%
+%James-Stein estimation results
+%
+%8 Decision Theory
+%
+%\begin{longtable}{SSSS}
+%\hline
+%{$d_{JS}(\mathbf{X}; \overline{X}_9)$} & {$d_{JS}(\mathbf{X}; \theta_0)$} & {$X$} & {$\theta$} \\
+%\hline
+%-9.661665  & -9.815039  & -9.100158  & -8.874870  \\
+%-11.250872 & -11.264007 & -11.625661 & -11.122456 \\
+%-11.750747 & -11.719771 & -12.420041 & -11.814118 \\
+%-10.821632 & -10.872646 & -10.943531 & -10.367289 \\
+%-9.803345  & -9.944217  & -9.325311  & -9.524356  \\
+%-11.102558 & -11.128782 & -11.389967 & -11.445677 \\
+%-9.058129  & -9.264763  & -8.141045  & -9.344254  \\
+%-11.239240 & -11.253402 & -11.607176 & -11.445654 \\
+%-10.844376 & -10.893383 & -10.979675 & -10.775367 \\
+%\hline
+%\end{longtable}

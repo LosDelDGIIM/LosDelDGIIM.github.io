@@ -1,0 +1,1168 @@
+%\chapter{Pearson's Chi-Square}
+%\label{cha:Pearson's Chi-Square}
+%In this chapter we explore Pearson’s Chi-Square statistic/test from an asymptotic point of view and
+%derive the “usual” chi-square approximation that is typically used to set critical values and compute
+%\(p\)-values. We also demonstrate how useful insights on the power of the test can be obtained from asymptotics along local alternatives. For reading, see Ferguson (1996, chaps 9-10).
+%
+%Given the counts for a dice of how many times has each face show up, is it \textbf{fair}?
+%You can calculate what is the probability that a fair dice would give such progression.
+%This is the type of problem that Pearson's Chi-Square tackles.
+%
+%Another example would be, I have an algorithm to generate random numbers that is supposed to follow the normal distribution. 
+%In order to check that my algorithm is correct, I can discretize the problem using intervals to get the counts, and use Pearson's Chi-Square.  I have the ``real"  probabilities of landing in each interval because it is the Normal Distribution.
+%
+%Now let's say that I expected a count of 16 and got 20, and I expected 0 and got 4. Then maybe the second one is a bigger the departure than the first one.
+%
+%\section{Facts About Normal Distributions}%
+%\label{sec:Facts About Normal Distributions}
+%Let's start talking about something else entirely.
+%Many statistical problems when you push the sample to be large, then they look like normal distributions.
+%First let's have a discussion about problems involving normal distributions.
+%
+%If \(\bs{X}\sim \cc{N}_{k}(\bs{\mu},\Sigma)\) is multivariate normal in \(\R^{k}\), and \(A\) and \(\bs{b }\) are a matrix and a vector of suitable dimensions, then \[
+%    A\bs{X} + \bs{b }\sim N_{d}(A \bs{\mu}+\bs{b }, A \Sigma A^{\top}).
+%\]
+%TODO: proof (look normal distribution definitions, covariance and linearity (independence), etc).
+%
+%Let \(X_1, \dots , X_{k}\) be i.i.d \(\cc{N}(0,1)\).
+%The chi-square distribution with \(k\) degrees of freedom, denoted \(\chi^2_{k}\), is the distribution of \(\sum\limits_{j=1}^{k} X^2_{j} \).
+%This is a very studied distribution, meaning we know all it's moments, mean, etc (that problem is done).
+%
+%Put differently, if \(\bs{X}=(X_1, \dots , X_{k})^{\top}\sim \cc{N}_{k}(0,I_{k})\) (``a standard normal point in \(\R^{k}\)''), then the squared norm of \(\bs{X}\) follows \[
+%    \|\bs{X}\|^2_{2}\sim \chi^2_{k}.
+%\]
+%
+%Now here we have a convenient way of measuring distances. Sometimes the coordinates are quite correlated, meaning if one is far away so are the others. The following lemma is a useful fact.
+%
+%\begin{lemma}
+%\label{lem:mahalani}
+%   If \(\bs{X}\sim \cc{N}_{k}(\mu,\Sigma)\) and \(\Sigma\) invertible, then \[
+%       (\bs{X}-\mu)^{\top}\Sigma^{-1}(\bs{X}-\mu) \sim \chi^2_{k}.
+%   \] 
+%\end{lemma}
+%\begin{proof}
+%    Decompose the covariance matrix as \(\Sigma = LL^{\top}\) ( \(\Sigma\) is an invertible positive semi-definite so Cholesky decomposition is possible). Then \[
+%        (\bs{X}-\mu)^{\top}\Sigma^{-1}(\bs{X}-\mu) = \| L^{-1}(\bs{X}-\mu)\|^2_{2}
+%    \]
+%    with \(L^{-1}(\bs{X}-\mu) \sim \cc{N}_{k}(\bs{0},L^{-1}\Sigma L^{-T}) = \cc{N}_{k}(\bs{0},I)\).
+%\end{proof}
+%
+%This is called the Malabari distance. This measures the distance taking into account the correlation vector. And if you do that, you always get a fix distribution.
+%
+%\begin{remark}[]
+%    The Cholesky decomposition gives lower-triangular \(L\). Alternatively, one could define a symmetric square-root \(\bs{L} = \Sigma^{1/2}\) by taking \[
+%        \Sigma^{1 /2} = \bs{Q} \begin{pmatrix} \sqrt{\lm_1} &&0\\ &\ddots&\\0&&\sqrt{\lm_{k}}  \end{pmatrix} \bs{Q}^{T}
+%    \]
+%    where \(\lm_{j}>0\) are the eigenvalues of \(\Sigma\) and columns of \(\bs{Q}\) are eigenvectors.
+%\end{remark}
+
+\chapter{Pearson's Chi-Square}
+\label{cha:Pearson's Chi-Square}
+
+In this chapter, we explore Pearson’s Chi-Square statistic/test from an asymptotic point of view and derive the ``usual'' chi-square approximation that is typically used to set critical values and compute $p$-values. We also demonstrate how useful insights on the power of the test can be obtained from asymptotics along local alternatives. For further reading, see Ferguson (1996, chaps 9-10).
+
+\subsubsection{Motivation: Is the Dice Fair?}
+Consider the canonical problem: you are at a casino, and someone hands you a die. You want to know, is this die \textbf{fair}? That is, does each of the six faces show up with equal probability $1/6$?
+
+To test this, you roll the die $n=100$ times and observe the counts for each face. Suppose you get a sequence of counts like $20, 10, 25, \dots$. If the die were truly fair, you would expect each face to appear $100/6 \approx 16.7$ times. The observed vector of counts differs from the expected vector of counts. The core statistical question is: \textit{How different is too different?}
+
+We need to calculate the probability of seeing such a deviation (or a more extreme one) under the assumption that the die is fair. This is the rationale behind $p$-values. If this probability is very low, it casts doubt on the fairness of the die.
+
+\begin{ex}[Random Number Generation]
+    
+Another practical application arises in computational statistics. Suppose you have an algorithm designed to generate random numbers from a standard normal distribution. Since computer-generated numbers are deterministic (pseudo-random), you might want to verify their statistical properties.
+One way to check this is to discretize the problem:
+\begin{enumerate}
+    \item Bin the real line into intervals.
+    \item Calculate the theoretical probability of a standard normal variable landing in each interval.
+    \item Generate $n$ samples using your algorithm and count how many fall into each bin.
+\end{enumerate}
+This reduces the problem to the same structure as the dice roll—comparing observed counts in bins to expected counts derived from the theoretical probabilities. This is often called a ``goodness-of-fit'' test.
+\end{ex}
+
+\begin{note}[on Distances]
+When comparing observed counts to expected counts, we are essentially measuring a distance between two vectors. However, simple Euclidean distance might not be appropriate.
+Consider the following:
+\begin{itemize}
+    \item \textbf{Scenario A:} Expected 16, Observed 20.
+    \item \textbf{Scenario B:} Expected 0, Observed 4.
+\end{itemize}
+In both cases, the absolute difference is 4. However, Scenario B represents a much more drastic deviation (an impossible event becoming possible) than Scenario A. Similarly, a deviation of 4 is large if the expected count is small, but negligible if the expected count is 1000. Pearson's Chi-Square addresses this by looking at distances relative to the expected magnitude (perturbing the coordinate system).
+\end{note}
+
+\section{Background on Normal and Chi--Square Distributions}
+\label{sec:Facts About Normal Distributions}
+
+Before diving into the Chi-Square test itself, let's establish some fundamental facts about normal distributions. Many statistical problems, when the sample size $n$ is pushed to infinity, approximate problems involving normal distributions.
+
+\subsection{Multivariate Normal Distribution}
+If $\bs{X} \sim \mathcal{N}_{k}(\bs{\mu}, \Sigma)$ is a multivariate normal vector in $\mathbb{R}^{k}$, it is fully characterized by its mean vector $\bs{\mu}$ and covariance matrix $\Sigma$.
+An important property is stability under affine transformations. If $A$ is a matrix and $\bs{b}$ is a vector of suitable dimensions, then:
+\[
+    A\bs{X} + \bs{b} \sim \mathcal{N}_{d}(A \bs{\mu} + \bs{b}, A \Sigma A^{\top}).
+\]
+\begin{proof}[Sketch]
+One definition of a multivariate normal distribution is that it is the joint distribution of linear combinations of independent standard normal variables. Since linear combinations of linear combinations remain linear combinations, the affine transformation of a normal vector remains normal. The parameters follow from linearity of expectation and the definition of covariance.
+\end{proof}
+
+\subsection{Chi-Square Distribution}
+Let $X_1, \dots, X_{k}$ be i.i.d. $\mathcal{N}(0,1)$. The chi-square distribution with $k$ degrees of freedom, denoted $\chi^2_{k}$, is defined as the distribution of the sum of their squares:
+\[
+    \sum_{j=1}^{k} X^2_{j} \sim \chi^2_{k}.
+\]
+In vector notation, if $\bs{X} = (X_1, \dots, X_{k})^{\top} \sim \mathcal{N}_{k}(0, I_{k})$ represents a ``standard normal point'' in $\mathbb{R}^{k}$, then its squared Euclidean norm follows a chi-square distribution:
+\[
+    \|\bs{X}\|^2_{2} \sim \chi^2_{k}.
+\]
+This distribution is well-studied; we have analytical expressions for its density and efficient numerical methods for computing probabilities.
+
+\subsection{Mahalanobis Distance}
+We are interested in measuring the distance between a random vector $\bs{X}$ and its mean $\bs{\mu}$. If the coordinates of $\bs{X}$ are highly correlated, a simple Euclidean distance might be misleading. To account for correlations, we use the covariance matrix to ``standardize'' the distance.
+
+\begin{lemma}[Mahalanobis Distance]
+\label{lem:mahalanobis}
+If $\bs{X} \sim \mathcal{N}_{k}(\bs{\mu}, \Sigma)$ and $\Sigma$ is invertible, then the quadratic form
+\[
+    (\bs{X} - \bs{\mu})^{\top} \Sigma^{-1} (\bs{X} - \bs{\mu}) \sim \chi^2_{k}.
+\]
+\end{lemma}
+
+\begin{proof}
+    Since $\Sigma$ is positive definite, we can decompose it (e.g., via Cholesky decomposition) as $\Sigma = L L^{\top}$, where $L$ is invertible. Then $\Sigma^{-1} = (L^{-1})^{\top} L^{-1}$. Substituting this into the quadratic form:
+    \[
+        (\bs{X} - \bs{\mu})^{\top} \Sigma^{-1} (\bs{X} - \bs{\mu}) = (\bs{X} - \bs{\mu})^{\top} (L^{-1})^{\top} L^{-1} (\bs{X} - \bs{\mu}) = \| L^{-1}(\bs{X} - \bs{\mu}) \|^2_{2}.
+    \]
+    Let $\bs{Z} = L^{-1}(\bs{X} - \bs{\mu})$. Since $\bs{X}$ is normal, $\bs{Z}$ is normal.
+    \begin{itemize}
+        \item \textbf{Mean:} $\E[\bs{Z}] = L^{-1}(\E[\bs{X}] - \bs{\mu}) = \bs{0}$.
+        \item \textbf{Covariance:} $\text{Cov}(\bs{Z}) = L^{-1} \text{Cov}(\bs{X}) (L^{-1})^{\top} = L^{-1} \Sigma (L^{-1})^{\top} = L^{-1} (L L^{\top}) (L^{\top})^{-1} = I$.
+    \end{itemize}
+    Thus, $\bs{Z} \sim \mathcal{N}_{k}(\bs{0}, I)$, and $\|\bs{Z}\|^2_{2} \sim \chi^2_{k}$.
+\end{proof}
+
+The transformation $L^{-1}(\bs{X}-\bs{\mu})$ effectively de-correlates the components of $\bs{X}$ and scales them to unit variance. By measuring distance in this way (the Mahalanobis distance), we obtain a statistic with a fixed, known distribution ($\chi^2_k$) regardless of the specific values of $\bs{\mu}$ or $\Sigma$. This invariance is crucial for constructing test statistics.
+
+\begin{remark}
+    While the Cholesky decomposition gives a lower-triangular $L$, one could alternatively use the symmetric square root $\Sigma^{1/2}$ derived from the spectral decomposition:
+    \[
+        \Sigma^{1/2} = \bs{Q} \begin{pmatrix} \sqrt{\lambda_1} & & 0 \\ & \ddots & \\ 0 & & \sqrt{\lambda_{k}} \end{pmatrix} \bs{Q}^{\top},
+    \]
+    where $\lambda_{j} > 0$ are the eigenvalues of $\Sigma$ and the columns of $\bs{Q}$ are the eigenvectors. The result holds for any matrix square root $L$ such that $LL^\top = \Sigma$.
+\end{remark}
+
+\subsection{Hotelling's $T^2$}
+\label{ssec:Hotellings's T2}
+
+We now apply the asymptotic theory of normal distributions to a specific hypothesis testing problem: comparing a sample mean vector to a hypothesized population mean.
+
+\paragraph{Setup:}
+Suppose we observe $n$ data points, where each data point is a vector in $\mathbb{R}^k$.
+For example, imagine a clinical study with $n$ patients, where we measure $k$ characteristics (e.g., iron, protein, vitamin levels) for each patient. We denote these random vectors as $X_1, X_2, \dots, X_n$.
+We assume they are drawn i.i.d.\ from a distribution with mean vector $\bs{\mu}$ and covariance matrix $\Sigma$. Note that we do not strictly require the underlying data to be normally distributed; normality will emerge asymptotically via averaging (CLT).
+
+\paragraph{Goal:}
+We wish to test whether the population mean $\bs{\mu}$ is equal to a specific target vector $\bs{\mu}_0$.
+\[
+    H_0 : \bs{\mu} = \bs{\mu}_0 \quad \text{vs.} \quad H_1 : \bs{\mu} \neq \bs{\mu}_0.
+\]
+To do this, we compute the sample mean $\overline{X}_n$. We need a way to measure the ``distance" between the observed $\overline{X}_n$ and the hypothesized $\bs{\mu}_0$.
+
+\paragraph{Decorrelation and the Mahalanobis Distance}
+Simply calculating the Euclidean distance $\|\overline{X}_n - \bs{\mu}_0\|^2$ is often misleading because the coordinates of $X$ might be highly correlated or have vastly different variances (e.g., one variable is order $10^3$ while another is $10^{-1}$).
+To gauge if a deviation is statistically significant, we must account for this structure. We essentially need to ``decorrelate" the data.
+
+
+
+If we knew the true covariance $\Sigma$, we would use the Mahalanobis distance based on $\Sigma^{-1}$. Since $\Sigma$ is unknown, we replace it with the \textbf{sample covariance matrix} $S_n$:
+\[
+    S_{n} = \frac{1}{n-1}\sum_{i=1}^{n} (X_{i}-\overline{X}_{n})(X_{i}-\overline{X}_{n})^{\top}.
+\]
+This leads us to \textbf{Hotelling's $T^2$ statistic}.
+
+\paragraph{Analogy to the Univariate $t$-statistic:}
+It is helpful to view this as the high-dimensional generalization of the squared Student's $t$-statistic.
+In 1D ($k=1$), the $t$-statistic is $t = \frac{\overline{X}_n - \mu_0}{s/\sqrt{n}}$. Squaring this gives:
+\[
+    t^2 = \frac{n(\overline{X}_n - \mu_0)^2}{s^2} = n (\overline{X}_n - \mu_0) (s^2)^{-1} (\overline{X}_n - \mu_0).
+\]
+Hotelling's $T^2$ has the exact same form, but with vectors and matrices:
+\[
+    T^2 = n (\overline{X}_n - \bs{\mu}_0)^\top S_n^{-1} (\overline{X}_n - \bs{\mu}_0).
+\]
+
+\begin{theo}[Asymptotic Distribution of Hotelling's $T^2$]
+\label{theo:hotelling}
+Let $X_1, X_2, \dots$ be i.i.d.\ random vectors in $\mathbb{R}^{k}$ with mean vector $\bs{\mu} = \mathsf{E}[X_{i}]$ and finite invertible covariance matrix $\Sigma = \mathsf{Var}[X_{i}]$. Let $S_n$ be the sample covariance matrix.
+Then $S_{n} \overset{p}{\longrightarrow} \Sigma$, and
+\[
+    T^2(\bs{\mu}) := n (\overline{X}_{n}-\bs{\mu})^{\top}S_{n}^{-1}(\overline{X}_{n} -\bs{\mu}) \overset{d}{\longrightarrow}\chi^2_{k}.
+\]
+\end{theo}
+
+\begin{proof}
+    The proof relies on Slutsky's Theorem and the Continuous Mapping Theorem.
+    First, consider the decomposition of the sample covariance matrix:
+    \[
+        S_{n}= \frac{n}{n-1} \left[ \underbrace{\frac{1}{n}\sum_{i=1}^{n} (X_{i}-\bs{\mu})(X_{i}-\bs{\mu})^{\top}}_{ \overset{p}{\longrightarrow}\Sigma \text{ by LLN}} - \underbrace{(\overline{X}_{n}-\bs{\mu})}_{ \overset{p}{\longrightarrow}0}\underbrace{(\overline{X}_{n}-\bs{\mu})^{\top}}_{ \overset{p}{\longrightarrow}0} \right].
+    \]
+    Thus, $S_{n} \overset{p}{\longrightarrow} \Sigma$, which implies $S_n^{-1} \overset{p}{\longrightarrow} \Sigma^{-1}$ (since matrix inversion is continuous at invertible matrices).
+
+    Next, by the Central Limit Theorem (CLT):
+    \[
+        \sqrt{n} (\overline{X}_{n}-\bs{\mu}) \overset{d}{\longrightarrow} Y \sim \mathcal{N}_{k}(0,\Sigma).
+    \]
+    We can now apply Slutsky's Theorem to the product of the vector convergence and the matrix convergence. The statistic converges in distribution to the quadratic form of the limiting normal variable:
+    \[
+        T^2(\bs{\mu}) \overset{d}{\longrightarrow} Y^{\top}\Sigma^{-1}Y.
+    \]
+    By Lemma \ref{lem:mahalani}, $Y^{\top}\Sigma^{-1}Y \sim \chi^2_{k}$.
+\end{proof}
+
+\subsubsection{Application: Hypothesis Testing}
+\label{par:Application:}
+
+To perform a test with asymptotic level $\alpha \in (0,1)$, we use the quantile of the chi-square distribution as our critical value.
+
+\textbf{Decision Rule:} Reject $H_0: \bs{\mu}=\bs{\mu}_{0}$ if
+\[
+    T^2(\bs{\mu}_{0}) \ge \chi^2_{k, 1-\alpha},
+\]
+where $\chi^2_{k, 1-\alpha}$ is the $(1-\alpha)$-quantile of the $\chi^2_k$ distribution.
+Under $H_0$, the probability of type I error converges to $\alpha$ as $n \to \infty$.
+
+\begin{ex}[Women's Health and Nutrition]
+    Consider a dataset regarding the nutrient intake of $n=40$ women. We observe four variables ($k=4$): Iron, Protein, Vitamin A, and Vitamin C. We want to test if their average intake matches the recommended daily values.
+
+    \textbf{Data Preview:}
+    \begin{minted}{R}
+X <- readr::read_csv("data/nutrient.cs")
+# # A tibble: 40 x 4
+#    Iron Protein `Vit A` `Vit C`
+#   <dbl>   <dbl>   <dbl>   <dbl>
+# 1  10.2    42.6    349.    54.1
+# 2  13.7    59.9    668.   155.
+...
+n <- nrow(X) # 40
+    \end{minted}
+
+    \textbf{Hypothesis:}
+    The suggested daily intake vector is $\bs{\mu}_0 = (15, 75, 800, 90)^\top$.
+    \begin{minted}{R}
+mu0 <- c(15, 75, 800, 90)
+    \end{minted}
+
+    \textbf{Observed Means:}
+    \begin{minted}{R}
+Xbar <- colMeans(X)
+#     Iron  Protein    Vit A    Vit C
+# 13.48640 81.52893 769.4960 97.69060
+    \end{minted}
+    Notice that Vitamin A has a much larger scale (variance) than Iron. A simple difference would be dominated by Vitamin A, but Hotelling's $T^2$ handles this scaling automatically.
+
+    \textbf{Test Statistic Calculation:}
+    \begin{minted}{R}
+# T2 = n * (Xbar - mu0)' * S_inv * (Xbar - mu0)
+S_inv <- solve(cov(X))
+diff <- Xbar - mu0
+T2 <- n * t(diff) %*% S_inv %*% diff
+# [1] 18.66158
+    \end{minted}
+
+    \textbf{Conclusion:}
+    Under $H_0$, $T^2 \approx \chi^2_4$. The expected value of a $\chi^2_4$ variable is 4. The observed value of $18.66$ is unusually large (in the far right tail).
+    \begin{minted}{R}
+1 - pchisq(T2, df=4)
+# [1] 0.000915846
+    \end{minted}
+    With a $p$-value of $\approx 0.0009$, we reject the null hypothesis. It is highly implausible that the women's average intake conforms to the recommended guidelines.
+\end{ex}
+
+%\subsection{Hotellings's T2}%
+%\label{ssec:Hotellings's T2}
+%Let's keep talking about normal problems.
+%Now we will talk about a testing problem, very similar to the coherence counts, but just in the normal problems.
+%
+%Imagine a testing problem where you get to see vectors randomly drawn from a multivariate normal distribution and you want to test whether the normal distribution has a vector mean \(\mu\) that is equal to a given vector \(\mu_0\). 
+%
+%So this is the setup. I get to see data in a data matrix of size \(n \) rows and \(k\) columns. That would mean that of \(n \) patients I have measure \(k\) characteristics of the patients.
+%So we get data points that are multivariant and can be correlated if they want. Imagine I get a collection of this vectors \(X_1,X_2,\dots \).
+%Suppose that they are all drawn from the same distribution that has a mean vector \(\bs{\mu}\), and a covariance matrix \(\Sigma\).
+%Since we are doing asintotics I'm not assuming that I have normality, normality will emerge from averaging.
+%I want to understand, are the data compatible with a given mean vector \(\bs{\mu}\).
+%So I want to measure the distance somehow between what the data look like and what the mean is suppose to be.
+%It's economical statistics that solve this problems.
+%If you get a bunch of vectors you can average them all, and we get a \(k\)-vector that we will call \(\overline{X}_{n}\).
+%Then I would like to compare \(\overline{X}_{n}\) to \(\bs{\mu}\) (because I want to know how different that is).
+%So if you want to arrive at a distance that you can understand the distribution when the true mean is equal to that \(\bs{\mu}\) then you need to somehow decorrelate the coordinates of \(\bs{X}\). 
+%
+%So then I should decorrelate this vector \(\overline{X}-\bs{\mu}\). 
+%I don't know the covariance matrix, but I can estimate.
+%So I'm going to estimate the covariance matrix with a matrix \(S_{n}\).
+%We already had empirical covariance matrices before. I look at every vector minus the mean vector outer product, sum up and average and I do it minus one for unbiasedness (but this is irrelevant).
+%
+%This is just a shorthand of writing down a \(k \) by \( k\) matrix, whose diagonals are the variances of every column in my dataset. So the samples variances of every column of my dataset goes on the diagonal. And every odd diagonal entry of that matrix is a covariance between 2 columns in my dataset.
+%So this is the sample covariance matrix using my \(n \) vectors. 
+%Then, in this setup it holds, we call that this sample covariance matrix converges on probability to the true covariance matrix for this random vector. And if this true covariance matrix \(\Sigma\) is invertible, then Hotellings \(T^2(\bs{\mu)} := n \cdot \dots \) does converge to \(\chi^2_{k}\) with \(k\) degrees of freedom.
+%
+%In 1 dimension we did a \(T\) statistic already. If \(k=1\) then we can write it as the square \(\overline{X}_{n} - \bs{\mu}\) this is essentially dividing by the sample variance. So this will be the square of the \(T\) statistic and when we first talked about delta method, sluggish theorem etc I show you an example of a \(T\) statistic. Where I show you in very simple steps that such empirical variance are consistent estimators of true variance that converges in probability and then we look at that such a \(T\) statistic. Very similar this is the square of such a \(T\) statistic.
+%So this is the multivariate high dimensional of that example we did before.
+%
+%\begin{theo}[]
+%\label{theo:hotelling}
+%Let \(X_1,X_2,\dots\) be i.i.d. random vectors in \(\R^{k}\) with mean vector \(\bs{\mu} = \mathsf{E}[X_{i}]\) and (finite) covariance matrix \(\Sigma = \mathsf{Var}[X_{i}]\). Let \[
+%    S_{n }= \frac{1}{n-1}\sum\limits_{i=1}^{n} (X_{i}-\overline{X}_{n })(X_{i}-\overline{X}_{n })^{T} 
+%\] 
+%be the sample covariance matrix. 
+%Then \(S_{n } \overset{p}{\longrightarrow} \Sigma\), and if \(\Sigma\) is invertible, we have \[
+%    T^2(\bs{\mu}) := n \cdot (\overline{X}_{n }-\bs{\mu})^{T}S_{n }^{-1}(\overline{X}_{n} -\bs{\mu}) \overset{d}{\longrightarrow}\chi^2_{k}.
+%\]
+%\end{theo}
+%
+%Now let's talk about the application. Suppose you have the clinical characteristic for a patient and you also have their canonical values that people should have. Now I'm going to check in this population of patients if are the characteristic in average matching this standard collection of values.
+%
+%So let's test the hypothesis a vector \(\bs{\mu} = \bs{\mu}_{0}\). 
+%So based on this theorem if this is true, if \(\bs{\mu}_{0}\) is even I can compute this \(T^2\) for \(\bs{\mu}_{0}\) instead of \(\bs{\mu}\) so I calculate the empirical average of the characteristics of the patients on the sample, compare to the hypothesis \(H_0\) and look how large the deviation is in this decorrelated way (mahalanubi distance). 
+%If I do it like that I have a statistic then I know that when the null hypothesis is true  and \(\bs{\mu}_{0}\) is the actual mean then this asyntotic result is true and this statistic will be for large \(n\) effectively distribute \(\chi^2_{k}\). 
+%So if I want a statistical test I can say compute this \(T^2\) statistic and compare it to a quantile of a \(\chi^2\) distribution.
+%If this number turns out to be bigger than the quantile I reject the hypothesis and this allows me to control the type 1 error rate and the desired level \(\alpha\) rate. If the null hypothesis is true up to asyntotic aproximation. Is an asyntotic test so if I pick this critical value the statistical test reject, has a type 1 error rate that converges to a \(\alpha\) rate. The limit is continuous all the probabilities converge.
+%
+%\paragraph{Application:}%
+%\label{par:Application:}
+%Given a level \(\alpha \in (0,1)\), consider testing \[
+%    H_0 : \bs{\mu}=\bs{\mu}_{0} \text{ vs. } H_1 : \bs{\mu} \neq \bs{\mu}_{0}.
+%\]
+%If we reject \(H_0\) when \(T^2(\bs{\mu}_{0}) \ge F^{-1}_{\chi^2_{k}}(1-\alpha)\) then the probability of a type I error converges to \(\alpha\) as \(n \longrightarrow \infty\).
+%\begin{proof}
+%    Observe that \[
+%        S_{n}= \frac{n}{n-1} \cdot \biggl[ \underbrace{\frac{1}{n}\sum\limits_{i=1}^{n} (X_{i}-\bs{\mu})(X_{i}-\bs{\mu})^{T}}_{ \overset{p}{\longrightarrow}\Sigma \text{ by LLN}}-\underbrace{(\overline{X}_{n}-\bs{\mu})}_{ \overset{p}{\longrightarrow}0}\underbrace{(\overline{X}_{n}-\bs{\mu})^{T}}_{ \overset{p}{\longrightarrow}0}  \biggr] 
+%    \]
+%    so that \(S_{n} \overset{p}{\longrightarrow} \Sigma\) by Theorem 10.3.
+%    Next by the CLT, \[
+%        \sqrt{n} (\overline{X}_{n}-\bs{\mu}) \overset{d}{\longrightarrow} Y \sim \cc{N}_{k}(0,\Sigma).
+%    \]
+%    Theorem 10.3 and Lemma \autoref{lem:mahalani} gives \[
+%        T^2(\bs{\mu}) \overset{d}{\longrightarrow} Y^{T}\Sigma^{-1}Y\sim \chi^2_{k}.
+%    \]
+%\end{proof}
+%\begin{ex}[Women's health]
+%    A number of women where suppose to take a number of supplements and they did.
+%    \leavevmode
+%    \begin{minted}{R}
+%X <- readr::read_csv("data/nutrient.cs")
+%X
+%# # A tibble: 40 x 4
+%# Iron Protein `Vit A` `Vit C`
+%#   <dbl>   <dbl>   <dbl>   <dbl>
+%# 1 10.2    42.6    349.    54.1
+%# 2 13.7    59.9    668.    155.
+%# 3 13.2    42.2    792.    225.
+%# 4 18.9    111.    740.    81.0
+%# 5  6.8    45.8    166.    13.0
+%# 6 18.4    116.    1120.   159.
+%# # i 34 more rows
+%n <- nrow(X)
+%   \end{minted}
+%    
+%   Suggested intake of iron, protein, vitamin A and C:
+%   \begin{minted}{R}
+%mu0 <- c(15, 75, 800, 90)
+%   \end{minted}
+%   
+%   Observed average values:
+%   \begin{minted}{R}
+%Xbar <- colMeans(X)
+%Xbar
+%# Iron      Protein     Vit A   Vit C
+%# 13.48640 81.52893 769.49600 97.69060
+%   \end{minted}
+%   
+%   The observed statistic value is equal to
+%   \begin{minted}{R}
+%T2 <- n*sum( (Xbar-mu0)* (solve(cov(X))%*%(Xbar-mu0)))
+%T2
+%# [1] 18.66158
+%   \end{minted}
+%
+%   which leads to a very small \(p\)-value of
+%   \begin{minted}{R}
+%1-pchisq(T2, 4)
+%# [1] 0.000915846
+%    \end{minted}
+%    The value 18.66158 is already an unusually rather high value.
+%    So the probability of seen something like this is 1 in 10.000. 
+%    So it's not plausible that this follows the adjusted intake on average. 
+%\end{ex}
+%\subsection{Non-Central Chi-Square Distribution}%
+%\label{sub:Non-Central Chi-Square Distribution}
+%Let's keep talking about normals and distance.
+% So in this problem here, we were thinking about chi-square
+% distributions. 
+% And I said here, okay, this is great because knowing this chi-square limit
+% allows me to set a critical value for the test statistic.
+% So this is a test statistic.
+%
+% I compare the average that I see in the data to some hypothesized vector \(\bs{\mu}_0\). And I look
+% at this test statistic, and knowing what happens when the null hypothesis is true, that allows
+% me to understand what I need to do to set a cutoff to hold a certain type one error
+% rate. 
+%
+% Type one error rates are about things that happen when the null hypothesis
+% is true. Suppose I want to understand something about the power of the test. Well, if I asked
+% about power, then I asked you about a scenario where you formed the statistic centering around
+% a vector \(\bs{\mu}_0\), which then actually isn't the mean vector of the \(X\)'s that I averaged. So
+% this is different. 
+%
+% So what about the distribution of square distances involving normal random
+% variables when the distance is between random vectors with a certain mean vector and yet
+% some other vector? 
+% That's the question of interest. And this leads to this concept of non-central
+% chi-square distributions. 
+%
+% So chi-square distributions are about what are typical variations, typical
+% spread of norms or squared norms of centered vectors that have mean zero.  And if
+% they don't have mean zero, and you look at squared norms, then you get so-called non-central
+% chi-squares. 
+%
+% So here's the definition. So let me take \(\bs{X}\), a normal random vector, \(k\) components,
+% so it's in \(\R^{k}\), identity \(I\) as a covariance matrix. That means that they're all independent and
+% they all have variance 1. 
+%But now in contrast to before, I'm going to say each one of them
+% has its own mean \(\mu_j\). And so there's a vector \(\bs{\mu}\) of \(k\) means, holding means \(\mu_1\) up to
+% \(\mu_{k}\). 
+%
+% So in other words, so \(x_{j}\), the random variable is normal, mean \(\mu_{j}\), and variance
+% 1, and all these guys are independent. Then I can say, okay, look at the squared norm
+% of \(\bs{X}\), \(\|\bs{X}\|^2_{2}\), so the sum of the squared \(X_{j}\)'s. It has some distribution, no? And this distribution
+% is called a non-central chi-square distribution. It's called a non-central chi-square distribution
+% with \(k\) degrees of freedom. 
+%
+% So apparently it's allowed to change as I change the \(k\). Makes
+% sense, right? If I sum more squares, it should be bigger, bigger, bigger, bigger in terms
+% of what I get out. So this should vary with \(k\), this distribution, and okay, there's a
+% parameter \(k\) degrees of freedom. 
+%
+% And then there's a so-called non-centrality parameter. So there's
+% one number that is also indexing the distribution, and that is the squared norm of the vector
+% \(\bs{\mu}\), \(\|\bs{\mu}\|^2_{2}\). So non-central chi-square distribution is determined by two numbers. One is an integer \(k\), and the other one is a positive number that plays the role of this,
+% that here is the squared norm. 
+%
+% So a non-central chi-square distribution is determined
+% by two numbers, \(k\), the degrees of freedom, just like in the case before, but then one
+% more number, which is the non-centrality parameter. And this definition, as it's written, doesn't
+% yet make sense, right? Because why should the distribution of \(\|\bs{X}\|^2_{2}\) 
+% be the same when I look at two settings with different \(\mu_{j}\) 's? 
+%
+% But I happen to have vectors
+% of the same squared length. There's a claim hidden in here for well-definedness. So I need to convince you that if I take two random vectors, \(\bs{X}\) and \(\bs{Y}\), both in
+% \(\R^{k}\), both with identity as a covariance matrix, but different mean vectors \(\bs{\mu}\) and say \(\bs{\delta}\),
+% I need to convince you that if \(\bs{\mu}\) and \(\bs{\delta}\) have the same length, then the distribution \(\|\bs{X}\|^2_{2}\)
+%is the same as \(\|\bs{Y}\|^2_{2}\).
+%
+%I need to prove that to make this a meaningful definition. Why is
+% this true? Well, if you have two vectors that have the same length, then you can just pick
+% an orthogonal transformation, that moves one vector into the other. They're
+% in two dimensions, they're on the same circle, and I just rotate one into the other. So I
+% pick an orthogonal matrix \(\bs{Q}\) that moves \(\bs{\mu}\) into \(\bs{\delta}\), and I can do that because they
+% have the same length. 
+%
+% So I am interested in the length of \(\bs{X}\), that's the same as the length
+% of \(\bs{QX}\), right? Orthogonal matrices, that's there. That's why we're interested in them.
+% They don't change lengths. So these have the same length. But what's the distribution
+% of \(\bs{QX}\)? Well, the distribution of \(QX\) is normal because it's linear transformations of normals.
+
+\subsection{Non-Central Chi-Square Distribution}
+\label{sub:Non-Central Chi-Square Distribution}
+
+We previously established that under the null hypothesis ($H_0: \bs{\mu} = \bs{\mu}_0$), the test statistic follows a central $\chi^2$ distribution. This allows us to control the Type I error rate.
+However, if we want to analyze the \textbf{power} of a test, we must ask: 
+\begin{quote}
+\textit{What happens when the null hypothesis is false?}
+\end{quote}
+In this scenario, the data is centered around a true mean $\bs{\mu}$ that differs from the hypothesized $\bs{\mu}_0$. Consequently, we are looking at the squared norm of a random vector with a non-zero mean. This leads to the \textbf{non-central chi-square distribution}.
+
+\begin{definition}[Non-Central Chi-Square]
+    Let $\bs{X} \sim \cc{N}_{k}(\bs{\mu}, I_{k})$. That is, $X_1, \dots, X_k$ are independent with unit variance, but $X_j \sim \cc{N}(\mu_j, 1)$.
+    The distribution of the squared norm $\|\bs{X}\|^2_{2} = \sum_{j=1}^{k} X^2_{j}$ is called the \textbf{non-central chi-square distribution} with $k$ degrees of freedom and non-centrality parameter $\lambda = \|\bs{\mu}\|^2_{2}$. We denote this as:
+    \[
+        \|\bs{X}\|^2_{2} \sim \chi^2_{k}(\|\bs{\mu}\|^2_{2}).
+    \]
+\end{definition}
+
+\paragraph{Geometric Intuition (Rotational Invariance):}
+The definition above claims that the distribution depends on $\bs{\mu}$ \textit{only} through its squared length $\|\bs{\mu}\|^2$. Why is this well-defined?
+Consider two mean vectors $\bs{\mu}$ and $\bs{\delta}$ with the same length ($\|\bs{\mu}\| = \|\bs{\delta}\|$).
+
+Since they lie on the same hypersphere, there exists an orthogonal matrix $\bs{Q}$ (a rotation) such that $\bs{\delta} = \bs{Q}\bs{\mu}$.
+If we define $\bs{Y} = \bs{Q}\bs{X}$, then:
+\begin{itemize}
+    \item Length is preserved: $\|\bs{Y}\|^2 = \|\bs{Q}\bs{X}\|^2 = \|\bs{X}\|^2$.
+    \item Distribution is preserved: $\bs{Y}$ is still normal with identity covariance (since $\bs{Q}I\bs{Q}^\top = I$), but its mean is rotated to $\bs{Q}\bs{\mu} = \bs{\delta}$.
+\end{itemize}
+Thus, the distribution of the squared norm depends only on the distance of the mean vector from the origin, not its direction.
+
+\begin{note}[R Implementation]
+    In \texttt{R}, the chi-square family functions (\texttt{rchisq}, \texttt{dchisq}, \texttt{pchisq}, \texttt{qchisq}) accept an optional argument \texttt{ncp} (non-centrality parameter).
+    \begin{minted}{R}
+# Generate 100 draws from non-central chi-square (df=5, lambda=2.1)
+rchisq(n=100, df=5, ncp=2.1)
+    \end{minted}
+\end{note}
+
+\subsubsection{Projection Matrices and Singular Covariance}
+\label{sub:Projection Matrices}
+
+In the previous sections, we assumed the covariance matrix $\Sigma$ was invertible to define the Mahalanobis distance. However, in many applications—specifically the upcoming dice roll problem—variables satisfy linear constraints (e.g., counts summing to $N$). This forces the random vector to lie in a lower-dimensional subspace, resulting in a \textbf{singular} (non-invertible) covariance matrix.
+
+We need to understand when $\|\bs{X}\|^2$ follows a chi-square distribution even if $\Sigma$ is singular. The key concept is the \textbf{projection matrix}.
+
+\begin{definition}[Projection Matrix]
+    A symmetric matrix $\Sigma$ is a projection matrix if $\Sigma^2 = \Sigma$.
+    \begin{itemize}
+        \item \textbf{Eigenvalues:} Since $\lambda^2 = \lambda$, the eigenvalues must be either $0$ or $1$.
+        \item \textbf{Intuition:} If you project an object onto the floor ($\Sigma$), it lands on the floor. If you try to project it onto the floor again ($\Sigma^2$), it doesn't move—it's already there.
+    \end{itemize}
+\end{definition}
+
+
+
+\begin{lemma}
+    \label{lem:dsnpg}
+    Let $\bs{X} \sim \cc{N}_{k}(\bs{\delta}, \Sigma)$ where $\Sigma$ is a projection matrix of rank $r$. If the mean vector lies in the projection space (i.e., $\Sigma \bs{\delta} = \bs{\delta}$), then:
+    \[
+        \|\bs{X}\|^2_{2} \sim \chi^2_{r}(\|\bs{\delta}\|^2_{2}).
+    \]
+\end{lemma}
+TODO: improve proof
+\begin{proof}[Sketch]
+    Using the spectral decomposition, we can rotate the space such that $\Sigma$ becomes a diagonal matrix with $r$ ones and $k-r$ zeros. This effectively isolates $r$ active standard normal variables (plus means), while the remaining $k-r$ variables are identically zero. The sum of squares is then simply the sum of $r$ squared normals.
+\end{proof}
+
+\section{Multinomial Experiments}
+\label{sub:Multinomial Experiments}
+
+Suppose we conduct $n$ independent replications of an experiment with $c$ possible outcomes (e.g., rolling a die).
+Let $U_i$ be the random variable representing the categorical outcome of the $i$-th trial:
+\[
+    U_i = j \quad \text{if the $i$-th trial results in outcome } j \in \{1, \dots, c\}.
+\]
+The variables $U_1, \dots, U_n$ are i.i.d., and their distribution is completely determined by the probabilities:
+\[
+    p_j = \mathsf{P}(U_i = j), \quad j = 1, \dots, c.
+\]
+We assume $p_j > 0$ for all $j$, and naturally, $\sum\limits_{j=1}^{c} p_j = 1$.
+
+\paragraph{Indicator Variables (One-Hot Encoding)}
+While the raw data $U_i$ are integers, theoretical analysis (specifically the Central Limit Theorem) is much easier if we work with sums of vectors. We introduce binary indicators $X_{ij}$ to represent the data algebraically.
+\[
+    X_{ij} = \bs{1}_{\{j\}}(U_i) = \begin{cases}
+        1 & \text{if } U_i = j \\
+        0 & \text{otherwise}
+    \end{cases}
+\]
+
+
+We can view the outcome of the $i$-th trial as a vector $\bs{X}_i = (X_{i1}, \dots, X_{ic})^\top$. This vector is a canonical basis vector $\bs{e}_j$ (often called a ``one-hot'' vector in machine learning) with a 1 at position $j$ and 0 elsewhere.
+\[
+    \bs{X}_i = \bs{e}_j = (0, \dots, 1, \dots, 0)^\top \iff U_i = j.
+\]
+This notation ``blows up'' a single column of categorical data into a matrix of binary indicators, but it simplifies the math: the column sums of this matrix are exactly the counts we need.
+
+\begin{ex}[Rolling a four-sided die]
+    Consider $n=8$ rolls of a 4-sided die ($c=4$).
+    \begin{minted}{R}
+set.seed(2025)
+c <- 4
+n <- 8
+# Simulate raw outcomes
+U <- sample(1:c, n, replace=TRUE)
+print(U)
+# [1] 1 4 4 2 1 3 2 3
+
+# Convert to Indicator Matrix (One-Hot Encoding)
+X <- matrix(0, n, c)
+for(i in 1:n){ X[i, U[i]] = 1 }
+
+# Display as Data Frame
+data.frame(X)
+#   X1 X2 X3 X4
+# 1  1  0  0  0  <-- U[1]=1
+# 2  0  0  0  1  <-- U[2]=4
+# 3  0  0  0  1
+# 4  0  1  0  0
+# 5  1  0  0  0
+# 6  0  0  1  0
+# 7  0  1  0  0
+# 8  0  0  1  0
+    \end{minted}
+\end{ex}
+
+\subsection{The Multinomial Distribution}
+\label{sub:Multinomial Distribution}
+
+\paragraph{Sufficient Statistics: The Counts}
+From the indicator vectors, we derive the aggregate counts for each category. Let $N_j$ be the number of times outcome $j$ occurred in the $n$ trials.
+In terms of our indicator matrix, $N_j$ is simply the column sum:
+\[
+    N_j = \sum_{i=1}^{n} X_{ij}.
+\]
+The vector of counts $\bs{N} = (N_1, \dots, N_c)^\top$ follows a \textbf{Multinomial Distribution} with parameters $n$ and probability vector $\bs{p} = (p_1, \dots, p_c)^\top$.
+\begin{itemize}
+    \item If $c=2$, this simplifies to the familiar \textbf{Binomial distribution}.
+    \item Note that $\sum_{j=1}^c N_j = n$. This linear constraint means the random vector $\bs{N}$ is confined to a subspace of dimension $c-1$. Consequently, the covariance matrix of $\bs{N}$ is \textbf{singular}. This connects back to our previous discussion on projection matrices—we will rely on that theory to analyze test statistics involving $\bs{N}$.
+\end{itemize}
+
+We formally define the distribution of the count vector $\bs{N}$.
+
+\begin{definition}[Multinomial Distribution]
+    The random vector of counts $\bs{N} = (N_1, \dots, N_c)^\top$ follows a \textbf{Multinomial Distribution} with parameters $n$ (number of trials) and $\bs{p} = (p_1, \dots, p_c)^\top$ (probabilities).
+    The probability mass function is given by:
+    \[
+        \mathsf{P}(N_1 = n_1, \dots, N_c = n_c) = \binom{n}{n_1 \dots n_c} p_1^{n_1} \dots p_c^{n_c}
+    \]
+    where $n_j \ge 0$ and $\sum\limits_{j=1}^c n_j = n$.
+    The term $\binom{n}{n_1 \dots n_c} = \frac{n!}{n_1! \dots n_c!}$ is the \textit{multinomial coefficient}, counting the number of ways to partition $n$ items into $c$ labeled groups with sizes $n_1, \dots, n_c$.
+\end{definition}
+
+
+
+\subsubsection{Moments and Covariance Structure}
+
+Using the indicator variable representation $\bs{N} = \sum\limits_{i=1}^n \bs{X}_i$, we can easily derive the moments. Recall that $\bs{X}_i$ is a ``one-hot" vector where $X_{ij} \sim \text{Bernoulli}(p_j)$.
+
+\paragraph{Expectation:}
+Since expectation is linear:
+\[
+    \E[N_j] = \sum_{i=1}^n \E[X_{ij}] = \sum_{i=1}^n p_j = n p_j.
+\]
+Thus, the expected vector is $\E[\bs{N}] = n \bs{p}$.
+
+\paragraph{Variance and Covariance:}
+Since the trials are independent, the variance of the sum is the sum of the variances: $\text{Var}(\bs{N}) = n \text{Var}(\bs{X}_i)$. We focus on determining the covariance matrix of a single trial, $\bs{X}_i$.
+
+\begin{itemize}
+    \item \textbf{Variance (Diagonal):} For a single category $j$, $X_{ij}$ is a Bernoulli variable.
+    \[
+        \text{Var}(X_{ij}) = p_j(1 - p_j).
+    \]
+    \item \textbf{Covariance (Off-diagonal):} For distinct categories $j \neq \ell$, we look at the interaction.
+    \[
+        \mathsf{Cov}(X_{ij}, X_{i\ell}) = \mathsf{E}[X_{ij}X_{i\ell}] - \mathsf{E}[X_{ij}]\mathsf{E}[X_{i\ell}].
+    \]
+    Crucially, a single trial cannot result in both outcome $j$ and outcome $\ell$ simultaneously (mutually exclusive). Thus, the product $X_{ij}X_{i\ell}$ is always 0.
+    \[
+        \mathsf{E}[X_{ij}X_{i\ell}] = 0 \implies \mathsf{Cov}(X_{ij}, X_{i\ell}) = 0 - p_j p_{\ell} = -p_j p_{\ell}.
+    \]
+\end{itemize}
+
+\begin{note}
+    The covariance is negative. This makes intuitive sense: if we know trial $i$ resulted in category $j$ (so $X_{ij}=1$), then it \textit{cannot} be category $\ell$ (so $X_{i\ell}$ must be 0). If one indicator goes up, the others must yield.
+\end{note}
+
+\subsubsection{Matrix Representation and Singularity}
+
+We can express the covariance matrix of a single trial $\bs{X}_i$, denoted as $\Sigma_{\bs{X}}$, in a compact matrix form.
+Let $\mathbf{P} = \text{diag}(p_1, \dots, p_c)$ be a diagonal matrix of probabilities.
+
+\[
+    \text{Var}(\bs{X}_i) = \begin{pmatrix}
+        p_1(1-p_1) & -p_1p_2 & \dots & -p_1p_c \\
+        -p_2p_1 & p_2(1-p_2) & & \vdots \\
+        \vdots & & \ddots & \\
+        -p_cp_1 & \dots & & p_c(1-p_c)
+    \end{pmatrix}
+    = \mathbf{P} - \bs{p}\bs{p}^\top.
+\]
+
+Consequently, the covariance matrix for the total counts $\bs{N}$ is:
+\[
+    \text{Var}(\bs{N}) = n (\mathbf{P} - \bs{p}\bs{p}^\top).
+\]
+
+\paragraph{Rank and Kernel:}
+The matrix $\mathbf{P} - \bs{p}\bs{p}^\top$ is \textbf{singular}. To see this, consider the vector of all ones, $\bs{1} = (1, \dots, 1)^\top$.
+\[
+    (\mathbf{P} - \bs{p}\bs{p}^\top)\bs{1} = \mathbf{P}\bs{1} - \bs{p}(\bs{p}^\top \bs{1}).
+\]
+Since $\mathbf{P}\bs{1} = \bs{p}$ (the vector of probabilities) and $\bs{p}^\top \bs{1} = \sum p_j = 1$, we get:
+\[
+    \bs{p} - \bs{p}(1) = \bs{0}.
+\]
+The vector $\bs{1}$ is in the kernel (null space) of the covariance matrix. This implies the rank is at most $c-1$ (it is exactly $c-1$ provided $p_j > 0$).
+This algebraic singularity corresponds exactly to the physical constraint that the counts must sum to $n$ ($\sum N_j = n$). The data does not vary freely in $c$ dimensions; it is confined to a $(c-1)$-dimensional subspace.
+
+\section{Pearson's Chi-Square Test}
+\label{sec:Pearson's Chi-Square Test}
+
+We now address the testing problem: given a vector of counts $\bs{N} \sim \text{Multinomial}(n, \bs{p})$, is the underlying probability vector $\bs{p}$ equal to a specific hypothesized vector $\bs{p}_0$?
+
+\paragraph{The Hypotheses:}
+\[
+    H_0: \bs{p} = \bs{p}_0 \quad \text{vs.} \quad H_1: \bs{p} \neq \bs{p}_0
+\]
+
+\paragraph{The Test Statistic:}
+To test this, we compare the \textbf{observed counts} ($N_j$) with the \textbf{expected counts} under the null hypothesis. Under $H_0$, $\mathsf{E}[N_j] = n p_{0j}$. Pearson's statistic aggregates the squared deviations, normalized by the expected counts:
+
+\[
+    W_n(\bs{p}_0) := \sum\limits_{j=1}^c \frac{(N_j - n p_{0j})^2}{n p_{0j}}.
+\]
+
+
+
+\paragraph{Decision Rule:}
+We reject $H_0$ if the statistic is sufficiently large, specifically if $W_n \ge k_\alpha$, where $k_\alpha$ is the critical value derived from the asymptotic distribution.
+
+\subsection{Asymptotic Distribution}
+
+While the exact distribution of $W_n$ is discrete (and complex to calculate for large $n$), Pearson's great insight was that it approaches a known limit.
+
+\begin{theo}
+    If $\bs{N} \sim \text{Multinomial}(n, \bs{p}_0)$ and $n \to \infty$, then:
+    \[
+        W_n(\bs{p}_0) \xrightarrow{d} \chi_{c-1}^2.
+    \]
+    Consequently, the test that rejects when $W_n \ge \chi^2_{c-1; 1-\alpha}$ has asymptotic level $\alpha$:
+    \[
+        \mathsf{P}_{\bs{p}_0}(W_n(\bs{p}_0) \ge k_\alpha) \underset{n \to \infty}{\longrightarrow} \alpha.
+    \]
+\end{theo}
+
+\begin{proof}[]
+    \leavevmode
+    \newline
+\textbf{Reformulation as a Quadratic Form} \\
+Let $\bs{P}_0 = \text{diag}(p_{01}, \dots, p_{0c})$. We can rewrite the sum notation using vectors. Let $\overline{\bs{X}}_n = \frac{1}{n} \bs{N} = \frac{1}{n} \sum\limits_{i=1}^n \bs{X}_i$ be the vector of relative frequencies.
+Algebraic manipulation shows:
+\[
+    W_n(\bs{p}_0) = n \sum\limits_{j=1}^c \frac{(N_j/n - p_{0j})^2}{p_{0j}} = n(\overline{\bs{X}}_n - \bs{p}_0)^{\top} \bs{P}_0^{-1} (\overline{\bs{X}}_n - \bs{p}_0).
+\]
+
+\textbf{Multivariate CLT} \\
+The vector $\overline{\bs{X}}_n$ is an average of i.i.d. indicator vectors $\bs{X}_i$. Under $H_0$, $\mathsf{E}[\bs{X}_i] = \bs{p}_0$ and $\mathsf{Var}[\bs{X}_i] = \bs{P}_0 - \bs{p}_0\bs{p}_0^\top$ (from Section \ref{sub:Multinomial Distribution}).
+Applying the Multivariate Central Limit Theorem:
+\[
+    \sqrt{n}(\overline{\bs{X}}_n - \bs{p}_0) \xrightarrow{d} \bs{Y} \sim \mathcal{N}_c(\bs{0}, \boldsymbol{\Sigma}), \quad \text{where } \boldsymbol{\Sigma} = \bs{P}_0 - \bs{p}_0 \bs{p}_0^\top.
+\]
+
+\textbf{Continuous Mapping} \\
+By the Continuous Mapping Theorem, the statistic converges to a quadratic form of the Gaussian vector $\bs{Y}$:
+\[
+    W_n(\bs{p}_0) \xrightarrow{d} \bs{Y}^{\top} \bs{P}_0^{-1} \bs{Y}.
+\]
+We can factor $\bs{P}_0^{-1}$ as $\bs{P}_0^{-1/2}\bs{P}_0^{-1/2}$. Let $\bs{Z} = \bs{P}_0^{-1/2} \bs{Y}$. Then:
+\[
+    W_n(\bs{p}_0) \xrightarrow{d} \|\bs{Z}\|_2^2.
+\]
+
+\textbf{Analyzing the Covariance of Z} \\
+The vector $\bs{Z}$ is a linear transformation of a Gaussian, so $\bs{Z} \sim \mathcal{N}(\bs{0}, \boldsymbol{\Sigma}_{\bs{Z}})$. We compute its covariance:
+\[
+    \boldsymbol{\Sigma}_{\bs{Z}} = \mathsf{Var}[\bs{P}_0^{-1/2} \bs{Y}] = \bs{P}_0^{-1/2} \boldsymbol{\Sigma} \bs{P}_0^{-1/2}.
+\]
+Substituting $\boldsymbol{\Sigma} = \bs{P}_0 - \bs{p}_0\bs{p}_0^\top$:
+\[
+    \boldsymbol{\Sigma}_{\bs{Z}} = \bs{P}_0^{-1/2} (\bs{P}_0 - \bs{p}_0\bs{p}_0^\top) \bs{P}_0^{-1/2} = \bs{I}_c - (\bs{P}_0^{-1/2}\bs{p}_0)(\bs{P}_0^{-1/2}\bs{p}_0)^\top.
+\]
+Let $\bs{u} = \bs{P}_0^{-1/2}\bs{p}_0$. This vector $\bs{u}$ has entries $\sqrt{p_{0j}}$. Its squared norm is:
+\[
+    \|\bs{u}\|^2 = \bs{u}^\top \bs{u} = \sum\limits_{j=1}^c (\sqrt{p_{0j}})^2 = \sum\limits_{j=1}^c p_{0j} = 1.
+\]
+Thus, $\boldsymbol{\Sigma}_{\bs{Z}} = \bs{I}_c - \bs{u}\bs{u}^\top$. Since $\|\bs{u}\|=1$, this is a \textbf{projection matrix} projecting onto the orthogonal complement of $\bs{u}$. Its rank is:
+\[
+    \text{rank}(\bs{I}_c - \bs{u}\bs{u}^\top) = \text{tr}(\bs{I}_c) - \text{tr}(\bs{u}\bs{u}^\top) = c - 1.
+\]
+
+\textbf{Conclusion:} \\
+By \autoref{lem:dsnpg} (distribution of squared norm of projected Gaussian),
+\[
+    \|\bs{Z}\|_2^2 \sim \chi_{c-1}^2.
+\]
+\end{proof}
+
+\subsection{Asymptotic Power}
+\label{sub:Asymptotic Power}
+
+We now consider the behavior of the test when the null hypothesis is false. A good test should eventually detect any fixed deviation from the null as the sample size increases.
+
+\begin{theo}[Consistency of Chi-Square Test]
+    \label{thm:consistency}
+    The Chi-Square test is \textbf{consistent}. That is, if the true distribution is $\bs{N} \sim \text{Multinomial}(n, \bs{p})$ with $\bs{p} \neq \bs{p}_0$, then the probability of rejecting $H_0$ converges to 1:
+    \[
+        \mathsf{P}_{\bs{p}}(W_n(\bs{p}_0) \ge k_\alpha) \underset{n \to \infty}{\longrightarrow} 1.
+    \]
+\end{theo}
+
+
+
+\begin{proof}
+    We analyze the behavior of the statistic scaled by $1/n$. Recall that $W_n(\bs{p}_0) = n(\overline{\bs{X}}_n - \bs{p}_0)^{\top} \bs{P}_0^{-1} (\overline{\bs{X}}_n - \bs{p}_0)$.
+    
+    \textbf{Convergence of the Scaled Statistic} \\
+    By the Law of Large Numbers (LLN), the vector of observed relative frequencies converges in probability to the true probability vector:
+    \[
+        \overline{\bs{X}}_n \xrightarrow{p} \bs{p}.
+    \]
+    By the Continuous Mapping Theorem, the quadratic form converges:
+    \[
+        \frac{1}{n}W_n(\bs{p}_0) = (\overline{\bs{X}}_n - \bs{p}_0)^{\top} \bs{P}_0^{-1} (\overline{\bs{X}}_n - \bs{p}_0) \xrightarrow{p} (\bs{p} - \bs{p}_0)^{\top} \bs{P}_0^{-1} (\bs{p} - \bs{p}_0) =: \Delta.
+    \]
+
+    \textbf{Positivity of the Limit} \\
+    The matrix $\bs{P}_0 = \text{diag}(\bs{p}_0)$ is a diagonal matrix with positive entries, so its inverse $\bs{P}_0^{-1}$ is positive definite. Since $\bs{p} \neq \bs{p}_0$, the vector $(\bs{p} - \bs{p}_0)$ is non-zero. Therefore, the quadratic form $\Delta$ must be strictly positive:
+    \[
+        \Delta > 0.
+    \]
+
+    \textbf{Asymptotic Probability} \\
+    The critical value $k_\alpha$ is a fixed constant (the quantile of a $\chi^2_{c-1}$ distribution) and does not grow with $n$. Thus, $k_\alpha/n \to 0$.
+    We can lower bound the rejection probability for sufficiently large $n$ (such that $k_\alpha/n < \Delta/2$):
+    \[
+        \mathsf{P}(W_n(\bs{p}_0) \ge k_\alpha) = \mathsf{P}\left(\frac{1}{n}W_n(\bs{p}_0) \ge \frac{1}{n}k_\alpha\right).
+    \]
+    Since $\frac{1}{n}W_n(\bs{p}_0) \xrightarrow{p} \Delta$ and $\frac{1}{n}k_\alpha \to 0$, for any $\epsilon > 0$, the probability mass concentrates around $\Delta$. Specifically:
+    \[
+        \mathsf{P}\left(\frac{1}{n}W_n(\bs{p}_0) \ge \frac{1}{2}\Delta\right) \to 1.
+    \]
+    Intuitively, under the alternative hypothesis, the statistic $W_n$ grows linearly with $n$ (it is roughly $n\Delta$), while the critical threshold $k_\alpha$ stays constant. Thus, the statistic eventually exceeds the threshold with certainty.
+\end{proof}
+
+\subsection{Local Power Analysis}
+\label{sub:Local Power Analysis}
+
+While consistency (\autoref{thm:consistency}) assures us that the test will eventually reject any fixed false null hypothesis as $n \to \infty$, it does not help us approximate the power for a specific finite sample size $n$. To derive a useful approximation for power and sample size planning, we consider \textbf{local alternatives} that approach the null hypothesis at a rate of $1/\sqrt{n}$.
+
+\paragraph{Sequence of Alternatives:}
+Consider a sequence of probability vectors $\bs{p}_n$ defined by:
+\[
+    \bs{p}_n = \bs{p}_0 + \frac{1}{\sqrt{n}} \boldsymbol{\delta},
+\]
+where $\bs{p}_0$ is the null hypothesis vector ($p_{0j} > 0, \sum p_{0j} = 1$) and $\boldsymbol{\delta} \in \mathbb{R}^c$ is a fixed direction vector such that $\sum_{j=1}^c \delta_j = 0$ (ensuring $\sum p_{nj} = 1$).
+
+\begin{theo}
+    \label{thm:LocalPower}
+    Let $\bs{N}^{(n)} \sim \text{Multinomial}(n, \bs{p}_n)$. Then, as $n \to \infty$:
+    \[
+        W_n(\bs{p}_0) = \sum\limits_{j=1}^c \frac{(N_j^{(n)} - n p_{0j})^2}{n p_{0j}} \xrightarrow{d} \chi_{c-1}^2 (\lambda),
+    \]
+    where the limit is a \textbf{non-central chi-square distribution} with $c-1$ degrees of freedom and non-centrality parameter:
+    \[
+        \lambda = \sum\limits_{j=1}^c \frac{\delta_j^2}{p_{0j}}.
+    \]
+\end{theo}
+
+
+
+\paragraph{Application (Power Calculation):}
+This theorem allows us to approximate the power of the test for a specific alternative $\bs{p}$ and sample size $n$.
+\begin{enumerate}[]
+    \item 
+ Set $\boldsymbol{\delta} = \sqrt{n}(\bs{p} - \bs{p}_0)$.
+\item   Calculate $\lambda = \sum \delta_j^2 / p_{0j} = n \sum (p_j - p_{0j})^2 / p_{0j}$.
+\item   The power is approximately $\mathsf{P}(Y \ge k_\alpha)$, where $Y \sim \chi^2_{c-1}(\lambda)$.
+\end{enumerate}
+
+\begin{proof}[]
+The proof relies on establishing the asymptotic normality of the scaled count vector under the sequence of local alternatives.
+
+\textbf{Asymptotic Normality of the Counts} \\
+We claim that:
+\begin{equation}
+    \sqrt{n}\left(\frac{1}{n}\bs{N}^{(n)} - \bs{p}_0\right) \xrightarrow{d} \bs{Y} \sim \mathcal{N}_c(\boldsymbol{\delta}, \boldsymbol{\Sigma}), \label{eq:shifted_normal}
+\end{equation}
+where $\boldsymbol{\Sigma} = \bs{P}_0 - \bs{p}_0 \bs{p}_0^\top$.
+To see this, we decompose the term:
+\[
+    \sqrt{n}\left(\frac{1}{n}\bs{N}^{(n)} - \bs{p}_0\right) = \sqrt{n}\left(\frac{1}{n}\bs{N}^{(n)} - \bs{p}_n\right) + \sqrt{n}(\bs{p}_n - \bs{p}_0).
+\]
+By definition of $\bs{p}_n$, the second term is exactly $\boldsymbol{\delta}$. It remains to show that the first term converges to $\mathcal{N}_c(\bs{0}, \boldsymbol{\Sigma})$.
+
+Using the Cramér-Wold device, we check convergence for linear combinations $\bs{a}^\top \bs{N}^{(n)}$ for any $\bs{a} \in \mathbb{R}^c$. Specifically, we restrict attention to $\bs{a} \perp \bs{1}$ (since the sum of counts is fixed).
+Let $\bs{X}_i^{(n)}$ be the indicator vector for the $i$-th trial in the $n$-th experiment.
+\[
+    \frac{1}{n}\bs{N}^{(n)} \overset{d}{=} \frac{1}{n}\sum\limits_{i=1}^n \bs{X}_i^{(n)}.
+\]
+The variance of the projection is $\sigma_n^2 = n \cdot \bs{a}^\top \boldsymbol{\Sigma}(\bs{p}_n) \bs{a}$. As $n \to \infty$, $\bs{p}_n \to \bs{p}_0$, so $\boldsymbol{\Sigma}(\bs{p}_n) \to \boldsymbol{\Sigma}(\bs{p}_0)$.
+To apply the Lyapunov CLT, we bound the third moment. Let $A = \max_j |a_j|$. Then $|\bs{a}^\top \bs{X}_i^{(n)}| \le A$ and $|\bs{a}^\top \bs{p}_n| \le A$.
+\[
+    \mathsf{E}[|\bs{a}^\top \bs{X}_i^{(n)} - \bs{a}^\top \bs{p}_n|^3] \le 8A^3.
+\]
+The Lyapunov condition requires:
+\[
+    \frac{1}{\sigma_n^3} \sum\limits_{i=1}^n \mathsf{E}[\dots] \le \frac{8 n A^3}{n^{3/2} (\bs{a}^\top \boldsymbol{\Sigma}(\bs{p}_n)\bs{a})^{3/2}} \xrightarrow{n \to \infty} 0.
+\]
+Thus, the CLT holds, and $\sqrt{n}(\frac{1}{n}\bs{N}^{(n)} - \bs{p}_n) \xrightarrow{d} \mathcal{N}(\bs{0}, \boldsymbol{\Sigma})$. Adding the constant shift $\boldsymbol{\delta}$ yields Equation (\ref{eq:shifted_normal}).
+
+\textbf{Transformation to Non-Central Chi-Square} \\
+As in Theorem 12.2, the test statistic is a quadratic form:
+\[
+    W_n(\bs{p}_0) \xrightarrow{d} \bs{Y}^\top \bs{P}_0^{-1} \bs{Y} = \|\bs{Z}\|^2,
+\]
+where $\bs{Z} = \bs{P}_0^{-1/2} \bs{Y}$. Since $\bs{Y} \sim \mathcal{N}(\boldsymbol{\delta}, \boldsymbol{\Sigma})$, the linear transformation $\bs{Z}$ is also Normal:
+\[
+    \bs{Z} \sim \mathcal{N}_c(\bs{P}_0^{-1/2}\boldsymbol{\delta}, \bs{P}_0^{-1/2}\boldsymbol{\Sigma}\bs{P}_0^{-1/2}).
+\]
+The covariance matrix simplifies to a projection matrix $\bs{I}_c - \bs{u}\bs{u}^\top$ (where $\bs{u} = \sqrt{\bs{p}_0}$), just as in the null case.
+The mean vector is $\boldsymbol{\mu}_Z = \bs{P}_0^{-1/2}\boldsymbol{\delta}$.
+Since $\sum \delta_j = 0$, we have $\bs{u}^\top \boldsymbol{\mu}_Z = \bs{p}_0^{\top} \bs{P}_0^{-1} \boldsymbol{\delta} = \bs{1}^\top \boldsymbol{\delta} = 0$.
+The vector $\bs{Z}$ lies in the subspace where the covariance acts as the identity. Thus, $\|\bs{Z}\|^2$ follows a non-central chi-square distribution.
+
+The non-centrality parameter is the squared norm of the mean:
+\[
+    \lambda = \|\boldsymbol{\mu}_Z\|^2 = \|\bs{P}_0^{-1/2}\boldsymbol{\delta}\|^2 = \sum\limits_{j=1}^c \frac{\delta_j^2}{p_{0j}}.
+\]
+\end{proof}
+
+\section{R Example}
+\label{sec:R_Example}
+
+In this section, we apply the theory to a practical example: testing the fairness of a die using R. We will proceed in three steps: first by manually calculating the statistic to understand the mechanics, second by using R's built-in testing function, and third by handling small sample sizes via simulation.
+
+\subsection{Applying the Test Manually}
+\label{sub:Applying_Manual}
+
+Consider a scenario where we roll a six-sided die $n=100$ times. We wish to test the null hypothesis that the die is fair:
+\[
+    H_0: \bs{p} = \bs{p}_0 = (1/6, \dots, 1/6)^\top.
+\]
+
+First, we define the null probabilities and the observed counts $\bs{N}$ in R:
+
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{r}
+# Null hypothesis probabilities (fair die)
+p0 <- rep(1/6, 6)
+
+# Observed counts for the six sides
+N <- c(20, 19, 16, 21, 15, 9)
+
+# Total number of trials
+n <- sum(N)
+print(n)
+# [1] 100
+\end{minted}
+
+To determine if these counts are unusual, we calculate Pearson's chi-square statistic $W_n(\bs{p}_0)$ manually:
+\[
+    W_n = \sum\limits_{j=1}^c \frac{(N_j - n p_{0j})^2}{n p_{0j}}.
+\]
+
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{r}
+# Calculate the test statistic manually
+W <- sum((N - n * p0)^2 / (n * p0))
+print(W)
+# [1] 5.84
+\end{minted}
+
+The observed value is $W \approx 5.84$. Is this large or small? Under $H_0$, $W$ follows a $\chi^2$ distribution with $c-1 = 5$ degrees of freedom. The expectation of a $\chi^2_5$ variable is 5, so $5.84$ is very close to the expected value, suggesting no strong evidence against $H_0$.
+
+We can calculate specific critical values $k_\alpha$ for $\alpha = 0.05$ and $\alpha = 0.1$:
+
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{r}
+# Critical values for alpha = 0.05 and 0.1
+qchisq(c(0.95, 0.90), df = 6 - 1)
+# [1] 11.07050  9.23636
+\end{minted}
+
+Since $5.84 < 9.23$, we cannot reject $H_0$ even at the 10\% level. The asymptotic $p$--value is calculated as $\mathsf{P}(\chi^2_5 \ge W)$:
+
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{r}
+# $p$--value calculation
+pchisq(W, df = 6 - 1, lower.tail = FALSE)
+# [1] 0.3221003
+\end{minted}
+
+\subsubsection{Dedicated Function in R}
+\label{sub:Dedicated_Function}
+
+In practice, we use the dedicated \texttt{chisq.test} function. It automatically handles the degrees of freedom and $p$--value calculation.
+
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{r}
+test_result <- chisq.test(N)
+print(test_result)
+# 
+# 	Chi-squared test for given probabilities
+# 
+# data:  N
+# X-squared = 5.84, df = 5, $p$--value = 0.3221
+\end{minted}
+
+The output matches our manual calculation perfectly. The result is stored as an object of class \texttt{htest}. We can inspect its structure to extract specific components:
+
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{r}
+attributes(test_result)
+# $names
+# [1] "statistic" "parameter" "p.value"   "method"    "data.name" "observed" 
+# [7] "expected"  "residuals" "stdres"   
+# $class
+# [1] "htest"
+
+test_result$p.value
+# [1] 0.3221003
+\end{minted}
+
+\paragraph{Non-Uniform Null Hypotheses}
+We can also test against arbitrary probability vectors. For example, if we hypothesize a loaded die with $\bs{p}_0 = (0.5, 0.1, 0.1, 0.1, 0.1, 0.1)$:
+
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{r}
+# Testing a biased hypothesis
+chisq.test(N, p = c(0.5, 0.1, 0.1, 0.1, 0.1, 0.1))
+# X-squared = 44.4, df = 5, $p$--value = 1.921e-08
+\end{minted}
+In this case, the $p$--value is extremely small, leading to a strong rejection of the biased hypothesis.
+
+\subsubsection{Small Counts and Simulation}
+\label{sub:Small_Counts}
+
+Asymptotic approximations rely on the Central Limit Theorem. If the expected counts $n p_{0j}$ are small (a common rule of thumb is $<5$), the $\chi^2$ approximation may be inaccurate.
+
+Consider a small experiment with a 3-sided die (outcomes 1, 2, 3) rolled only $n=12$ times:
+
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{r}
+N_small <- c(3, 2, 7)
+# Standard asymptotic test
+chisq.test(N_small)
+# X-squared = 3.5, df = 2, $p$--value = 0.1738
+\end{minted}
+
+The asymptotic $p$--value is roughly $0.17$. However, because the sample size is so small, we should not trust the continuous $\chi^2$ curve to approximate the discrete distribution of the statistic.
+
+\paragraph{Monte Carlo Simulation}
+Since the null hypothesis is simple (all parameters are fully specified), we can approximate the exact distribution of the statistic by simulation. We generate $B$ datasets from the null distribution, calculate the statistic for each, and see how often the simulated statistic exceeds our observed value.
+
+R provides a built-in argument \texttt{simulate.p.value} for this:
+
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{r}
+set.seed(123)
+chisq.test(N_small, simulate.p.value = TRUE, B = 20000)
+# 
+# 	Chi-squared test for given probabilities with simulated $p$--value
+# 	(based on 20000 replicates)
+# 
+# data:  N_small
+# X-squared = 3.5, df = NA, $p$--value = 0.2637
+\end{minted}
+
+
+
+Notice the discrepancy: the asymptotic $p$--value was $\approx 0.17$, while the simulated $p$--value is $\approx 0.26$. While the statistical decision (do not reject) might remain the same here, the numerical difference highlights the error in asymptotic approximation for small $n$.
+
+\paragraph{Under the Hood}
+To understand what \texttt{simulate.p.value = TRUE} does, we can replicate the simulation manually:
+
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{r}
+# 1. Define data and parameters
+n <- sum(N_small)
+p0 <- c(1/3, 1/3, 1/3)
+observed_W <- sum((N_small - n * p0)^2 / (n * p0))
+
+# 2. Generate B synthetic datasets under H0
+B <- 20000
+set.seed(123)
+# rmultinom generates B vectors of counts
+simulated_counts <- rmultinom(n = B, size = n, prob = p0)
+
+# 3. Compute statistic for every synthetic dataset
+sim_W <- apply(simulated_counts, 2, function(x) {
+  sum((x - n * p0)^2 / (n * p0))
+})
+
+# 4. Compute $p$--value (proportion of simulated W >= observed W)
+mean(sim_W >= observed_W)
+# [1] 0.26755
+\end{minted}
+
+This manual simulation confirms the result provided by the dedicated function.
+
+\subsection{Power of Chi-Square Test}
+\label{sub:Power_Calculation}
+
+Following the theoretical framework of local alternatives, we can perform practical power calculations. This is often required in research proposals to justify that a study has a sufficient chance of detecting an effect if it exists.
+
+\begin{ex}[Ferguson 1996]
+Suppose we wish to test the fairness of a six-sided die ($\bs{p}_0 = 1/6 \cdot \bs{1}$) with a sample size of $n=300$ at a significance level $\alpha = 0.05$.
+
+First, we determine the critical value $k_\alpha$. The test rejects $H_0$ if the statistic exceeds this value.
+
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{r}
+# 1. Setup Null Hypothesis and Critical Value
+p0 <- rep(1/6, 6)
+n <- 300
+alpha <- 0.05
+
+# Critical value for chi-square with 6-1 = 5 df
+crit <- qchisq(1 - alpha, df = 5)
+print(crit)
+# [1] 11.0705
+\end{minted}
+
+Now, consider a specific alternative hypothesis where the die is biased:
+\[ \bs{p} = (0.13, 0.13, 0.17, 0.17, 0.20, 0.20)^\top \]
+
+To approximate the power, we calculate the non-centrality parameter $\lambda$. Recall that $\bs{p} = \bs{p}_0 + \boldsymbol{\delta}/\sqrt{n}$, which implies $\boldsymbol{\delta} = \sqrt{n}(\bs{p} - \bs{p}_0)$.
+The non-centrality parameter is $\lambda = \sum \delta_j^2 / p_{0j}$.
+
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{r}
+# 2. Define Alternative Hypothesis
+p_alt <- c(0.13, 0.13, 0.17, 0.17, 0.2, 0.2)
+
+# 3. Calculate Non-centrality Parameter (lambda)
+# delta corresponds to the local alternative shift
+delta <- sqrt(n) * (p_alt - p0)
+lambda <- sum(delta^2 / p0)
+print(lambda)
+# [1] 8.88
+\end{minted}
+
+
+
+The power is the probability that a non-central $\chi^2$ variable exceeds the critical value established under the null.
+
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{r}
+# 4. Calculate Asymptotic Power
+power_approx <- pchisq(crit, df = 5, ncp = lambda, lower.tail = FALSE)
+print(power_approx)
+# [1] 0.6167596
+\end{minted}
+
+With $n=300$, we have approximately a 62\% chance of detecting this specific deviation from fairness.
+\end{ex}
+
+\subsection{Sample Size Calculation}
+\label{sub:Sample_Size}
+
+A common question in grant applications is the inverse of the power calculation: \textit{``How large a sample size $n$ is needed to achieve a target power (e.g., 90\%)?"}
+
+This is essentially a budget justification question: proving to a funding agency that the requested resources (to enroll $n$ patients or perform $n$ experiments) are necessary and sufficient to obtain a statistically significant finding.
+
+We can solve this by reversing the previous calculation. We need to find the specific $\lambda$ that yields a power of 0.9, and then solve for $n$.
+
+\paragraph{Step 1: Find required $\lambda$}
+We use a root-finding function to find $\lambda_0$ such that $P(\chi^2_{5}(\lambda_0) > k_\alpha) = 0.9$.
+
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{r}
+target_power <- 0.9
+
+# Function to minimize: Power(lambda) - Target
+f_opt <- function(lambda) {
+  pchisq(crit, df = 5, ncp = lambda, lower.tail = FALSE) - target_power
+}
+
+# Find root
+lambda0 <- uniroot(f_opt, interval = c(0, 50))$root
+print(lambda0)
+# [1] 16.46946
+\end{minted}
+
+\paragraph{Step 2: Solve for $n$}
+We know that $\lambda = n \sum_{j=1}^c \frac{(p_j - p_{0j})^2}{p_{0j}}$. Let $E = \sum \frac{(p_j - p_{0j})^2}{p_{0j}}$ be the ``effect size" (or distance from the null). Then $\lambda = n \cdot E$, so $n = \lambda / E$.
+
+\begin{minted}[frame=lines, framesep=2mm, baselinestretch=1.2, fontsize=\footnotesize, linenos]{r}
+# Calculate effect size component
+effect_size <- sum((p_alt - p0)^2 / p0)
+
+# Solve for n
+n_required <- lambda0 / effect_size
+print(n_required)
+# [1] 556.4008
+\end{minted}
+
+To achieve 90\% power for this specific alternative, we would need $n \approx 557$ trials.
