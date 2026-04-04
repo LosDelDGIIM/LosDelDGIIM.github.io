@@ -1,0 +1,321 @@
+\documentclass[12pt]{article}
+
+\input{../../_assets/preambulo.tex}
+
+\begin{document}
+
+    % 1. Foto de fondo
+    % 2. Título
+    % 3. Encabezado Izquierdo
+    % 4. Color de fondo
+    % 5. Coord x del titulo
+    % 6. Coord y del titulo
+    % 7. Fecha
+
+    
+    \input{../../_assets/portada}
+    \portadaExamen{ffccA4.jpg}{Modelos \\ Avanzados de \\ Computación \\Examen I \\ de Prácticas}{Modelos Avanzados de Computación. Examen I de Prácticas}{MidnightBlue}{-8}{28}{2026}{José Manuel Sánchez Varbas}
+
+    \newpage
+
+    \begin{description}
+        \item[Asignatura] Modelos Avanzados de Computación.
+        \item[Curso Académico] Desconocido.
+        \item[Grado] Grado en Ingeniería Informática.
+        \item[Grupo] Desconocido.
+        \item[Profesor] Desconocido.
+        \item[Descripción] Primer Examen de Prácticas.
+        \item[Fecha] Desconocida.
+        \item[Duración] Desconocida.
+    \end{description}
+    \newpage
+
+
+    % ------------------------------------
+
+    \begin{ejercicio}
+        Escribir explícitamente una MT que acepte el siguiente lenguaje:
+        $$\{ucv : u,v \in \{0,1\}^* \text{ con } u \geq v\}$$
+    \end{ejercicio}
+
+    \begin{ejercicio}
+        Escribir explícitamente una MT que, dada una entrada $u \in \{0,1\}^{*}$,
+        devuelva $3u$.
+    \end{ejercicio}
+
+    \newpage
+
+    \setcounter{ejercicio}{0}
+
+    \begin{ejercicio}
+        Escribir explícitamente una MT que acepte el siguiente lenguaje:
+        $$\{ucv : u,v \in \{0,1\}^* \text{ con } u \geq v\}$$ 
+
+        Recordemos que, por definición, si $v, u \in A = \{a_1, \ldots, a_n\}$, 
+        con $A$ un alfabeto, entonces:
+        $$v \leq u \iff \begin{cases}
+            v = u \\
+            |v| < |u| \\
+            |v| = |u| \text{ y $v$ precede a $u$ en orden alfabético,
+            con $a_1 < \cdots < a_n$}
+        \end{cases}$$
+
+        Por tanto, consideramos el lenguaje 
+        $$L = \{ucv : u,v \in \{0,1\}^* \text{ con } u \geq v\} = 
+        \{ucv : u,v \in \{0,1\}^* \text{ con } v \leq u\}$$
+
+        La idea será utilizar una MT con 3 cintas:
+        \begin{enumerate}
+            \item En la primera, la entrada original.
+            \item En la segunda, $u$.
+            \item En la tercera, $v$.
+        \end{enumerate}
+        y las subrutinas serán las siguientes:
+        \begin{enumerate}
+            \item Copiar $u$ en la cinta 2 y $v$ en la cinta 3.
+            \item Comparar longitudes. Si $|u| \neq |v|$, entonces:
+            \begin{itemize}
+                \item Si $|v| < |u|$, aceptar (enviar a estado final)
+                \item Si $|v| > |u|$, rechazar (enviar a un estado sin transiciones por ejemplo).
+            \end{itemize}
+            \item Si $|u| = |v|$, comparar bit a bit de izquierda a derecha.
+            Si en algún momento difieren:
+            \begin{itemize}
+                \item Si el primer símbolo en que difieren es $1$ en $u$
+                y $0$ en $v$, aceptar.
+                \item Si es al revés, rechazar.
+            \end{itemize}
+            \item Si no difieren en ningún símbolo, aceptar.
+        \end{enumerate}
+
+
+        Un ejemplo sería la MT $$M = (Q,A,B, \delta, q_0, \#, \{q_6\})$$
+        con 
+        $$Q = \{q_0, q_1, q_2, q_3, q_4, q_5, q_6\}$$
+        $$A = \{0,1,c\}$$
+        $$B = \{0,1,c, \#\}$$
+
+        \newpage
+
+        El significado de los estados es el siguiente:
+        \begin{enumerate}
+            \item $q_0$: Copiar $u$ de la cinta $1$ a la cinta $2$.
+            \item $q_1$: Copiar $v$ de la cinta $1$ a la cinta $3$.
+            \item $q_2$: Posicionar el cabezal de las cintas $2$ y $3$ al principio.
+            \item $q_3$: Comparar longitudes.
+            \item $q_4$: Si $|v| = |u|$, reposicionar el cabezal de las cintas $2$ y $3$ nuevamente al principio.
+            \item $q_5$: Comparar lexicográficamente.
+            \item $q_6$: Aceptar las palabras de $L$.
+        \end{enumerate}
+
+        Para rechazar, se enviará a estados para los que no haya transiciones definidas,
+        parando $M$ y rechazando. Se entenderá, cuando aparezcan, que $a,b \in \{0,1\}$.
+
+        \subsubsection*{Copia de $u$ a la cinta $2$}
+        
+        $$\delta(q_0, a, \#, \#) = (q_0, a, a, \#, D, D, S)$$
+        $$\delta(q_0, c, \#, \#) = (q_1, c, \#, \#, D, S, S)$$
+
+        \subsubsection*{Copia de $v$ a la cinta $3$}
+        
+        $$\delta(q_1, a, \#, \#) = (q_1, a, \#, a, D, S, D)$$
+        $$\delta(q_1, \#, \#, \#) = (q_2, \#, \#, \#, S, S, S)$$
+        
+        A partir de aquí la cinta $1$ se quedará estática $(S)$ siempre, y siempre se leerán blancos $(\#)$ en esta cinta. Ya no nos interesa
+        su contenido.
+
+        \subsubsection*{Posicionar el cabezal de las cintas $2$ y $3$ al principio}
+
+        $$\delta(q_2, \#, a, b) = (q_2, \#, a, b, S, I, I)$$
+        $$\delta(q_2, \#, \#, a) = (q_2, \#, \#, a, S, S, I)$$
+        $$\delta(q_2, \#, a, \#) = (q_2, \#, a, \#, S, I, S)$$
+        $$\delta(q_2, \#, \#, \#) = (q_3, \#, \#, \#, S, D, D)$$
+
+        \subsubsection*{Comparar longitudes}
+
+        $$\delta(q_3, \#, a, b) = (q_3, \#, a, b, S, D, D)$$
+
+        Ahora, si leo un blanco antes en la cinta 3 que en la 2, es porque
+        $|v| < |u| \iff v \leq u$, por lo tanto, hay que aceptar, cosa que
+        hacemos con la siguiente transición:
+
+        $$\delta(q_3, \#, a, \#) = (q_6, \#, a, \#, S, S, S)$$
+
+        Si por el contrario se llegara a un estado de la forma $(q_3, \#, \#, a)$, 
+        querría decir que se leería un blanco antes en la cinta 2 que en la 3, 
+        es decir, que $|v| > |u|$, por lo tanto, hay que rechazar, para lo cual
+        no se define ninguna transición. \\
+
+        En otro caso, las palabras tienen la misma longitud, por lo que se llega a:
+        $$\delta(q_3, \#, \#, \#) = (q_4, \#, \#, \#, S, S, S)$$
+
+        Al llegar a $q_4$, sabemos que $|v| = |u|$, por lo que consideramos la
+        primera y tercera posibilidad de la definición de $v \leq u$. 
+
+        \subsubsection*{Si $|v| = |u|$, reposicionar el cabezal de las cintas $2$ y $3$ al principio}
+
+        $$\delta(q_4, \#, a, b) = (q_4, \#, a, b, S, I, I)$$
+
+        Aquí usamos que, en este punto, ambas palabras tienen la misma longitud,
+        por lo que si movemos ambos cabezales a la izquierda desde el final de cada palabra,
+        ambos leerán blanco al mismo tiempo, por lo que no hacen falta las dos
+        transiciones intermedias que se habían definido en el anterior posicionamiento
+        al principio. Una vez se llegue a blanco, necesariamente a la vez, en cada cinta, pasamos a la siguiente subrutina:
+
+        $$\delta(q_4, \#, \#, \#) = (q_5, \#, \#, \#, S, D, D)$$
+
+        \subsubsection*{Comparación lexicográfica de izquierda a derecha}
+
+        $$\delta(q_5, \#, a, a) = (q_5, \#, a, a, S, D, D)$$
+
+        Ahora, quedan dos maneras de aceptar y una de rechazar. La primera
+        de aceptar es que, aunque las longitudes sean iguales, el primer símbolo en que 
+        difieren es $1$ en $u$ y $0$ en $v$, y como $0 < 1$, $v$ precede a $u$, y 
+        $v \leq u$. Se ve reflejado en la siguiente transición:
+
+        $$\delta(q_5, \#, 1, 0) = (q_6, \#, 1, 0, S, S, S)$$
+
+        La segunda de aceptar es llegar al final en ambas palabras sin leer
+        ningún carácter distinto después de comparar bit a bit de izquierda a derecha, 
+        en cuyo caso $v = u \iff v \leq u$:
+
+        $$\delta(q_5, \#, \#, \#) = (q_6, \#, \#, \#, S, S, S)$$
+
+        La manera de rechazar sería llegar al estado $(q_5, \#, 0, 1)$,
+        ya que el primer símbolo en que difieren es $0$ en $u$ y $1$ en $v$, 
+        de donde $v$ no precede a $u$. Para rechazar no se define transición.
+
+    \end{ejercicio}
+
+    \begin{ejercicio}
+        Escribir explícitamente una MT que, dada una entrada $u \in \{0,1\}^{*}$,
+        devuelva $3u$. \\
+
+        Usaremos que $3u = 2u + u$, y que $2u = u0$, y lo que quedará será
+        sumar dos números en binario. \\
+
+        La idea será utilizar una MT con 4 cintas:
+        \begin{enumerate}
+            \item En la primera, la entrada original, que en primer lugar se copiará a la
+            segunda, y luego se convertirá a $2u = u0$.
+            \item En la segunda, una copia de la entrada original $u$.
+            \item En la tercera, la suma $3u = 2u + u$ escrita al revés (de bit 
+            menos significativo a más significativo).
+            \item En la cuarta, salida final $3u$, en el orden correcto.
+        \end{enumerate}
+        y las subrutinas serán las siguientes:
+        \begin{enumerate}
+            \item Copiar $u$ en la cinta 1.
+            \item Después de copiar, escribir un $0$ al final de la cinta $1$,
+            de tal manera que la cinta $1$ contiene $2u$ y la cinta $2$ contiene
+            $u$.
+            \item Se suman ambos números en binario, de derecha a izquierda, con
+            un estado para cuando haya acarreo, y otro para cuando no lo haya.
+            \item El resultado se escribe en la cinta 3 al revés.
+            \item Se copia la cinta 3 en la 4 recorriéndola de derecha 
+            a izquierda y se obtiene lo pedido.
+        \end{enumerate}
+
+
+        Un ejemplo sería la MT $$M = (Q,A,B, \delta, q_0, \#, \{q_5\})$$
+        con 
+        $$Q = \{q_0, q_1, q_2, q_3, q_4, q_5\}$$
+        $$A = \{0,1\}$$
+        $$B = \{0,1, \#\}$$
+
+        \newpage
+
+        El significado de los estados es el siguiente:
+        \begin{enumerate}
+            \item $q_0$: Copiar $u$ de la cinta $1$ a la cinta $2$. Al terminar
+            de copiar, añadir un $0$ en la cinta $1$, obteniendo $2u$.
+            \item $q_1$: Sumar con acarreo $0$.
+            \item $q_2$: Sumar con acarreo $1$. 
+            \item $q_3$: Preparar para copiar al revés.
+            \item $q_4$: Copiar de la cinta $3$ en la $4$ al revés.
+            \item $q_5$: Aceptar.
+        \end{enumerate}
+
+        Se rechazará igual que antes, y también igual que antes, se entenderá, cuando aparezca, que $a \in \{0,1\}$,
+        y que $\overline{a}$ es el complementario de $a$. Es decir, $(a, \overline{a}) \in \{(0,1), (1,0)\}$.
+
+        \subsubsection*{Copia de $u$ a la cinta $2$. Al terminar de copiar, añadir un $0$ en la cinta $1$}
+        
+        $$\delta(q_0, a, \#, \#, \#) = (q_0, a, a, \#, \#, D, D, S, S)$$
+
+        Se termina de copiar cuando se lee blanco en las dos cintas ($1$ y $2$) a la vez, y en este punto se añade un $0$ al final de la cinta $1$,
+        y se mueve a la izquierda el cabezal de la cinta $2$ para empezar a sumar (hay que colocarlo en el último bit de $u$): 
+
+        $$\delta(q_0, \#, \#, \#, \#) = (q_1, 0, \#, \#, \#, S, I, S, S)$$
+
+        \subsubsection*{Suma binaria con acarreo $0$}
+
+        Si sumo dos ceros, el resultado es un tercer cero en la cinta $3$:
+
+        $$\delta(q_1, 0, 0, \#, \#) = (q_1, 0, 0, 0, \#, I, I, D, S)$$
+
+        Si sumo un uno y un cero, en el orden que sea, el resultado es 
+        un segundo uno en la cinta $3$:
+
+        $$\delta(q_1, a, \overline{a}, \#, \#) = (q_1, a, \overline{a}, 1, \#, I, I, D, S)$$
+
+        Si sumo dos unos, pasaría a $q_2$ porque hay acarreo:
+
+        \begin{equation}\label{eq:transicionacar}
+            \delta(q_1, 1, 1, \#, \#) = (q_2, 1, 1, 0, \#, I, I, D, S)
+        \end{equation}
+
+        Si no hay acarreo, como $|2u| > |u|$, quedará algún caracter por 
+        leer en la cinta $1$ antes que en la $2$, donde eventualmente se 
+        llegará al blanco. 
+        
+        $$\delta(q_1, a, \#, \#, \#) = (q_1, a, \#, a, \#, I, S, D, S)$$
+
+        Si ambas entradas han llegado a blanco y no hay acarreo terminaría
+        la suma y se prepararía para invertir
+
+        $$\delta(q_1, \#, \#, \#) = (q_3, \#, \#, \#, S, S, I, S)$$
+
+        \newpage
+
+        \subsubsection*{Suma binaria con acarreo $1$}
+
+        Si se aplicara la transición $(\ref{eq:transicionacar})$, 
+        a la entrada habría que sumarle un $1$. Los sumandos pueden ser 
+        $(0,0), (1,0), (0,1)$ o $(1,1)$. Solo si se da el primero ya no tendríamos 
+        acarreo, y volveríamos a $q_1$:
+
+        $$\delta(q_2, 0, 0, \#, \#) = (q_1, 0, 0, 1, \#, I, I, D, S)$$
+        
+        En los otros tres casos seguiremos teniendo acarreo:
+        
+        $$\delta(q_2, a, \overline{a}, \#, \#) = (q_2, a, \overline{a}, 0, \#, I, I, D, S)$$
+        $$\delta(q_2, 1, 1, \#, \#) = (q_2, 1, 1, 1, \#, I, I, D, S)$$
+
+        Si la cinta $2$ lee blanco, es porque se ha recorrido completamente $u$.
+        Si se suma cero, terminará el acarreo, volviendo a $q_1$:
+
+        $$\delta(q_2, 0, \#, \#, \#) = (q_1, 0, \#, 1, \#, I, I, D, S)$$
+
+        Si se suma un uno, quedará un último acarreo:
+
+        $$\delta(q_2, 1, \#, \#, \#) = (q_2, 1, \#, 0, \#, I, S, D, S)$$
+
+        Si se terminan ambas entradas pero queda acarreo se escribe
+        un uno adicional y se pasa a $q_3$ para terminar:
+        $$\delta(q_2, \#, \#, \#, \#) = (q_3, \#, \#, 1, \#, S, S, S, S)$$
+
+        \subsubsection*{Preparar para copiar al revés.}
+
+        $$\delta(q_3, \#, \#, a, \#) = (q_4, \#, \#, a, \#, S, S, S, S)$$
+
+        \subsubsection*{Copia de la cinta $3$ a la $4$ al revés.}
+
+        $$\delta(q_4, \#, \#, a, \#) = (q_4, \#, \#, a, a, S, S, I, D)$$
+
+        Al llegar al final a todo blanco aceptamos:
+
+        $$\delta(q_4, \#, \#, \#, \#) = (q_5, \#, \#, \#, \#, S, S, S, S)$$
+    \end{ejercicio}
+
+\end{document}
