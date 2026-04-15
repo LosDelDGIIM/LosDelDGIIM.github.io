@@ -16,10 +16,12 @@ When a light ray interacts with an object, it can be absorved or its direction c
     \item \ul{Going backward}: rays are traced backward from the observer, so only the rays that reach the observer are considered. A ray is traced for determining the color of each pixel in the image.
 \end{itemize}
 
+Given the inefficiency of the forward approach, the backward approach is the one used in ray tracing and path tracing.
+
 
 \section{Ray Tracing}
 
-For each pixel in the image, a \emph{primary ray} is traced from the observer's eye through the pixel into the scene. Once the ray intersects with an object, three type of \emph{secondary rays} can be generated:
+Ray tracing is a rendering technique that simulates the way light interacts with objects in a scene to produce realistic images. For each pixel in the image, a \emph{primary ray} is traced from the observer's eye through the pixel into the scene. Once the ray intersects with an object, three type of \emph{secondary rays} can be generated:
 \begin{itemize}
     \item \ul{Shadow rays}: For each light source, a shadow ray is traced from the intersection point to the light source to determine if the point is in shadow or not. If the shadow ray intersects another object before reaching the light source, the point is in shadow and does not receive direct illumination from that light source.
     \item \ul{Reflection rays}: If the surface is reflective, a reflection ray is traced in the direction of the reflected ray, which is calculated based on the angle of incidence and the surface normal.
@@ -27,17 +29,48 @@ For each pixel in the image, a \emph{primary ray} is traced from the observer's 
 \end{itemize}
 
 Therefore, for each intersection $N+2$ rays are traced, where $N$ is the number of light sources in the scene. The reflection and refraction rays are recursively considered as primary rays, so they can generate more secondary rays if they intersect with other objects. This process continues until once of the following conditions is met:
+\begin{itemize}
+    \item A ray does not intersect with any object, in which case it contributes the background color to the pixel.
+    \item A ray reaches a predefined maximum recursion depth, in which case it does not generate any more rays and contributes just its local illumination to the pixel.
+\end{itemize}
 
-
+The color of each pixel is determined by the color of its first intersection point. For each intersection point, the color is calculated as:
+\begin{align*}
+    I  &= k_d I_{\text{direct}} + k_s I_{\text{reflection}} + k_t I_{\text{refraction}}
+\end{align*}
+where $k_d, k_s, k_t\in \bb{R}^+_0$ such that $k_d + k_s + k_t = 1$ are three coefficients that determine the contribution of each type of ray to the final color, and $I_{\text{direct}}$ is the color contribution from local illumination calculated using phong shading, $I_{\text{reflection}}$ is the color contribution from the intersection point of the reflection ray, and $I_{\text{refraction}}$ is the color contribution from the intersection point of the refraction ray.
+\begin{observacion}
+    As the reader may have noticed, the complexity of ray tracing increases exponentially, but the contribution of rays decreases exponentially, so in practice, a maximum recursion depth of 4 or 5 is usually sufficient for producing high-quality images.
+\end{observacion}
 
 
 
 \subsection{Diffuse surfaces}
 
 
-
 There are two main types of surfaces:
 \begin{itemize}
     \item \ul{Diffuse surfaces}: they reflect light uniformly in all directions.
     \item \ul{Specular surfaces}: they reflect light in a specific direction, following the law of reflection.
+\end{itemize}
+
+As the reader may notice, ray tracing just considers specular surfaces. In order to render diffuse surfaces, another reason to stop the recursion is included:
+\begin{itemize}
+    \item A ray hits a diffuse surface, in which case it does not generate any more rays and contributes just its local illumination to the pixel.
+\end{itemize}
+
+This way, between the eye and the light source as many specular surfaces as we want can be included, but only one diffuse surface can be included just before the light source.
+
+\section{Path Tracing}
+
+Path tracing is also a rendering technique that simulates the way light interacts with objects in a scene to produce realistic images, similar to ray tracing. For each pixel in the image, $N$ rays are traced from the observer's eye through the pixel into the scene, where $N$ is a predefined number of samples per pixel. Once a ray intersects with an object, its direction is randomly changed according to the material properties of the surface, and a new ray is traced in that direction, generating therefore a path. This process continues until one of the following conditions is met:
+\begin{itemize}
+    \item A ray does not intersect with any object, in which case it contributes the background color to the pixel.
+    \item A ray reaches a predefined maximum depth, in which case it contributes just its local illumination to the pixel.
+\end{itemize}
+
+The color of each pixel is determined by the average color contribution of all the rays traced for that pixel. It should however be noted that ``randomly'' does not mean ``uniformly''. Depending on the material properties of the surface, from an specific direction, some directions will be more likely to be chosen than others.
+\begin{itemize}
+    \item For perfect diffuse surfaces, the new direction is chosen uniformly in the hemisphere above the surface.
+    \item For perfect specular surfaces, the new direction is the reflection direction.
 \end{itemize}
