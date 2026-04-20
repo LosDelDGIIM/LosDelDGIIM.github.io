@@ -1,9 +1,6 @@
 \chapter{IoT Internetworking}
 
-During this chapter, we will focus on the IoT internetworking aspect, which is crucial for enabling communication and data exchange between different components of an IoT system. All the different components of an IoT system need to be able to communicate with each other in order to function properly, and the IoT Things need to be able to send the measured data and receive commands and updates from the users and applications. Therefore, connectivity and communication protocols are essential for the overall functionality and performance of an IoT system.
-
-
-A reader may initially think that using the Internet and the well-known TCP/IP protocol suite would be sufficient for enabling communication in an IoT system, and it is in fact a good approach as these protocols have proven to be extremely successful and widely adopted in the traditional Internet. However, there are several challenges and limitations that need to be addressed when using the Internet and TCP/IP protocols in the context of IoT systems, as an usuall Internet device is very different from an IoT device in terms of resources, capabilities, and requirements.
+During this chapter, we will focus on the IoT internetworking aspect, which is crucial for enabling communication and data exchange between different components of an IoT system. A reader may initially think that using the Internet and the well-known TCP/IP protocol suite would be sufficient for enabling communication in an IoT system, and it is in fact a good approach as these protocols have proven to be extremely successful and widely adopted in the traditional Internet. However, there are several challenges and limitations that need to be addressed when using the Internet and TCP/IP protocols in the context of IoT systems, as an usuall Internet device is very different from an IoT device in terms of resources, capabilities, and requirements. Some of these challenges and limitations include:
 \begin{itemize}
     \item \ul{Data Item Size}: IoT devices often generate and exchange small data items, such as sensor readings or control commands, while the Internet and TCP/IP protocols are designed to handle larger data items, such as web pages or multimedia content.
     \item \ul{Not Optimized for Energy Efficiency}: IoT devices are often battery-powered and have limited energy resources, while the Internet and TCP/IP protocols are not optimized for energy efficiency and may require more power consumption than what is feasible for IoT devices.
@@ -73,11 +70,11 @@ The Physical Layer (PHY) of the IEEE 802.15.4 standard defines the physical char
 
 The services provided by the PHY layer are divided into two categories:
 \begin{itemize}
-    \item \ul{Data Services}: These services are used for transmitting and receiving data between devices in the PAN.
-    \item \ul{Management Services}: These services are used for managing the communication and the network, such as channel scanning (to find the best channel for communication), energy detection (to measure the energy level of the channel and determine if it is busy or idle), and link quality indication (to measure the quality of the communication link between devices).
+    \item \ul{Data Services}: These services are used for transmitting and receiving the PPDU between devices in the PAN.
+    \item \ul{Management Services}: These services are used for managing the communication and the network, such as channel scanning (to find the best channel for communication), link quality indication (to measure the quality of the communication link between devices) and CCA (Clear Channel Assessment, to check if the channel is idle before transmitting).
 \end{itemize}
 
-The content that is in fact transmitted over the air is the \emph{PHY Protocol Data Unit (PPDU)}, which consists of the \emph{PHY Service Data Unit (PSDU)} encapsulated with the header. The $6$ bytes Header consists of:
+The content that is in fact transmitted over the medium is the \emph{PHY Protocol Data Unit (PPDU)}, which consists of the \emph{PHY Service Data Unit (PSDU)} encapsulated with the header. The $6$ bytes Header consists of:
 \begin{itemize}
     \item \ul{Synchronization Header (SHR)}, 5 bytes:
     
@@ -89,6 +86,344 @@ The content that is in fact transmitted over the air is the \emph{PHY Protocol D
 \end{itemize}
 
 \subsection{Data Link Layer (MAC)}
+
+The standard IEEE 802.15.4 only defines the MAC sublayer of the Data Link Layer, which is responsible for managing access to the medium and ensuring reliable communication between devices in the PAN. The services provided by the MAC layer are divided into two categories:
+\begin{itemize}
+    \item \ul{Data Services}: These services are used for transmitting and receiving the MPDU between devices in the PAN across the PHY layer.
+    \item \ul{Management Services}: These services are used for managing the communication and the network, such as the beacon or GTS management. It also has hooks\footnote{It has hooks (and not specific services) because the security services are eventually broken, so the standard would end up being unsecure nd obsolete. However, providing hooks allows for selecting the optimal security services and replacing them when they are broken without the need to change the standard itself.} for implementing security services.
+\end{itemize}
+
+The content that is in fact transmitted over the medium is the \emph{MAC Protocol Data Unit (MPDU)}, which consists of the \emph{MAC Service Data Unit (MSDU)} encapsulated with the header and the footer. The footer is just a $2$ bytes CRC (Cyclic Redundancy Check) for error detection, while the header consists of:
+\begin{itemize}
+    \item \ul{Frame Control (FC)}, 2 bytes:
+    
+    This field is used to indicate the type of frame being transmitted, such as a data frame, a beacon frame, or an acknowledgment frame.
+
+    \item \ul{Sequence Number}, 1 byte:
+    
+    This field is used to identify the frames being transmitted, which can be useful for ensuring reliable communication and detecting duplicate frames.
+
+    \item \ul{Addressing Fields}, 0 to 20 bytes:
+    
+    These fields are used to indicate the source and destination addresses of the frame being transmitted, and the PAN ID ($2$ bytes) of each device.
+\end{itemize}
+
+Regarding the MAC adresses, there are two types of addresses that can be used in the IEEE 802.15.4 standard:
+\begin{itemize}
+    \item \ul{Short Address}: This is a 16-bit address that is manually assigned to a device by the network operator. It is used for communication within the PAN, and it is not globally unique.
+    \item \ul{Extended Address}: This is a 64-bit address that is asigned to a device by the manufacturer, and it is globally unique. It is used for communication between devices in different PANs, and it can also be used for communication with devices on the Internet.
+\end{itemize}
+
+This standard also defines several types of variants for the MAC layer, which esentially use different variants of controlling the access to the medium.
+
+\subsubsection{CSMA/CA and variants}
+
+The Carrier Sense Multiple Access with Collision Avoidance (CSMA/CA) is a protocol for controlling access to the medium in a shared communication channel. It is based on the principle of carrier sensing, where devices listen to the channel before transmitting to ensure that it is not already in use by another device. Its main idea is described in Figure~\ref{fig:csma-ca}, where a backoff time is waited because:
+\begin{itemize}
+    \item If multiple devices want to transmit at the same time and no backoff time is used, they would all start transmitting simultaneously when they sense that the channel is idle, which would lead to collisions and failed transmissions.
+    \item It saves energy, as the device can go to sleep during the backoff time and wake up just before attempting to transmit, which can be more efficient than continuously sensing the channel.
+    \item It allows for better performance, as it allows for the ackoledgment of successful transmissions and the retransmission of failed transmissions, which can improve the overall reliability and efficiency of the communication.
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.5cm and 1.5cm,
+        font=\small\sffamily,
+        thick,
+        block/.style={
+            draw=black!70, 
+            fill=white, 
+            align=center, 
+            inner sep=6pt, 
+            rounded corners=2pt,
+            line width=0.8pt,
+            minimum width=2cm,
+            drop shadow={opacity=0.2} 
+        },
+        main/.style={
+            block,
+            fill=blue!5,
+            draw=blue!60!black},
+        input/.style={
+            block,
+            fill=gray!10, dashed},
+        decision/.style={
+            diamond,
+            draw=orange!80!black,
+            fill=orange!5, 
+            aspect=2,
+            inner sep=2pt,
+            minimum width=2.5cm, font=\footnotesize\bfseries
+        }
+    ]
+
+        \node[main] (start) {Device wants to transmit};
+
+        % NODOS
+        \node [block, below=of start] (waitTime) {Select random backoff time};
+        \node [block, below=of waitTime] (sense) {After backoff time, perform CCA};
+        
+        \node [decision, below=of sense] (channelIdle) {Channel idle?};
+        \node [block, below=1cm of channelIdle] (startSending) {Start sending};
+
+        % CONEXIONES
+        \draw [-Stealth] (start) -- (waitTime);
+        \draw [-Stealth] (waitTime) -- (sense);
+        \draw [-Stealth] (sense) -- (channelIdle);
+        \draw [-Stealth] (channelIdle) -- (startSending);
+        \draw [-Stealth, rounded corners] (channelIdle.west) 
+        -- ++(-2cm, 0)  % Se mueve 1cm a la izquierda desde el punto inicial
+        |- (waitTime.west); % Sube y luego entra por la izquierda de waitTime
+        
+        % Channel idle? N / Y
+        \node [xshift=0.3cm, yshift=-0.4cm] at (channelIdle.south) {\small Y};
+        \node [yshift=0.25cm, xshift=-0.4cm] at (channelIdle.west) {\small N};
+    \end{tikzpicture}
+    \caption{CSMA/CA protocol.}
+    \label{fig:csma-ca}
+\end{figure}
+
+However, this main protocol has different specific variants that are used in the different variants of the MAC layer defined in the IEEE 802.15.4 standard.
+\begin{itemize}
+    \item \ul{Slotted CSMA/CA}:
+    
+    This variant is used when the frame is divided into slots. The main idea of this protocol is described in Figure~\ref{fig:slotted-csma-ca}. Some important abbreviations used there are:
+    \begin{itemize}
+        \item \emph{BE}: backoff exponent, which is used to calculate the possible number of backoff periods\footnote{A backoff period is the basic unit of time when using this protocol.} that the device can choose for waiting.
+        \item \emph{NB}: number of backoffs, which is the number of times the device has attempted to access the channel and has been unsuccessful.
+        \item \emph{CW}: contention window, which is the number of consecutive clear channel assessments (CCAs) that the device needs to perform before it can start transmitting. It is used to ensure that the device has a good chance of successfully accessing the channel before it starts transmitting.
+    \end{itemize}
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.5cm and 1.5cm,
+        font=\small\sffamily,
+        thick,
+        block/.style={
+            draw=black!70, 
+            fill=white, 
+            align=center, 
+            inner sep=6pt, 
+            rounded corners=2pt,
+            line width=0.8pt,
+            minimum width=2cm,
+            drop shadow={opacity=0.2} 
+        },
+        main/.style={
+            block,
+            fill=blue!5,
+            draw=blue!60!black},
+        input/.style={
+            block,
+            fill=gray!10, dashed},
+        decision/.style={
+            diamond,
+            draw=orange!80!black,
+            fill=orange!5, 
+            aspect=2,
+            inner sep=2pt,
+            minimum width=2.5cm, font=\footnotesize\bfseries
+        },
+        resultFailure/.style={
+            block,
+            fill=red!5,
+            draw=red!60!black
+        },
+        resultSuccess/.style={
+            block,
+            fill=green!5,
+            draw=green!60!black
+        }
+    ]
+
+        \node[main] (start) {Device wants to transmit\\$NB=0$, $BE=\texttt{minBE}$, $CW=CW_0$};
+
+        % NODOS
+        \node [block, below=of start] (waitTime) {Select random backoffs periods to wait in $[0, 2^{BE}-1]$\\\textbf{and wait for that time}};
+        \node [block, below=of waitTime] (sense) {In next slot, Perform CCA};
+        
+        \node [decision, below=of sense] (channelIdle) {Channel idle?};
+        \node [block, below=1cm of channelIdle] (noIdle) {$NB = NB + 1$\\$BE = \min(BE + 1, \texttt{maxBE})$\\$CW = CW_0$};
+        \node [decision, below=of noIdle] (maxBackoffs) {$NB > \texttt{maxBO}$?};
+        \node [resultFailure, below=1cm of maxBackoffs] (failure) {Transmission failed};
+
+        \node [block, right=of noIdle] (yesIdle) {$CW = CW - 1$};
+        \node [decision, below=of yesIdle, yshift=-0.7cm] (cwZero) {$CW = 0$?};
+        \node [resultSuccess, below=1cm of cwZero] (success) {Start sending};
+
+        % CONEXIONES
+        \draw [-Stealth] (start) -- (waitTime);
+        \draw [-Stealth] (waitTime) -- (sense);
+        \draw [-Stealth] (sense) -- (channelIdle);
+        \draw [-Stealth] (channelIdle) -- (noIdle);
+        \draw [-Stealth] (noIdle) -- (maxBackoffs);
+        \draw [-Stealth] (maxBackoffs) -- (failure);
+        \draw [-Stealth, rounded corners] (channelIdle) -| (yesIdle);
+        \draw [-Stealth] (yesIdle) -- (cwZero);
+        \draw [-Stealth] (cwZero) -- (success);
+        \draw [-Stealth, rounded corners] (maxBackoffs.west)
+        -- ++(-3.5cm, 0)  % Se mueve 1cm a la izquierda desde el punto inicial
+        |- (waitTime.west); % Sube y luego entra por la izquierda de waitTime
+        \draw [-Stealth, rounded corners] (cwZero.east)
+        -- ++(1cm, 0)  % Se mueve 1cm a la derecha desde el punto inicial
+        |- (sense.east); % Sube y luego entra por la derecha de waitTime
+
+        % Channel idle? N / Y
+        \node [xshift=0.3cm, yshift=-0.4cm] at (channelIdle.south) {\small N};
+        \node [yshift=0.25cm, xshift=0.4cm] at (channelIdle.east) {\small Y};
+        \node [xshift=0.3cm, yshift=-0.4cm] at (maxBackoffs.south) {\small Y};
+        \node [yshift=0.25cm, xshift=-0.4cm] at (maxBackoffs.west) {\small N};
+        \node [xshift=0.3cm, yshift=-0.4cm] at (cwZero.south) {\small Y};
+        \node [yshift=0.25cm, xshift=0.4cm] at (cwZero.east) {\small N};
+    \end{tikzpicture}
+    \caption{Slotted CSMA/CA protocol.}
+    \label{fig:slotted-csma-ca}
+\end{figure}
+
+    \item \ul{Unslotted CSMA/CA}:
+    
+    This variant is used when the time is not divided into slots. The main idea of this protocol is described in Figure~\ref{fig:unslotted-csma-ca}. Here, the CW is not used as there are no slots, so the device can attempt to transmit as soon as it senses that the channel is idle, without waiting for the next slot.
+    \begin{figure}
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.5cm and 1.5cm,
+        font=\small\sffamily,
+        thick,
+        block/.style={
+            draw=black!70, 
+            fill=white, 
+            align=center, 
+            inner sep=6pt, 
+            rounded corners=2pt,
+            line width=0.8pt,
+            minimum width=2cm,
+            drop shadow={opacity=0.2} 
+        },
+        main/.style={
+            block,
+            fill=blue!5,
+            draw=blue!60!black},
+        input/.style={
+            block,
+            fill=gray!10, dashed},
+        decision/.style={
+            diamond,
+            draw=orange!80!black,
+            fill=orange!5, 
+            aspect=2,
+            inner sep=2pt,
+            minimum width=2.5cm, font=\footnotesize\bfseries
+        },
+        resultFailure/.style={
+            block,
+            fill=red!5,
+            draw=red!60!black
+        },
+        resultSuccess/.style={
+            block,
+            fill=green!5,
+            draw=green!60!black
+        }
+    ]
+
+        \node[main] (start) {Device wants to transmit\\$NB=0$, $BE=\texttt{minBE}$};
+
+        % NODOS
+        \node [block, below=of start] (waitTime) {Select random backoffs periods to wait in $[0, 2^{BE}-1]$\\\textbf{and wait for that time}};
+        \node [block, below=of waitTime] (sense) {Perform CCA};
+        
+        \node [decision, below=of sense] (channelIdle) {Channel idle?};
+        \node [block, below=1cm of channelIdle] (noIdle) {$NB = NB + 1$\\$BE = \min(BE + 1, \texttt{maxBE})$};
+        \node [decision, below=of noIdle] (maxBackoffs) {$NB > \texttt{maxBO}$?};
+        \node [resultFailure, below=1cm of maxBackoffs] (failure) {Transmission failed};
+
+        \node [resultSuccess, right=of failure] (success) {Start sending};
+
+        % CONEXIONES
+        \draw [-Stealth] (start) -- (waitTime);
+        \draw [-Stealth] (waitTime) -- (sense);
+        \draw [-Stealth] (sense) -- (channelIdle);
+        \draw [-Stealth] (channelIdle) -- (noIdle);
+        \draw [-Stealth] (noIdle) -- (maxBackoffs);
+        \draw [-Stealth] (maxBackoffs) -- (failure);
+        \draw [-Stealth, rounded corners] (channelIdle) -| (success);
+        \draw [-Stealth, rounded corners] (maxBackoffs.west)
+        -- ++(-3.5cm, 0)  % Se mueve 1cm a la izquierda desde el punto inicial
+        |- (waitTime.west); % Sube y luego entra por la izquierda de waitTime
+
+        % Channel idle? N / Y
+        \node [xshift=0.3cm, yshift=-0.4cm] at (channelIdle.south) {\small N};
+        \node [yshift=0.25cm, xshift=0.4cm] at (channelIdle.east) {\small Y};
+        \node [xshift=0.3cm, yshift=-0.4cm] at (maxBackoffs.south) {\small Y};
+        \node [yshift=0.25cm, xshift=-0.4cm] at (maxBackoffs.west) {\small N};
+    \end{tikzpicture}
+    \caption{Unslotted CSMA/CA protocol.}
+    \label{fig:unslotted-csma-ca}
+\end{figure}
+
+    \item \ul{Time Division Multiple Access (TDMA)}:
+    
+    This is another variant used for controlling access to the medium when more than one device needs to transmit at the same time. In this protocol, the devices are assigned the whole frequency band for a specific period of time, which is called a time slot.
+
+    \item \ul{Frequency Division Multiple Access (FDMA)}:
+    
+    This is another variant used for controlling access to the medium when more than one device needs to transmit at the same time. In this protocol, the devices are assigned different frequency bands for communication, which allows them to transmit simultaneously without interference.
+
+    \item \ul{Time-Frequency Division Multiple Access (TFDMA)}:
+    
+    This last variant is a combination of TDMA and FDMA, where the devices are assigned only a portion of the frequency band for a specific period of time, which allows for more efficient use of the available resources and can improve the performance of the communication.
+\end{itemize}
+
+Once the different forms of controlling access to the medium have been described, the specific variants of the MAC layer defined in the IEEE 802.15.4 standard can be described, which basically use different variants of controlling access to the medium.
+
+\subsubsection{Beacon-enabled Networks}
+
+Beacon-enabled networks are a variant of the MAC layer defined in the IEEE 802.15.4 standard, where time is divided into superframes. Each superframe starts with a \emph{beacon frame} that is transmitted by the PAN Coordinator to synchronize the devices in the PAN and to provide information about the network, such as the PAN ID, the channel, and the superframe structure. It is divided in:
+\begin{itemize}
+    \item \ul{Active Period}: During this period of time, the devices in the PAN can communicate with each other. The active period is divided into 16 slots, and they are split into two parts (configurable by the PAN Coordinator):
+    \begin{itemize}
+        \item \emph{Contention Access Period (CAP)}: During these time slots, the devices in the PAN compete for access to the medium using the slotted CSMA/CA protocol to transmit their data. It should be noted than during the CAP, devices will only start transmitting if they have enough time slots ($CW$) to complete the transmission of their data.
+        \item \emph{Contention Free Period (CFP)}: These time slots are called \emph{Guaranteed Time Slots (GTS)}, and there are up to 7 GTSs available in each superframe. Devices in the PAN can request GTSs from the PAN Coordinator, which assigns them to the devices that request them. During these time slots, the devices that have been assigned GTSs can transmit their data without competing for access to the medium.
+    \end{itemize}
+    \item \ul{Inactive Period}: During this period of time (configurable by the PAN Coordinator), no communication takes place, and the devices in the PAN (including the PAN Coordinator) can go to sleep to save energy.
+\end{itemize}
+
+In this variant, there is also an Acknowledgment mechanism. In the header of a data frame sent, there is a specific bit that indicates whether the sender of the frame wants to receive an acknowledgment from the receiver (except from beacon and acknowledgment frames, which do not allow for acknowledgment). If this bit is set:
+\begin{itemize}
+    \item If the receiver successfully receives the frame, it sends an acknowledgment frame back to the sender to confirm that the frame has been received correctly.
+    \item If the sender does not receive an acknowledgment frame within a certain period of time, it assumes that the transmission has failed and attempts to retransmit the frame. There is a maximum number of retransmissions that the sender can attempt before giving up and considering the transmission as failed.
+\end{itemize}
+
+
+\subsubsection{Networks without Beacons}
+
+This is another variant of the MAC layer defined in the IEEE 802.15.4 standard, where there are no beacon frames and no superframes. In this variant, the devices in the PAN continuously compete for access to the medium using the unslotted CSMA/CA protocol to transmit their data.
+
+
+
+\subsubsection{Time Slotted Channel Hopping (TSCH) MAC Layer}
+
+This new modern variant of the MAC layer defined in the IEEE 802.15.4 standard is designed to provide high reliability and low latency communication for IoT applications. The PAN coordinator divides time into slots, which are grouped into \emph{slotframes}. Each slotframe consists of a fixed number of time slots, and the communication between devices in the PAN is organized around these slotframes. In addition, different frequency channels are used for communication, so a TFDMA approach is used for controlling access to the medium. Each time slot for each frequency channel is called a \emph{cell}, and there are three types of cells:
+\begin{itemize}
+    \item \ul{Shared Cells}: These cells are used for communication between devices in the PAN, and they are shared among all the devices in the PAN. They use CSMA/CA for controlling access to the medium.
+    \item \ul{Dedicated Cells}: These cells are assigned to specific devices in the PAN, and they are used for communication between those devices. They are assigned using a pseudo-random algorithm\footnote{IEEE 802.15.4 does not specify this. It is delegated to higher layer protocols.} (it is not totally random because it needs to be deterministic to ensure that the devices know which cells they can use for communication), and they do not use CSMA/CA for controlling access to the medium, as the devices that have been assigned those cells can transmit their data without competing for access to the medium.
+    \item \ul{Advertisement Cells}: These cells are used for transmitting frames from the PAN Coordinator to the devices in the PAN.
+\end{itemize}
+
+It should be noted that this variant also uses an acknowledgment mechanism similar to the one used in the beacon-enabled networks, and both the data and the acknowledgment frames are supposed to be transmitted within the same cell.
+
+
+
+
+
+
+For each slotframe, and given that there are multiple channels (frequencies) available for communication, the PAN Coordinator assigns a specific channel to each time slot in the slotframe, which is called \emph{channel hopping}. 
+
+
+
+
 
 \section{NB-IoT}
 
