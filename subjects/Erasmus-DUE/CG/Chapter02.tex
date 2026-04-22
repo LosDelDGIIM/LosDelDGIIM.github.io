@@ -82,3 +82,86 @@ This process is really fast, as:
 
 
 \section{Fewer ray-object intersections}
+
+There are two main techniques for reducing the number of ray-object intersection tests, which are developped in the next two sections.
+
+\subsection{Bounding Volumes}
+
+The main idea of bounding volumes is to enclose each object in the scene with a simple geometric shape (called a bounding volume) that can be tested for intersection with rays much faster than the original object (which may have thousands of polygons). There are two options:
+\begin{itemize}
+    \item If the ray does not intersect the bounding volume, then it cannot intersect the original object, and we can skip the intersection test with the original object.
+    \item If the ray intersects the bounding volume, then we need to perform the intersection test with the original object.
+\end{itemize}
+
+There are different types of bounding volumes, such as:
+\begin{itemize}
+    \item \ul{Bounding spheres}: The object is enclosed in a sphere defined by a center point and a radius.
+    \begin{itemize}
+        \item Its intersection test with a ray is very fast, as it only requires solving a quadratic equation.
+        \item Its construction is also very fast, as it only requires calculating the center and the radius of the sphere that encloses the object. In addition, it doesn't have to be updated when the object is rigidly transformed.
+    \end{itemize}
+    Despite these advantages, they also enclose a lot of empty space, which can lead to many false positives (i.e., rays that intersect the bounding sphere but do not intersect the original object).
+    \item \ul{Axis-aligned bounding boxes (AABBs)}: The object is enclosed in a box whose edges are aligned with the coordinate axes.
+    \begin{itemize}
+        \item Its intersection test with a ray is also fast.
+        \item Its construction is also very fast, as it only requires calculating the minimum and maximum coordinates of the object along each axis. However, it has to be updated when the object is rigidly transformed, as the minimum and maximum coordinates may change.
+    \end{itemize}
+    \item \ul{Oriented bounding boxes (OBBs)}: The object is enclosed in a box that can be oriented in any direction.
+    \begin{itemize}
+        \item Its intersection test with a ray is as fast as the AABB, but it can be more accurate, as it can fit the object better than the AABB.
+        \item Its construction is more expensive than the AABB, as it requires calculating the orientation of the box that best fits the object. However, it doesn't have to be reconstructed when the object is rigidly transformed, as the same transformation can be applied to the box.
+    \end{itemize}
+\end{itemize}
+
+However, using bounding volumes alone only reduces the number of ray-object intersection tests by a constant factor, as each object is still tested for intersection with the ray. The complexity of ray tracing with bounding volumes is still $O(np)$, but with a smaller constant factor. In order to achieve a better complexity, a hierarchy of bounding volumes can be used.
+
+\subsubsection{Bounding Volume Hierarchies (BVH)}
+
+A bounding volume hierarchy (BVH) is a tree structure where each node contains a bounding volume that encloses a subset of the objects contained in its father. The algorithm is therefore as follows:
+\begin{itemize}
+    \item If the ray does not intersect the bounding volume of a node, then it cannot intersect any of the objects contained in that node, and we can skip the intersection tests with all those objects.
+    \item If the ray intersects the bounding volume of a node, then we need to check the intersection with the bounding volumes of its children nodes, and so on until we reach the leaf nodes.
+\end{itemize}
+
+That way, we can reduce the number of ray-object intersection tests significantly, as many rays will not intersect the bounding volumes of the nodes in the hierarchy. The complexity of ray tracing with a BVH is significantly reduced to logarithmic.
+
+\subsection{Spatial subdivision}
+
+In this technique, instead of enclosing the objects in bounding volumes, the space is divided into disjoint regions (called cells), and each cell contains a list of the objects that are intersecting it. There are different types of spatial subdivision, such as the following.
+
+\subsubsection{Uniform grids}
+
+In this technique, the space is divided into a regular grid of cells, all of them of the same size. Traversing the grid is very fast, but it is a poor choice if the objects in the scene are not uniformly distributed, as many cells will be empty and others will contain many objects, leading to many ray-object intersection tests. Therefore, the following techniques are used to adapt the grid to the distribution of the objects in the scene.
+
+\subsubsection{Octrees}
+
+In this technique, the space is recursively subdivided into eight octants (hence the name octree). If one of the octants contains more than a certain number of objects, it is further subdivided into eight smaller octants, and so on until a certain maximum depth is reached or until all the octants contain a small number of objects. The result is a tree structure where each node represents an octant of the space, and each leaf node contains a octant that contains a small number of objects. This way, the grid is adapted to the distribution of the objects in the scene, leading to fewer ray-object intersection tests.\\
+
+Each division is in fact three divisions:
+\begin{itemize}
+    \item A division along the $x$-axis, with a plane perpendicular to the $x$-axis located at the middle of the cell along the $x$-axis, which divides the space in two equal parts along the $x$-axis.
+    \item A division along the $y$-axis, with a plane perpendicular to the $y$-axis located at the middle of the cell along the $y$-axis, which divides the space in two equal parts along the $y$-axis.
+    \item A division along the $z$-axis, with a plane perpendicular to the $z$-axis located at the middle of the cell along the $z$-axis, which divides the space in two equal parts along the $z$-axis.
+\end{itemize}
+
+\subsubsection{KD trees}
+
+This idea follows the same idea as octrees, but instead of dividing the space into eight octants, each division uses just one plane.
+\begin{itemize}
+    \item The plane direction is chosen to be perpendicular to one of the coordinate axes (i.e., $x$, $y$, or $z$). The order of the axes is chosen in a round-robin manner (i.e., $x$, then $y$, then $z$, then $x$ again, and so on).
+    \item There are however infinite possible positions for the plane along the chosen axis. In order to reduce the number of possible positions, only the planes located at the boundaries of the objects in the scene are considered. An optimization approach is used, selecting the plane that minimizes an specific cost function.
+\end{itemize}
+
+\subsubsection{Binary Space Partitioning (BSP) trees}
+
+This idea follows the same idea as KD trees, but instead of restricting the plane direction to be perpendicular to one of the coordinate axes, any plane can be used for the division. Therefore, not only the direction but also the position of the plane can be optimized.
+
+Detecting where a point $P$ is located within the BSP tree is done by traversing the tree from the root node to the leaf nodes, at each node checking on which side of the plane the point $P$ is located, and then moving to the corresponding child node until a leaf node is reached. In order to know on which side of the plane defined by a point $P_0$ and a normal vector $\vec{N}$ the point $P$ is located, the following dot product can be calculated:
+\[(P - P_0) \cdot \vec{N}\]
+If the result is positive, then $P$ is located on the side of the plane towards which the normal vector $\vec{N}$ is pointing. If the result is negative, then $P$ is located on the opposite side of the plane. If the result is zero, then $P$ is located on the plane itself.
+
+\subsubsection{Cost Function for KD and BSP trees}
+
+The cost function is used to determine the optimal position and direction of the dividing plane in both KD and BSP trees. An heuristic called \ul{Surface Area Heuristic (SAH)} is commonly used for this purpose.
+
+% // TODO: Cont
