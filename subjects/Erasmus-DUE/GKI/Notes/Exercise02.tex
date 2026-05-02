@@ -9,7 +9,7 @@ The Python part of this exercise is available in \myhref{https://github.com/LosD
 You are responsible for the course planning at a university. For a specific module, there are several lectures that partially build upon each other. Your task is to find an order in which all lectures can be attended without attending a lecture before one of its prerequisites.
 \begin{description}
     \item[Lectures (Nodes):] Math 1, Math 2, Computer Science 1, Computer Science 2, Databases, Algorithms, Software Development
-    \item[Dependencies (directed edges ``must be attended before''):]
+    \item[Dependencies (directed edges ``must be attended before''):]~
     \begin{itemize}
         \item Math 1 $\rightarrow$ Math 2
         \item Computer Science 1 $\rightarrow$ Computer Science 2
@@ -22,17 +22,77 @@ You are responsible for the course planning at a university. For a specific modu
 
 \begin{ejercicio}
     Create the graph. Represent the directed graph as an adjacency list, and for each node, note the in-degree (number of incoming edges).
+    \begin{figure}
+        \begin{tikzpicture}[
+            node distance=2cm,
+            auto,
+            every node/.style={ellipse, draw, minimum size=1.5em}
+        ]
+            \node (M1) at (0, 0) {Math 1};
+            \node (M2) at (3, 0) {Math 2};
+            \node (CS1) at (0, -4) {Computer Science 1};
+            \node (CS2) at (6, -4) {Computer Science 2};
+            \node (DB) at (11, -4) {Databases};
+            \node (Algo) at (6, -2) {Algorithms};
+            \node (SD) at (9, 0) {Software Development};
+
+            \draw[-Stealth] (M1) -- (M2);
+            \draw[-Stealth] (CS1) -- (CS2);
+            \draw[-Stealth] (CS1) -- (Algo);
+            \draw[-Stealth] (M2) -- (Algo);
+            \draw[-Stealth] (CS2) -- (DB);
+            \draw[-Stealth] (Algo) -- (SD);
+        \end{tikzpicture}
+        \caption{Directed graph representing the dependencies between lectures.}
+        \label{fig:graphExcercise2}
+    \end{figure}
+
+    The graph is depicted in Figure~\ref{fig:graphExcercise2}. The adjacency list and in-degrees are as follows:
+\begin{itemize}
+    \item \ul{Math 1}: Adjacent to [Math 2], In-degree $= 0$
+    \item \ul{Math 2}: Adjacent to [Algorithms], In-degree $= 1$
+    \item \ul{Computer Science 1}: Adjacent to [CS 2, Algorithms], In-degree~$= 0$
+    \item \ul{Computer Science 2}: Adjacent to [Databases], In-degree $= 1$
+    \item \ul{Databases}: Adjacent to [], In-degree $= 1$
+    \item \ul{Algorithms}: Adjacent to [Software Development], In-degree $= 2$
+    \item \ul{Software Development}: Adjacent to [], In-degree $= 1$
+\end{itemize}
 \end{ejercicio}
 
 \begin{ejercicio}
-    Apply Kahn's Algorithm. Perform Kahn’s algorithm manually (or implement it in a programming language of your choice) to find a topological sorting of the lectures. Document each step:
+    Apply Kahn's Algorithm. Perform Kahn's algorithm manually (or implement it in a programming language of your choice) to find a topological sorting of the lectures. Document each step:
     \begin{enumerate}
         \item Start with all nodes whose in-degree $= 0$.
         \item Remove one of these nodes, add it to the order, and reduce the in-degrees of its neighbors.
         \item Repeat until all nodes are processed.
     \end{enumerate}
+    \begin{table}
+        \centering
+        \caption{Steps of Kahn's Algorithm for topological sorting of the lectures.}
+        \label{tab:kahnSteps}
+    \begin{tabular}{c|c|c}
+        \textbf{Step} & \textbf{Final Order} & \textbf{New In-degrees} \\
+        \hline
+        0 & [] & \makecell{Math 1: 0 \\ Math 2: 1 \\ Computer Science 1: 0 \\ Computer Science 2: 1 \\ Databases: 1 \\ Algorithms: 2 \\ Software Development: 1}\\ \hline
+        1 & [Math 1] & \makecell{Math 2: 0 \\ Computer Science 1: 0 \\ Computer Science 2: 1 \\ Databases: 1 \\ Algorithms: 2 \\ Software Development: 1}\\ \hline
+        2 & [Math 1, Math 2] & \makecell{Computer Science 1: 0 \\ Computer Science 2: 1 \\ Databases: 1 \\ Algorithms: 1 \\ Software Development: 1}\\ \hline
+        3 & [Math 1, Math 2, Computer Science 1] & \makecell{Computer Science 2: 0 \\ Databases: 1 \\ Algorithms: 0 \\ Software Development: 1}\\ \hline
+        4 & [M1, M2, CS1, CS2] & \makecell{Databases: 0 \\ Algorithms: 0 \\ Software Development: 1}\\ \hline
+        5 & [M1, M2, CS1, CS2, Databases] & \makecell{Algorithms: 0 \\ Software Development: 1}\\ \hline
+        6 & [M1, M2, CS1, CS2, Databases, Algorithms] & \makecell{Software Development: 0}\\ \hline
+        7 & [M1, M2, CS1, CS2, Databases, Algorithms, SD] & \makecell{}\\
+    \end{tabular}
+    \end{table}
+    The algorithm can be seen in the Table~\ref{tab:kahnSteps}.
 \end{ejercicio}
 
 \begin{ejercicio}
-    Interpret the result. State the calculated order of the lectures, and determine if this order is unique. Justify your answer.
+    Interpret the result. State the calculated order of the lectures, and determine if this order is unique. Justify your answer.\\
+
+    The calculated order of the lectures is:
+\begin{center}
+    Math 1 $\rightarrow$ Math 2 $\rightarrow$ Computer Science 1 $\rightarrow$ Computer Science 2 $\rightarrow$ Databases $\rightarrow$ Algorithms $\rightarrow$ Software Development 
+\end{center}
+
+    This order is not unique. For example, Computer Science 1 and Math 1 both have an in-degree of 0 at the start, so we could have chosen Computer Science 1 before Math 1, which would lead to a different valid topological order. The presence of multiple nodes with in-degree 0 at various steps allows for multiple valid topological sorts.
 \end{ejercicio}
