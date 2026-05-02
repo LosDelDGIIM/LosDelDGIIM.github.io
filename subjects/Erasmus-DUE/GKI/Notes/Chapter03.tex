@@ -47,6 +47,29 @@ This matrix is also called ``next-neighbor'' matrix, as the neighboring vertices
 
 Lastly, the \emph{transition matrix} is obtained by normalizing the adjacency matrix. This is done by dividing each entry $a_{ij}$ by the sum of the entries in the $i$-th row. The transition matrix can be used to find the probability of transitioning from one vertex to another in a random decision process.
 
+
+\subsection{PageRank}
+
+PageRank is an algorithm used to determine the importance of nodes in a graph. It is well-known for being used by Google Search to rank web pages in their search engine results. It works by counting the number and quality of links to a page to determine a rough estimate of how important the website is. The underlying assumption is that more important websites are likely to receive more links from other websites. Everything is represented as a directed graph, where the vertices represent web pages and the edges represent hyperlinks between them. There are certain parameters that can be adjusted in the PageRank algorithm, such as:
+\begin{itemize}
+    \item The teleportation probability vector. It's $n$-th entry represents the probability of jumping to the $n$-th page when a random surfer decides to teleport (going to a random page instead of following a link). It is usually set to a uniform distribution, meaning that the random surfer has an equal probability of jumping to any page.
+    \item The damping factor $\alpha$, which represents the probability that a random surfer will continue following links rather than teleporting.
+    \item The convergence threshold, which determines when the algorithm should stop iterating and return the PageRank values.
+\end{itemize}
+
+The algorithm returns the PageRank vector, whose $n$-th entry represents the PageRank of the $n$-th page. The PageRank values decide in which order the pages are shown in the search results, with higher PageRank values indicating more important pages. The PageRank algorithm works as follows:
+\begin{enumerate}
+    \item Initialize the PageRank vector with the teleportation probability vector.
+    \item Update the old PageRank vector (PR) by adding the transition matrix multiplied by the old PageRank vector (weighted by the damping factor $\alpha$) and the teleportation probability vector (weighted by $1-\alpha$):
+    \begin{equation*}
+        PR = \alpha \cdot M \cdot PR + (1 - \alpha) \cdot v
+    \end{equation*}
+    Where $M$ is the transition matrix and $v$ is the teleportation probability vector.
+    \item Repeat the process until the change in the PageRank vector is less than the convergence threshold (or a maximum number of iterations is reached).
+\end{enumerate}
+
+Once the algorithm converges, the PageRank values can be used to rank the web pages in search results. The higher the PageRank value, the more important the page is considered to be, and therefore, it will be ranked higher in the search results.
+
 \section{Sorting Algorithms}
 
 Sorting algorithms are a fundamental part of computer science, as they allow us to organize data in a specific order. In addition, they are used in many search algorithms, as they can help to reduce the search space and improve the efficiency of the search.
@@ -98,20 +121,166 @@ The efficiency of Quick Sort depends on the choice of the pivot. The complexity 
 
 \subsection{Topological Sorting: Kahn's Algorithm}
 
-This algorithm is used to sort the vertices of a directed acyclic graph (DAG) in a linear order. If there is a directed edge from vertex $u$ to vertex $v$, then $u$ comes before $v$ in the ordering. It is used in several applications, such as scheduling tasks, resolving dependencies, and determining the order of compilation in programming languages.
+This algorithm is used to sort the vertices of a directed acyclic graph (DAG) in a linear order. If there is a directed edge from vertex $u$ to vertex $v$, then $u$ comes before $v$ in the ordering. It is used in several applications, such as scheduling tasks, resolving dependencies, and determining the order of compilation in programming languages. The algorithm works as follows:
+\begin{enumerate}
+    \item The result is going to be stored in a list called $L$.
+    \item Find all vertices with no incoming edges and add them to a set $S$.
+    \item While $S$ is not empty:
+    \begin{enumerate}
+        \item Remove a vertex $n$ from $S$ and add it to $L$.
+        \item For each vertex $m$ with an edge from $n$ to $m$:
+        \begin{enumerate}
+            \item Remove the edge from $n$ to $m$.
+            \item If $m$ has no other incoming edges, add $m$ to $S$.
+        \end{enumerate}
+    \end{enumerate}
+    \item If there are still edges in the graph, it means that there is a cycle, and therefore, a topological sort is not possible. Otherwise, the list $L$ contains the vertices in topologically sorted order.
+\end{enumerate}
 
 \section{Uninformed Search}
 
+Uninformed search algorithms are those that do not have any additional information about the search space. They explore the search space in a systematic way, without any guidance or heuristics.
+
+\subsection{Breadth-First Search}
+
+This algorithm explores the search space level by level, starting from the root node and expanding all the nodes at the present depth before moving on to the nodes at the next depth level. It uses a queue (FIFO) to keep track of the nodes to be explored. It is guaranteed to find the shortest path, but it can be memory intensive, as it needs to store all the nodes at the current depth level.
+
+\subsection{Depth-First Search}
+
+This algorithm explores the search space by going as deep as possible along each branch before backtracking. It uses a stack (LIFO) to keep track of the nodes to be explored. It is not guaranteed to find the shortest path, but it can be more memory efficient than breadth-first search.
+
+\subsection{Depth-Limited Search}
+
+This algorithm is a variation of depth-first search that limits the depth of the search. It is used to avoid infinite loops in cases where the search space is infinite or has cycles. It uses a stack (LIFO) to keep track of the nodes to be explored, and it keeps track of the current depth of the search. If the depth limit is reached, it backtracks and explores other branches. It is not guaranteed to find the searched node, but it can be more memory efficient than depth-first search. The choice of the depth limit is crucial, as it can affect the completeness and optimality of the search.
+
+\subsection{Iterative Deepening Search}
+
+This algorithm combines the benefits of both breadth-first and depth-first search. It performs a depth-limited search with increasing depth limits until a solution is found.
+\begin{enumerate}
+    \item Start with a depth limit of 0.
+    \item Perform a depth-limited search with the current depth limit.
+    \item If a solution is found, return it. Otherwise, increase the depth limit and repeat the process.
+\end{enumerate}
+
+A stack (LIFO) is used to keep track of the nodes to be explored in the depth-limited search. It is guaranteed to find the shortest path, and it can be more memory efficient than breadth-first search.
+
+\subsection{Bidirectional Search}
+
+This algorithm is used to find the shortest path between two nodes in a graph. It works by simultaneously searching (typically BFS) from both the start node and the goal node until the two searches meet in the middle. It uses two data structures to keep track of the nodes to be explored from both directions. It is guaranteed to find the shortest path, and it can be more efficient than unidirectional search, especially in cases where the search space is large.
+
+\subsection{Uniform Cost Search}
+
+This algorithm is used in weighted graphs (where the edges have positive costs) to find the least costly path from the root node to a goal node. It is similar to breadth-first search, but it takes into account the cost of the path.
+It uses a priority queue to keep track of the nodes to be explored, where the priority is determined by the cost of the path from the root node to the current node. It is guaranteed to find the least costly path, but it can be memory intensive, as it needs to store all the nodes in the search space.
+\begin{enumerate}
+    \item Start with the root node and add it to the priority queue with a cost of 0.
+    \item While the priority queue is not empty:
+    \begin{enumerate}
+        \item Remove the node with the lowest cost from the priority queue.
+        \item If the node is a goal node, return the path to it.
+        \item Otherwise, expand the node and add its children to the priority queue with their respective cumulative costs.
+    \end{enumerate}
+\end{enumerate}
+
+\subsection{Dijkstra's Algorithm}
+
+This algorithm is a specific implementation of uniform cost search that is used to find the shortest path from a source node to all other nodes in a weighted graph. It works by maintaining a priority queue of nodes to be explored, where the priority is determined by the cumulative cost from the source node to the current node. The algorithm iteratively expands the node with the lowest cumulative cost and updates the costs of its neighbors until all nodes have been explored. It is guaranteed to find the shortest path from the source node to all other nodes, but it can be memory intensive, as it needs to store all the nodes in the search space.
+\begin{enumerate}
+    \item Start with the source node and add it to the priority queue with a cost of 0. Every other node is added to the priority queue with a cost of infinity.
+    \item While the priority queue is not empty (it is not empty until all nodes have been explored):
+    \begin{enumerate}
+        \item Remove the node with the lowest cumulative cost from the priority queue.
+        \item For each neighbor of the current node:
+        \begin{enumerate}
+            \item Calculate the cumulative cost to reach the neighbor through the current node.
+            \item If this cumulative cost is less than the previously known cost for that neighbor, update the cost and modify it in the priority queue.
+        \end{enumerate}
+    \end{enumerate}
+\end{enumerate}
+
 \section{Informed Search}
 
-\subsection{Dijkstra Search}
+Informed search algorithms are those that have additional information about the search space. They use this information to guide the search and improve its efficiency. The additional information is usually in the form of a heuristic function, which estimates the cost of reaching the goal from a given node.
+
+\subsection{Greedy Best First Search}
+
+This algorithm uses a priority queue to keep track of the nodes to be explored, where the priority is determined by the heuristic function. It always expands the node that is estimated to be closest to the goal.
+\begin{enumerate}
+    \item Start with the root node and add it to the priority queue with a priority determined by the heuristic function.
+    \item While the priority queue is not empty:
+    \begin{enumerate}
+        \item Remove the node with the lowest heuristic value from the priority queue.
+        \item If the node is a goal node, return the path to it.
+        \item Otherwise, expand the node and add its children to the priority queue with their respective heuristic values.
+    \end{enumerate}
+\end{enumerate}
+
+The efficiency of Greedy Best First Search depends on the quality of the heuristic function. The main drawback of this algorithm is that it is not guaranteed to find the optimal solution, as it does not consider the actual cost of the path, but only its estimated cost to the goal.
+
+\subsection{A* Search}
+
+This algorithm is a combination of uniform cost search and greedy best first search. It uses a priority queue to keep track of the nodes to be explored, where the priority is determined by:
+\begin{equation*}
+    f(n) = g(n) + h(n)
+\end{equation*}
+Where $g(n)$ is the actual cost from the root node to the current node $n$, and $h(n)$ is the heuristic estimate of the cost from $n$ to the goal. A* Search is guaranteed to find the optimal solution if the heuristic function is:
+\begin{itemize}
+    \item Admissible: It never overestimates the cost to reach the goal.
+    \item Consistent (or monotonic): For every node $n$ and every successor $n'$ of $n$, the estimated cost of reaching the goal from $n$ is no greater than the cost of getting from $n$ to $n'$ plus the estimated cost of reaching the goal from $n'$. Formally, this can be expressed as:
+    \begin{equation*}
+        h(n) \leq c(n, n') + h(n')
+    \end{equation*}
+    Where $c(n, n')$ is the actual cost of moving from node $n$ to node $n'$.
+\end{itemize}
+
+Therefore, the A* Search algorithm is:
+\begin{enumerate}
+    \item Start with the root node and add it to the priority queue with a priority determined by $f(n) = g(n) + h(n)$. All other nodes are added to the priority queue with a priority of infinity.
+    \item While the priority queue is not empty:
+    \begin{enumerate}
+        \item Remove the node with the lowest $f(n)$ value from the priority queue.
+        \item If the node is a goal node, return the path to it.
+        \item Otherwise, expand the node. For each child of the current node:
+        \begin{enumerate}
+            \item Calculate $g(n')$ as $g(n) + c(n, n')$, where $c(n, n')$ is the actual cost of moving from node $n$ to node $n'$. If that new $g(n')$ value is less than the previously known $g(n')$ value for that child, update $g(n')$ and calculate $f(n') = g(n') + h(n')$.
+        \end{enumerate}
+    \end{enumerate}
+\end{enumerate}
+
 
 \section{Local Search}
 
-\section{Modern utilities}
+Local search algorithms are those that operate on a single solution and try to find a better solution by making small changes to it. They are often used in optimization problems. Therefore, the aim is finding a local optimum, not necessarily a global one.
 
-\subsection{Information Retrieval}
+\subsection{Hill Climbing}
 
-\subsection{Search Engines}
+This algorithm starts with an arbitrary solution and iteratively makes small changes to it, accepting the change if it results in a better solution. The process continues until no further improvements can be made (or a maximum number of iterations is reached).
+\begin{enumerate}
+    \item Start with an arbitrary solution.
+    \item Generate the neighbors of the current solution by making small changes to it.
+    \item Evaluate the neighbors and select the one with the best value.
+    \item If the best neighbor is better than the current solution, move to that neighbor and repeat the process. Otherwise (if no neighbor is better), return the current solution as a local optimum.
+\end{enumerate}
 
-\subsection{PageRank}
+\subsection{Simulated Annealing}
+
+This algorithm is a variation of hill climbing that allows for occasional moves to worse solutions in order to escape local optima. It is inspired by the annealing process in metallurgy, where a material is heated and then slowly cooled to remove defects and improve its properties. The algorithm works as follows:
+\begin{enumerate}
+    \item Start with an arbitrary solution, an initial temperature $T\geq 0$, and a cooling rate $\alpha$ (where $0 < \alpha < 1$).
+    \item Generate a neighbor of the current solution by making a small change to it.
+    \item Evaluate the neighbor and calculate the change in the objective function $\Delta E$ (difference between the neighbor's value and the current solution's value).
+    \item If $\Delta E < 0$ (the neighbor is better), move to that neighbor. Otherwise, move to the neighbor with a probability of $e^{-\Delta E / T}$.
+    \item Update the temperature by multiplying it by the cooling rate: $T = \alpha T$.
+    \item Repeat the process until a stopping criterion is met (e.g., a maximum number of iterations, a minimum temperature, or a satisfactory solution).
+\end{enumerate}
+
+This algorithm doesn't necessarily find the optimal solution, but it can avoid being stuck in local optima, especially if the cooling schedule is well-designed.
+
+% \section{Modern utilities}
+% // TODO: Desarrollar?
+
+% \subsection{Information Retrieval}
+
+% \subsection{Search Engines}
+
+% \subsection{PageRank}
