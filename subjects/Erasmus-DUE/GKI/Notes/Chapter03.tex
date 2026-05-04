@@ -194,6 +194,19 @@ It uses a priority queue to keep track of the nodes to be explored, where the pr
     \end{enumerate}
 \end{enumerate}
 
+
+\subsubsection{Local Uniform Cost Search}
+
+This algorithm is a variation of uniform cost search that is used to find the least costly path from a given node to a goal node, but just considering the local neighborhood of the given node. For each selected node, the next selected node is the one with the lowest cost among its neighbors. It is not guaranteed to find the least costly path, but it can be more efficient than uniform cost search in cases where the search space is large and the goal node is close to the given node.
+\begin{enumerate}
+    \item Start with the given node.
+    \item While the goal node has not been reached, or a maximum number of iterations has not been reached:
+    \begin{enumerate}
+        \item Evaluate the neighbors of the current node and select the one with the lowest cost.
+        \item Move to the selected neighbor and repeat the process.
+    \end{enumerate} 
+\end{enumerate}
+
 \subsection{Dijkstra's Algorithm}
 
 This algorithm is a specific implementation of uniform cost search that is used to find the shortest path from a source node to all other nodes in a weighted graph. It works by maintaining a priority queue of nodes to be explored, where the priority is determined by the cumulative cost from the source node to the current node. The algorithm iteratively expands the node with the lowest cumulative cost and updates the costs of its neighbors until all nodes have been explored. It is guaranteed to find the shortest path from the source node to all other nodes, but it can be memory intensive, as it needs to store all the nodes in the search space.
@@ -209,6 +222,8 @@ This algorithm is a specific implementation of uniform cost search that is used 
         \end{enumerate}
     \end{enumerate}
 \end{enumerate}
+
+% // TODO: Igual que UCS, pero simplemente no se detiene cuando encuentra un nodo objetivo, sino que sigue explorando hasta que se han explorado todos los nodos???
 
 \section{Informed Search}
 
@@ -235,14 +250,17 @@ This algorithm is a combination of uniform cost search and greedy best first sea
 \begin{equation*}
     f(n) = g(n) + h(n)
 \end{equation*}
-Where $g(n)$ is the actual cost from the root node to the current node $n$, and $h(n)$ is the heuristic estimate of the cost from $n$ to the goal. A* Search is guaranteed to find the optimal solution if the heuristic function is:
+Where $g(n)$ is the actual cost from the root node to the current node $n$, and $h(n)$ is the heuristic estimate of the cost from $n$ to the goal. Two important properties of the heuristic function are:
 \begin{itemize}
-    \item Admissible: It never overestimates the cost to reach the goal.
+    \item Admissible: It never overestimates the cost to reach the goal. It can be expressed as:
+    \begin{equation*}        h(n) \leq h^*(n)\qquad \forall n\in V
+    \end{equation*}
+    where $h^*(n)$ is the true cost from node $n$ to the goal. If the heuristic is admissible, A* Search is guaranteed to find the optimal solution.
     \item Consistent (or monotonic): For every node $n$ and every successor $n'$ of $n$, the estimated cost of reaching the goal from $n$ is no greater than the cost of getting from $n$ to $n'$ plus the estimated cost of reaching the goal from $n'$. Formally, this can be expressed as:
     \begin{equation*}
         h(n) \leq c(n, n') + h(n')
     \end{equation*}
-    Where $c(n, n')$ is the actual cost of moving from node $n$ to node $n'$.
+    where $c(n, n')$ is the actual cost of moving from node $n$ to node $n'$. If the heuristic is consistent, it is also admissible, and A* Search is guaranteed to find the optimal solution. In addition, if the heuristic is consistent, A* Search is more efficient, as it does not need to revisit nodes that have already been explored.
 \end{itemize}
 
 Therefore, the A* Search algorithm is:
@@ -281,7 +299,7 @@ This algorithm is a variation of hill climbing that allows for occasional moves 
     \item Start with an arbitrary solution, an initial temperature $T\geq 0$, and a cooling rate $\alpha$ (where $0 < \alpha < 1$).
     \item Generate a neighbor of the current solution by making a small change to it.
     \item Evaluate the neighbor and calculate the change in the objective function $\Delta E$ (difference between the neighbor's value and the current solution's value).
-    \item If $\Delta E < 0$ (the neighbor is better), move to that neighbor. Otherwise, move to the neighbor with a probability of $e^{-\Delta E / T}$.
+    \item If $\Delta E < 0$ (the neighbor is better), move to that neighbor. Otherwise, move to the neighbor with a probability of $e^{-\Delta E / T}$. Initially, with a high temperature, the algorithm is more likely to accept worse solutions, allowing it to explore the search space more broadly. As the temperature decreases, the algorithm becomes less likely to accept worse solutions, focusing more on local improvements.
     \item Update the temperature by multiplying it by the cooling rate: $T = \alpha T$.
     \item Repeat the process until a stopping criterion is met (e.g., a maximum number of iterations, a minimum temperature, or a satisfactory solution).
 \end{enumerate}
