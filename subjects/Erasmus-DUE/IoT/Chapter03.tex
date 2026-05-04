@@ -440,7 +440,97 @@ LTE (Long-Term Evolution) is a standard for wireless communication that is widel
 Once installed, a cellular network enables connection to the Internet everywhere in the area covered by the network (which is usually really large). However, setting up a cellular network can be really expensive, and it may not be feasible for some IoT applications that require low-cost communication solutions. To address this issue, the NB-IoT standard was developed to provide a low-cost, low-power, wide-area communication solution for IoT applications that can be deployed in existing LTE networks without the need for changes to the infrastructure.
 
 
+\subsection{NB-IoT Channels}
 
+NB-IoT can be deployed in three different ways, which use different channels for communication:
+\begin{itemize}
+    \item \ul{Standalone Deployment}: This deployment is used when there is no other system available and therefore GSM (which is an older cellular communication standard) spectrum is used for communication. In this deployment, NB-IoT reserves a specific portion of the GSM spectrum for communication (a single 200 kHz channel), and it uses that channel for communication between the devices and the base stations.
+    
+    As an advantage, this deployment does not interfere with the existing LTE network, as it uses a different spectrum for communication. However, GSM is older and less efficient than LTE, so this deployment may not provide the best performance for NB-IoT applications.
+
+    \item \ul{Guard Band Deployment}: This deployment is used when there is an existing LTE network, and it uses the guard band (which is a portion of the spectrum that is reserved for preventing interference between different channels) for communication. This band is not used for communication in the LTE network, so it can be used for NB-IoT communication without interfering with the existing LTE network. A channel is then reserved in the guard band for NB-IoT communication.
+    
+    \item \ul{In-Band Deployment}: This deployment is used when there is an existing LTE network, and it uses a portion of the LTE spectrum for communication. In this deployment, a specific portion of the LTE spectrum (a single channel) is used for NB-IoT communication, and it is time-shared with the existing LTE network. Collisions between NB-IoT and LTE communication need to be controlled to ensure that both types of communication can coexist without interference.
+\end{itemize}
+
+However, these physical channels are not directly used, but they are abstracted by logical channels that provide specific functionalities and features for enabling communication in NB-IoT applications. NB-IoT uses specific logic channels, and each of them is divided in two different types of channels:
+\begin{itemize}
+    \item \ul{Signaling Channels}: These channels are used for transmitting control information and signaling messages between the devices and the base stations. They are used for tasks such as device registration, authentication, and mobility management.
+    \item \ul{Data Channels}: These channels are used for transmitting user data between the devices and the base stations.
+\end{itemize}
+
+Each of these channels in fact uses several physical channels for communication, and they have to be mapped. There are two different mappings that are applied:
+\begin{itemize}
+    \item \ul{Frequency Multiplexing}: Two different physical channels are used, one for uplink communication (from the device to the base station) and another for downlink communication (from the base station to the device).
+    \item \ul{Time Multiplexing}: In the same physical channel, different time slots are used for different logical channels, so the devices and the base stations need to be synchronized to ensure that they are using the correct time slots for communication.
+\end{itemize}
+    
+\subsection{Cell Controlling in NB-IoT}
+
+NB-IoT has a well-known common model: messages will be infrequent and small. This allows for no handover. While you are being served by a base station, you can perfetly communicate with it, but if you move to another cell, the communication will be lost and you will need to join to the new cell. In order to join a cell, the following process is followed:
+\begin{enumerate}
+    \item The UE listens in a broadcast channel for a specific message from the base station containing the information about the cell.
+    \item After receiving that message, the UE checks if the cell is joinable (as there are test cells, for example, that are not joinable).
+    \item If the cell is joinable, in the information received there is a threshold for the signal strength, so the UE checks if the signal strength is above that threshold.
+    \item From all the joinable cells with a signal strength above the threshold, the UE selects the one with the best signal strength and tries to join it.
+\end{enumerate}
+
+Switching between cells is also supported but, as previously mentioned, there is no handover, so the communication will be lost during the switching process. The switching process can be performed when, due to mobility or other factors, the signal strength of the current cell drops below a certain threshold, and a new cell with a better signal strength is available. In that case, the UE can switch to the new cell by following the same process as when joining a cell for the first time.
+
+\subsection{UE Modes in NB-IoT}
+
+NB-IoT defines four different modes for the UE, which are designed to optimize the power consumption of the devices in the NB-IoT network.
+
+\subsubsection{Active Mode}
+    An UE only enters this mode when it needs to transmit or receive data, and it is the most power-consuming mode. In this mode, the UE is actively communicating with the base station, and therefore has reserved resources for communication. There are two different types of transmission in this mode:
+    \begin{itemize}
+        \item \ul{Uplink Transmission}: In this type of transmission, the UE transmits data to the base station. There are two different variants:
+        \begin{itemize}
+            \item \emph{Via Data Channels}: This is a connection-oriented transmission. The UE uses a signal channel to request resources for uplink transmission, and the base station informs the UE about the timeslots and the data channels that it can use for the uplink transmission. The UE can then transmit its data to the base station using those resources when needed. After the transmission is completed, the UE can release the resources that it has been using for the uplink transmission and close the connection.
+            
+            This is useful for large transmissions, but introduces a lot of overhead for small transmissions. An small optimization is used by letting the UE ask the base station to resume the connection that it had previously established, so the UE can use the same resources that it had been using before without the need to go through the whole process of requesting resources and establishing a new connection. However, the overhead is still significant for small transmissions, so there is another variant for small transmissions.
+        
+            \item \emph{Via Signal Channels}: This is a connectionless transmission. In the first step, when the UE asks the base station for resources for uplink transmission, the actual data that the UE wants to transmit is included in the request (called piggybacking), so there is no need to establish a connection and reserve resources for the transmission. The base station can then transmit the data to the core network immediately after receiving the request from the UE, without the need to wait for the UE to transmit its data using the reserved resources. This is useful for small transmissions, as it allows for a more efficient use of the resources and reduces the overhead associated with establishing a connection and reserving resources for the transmission.
+        \end{itemize}
+        \item \ul{Downlink Transmission}: In this type of transmission, the base station transmits data to the UE. The base station pages the UE (it can page several UE in the same message) to notify it that there is data waiting for it to be transmitted. Once the UE receives the paging message, there are also the two same variants for the downlink transmission:
+        \begin{itemize}
+            \item \emph{Via Data Channels}: Connection-oriented transmission where the UE reserves a specific timeslot and data channel for the downlink transmission.
+            \item \emph{Via Signal Channels}: Connectionless transmission where the UE tells the base station that it is ready to receive the data, and that the data should be included (piggybacked) in the message sent over the signal channel, so there is no need to reserve resources for the downlink transmission.
+        \end{itemize}
+    \end{itemize}
+
+    Regarding the downlink transmission, paging is used to notify the UE that there is data waiting for it to be transmitted. However, once the gateways receive the data for the UE, it is not yet known which base station is serving the UE, i.e., which base station should send the paging message to the UE. To solve this issue, tracking is used. Two extreme scenarios could be considered to better understand how it is done.
+    \begin{itemize}
+        \item \emph{Only one cell is paged}: The MME keeps track of the cell that is serving the UE at every moment, so when there is data waiting for the UE, only its specific cell is paged. This would reduce the overhead of paging (as only one cell is paged), but it would imply a lot of overhead each time the UE switches between cells. This is also a problem from the privacy point of view, as the MME would have to keep track of the cell that is serving the UE at every moment, which could be used to track the location of the UE.
+        \item \emph{All the cells are paged}: The MME does not keep track of the cell that is serving the UE, so when there is data waiting for the UE, all the cells are paged. This would reduce the overhead of tracking (as there is no need to keep track of the cell that is serving the UE), but it would imply a lot of overhead for paging (as all the cells are paged).
+    \end{itemize}
+
+    As the reader may have already guessed, the actual solution is a trade-off between these two extreme scenarios. The concept of \emph{Tracking Area} is used, which is just a group of cells with the same tracking area identifier (TAI). The MME keeps track of the tracking area that is serving the UE, so when there is data waiting for the UE, only the cells in that tracking area are paged. When the UE needs to inform the MME of the cell that is serving it, it sends a Tracking Area Update (TAU) message to the MME, which updates in its internal records the tracking area that is serving the UE.
+    \begin{itemize}
+        \item When a UE joins the network, it sends a TAU message to the MME to inform it of the tracking area that is serving it.
+        \item When a UE switches between cells, it checks if the new cell belongs to the same tracking area as the previous cell. If it does, there is no need to send a TAU message to the MME, as the tracking area that is serving the UE has not changed. If it does not, the UE sends a TAU message to the MME to inform it of the new tracking area that is serving it.
+        \item Every certain period of time, the UE sends a TAU message to the MME to inform it that it is still connected to the network. If the MME does not receive a TAU message from the UE within a certain period of time, it assumes that the UE has disconnected from the network and it deletes its internal record accordingly.
+    \end{itemize}
+
+\subsubsection{Idle Mode}
+This mode is used when the UE does not need to transmit or receive data, but it still needs to be registered in the network and able to receive paging messages from the base station. No resources are reserved for communication in this mode, but:
+\begin{itemize}
+    \item The UE still informs the base station about its location, so the base station can send paging messages to the UE when needed.
+    \item The UE still monitors for paging messages from the base station, so it can receive them when they are sent.
+    \item The SGW retains the incoming data for the UE in buffers until it receives a paging message from the base station, which indicates that there is data waiting for the UE to be transmitted or received.
+\end{itemize}
+
+Even though a UE can set itself to idle mode, the base station can also set the UE to idle mode if it detects that the UE has not been transmitting or receiving data for a certain period of time.
+
+\subsubsection{Extended Discontinuous Reception (eDRX) Mode}
+
+One thing that should be taken into account is that paging is not done continuously, but it is done in specific time intervals are the start of each hyperframe (which is a group of slotframes). This means that the UE needs to be listening for paging messages only at the start of each hyperframe, and it can go to sleep during the rest of the time to save energy.
+
+The eDRX mode is used when the UE needs to save energy by sleeping for longer periods of time, but it still needs to be able to receive paging messages from the base station. In this mode, the UE can configure the number of hyperframes that it will sleep for, so it will only listen for paging messages at the start of each hyperframe after sleeping for that number of hyperframes. This allows the UE to save energy by sleeping for longer periods of time, while still being able to receive paging messages from the base station when needed. During all that time, the SGW retains the incoming data for the UE in buffers.
+
+\subsubsection{Power Saving Mode (PSM)}
+
+This mode is used when the UE needs to save even more energy by sleeping for an unlimited period of time. During this time, the base station will not page the UE, and the SGW will retain the incoming data for the UE in buffers. When the UE awakes from this mode to send data, it will notify the base station that it is awake and wait for the base station to send the buffered data to it (if there is any data waiting for it to be transmitted or received).
 
 \section{6LowPAN}
 
