@@ -111,7 +111,13 @@ The content that is in fact transmitted over the medium is the \emph{MAC Protoco
 Regarding the MAC adresses, there are two types of addresses that can be used in the IEEE 802.15.4 standard:
 \begin{itemize}
     \item \ul{Short Address}: This is a 16-bit address that is manually assigned to a device by the network operator. It is used for communication within the PAN, and it is not globally unique.
+    
+    These are called Short Addresses (SADDR).
     \item \ul{Extended Address}: This is a 64-bit address that is asigned to a device by the manufacturer, and it is globally unique. It is used for communication between devices in different PANs, and it can also be used for communication with devices on the Internet.
+    
+    These are called Extended Unique Identifier (EUI-64) addresses.
+
+    Specially important is the second least significant bit of the first byte of the EUI-64 address, which is called the universal/local (U/L) bit.
 \end{itemize}
 
 This standard also defines several types of variants for the MAC layer, which esentially use different variants of controlling the access to the medium.
@@ -448,7 +454,7 @@ NB-IoT can be deployed in three different ways, which use different channels for
     
     As an advantage, this deployment does not interfere with the existing LTE network, as it uses a different spectrum for communication. However, GSM is older and less efficient than LTE, so this deployment may not provide the best performance for NB-IoT applications.
 
-    \item \ul{Guard Band Deployment}: This deployment is used when there is an existing LTE network, and it uses the guard band (which is a portion of the spectrum that is reserved for preventing interference between different channels) for communication. This band is not used for communication in the LTE network, so it can be used for NB-IoT communication without interfering with the existing LTE network. A channel is then reserved in the guard band for NB-IoT communication.
+    \item \ul{Guard Band Deployment}: This deployment is used when there is an existing LTE network, and it uses the guard band (which is a portion of the spectrum that is reserved for preventing interference between different channels) for communication. This band is not used for communication in the LTE network, so it can be used for NB-IoT communication without interfering with the existing LTE network. A channel is then reserved in the guard band for NB-IoT communication. It should however be used with caution, as the guard band is not designed for communication and therefore may have some limitations in terms of performance and reliability.
     
     \item \ul{In-Band Deployment}: This deployment is used when there is an existing LTE network, and it uses a portion of the LTE spectrum for communication. In this deployment, a specific portion of the LTE spectrum (a single channel) is used for NB-IoT communication, and it is time-shared with the existing LTE network. Collisions between NB-IoT and LTE communication need to be controlled to ensure that both types of communication can coexist without interference.
 \end{itemize}
@@ -532,6 +538,191 @@ The eDRX mode is used when the UE needs to save energy by sleeping for longer pe
 
 This mode is used when the UE needs to save even more energy by sleeping for an unlimited period of time. During this time, the base station will not page the UE, and the SGW will retain the incoming data for the UE in buffers. When the UE awakes from this mode to send data, it will notify the base station that it is awake and wait for the base station to send the buffered data to it (if there is any data waiting for it to be transmitted or received).
 
+
+
 \section{6LowPAN}
+
+During this section, we will cover how to actually connect the devices to the internet, which is the main goal of IoT. In order to do so, IP (Internet Protocol) is used, which is the main protocol for communication in the Internet. In order to connect to internet, there are two different approach, depending on the protocols used in the lower layers.
+
+\subsection{IP with NB-IoT}
+
+When a UE uses NB-IoT for communication, given that NB-IoT is based on LTE (which is fully IP-based), LTE provides the direct support needed for connecting the UE to the Internet using IP. There are two options:
+\begin{itemize}
+    \item \ul{If the UE is powerful enough to directly speak IP}:
+    
+    The PGW can asign an IP address to the UE, and the UE can use that IP address to communicate with other devices in the Internet using IP.
+
+    \item \ul{If the UE is not powerful enough to directly speak IP}:
+    
+    In this case, the UE uses an specific protocol for communication with the SGW, which forwards the data to the PGW, which is responsible for translating that specific protocol to IP and forwarding the data to the Internet. Therefore, the PGW acts as a gateway between the UE and the Internet, creating the IP packets.
+    
+    It should however be noticed that there is also an IP address assigned to the UE, but it is not used for communication between the UE and the base station, but it is only used for communication between the PGW and the Internet. The UE does not even know that it has an IP address.
+\end{itemize}
+
+\subsection{IP with IEEE 802.15.4: 6LowPAN}
+
+When a device uses IEEE 802.15.4 for communication, given that IEEE 802.15.4 is not IP-based, there is no direct support for connecting the device to the Internet using IP. A first approach to solve this issue is to use the PAN Coordinator as a gateway between the devices in the PAN and the Internet. However, in this section we will cover how to directly connect the devices in the PAN to the Internet using IP.
+
+A first approach would be to directly use IP, but there are some issues (which will be covered) that makes it necessary to use a specific protocol for connecting the devices in the PAN to the Internet using IP, which is called 6LowPAN (IPv6 over Low-Power Wireless Personal Area Networks). This protocol is just an adaptation layer to let IP and IEEE 802.15.4 work together. The IP SDU is encapsulated using a header stack, where the following headers appear \emph{in the following order}:
+\begin{enumerate}
+    \item \ul{Mesh Addressing Header}: Used when the peer-to-peer communication is needed between the devices in the PAN, as it allows for multi-hop communication between the devices in the PAN.
+    \item \ul{Broadcast Header}: Used when a broadcast communication is needed between the devices in the PAN.
+    \item \ul{Fragmentation Header}: Used when the IP SDU is too large to be transmitted in a single IEEE 802.15.4 frame.
+    \item \ul{Dispatch Header} (1 byte): This header is used to indicate the type of the following headers in the header stack (regarding compression).
+\end{enumerate}
+It should be noted that, if any of those headers is not needed, it can be omitted to save resources. In order to better understand how does 6LowPAN work, we will cover the main issues that arise when trying to directly use IP over IEEE 802.15.4, and how 6LowPAN solves those issues.
+
+\subsubsection{Limited IP Adresses Configuration}
+
+The IoT Things have almost no user interaction, so they need to be able to automatically configure their IP address when they join the network. IPv6 provides a general network-independent mechanism for automatic IP address configuration, but it does not take into account the specifications of IEEE 802.15.4.
+
+The solution that 6LowPAN provides for this issue is \textbf{Stateless Address Autoconfiguration (SLAAC)}, which is a mechanism that allows the devices in the PAN to automatically configure their IP address when they join the network, without the need for a DHCP server or any other external configuration mechanism (that is why it is called stateless). The addresses assigned are \emph{Local Link (LL) IPv6 addresses}, which are only valid within the local network (the PAN) and cannot be used for communication with devices outside the PAN. If communication with devices outside the PAN is needed, then the router in the PAN (which is usually the PAN Coordinator) will perform a Network Address Translation (NAT) to translate the LL IPv6 addresses to global IPv6 addresses that can be used for communication with devices outside the PAN.
+
+The 16-byte IPv6 addresses are created taking into account the IEEE 802.15.4 addresses, so it depends on the type of address used:
+\begin{itemize}
+    \item \ul{64-bit Extended Unique Identifier (EUI-64) Address}:
+    
+    The IPv6 address has two different parts: the IPv6 Interface Identifier (IID), which is the 8 least significant bytes of the IPv6 address, and the IPv6 Network Prefix, which is the 8 most significant bytes of the IPv6 address.
+    \begin{itemize}
+        \item The Network Prefix is a fixed value that is defined by the 6LowPAN standard (given that it is only used for communication within the PAN, there is no need for a global unique prefix). It is set to \verb|FE80::|\footnote{In IPv6, hexadecimal notation is usually used. The usual convention is to split the address in 2-bytes groups, using ``:'' to differenciate them. Two consecutive colon ``::'' is used to filled with as many zeros as needed.}, which is the prefix for link-local addresses in IPv6.
+        
+        \item The IID is created using the EUI-64 address of the device, but just flipping the U/L bit.
+    \end{itemize}
+    \item \ul{16-bit Short Address}:
+    
+    The Network Prefix is the same as in the previous case, but the IID is created using the 16-bit short address of the device. The SADDR is ``converted'' to the following 64-bit address: \verb|<PAN ID>:00FF:FE00:<SADDR>|, where \verb|<PAN ID>| is the PAN ID of the device, and \verb|<SADDR>| is the 16-bit short address of the device. The IID is then created using that 64-bit address, but just setting the U/L bit to 0.
+\end{itemize}
+
+This mechanism allows the devices in the PAN to automatically configure their IP address when they join the network, without the need for a DHCP server or any other external configuration mechanism, and it also allows for communication between the devices in the PAN using their IPv6 addresses.
+
+\subsubsection{IPv6 Minimum MTU requirement}
+
+IPv6 requires that the minimum MTU for communication is 1280 bytes, which is much larger than the maximum frame size of IEEE 802.15.4 (127 bytes). The IPv6 protocol states that, for communication over links with a smaller MTU, link-specific fragmentation and reassembly mechanisms need to be implemented at a lower layer, which is what 6LowPAN does. When fragmenting, the fragment header is added to the header stack, and it differs from the first fragment to the rest of fragments.
+\begin{itemize}
+    \item The fragment header for the first fragment contains:
+    \begin{itemize}
+        \item \emph{Fragment Type} (5 bits): \verb|11000| for the first fragment.
+        \item \emph{Datagram Length} (11 bits): This field indicates the total length (in bytes) of the original IPv6 PDU that the 6LowPAN header stack is encapsulating, including the IPv6 header and the payload (after the IP fragmenting). It is used, for instance, to let the receiver know how much buffer space it needs to allocate for reassembling the fragments.
+        
+        It should be noted that the maximum value for this field is $2^{11}-1=2047$ bytes, which is larger than the minimum MTU required by IPv6. Therefore, the MTU for communication over IEEE 802.15.4 using 6LowPAN is effectively 2048 bytes, and therefore for PDUs larger than 2047 bytes, the fragmentation mechanism of IPv6 needs to be used in addition to the fragmentation mechanism of 6LowPAN.
+        % // TODO: Is the MTU then 2048, or 1028
+
+        \item \emph{Datagram Tag} (16 bits): This field is used to identify the fragments that belong to the same original IPv6 PDU. All the fragments that belong to the same original IPv6 PDU will have the same value in this field, so the receiver can use it to reassemble the fragments correctly.
+    \end{itemize}
+
+    % // TODO: El resto de header stack solo va en el primero??
+
+    \item The fragment header for the rest of fragments contains:
+    \begin{itemize}
+        \item \emph{Fragment Type} (5 bits): \verb|11100| for the rest of fragments.
+        \item \emph{Datagram Length} (11 bits): This field has the same value as in the first fragment, and should be repeated in all the fragments because the second fragment may arrive before the first fragment, so the receiver needs to know the total length of the original IPv6 PDU to be able to reassemble the fragments correctly.
+        \item \emph{Datagram Tag} (16 bits): This field has the same value as in the first fragment.
+        \item \emph{Datagram Offset} (8 bits): This field indicates the offset (in multiples of 8 bytes) of the data in the current fragment with respect to the start of the original IPv6 PDU. It is used by the receiver to reassemble the fragments in the correct order.
+        
+        It should be noted that the maximum value for this field is $2^8-1=255$, which means that the maximum size of each fragment is $255 \cdot 8 = 2040$ bytes. Given that the maximum length of the original IPv6 PDU is 2047 bytes, that offset is enough to ensure that the fragments can be reassembled correctly.
+
+        In addition, it should be noted that the capacity available with IEEE 802.15.4 for the payload is sometimes not fully used, as the offset of the next fragment needs to be a multiple of 8 bytes.
+    \end{itemize}
+\end{itemize}
+
+Regarding defragmentation, a fragment could be lost during transmission, so the receiver needs to implement a timeout mechanism to avoid waiting indefinitely for the missing fragment. If the receiver does not receive all the fragments of an original IPv6 PDU within a certain period of time, it discards all the fragments that it has received for that original IPv6 PDU (as it is considered as a failed transmission). Another higher layer (as TCP) can then request the retransmission of the original IPv6 PDU if needed.
+
+\subsubsection{Header Overhead}
+
+Even though up to this point IP and IEEE 802.15.4 have been made to work together, this would still be very inefficient. Out of the 127 bytes of the maximum PSDU size of IEEE 802.15.4:
+\begin{itemize}
+    \item Up to 25 bytes are used for the MAC header and the MAC footer, which leaves 102 bytes for the payload.
+    \item Up to 21 bytes are used for an additional encryption protocol, which leaves 81 bytes for the payload.
+    \item If 6LowPAN is used, even more bytes are used for the 6LowPAN header stack, which leaves even less bytes for the payload.
+    \item 40 bytes are used for the IPv6 header, which leaves 41 bytes for the payload.
+    \item 8 bytes are used for the UDP header, which leaves 33 bytes for the payload.
+\end{itemize}
+
+Having a payload of only 33 bytes is really inefficient, so 6LowPAN provides a mechanism for compressing the IPv6 header to reduce the overhead of transmitting IP packets over IEEE 802.15.4. Two different approeaches for compression are used: HC1 and HC2, or IPHC and NHC. We will cover in detail the HC1 and HC2 mechanisms, as they are the most widely used ones:
+\begin{itemize}
+    \item \ul{IPv6 Header Compression (HC1)}: This is a simple compression mechanism that is used for compressing the IPv6 header. In the Dispatch Header, \verb|0x42| is used to indicate that the IPv6 header is compressed using HC1. After that, the HC1 encoding indicates which fields of the IPv6 header are compressed and which fields are not compressed. The HC1 encoding fields are:
+    \begin{itemize}
+        \item 2 bits for each of the address fields (source and destination).
+        
+        Each of the address are split in two parts: the network prefix (the 8 most significant bytes) and the interface identifier (the 8 least significant bytes).
+        \begin{itemize}
+            \item The first bit indicates if the network prefix is assumed to be the LL IPv6 prefix (which is \verb|FE80::|) or not. If assumed, a 1 is set in that bit and the network prefix is not included in the compressed header. If not assumed, a 0 is set in that bit and the network prefix is included in the uncompressed fields.
+            \item The second bit indicates if the interface identifier is assumed to be derived from the IEEE 802.15.4 address of the device or not. If assumed, a 1 is set in that bit and the interface identifier is not included in the compressed header. If not assumed, a 0 is set in that bit, and the interface identifier is included in the uncompressed fields.
+        \end{itemize}
+
+        It should be noted that, when the address is not assumed (which is common when the communication needs to be done with devices outside the PAN), the whole address is included in the uncompressed fields, so the compression is not really effective. IPHC and NHC tend to solve this problem.
+
+
+        % // TODO: Menciona que esta asunción no funciona, porque en muchos casos se usarán otras. Es cierto? No decíamos que la PGW les cambiaba? Como hacer NAT
+
+        \item 1 bit for the Traffic Class and Flow Label fields:
+        
+        If both fields are assumed to be 0 (which is the most common case), a 1 is set in that bit. If they are not assumed, a 0 is set in that bit, and both fields are included in the uncompressed fields.
+        
+        \item 2 bits for the Next Header field:
+        
+        $00$ means that the Next Header field is not compressed, and it is included in the uncompressed fields. $01$ stands for UDP, $10$ stands for ICMP, and $11$ stands for TCP, so in those cases the Next Header field is compressed by just indicating the protocol used in that field.
+
+        This is sometimes a problem, because there are more types of headers (as the fragment header, if fragmentation in IP has happened), that are not considered.
+
+        \item 1 bit for deciding if HC2 encoding is used for compressing the next header:
+        
+        If the Next Header field is compressed using the previous 2 bits, that header can also be compressed using HC2. If it is used, a 1 is set in that bit, and the next header is compressed using HC2 encoding. If it is not used, a 0 is set in that bit.
+
+        If the Next Header field is not compressed using the previous 2 bits, then HC2 can't be used for compressing the next header, so a 0 is set in that bit.
+    \end{itemize}
+
+    Some specific fields of the IPv6 header were not mentioned in the HC1 encoding:
+    \begin{itemize}
+        \item Version: This field is always set to 6 for IPv6, so it is not needed to be included in the compressed header.
+        \item Payload Length: This field can be calculated from the length of the IEEE 802.15.4 frame.
+        \item Hop Limit: This field can't be assumed to have a specific value, so it is always sent afterwards uncompressed.
+    \end{itemize}
+
+    The order of the uncompressed fields (if they are present) is: hop limit, source address, dest address, traffic class, flow label and next header\footnote{After the hop limit (which is always present), they follow the same order as in the HC1 encoding.}.
+
+    It should be noted that, in a worst case, no compression but the opposite would happen. In that case, we can just send the uncompressed IPv6 header, but no HC2 compression would be possible.
+
+    \item \ul{Next Header Compression (HC2)}: This is another compression mechanism that is used for compressing the next header when it is a UDP, TCP or ICMP header, the field ``Next Header'' has been compressed in HC1, and the HC2 field in HC1 was activated.
+    
+    The HC2 encoding for a UDP\footnote{TCP and ICMP follow similar, but more complex, schemes.} Header is as follows:
+    \begin{itemize}
+        \item 1 bit for each of the ports (source and destination):
+        
+        Each port can only be compressed if it is in the range [\verb|F0B0|, \verb|F0BF|]. If it is in that range and it is compressed, a 1 is set in that bit, and the port is compressed by just including the least significant 4 bits of the port number in the uncompressed fields. If it is not in that range or it is not compressed, a 0 is set in that bit, and the 16 bits of the port number are included in the uncompressed fields.
+        
+        \item 1 bit for the length field:
+        
+        If the length field is derived from the length of the IPv6 payload, a 1 is set in that bit, and the length field is not included in the uncompressed fields. If it is not, a 0 is set in that bit, and the length field is included in the uncompressed fields.
+        
+        \item 5 bits reserved for future use, not used.
+    \end{itemize}
+
+    Some specific fields of the UDP header were not mentioned in the HC2 encoding:
+    \begin{itemize}
+        \item Checksum: This field can't be assumed to have a specific value, so it is always sent afterwards uncompressed.
+    \end{itemize}
+
+    The order of the uncompressed fields (if they are present) of the UDP header is: source port, destination port, length and checksum.
+\end{itemize}
+
+If HC1 and HC2 compression is used, the order is quite unexpected. After the Dispatch Header, the HC1 and, if used, the HC2 encoding are included. After them, the HC1 uncompressed fields are included and, if HC2 is used, the HC2 uncompressed fields are finally included.\\
+
+However, also the IPHC (IP Header Compression) and NHC (Next Header Compression) mechanisms can be used for compression. Some of their benefits are:
+\begin{itemize}
+    \item They include mechanisms for compressing both routed addresses and broadcast addresses.
+    
+    They do not compress packets on their own, but also considering that they may be the same as in the previous packet. If the previous packet is not available at destination (because the order is not guaranteed), they can be whether buffered at destination or simply discarded (as IP is not reliable).
+
+    \item The hop limit field can be also  compressed.
+    \item Higher layer headers can be better compressed without mixing the compression of the IPv6 header and the compression of the next header, as it happens with HC1 and HC2.
+\end{itemize}
+
+
+
+
+
+
+
 
 \section{MQTT}
