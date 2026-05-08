@@ -2,7 +2,7 @@
 
 The Python part of this exercise is available in \myhref{https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/blob/main/subjects/Erasmus-DUE/GKI/Exercises/Exercise2.ipynb}{this Jupyter Notebook}.
 
-\subsubsection*{Kahn's Algorithm (Topological Sorting)}
+\subsection*{Kahn's Algorithm (Topological Sorting)}
 
 You are responsible for the course planning at a university. For a specific module, there are several lectures that partially build upon each other. Your task is to find an order in which all lectures can be attended without attending a lecture before one of its prerequisites.
 \begin{description}
@@ -94,3 +94,214 @@ You are responsible for the course planning at a university. For a specific modu
 
     This order is not unique. For example, Computer Science 1 and Math 1 both have an in-degree of 0 at the start, so we could have chosen Computer Science 1 before Math 1, which would lead to a different valid topological order. The presence of multiple nodes with in-degree 0 at various steps allows for multiple valid topological sorts.
 \end{ejercicio}
+
+
+\subsection*{BFS vs DFS}
+
+\begin{ejercicio}
+    What are the key differences between BFS and DFS in terms of traversal strategy, data structures used, and typical applications?
+    \begin{description}
+        \item[Traversal Strategy:] BFS explores all neighbors at the present depth before moving on to the nodes at the next depth level, while DFS explores as far as possible along each branch before backtracking.
+        \item[Data Structures:] BFS typically uses a queue to keep track of the next nodes to visit, while DFS uses a stack (either explicitly or via recursion).
+        \item[Applications:] BFS is often used for finding the shortest path in unweighted graphs, while DFS is useful for tasks like topological sorting, cycle detection, and solving puzzles that require exploring all possibilities (e.g., mazes).
+    \end{description}
+\end{ejercicio}
+\begin{ejercicio}
+    In what scenarios would you prefer BFS over DFS, and vice versa?
+    \begin{description}
+        \item[Prefer BFS:] When you need to find the shortest path in an unweighted graph, when you want to explore all nodes at a certain depth before going deeper, or when the solution is likely to be found close to the root.
+        \item[Prefer DFS:] When you want to explore all possible paths (e.g., backtracking problems), when the solution is likely to be found far from the root, or when you want to use less memory (DFS can be more memory-efficient than BFS in certain cases).
+    \end{description}
+\end{ejercicio}
+
+
+\begin{ejercicio}\label{ex:dfsBfs}
+    Create a small graph as an example to practice this task (feel free to include a few intersections and cafés).
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}[
+            node distance=2cm,
+            auto,
+            vertex/.style={rectangle, draw, minimum size=1.5em, align=center}
+        ]
+            \node[vertex] (A) at (0, 0) {A\\House};
+            \node[vertex] (B) at (2.5, 2) {B\\Bakery};
+            \node[vertex] (C) at (2.5, -2) {C\\Park};
+            \node[vertex] (D) at (6, 2) {D\\Library};
+            \node[vertex] (E) at (6, 0) {E\\Market};
+            \node[vertex] (F) at (9, 0) {F\\Café};
+
+            \draw[-Stealth] (A) -- node[midway, above left] {$\unit[4]{min}$} (B);
+            \draw[-Stealth] (A) -- node[midway, below left] {$\unit[2]{min}$} (C);
+            \draw[-Stealth] (B) -- node[midway, above] {$\unit[3]{min}$} (D);
+            \draw[-Stealth] (D) -- node[midway, right] {$\unit[2]{min}$} (E);
+            \draw[-Stealth] (C) -- node[midway, below right] {$\unit[8]{min}$} (E);
+            \draw[-Stealth] (E) -- node[midway, above] {$\unit[4]{min}$} (F);
+        \end{tikzpicture}
+        \caption{Graph for Exercise~\ref{ex:dfsBfs}.}
+        \label{fig:dfsBfsGraph}
+    \end{figure}
+
+    The graph is depicted in Figure~\ref{fig:dfsBfsGraph}. 
+\end{ejercicio}
+
+% // TODO: Corregir
+\begin{ejercicio}[Approach]
+    Explain how you would find the café if you first searched all directly adjacent intersections (BFS), compared to simply walking straight down a street until you can go no further (DFS).
+    \begin{description}
+        \item[BFS Approach:] Starting at the house (A), you would first check the adjacent intersections (B and C). If you find the café at either of these intersections, you are done. If not, you would then check the neighbors of B (D) and C (E). If you find the café at D or E, you are done. If not, you would check the neighbors of D (E, which you wouldn't visit as you have already visited it) and E (F), where you would find the café at F.
+        
+        \item[DFS Approach:] Starting at the house (A), you would choose one adjacent intersection to explore first (e.g., B). From B, you would go to D, and from D to E, and finally from E to F, where you would find the café. You would not check C at all in this approach, and you would only find the café after exploring a path with more intersections.
+    \end{description}
+\end{ejercicio}
+
+\begin{ejercicio}
+    Why does a queue help you search systematically in a circle around your starting point, while a stack tends to push you deeper into the structure?\\
+
+    A queue helps you search systematically in a circle around your starting point because it processes nodes in the order they were added. When you add all adjacent nodes to the queue, you will explore all nodes at the current depth before moving on to the next level. This ensures that you are exploring nodes in a breadth-first manner, which naturally expands outwards from the starting point.
+
+    In contrast, a stack processes nodes in a last-in, first-out (LIFO) order. When you add an adjacent node to the stack, it will be the next node you explore. This means that you will go deeper into the structure along one path before backtracking to explore other paths. This depth-first approach can lead you to explore a long path before checking other adjacent nodes, which is why it tends to push you deeper into the structure.
+\end{ejercicio}
+
+
+
+\subsection*{Uniform Cost Search (UCS)}
+
+\begin{ejercicio}
+    Explain the concept of Uniform Cost Search. How does it differ from BFS and DFS?
+
+    Uniform Cost Search (UCS) is a search algorithm that expands the node with the lowest cumulative cost from the start node. It differs from BFS and DFS in that it takes into account the cost of reaching each node, rather than just the depth (BFS) or the path taken (DFS). UCS uses a priority queue to manage the nodes based on their cumulative cost, ensuring that it always expands the least costly path first. This makes UCS suitable for finding the optimal solution in weighted graphs, whereas BFS and DFS do not guarantee optimality in such cases.
+\end{ejercicio}
+\begin{ejercicio}
+    What data structure does Uniform Cost Search typically use to manage the search process?
+
+    Uniform Cost Search typically uses a priority queue to manage the search process. The priority queue allows UCS to always expand the node with the lowest cumulative cost first, ensuring that it finds the optimal solution in weighted graphs.
+\end{ejercicio}
+\begin{ejercicio}
+    When is Uniform Cost Search most appropriate?
+    
+    Uniform Cost Search is most appropriate when the graph has weighted edges and you need to find the path with the minimum total cost from the start node to a goal node.
+\end{ejercicio}
+
+
+% // TODO: Corregir
+\begin{ejercicio}[Approach]
+    Suppose each street takes a different amount of time (traffic lights, inclines). In UCS, how do you decide which turn to take next?
+
+    In Uniform Cost Search, you would calculate the cumulative cost (time) to reach each adjacent intersection from your current location. You would then add these costs to a priority queue, which will allow you to always expand the node with the lowest cumulative cost next. This way, you ensure that you are always taking the path that has cost you the least effort so far, leading you towards the optimal route to your destination.
+\end{ejercicio}
+\begin{ejercicio}
+    How do you ensure that you always continue along the path that has cost you the least effort so far?
+
+    To ensure that you always continue along the path that has cost you the least effort so far, you would use a priority queue to manage the nodes based on their cumulative cost. Whenever you expand a node, you would calculate the cumulative cost to reach its neighbors and add them to the priority queue. The priority queue will automatically sort the nodes based on their cumulative cost, allowing you to always expand the node with the lowest cost next. This way, you are guaranteed to follow the path that has cost you the least effort at each step, leading you towards the optimal solution.
+\end{ejercicio}
+
+
+\subsection*{Dijkstra's Algorithm}
+\begin{ejercicio}
+    Describe Dijkstra's algorithm. What problem does it solve?
+
+    Dijkstra's algorithm is a graph search algorithm that finds the shortest path from a starting node to all other nodes in a weighted graph. It solves the problem of finding the minimum cumulative cost (or distance) from the start node to each of the other nodes in the graph. The algorithm uses a priority queue to keep track of the nodes to be explored, always expanding the node with the lowest cumulative cost first. This ensures that once a node's shortest path is determined, it will not change, allowing Dijkstra's algorithm to efficiently find the optimal paths in weighted graphs.
+\end{ejercicio}
+\begin{ejercicio}
+    How does Dijkstra's algorithm handle weighted graphs?
+
+    Dijkstra's algorithm handles weighted graphs by maintaining a priority queue that keeps track of the cumulative cost to reach each node from the starting node. When the algorithm expands a node, it calculates the cumulative cost to reach its neighbors by adding the weight of the edge connecting them to the cumulative cost of the current node. If this new cumulative cost is less than the previously recorded cost for that neighbor, the algorithm updates the cost and adds the neighbor to the priority queue for further exploration. This process ensures that Dijkstra's algorithm efficiently finds the shortest paths in weighted graphs.
+\end{ejercicio} 
+\begin{ejercicio}
+    Compare and contrast Dijkstra's algorithm with Uniform Cost Search.
+
+    Dijkstra's algorithm and Uniform Cost Search (UCS) are the same algorithm, but UCS stops when it reaches the goal node, while Dijkstra's algorithm continues until it has found the shortest path to all nodes in the graph.
+\end{ejercicio}
+
+
+
+% // TODO: Corregir
+\begin{ejercicio}[Procedure]
+    Describe the step-by-step process Dijkstra uses to determine the distance from the starting point to each intersection.
+
+    Dijkstra's algorithm starts by initializing the distance to the starting point as 0 and the distances to all other nodes as infinity. It uses a priority queue to keep track of the nodes to explore, starting with the initial node. At each step, it expands the node with the lowest cumulative cost (distance) from the start node. For each of its neighbors, it calculates the cumulative cost to reach that neighbor by adding the weight of the edge connecting them to the cumulative cost of the current node. If this new cumulative cost is less than the previously recorded cost for that neighbor, it updates the cost and adds the neighbor to the priority queue for further exploration. This process continues until all nodes have been explored, resulting in the shortest distance from the starting point to each intersection.
+\end{ejercicio}
+\begin{ejercicio}
+    What do you do if you discover a shortcut to an intersection that you previously knew only via a longer route?
+
+    If you discover a shortcut to an intersection that you previously knew only via a longer route, you would update the cumulative cost (distance) for that intersection in the priority queue. This involves checking if the new cumulative cost is less than the previously recorded cost for that intersection. If it is, you would update the cost and add the intersection back into the priority queue for further exploration. This way, Dijkstra's algorithm ensures that it always finds the shortest path to each node, even if a shorter path is discovered after initially exploring a longer route.
+\end{ejercicio}
+
+\subsection*{A* Search}
+\begin{ejercicio}
+    Explain the A* search algorithm. What is the role of the heuristic function in A*?
+
+    A* search algorithm is an informed search algorithm that combines the features of Uniform Cost Search and a heuristic to efficiently find the shortest path from a start node to a goal node in a weighted graph. The role of the heuristic function in A* is to estimate the cost from the current node to the goal node. This heuristic helps guide the search process by prioritizing nodes that are likely to lead to the goal more quickly, thus reducing the number of nodes explored and improving efficiency compared to uninformed search algorithms like Uniform Cost Search.
+\end{ejercicio}
+\begin{ejercicio}
+    How does A* differ from Dijkstra's algorithm and Uniform Cost Search?
+
+    A* differs from Dijkstra's algorithm and Uniform Cost Search in that it incorporates a heuristic function to estimate the cost from the current node to the goal node. While Dijkstra's algorithm and Uniform Cost Search only consider the cumulative cost from the start node to the current node, A* combines this cumulative cost with the heuristic estimate to prioritize nodes that are more likely to lead to the goal. This allows A* to find the optimal path more efficiently in many cases, especially when the heuristic is well-designed.
+\end{ejercicio}
+\begin{ejercicio}
+    What are the conditions for a heuristic to be admissible and consistent in A*?
+    \begin{itemize}
+        \item \ul{Admissible}: A heuristic is admissible if it never overestimates the true cost to reach the goal. In other words, for any node $n$, the heuristic value $h(n)$ must be less than or equal to the actual cost from $n$ to the goal node.
+        \item \ul{Consistent (Monotonic)}: A heuristic is consistent if for every node $n$ and every successor $n'$ of $n$, the estimated cost to reach the goal from $n$ is less than or equal to the cost of reaching $n'$ plus the estimated cost from $n'$ to the goal, which is basically the triangle inequality. Consistency implies admissibility, but not vice versa.
+    \end{itemize}
+\end{ejercicio}
+
+
+% // TODO: Corregir
+\begin{ejercicio}[Procedure]
+    You see the church tower in the distance near the café. How does A* combine the distance already traveled with this straight-line estimate to shorten the route?
+
+    A* combines the distance already traveled (the cumulative cost from the start node to the current node) with the straight-line estimate (the heuristic value from the current node to the goal node) by calculating a total cost function $f(n) = g(n) + h(n)$, where $g(n)$ is the cumulative cost to reach node $n$ and $h(n)$ is the heuristic estimate to reach the goal from node $n$. The algorithm prioritizes nodes with the lowest $f(n)$ value, which means it will explore paths that are both cost-effective so far and have a promising estimate to reach the goal. This allows A* to efficiently find a shorter route to the café by guiding the search towards nodes that are likely to lead to the goal more quickly.
+\end{ejercicio}
+\begin{ejercicio}
+    Why can't your guess (I think it's still 5 minutes) be longer than the actual distance, so that you're guaranteed to find the café via the fastest route?
+
+    Your guess (the heuristic estimate) cannot be longer than the actual distance because if it were, it would overestimate the cost to reach the goal. This would lead A* to prioritize nodes that are actually farther from the goal, potentially causing it to explore less optimal paths and miss the fastest route. By ensuring that the heuristic is admissible (never overestimates), A* guarantees that it will find the optimal path to the café, as it will always consider paths that are truly closer to the goal as more promising.
+\end{ejercicio}
+
+
+
+% // TODO: Es relevante??
+\begin{comment}
+\subsection*{Computational Complexity}
+\begin{ejercicio}
+    Discuss the time and space complexity of BFS, DFS, Uniform Cost Search, Dijkstra's algorithm, and A* search.
+\end{ejercicio}
+\begin{ejercicio}
+    How does the choice of data structure (adjacency list vs. adjacency matrix) affect the performance of these algorithms?
+\end{ejercicio}
+
+
+
+**5. Computational Complexity:**
+
+* **Discuss the time and space complexity of BFS, DFS, Uniform Cost Search, Dijkstra's algorithm, and A* search.**
+    * Let V be the number of vertices and E be the number of edges in the graph.
+    * **BFS:**
+        * Time: O(V + E) (if using an adjacency list) or O(V^2) (if using an adjacency matrix).
+        * Space: O(V) (to store the queue and visited nodes).
+    * **DFS:**
+        * Time: O(V + E) (if using an adjacency list) or O(V^2) (if using an adjacency matrix).
+        * Space: O(V) (in the worst case, to store the stack).
+    * **Uniform Cost Search:**
+        * Time: O(B^C/ε), where B is the branching factor, C is the cost of the optimal solution and ε is the minimum edge cost. In worst case it can be exponential.
+        * Space: O(B^C/ε)
+    * **Dijkstra's Algorithm:**
+        * Time: O(V^2) (using an adjacency matrix) or O((V + E) log V) (using a priority queue with an adjacency list).
+        * Space: O(V) (to store the distances and visited nodes).
+    * **A* Search:**
+        * Time: In the worst case, exponential, but with a good heuristic, it can be much faster.
+        * Space: O(V) in the worst case.
+* **How does the choice of data structure (adjacency list vs. adjacency matrix) affect the performance of these algorithms?**
+    * **Adjacency List:**
+        * Efficient for sparse graphs (graphs with relatively few edges).
+        * Allows for faster traversal of neighbors.
+        * Generally leads to better time complexity for BFS, DFS, Dijkstra's, and A*.
+    * **Adjacency Matrix:**
+        * Efficient for dense graphs (graphs with many edges).
+        * Allows for constant-time checking of whether an edge exists between two vertices.
+        * Can lead to higher time complexity for algorithms that need to iterate over neighbors.
+
+
+\end{comment}
