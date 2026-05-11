@@ -1,0 +1,254 @@
+\chapter{Machine Learning Methodic}
+
+Once data has been collected, preprocessed and analyzed, the next step is to apply a machine learning model to it, in order to extract useful information and make predictions. Models are trained and, afterwards, they are evaluated to check their performance. Therefore, the whole dataset is usually split into three subsets:
+\begin{itemize}
+    \item \emph{Training set} (70-90\%): the subset of data used to train the model. The model learns from this data by adjusting its parameters to minimize the error between its predictions and the actual values.
+    \item \emph{Validation set} (10-15\%): the subset of data used to tune the hyperparameters of the model. Hyperparameters are parameters that are not learned from the data, but rather set by the user.
+    \item \emph{Test set} (10-30\%): the subset of data used to evaluate the performance of the trained model. The model makes predictions on this data, and its performance is measured using various metrics, such as accuracy, precision, recall, F1 score, etc.
+\end{itemize}
+
+There are three main types of machine learning:
+There are three main types of machine learning:
+\begin{itemize}
+    \item \ul{Unsupervised Learning}: The machine is trained on unlabeled data, where it must find patterns and relationships on its own.
+    
+    It usually does not perform well on complex tasks, but it is perfect for outlier detection, as it can identify data points that do not fit the general pattern of the data.
+
+    % // TODO: Qué es, y qué no es? Añadir del Tema 1?
+    
+    
+    \item \ul{Supervised Learning}: The machine is trained on labeled data, where the correct output is provided for each input.
+    
+    Labelling data can be time-consuming and expensive, and enterprises often use CAPTCHAs (Completely Automated Public Turing test to tell Computers and Humans Apart) to outsource this task to humans. While detecting if you are a human or a bot by analyzing how you click on images, you are actually helping to label data for machine learning models.
+    
+    \item \ul{Reinforcement Learning}: The machine learns by interacting with an environment and receiving feedback in the form of rewards or penalties based on its actions.
+\end{itemize}
+
+\section{Classification}
+
+Classification is a supervised learning task where the goal is to assign a label to an input based on its features. For example, given an email, the task is to classify it as spam or not spam. A really common classifier is the \emph{Binary Classifier}, which is used to classify data into two classes, whether yes or no, true or false, spam or not spam, etc. A \emph{threshold} is used to determine the decision boundary between the two classes. If the predicted probability of an input belonging to a certain class is above the threshold, it is classified as that class; otherwise, it is classified as the other class.
+
+When working with a binary classifier, it is important to distinguish between the actual class and the predicted class. This leads to four possible outcomes:
+\begin{itemize}
+    \item \ul{True Positive (TP)}: The model correctly predicts the positive class.
+    \item \ul{True Negative (TN)}: The model correctly predicts the negative class.
+    \item \ul{False Positive (FP)}: The model incorrectly predicts the positive class when it is actually negative.
+    \item \ul{False Negative (FN)}: The model incorrectly predicts the negative class when it is actually positive.
+\end{itemize}
+
+This results in the following terms:
+\begin{itemize}
+    \item \ul{Actual Positive (AP)}: The actual class is positive. $AP = TP + FN$.
+    \item \ul{Actual Negative (AN)}: The actual class is negative. $AN = TN + FP$.
+    \item \ul{Predicted Positive (PP)}: The predicted class is positive. $PP = TP + FP$.
+    \item \ul{Predicted Negative (PN)}: The predicted class is negative. $PN = TN + FN$.
+\end{itemize}
+
+For a classifier with $n$ classes, this is all summarized in the \emph{confusion matrix}, which is a $n \times n$ matrix where the rows represent the predicted classes and the columns represent the actual classes\footnote{This is the most common way to represent the confusion matrix, but it can also be represented with the rows and columns swapped.}, and the $(i, j)$-th entry represents the number/percentage of instances where the predicted class is $i$ and the actual class is $j$. Therefore, the diagonal entries represent the correct predictions, while the off-diagonal entries represent the incorrect predictions. 
+For a binary classifier, the confusion matrix is represented in the Table~\ref{tab:confusion-matrix}.
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+\begin{table}
+    \centering
+    \caption{Confusion Matrix for a Binary Classifier.}
+    \label{tab:confusion-matrix}
+\begin{tabular}{@{}cc|cc|c@{}}
+\cmidrule(lr){3-4}
+                                                        &          & \multicolumn{2}{c|}{Actual Values} &                         \\ \cmidrule(lr){3-4}
+                                                        &          & Positive         & Negative        &                         \\ \midrule
+\multicolumn{1}{|l|}{\multirow{2}{*}{Predicted Values}} & Positive & \cellcolor[HTML]{C0C0C0}TP               & \cellcolor[HTML]{C0C0C0}FP              & \multicolumn{1}{l|}{PP} \\
+\multicolumn{1}{|l|}{}                                  & Negative & \cellcolor[HTML]{C0C0C0}FN               & \cellcolor[HTML]{C0C0C0}TN              & \multicolumn{1}{l|}{PN} \\ \midrule
+                                                        &          & AP               & AN              &                         \\ \cmidrule(lr){3-4}
+\end{tabular}
+\end{table}
+
+\subsection{Evaluation Metrics}
+
+
+% // TODO: Memorizar estos? Con los nombres me lío
+The first metric that comes to mind to evaluate the performance of a classifier is \emph{accuracy}:
+\begin{itemize}
+    \item \ul{Accuracy}: the proportion of \emph{correct predictions} out of the {total} number of \emph{predictions}. The question is: \emph{How many predictions were correct?}
+    \begin{equation}
+        \label{label:accuracy}
+        \text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}
+    \end{equation}
+\end{itemize}
+
+This metric can however be misleading when the classes are imbalanced, meaning that one class is much more frequent than the other. For example, if 95\% of the data belongs to the negative class and only 5\% belongs to the positive class, a model that always predicts negative will have an accuracy of 95\%, which seems good, but it is actually a terrible model because it never predicts the positive class correctly. Therefore, in cases of imbalanced classes, it is better to use other metrics, as the following.
+\begin{itemize}
+    \item \ul{Precision}: the proportion of \emph{true positive predictions} out of the {total} number of \emph{positive predictions}. Also called \emph{positive predictive value}. The question is: \emph{If predected positive, how likely is it to be actually positive?}
+    \begin{equation} \label{label:precision}
+        \text{Precision} = PPV = P(AP \mid PP) = \frac{TP}{TP + FP}
+    \end{equation}
+    \item \ul{Recall}: the proportion of \emph{true positive predictions} out of the {total} number of \emph{actual positives}. Also called \emph{sensitivity} or \emph{true positive rate}. The question is: \emph{If actually positive, how likely is it to be predicted positive?}
+    \begin{equation} \label{label:recall}
+        \text{Recall} = TPR = P(TP \mid AP) = \frac{TP}{TP + FN}
+    \end{equation}
+\end{itemize}
+
+Even though a theoretically perfect model would have both precision and recall equal to 1, this is in practice very difficult to achieve, and there is usually a trade-off between them. For example, if we set a very low threshold for a binary classifier, it will predict positive for almost all instances, which will result in a high recall but a low precision. On the other hand, if we set a very high threshold, it will predict positive for very few instances, which will result in a high precision but a low recall. Therefore, it is important to find the right balance between precision and recall depending on the specific problem and the costs associated with false positives and false negatives:
+\begin{itemize}
+    \item In medical diagnosis, a false negative (failing to detect a disease) can be much more costly than a false positive (incorrectly diagnosing a healthy person), so we would want to prioritize recall over precision.
+    \item In email spam detection, a false positive (marking a legitimate email as spam) can be more costly than a false negative (failing to detect a spam email), so we would want to prioritize precision over recall.
+\end{itemize}
+
+As precision and recall are important metrics for the positive class, they also have their opposite metrics for the negative class, which are also important to evaluate the performance of a classifier
+\begin{itemize}
+    \item \ul{Negative Predictive Value (NPV)}: the proportion of \emph{true negative predictions} out of the {total} number of \emph{negative predictions}. The question is: \emph{If predicted negative, how likely is it to be actually negative?}
+    \begin{equation} \label{label:npv}
+        NPV = P(AN \mid PN) = \frac{TN}{TN + FN}
+    \end{equation}
+    \item \ul{Specificity}: the proportion of \emph{true negative predictions} out of the {total} number of \emph{actual negatives}. Also called \emph{true negative rate}. The question is: \emph{If actually negative, how likely is it to be predicted negative?}
+    \begin{equation} \label{label:specificity}
+        \text{Specificity} = TNR = P(TN \mid AN) = \frac{TN}{TN + FP}
+    \end{equation}
+\end{itemize}
+
+Out of this four metrics (precision, recall, NPV and specificity), we can derive their four complementary metrics:
+\begin{itemize}
+    \item \ul{False Positive Rate (FPR)}: the proportion of \emph{false positive predictions} out of the {total} number of \emph{actual negatives}. Also called \emph{false alarm rate}.
+    \begin{equation} \label{label:fpr}
+        FPR = P(PP \mid AN) = \frac{FP}{FP + TN} = 1 - \text{TNR}
+    \end{equation}
+    % // TODO: Diapositiva 69. Error?
+    \item \ul{False Discovery Rate (FDR)}: the proportion of \emph{false positive predictions} out of the {total} number of \emph{positive predictions}.
+    \begin{equation} \label{label:fdr}
+        FDR = P(AN \mid PP) = \frac{FP}{TP + FP} = 1 - \text{PPV}
+    \end{equation}
+    \item \ul{False Omission Rate (FOR)}: the proportion of \emph{false negative predictions} out of the {total} number of \emph{negative predictions}.
+    \begin{equation} \label{label:for}
+        FOR = P(AP \mid PN) = \frac{FN}{TN + FN} = 1 - \text{NPV}
+    \end{equation}
+    \item \ul{False Negative Rate (FNR)}: the proportion of \emph{false negative predictions} out of the {total} number of \emph{actual positives}. Also called \emph{miss rate}.
+    \begin{equation} \label{label:fnr}
+        FNR = P(PN \mid AP) = \frac{FN}{TP + FN} = 1 - \text{TPR}
+    \end{equation}
+\end{itemize}
+
+
+Given that trade-offs between precision and recall exist, it is important to have single metrics that combines both of them. The following are some of the most common metrics that combine the metrics we have seen so far:
+\begin{itemize}
+    \item \ul{F1 Score}: the harmonic mean of precision and recall.
+    \begin{equation} \label{label:f1-score}
+        F1 = \dfrac{2}{\dfrac{1}{\text{PPV}} + \dfrac{1}{\text{TPR}}} = \dfrac{2 \cdot \text{PPV} \cdot \text{TPR}}{\text{PPV} + \text{TPR}}
+    \end{equation}
+    \item \ul{Fowlkes-Mallows index}: the geometric mean of precision and recall.
+    \begin{equation} \label{label:fowlkes-mallows}
+        FM = \sqrt{\text{PPV} \cdot \text{TPR}}
+    \end{equation}
+    \item \ul{Matthews Correlation Coefficient (MMC)}: a correlation coefficient between the actual and predicted classes.
+    \begin{equation} \label{label:mmc}
+        MCC = \sqrt{\text{TPR} \cdot \text{TNR} \cdot \text{PPV} \cdot \text{NPV}} - \sqrt{\text{FNR} \cdot \text{FPR} \cdot \text{FDR} \cdot \text{FOR}}
+    \end{equation}
+    It is the geometric mean of the basic metrics (TPR, TNR, PPV and NPV) minus the geometric mean of the complementary metrics (FNR, FPR, FDR and FOR). It ranges from $-1$ to $1$, where:
+    \begin{itemize}
+        \item $1$ indicates a perfect classifier.
+        \item $0$ indicates a random classifier.
+        \item $-1$ indicates a completely wrong classifier.
+    \end{itemize}
+
+    It is the most informative metric for evaluating the performance of a binary classifier, especially when the classes are imbalanced, as it the only one that takes into account the whole confusion matrix.
+\end{itemize}
+
+
+Other metrics that are commonly used to evaluate the performance of a classifier are:
+\begin{itemize}
+    \item \ul{Prevalence}: the proportion of actual positives in the dataset.
+    \begin{equation} \label{label:prevalence}
+        \text{Prevalence} = P(AP) = \frac{AP}{AP + AN}
+    \end{equation}
+    \item \ul{Balanced Accuracy}: the average of the true positive rate and the true negative rate.
+    \begin{equation} \label{label:balanced-accuracy}
+        \text{Balanced Accuracy} = \frac{\text{TPR} + \text{TNR}}{2}
+    \end{equation}
+    It is a better metric than accuracy when the classes are imbalanced, as it takes into account both the true positive rate and the true negative rate.
+    \item \ul{Positive Likelihood Ratio ($LR_+$)}: the ratio of the true positive rate to the false positive rate.
+    \begin{equation} \label{label:lr+}
+        LR_+ = \frac{\text{TPR}}{\text{FPR}}
+    \end{equation}
+    It indicates how much more likely a positive test result is to be found in an actual positive case than in an actual negative case. The higher the $LR_+$, the better the test is at identifying actual positives.
+    \item \ul{Negative Likelihood Ratio ($LR_-$)}: the ratio of the false negative rate to the true negative rate.
+    \begin{equation} \label{label:lr-}
+        LR_- = \frac{\text{FNR}}{\text{TNR}}
+    \end{equation}
+    It indicates how much more likely a negative test result is to be found in an actual positive case than in an actual negative case. The lower the $LR_-$, the better the test is at identifying actual negatives.
+    \item \ul{Diagnostic Odds Ratio (DOR)}: the ratio of the positive likelihood ratio to the negative likelihood ratio.
+    \begin{equation} \label{label:dor}
+        DOR = \frac{LR_+}{LR_-}
+    \end{equation}
+    The higher the DOR, the better the test is at discriminating between actual positives and actual negatives.
+    \item \ul{Informedness}: the difference between the true positive rate and the false positive rate.
+    \begin{equation} \label{label:informedness}
+        \text{Informedness} = \text{TPR} - \text{FPR} = \text{TPR} + \text{TNR} - 1
+    \end{equation}
+    \item \ul{Markedness}: the difference between the positive predictive value and the false discovery rate.
+    \begin{equation} \label{label:markedness}
+        \text{Markedness} = \text{PPV} - \text{FDR} = \text{PPV} + \text{NPV} - 1
+    \end{equation}
+    \item \ul{Prevalence Threshold ($PT$)}: the prevalence at which the positive likelihood ratio equals the negative likelihood ratio.
+    \begin{equation} \label{label:pt}
+        PT = \dfrac{\sqrt{TPR \cdot FPR} - FPR}{TPR - FPR}
+    \end{equation}
+\end{itemize}
+
+Lastly, an important curve used to evaluate the performance of a binary classifier is the \emph{Receiver Operating Characteristic (ROC) curve}, which plots the true positive rate (TPR) against the false positive rate (FPR) at various threshold settings using the same dataset. The area under the ROC curve (AUC) is a common metric used to summarize the performance of a binary classifier, where a higher AUC indicates a better performance.
+\begin{itemize}
+    \item An ideal classifier would have all the points in the ROC curve at the top-left corner, which corresponds to a TPR of 1 and a FPR of 0, resulting in an AUC of 1.
+    \item The bigger the AUC, the better the performance of the classifier.
+\end{itemize}
+
+\section{Error and Uncertainty}
+
+When evaluating the performance of a machine learning model, it is important to take into account the error and uncertainty associated with the predictions. The different types of errors are:
+\begin{itemize}
+    \item \ul{Blunders}: errors caused by human carelessness, such as accidentally deleting data, mislabeling data, or using the wrong algorithm. These errors can be easily avoided by being careful and double-checking the work.
+    \item \ul{Random Errors}: uncontrollable errors that occur due to fluctuations in variables. They can be:
+    \begin{itemize}
+        \item \emph{Environmental}: caused by changes in the environment, such as temperature, humidity, etc.
+        \item \emph{Observational}: when the observer's judgment leads to random innacuracies.
+    \end{itemize}
+    \item \ul{Systematic Errors}: errors that are identifiable and can be corrected. They can be:
+    \begin{itemize}
+        \item \emph{Instrumental}: caused by a flaw in the measurement instrument, such as a miscalibrated sensor.
+        \item \emph{Theoretical}: caused by a flaw in the theoretical model, such as an incorrect assumption.
+        \item \emph{Environmental}: caused by a consistent change in the environment, such as a change in the temperature that affects the measurements.
+        \item \emph{Observational}: when the observer does not read the measurement instrument correctly, such as reading the wrong value on a scale.
+    \end{itemize}
+\end{itemize}
+
+
+However, an important trade-off is that no model is perfect, and there will always be some error associated with the predictions, as the data themselves are not perfect, and the model is just an approximation of reality. Therefore, it is important to evaluate the performance of a model using appropriate metrics that take into account the error and uncertainty associated with the predictions. Depending on the task, different metrics are used to evaluate the performance of a model.
+\begin{itemize}
+    \item In classification tasks (prediction of discrete labels), the error measurement has already been covered in the previous section, where we have seen various metrics to evaluate the performance of a classifier.
+    \item In regression tasks (prediction of continuous values), the error is usually measured using the following metrics, where the predicted values are denoted by $\hat{y}_i$ and the actual values are denoted by $y_i$:
+    \begin{itemize}
+        \item \ul{Mean Absolute Error (MAE)}: the average of the absolute differences between the predicted values and the actual values.
+        \begin{equation} \label{label:mae}
+            MAE = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|
+        \end{equation}
+
+        As an advantage, it is less sensitive to outliers than the mean squared error.
+        \item \ul{Mean Squared Error (MSE)}: the average of the squared differences between the predicted values and the actual values.
+        \begin{equation} \label{label:mse}
+            MSE = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2
+        \end{equation}
+        As an disadvantage, it is more sensitive to outliers than the MAE, and it can be difficult to interpret the error in the original units of the data, as it is in squared units.
+        \item \ul{Root Mean Squared Error (RMSE)}: 
+        \begin{equation} \label{label:rmse}
+            RMSE = \sqrt{MSE}
+        \end{equation}
+        \item \ul{Mean Absolute Percentage Error (MAPE)}: the average of the absolute percentage differences between the predicted values and the actual values.
+        \begin{equation} \label{label:mape}
+            MAPE = \frac{1}{n} \left(\sum_{i=1}^{n} \left| \frac{y_i - \hat{y}_i}{y_i} \right|\right)\cdot 100\%
+        \end{equation}
+        As an advantage, it is easy to interpret the error in terms of percentage, which can be more meaningful in some contexts. As a disadvantage, it can be undefined when any of the actual values are zero, and it can be heavily influenced by small actual values, leading to very large percentage errors.
+    \end{itemize}
+\end{itemize}
+
+
+\section{Overfitting and Underfitting}
+
+
+% Teorema de la comida: No hay uno que funcione siempre. Por tanto, en cada casou un ajuste necesario de los parámetros. Cómo? Brute force: Problema: dimensiones. Solucion? Trial and error.
