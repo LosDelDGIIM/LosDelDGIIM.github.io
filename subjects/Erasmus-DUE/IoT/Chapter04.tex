@@ -66,13 +66,72 @@ This approach means that, if the IoT Thing is in fact not moving, it will have c
     \item Measuring the location of the IoT Thing may also take some time ($t_{\text{measure}}$). If the calculated sleep time $T_t$ is less than the measurement time $t_{\text{measure}}$, the IoT Thing will not be able to sleep for the calculated time, and it will have to measure its location immediately.
 \end{itemize}
 
-Therefore, in order to address these problems, instead of sending the location data only when the accuracy radius is reached (where the sleep time $T_t$ is zero), the IoT Thing will send the location data when:
+Therefore, in order to address these problems, instead of sending the location data only when the accuracy radius is reached (where the sleep time $T_t$ would be zero), the IoT Thing will send the location data when:
 \begin{equation*}
     T_t \leq \max\{T_{\min}, t_{\text{measure}}\}
 \end{equation*}
 % // TODO: Esta fórmula es correcta? Hay tres versiones distintas
 
+Even though this last modification allows the IoT Thing to sleep for a longer time, it still requires the IoT Thing to measure its location several times before actually sending the location data, which can lead to unnecessary energy consumption. The next protocol will address this problem.
 
 \subsection{Early Distance-based Reporting}
 
+The early distance-based reporting protocol is designed to address the limitations of the distance-based reporting protocol by allowing the IoT Thing to report its location \emph{before} reaching the accuracy radius, which can lead to longer sleep times and thus more energy savings. That way, a balance can be reached between:
+\begin{itemize}
+    \item The energy consumption for sending the location data over the network.
+    \item The energy consumption for measuring the location of the IoT Thing.
+\end{itemize}
+
+The idea used to reach that balance is called the \emph{Energy-based update condition}. It compares two energy consumption values:
+\begin{itemize}
+    \item The energy consumption for sending the location data over the network inmediately.
+    \item The energy consumption for dropping the current measurement and waiting for the next measurement (where we will again apply this comparison). 
+    % // TODO: Lo siguiente es cierto?
+    The waited time is calculated as in the Distance-based reporting protocol.
+\end{itemize}
+
+The IoT will always choose the option with the lowest energy consumption, which allows it to save energy while still ensuring that the location data is accurate within a certain distance $d_{\max}$. However, in order to effectively apply this protocol, the IoT Thing needs to have a good estimation of the energy consumption for both options (which depends on the future location of the IoT Thing, which is not known). Therefore, some heuristics are applied. We will explore the two main heuristics used for this purpose.
+
+\subsubsection{Next Fix heuristic}
+
+The next fix heuristic is based on the idea of stimating the energy consumption for both options.
+\begin{itemize}
+    \item The energy consumption for sending the location data over the network inmediately is estimated as follows:
+    \begin{equation*}
+        E_{\text{update}} = \dfrac{E_{\text{send}} + E_{\text{measure}}}{T_0}
+    \end{equation*}
+    Where $T_0$ is the time until the next measurement when an update is sent ($t=0$).
+    \item The energy consumption for dropping the current measurement and waiting for the next measurement is estimated as follows:
+    \begin{equation*}
+        E_{\text{no-update}} = \dfrac{E_{\text{measure}}}{T_t}
+    \end{equation*}
+    Where $T_t$ is the time until the next measurement when no update is sent (calculated as in the Distance-based reporting protocol).
+\end{itemize}
+
+Depending on the values of $E_{\text{update}}$ and $E_{\text{no-update}}$, the IoT Thing will choose the option with the lowest energy consumption.
+
+
+\subsubsection{Predicted Movement heuristic}
+
+This heuristic is much more complex than the Next Fix heuristic, as it is based on the idea of predicting the future location of the IoT Thing in order to estimate the energy consumption for both options more accurately. It divides the time in \emph{cycles}, and:
+\begin{itemize}
+    \item Updating the location data over the network starts a new cycle.
+    \item Dropping the current measurement and waiting for the next measurement continues the current cycle.
+\end{itemize}
+
+
+
 \subsection{Dead Reckoning}
+
+Dead reckoning is a similar technique to the Predicted Movement heuristic, as it allows the IoT Thing to estimate its location based on its previous location and its movement. It works as follows:
+\begin{itemize}
+    \item Initially, the IoT Thing reports its current state (location) and an expected update function (which is a function that estimates the future location of the IoT Thing based on its current location and its movement). That update function may be very complex:
+    \begin{itemize}
+        \item A linea movement can be estimated, but it may be too simple for some applications.
+        \item A more complex movement can be estimated using machine learning techniques. However, this requires more computational resources on the IoT Thing, which can lead to higher energy consumption. This is a trade-off that needs to be carefully considered when designing the expected update function.
+    \end{itemize}
+    \item After that, both the cloud server and the IoT Thing have that function that can be used to estimate the location of the IoT Thing in the future.
+    \item Periodically, the IoT Thing measures its location and compares it with the estimated location. If the error between the measured location and the estimated location exceeds a certain threshold, the IoT Thing reports its current state (location) and an new updated expected update function.
+\end{itemize}
+
+That way, the IoT Thing can sleep for a longer time, and it only needs to report its location when the error between the estimated location and the measured location exceeds a certain threshold, which can lead to significant energy savings. Meanwhile, the cloud server can use the expected update function to estimate the location of the IoT Thing at any time, which allows it to have accurate location data without needing to receive updates from the IoT Thing too frequently.
