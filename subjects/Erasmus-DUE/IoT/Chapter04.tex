@@ -1,0 +1,78 @@
+\chapter{IoT Connected Data}
+
+In Section~\ref{sec:SWBlocks}, we identified three main SW functional blocks that are required to implement an IoT application: IoT Networking, IoT Data Management, and IoT Data Processing. The first SW Block has been covered in the previous chapter and, in this chapter, we will focus on the other two SW Blocks, which are closely related to each other and are responsible for handling the data collected from the IoT Things.
+
+In order to manage the data, three aspects are needed:
+\begin{itemize}
+    \item \ul{Data Models}: models that define the structure and semantics of the data collected from the IoT Things.
+    \item \ul{Data Storage}: mechanisms to store the data collected from the IoT Things, which can be either on-premises or in the cloud.
+    \item \ul{Updating Protocols}: protocols to update the data collected from the IoT Things in a way that the rest of the system can access it in a timely manner.
+\end{itemize}
+
+\section{IoT Updating Protocols}
+
+Smart Things are usually energy-constrained devices that need to optimize their energy consumption in order to prolong their battery life. Even though the Networking Protocols covered in the previous chapter are designed to be energy-efficient, there are still more energy-saving techniques that can be applied to the data management aspect of IoT applications. There are two main techniques:
+\begin{itemize}
+    \item \ul{Stream Compression}: given a stream of data collected from an IoT Thing, it is possible to apply compression techniques to reduce the amount of data that needs to be transmitted over the network, which can save energy.
+    \item \ul{Update Protocols}: given a required accuracy of a measurement, it is possible to apply update protocols to reduce the number of measurements needed (and thus the amount of data that needs to be transmitted over the network).
+\end{itemize}
+
+In this section, we will focus on the second technique. Update protocols are designed to reduce the number of measurements needed to achieve a certain level of accuracy, and are usually applicable for data that changes continuously over time, such as temperature, humidity, or location.
+
+Regarding \textbf{location data}, a lot of research has been done on update protocols for location data, which is a very common type of data collected from IoT Things. During the next sections, we will cover some of the most common update protocols for location data, which can be applied to other types of data as well.
+
+\subsection{Periodic Reporting}
+
+Periodic reporting is the simplest update protocol, where the IoT Thing reports its location at regular intervals, regardless of whether the location has changed or not. A fixed period $T$ is fixed, and the IoT Thing reports its location every $T$ seconds. The key aspect here is how to choose the period $T$.
+\begin{itemize}
+    \item If $T$ is too small, the IoT Thing will report its location too frequently, which can lead to unnecessary energy consumption and network congestion.
+    \item If $T$ is too large, the IoT Thing will report its location too infrequently, which can lead to inaccurate location data and a poor user experience.
+\end{itemize}
+
+In order to choose the period $T$, we follow a worst-case approach, where we assume that the IoT Thing is moving in a stright line at its maximum speed $v_{\max}$, and we want to ensure that the location data is accurate within a certain distance $d_{\max}$, usually called \emph{accuracy radius} and defined by the application requirements. In this case, we can derive the period $T$ as follows:
+\begin{equation*}
+    T = \frac{d_{\max}}{v_{\max}}
+\end{equation*}
+
+This could however load to unnecessary measurements when:
+\begin{itemize}
+    \item The IoT Thing is moving at a speed lower than $v_{\max}$.
+    \item The IoT Thing is doing micro-movements within the accuracy radius $d_{\max}$, which can be the case for example for a person sitting on a chair and moving slightly.
+\end{itemize}
+
+\subsection{Distance-based Reporting}
+
+The distance-based reporting protocol is designed to address the limitations of periodic reporting by allowing the IoT Thing to report its location as late as possible, while still ensuring that the location data is accurate within a certain distance $d_{\max}$. If the last reported location is $L_{\text{last}}$, the IoT Thing will report its location only when the distance between its current location $L_{\text{current}}$ and the last reported location $L_{\text{last}}$ exceeds the accuracy radius $d_{\max}$, i.e., when:
+\begin{equation*}
+    \text{distance}(L_{\text{current}}, L_{\text{last}}) \geq d_{\max}
+\end{equation*}
+
+This protocol allows the send over the internet only the necessary measurements (so it reduces all the possible overhead because of this), but it however needs to measure the location in between the updates. In order to sleep as much as possible, the same worst-case approach of periodic reporting can be applied. Let's assume that:
+\begin{itemize}
+    \item The IoT Thing is moving in a straight line at its maximum speed $v_{\max}$.
+    \item The maximum accuracy radius is $d_{\max}$.
+    \item The last reported location is $L_{\text{last}}$.
+    \item The measured location of the IoT Thing at time $t$ is $L(t)$.
+\end{itemize}
+
+In that case, at time $t$, the IoT device can sleep until for $T_t$ seconds, where $T_t$ is defined as follows:
+\begin{equation*}
+    T_t = \frac{d_{\max} - \text{distance}(L(t), L_{\text{last}})}{v_{\max}}
+\end{equation*}
+
+This approach means that, if the IoT Thing is in fact not moving, it will have constant sleep time, but if it is moving towards the accuracy radius, it will have a decreasing sleep time, which allows it to report its location as soon as possible when it reaches the accuracy radius. This has however some problems:
+\begin{itemize}
+    \item As the IoT Thing reaches the accuracy radius, it will have to measure its location more and more frequently, making it not energy-efficient. Therefore, a minimum sleep time $T_{\min}$ can be defined, which is the minimum time that the IoT Thing can sleep before measuring its location again.
+    \item Measuring the location of the IoT Thing may also take some time ($t_{\text{measure}}$). If the calculated sleep time $T_t$ is less than the measurement time $t_{\text{measure}}$, the IoT Thing will not be able to sleep for the calculated time, and it will have to measure its location immediately.
+\end{itemize}
+
+Therefore, in order to address these problems, instead of sending the location data only when the accuracy radius is reached (where the sleep time $T_t$ is zero), the IoT Thing will send the location data when:
+\begin{equation*}
+    T_t \leq \max\{T_{\min}, t_{\text{measure}}\}
+\end{equation*}
+% // TODO: Esta fórmula es correcta? Hay tres versiones distintas
+
+
+\subsection{Early Distance-based Reporting}
+
+\subsection{Dead Reckoning}
