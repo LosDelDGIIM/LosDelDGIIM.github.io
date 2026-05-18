@@ -236,18 +236,74 @@ The recorded lecture is provided \myhref{https://www.youtube.com/watch?v=4_PkeL2
 
 \begin{ejercicio}
     Given the following MQTT configuration with five clients $C1, C2, C3, C4, C5$ and a broker $B$, which clients receive published messages in the following scenarios?
-    \begin{enumerate}
-        \item $C1$ publishes a message for topic \texttt{home/groundfloor/temp} with the retain flag set to ``1''. $C2$ publishes a message for topic \texttt{home/secondfloor/temp} with the retain flag set to ``0''. $C3$ publishes a message for topic \texttt{home/thirdfloor/livingroom/temp} with the retain flag set to ``1''. After all publications are done, $C4$ subscribes to topic \texttt{home/secondfloor/temp} and $C5$ subscribes to topic \texttt{home}.
-        \item $C1$ subscribes to topic \texttt{home/thirdfloor/+/temp}. After this, $C2$ publishes a message for topic \texttt{home/groundfloor/temp} with the retain flag set to ``1''. $C3$ publishes a message for topic \texttt{home/secondfloor/temp} with the retain flag set to ``0''. $C4$ publishes a message for topic \texttt{home/thirdfloor/livingroom/temp} with the retain flag set to ``0''. After all publications done, $C5$ subscribes to topic \texttt{home/thirdfloor/livingroom/temp}.
-        \item $C1$ subscribes to topic \texttt{home/groundfloor/temp}. $C2$ subscribes to topic \texttt{home/secondfloor/temp}. After the subscriptions are done, $C3$ publishes a message for topic \texttt{home/+/temp}.
-        \item $C1$ subscribes to topic \texttt{home/\#} with QoS level 0. $C2$ subscribes to topic \texttt{home/+/temp} with QoS level 0. After the subscriptions are done, $C3$ publishes a message for topic \texttt{home/thirdfloor/temp} with QoS level 2.
+    \begin{enumerate}[label=(\alph*)]
+        \item The situation is:
+        \begin{enumerate}[label=\arabic*)]
+            \item $C1$ subscribes to topic \texttt{home/groundfloor/temp} with the retain flag set to ``1''.
+            \item $C2$ subscribes to topic \texttt{home/secondfloor/temp} with the retain flag set to ``0''.
+            \item $C3$ subscribes to topic \texttt{home/thirdfloor/livingroom/temp} with the retain flag set to ``1''.
+        \end{enumerate}
+        After all publications are done, $C4$ subscribes to topic \texttt{home/secondfloor/temp} and $C5$ subscribes to topic \texttt{home}.\\
+
+        In this case:
+        \begin{itemize}
+            \item $C4$ would not receive any message, as the retain flag for the message published by C2 was set to ``0'', which means that the broker does not store the message and does not send it to new subscribers.
+            \item $C5$ would not receive any message, as its topic filter \texttt{home} does not match any of the topics that $C1$, $C2$, and $C3$ published messages for.
+        \end{itemize}
+        \item The situation is:
+        \begin{enumerate}[label=\arabic*)]
+            \item $C1$ subscribes to topic \texttt{home/thirdfloor/+/temp}.
+            \item $C2$ publishes a message for topic \texttt{home/groundfloor/temp} with the retain flag set to ``1''.
+            \item $C3$ publishes a message for topic \texttt{home/secondfloor/temp} with the retain flag set to ``0''.
+            \item $C4$ publishes a message for topic \texttt{home/thirdfloor/livingroom/temp} with the retain flag set to ``0''.
+        \end{enumerate}
+        After all publications are done, $C5$ subscribes to topic \texttt{home/thirdfloor/livingroom/temp}.\\
+
+        In this case:
+        \begin{itemize}
+            \item $C1$ would receive the message published by $C4$, as its topic filter \texttt{home/thirdfloor/+/temp} matches the topic of the message published by $C4$.
+            \item $C5$ would not receive any message, as the retain flag for the message published by $C4$ was set to ``0''.
+        \end{itemize}
+        \item The situation is:
+        \begin{enumerate}[label=\arabic*)]
+            \item $C1$ subscribes to topic \texttt{home/+/temp}.
+            \item $C2$ subscribes to topic \texttt{home/secondfloor/temp}.
+            \item $C3$ publishes a message for topic \texttt{home/+/temp}.
+        \end{enumerate}
+
+        It is not possible to publish a message for topic \texttt{home/+/temp}, as the topic filter \texttt{home/+/temp} contains a wildcard character, which is not allowed in the topic of a published message. Therefore, no client would receive any message in this case.
+        
+        \item The situation is:
+        \begin{enumerate}[label=\arabic*)]
+            \item $C1$ subscribes to topic \texttt{home/\#} with QoS level 0.
+            \item $C2$ subscribes to topic \texttt{home/+/temp} with QoS level 0.
+            \item $C3$ publishes a message for topic \texttt{home/thirdfloor/temp} with QoS level 2.
+        \end{enumerate}
+
+            In this case:
+            \begin{itemize}
+                \item $C1$ would receive the message published by $C3$, as its topic filter \texttt{home/\#} matches the topic of the message published by $C3$. However, it would receive the message with QoS level 0, as that is the QoS level of its subscription, which means that the broker would not guarantee the delivery of the message to $C1$.
+                \item $C2$ would also receive the message published by $C3$, as its topic filter \texttt{home/+/temp} matches the topic of the message published by $C3$. However, it would also receive the message with QoS level 0, as that is the QoS level of its subscription, which means that the broker would not guarantee the delivery of the message to $C2$.
+            \end{itemize}
+            
+            % // TODO: Es correcto lo del downgrade?
     \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
-    Client $C2$ subscribes to the topic \texttt{a/b/c} with QoS level 0. Afterwards, client $C1$ publishes a message to the topic \texttt{a/b/c} with QoS level 2. Looking at the message headers: what is the QoS level between $C1$ and the broker? What is the QoS level between the broker and $C2$?
+    Client $C2$ subscribes to the topic \texttt{a/b/c} with QoS level 0. Afterwards, client $C1$ publishes a message to the topic \texttt{a/b/c} with QoS level 2. Looking at the message headers:
+    \begin{enumerate}
+        \item What is the QoS level between $C1$ and the broker?
+        
+        Since $C1$ published the message with QoS level 2, the QoS level between $C1$ and the broker is 2, which means that the broker will guarantee the delivery of the message to $C1$ by using a four-step handshake process.
+        \item What is the QoS level between the broker and $C2$?
+        
+        Since $C2$ subscribed to the topic with QoS level 0, the QoS level between the broker and $C2$ is 0, which means that the broker will not guarantee the delivery of the message to $C2$ and will simply send it without any acknowledgment or retry mechanism.
+    \end{enumerate}
 \end{ejercicio}
 
 \begin{ejercicio}
     Explain how to use ``Shared Subscriptions'' in MQTT.
+
+    Shared Subscriptions in MQTT allow multiple clients to share the same subscription, which means that when a message is published to the topic of the shared subscription, it will be delivered to only one of the clients that are part of the shared subscription. This can be useful for load balancing and scalability, as it allows multiple clients to share the workload of processing messages for a specific topic. To use Shared Subscriptions, clients can subscribe to a topic using a special syntax that includes a shared subscription identifier (e.g., \texttt{\$share/group1/topic}), and the broker will manage the distribution of messages among the clients that are part of the shared subscription.
 \end{ejercicio}

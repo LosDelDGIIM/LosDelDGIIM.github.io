@@ -1,0 +1,249 @@
+\chapter{IoT Connected Data}
+
+In Section~\ref{sec:SWBlocks}, we identified three main SW functional blocks that are required to implement an IoT application: IoT Networking, IoT Data Management, and IoT Data Processing. The first SW Block has been covered in the previous chapter and, in this chapter, we will focus on the other two SW Blocks, which are closely related to each other and are responsible for handling the data collected from the IoT Things.
+
+In order to manage the data, three aspects are needed:
+\begin{itemize}
+    \item \ul{Data Models}: models that define the structure and semantics of the data collected from the IoT Things.
+    \item \ul{Data Storage}: mechanisms to store the data collected from the IoT Things, which can be either on-premises or in the cloud.
+    \item \ul{Updating Protocols}: protocols to update the data collected from the IoT Things in a way that the rest of the system can access it in a timely manner.
+\end{itemize}
+
+\section{IoT Updating Protocols}
+
+Smart Things are usually energy-constrained devices that need to optimize their energy consumption in order to prolong their battery life. Even though the Networking Protocols covered in the previous chapter are designed to be energy-efficient, there are still more energy-saving techniques that can be applied to the data management aspect of IoT applications. There are two main techniques:
+\begin{itemize}
+    \item \ul{Stream Compression}: given a stream of data collected from an IoT Thing, it is possible to apply compression techniques to reduce the amount of data that needs to be transmitted over the network, which can save energy.
+    \item \ul{Update Protocols}: given a required accuracy of a measurement, it is possible to apply update protocols to reduce the number of measurements needed (and thus the amount of data that needs to be transmitted over the network).
+\end{itemize}
+
+In this section, we will focus on the second technique. Update protocols are designed to reduce the number of measurements needed to achieve a certain level of accuracy, and are usually applicable for data that changes continuously over time, such as temperature, humidity, or location.
+
+Regarding \textbf{location data}, a lot of research has been done on update protocols for location data, which is a very common type of data collected from IoT Things. During the next sections, we will cover some of the most common update protocols for location data, which can be applied to other types of data as well.
+
+\subsection{Periodic Reporting}
+
+Periodic reporting is the simplest update protocol, where the IoT Thing reports its location at regular intervals, regardless of whether the location has changed or not. A fixed period $T$ is fixed, and the IoT Thing reports its location every $T$ seconds. The key aspect here is how to choose the period $T$.
+\begin{itemize}
+    \item If $T$ is too small, the IoT Thing will report its location too frequently, which can lead to unnecessary energy consumption and network congestion.
+    \item If $T$ is too large, the IoT Thing will report its location too infrequently, which can lead to inaccurate location data and a poor user experience.
+\end{itemize}
+
+In order to choose the period $T$, we follow a worst-case approach, where we assume that the IoT Thing is moving in a stright line at its maximum speed $v_{\max}$, and we want to ensure that the location data is accurate within a certain distance $d_{\max}$, usually called \emph{accuracy radius} and defined by the application requirements. In this case, we can derive the period $T$ as follows:
+\begin{equation*}
+    T = \frac{d_{\max}}{v_{\max}}
+\end{equation*}
+
+This could however load to unnecessary measurements when:
+\begin{itemize}
+    \item The IoT Thing is moving at a speed lower than $v_{\max}$.
+    \item The IoT Thing is doing micro-movements within the accuracy radius $d_{\max}$, which can be the case for example for a person sitting on a chair and moving slightly.
+\end{itemize}
+
+\subsection{Distance-based Reporting}
+
+The distance-based reporting protocol is designed to address the limitations of periodic reporting by allowing the IoT Thing to report its location as late as possible, while still ensuring that the location data is accurate within a certain distance $d_{\max}$. If the last reported location is $L_{\text{last}}$, the IoT Thing will report its location only when the distance between its current location $L_{\text{current}}$ and the last reported location $L_{\text{last}}$ exceeds the accuracy radius $d_{\max}$, i.e., when:
+\begin{equation*}
+    \text{distance}(L_{\text{current}}, L_{\text{last}}) \geq d_{\max}
+\end{equation*}
+
+This protocol allows the send over the internet only the necessary measurements (so it reduces all the possible overhead because of this), but it however needs to measure the location in between the updates. In order to sleep as much as possible, the same worst-case approach of periodic reporting can be applied. Let's assume that:
+\begin{itemize}
+    \item The IoT Thing is moving in a straight line at its maximum speed $v_{\max}$.
+    \item The maximum accuracy radius is $d_{\max}$.
+    \item The last reported location is $L_{\text{last}}$.
+    \item The measured location of the IoT Thing at time $t$ is $L(t)$.
+\end{itemize}
+
+In that case, at time $t$, the IoT device can sleep until for $T_t$ seconds, where $T_t$ is defined as follows:
+\begin{equation*}
+    T_t = \frac{d_{\max} - \text{distance}(L(t), L_{\text{last}})}{v_{\max}}
+\end{equation*}
+
+This approach means that, if the IoT Thing is in fact not moving, it will have constant sleep time, but if it is moving towards the accuracy radius, it will have a decreasing sleep time, which allows it to report its location as soon as possible when it reaches the accuracy radius. This has however some problems:
+\begin{itemize}
+    \item As the IoT Thing reaches the accuracy radius, it will have to measure its location more and more frequently, making it not energy-efficient. Therefore, a minimum sleep time $T_{\min}$ can be defined, which is the minimum time that the IoT Thing can sleep before measuring its location again.
+    \item Measuring the location of the IoT Thing may also take some time ($t_{\text{measure}}$). If the calculated sleep time $T_t$ is less than the measurement time $t_{\text{measure}}$, the IoT Thing will not be able to sleep for the calculated time, and it will have to measure its location immediately.
+\end{itemize}
+
+Therefore, in order to address these problems, instead of sending the location data only when the accuracy radius is reached (where the sleep time $T_t$ would be zero), the IoT Thing will send the location data when:
+\begin{equation*}
+    T_t \leq \max\{T_{\min}, t_{\text{measure}}\}
+\end{equation*}
+% // TODO: Esta fórmula es correcta? Hay tres versiones distintas
+
+Even though this last modification allows the IoT Thing to sleep for a longer time, it still requires the IoT Thing to measure its location several times before actually sending the location data, which can lead to unnecessary energy consumption. The next protocol will address this problem.
+
+\subsection{Early Distance-based Reporting}
+
+The early distance-based reporting protocol is designed to address the limitations of the distance-based reporting protocol by allowing the IoT Thing to report its location \emph{before} reaching the accuracy radius, which can lead to longer sleep times and thus more energy savings. That way, a balance can be reached between:
+\begin{itemize}
+    \item The energy consumption for sending the location data over the network.
+    \item The energy consumption for measuring the location of the IoT Thing.
+\end{itemize}
+
+The idea used to reach that balance is called the \emph{Energy-based update condition}. It compares two energy consumption values:
+\begin{itemize}
+    \item The energy consumption for sending the location data over the network inmediately.
+    \item The energy consumption for dropping the current measurement and waiting for the next measurement (where we will again apply this comparison). 
+    % // TODO: Lo siguiente es cierto?
+    The waited time is calculated as in the Distance-based reporting protocol.
+\end{itemize}
+
+The IoT will always choose the option with the lowest energy consumption, which allows it to save energy while still ensuring that the location data is accurate within a certain distance $d_{\max}$. However, in order to effectively apply this protocol, the IoT Thing needs to have a good estimation of the energy consumption for both options (which depends on the future location of the IoT Thing, which is not known). Therefore, some heuristics are applied. We will explore the two main heuristics used for this purpose.
+
+\subsubsection{Next Fix heuristic}
+
+The next fix heuristic is based on the idea of stimating the energy consumption for both options.
+\begin{itemize}
+    \item The energy consumption for sending the location data over the network inmediately is estimated as follows:
+    \begin{equation*}
+        E_{\text{update}} = \dfrac{E_{\text{send}} + E_{\text{measure}}}{T_0}
+    \end{equation*}
+    Where $T_0$ is the time until the next measurement when an update is sent ($t=0$).
+    \item The energy consumption for dropping the current measurement and waiting for the next measurement is estimated as follows:
+    \begin{equation*}
+        E_{\text{no-update}} = \dfrac{E_{\text{measure}}}{T_t}
+    \end{equation*}
+    Where $T_t$ is the time until the next measurement when no update is sent (calculated as in the Distance-based reporting protocol).
+\end{itemize}
+
+Depending on the values of $E_{\text{update}}$ and $E_{\text{no-update}}$, the IoT Thing will choose the option with the lowest energy consumption.
+
+
+\subsubsection{Predicted Movement heuristic}
+
+This heuristic is much more complex than the Next Fix heuristic, as it is based on the idea of predicting the future location of the IoT Thing in order to estimate the energy consumption for both options more accurately. It divides the time in \emph{cycles}, and:
+\begin{itemize}
+    \item Updating the location data over the network starts a new cycle.
+    \item Dropping the current measurement and waiting for the next measurement continues the current cycle.
+\end{itemize}
+
+
+
+\subsection{Dead Reckoning}
+
+Dead reckoning is a similar technique to the Predicted Movement heuristic, as it allows the IoT Thing to estimate its location based on its previous location and its movement. It works as follows:
+\begin{itemize}
+    \item Initially, the IoT Thing reports its current state (location) and an expected update function (which is a function that estimates the future location of the IoT Thing based on its current location and its movement). That update function may be very complex:
+    \begin{itemize}
+        \item A linea movement can be estimated, but it may be too simple for some applications.
+        \item A more complex movement can be estimated using machine learning techniques. However, this requires more computational resources on the IoT Thing, which can lead to higher energy consumption. This is a trade-off that needs to be carefully considered when designing the expected update function.
+    \end{itemize}
+    \item After that, both the cloud server and the IoT Thing have that function that can be used to estimate the location of the IoT Thing in the future.
+    \item Periodically, the IoT Thing measures its location and compares it with the estimated location. If the error between the measured location and the estimated location exceeds a certain threshold, the IoT Thing reports its current state (location) and an new updated expected update function.
+\end{itemize}
+
+That way, the IoT Thing can sleep for a longer time, and it only needs to report its location when the error between the estimated location and the measured location exceeds a certain threshold, which can lead to significant energy savings. Meanwhile, the cloud server can use the expected update function to estimate the location of the IoT Thing at any time, which allows it to have accurate location data without needing to receive updates from the IoT Thing too frequently.
+
+\section{IoT Data Models}
+
+Data models are used to define the structure and semantics of the data collected from the IoT Things. They are essential for the proper management of the data, as they allow us to understand what the data represents and how it can be used. Even though that may sound simple, it is actually a very complex topic, and there is no standard data model for IoT applications. In this section, we will cover some of the most common data models used in IoT applications, which can be applied to other types of data as well.
+\begin{itemize}
+    \item \ul{Key-Value Model}: this is the simplest data model, where the data is represented as a set of key-value pairs, which represents the environment variable and its value. For example, a temperature sensor may report \texttt{(temperature, 25)}. This model is very simple and easy to use, but it has some limitations, as it cannot represent complex relationships between the data.
+    \item \ul{Graphical Model}: this model represents the data as a graph. Even though humans can easily understand graphical models, they are not very efficient for machines to process, so they are not very common in IoT applications.
+    \item \ul{Ontology / Linked-data Based Model}: this aproach models everything as a graph, but it uses a more structured approach (triples) to represent the data, which allows it to represent complex relationships between the data. They allow to define plenty of different relationships between the data, which can be very useful for some applications.
+\end{itemize}
+
+
+\section{Data Processing}
+
+Data processing is the process of transforming the raw data collected from the IoT Things into useful information that can be used by the applications. Some application programming will be needed, but a big problem is that, even with update protocols, the amount of data collected from the IoT Things can be very large, which can lead to problems in terms of storage and processing. Therefore, some preprocessing techniques are needed to reduce the amount of data that needs to be stored and processed by:
+\begin{itemize}
+    \item Filtering out unnecessary data that are not relevant for the application.
+    \item Aggregating data to reduce the amount of data that needs to be stored and processed.
+\end{itemize}
+
+There are two main approaches that help when working with highly dynamic data, which we will cover in the next sections.
+\subsection{Stream Processing}
+
+Stream processing is a technique that allows us to process data in real-time as it is being generated, which can be very useful for IoT applications. It uses similar techniques to those used in databases, but it is designed to handle the continuous stream of data generated by the IoT Things. It is based on three main ideas:
+\begin{itemize}
+    \item Data comes as a \emph{stream}, which is an unbounded sequence of data items that are generated by the IoT Things.
+    \item That stream is received by a \emph{Data Stream Management System} (DSMS), which is a software system (similar to a Database Management System) that is designed to handle the continuous stream of data and provide real-time processing capabilities. It usually provides databases for historial and static data.
+    \item Applications can define \emph{queries} that are executed on the DSMS in order to obtain the desired information from the data stream.
+\end{itemize}
+
+Regarding the queries, there are two main types of queries:
+\begin{itemize}
+    \item \ul{One-time queries}: it allows the application to query the DSMS at any time to obtain the desired information from the currently stored data.
+    \item \ul{Continuous queries}: it allows the application to define a query that is continuously executed on the DSMS, and the results are updated in real-time as new data arrives. The whole data stream is then processed.
+\end{itemize}
+
+Queries that are about a specific time interval include the concept of \emph{windows}, which are used to define a finite subset of the data stream that is used for the query. There are two main types of windows:
+\begin{itemize}
+    \item \ul{Tuple-based windows}: it defines a window based on the number of data items that are included in the window.
+    \item \ul{Time-based windows}: it defines a window based on the time interval that is included in the window. Three main types of time-based windows are:
+    \begin{itemize}
+        \item \emph{Sliding windows}: the window moves continuously as new data arrives. The overlap between two consecutive windows is almost the whole window, which means that the same data items are included in both windows.
+        \item \emph{Stepping windows}: the window moves in discrete steps as new data arrives, but with an overlap between two consecutive windows. The overlap between two consecutive windows is a fraction of the window size that can be defined, which means that some data items are included in both windows, but not all of them.
+        \item \emph{Tumbling windows}: the window moves in discrete steps as new data arrives, but without any overlap between two consecutive windows. The overlap between two consecutive windows is zero, so no data items are included in both windows.
+    \end{itemize}
+\end{itemize}
+
+Apart from the window concept, the query re-evaluation should be considered. There are two main approaches to query re-evaluation:
+\begin{itemize}
+    \item \ul{Eager re-evaluation}: all the queries are re-evaluated every time new data arrives, which can lead to high computational overhead, but it allows to have the most up-to-date results.
+    \item \ul{Periodic re-evaluation}: all the queries are re-evaluated at regular intervals, which can reduce the computational overhead, but it may lead to less up-to-date results and may miss some important patterns in the data stream.
+\end{itemize}
+
+It should be noted that the window concept and the query re-evaluation approach should not be confused, as they are two different concepts. The window concept is assigned to the query definition, while the query re-evaluation approach is assigned to the DSMS configuration.
+% // TODO: Cómo se mezclan las ventanas y la re-evaluación?
+
+Lastly, there are two possible query results:
+\begin{itemize}
+    \item \ul{Result Set}: it is a set of data items that are the result of the query. They can be directly used by the application.
+    
+    In a continuous query, every time the query is re-evaluated, a new result set is generated.
+    \item \ul{Data Stream}: it is a stream of data items that are the result of the query. That data stream can be used as an input for another query, which allows us to create complex processing pipelines. In can only be generated for continuous queries.
+\end{itemize}
+
+\subsubsection{CQELS}
+
+% // TODO: Esto es importante?
+
+Continuous Query Evaluation over Linked Streams (CQELS) is an specific example of a DSMS that is designed to handle linked data streams, which are data streams that are represented using the Linked-data Based Model. For each query, there are three steps:
+\begin{enumerate}
+    \item \ul{Pre-processing}: it is responsible for integrating the two main data sources of the DSMS:
+    \begin{itemize}
+        \item The linked data stream, which is the data that is generated by the IoT Things and is represented using the Linked-data Based Model.
+        \item The Linked Database, which is a database that stores static data that can be used to enrich the data stream.
+    \end{itemize}
+    \item \ul{Optimization}: it is responsible for optimizing the query execution plan, which is the sequence of operations that are performed to execute the query. It reorders the operations in the query execution plan to reduce the computational overhead and improve the performance of the query execution.
+    \item \ul{Execution}: it is responsible for executing the query execution plan and generating the query results.
+\end{enumerate}
+
+% // TODO: Entra?
+There are different operators, which are the basic building blocks of the query execution plan. They can be of three main types:
+\begin{itemize}
+    \item \ul{Relational operators}: they are used to perform relational operations on the data stream, such as selection, projection, and join.
+    \item \ul{Stream operators}: they are used to produce new data streams from the input data.
+    \item \ul{Window operators}: they are used to define the windows that are used for the query execution.
+\end{itemize}
+
+% // TODO: Entra?
+The data flow is the sequence of operations that are performed to execute the query, which is defined by the query execution plan. The data flow can be represented as a directed acyclic graph, where the nodes represent the operators and the edges represent the data flow between the operators. It should be noted that it could change in different re-evaluations of the same query, as the optimization step can reorder the operations in the query execution plan.
+
+% // TODO: El resto??
+
+
+
+
+\subsection{Complex Event Processing}
+
+Complex event processing (CEP) is a technique that models the data collected from the IoT Things as a series of events. It focuses on detecting complex patterns of lower-level events, which can be very useful for some applications. It follows a similar approach to publish-subscribe systems, but uses filtering and aggregation techniques to create higher-level events from the lower-level events generated by the IoT Things. These two types of events are called:
+\begin{itemize}
+    \item \ul{Atomic events}: they are the basic events that are generated by the IoT Things, which can be very simple, such as a temperature measurement or a location update.
+    \item \ul{Complex events}: they are the events that are generated by the CEP system, which are created by combining multiple atomic events.
+\end{itemize}
+
+In order to create complex events from atomic events, the CEP system uses a set of rules, which are called \emph{Event-Condition-Action} (ECA) rules. These rules define the conditions under which a complex event should be generated from a set of atomic events. The ECA rules are defined as follows:
+\begin{center}
+\texttt{ON <event> IF <condition> THEN <action>}
+\end{center}
+Where:
+\begin{itemize}
+    \item \texttt{<event>} is used to filter the events that are considerd (location, time, etc.).
+    \item \texttt{<condition>} is the most flexible part of the rule, as it can be used to define any condition that needs to be satisfied for the complex event to be generated. It can be based on the attributes of the events, the relationships between the events, or any other condition that can be defined using the data collected from the IoT Things.
+    \item \texttt{<action>} is used to define the action that should be performed when the rule is triggered, which is usually the generation of a complex event. It could however be any other action, such as sending the data to the application.
+\end{itemize}
