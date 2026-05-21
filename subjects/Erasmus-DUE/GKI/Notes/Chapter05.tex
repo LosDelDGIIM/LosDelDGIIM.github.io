@@ -29,8 +29,8 @@ During the following sections, we will explore some of these steps in more detai
 \section{Crossover}
 Crossover is a genetic operator used to combine the genetic information of two parent chromosomes to generate a new offspring chromosome. There are several types of crossover methods, including:
 \begin{itemize}
-    \item \ul{Cycle Crossover (CX)}:
-    % // TODO: En el ejemplo no es como dice internet. No hay ciclos
+    % \item \ul{Cycle Crossover (CX)}:
+    % // En el ejemplo no es como dice internet. No hay ciclos
     % https://commons.apache.org/proper/commons-math/javadocs/api-3.6.1/org/apache/commons/math3/genetics/CycleCrossover.html
     \item \ul{Order-Based Crossover (OX2)}:
     Fixed positions are selected from the first parent, their values are copied to the offspring in the same positions,
@@ -57,24 +57,58 @@ Crossover is a genetic operator used to combine the genetic information of two p
     \end{table}
 
     \item \ul{Voting Crossover (VX)}:
-    % // TODO: Error en las diapositivas?
-    % // TODO: CC del inicio no debería ser AA?
-    % // Xq coge siempre del 2º? Hace una copia exacta
+    
+    For each gene, the value that appears most frequently among the parents is selected for the offspring. In case of a tie, one of the values is randomly selected.
+
+    This makes it a more general crossover method that can be applied to more than two parents, as it can take into account the values of all the parents when determining the value of each gene in the offspring.
+    \begin{table}[ht]
+        \centering
+        \begin{tabular}{r|cccccccccc}
+            Parent 1 & {A} & {A} & B & {B} & {A} & A & C & C & {A} & A \\
+            Parent 2 & C & C & A & B & A & B & B & A & A & A \\
+            Parent 3 & A & A & A & B & A & A & C & C & A & A \\ \hline
+            Offspring & {A} & {A} & A & {B} & {A} & A & C & C & {A} & A
+        \end{tabular}
+        \caption{\centering Example of Voting Crossover (VX) with three parents.}
+    \end{table}
+
+    \item \ul{Maximal Preservative Crossover (MPX)}:
+    
+    An interval of genes is selected from the first parent and copied to the offspring (in the same positions). The remaining genes are filled with the values from the second parent, starting from the start of the interval.
+    \begin{table}[ht]
+        \centering
+        \begin{tabular}{r|cc|cccccc|cc}
+            Parent 1 & A & A & {B} & {B} & {A} & {A} & {C} & {C} & A & A \\
+            Parent 2 & C & C & \textbf{A} & \textbf{B} & \textbf{A} & \textbf{B} & B & A & A & A \\ \hline
+            Offspring & \textbf{A} & \textbf{B} & {B} & {B} & {A} & {A} & {C} & {C} & \textbf{A} & \textbf{B}
+        \end{tabular}
+        \caption{\centering Example of Maximal Preservative Crossover (MPX), where the selected interval is 2-7.}
+    \end{table}
+
+    It should be noted that, if the interval selected in the first parent is too short, there may not be enough genes to fill the offspring. This should be controlled, as in some cases, chromosomes should not vary in length.
 
     \item \ul{Alternating Positions Crossover (AP)}:
-    % // TODO: Si ya está, no avanzo a la siguiente posición?
-    % // Qué pasa si ya está el de ambos padres?
-    % // Qué pasa si sigo hasta terminar los padres y no he terminado el hijo?
-    \item \ul{Maximal Preservative Crossover (MPX)}:
-    % // TODO: Qué pasa si el intervalo escogido es muy corto? Por ejemplo solo tiene 2?
-    \item \ul{Merge Crossover (MX)}:
-    % // TODO: Qué segmentos se han elegido?
-    % // TODO: Mismas dudas que AP
-    \item \ul{Sequential Constructive Crossover (SCX)}:
-    % // TODO: No lo entiendo. No es igual que AP?
+    
+    The offspring is created by alternating the genes of the two parents, but with two important constraints:
+    \begin{itemize}
+        \item Positions should be kept. If a gene is in the position $i$ in offspring, it should be in the same position $i$ in the parent from which it was taken.
+        \item Genes can't be repeated in a chromosome.
+    \end{itemize}
+    
+    This results in the following procedure to create the offspring:
+    \begin{enumerate}
+        \item The first gene of the offspring is taken from the first position of the first parent.
+        \item For every gene in the offspring, the next gene is taken from the other parent. If that gene is already in the offspring, the order of the parents is switched, and the next gene for that position is chosen from the other parent.
+        \begin{itemize}
+            \item It that gene is also already in the offspring (which is not likely), then a mutation has to be performed, as there is no way to fill that position with a gene from the parents without repeating genes. This mutation can be done by randomly selecting a gene that is not already in the offspring and placing it in that position.
+        \end{itemize}
+
+        \item This process is repeated until the offspring is complete.
+    \end{enumerate}
+
+    It should be noted that, if the parents are very similar, there may not be enough genes to fill the offspring without repeating genes. This should be controlled, as in some cases, chromosomes should not vary in length.
 \end{itemize}
 
-% // TODO: En la diapositiva habla también de Ein-Punkt crossover
 
 \section{Mutation}
 Mutation is a genetic operator used to maintain genetic diversity within a population of chromosomes. It introduces random changes to the genes of offspring chromosomes, which can help prevent premature convergence to local optima. There are several types of mutation types, as:
@@ -85,16 +119,21 @@ Mutation is a genetic operator used to maintain genetic diversity within a popul
     \item \ul{Letal Mutation}: A mutation that results in a non-viable solution (e.g., a solution that violates constraints of the problem).
 \end{itemize}
 
-Depending on the problem being solved, different mutation methods will result in letal mutations, which should be avoided since they do not contribute to the search for optimal solutions. The choice of mutation method and the mutation rate (the probability of mutation occurring) can have a significant impact on the performance of a genetic algorithm. A high mutation rate can lead to excessive randomness and slow convergence, while a low mutation rate may not introduce enough diversity into the population, leading to premature convergence. There are different methods to perform mutation, such as:
+Depending on the problem being solved, different mutation methods will result in letal mutations, which should be avoided since they do not contribute to the search for optimal solutions. The choice of mutation method and the mutation rate (the probability of mutation occurring) can have a significant impact on the performance of a genetic algorithm. A high mutation rate can lead to excessive randomness and slow convergence, while a low mutation rate may not introduce enough diversity into the population, leading to premature convergence. There are different basic methods to perform mutation, such as:
 \begin{itemize}
     \item \ul{Deletion}: A segment of the chromosome is removed.
     \item \ul{Insertion}: A segment of the chromosome is selected and inserted into another position in the chromosome.
     \item \ul{Duplication}: A segment of the chromosome is duplicated and inserted into another position in the chromosome.
     \item \ul{Inversion}: A segment of the chromosome is reversed.
 \end{itemize}
-% // TODO: Inversion sí. Pero el resto cambian la longitud del cromosoma, no?
-% // TODO: Se pueden aplicar dos en una? Para cambiar un valor...
-% // TODO: Hay algunas que no son válidas
+
+Using those, we can create more complex mutation methods, such as:
+\begin{itemize}
+    \item \ul{Scramble Mutation}: A segment of the chromosome is selected and its genes are randomly shuffled.
+    \item \ul{Swap Mutation}: Two genes in the chromosome are selected and their positions are swapped.
+\end{itemize}
+
+It is true that some of these mutation methods can change the length of the chromosome, which may not be desirable in certain problems where a fixed-length representation is required. This should be taken into account, as they could end up being letal mutations if the resulting chromosome is not a valid solution to the problem.
 
 \section{Selection}
 
@@ -116,9 +155,7 @@ There are several selection methods, including:
     \item \ul{Steady State Selection}: Only a small number of chromosomes (e.g., 30\%) are replaced in each generation, while the rest of the population remains unchanged. This allows for a gradual evolution of the population over time.
     
     It should be noted that this approach is just a variation of elitist selection, where the portion of the ``elite'' is much larger than in the standard elitist selection.
-    % // TODO: Igual que el anterior, no?
     \item \ul{Tournament Selection}: Fixed $k$ chromosomes are randomly selected from the population, and the one with the highest fitness is chosen for reproduction. This process is repeated until the desired number of chromosomes is selected.
-    % // TODO: Qué es el valor de p de las diapositivas?
     \item \ul{Roulette Wheel Selection}: Each chromosome is assigned a probability of selection proportional to its fitness. If $f_i$ is the fitness of chromosome $i$, then:
     \[
         P(i) = \frac{f_i}{\sum\limits_{j=1}^{N} f_j}
