@@ -781,7 +781,7 @@ Even though B-spline cubic splines do not interpolate the control points, they h
 \subsubsection{Achieving Interpolation with B-spline Cubic Splines}
 
 Even though B-spline cubic splines do not interpolate the control points, we can achieve interpolating a point by repeating it three times.
-Since in each segment, we have 4 control points.
+Since in each segment, we have 4 control points:
 \begin{itemize}
     \item If the segments where the first three control points are the same, then the curve will start in that point.
     \item If the segments where the last three control points are the same, then the curve will end in that point.
@@ -793,3 +793,150 @@ Therefore, the different situations are:
     \item If we want to interpolate the last point, we need to repeat it three times at the end of the control points list, and the last segment will end in that point.
     \item If we want to interpolate a point in the middle, we need to repeat it three times in the middle of the control points list, and a segment will end in that point and the next segment will start in that point.
 \end{itemize}
+
+
+\section{Parametric Surfaces}
+
+Even though splines are commonly used to represent curves, they can also be used to represent surfaces. A parametric surface is a function that maps a pair of parameters $(u,v)$ to a point in 3D space. Space is divided into patches, and each patch is defined by a parametric function. In each patch, a total of $n\cdot m$ control points are used, where:
+\begin{itemize}
+    \item $n$ is the number of control points in the $u$ direction.
+    \item $m$ is the number of control points in the $v$ direction.
+\end{itemize}
+
+After creating a grid-like structure with the control points, when interpolating a point on the surface with parameters $(u,v)$, the process is as follows (shown in Figure~\ref{fig:parametric_surface_interpolation}):
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[x=1cm, y=1cm, -Stealth, scale=1.0]
+
+        % ====================================================================
+        % PASO 1: Red Original de Puntos de Control
+        % ====================================================================
+        \begin{scope}[shift={(0,0)}]
+            \node[anchor=south west, font=\bfseries\sffamily\small] at (-0.5, 3.8) {1: Place $P_{i,j}$ in a grid};
+            
+            % Definición de coordenadas para la malla
+            \foreach \i/\y in {1/3, 2/2, 3/1, 4/0} {
+                \foreach \j/\x in {1/0, 2/1, 3/2, 4/3} {
+                    \pgfmathsetmacro{\xcoord}{\x + 0.25*\y}
+                    \pgfmathsetmacro{\ycoord}{\y + 0.15*\x}
+                    \coordinate (P\i\j) at (\xcoord,\ycoord);
+                    \node[anchor=south, font=\tiny] at (P\i\j) {$P_{\i\j}$};
+                }
+            }
+            
+            % Dibujar las líneas de la malla
+            \foreach \i in {1,2,3,4} {
+                \draw[gray!40, dashed, thick] (P\i1) -- (P\i2) -- (P\i3) -- (P\i4);
+            }
+            \foreach \j in {1,2,3,4} {
+                \draw[gray!40, dashed, thick] (P1\j) -- (P2\j) -- (P3\j) -- (P4\j);
+            }
+            
+            % Dibujar los nodos
+            \foreach \i in {1,2,3,4} {
+                \foreach \j in {1,2,3,4} {
+                    \fill[draw=black, fill=white, thick] (P\i\j) circle (2pt);
+                }
+            }
+            
+            % Etiquetas de las direcciones
+            \draw[-Stealth, thick, blue] (-0.4,-0.4) -- (0.8,-0.2) node[midway, below, sloped, font=\tiny] {Dir $v$ ($j$)};
+            \draw[-Stealth, thick, red] (-0.4,-0.4) -- (-0.2,0.8) node[midway, left, font=\tiny] {Dir $u$ ($i$)};
+        \end{scope}
+
+        % Flecha de transición 1
+        \draw[-Stealth, ultra thick, gray!60] (4.2, 1.8) -- (4.9, 1.8);
+
+        % ====================================================================
+        % PASO 2: Curvas intermedias fijando 'v' (Cálculo de P_i(v))
+        % ====================================================================
+        \begin{scope}[shift={(5.2,0)}]
+            \node[anchor=south west, font=\bfseries\sffamily\small] at (0.0, 3.8) {2: Interpolation in $v$};
+            
+            \foreach \i/\y in {1/3, 2/2, 3/1, 4/0} {
+                \foreach \j/\x in {1/0, 2/1, 3/2, 4/3} {
+                    \pgfmathsetmacro{\xcoord}{\x + 0.25*\y}
+                    \pgfmathsetmacro{\ycoord}{\y + 0.15*\x}
+                    \coordinate (Q\i\j) at (\xcoord,\ycoord);
+                }
+            }
+            
+            % Fondo atenuado
+            \foreach \i in {1,2,3,4} { \draw[gray!20, dashed] (Q\i1) -- (Q\i4); }
+            \foreach \j in {1,2,3,4} { \draw[gray!20, dashed] (Q1\j) -- (Q4\j); }
+            \foreach \i in {1,2,3,4} { \foreach \j in {1,2,3,4} { \fill[gray!30] (Q\i\j) circle (1.5pt); } }
+            
+            % Curvas interpoladas en v
+            \draw[blue!60, thick] (Q11) .. controls ($(Q11)+(0.6,0.2)$) and ($(Q14)-(0.6,0.2)$) .. (Q14);
+            \draw[blue!60, thick] (Q21) .. controls ($(Q21)+0.6*(0.2,0.15)$) and ($(Q24)-0.6*(0.2,0.15)$) .. (Q24);
+            \draw[blue!60, thick] (Q31) .. controls ($(Q31)+0.6*(0.2,0.1)$) and ($(Q34)-0.6*(0.2,0.1)$) .. (Q34);
+            \draw[blue!60, thick] (Q41) .. controls ($(Q41)+0.6*(0.2,0.05)$) and ($(Q44)-0.6*(0.2,0.05)$) .. (Q44);
+            
+            % Puntos intermedios evaluados para un v fijo
+            \coordinate (Pi1) at ($(Q11)!0.45!(Q14)+(0.05,0.1)$);
+            \coordinate (Pi2) at ($(Q21)!0.45!(Q24)+(0.03,0.06)$);
+            \coordinate (Pi3) at ($(Q31)!0.45!(Q34)+(0.01,0.03)$);
+            \coordinate (Pi4) at ($(Q41)!0.45!(Q44)+(0.0,0.0)$);
+            
+            \draw[red!40, dashed, thick] (Pi1) -- (Pi2) -- (Pi3) -- (Pi4);
+            
+            \fill[blue] (Pi1) circle (2.5pt) node[right=1pt, font=\tiny] {$P_0(v)$};
+            \fill[blue] (Pi2) circle (2.5pt) node[right=1pt, font=\tiny] {$P_1(v)$};
+            \fill[blue] (Pi3) circle (2.5pt) node[right=1pt, font=\tiny] {$P_2(v)$};
+            \fill[blue] (Pi4) circle (2.5pt) node[right=1pt, font=\tiny] {$P_3(v)$};
+        \end{scope}
+
+        % Flecha de transición 2
+        \draw[-Stealth, ultra thick, gray!60] (9.7, 1.8) -- (10.4, 1.8);
+
+        % ====================================================================
+        % PASO 3: Curva final usando los P_i(v) como puntos de control
+        % ====================================================================
+        \begin{scope}[shift={(10.7,0)}]
+            \node[anchor=south west, font=\bfseries\sffamily\small] at (-0.5, 3.8) {3: Final Curve in $u$};
+            
+            \foreach \i/\y in {1/3, 2/2, 3/1, 4/0} {
+                \foreach \j/\x in {1/0, 2/1, 3/2, 4/3} {
+                    \pgfmathsetmacro{\xcoord}{\x + 0.25*\y}
+                    \pgfmathsetmacro{\ycoord}{\y + 0.15*\x}
+                    \coordinate (R\i\j) at (\xcoord,\ycoord);
+                }
+            }
+            
+            \coordinate (F1) at ($(R11)!0.45!(R14)+(0.05,0.1)$);
+            \coordinate (F2) at ($(R21)!0.45!(R24)+(0.03,0.06)$);
+            \coordinate (F3) at ($(R31)!0.45!(R34)+(0.01,0.03)$);
+            \coordinate (F4) at ($(R41)!0.45!(R44)+(0.0,0.0)$);
+            
+            \draw[red!30, dashed] (F1) -- (F2) -- (F3) -- (F4);
+            \fill[blue!30] (F1) circle (1.5pt);
+            \fill[blue!30] (F2) circle (1.5pt);
+            \fill[blue!30] (F3) circle (1.5pt);
+            \fill[blue!30] (F4) circle (1.5pt);
+            
+            % Curva final
+            \draw[red, ultra thick] (F1) .. controls ($(F1)!0.35!(F2)$) and ($(F4)!0.35!(F3)$) .. (F4);
+            
+            % Punto sobre la superficie
+            \coordinate (Puv) at ($(F1)!0.48!(F4)+(0.02, 0.05)$);
+            \fill[red] (Puv) circle (3pt) node[above right, font=\scriptsize\bfseries] {$P(u,v)$};
+        \end{scope}
+
+    \end{tikzpicture}
+    \caption{Interpolation Process on a Parametric Surface}
+    \label{fig:parametric_surface_interpolation}
+\end{figure}
+\begin{enumerate}
+    \item First, we interpolate in the $v$ direction to get $n$ points.
+    \item Using the points obtained in the previous step as control points, we interpolate in the $u$ direction to get the final point on the surface.
+\end{enumerate}
+\begin{observacion}
+    The same process can be done in the opposite order, first interpolating in the $u$ direction and then in the $v$ direction, and we would get the same result.
+\end{observacion}
+
+Mathematically, we can express the process as follows. Let's denote the control points as $y_{ij}$, where $i$ is the index in the $u$ direction and $j$ is the index in the $v$ direction. Then, we can express the interpolation process as:
+\begin{align*}
+    P(u,v) &= \sum_{i=0}^{n-1} \left( \sum_{j=0}^{m-1} y_{ij} B_j(v) \right) B_i(u)\\
+    &= \sum_{i=0}^{n-1} \sum_{j=0}^{m-1} y_{ij} B_i(u) B_j(v)
+\end{align*}
+where $B_i(u)$ and $B_j(v)$ are the basis functions in the $u$ and $v$ directions, respectively. The specific type of basis functions used will depend on the type of spline we are using (e.g., Bezier, Hermite, etc.).
