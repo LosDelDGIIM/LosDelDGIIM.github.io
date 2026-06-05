@@ -1,0 +1,34 @@
+% // TODO: Replace samples=40 por 200
+\chapter{Paths and Volumes}
+
+During the previous chapters, we have been working with path tracing algorithms, but in Section~\ref{sec:path_tracing} it was not explained how the random direction of the new ray was calculated. The reasons for this are explained in the usually called Physically Based Rendering (PBR), because it takes into account all the light that is emitted, reflected, transmitted or received by a surface.
+
+\section{The Rendering Equation}
+
+The first step to understand the PBR is to understand the Rendering Equation~\eqref{eq:rendering_equation}, which is an integral equation that describes the equilibrium of light in a scene.
+\begin{equation}
+L_O(x, \omega, \lambda) = L_E(x, \omega, \lambda) + \int_{\Omega} f_r(x, \omega, \omega', \lambda) \cdot L_I(x, \omega', \lambda) \cdot (\omega' \cdot N) \ d\omega'
+\label{eq:rendering_equation}
+\end{equation}
+where $L_O(x, \omega, \lambda)$ is the outgoing radiance at point $x$ in direction $\omega$ and wavelength $\lambda$, $L_E$ is the emitted radiance, $f_r$ is the BRDF, $L_I$ is the incoming radiance, $N$ is the normal of the surface and $\Omega$ is the hemisphere of directions above the surface. The integral term represents the contribution of all the incoming light that is reflected by the surface, and it is computed by integrating over all the directions in the hemisphere.
+\begin{observacion}
+    It should be noted that $\max(0,\omega'\cdot N)$ is not needed, as the domain of integration is the hemisphere of directions above the surface, which means that $\omega'\cdot N$ is always non-negative. However, if the domain of integration were the entire sphere, then the term $\max(0,\omega'\cdot N)$ would be needed to ensure that only the directions above the surface contribute to the integral.
+\end{observacion}
+
+\subsection{Bidirectional Reflectance Distribution Function (BRDF)}
+The BRDF is a function that describes how light is reflected by a surface. It is defined as the fraction of light from an incoming direction $\omega'$ that is reflected in an outgoing direction $\omega$ at a point $x$ on the surface, for a given wavelength $\lambda$. It is denoted as $f_r(x, \omega, \omega', \lambda)$ and it has the following properties:
+\begin{itemize}
+    \item $f_r(x, \omega, \omega', \lambda) \geq 0$: the BRDF is always non-negative.
+    \item Helmholtz Reciprocity, which states that the BRDF is symmetric with respect to the incoming and outgoing directions. This means that the light may be inverted.
+    \begin{equation*}
+f_r(x, \omega, \omega', \lambda) = f_r(x, \omega', \omega, \lambda)
+    \end{equation*}
+    \item Energy Conservation, which states that the total amount of light reflected by a surface cannot exceed the amount of light that is incident on it.
+    \begin{equation*}
+\int_{\Omega} f_r(x, \omega, \omega', \lambda) \cdot (\omega' \cdot N)\ d\omega' \leq 1\qquad \forall x, \omega, \lambda
+    \end{equation*}
+\end{itemize}
+
+This equation works in a lot of situations, but it does not take into account the volumetric surfaces, which are surfaces that have a certain thickness. For example, a glass sphere is a volumetric surface, because it has a certain thickness that allows light to pass through it. In this case, the light can be reflected, transmitted or absorbed by the surface, and the BRDF is not enough to describe the behavior of light in this case.
+
+\section{The Rendering Equation for Volumetric Surfaces}
