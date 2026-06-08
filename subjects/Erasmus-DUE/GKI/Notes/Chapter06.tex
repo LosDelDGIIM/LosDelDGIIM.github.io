@@ -269,4 +269,173 @@ This method allows for the identification of clusters of varying densities, as t
 
 \section{Classification}
 
+Classification is a technique used to assign labels to data points based on their features. During the following sections, we will discuss some of the most common classification algorithms, including K-Nearest Neighbors, Decision Trees, and Support Vector Machines.
+
 \subsection{K-Nearest Neighbors}
+
+K-Nearest Neighbors (KNN) is a simple and intuitive algorithm that was already explained in Section~\ref{sec:knn}. As it was stated there, it can also be used for classification tasks, selecting the most common class among the $k$ nearest neighbors of a data point.
+
+\subsection{Support Vector Machines (SVM)}
+
+Support Vector Machines (SVM) is a powerful classification algorithm that finds the optimal hyperplane that separates the data points of different classes in the feature space. Among all the possible hyperplanes that can separate the classes, SVM selects the one that maximizes the margin, which is the distance between the hyperplane and the nearest data points from each class (called support vectors). This approach helps to improve the generalization of the model and reduce the risk of overfitting.
+\begin{observacion}
+    It should be noted that only the support vectors are relevant for determining the position of the hyperplane, as they are the closest points to the decision boundary. The other data points do not affect the position of the hyperplane, which is why SVM can be effective even with a small number of points.
+\end{observacion}
+
+The equation of the optimal hyperplane can be expressed as:
+\begin{equation*}
+    w^t \cdot x + b = 0
+\end{equation*}
+where:
+\begin{itemize}
+    \item $w$ is the weight vector that is perpendicular to the hyperplane and determines its orientation.
+    \item $x$ is the input feature vector.
+    \item $b$ is the bias term that shifts the hyperplane away from the origin.
+\end{itemize}
+
+Two classes of data points are considered, a positive class (labeled as $+1$) and a negative class (labeled as $-1$). The support vectors are the data points that satisfy the following conditions:
+\begin{itemize}
+    \item For the positive class: $w^t \cdot x + b = 1$
+    \item For the negative class: $w^t \cdot x + b = -1$
+\end{itemize}
+
+The classification of a new data point $x$ can be determined by evaluating the equation of the hyperplane:
+\begin{itemize}
+    \item If $w^t \cdot x + b \geq 1$, the data point is classified as belonging to the positive class.
+    \item If $w^t \cdot x + b \leq -1$, the data point is classified as belonging to the negative class.
+    \item If $-1 < w^t \cdot x + b < 1$, the data point is classified as being on the margin, and it may be classified as either class depending on the specific implementation of the SVM algorithm.
+\end{itemize}
+
+In order to determine the margin $\gamma$, lets consider a point $x_{-}$ support vector from the negative class and the corresponding point $x_{+}$ that lies on the margin of the positive class. Since $w$ is perpendicular to the hyperplane, the following equation holds:
+\begin{equation*}
+    x_{+} = x_{-} + \gamma \frac{w}{\|w\|}
+\end{equation*}
+
+Since $x_{+}$ lies on the margin of the positive class, it satisfies the equation $w^t \cdot x_{+} + b = 1$. Taking these two equations together, we can derive the following equation:
+\begin{align*}
+    w^t \cdot \left(x_{-} + \gamma \frac{w}{\|w\|}\right) + b &= 1 \\
+    w^t \cdot x_{-} + \gamma \frac{w^t \cdot w}{\|w\|} + b &= 1\\
+    w^t \cdot x_{-} + \gamma \|w\| + b &= 1
+\end{align*}
+
+Taking into account that $x_{-}$ is a support vector from the negative class, it satisfies the equation $w^t \cdot x_{-} + b = -1$. Substituting this into the previous equation, we get:
+\begin{align*}
+    -1 + \gamma \|w\| &= 1 \Longrightarrow \gamma = \frac{2}{\|w\|}
+\end{align*}
+
+Taking into account that the margin $\gamma$ should be maximized, the optimal hyperplane can be found. An important parameter of the SVM algorithm is the regularization parameter $C$, which controls the trade-off between maximizing the margin and minimizing the classification error on the training data.
+\begin{itemize}
+    \item A small value of $C$ allows for a larger margin, even if it means that some data points are misclassified. This can lead to better generalization on unseen data, as the model is less likely to overfit the training data.
+    \item A large value of $C$ forces the model to classify all training data points correctly, which can lead to a smaller margin and potentially overfitting the training data.
+\end{itemize}
+
+The selection of the regularization parameter $C$ is crucial for the performance of the SVM model. Lastly, it should be noted that SVM can be extended to handle non-linearly separable data by using kernel functions, which implicitly map the input features into a higher-dimensional space where a linear separation is possible.
+
+\subsection{Decision Trees}
+
+Decision Trees are a type of classification algorithm that uses a tree-like model of decisions and their possible consequences. The structure of a decision tree consists of nodes and branches:
+\begin{itemize}
+    \item \ul{Root Node}: This is the topmost node of the tree, which represents the entire dataset. It is the starting point for making predictions.
+    \item \ul{Internal Nodes}: These nodes represent the features or attributes used to split the data. Each internal node corresponds to a specific feature and a threshold value that is used to divide the data into subsets.
+    \item \ul{Leaf Nodes}: These nodes represent the final output of the tree, which is the predicted class label for the data points that reach that node.
+\end{itemize}
+
+The decision tree is constructed by recursively splitting the dataset based on the features that provide the best separation of the classes. The splitting process continues until a stopping criterion is met, such as:
+\begin{itemize}
+    \item All data points in a node belong to the same class.
+    \item The maximum depth of the tree is reached.
+    \item The minimum number of data points required to split a node is not met.
+\end{itemize}
+
+As happened with kNN, the decision tree algorithm can be used for both classification and regression tasks.
+\begin{itemize}
+    \item In classification tasks, the predicted class label for a data point is determined by the majority class of the data points that reach the corresponding leaf node.
+    \item In regression tasks, the predicted value for a data point is determined by the average value of the data points that reach the corresponding leaf node.
+\end{itemize}
+
+The decision tree algorithm has several advantages, such as being easy to interpret and visualize, handling both numerical and categorical data, and being able to capture non-linear relationships between features. However, it can also be prone to overfitting and the resulting tree is usually instable, as small changes in the data can lead to a completely different tree structure.
+
+\subsubsection{Splitting Criteria}
+
+Different criteria can be used to determine the best feature and threshold for splitting the data at each internal node of the decision tree. Some of the most common splitting criteria include:
+\begin{itemize}
+    \item \ul{Entropy}: This criterion measures the impurity of a node based on the distribution of class labels. The goal is to minimize the entropy after the split. It is calculated as:
+    \begin{equation*}
+        S(X) = -\sum_{x\in K} p(x) \log_{|K|} (p(x))
+    \end{equation*}
+    where:
+    \begin{itemize}
+        \item $K$ is the set of all possible class labels.
+        \item $S(X)$ is the entropy of the node.
+        \item $p(x)$ is the proportion of data points in the node that belong to class $x$.
+    \end{itemize}
+
+    It should be noted that the logarithm is taken with base $|K|$, and $0\cdot \log_{|K|}(0)$ is defined as $0$. The minus sign is used to ensure that the entropy is a non-negative value, as the logarithm of a probability is always negative or zero. The lower the entropy, the more pure the node is, meaning that it contains data points that mostly belong to a single class.
+
+    \item \ul{Gini Impurity}: This criterion measures the impurity of a node based on the probability of misclassifying a randomly chosen data point from the node. The goal is to minimize the Gini impurity after the split. It is calculated as:
+    \begin{equation*}
+        G(X) = 1 - \sum_{x\in K} p(x)^2
+    \end{equation*}
+    where:
+    \begin{itemize}
+        \item $K$ is the set of all possible class labels.
+        \item $G(X)$ is the Gini impurity of the node.
+        \item $p(x)$ is the proportion of data points in the node that belong to class $x$.
+    \end{itemize}
+
+    When the Gini impurity of every child node is known, the Gini impurity of the parent node can be calculated as the weighted average of the Gini impurity of the child nodes:
+    \begin{equation*}
+    G_{\text{parent}} = \sum_{i} \frac{|X_i|}{|X|} G(X_i)
+    \end{equation*}
+\end{itemize}
+
+\begin{observacion}
+    Both entropy and Gini impurity are commonly used splitting criteria for decision trees, and they often yield similar results. However, Gini impurity is computationally more efficient than entropy, as it does not involve calculating logarithms. As a result, Gini impurity is often preferred in practice, especially when dealing with large datasets.
+\end{observacion}
+
+\subsubsection{Information Gain}
+Information Gain is a measure used to evaluate the effectiveness of a feature in splitting the data. It is calculated as the difference between the entropy of the parent node and the weighted average entropy of the child nodes after the split. The formula for Information Gain is:
+\begin{equation*}
+    IG(X, A) = S(X) - \sum_{v\in V_A} \frac{|X_v|}{|X|} S(X_v)
+\end{equation*}
+where:
+\begin{itemize}
+    \item $X$ is the set of data points in the parent node.
+    \item $A$ is the feature being evaluated for the split.
+    \item $V_A$ is the set of all possible values for feature $A$.
+    \item $X_v$ is the subset of data points in the parent node that have value $v$ for feature $A$.
+\end{itemize}
+
+A higher Information Gain indicates that the feature is more effective in splitting the data, as it results in a greater reduction in entropy. Therefore, when constructing a decision tree, the feature with the highest Information Gain is typically selected for splitting at each internal node.
+
+\subsubsection{ID 3 Algorithm}
+The ID 3 (Iterative Dichotomiser 3) algorithm is a specific implementation of the decision tree algorithm. Its aim is to construct a decision tree where the leaf nodes are as pure as possible. The algorithm works as follows:
+\begin{enumerate}
+    \item Start with the entire dataset as the root node of the tree.
+    \item Calculate the Information Gain for each unused feature in the dataset and select the feature with the highest Information Gain to split the data at the current node.
+    \item Create child nodes for each possible value of the selected feature and partition the data accordingly.
+    \item Repeat steps 2 and 3 recursively for each child node until one of the following stopping criteria is met:
+    \begin{itemize}
+        \item All data points in the node belong to the same class (i.e., the node is pure).
+        \item There are no more features to split on.
+        \item The maximum depth of the tree is reached.
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{C 4.5 Algorithm}
+The C 4.5 algorithm is an extension of the ID 3 algorithm that addresses some of its limitations. It introduces several improvements in order to better handle continuous features, missing values and overfitting. It uses some base cases:
+\begin{enumerate}
+    \item If all data points in the node belong to the same class, the node is made a leaf node with that class label.
+    \item If no feature provides a positive Information Gain, the node is made a leaf node with the majority class label of the data points in that node.
+    \item If a previously unseen class is encountered (i.e., a class that is not present in the training data), the higher up node is made a leaf node with the majority class label of the data points in that node.
+\end{enumerate}
+
+Its main differences with the ID 3 algorithm are:
+\begin{itemize}
+    \item It uses the Gain Ratio instead of Information Gain to select the best feature for splitting. The Gain Ratio is calculated as the Information Gain divided by the intrinsic information of the feature, which helps to avoid bias towards features with many values.
+    \item It checks the bases cases before calculating the Gain Ratio, which can help to reduce the depth of the tree and improve its generalization.
+\end{itemize}
+
+\subsubsection{Bagging}
+
+\subsubsection{Random Forests}
