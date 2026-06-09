@@ -41,9 +41,9 @@ Absorption is the process by which light is absorbed by a medium, which means th
 \end{itemize}
 
 It represents the probability of light being absorbed per unit distance traveled in the medium. The higher the absorption coefficient, the more likely it is that a photon will be absorbed as it travels through the medium. The equation that describes the absorption of light in a medium is:
-\begin{equation*}
+\begin{equation}\label{eq:absorption_differential}
 \frac{dL(t)}{dt} = -\sigma_a(x(t), \omega) \cdot L(t)
-\end{equation*}
+\end{equation}
 where $L(t)$ is the radiance of the light at time $t$ and $x(t)$ is the position of the light at time $t$. After solving this differential equation, we obtain the Beer-Lambert Law~\eqref{eq:absorption}.
 \begin{equation}\label{eq:absorption}
     L(t) = L(0) \cdot e^{\displaystyle -\int_0^t \sigma_a(x(s), \omega) ds}
@@ -52,8 +52,65 @@ where $L(t)$ is the radiance of the light at time $t$ and $x(t)$ is the position
 \begin{observacion}
     Apart from the mathematical reasoning, the Beer-Lambert Law can be intuitively understood as follows: as light travels through a medium, it has a certain probability of being absorbed at each point along its path. The longer the path, the more opportunities there are for absorption to occur, which is why the radiance decreases exponentially with distance.
 \end{observacion}
-\subsection{Out-scattering}
 
 \subsection{Emission}
 
-\subsection{In-scattering}
+Emission is the process by which a medium emits light, which means that it generates light on its own. This process can be described by $L_E(x, \omega)$, which represents the radiance emitted by the medium at position $x$ in direction $\omega$. The equation that describes the emission of light in a medium is:
+\begin{equation*}
+\frac{dL(t)}{dt} = L_E(x(t), \omega)
+\end{equation*}
+where $L(t)$ is the radiance of the light at time $t$ and $x(t)$ is the position of the light at time $t$. After solving this differential equation, we obtain the following equation for emission:
+\begin{equation}\label{eq:emission}
+    L(t) = L(0) + \int_0^t L_E(x(s), \omega) ds
+\end{equation}
+
+\begin{observacion}
+    The equation for emission can be intuitively understood as follows: as light travels through a medium, it can be emitted at any point along its path. The total radiance at time $t$ is the initial radiance plus the contribution from all the emission that has occurred along the path up to time $t$.
+\end{observacion}
+
+\subsection{Scattering}
+
+Scattering is the process by which light is scattered by a medium, which means that it changes direction as it interacts with the particles in the medium. Even though it is just one sane phenomenon, two different types of scattering are usually defined.
+
+\subsubsection{Out-scattering}
+
+Out-scattering is the process by which light is scattered out of its original path, which means that it is redirected in a different direction. This process can be described by the scattering coefficient $\sigma_s(x, \omega)$. The equation that describes the out-scattering of light in a medium is:
+\begin{equation}\label{eq:out_scattering_differential}
+\frac{dL(t)}{dt} = -\sigma_s(x(t), \omega) \cdot L(t)
+\end{equation}
+
+Given its similarity with the absorption equation~\eqref{eq:absorption_differential}, a new coefficient called the extinction coefficient $\sigma_t(x, \omega)$ is defined as the sum of the absorption and scattering coefficients:
+\begin{equation*}
+\sigma_t(x, \omega) = \sigma_a(x, \omega) + \sigma_s(x, \omega)
+\end{equation*}
+
+Appart from the extinction coefficient, the \emph{albedo} of the medium is also defined as the ratio of the scattering coefficient to the extinction coefficient:
+\begin{equation*}
+\rho(x, \omega) = \frac{\sigma_s(x, \omega)}{\sigma_t(x, \omega)}
+\end{equation*}
+
+As with the absorption equation, after solving the out-scattering differential equation, we obtain the following generalization of the Beer-Lambert Law, which takes into account both absorption and out-scattering:
+\begin{equation}\label{eq:out_scattering}
+    L(t) = L(0) \cdot e^{\displaystyle -\int_0^t \sigma_t(x(s), \omega) ds}
+\end{equation}
+
+\subsubsection{In-scattering}
+In-scattering is the process by which light is scattered into the original path, which means that it is redirected from a different direction into the original path. This process can be described by the phase function\footnote{Equivalent of the BRDF.} $p(x, \omega, \omega')$, which represents the probability of light being scattered from direction $\omega'$ into direction $\omega$ at position $x$. The equation that describes the in-scattering of light in a medium is:
+\begin{equation}
+    L(t) = \sigma_s(x(t), \omega) \cdot \int_{\bb{S}^2} p(x(t), \omega, \omega') \cdot L(t) \ d\omega'
+\end{equation}
+\begin{observacion}
+    The equation for in-scattering can be intuitively understood as follows: as light travels through a medium, it can be scattered into its original path from any direction. The total radiance at time $t$ is the contribution from all the in-scattering that has occurred along the path up to time $t$.
+\end{observacion}
+
+\subsection{The Volumetric Rendering Equation}
+
+The volumetric rendering equation is a generalization of the rendering equation that takes into account the interactions of light with participating media. The ray is parametrized, and goes from $t=s_0$ to $t=s$, where $s_0$ is the point where the ray enters the medium and $s$ is the point where the ray exits the medium to reach the camera. The volumetric rendering equation is given by:
+\begin{equation}\label{eq:volumetric_rendering_equation}
+L(s) = L(s_0) \cdot e^{\displaystyle -\int_{s_0}^s \sigma_t(x(t), \omega) dt} + \int_{s_0}^s \left(L_E(x(t), \omega) \cdot e^{\displaystyle -\int_t^s \sigma_t(x(u), \omega) du} \right) dt
+\end{equation}
+where $L(s)$ is the radiance at the point where the ray exits the medium (which is the point that reaches the camera) and $L(s_0)$ is the radiance at the point where the ray enters the medium. It has two terms:
+\begin{itemize}
+    \item The first term represents the contribution of the radiance that enters the medium at $s_0$ and is attenuated by the medium as it travels to $s$.
+    \item The second term represents the contribution of the radiance that is emitted by the medium along the path from $s_0$ to $s$, and is also attenuated by the medium as it travels to $s$.
+\end{itemize}
