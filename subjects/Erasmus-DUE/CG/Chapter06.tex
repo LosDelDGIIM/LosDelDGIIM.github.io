@@ -103,7 +103,7 @@ In-scattering is the process by which light is scattered into the original path,
     The equation for in-scattering can be intuitively understood as follows: as light travels through a medium, it can be scattered into its original path from any direction. The total radiance at time $t$ is the contribution from all the in-scattering that has occurred along the path up to time $t$.
 \end{observacion}
 
-\subsection{The Volumetric Rendering Equation}
+\section{The Volumetric Rendering Equation}
 
 The volumetric rendering equation is a generalization of the rendering equation that takes into account the interactions of light with participating media. The ray is parametrized, and goes from $t=s_0$ to $t=s$, where $s_0$ is the point where the ray enters the medium and $s$ is the point where the ray exits the medium to reach the camera. The volumetric rendering equation is given by:
 \begin{equation}\label{eq:volumetric_rendering_equation}
@@ -114,3 +114,192 @@ where $L(s)$ is the radiance at the point where the ray exits the medium (which 
     \item The first term represents the contribution of the radiance that enters the medium at $s_0$ and is attenuated by the medium as it travels to $s$.
     \item The second term represents the contribution of the radiance that is emitted by the medium along the path from $s_0$ to $s$, and is also attenuated by the medium as it travels to $s$.
 \end{itemize}
+
+\section{Ray Casting Method}
+
+The volumetric rendering equation can be accurate, but has no analytical solution, which means that it cannot be solved in a closed form. Therefore, numerical methods are needed to approximate the solution. One of the most common approaches is the ray casting method, which \emph{discretizes the path of the ray into small segments having constant opacity and emission}. The segments are usually equidistant, but they can also be adaptive.
+
+The opacity and emission of the medium are stored in a 3D grid called a \emph{voxel grid}, which is a 3D array of voxels (volumetric pixels) that represent the properties of the medium at different points in space. In each segment of the ray, a tri-linear interpolation is performed to compute the opacity and emission of the medium at that point. As the Figure~\ref{fig:tri_linear_interpolation} shows, the tri-linear interpolation is performed by taking the eight vertices of the cube that contains the point where the interpolation is performed, and interpolating then in three dimensions ($x$, $y$, $z$) to obtain the value at the desired point.
+\begin{figure}
+    \centering
+    \begin{tikzpicture}[
+        % Definición de la perspectiva del sistema de coordenadas
+        x={(-0.5cm,-0.3cm)}, y={(1cm,0cm)}, z={(0cm,1cm)},
+        scale=3,
+        -stealth
+    ]
+
+        % --- COORDENADAS DE LOS VÉRTICES DEL CUBO ---
+        % Base inferior (z=0)
+        \coordinate (A) at (0,0,0);
+        \coordinate (B) at (1,0,0);
+        \coordinate (C) at (1,1,0);
+        \coordinate (D) at (0,1,0);
+        % Tapa superior (z=1)
+        \coordinate (E) at (0,0,1);
+        \coordinate (F) at (1,0,1);
+        \coordinate (G) at (1,1,1);
+        \coordinate (H) at (0,1,1);
+
+        % --- COORDENADAS DEL PLANO INTERMEDIO ---
+        % El plano corta a la mitad de las aristas en el eje Y (y=0.5)
+        \coordinate (P1) at (0,0.5,0);
+        \coordinate (P2) at (1,0.5,0);
+        \coordinate (P3) at (1,0.5,1);
+        \coordinate (P4) at (0,0.5,1);
+
+        % --- DIBUJO DEL FONDO Y ARISTAS OCULTAS ---
+        % Aristas traseras del cubo (líneas continuas, pero van detrás del plano)
+        \draw[thick, black] (A) -- (B);
+        \draw[thick, black] (A) -- (D);
+        \draw[thick, black] (A) -- (E);
+
+        % --- DIBUJO DEL PLANO VERDE DE INTERSECCIÓN ---
+        \fill[green!60!black, opacity=0.3] (P1) -- (P2) -- (P3) -- (P4) -- cycle;
+        % Contorno del plano (discontinuo con cruces 'x' conceptuales)
+        \draw[dashed, thick, black] (P1) -- (P2) -- (P3) -- (P4) -- cycle;
+        
+        % Marcadores 'x' en las esquinas del plano
+        \foreach \p in {P1,P2,P3,P4} {
+            \node[black] at (\p) {$\times$};
+        }
+
+        % --- DIBUJO DEL RESTO DEL CUBO (FRENTE) ---
+        \draw[thick, black] (B) -- (C) -- (D);
+        \draw[thick, black] (E) -- (F) -- (G) -- (H) -- cycle;
+        \draw[thick, black] (B) -- (F);
+        \draw[thick, black] (C) -- (G);
+        \draw[thick, black] (D) -- (H);
+
+        % --- PLANO DE INTERSECCIÓN: LÍNEA CENTRAL ---
+        % Línea punteada horizontal en medio del plano verde
+        \coordinate (M1) at (0,0.5,0.5);
+        \coordinate (M2) at (1,0.5,0.5);
+        \draw[dotted, thick, black] (M1) -- (M2);
+        \node[black] at (M1) {$\times$};
+        \node[black] at (M2) {$\times$};
+
+        % --- RECTA QUE ATRAVIESA EL CUBO ---
+        % Punto azul de intersección en la línea central
+        \coordinate (BlueDot) at (0.54, 0.5, 0.5); % Ajustado visualmente al centro
+
+        % --- PUNTOS Y NODOS (VÉRTICES Y MARCADORES) ---
+        % Vértices del cubo (Círculos verdes/oliva como en la imagen original)
+        % Vértices del cubo
+        \foreach \v in {A,B,C,D,E,F,G,H} {
+            \node[
+                circle,
+                draw=black,
+                fill=olive!60!white,
+                thick,
+                inner sep=1.5pt,
+                transform shape=false
+            ] at (\v) {};
+        }
+
+        % Punto azul destacado
+        \node[
+            circle,
+            draw=cyan,
+            fill=cyan,
+            inner sep=1.5pt,
+            transform shape=false
+        ] at (BlueDot) {};
+
+    \end{tikzpicture}
+    \caption{Tri-linear interpolation in a voxel grid. The blue dot represents the sample point where the interpolation is performed.}
+    \label{fig:tri_linear_interpolation}
+\end{figure}
+
+Once the opacity and emission of the medium at each segment of the ray are computed, the color and opacity along the ray must be accumulated to obtain the final color that reaches the camera, which is called \emph{compositing}. There are two main approaches to compositing: front-to-back and back-to-front.
+
+\subsection{Back-to-front compositing}
+
+In back-to-front compositing, the segments of the ray are processed from the farthest to the nearest, which means that the contribution of each segment is added to the final color after processing all the segments. The equation for back-to-front compositing in a segment with opacity $\alpha$ and color $C$ is:
+\begin{equation*}
+C_{\text{out}} = (1 - \alpha) \cdot C_{\text{in}} + \alpha \cdot C
+\end{equation*}
+where $C_{\text{in}}$ is the color that has been accumulated so far, and $C_{\text{out}}$ is the new accumulated color after processing the current segment.
+
+\subsection{Front-to-back compositing}
+
+In front-to-back compositing, the segments of the ray are processed from the nearest to the farthest, which means that the contribution of each segment is added to the final color as soon as it is processed. Two equations are needed for front-to-back compositing: one for the color and another for the opacity. The equations for front-to-back compositing in a segment with opacity $\alpha$ and color $C$ are:
+\begin{align*}
+C_{\text{out}} &= C_{\text{in}} + (1 - \alpha_{\text{in}}) \cdot \alpha \cdot C \\
+\alpha_{\text{out}} &= \alpha_{\text{in}} + (1 - \alpha_{\text{in}}) \cdot \alpha
+\end{align*}
+where $C_{\text{in}}$ and $\alpha_{\text{in}}$ are the color and opacity that have been accumulated so far, and $C_{\text{out}}$ and $\alpha_{\text{out}}$ are the new accumulated color and opacity after processing the current segment.
+
+\subsubsection{Early ray termination}
+One of the advantages of front-to-back compositing is that it allows for early ray termination, which means that if the accumulated opacity reaches a certain threshold (usually close to 1), the ray can be terminated early, as it is unlikely that any further contribution will significantly affect the final color. This can significantly reduce the computational cost of rendering scenes with dense participating media, as it avoids unnecessary calculations for segments that would not contribute much to the final image.
+
+This can't be done with back-to-front compositing, as the segments are processed in the opposite order, which means that the accumulated opacity is not available until all the segments have been processed.
+
+\subsubsection{Algorithm}
+
+Given the advantages of front-to-back compositing, it is the most commonly used approach in ray casting methods. In order to implement front-to-back compositing, the casted ray needs to be computed. In order to do so, two aspects are needed:
+\begin{itemize}
+    \item The entry point of the ray into the volume. This can be computed representing the volume with its coordinates as \texttt{rgb} values. The final color written in the buffer represents the coordinates of the entry point of the ray into the volume.
+    \item The direction of the ray. In order to do so, a second point is needed. There are two common approaches to compute this second point:
+    \begin{itemize}
+        \item The camera position can be used as the second point, so the direction of the ray is computed as the vector from the camera position to the entry point of the ray into the volume.
+        \item The exit point of the ray from the volume can be computed the same way as the entry point (but only representing the back faces of the volume), and then the direction of the ray is computed as the vector from the entry point to the exit point.
+    \end{itemize}
+\end{itemize}
+
+Once the ray is computed, it can be discretized into segments, and the opacity and emission of the medium at each segment can be computed using tri-linear interpolation. Finally, front-to-back compositing can be performed to accumulate the color and opacity along the ray, and early ray termination can be applied when the accumulated opacity reaches a certain threshold.
+
+\section{Volumes Generation: Fractals}
+
+During the sections above, the reader has learnt how to render volumes, but these volumes still need to be generated. Artificial analytical volumes as spheres or boxes can be easily generated, but they do not resemble the typical participating media that we can find in the real world, such as smoke, fog, or clouds. One of the most common approaches to generate more realistic volumes is to use fractals, which are mathematical objects that exhibit self-similarity at different scales. The fractal synthesis process is known as \emph{Rescale-and-add}.
+
+The rescale-and-add process is a method of generating fractals by repeatedly rescaling and adding a base image. This process creates a fractal-like structure that can produce realistic volume features. The process is iterative and involves the following steps:
+\begin{enumerate}
+    \item Start with a simple base, such as simple noise or some filter.
+    \item Rescale the base to half the size of the original.
+    \item Rescale the rescaled base to half its size.
+    \item ...
+    \item The smaller the size, the more detail is added to the final volume. This process is repeated until the desired level of detail is achieved.
+    \item The final volume is obtained by summing all the rescaled versions, but the smaller will have more influence on the final volume than the larger ones. This is because the smaller versions add more detail to the volume, while the larger versions provide a rougher structure.
+\end{enumerate}
+
+The rescale-and-add process can be implemented using the Equation~\eqref{eq:rescale-and-add}, which represents the color of the volume at a given point $(x, y, z)$ as the sum of the contributions from all the rescaled versions of the base image. The contribution of each rescaled version is weighted by a factor that decreases with each iteration, which ensures that the smaller versions have more influence on the final volume than the larger ones.
+\begin{equation}
+    C(x, y, z) = \sum_{i=1}^{n} \frac{1}{2^{i-1}} \cdot F\left( \frac{1}{2^{n-i}} x, \frac{1}{2^{n-i}}\cdot y, \frac{1}{2^{n-i}}\cdot z \right)
+    \label{eq:rescale-and-add}
+\end{equation}
+
+The function $F$ represents the base image, which can be generated using various different functions, such as filtered white noise, Perlin noise, images... The choice of the base image will affect the final appearance of the volume, as it determines the overall structure and features of the participating medium.
+
+\subsection{Parameters and their effects}
+
+In fact, the rescale-and-add process has four parameters that can be adjusted to achieve different types of volumes:
+\begin{itemize}
+    \item Base function $F$.
+    \item Roughness $r$: This parameter controls the influence of the smaller rescaled versions on the final volume.
+    \item Octaves $o$: This parameter determines the number of rescaled versions that are added together to create the final volume.
+    \item Lacunarity $l$: This parameter controls the rescaling factor between successive octaves.
+\end{itemize}
+
+Using those parameters, we can create a wide variety of volumes. The Equation~\eqref{eq:rescale-and-add-parameters} represents the color of the volume at a given point $(x, y, z)$ with the parameters included:
+\begin{equation}
+    C(x, y, z) = \sum_{i=1}^{o} \frac{1}{2}\cdot r^{i-1} \cdot F\left( \frac{1}{l^{o-i}} x, \frac{1}{l^{o-i}} y, \frac{1}{l^{o-i}} z \right)
+    \label{eq:rescale-and-add-parameters}
+\end{equation}
+
+We can observe that the Equation~\eqref{eq:rescale-and-add} is a special case of the Equation~\eqref{eq:rescale-and-add-parameters} when $r = 0.5$, $o = n$ and $l = 2$.
+
+\subsection{Multifractals}
+
+Multifractals are a generalization of fractals that can model more complex and heterogeneous structures. In the context of volume synthesis, multifractals can be used to create volumes with varying degrees of roughness and detail across different regions. In order to achieve this, we can have different base functions $F_i(x,y,z)$, each one with its own weight $a_i(x,y,z)$, which determines the influence of each base function on each point of the volume. The functions $a_i$ have to satisfy the following conditions forall point $(x,y,z)$:
+\begin{enumerate}
+    \item $a_i(x,y,z) \geq 0\qquad \forall i$, which means that the weights must be non-negative.
+    \item $\sum\limits_{i} a_i(x,y,z) = 1$, which means that the weights must sum to 1 at each point.
+\end{enumerate}
+
+Under these conditions, the function $F$ of the Equation~\eqref{eq:rescale-and-add-parameters} can be defined as a weighted sum of the base functions:
+\begin{equation}
+    F(x,y,z) = \sum_{i} a_i(x,y,z) \cdot F_i(x,y,z)
+\end{equation}
+
+This allows for the creation of different types of volumes in different regions, as the weights can be adjusted to give more influence to certain base functions in specific areas.
