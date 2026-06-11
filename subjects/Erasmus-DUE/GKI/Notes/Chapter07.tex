@@ -1,0 +1,144 @@
+\chapter{Regression}
+
+During this chapter, we will cover regression, which is a fundamental technique in machine learning used to model and analyze the relationships between variables. We will explore various methods for regression, including linear regression, regularized regression techniques, and outlier detection methods. Additionally, we will discuss classification methods that can be adapted for regression tasks.
+
+\section{Distances}
+
+Before diving into regression, it's essential to understand the concept of distances, as they play a crucial role in many regression algorithms. Different types of distances can be used to measure the similarity or dissimilarity between data points, which can affect the performance of regression models. Four conditions for a function to be considered a distance are:
+\begin{enumerate}
+    \item \ul{Non-negativity}: $d(x, y) \geq 0$ for all $x, y$.
+    \item \ul{Identity of indiscernibles}: $d(x, y) = 0$ if and only if $x = y$.
+    \item \ul{Symmetry}: $d(x, y) = d(y, x)$ for all $x, y$.
+    \item \ul{Triangle inequality}: $d(x, z) \leq d(x, y) + d(y, z)$ for all $x, y, z$.
+\end{enumerate}
+
+Some common types of distances include:
+\begin{itemize}
+    \item \ul{Euclidean Distance ($L^2$)}: The straight-line distance between two points in a multi-dimensional space, based on the Pythagorean theorem.
+    \begin{equation*}
+        d(x, y) = \sqrt{\sum_{i=1}^{n} (x_i - y_i)^2}
+    \end{equation*}
+
+    \item \ul{Minkowski Distance ($L^p$)}: A generalization of the Euclidean distance that includes other distance metrics as special cases.
+    \begin{equation*}
+        d(x, y) = \left( \sum_{i=1}^{n} |x_i - y_i|^p \right)^{1/p}
+    \end{equation*}
+
+    \item \ul{Manhattan Distance ($L^1$)}: The sum of the absolute differences between the coordinates of two points, often used in grid-like path scenarios.
+    \begin{equation*}
+        d(x, y) = \sum_{i=1}^{n} |x_i - y_i|
+    \end{equation*}
+
+    \item \ul{Max-Distance}: This distance measures the maximum difference between the coordinates of two points, also known as Chebyshev distance.
+    \begin{equation*}
+        d(x, y) = \max_{i} |x_i - y_i|
+    \end{equation*}
+
+    \item \ul{Min-Distance}: It measures the minimum difference between the coordinates of two points.
+    \begin{equation*}
+        d(x, y) = \min_{i} |x_i - y_i|
+    \end{equation*}
+
+    It should be noted that, strictly speaking, the Min-Distance does not satisfy all the conditions to be considered a true distance. However, it is still a useful metric in certain contexts.
+
+    \item \ul{Cosine Similarity}: Measures the cosine of the angle between two vectors, which is a measure of their orientation rather than their magnitude. It is commonly used in text analysis and high-dimensional spaces.
+    \begin{equation*}
+        d(x, y) = \cos(\theta) = \frac{x \cdot y}{\|x\| \|y\|}
+    \end{equation*}
+\end{itemize}
+
+Some specific distances for particular types of data include:
+\begin{itemize}
+    \item \ul{Hamming Distance}: Used for discrete objects or strings, it counts the number of positions at which the corresponding symbols are different.
+    \begin{equation*}
+        d(x, y) = \sum_{i=1}^{n} \delta(x_i, y_i)
+    \end{equation*}
+    where $\delta(x_i, y_i) = 1$ if $x_i \neq y_i$ and $0$ otherwise. For instance, the Hamming distance between ``kitten'' and ``sitting'' is 3.
+
+    \item \ul{Mahalanobis Distance}: A distance measure that accounts for the correlations between variables and the scale of the data, making it useful for multivariate data.
+    \begin{equation*}
+        d(x, y) = \sqrt{(x - y)^T \Sigma^{-1} (x - y)}
+    \end{equation*}
+    where $\Sigma$ is the covariance matrix of the data:
+    \begin{equation*}
+        \Sigma = E[(X - \mu)(X - \mu)^T]
+    \end{equation*}
+
+    It takes into account the variance of each variable and the covariance between variables, making it particularly effective for identifying outliers in multivariate data.
+\end{itemize}
+
+\subsection{Similarity Measures}
+
+In addition to distances, similarity measures are also crucial in regression and other machine learning tasks. They quantify how alike a dataset is, which can be particularly useful in clustering and classification tasks. Some common similarity measures include:
+\begin{itemize}
+    \item \ul{Entropy}: A measure of uncertainty or randomness in a dataset, often used in decision tree algorithms to determine the best splits.
+    \begin{equation*}
+        S(x) = -\sum_{x\in X} P(x) \log P(x)
+    \end{equation*}
+    where $P(x)$ is the probability of occurrence of the value $x$ in the dataset.
+
+    Depending on the base of the logarithm used, it is measured in bits (base 2), nats (base $e$), or bans (base 10).
+
+    \item \ul{Negentropy}: A measure of the degree of order or structure in a dataset, defined as the difference between the maximum possible entropy and the actual entropy of the dataset.
+    \begin{equation*}
+        N(x) = S_{\text{max}} - S(x)
+    \end{equation*}
+    where $S_{\text{max}}$ is the maximum entropy of the dataset, which occurs when all outcomes are equally likely.
+
+    \item \ul{Kullback-Leibler Divergence (Relative Entropy)}: A measure of how one probability distribution $Q(x)$ diverges from a reference probability distribution $P(x)$.
+    \begin{equation*}
+        D_{KL}(P \| Q) = \sum_{x} P(x) \log \frac{P(x)}{Q(x)}
+    \end{equation*}
+    It quantifies the amount of information lost when $Q$ is used to approximate $P$.
+
+    \item \ul{Cross-Entropy}: A measure of the entropy of an approximation $Q(x)$ relative to the true distribution $P(x)$, often used as a loss function in classification problems.
+    \begin{equation*}
+        H(P, Q) = -\sum_{x} P(x) \log Q(x)
+    \end{equation*}
+    It measures the average number of bits needed to identify an event from a set of possibilities, given a predicted distribution $Q$ instead of the true distribution $P$. It should be noted that:
+    \begin{equation*}
+        H(P, Q) = S(P) + D_{KL}(P \| Q)
+    \end{equation*}
+    
+    \item \ul{Mutual Information}: A measure of the mutual dependence between two variables, quantifying the amount of information obtained about one variable through the other.
+    \begin{equation*}
+        MI(X; Y) = \sum_{x \in X} \sum_{y\in Y} P(x, y) \log\left(\frac{P(x, y)}{P(x) P(y)}\right)
+    \end{equation*}
+
+    If $MI(X; Y) = 0$, it indicates that the variables are independent, while a higher value indicates a stronger dependency between the variables, and therefore more shared information.
+\end{itemize}
+
+
+\section{Dimensionality Reduction}
+
+\begin{comment}
+4. Reducción de Dimensionalidad y Descomposición de MatricesTécnicas matemáticas para proyectar datos de alta dimensión en espacios más pequeños (2D o 3D) facilitando su procesamiento o visualización:  PCA (Principal Component Analysis): Técnica lineal basada en valores y vectores propios (Eigenvalues/Eigenvectors). Incluye aplicaciones prácticas como los Eigenfaces para el reconocimiento y recombinación de rostros.  FA (Factor Analysis): Descomposición basada en un modelo gaussiano para cuando calcular componentes completos cuesta demasiado tiempo de cómputo.  FastICA: Análisis de componentes independientes optimizado mediante la minimización de la información mutua.  SVD (Singular Value Decomposition): Descomposición matricial generalizada en matrices de rotación y escalado.  Métodos No Lineales modernos:t-SNE: Proyección no lineal orientada a conservar estructuras locales y revelar clústeres ocultos mediante distribuciones t-Student.  UMAP: Extensión más rápida que t-SNE que equilibra la conservación de la estructura local y la global.  
+\end{comment}
+
+\section{Linear Regression}
+
+\begin{comment}
+4. El Objetivo Principal: Modelado Predictivo (Regresión)Aquí se aplica todo lo anterior. Usando las distancias y los datos (ya limpios o reducidos), intentamos predecir un valor numérico continuo.Regresión Lineal (Simple y Múltiple): Intenta trazar la línea perfecta minimizando la distancia Euclídea ($L^2$) al cuadrado de los errores.Problema del sobreajuste (Overfitting): Si el modelo se vuelve demasiado complejo debido a que mantuvimos demasiadas variables (no filtramos bien en el bloque de dimensionalidad), el modelo falla.Solución $\rightarrow$ Regresión Regularizada:Lasso: Añade una penalización basada en distancia Manhattan ($L^1$). Consigue que algunas variables valgan cero (hace una reducción de dimensionalidad integrada).Ridge: Añade una penalización basada en distancia Euclídea ($L^2$). Evita que las variables tengan demasiado peso si están muy correlacionadas (concepto ligado a Mahalanobis).ElasticNet: Equilibra ambas soluciones.
+\end{comment}
+
+\begin{comment}
+    Regresión Regularizada:Lasso (Penalización L1): Reduce coeficientes a cero absoluto sirviendo como selección automática de características.  Ridge (Penalización L2): Encoge coeficientes hacia cero sin eliminarlos por completo, ideal para combatir la multicolinealidad.  ElasticNet: Combinación balanceada de Lasso y Ridge.  Regresión Robusta: RANSAC, algoritmo diseñado para ajustar modelos descartando de forma iterativa los valores atípicos (outliers).  
+\end{comment}
+
+\section{Outlier detection}
+
+\begin{comment}
+LOF (Local Outlier Factor): Identificación basada en la densidad local de los vecinos.  Isolation Forest: Algoritmo no supervisado que aísla anomalías mediante particiones aleatorias (árboles de aislamiento).  
+\end{comment}
+
+\section{Classification methods used for regression}
+
+
+
+
+LASSO
+Ridge
+Elastic-Net
+RANSAC
+Non linear regression
+Logistic regression
