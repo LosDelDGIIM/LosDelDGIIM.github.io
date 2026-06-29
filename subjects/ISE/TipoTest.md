@@ -888,7 +888,7 @@ Nota: números enteros no negativos son: \\(0, 1, 2, 3, \dots\\)
     - (x) Verdadero
     - ( ) Falso
 
-52. Los monitores de actividad por muestreo muestran informacion exacta
+52. Los monitores de actividad por muestreo muestran información exacta
     - ( ) Verdadero
     - (x) Falso
 
