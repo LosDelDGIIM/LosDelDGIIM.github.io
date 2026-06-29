@@ -216,7 +216,7 @@ acap         up      1:00     3  idle  atcgrid[1-3]
 ```
 El `*` nos indica cuál es la cola por defecto del sistema.
 
-#### Obtener informacion sobre trabajos
+#### Obtener información sobre trabajos
 Para obtener información sobre los trabajos realizados y por realizar, así como sus identificadores de trabajos:
 ```bash
 qstat
