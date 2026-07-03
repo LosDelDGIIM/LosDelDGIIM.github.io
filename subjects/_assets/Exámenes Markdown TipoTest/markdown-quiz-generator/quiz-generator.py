@@ -43,6 +43,8 @@ def render_test(file_name: str, markdown_content: str) -> None:
         if stripped_line.lower().startswith("explicación:"):
             continue
 
+
+
         # Si pasa todos los filtros, mantenemos la línea original (conservando sus espacios)
         filtered_lines.append(line)
 

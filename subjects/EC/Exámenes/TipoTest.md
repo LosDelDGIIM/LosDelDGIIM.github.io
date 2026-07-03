@@ -31,7 +31,10 @@ ______
     - ( )  `ESP` no se puede usar como registro índice.
     - ( )  El factor de escala `S` puede ser 1, 2, 4, 8.
 
-Explicacion: `EBP` sí puede usarse como base, ya que es un registro más. No obstante, `ESP` no puede usarse como índice, ya que es el puntero de pila y y, por tanto, su modificación provocaría graves errores en la ejecución del programa.
+<details>
+  <summary>Respuesta</summary>
+  <p>`EBP` sí puede usarse como base, ya que es un registro más. No obstante, `ESP` no puede usarse como índice, ya que es el puntero de pila y y, por tanto, su modificación provocaría graves errores en la ejecución del programa.</p>
+</details>
 
 2. La extensión de signo a m bits de un número original N de n bits, con m > n, consiste en:
     - ( )  Realizar la operación \\(2^{m– N}\\)
@@ -39,7 +42,10 @@ Explicacion: `EBP` sí puede usarse como base, ya que es un registro más. No ob
     - (x)  Incrementar la cantidad de bits a m preservando el signo y el valor del número.
     - ( )  Incrementar la cantidad de bits a m rellenando con unos por la izquierda.
 
-Explicacion: No siempre tiene que rellenar con unos, ya que el número original puede ser positivo.
+<details>
+  <summary>Respuesta</summary>
+  <p>No siempre tiene que rellenar con unos, ya que el número original puede ser positivo.</p>
+</details>
 
 3. En x86-64, ¿cuál de los siguientes fragmentos de programa tiene un efecto sobre los flags distinto al resto?
     - ( )  `sub %edi,%edi` <br> `adc $0xFFFFFFFF, %edi`
@@ -47,7 +53,10 @@ Explicacion: No siempre tiene que rellenar con unos, ya que el número original 
     - ( )  `mov$-1,%edi` <br> `add $0, %edi`
     - ( )  `mov $0, %edi` <br> `sub $1, %edi`
 
-Explicacion: Todas las órdenes descritas ponen a 1 el valor de `SF` excepto la segunda, ya que la orden `mov` tan solo mueve datos, no modifica las banderas.
+<details>
+  <summary>Respuesta</summary>
+  <p>Todas las órdenes descritas ponen a 1 el valor de `SF` excepto la segunda, ya que la orden `mov` tan solo mueve datos, no modifica las banderas.</p>
+</details>
 
 4. Si `%rsp` vale `0xdeadbeefdeadd0d0`, ¿cuál será su nuevo valor después de que se ejecute `pushq %rbx?`
     - ( )  `0xdeadbeefdeadd0d4`
@@ -55,7 +64,10 @@ Explicacion: Todas las órdenes descritas ponen a 1 el valor de `SF` excepto la 
     - ( )  `0xdeadbeefdeadd0cc`
     - (x)  `0xdeadbeefdeadd0c8`
 
-Explicacion: La pila crece hacia posiciones decrecientes. Por tanto, en este caso, el puntero se actualiza a `-8(%rsp)`.
+<details>
+  <summary>Respuesta</summary>
+  <p>La pila crece hacia posiciones decrecientes. Por tanto, en este caso, el puntero se actualiza a `-8(%rsp)`.</p>
+</details>
 
 5. ¿Cómo se devuelve en ensamblador x86-64 Linux `gcc` el valor de retorno de una función `long int` al terminar esta?
     - ( )  La instrucción `RET` lo almacena en un registro especial de retorno.
@@ -63,7 +75,10 @@ Explicacion: La pila crece hacia posiciones decrecientes. Por tanto, en este cas
     - ( )  Se almacena en pila justo encima de los argumentos de la función.
     - (x)  Ninguna de esas formas es correcta.
 
-Explicacion: Por convención, y al ser datos de tipo `long`, se guarda en el registro `%rax`.
+<details>
+  <summary>Respuesta</summary>
+  <p>Por convención, y al ser datos de tipo `long`, se guarda en el registro `%rax`.</p>
+</details>
 
 6. Comparando las convenciones de llamada de gcc Linux IA32 con x86-64 respecto a registros **(IA32 ya no entra)**.
     - ( )  En IA32 `%ebx` es salva-invocante, pero en x86-64 `%rbx` es salva-invocado.
@@ -71,7 +86,10 @@ Explicacion: Por convención, y al ser datos de tipo `long`, se guarda en el reg
     - ( )  En IA32 `%esi` es salva-invocado, y en x86-64 `%rsi` es salva-invocado también.
     - ( )  En IA32 `%ebp` es especial (marco de pila), y en x86-64 `%rbp` también.
 
-Explicacion: El IA32 actualmente no entra en la asignatura EC.
+<details>
+  <summary>Respuesta</summary>
+  <p>El IA32 actualmente no entra en la asignatura EC.</p>
+</details>
 
 7. Son funciones de la unidad de control:
     - ( )  La codificación de las instrucciones máquina.
@@ -79,7 +97,10 @@ Explicacion: El IA32 actualmente no entra en la asignatura EC.
     - (x)  El secuenciamiento de las instrucciones máquina.
     - ( )  Todas las respuestas son ciertas.
 
-Explicacion: La EC es la que se encarga de las señales de reloj, etc.
+<details>
+  <summary>Respuesta</summary>
+  <p>La EC es la que se encarga de las señales de reloj, etc.</p>
+</details>
 
 8. Respecto a `MBR` y `MAR`
     - ( )  Ambos son accesibles por el programador.
@@ -95,7 +116,10 @@ Probablemente se trate de una instrucción de:
     - ( )  Carga total.
     - ( )  Almacenamiento local.
 
-Explicacion: Se está llamando a una subrutina, ya la pila crece guardándose el valor de retorno de `pc`, y el `pc` se actualiza a donde tiene que saltar.
+<details>
+  <summary>Respuesta</summary>
+  <p>Se está llamando a una subrutina, ya la pila crece guardándose el valor de retorno de `pc`, y el `pc` se actualiza a donde tiene que saltar.</p>
+</details>
 
 10.  En una unidad de control microprogramada con formato de microinstrucciones vertical, un subcampo que debe especificar 16 señales de control codificadas de tal forma que pueda activarse sólo una o ninguna harbá de tener una anchura mínima de:
     - ( )  4 bits.
@@ -103,7 +127,10 @@ Explicacion: Se está llamando a una subrutina, ya la pila crece guardándose el
     - ( )  16 bits.
     - ( )  17 bits.
 
-Explicacion: Son 16 señales más el 0; por lo que son 17. Para codificar 17 posibilidades en binario, en necesiario tener en cuenta que se necesitan $log_2(17)$ redondeados hacia arriba bits. Es decir, nos hacen falta 5 bits.
+<details>
+  <summary>Respuesta</summary>
+  <p>Son 16 señales más el 0; por lo que son 17. Para codificar 17 posibilidades en binario, en necesiario tener en cuenta que se necesitan $log_2(17)$ redondeados hacia arriba bits. Es decir, nos hacen falta 5 bits.</p>
+</details>
 
 
 11. Dado un camino de datos concreto, un posible formato de microprogramación se caracteriza como horizontal o vertical según tenga más o menos (señalar la respuesta **falsa**)
@@ -124,7 +151,10 @@ Explicacion: Son 16 señales más el 0; por lo que son 17. Para codificar 17 pos
     - ( ) 4n/(5+n)
     - ( ) (5+n)/4t
 
-Explicacion: El número de operaciones en un procesador no segmentado sería 5 por el número de instrucciones. No obstante, 
+<details>
+  <summary>Respuesta</summary>
+  <p>El número de operaciones en un procesador no segmentado sería 5 por el número de instrucciones. No obstante,</p>
+</details>
 
 14. En un procesador con segmentación de cauce, aumentar el número de etapas (p.ej. de 2 a 4, o de 4 a 8), tiene en general como consecuencia:
     - (x) Un Incremendo De Las Prestaciones.
@@ -132,7 +162,10 @@ Explicacion: El número de operaciones en un procesador no segmentado sería 5 p
     - ( ) Una disminución en la posible dependencia de datos.
     - ( ) Una disminución de la máxima frecuencia de reloj a la que puede operar el cauce.
     
-Explicacion: Se pueden ejecutar más instrucciones simultáneamente, ya que en cada ciclo de reloj podrá entrar una nueva instrucción al cauce.
+<details>
+  <summary>Respuesta</summary>
+  <p>Se pueden ejecutar más instrucciones simultáneamente, ya que en cada ciclo de reloj podrá entrar una nueva instrucción al cauce.</p>
+</details>
 
 15. En la secuencia de instrucciones siguiente, siendo el primer registro el destino, ¿cuántos riesgos se dan?<br>
 <code>sub r2,r1,r3<br>or r8,r6,r2</code><br>
@@ -159,7 +192,10 @@ Explicacion: Se pueden ejecutar más instrucciones simultáneamente, ya que en c
     - ( ) indirecto a través de registro.
     - (x) directo (o absoluto)
 
-Explicacion: Son referentes al IA32, que actualmente no entra en la asignatura EC.
+<details>
+  <summary>Respuesta</summary>
+  <p>Son referentes al IA32, que actualmente no entra en la asignatura EC.</p>
+</details>
 
 19. La conexión entre un dispositivo de E/S y el procesador mediante bus:
     - ( ) Es difícil de expandir.
@@ -167,7 +203,10 @@ Explicacion: Son referentes al IA32, que actualmente no entra en la asignatura E
     - ( ) Requiere mucha circuitería.
     - ( ) Requiere multiplexores y demultiplexores para las señales de datos.
 
-Explicacion: Se pueden incluir más dispositivos, y mediante puertas lógicas podemos evitar cortocircuitos.
+<details>
+  <summary>Respuesta</summary>
+  <p>Se pueden incluir más dispositivos, y mediante puertas lógicas podemos evitar cortocircuitos.</p>
+</details>
 
 
 20. El fragmento de código ensamblador de un microprocesador de 8 bits:<br><code>lds IOBuf	; Apuntar puntero pila a ...área mem.intermedia<br>ldx Count	; Inicializar x-contador<br>poll lda a Status; Leer estado en A<br>bpl poll	; Signo (A) != 1 => repetir<br>lda a Data	; Leer dato en A<br>psh a		; transferir dato a pila<br>dex 		; decrementar contador x<br>bne poll	; Seguir leyendo si x!=0<br></code><br> Corresponde a:<br>
@@ -176,7 +215,10 @@ Explicacion: Se pueden incluir más dispositivos, y mediante puertas lógicas po
     - ( ) Entrada programada sin consulta de estado.
     - ( ) Salida programada con consulta de estado.
 
-Explicacion: Vemos que se consulta el estado y, si se da la condición, se sigue leyendo.
+<details>
+  <summary>Respuesta</summary>
+  <p>Vemos que se consulta el estado y, si se da la condición, se sigue leyendo.</p>
+</details>
 
 21. En la E/S controlada por interrupciones:
     - ( ) El controlador DMA transfiere bloques de datos por el bus del sistema.
@@ -246,7 +288,10 @@ exactamente:
     - ( ) Se usa como referencia un computador UltraSPARC II 300MHz, y para cada test se calcula el cociente entre el tiempo de ejecución en el computador a testear y en el de referencia.
     - (x) El resultado final es la media aritmética de las (12 ó 17) velocidades, bien sea de enteros ó de punto flotante (SPECint2006 ó SPECfp2006).
 
-Explicacion: No es la media aritmética, es la geométrica.
+<details>
+  <summary>Respuesta</summary>
+  <p>No es la media aritmética, es la geométrica.</p>
+</details>
 
 32. ¿En qué generación, dentro de la historia de los computadores digitales, aparecieron la microprogramación, la segmentación de cauce, la memoria cache, los S.O. multiusuario y la memoria virtual?
 
@@ -276,7 +321,10 @@ Explicacion: No es la media aritmética, es la geométrica.
     - ( ) `movl (%rdi, %rcx, 4), %edx`
     - ( ) `addq $1, %rcx`
 
-Explicacion: TERMINAR
+<details>
+  <summary>Respuesta</summary>
+  <p>TERMINAR</p>
+</details>
 
 36. Si la variable `val` está almacenada en `ebx` y la variable `x` está almacenada en `eax`, la sentencia `val ^= x;` se puede traducir a ensamblador como:
 
@@ -292,7 +340,10 @@ Explicacion: TERMINAR
     - ( ) `or $0b101, %edx`
     - (x) `or $0x20, %edx`
 
-Explicacion: En binario, tenemos que `0x20=0b10 0000`. Notemos que se empieza a contar desde 0.
+<details>
+  <summary>Respuesta</summary>
+  <p>En binario, tenemos que `0x20=0b10 0000`. Notemos que se empieza a contar desde 0.</p>
+</details>
 
 38. Si tenemos un número `n`, de 64 bits, almacenado en la pareja de registros `EDX:EAX` (`EDX` contiene los 32 bits más significativos y `EAX` los 32 bits menos significativos) y queremos realizar la división \\(n/2^{32}\\) entonces:
 
@@ -301,7 +352,10 @@ Explicacion: En binario, tenemos que `0x20=0b10 0000`. Notemos que se empieza a 
     - ( ) Podemos usar las instrucciones siguientes, pero sólo en el caso de que `n` sea un número con signo: <br><code>mov $0x100000000, %ecx<br>div %ecx</code>
     - ( ) Podemos usar las instrucciones siguientes, tanto si `n` es un número con signo como sin signo: <br><code>mov $0x100000000, %ecx<br>div %ecx</code>
 
-Explicacion: Al dividir entre $2^{32}$, es como desplazar hacia la derecha 32 bits. Los 32 LSB se perderán, quedando tan solo `EDX`. Además, el signo se mantiene, ya que el `MSB` de `n` sigue siendo el `MSB` de `EDX`. No obstante, el cociente ya está en 32 bits, no en 64.
+<details>
+  <summary>Respuesta</summary>
+  <p>Al dividir entre $2^{32}$, es como desplazar hacia la derecha 32 bits. Los 32 LSB se perderán, quedando tan solo `EDX`. Además, el signo se mantiene, ya que el `MSB` de `n` sigue siendo el `MSB` de `EDX`. No obstante, el cociente ya está en 32 bits, no en 64.</p>
+</details>
 
 39. ¿Dónde está ubicado el séptimo argumento a una función (suponer código ensamblador generado por gcc para x86-64) inmediatamente después de ejecutar la instrucción `call`?
 
@@ -310,7 +364,10 @@ Explicacion: Al dividir entre $2^{32}$, es como desplazar hacia la derecha 32 bi
     - (x) `%rsp + 0x8`
     - ( ) `%rsp - 0x8`
 
-Explicacion: Los 6 primeros son registros. El séptimo es el primero en la pila. Como el puntero de pila es `%rsp`, y la pila crece en direcciones decrecientes, tenemos que ha de sumársele 8 para acceder al último valor guardado.
+<details>
+  <summary>Respuesta</summary>
+  <p>Los 6 primeros son registros. El séptimo es el primero en la pila. Como el puntero de pila es `%rsp`, y la pila crece en direcciones decrecientes, tenemos que ha de sumársele 8 para acceder al último valor guardado.</p>
+</details>
 
 40. Dado el código C siguiente:<br><code>struct data {<br> char str[16];<br>};<br>char *f(struct data *ptr) {<br> return &(ptr->str[2]);<br>}</code><br>La función se traducirá a ensamblador de x86-64 como:
 
@@ -319,7 +376,10 @@ Explicacion: Los 6 primeros son registros. El séptimo es el primero en la pila.
     - ( ) `movq 2(%rdi), %rax` <br>`ret`
     - ( ) `leaq (,%rdi,2), %rax` <br>`ret`
 
-Explicacion: A la dirección de memoria de `ptr` (que está en `%rdi`), ha de sumársele 2, ya que los `char` se codifican con un byte. Por tanto, es `2(%rdi)`. Además, como no se quiere obtener el contenido, sino tan solo la dirección (`&`), no usa `movq` sino `leaq`.
+<details>
+  <summary>Respuesta</summary>
+  <p>A la dirección de memoria de `ptr` (que está en `%rdi`), ha de sumársele 2, ya que los `char` se codifican con un byte. Por tanto, es `2(%rdi)`. Además, como no se quiere obtener el contenido, sino tan solo la dirección (`&`), no usa `movq` sino `leaq`.</p>
+</details>
 
 41. Respecto a requisitos de alineamiento de structs en gcc/IA32 x86 y x86-64, alguna de las siguientes afirmaciones es falsa:
 
@@ -328,7 +388,10 @@ Explicacion: A la dirección de memoria de `ptr` (que está en `%rdi`), ha de su
     - ( ) En x86-64 Linux alinea `double` a 8x (Windows también).
     - ( ) En x86-64 Linux alinea `float` a 8x (Windows también).
 
-Explicacion: Windows también lo alinea a `4x`.
+<details>
+  <summary>Respuesta</summary>
+  <p>Windows también lo alinea a `4x`.</p>
+</details>
 
 42. Si la estructura struct `a` ocupa un espacio de 28 bytes en memoria, ¿cuántos bytes ocupa la siguiente estructura struct `b` cuando se compila en 64 bits? <br><code>struct b {<br> struct a a1;<br> int i;<br> struct a a2;<br>};</code>
 
@@ -337,7 +400,10 @@ Explicacion: Windows también lo alinea a `4x`.
     - ( ) 64 bytes.
     - (x) 84 bytes.
 
-Explicacion: El offset de `a1` es 0, el de `i` es 28, y el de `a2` ha se ser múltiplo de 28, por lo que es 56. Por tanto, aunque un `int` solo ocupe 4, el resto de bits hasta ocupar 28 no se usan.
+<details>
+  <summary>Respuesta</summary>
+  <p>El offset de `a1` es 0, el de `i` es 28, y el de `a2` ha se ser múltiplo de 28, por lo que es 56. Por tanto, aunque un `int` solo ocupe 4, el resto de bits hasta ocupar 28 no se usan.</p>
+</details>
 
 43. Respecto a los términos microinstrucción y microcódigo:
 
@@ -353,7 +419,10 @@ Explicacion: El offset de `a1` es 0, el de `i` es 28, y el de `a2` ha se ser mú
     - ( ) Las únicas instrucciones en las que algunas de sus fases de ejecución conllevan un acceso a memoria son las instrucciones load y store.
     - ( ) El registro puntero de pila es un registro de propósito general que suele contener tanto direcciones como datos.
 
-Explicacion: El registro de estado contiene todas las banderas, como `ZF, CF, OF, SF` .
+<details>
+  <summary>Respuesta</summary>
+  <p>El registro de estado contiene todas las banderas, como `ZF, CF, OF, SF` .</p>
+</details>
 
 45. Un procesador con una unidad de control microprogramada tiene una memoria de control de 300 palabras de 100 bits, de las que 200 son diferentes. Si se rediseñara como unidad de control nanoprogramada, ¿qué tamaño ocuparía la nanomemoria que contiene las microinstrucciones completas sin repeticiones?
 
@@ -362,7 +431,10 @@ Explicacion: El registro de estado contiene todas las banderas, como `ZF, CF, OF
     - ( ) 22400 bits.
     - ( ) 30000 bits.
 
-Explicacion: La nanomemoria tendría 200 palabras, y cada una sería una dirección, por lo que ocuparía 100 bits.
+<details>
+  <summary>Respuesta</summary>
+  <p>La nanomemoria tendría 200 palabras, y cada una sería una dirección, por lo que ocuparía 100 bits.</p>
+</details>
 
 46. En el pseudocódigo usado para representar las microinstrucciones, la expresión `goto f(IR)`:
 
@@ -371,7 +443,10 @@ Explicacion: La nanomemoria tendría 200 palabras, y cada una sería una direcci
     - (x) Salta a una dirección de memoria de control que depende de la instrucción máquina actual.
     - ( ) Permite saltar a la dirección de memoria de control del principio de un microbucle.
 
-Explicacion: `IR` contiene la instrucción máquina actual, y `f` se supone que es una función que devolverá a qué dirección de memoria ha de saltar.
+<details>
+  <summary>Respuesta</summary>
+  <p>`IR` contiene la instrucción máquina actual, y `f` se supone que es una función que devolverá a qué dirección de memoria ha de saltar.</p>
+</details>
 
 47. Respecto a la predicción de saltos, alguna de las siguientes afirmaciones es falsa:
 
@@ -387,7 +462,10 @@ Explicacion: `IR` contiene la instrucción máquina actual, y `f` se supone que 
     - ( ) Por definición, un procesador superescalar debe tener varias unidades funcionales (más de una).
     - ( ) Implícitamente, se presupone que un procesador superescalar emitirá más de una instrucción por ciclo.
 
-Explicacion: En ambos es fundamental.
+<details>
+  <summary>Respuesta</summary>
+  <p>En ambos es fundamental.</p>
+</details>
 
 49. Respecto a los conceptos de interfaz de dispositivo, controlador(a), puerto de E/S:
 
@@ -417,7 +495,10 @@ Explicacion: En ambos es fundamental.
     - ( ) `0x0220`
     - (x) `0x0440`
 
-Explicacion: `CS` activa en alta implica que, cuando recibe un `1`, se ha seleccionado dicho dispositivo. Para que una puerta `AND` emita un 1, todas sus entradas han de ser 1. Para los bits negados, ha de ser un 0 el bit correspondiente de la dirección, pero para el 6º y 10º (empezando desde el 0) han de estar a 1. Por tanto, ha de ser `0b 0000 0100 0100 0000 = 0x0440`.
+<details>
+  <summary>Respuesta</summary>
+  <p>`CS` activa en alta implica que, cuando recibe un `1`, se ha seleccionado dicho dispositivo. Para que una puerta `AND` emita un 1, todas sus entradas han de ser 1. Para los bits negados, ha de ser un 0 el bit correspondiente de la dirección, pero para el 6º y 10º (empezando desde el 0) han de estar a 1. Por tanto, ha de ser `0b 0000 0100 0100 0000 = 0x0440`.</p>
+</details>
 
 53. Un computador con 15 líneas de direcciones tiene 3 módulos de memoria de \\(2^{13}\\) palabras y utiliza E/S mapeada en memoria. ¿Cuál es el número máximo de periféricos que pueden conectarse, si cada uno de ellos utiliza 8 direcciones?
 
@@ -426,7 +507,10 @@ Explicacion: `CS` activa en alta implica que, cuando recibe un `1`, se ha selecc
     - ( ) \\(2^{11}\\).
     - ( ) \\(2^{13}\\).
 
-Explicacion: Si hay 3 módulos de $2^{13}$ palabras, como cada palabra ocupa una dirección, estos ocupan $3\cdot 2^{13}$ direcciones. Por tanto, quedan libre $2^{13}$ direcciones. Como cada periférico ocupa $8=2^3$ direcciones, tenemos espacio para $2^{10}$ periféricos. De esta forma, tendremos: $$3\cdot 2^{13} + 2^{10}\cdot 2^{3}=3\cdot 2^{13} + 2^{13}=(3+1)\cdot 2^{13}=2^{15}$$
+<details>
+  <summary>Respuesta</summary>
+  <p>Si hay 3 módulos de $2^{13}$ palabras, como cada palabra ocupa una dirección, estos ocupan $3cdot 2^{13}$ direcciones. Por tanto, quedan libre $2^{13}$ direcciones. Como cada periférico ocupa $8=2^3$ direcciones, tenemos espacio para $2^{10}$ periféricos. De esta forma, tendremos: $$3cdot 2^{13} + 2^{10}cdot 2^{3}=3cdot 2^{13} + 2^{13}=(3+1)cdot 2^{13}=2^{15}$$</p>
+</details>
 
 54. Un procesador accede en el instante de tiempo `t` a una posición de memoria `d(t)`. Poco tiempo después (en el instante de tiempo `t+k`) accede a la posición anterior `d(t)-1`. Esos dos accesos son un ejemplo de:
 
@@ -442,7 +526,10 @@ Explicacion: Si hay 3 módulos de $2^{13}$ palabras, como cada palabra ocupa una
     - ( ) 10 ns.
     - (x) 12 ns.
 
-Explicacion: Tenemos que el $92%$ de las veces se usa la caché, y el $8%$ restante la memoria principal. Para los casos de la caché, se tarda 4ns, y para los de la MP se tardan 104ns (los 100 de la MP y los 4 de la caché fallida). Por tanto, en total son: $$4\cdot 0.92 + 104\cdot 0.08=12$$
+<details>
+  <summary>Respuesta</summary>
+  <p>Tenemos que el $92%$ de las veces se usa la caché, y el $8%$ restante la memoria principal. Para los casos de la caché, se tarda 4ns, y para los de la MP se tardan 104ns (los 100 de la MP y los 4 de la caché fallida). Por tanto, en total son: $$4cdot 0.92 + 104cdot 0.08=12$$</p>
+</details>
 
 56. Una SRAM de `1Mx4bit` (4Mbit) puede venir organizada en 2048 filas, dedicando por tanto al decodificador de columnas:
 
@@ -451,7 +538,10 @@ Explicacion: Tenemos que el $92%$ de las veces se usa la caché, y el $8%$ resta
     - ( ) 8 bits.
     - (x) 9 bits.
 
-Explicacion: El tamaño de la memoria especificado así implica que hay $1M = 2^{20}$ casillas y cada una ocupa 4 bits (esto último no nos es relevante). Como en total hay $2048=2^{11}$ filas, en total hay $2^{9}$ columnas, por lo que se emplean 9 bits.
+<details>
+  <summary>Respuesta</summary>
+  <p>El tamaño de la memoria especificado así implica que hay $1M = 2^{20}$ casillas y cada una ocupa 4 bits (esto último no nos es relevante). Como en total hay $2048=2^{11}$ filas, en total hay $2^{9}$ columnas, por lo que se emplean 9 bits.</p>
+</details>
 
 57. Un sistema basado en un microprocesador con un bus de datos de `n` bits y un bus de direcciones de 16 bits direcciona la memoria por palabras de `n` bits y dispone de una memoria SRAM formada por dos módulos de `16 K x n` cada uno. ¿Qué porcentaje del mapa de memoria está ocupado por la SRAM?
 
@@ -460,7 +550,10 @@ Explicacion: El tamaño de la memoria especificado así implica que hay $1M = 2^
     - (x) 50%
     - ( ) 100%
 
-Explicacion: Veamos el tamaño de memoria de cada uno de los dos módulos: $$16K\cdot n = 2^4\cdot 2^{10}\cdot n=2^{14}\cdot n$$ Como hay dos módulos, tenemos que la SRAM ocupa $2^{15}\cdot n$ bits. Como el bus de direcciones es de 16 bits, implica que en total el espacio de memoria es de $2^{16}$ direcciones, cada una de $n$ bits. Por tanto, la SRAM ocupa la mitad.
+<details>
+  <summary>Respuesta</summary>
+  <p>Veamos el tamaño de memoria de cada uno de los dos módulos: $$16Kcdot n = 2^4cdot 2^{10}cdot n=2^{14}cdot n$$ Como hay dos módulos, tenemos que la SRAM ocupa $2^{15}cdot n$ bits. Como el bus de direcciones es de 16 bits, implica que en total el espacio de memoria es de $2^{16}$ direcciones, cada una de $n$ bits. Por tanto, la SRAM ocupa la mitad.</p>
+</details>
 
 58. Un módulo de memoria de 16 GB está formado por varios chips DRAM de `1024Mx4`. ¿Cuántos chips DRAM necesita el módulo?
 
@@ -497,7 +590,10 @@ Explicacion: Veamos el tamaño de memoria de cada uno de los dos módulos: $$16K
     - ( ) La unidad de control necesita como entrada el registro contador de programa para saber cuál es la instrucción que debe ejecutar a continuación.
     - ( ) El registro de direcciones de memoria es un registro de propósito general que puede contener tanto direcciones como datos.
 
-Explicacion: La arquitectura Von Neumman consiste en la separación de ALU, UC, E/S, MP, por lo que no es lo descrito. La UC no necesita saber la siguiente instruccón, tan solo activará la señal de reloj cuando toque captarla. El MAR tan solo contiene direcciones, no datos. Por tanto, la correcta es la segunda.
+<details>
+  <summary>Respuesta</summary>
+  <p>La arquitectura Von Neumman consiste en la separación de ALU, UC, E/S, MP, por lo que no es lo descrito. La UC no necesita saber la siguiente instruccón, tan solo activará la señal de reloj cuando toque captarla. El MAR tan solo contiene direcciones, no datos. Por tanto, la correcta es la segunda.</p>
+</details>
 
 63. En una máquina little-endian con memoria de bytes y representación en complemento a dos que permite accesos a memoria de tamaño byte (1 B), media palabra (2 B) y palabra (4 B), se almacenan a partir de la posición `0xCAFEBAB0` cuatro palabras con valores -1, -2, -3, -4. ¿Qué se obtendría al consultar la media palabra de la posición `0xCAFEBABE`?
 
@@ -506,7 +602,10 @@ Explicacion: La arquitectura Von Neumman consiste en la separación de ALU, UC, 
     - ( ) No se puede saber, faltan datos.
     - ( ) Ninguna de las anteriores.
 
-Explicacion: Cada palabra guardada ocupa 4 Bytes, por lo que el -4 empieza en la dirección `0xCAFEBABC`. El -4 tenemos que es `-4=0xFFFB`, por lo que en la dirección `0xCAFEBABC` se encuentra la B, y en las tres direcciones siguientes una F. Por tanto, la media palabra que empieza en `0xCAFEBABE` y, por tanto, cupa también `0xCAFEBABF`, es `0xFF=-1`.
+<details>
+  <summary>Respuesta</summary>
+  <p>Cada palabra guardada ocupa 4 Bytes, por lo que el -4 empieza en la dirección `0xCAFEBABC`. El -4 tenemos que es `-4=0xFFFB`, por lo que en la dirección `0xCAFEBABC` se encuentra la B, y en las tres direcciones siguientes una F. Por tanto, la media palabra que empieza en `0xCAFEBABE` y, por tanto, cupa también `0xCAFEBABF`, es `0xFF=-1`.</p>
+</details>
 
 64. Se pretende almacenar una palabra de 4 B en una memoria de bytes a partir de una dirección determinada. ¿Cuál de las siguientes es válida, si la palabra debe quedar alineada?
 
@@ -515,7 +614,10 @@ Explicacion: Cada palabra guardada ocupa 4 Bytes, por lo que el -4 empieza en la
     - ( ) `0xCAFEBABE`
     - ( ) `0xABADF00D`
 
-Explicacion: Las palabras han de empezar en múltiplos de 4, por lo que los dos últimos bits de la dirección han de ser 0. Esto tan solo ocurre si los últimos 4 bits son `0b0000=0x0`, `0b0100=0x4`, `0b1000=0x8` o `0b=1100=0xC`. Por tanto, la única dirección que está alineada es la que termina en `C`.
+<details>
+  <summary>Respuesta</summary>
+  <p>Las palabras han de empezar en múltiplos de 4, por lo que los dos últimos bits de la dirección han de ser 0. Esto tan solo ocurre si los últimos 4 bits son `0b0000=0x0`, `0b0100=0x4`, `0b1000=0x8` o `0b=1100=0xC`. Por tanto, la única dirección que está alineada es la que termina en `C`.</p>
+</details>
 
 65. En una arquitectura de acumulador, la instrucción `LOAD X`:
 
@@ -524,7 +626,10 @@ Explicacion: Las palabras han de empezar en múltiplos de 4, por lo que los dos 
     - ( ) Transfiere el contenido del acumulador a la posición de memoria `X`.
     - (x) Transfiere el contenido de la posición de memoria `X` al acumulador.
 
-Explicacion: Esta arquitectura es del tipo `1/1`, por lo que todas las instrucciones reciben 1 operando, y es una dirección de memoria. Todo se controla con el acumulador, por lo que cargar la dirección de memoria `X` se ha de hacer en el acumulador.
+<details>
+  <summary>Respuesta</summary>
+  <p>Esta arquitectura es del tipo `1/1`, por lo que todas las instrucciones reciben 1 operando, y es una dirección de memoria. Todo se controla con el acumulador, por lo que cargar la dirección de memoria `X` se ha de hacer en el acumulador.</p>
+</details>
 
 66. Una instrucción máquina del tipo `Add M,R` podría formar parte del repertorio de:
 
@@ -533,7 +638,10 @@ Explicacion: Esta arquitectura es del tipo `1/1`, por lo que todas las instrucci
     - ( ) Una máquina con arquitectura R/R.
     - (x) Una máquina con arquitectura M/M.
 
-Explicacion: Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o `M/M`. Como al menos uno de los dos es una dirección de memoria (`M`), tenemos que no puede ser `R/R`.
+<details>
+  <summary>Respuesta</summary>
+  <p>Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o `M/M`. Como al menos uno de los dos es una dirección de memoria (`M`), tenemos que no puede ser `R/R`.</p>
+</details>
 
 67. ¿Cuál de los siguientes no es un modo de direccionamiento IA-32?
 
@@ -584,7 +692,10 @@ Explicacion: Al admitir dos operandos, tenemos que se trata de una tipo `R/R` o 
     - ( ) Ya no hay variables locales que destruir.
     - ( ) Ya no se hacen llamadas anidadas y por tanto no hay parámetros que ocupen espacio en pila.
 
-Explicacion: Al hacer el `leave`, vas a hacer mover el puntero de pila al antiguo valor de `rbp` y vas a hacer `pop %rbp`. Este es el primer valor que has introducido, por lo que ya has tenido que recuperar los otros registros salva invocados.
+<details>
+  <summary>Respuesta</summary>
+  <p>Al hacer el `leave`, vas a hacer mover el puntero de pila al antiguo valor de `rbp` y vas a hacer `pop %rbp`. Este es el primer valor que has introducido, por lo que ya has tenido que recuperar los otros registros salva invocados.</p>
+</details>
 
 74. Usando el repertorio IA-32, para intercambiar el valor de 2 variables (por ejemplo `A: .int 1` y `B: .int 2`) se pueden usar:
 
@@ -593,7 +704,10 @@ Explicacion: Al hacer el `leave`, vas a hacer mover el puntero de pila al antigu
     - ( ) 3 `mov`, no menos (se le llama "intercambio circular").
     - (x) 4 `mov`, no menos (debido a la arquitectura R/M).
 
-Explicacion: Tienes que usar 4, ya que no puedes mover entre dos posiciones de memoria sin pasar por registros.
+<details>
+  <summary>Respuesta</summary>
+  <p>Tienes que usar 4, ya que no puedes mover entre dos posiciones de memoria sin pasar por registros.</p>
+</details>
 
 75. Respecto a registros base e índice en IA-32, la excepción es que:
 
@@ -602,7 +716,10 @@ Explicacion: Tienes que usar 4, ya que no puedes mover entre dos posiciones de m
     - ( ) `RSP` no puede ser registro base.
     - (x) `RSP` no puede ser registro índice.
 
-Explicacion: `RSP` es el puntero de pila. Puede ser usado como registro base, pero no como registro índice.
+<details>
+  <summary>Respuesta</summary>
+  <p>`RSP` es el puntero de pila. Puede ser usado como registro base, pero no como registro índice.</p>
+</details>
 
 76. El registro `SP / ESP / RSP`:
 
@@ -625,7 +742,10 @@ Explicacion: `RSP` es el puntero de pila. Puede ser usado como registro base, pe
     - ( ) `xor %edx, %edx`<br>`sub %eax, %edx`<br>`mov %edx, %eax`
     - ( ) `neg %eax`
 
-Explicacion: `neg` hace una negación aritmética, por lo que aplica el complemento a 2. Esto es hacer el complemento a 1 (negar el valor, `not`), y sumarle 1. Por tanto, tenemos que la negunda y la cuarta opción son equivalentes, ambas guardan en `%eax` su opuesto, es decir `-%eax`. La tercera también hace lo mismo, ya que guarda en `eax` el valor `$0-%eax`. No obstante, la primera opción guarda `-1-%eax`, que es distinto.
+<details>
+  <summary>Respuesta</summary>
+  <p>`neg` hace una negación aritmética, por lo que aplica el complemento a 2. Esto es hacer el complemento a 1 (negar el valor, `not`), y sumarle 1. Por tanto, tenemos que la negunda y la cuarta opción son equivalentes, ambas guardan en `%eax` su opuesto, es decir `-%eax`. La tercera también hace lo mismo, ya que guarda en `eax` el valor `$0-%eax`. No obstante, la primera opción guarda `-1-%eax`, que es distinto.</p>
+</details>
 
 79. Si `A` y `B` son dos enteros almacenados respectivamente en `%eax` y `%ebx`, ¿cuál de las siguientes implementaciones de:<br>`if(!A && !B){... then part ...}` es incorrecta?
 
@@ -634,10 +754,22 @@ Explicacion: `neg` hace una negación aritmética, por lo que aplica el compleme
     - (x) ` test %ebx, %eax`<br>`   jne not_true`<br>`  ...then part...`<br>`not_true`<br>` ...`
     - ( ) ` test %eax, %eax`<br>`  jne not_true`<br>`  test %ebx, %ebx`<br>`   jne not_true`<br>`  ...then part...`<br>`not_true`<br>` ...`
 
-Explicacion: Para la primera, hemos de notar que `(!A && !B)=!(A || B)`. Si `A || B` no es nulo, entonces su valor booleano será `true`, por lo que al negarlo será `false`, por lo que habrá que ejecutar esa parte.
-Explicacion: Para la segunda, si `%eax` no es nulo, entonces es `true`. Al negarlo será `false`, por lo que la puerta `AND` llevará a la parte del `false`. Equivalente ocurre con `%ebx`.
-Explicacion: Para la tercera, es incorrecto. Ahí, el `if` que se está ejecutando es `if (A==B)`.
-Explicacion: Para la cuarta, tenemos que es igual que en la segunda; ya que es la forma eficiente de comparar si un registro es nulo.
+<details>
+  <summary>Respuesta</summary>
+  <p>Para la primera, hemos de notar que `(!A && !B)=!(A || B)`. Si `A || B` no es nulo, entonces su valor booleano será `true`, por lo que al negarlo será `false`, por lo que habrá que ejecutar esa parte.</p>
+</details>
+<details>
+  <summary>Respuesta</summary>
+  <p>Para la segunda, si `%eax` no es nulo, entonces es `true`. Al negarlo será `false`, por lo que la puerta `AND` llevará a la parte del `false`. Equivalente ocurre con `%ebx`.</p>
+</details>
+<details>
+  <summary>Respuesta</summary>
+  <p>Para la tercera, es incorrecto. Ahí, el `if` que se está ejecutando es `if (A==B)`.</p>
+</details>
+<details>
+  <summary>Respuesta</summary>
+  <p>Para la cuarta, tenemos que es igual que en la segunda; ya que es la forma eficiente de comparar si un registro es nulo.</p>
+</details>
 
 80. Dada la siguiente declaración en lenguaje C, una estructura de este tipo podría ocupar en un sistema Linux IA-32 o bien en uno x86- 64 un total de:<br><code>struct a {<br> int i;<br> double d;<br> char c;<br> short s;<br>};</code>
 
@@ -646,7 +778,10 @@ Explicacion: Para la cuarta, tenemos que es igual que en la segunda; ya que es l
     - ( ) 22 B.
     - (x) 24 B.
 
-Explicacion: Se podría pensar que, por el alineamiento, ocupa 32 B. No obstante, tras el `char` no hay 7 Bytes sin usar, ya que el `short` ocupa 4 B, por lo que puede comenzar en el offset `20`.
+<details>
+  <summary>Respuesta</summary>
+  <p>Se podría pensar que, por el alineamiento, ocupa 32 B. No obstante, tras el `char` no hay 7 Bytes sin usar, ya que el `short` ocupa 4 B, por lo que puede comenzar en el offset `20`.</p>
+</details>
 
 81. En un sistema Linux x86-64, ¿cuál de las siguientes expresiones es equivalente a la expresión C `(x[2] + 4)[3]`? Suponer que previamente se ha declarado `int **x`.
 
@@ -698,7 +833,10 @@ Explicacion: Se podría pensar que, por el alineamiento, ocupa 32 B. No obstante
     - ( ) Reduce el tamaño del bus.
     - ( ) Aumenta la tasa de aciertos.
 
-Explicacion: Al usar la cache, de velocidad bastante más rápida, se reduce el tiempo de ejecución.
+<details>
+  <summary>Respuesta</summary>
+  <p>Al usar la cache, de velocidad bastante más rápida, se reduce el tiempo de ejecución.</p>
+</details>
 
 89. En un sistema Linux IA-32, ¿cuántos enteros se podrían almacenar en una línea de cache, si la cache del procesador fuera de 4 KB, asociativa por conjuntos de 4-vías, y contuviera 4 conjuntos?
 
@@ -720,7 +858,10 @@ Explicacion: Al usar la cache, de velocidad bastante más rápida, se reduce el 
     - ( ) `0xCAFEBABF`
     - ( ) `0xCAFEBABE`
 
-Explicacion: Contando desde la izquierda, es el tercer byte. Por tanto, ocupará la tercera dirección de memoria.
+<details>
+  <summary>Respuesta</summary>
+  <p>Contando desde la izquierda, es el tercer byte. Por tanto, ocupará la tercera dirección de memoria.</p>
+</details>
 
 92. ¿Qué novedad se desarrolló en la tercera generación de computadores?
 
@@ -771,7 +912,10 @@ Explicacion: Contando desde la izquierda, es el tercer byte. Por tanto, ocupará
     - (x) Se suma un número positivo a un número negativo.
     - ( ) Se resta un número positivo de un número negativo.
 
-Explicacion: Se debe a que si ambos se pueden representar en memoria, entonces un número menor en valor absoluto también se puede representar.
+<details>
+  <summary>Respuesta</summary>
+  <p>Se debe a que si ambos se pueden representar en memoria, entonces un número menor en valor absoluto también se puede representar.</p>
+</details>
 
 99. Después de ejecutar una instrucción de suma sobre dos números con signo de la que sabemos que no provocará overflow (los dos números son pequeños en valor absoluto), queremos comprobar si el resultado de la suma es menor que 0. ¿Qué flag necesita comprobar la instrucción de salto condicional equivalente a `if (resultado<0) then goto label`?
 
@@ -792,7 +936,10 @@ Explicacion: Se debe a que si ambos se pueden representar en memoria, entonces u
     - ( ) Equivale a `mov %rsp, %rbp` seguida de `pop %rbp`.
     - (x) No es obligatorio usarla. En su lugar puede realizarse una secuencia explícita de operaciones `mov` y `pop`.
 
-Explicacion: `leave` equivale a `mov %rbp, %rsp`, `pop %rbp`, pero no es necesario usarla.
+<details>
+  <summary>Respuesta</summary>
+  <p>`leave` equivale a `mov %rbp, %rsp`, `pop %rbp`, pero no es necesario usarla.</p>
+</details>
 
 102. Para crear espacio en la pila para variables locales sin inicializar suele realizarse la siguiente operación:
     - ( ) Restar una cantidad positiva a `EBP`.
@@ -812,7 +959,10 @@ Explicacion: `leave` equivale a `mov %rbp, %rsp`, `pop %rbp`, pero no es necesar
     - ( ) `8048b90`
     - (x) `8048553`
 
-Explicacion: Vemos que la siguiente instrucción, `pushl`, está en la dirección `8048553`. por tanto, se introduce en la pila para poder volver a ella tras el `ret`.
+<details>
+  <summary>Respuesta</summary>
+  <p>Vemos que la siguiente instrucción, `pushl`, está en la dirección `8048553`. por tanto, se introduce en la pila para poder volver a ella tras el `ret`.</p>
+</details>
 
 105. En el fragmento de código:<br><code>804854e:e8 3d 06 00 00 call 8048b90 (main)<br>8048553:50 pushl %eax</code><br>La instrucción `call` suma al contador de programa la cantidad:
     - (x) `0000063d`
@@ -820,7 +970,10 @@ Explicacion: Vemos que la siguiente instrucción, `pushl`, está en la direcció
     - ( ) `0804854e`
     - ( ) `50`
 
-Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que es a priori la siguiente instrucción que iba a captar. No obstante, la operación `call` loha modificado, y la difereencia es `8048b90-8048553`, que corresponde a la primera opción.
+<details>
+  <summary>Respuesta</summary>
+  <p>En la fase de captación, `PC` se habrá situado en `8048553`, que es a priori la siguiente instrucción que iba a captar. No obstante, la operación `call` loha modificado, y la difereencia es `8048b90-8048553`, que corresponde a la primera opción.</p>
+</details>
 
 106. Es responsabilidad del procedimiento llamado salvaguardar los registros:
     - (x) `%ebx, %esi, %edi`
@@ -997,7 +1150,10 @@ Explicacion: En la fase de captación, `PC` se habrá situado en `8048553`, que 
 	- ( ) señales de lectura y escritura en memoria (RD, WR) 
 	- (x) dirección de la siguiente microinstrucción (bits del campo DIR o Memoria B de Wilkes) 
 
-Explicacion: <!-- 135 Repetida.-->
+<details>
+  <summary>Respuesta</summary>
+  <p><!-- 135 Repetida.--></p>
+</details>
 
 136. Tipos de riesgos que hemos estudiado en cauces segmentados (señalar la opción incorrecta) 
 	- ( ) riesgos estructurales 
@@ -1035,7 +1191,10 @@ Explicacion: <!-- 135 Repetida.-->
 	- ( ) mayor aprovechamiento del espacio de memoria (E/S mapeada resta espacio a la memoria) 
 	- ( ) decodificación de memoria más elegante, limpia, sencilla (E/S mapeada añade complejidad a la decodificación) 
 
-Explicacion: <!-- 142 Repetida.-->
+<details>
+  <summary>Respuesta</summary>
+  <p><!-- 142 Repetida.--></p>
+</details>
 
 143. Tipos de interrupción que suelen contemplar las CPUs comerciales actuales (señalar la opción incorrecta) 
 	- ( ) internas (excepciones o traps): generadas internamente por la CPU para indicar una condición que requiere atención (división por cero, codop inválido, etc)
@@ -1043,7 +1202,10 @@ Explicacion: <!-- 142 Repetida.-->
 	- ( ) software:generadas al ejecutar la instrucción INT (o equivalente) 
 	- (x) firmware (faults): generadas por el microcódigo de la CPU ( segmentation fault, page fault, etc) 
 
-Explicacion: <!-- 144 Repetida.-->
+<details>
+  <summary>Respuesta</summary>
+  <p><!-- 144 Repetida.--></p>
+</details>
 
 145. Respecto a salvaguardar los registros de la CPU al inicio de una rutina de servicio de interrupción (ISR) 
 	- ( ) no es necesario salvar ninguno más,si el contador de programa y los flags de estado ya los salva la propia CPU como parte del mecanismo de interrupción 
@@ -1057,7 +1219,10 @@ Explicacion: <!-- 144 Repetida.-->
 	- ( ) acceso directo a memoria 
 	- ( ) modo de direccionamiento directo
 
-Explicacion: <!-- 147 Incompleta.-->
+<details>
+  <summary>Respuesta</summary>
+  <p><!-- 147 Incompleta.--></p>
+</details>
 
 148. Las técnicas write-through y write-back están relacionadas con 
 	- (x) coherencia cache 
@@ -1065,7 +1230,10 @@ Explicacion: <!-- 147 Incompleta.-->
  	- ( ) arbitraje de buses 
 	- ( ) etapas de la unidad de control 
 
-Explicacion: <!-- 149 Repetida.-->
+<details>
+  <summary>Respuesta</summary>
+  <p><!-- 149 Repetida.--></p>
+</details>
 
 150. En un sistema con direcciones de 32bits, memoria de bytes, cache de 1MB asociativa por conjuntos de 4 vías y líneas de 64B, el campo etiqueta en el formato de dirección cache es de 
 	- ( ) 16bits 
@@ -1139,7 +1307,10 @@ Explicacion: <!-- 149 Repetida.-->
 	- (x) Retrasar la fase de decisión saltar/no saltar de las instrucciones de salto condicional contribuye a mejorar el rendimiento del procesador. 
 	- ( ) Cuantas más etapas tenga un cauce, más instrucciones se estarán ejecutando en distintas fases y más posibilidades se presentan de que existan riesgos entre ellas.
 
-Explicacion: <!-- 162 Repetida.--> 
+<details>
+  <summary>Respuesta</summary>
+  <p><!-- 162 Repetida.--></p>
+</details>
 
 163. La predicción de saltos está relacionada con... 
 	- ( ) Los riesgos estructurales (intenta evitar el efecto de un fallo de cache) 
@@ -1660,7 +1831,10 @@ Se puede adivinar que:
      - (x) `_start`
      - ( ) `_init`
 
-Explicacion: No es x86-64, que con gcc el punto de entrada es `main`. 
+<details>
+  <summary>Respuesta</summary>
+  <p>No es x86-64, que con gcc el punto de entrada es `main`.</p>
+</details>
 
 233. La siguiente línea en la sección de datos de un programa en ensamblador de
 IA32<br>
@@ -1724,7 +1898,10 @@ IA32<br>
      - (x) Fallaría con `lista: .int 1,2,3,4, 1,2,3,4, ...`
      - ( ) No es correcta pero el error no se manifiesta en los ejemplos propuestos, o se manifiesta en ambos
 
-Explicacion: El problema es que como registro índice usa en la operación suma `%edx`, que es el correspondiente al acarreo. Por tanto, como en el segundo caso los valores de la lista varían, no funcionaría.
+<details>
+  <summary>Respuesta</summary>
+  <p>El problema es que como registro índice usa en la operación suma `%edx`, que es el correspondiente al acarreo. Por tanto, como en el segundo caso los valores de la lista varían, no funcionaría.</p>
+</details>
 
 237. En la práctica "media" se pide sumar una lista de 32 enteros SIN signo de 32
    bits en una plataforma de 32 bits sin perder precisión, esto es, evitando perder
@@ -1780,7 +1957,10 @@ Explicacion: El problema es que como registro índice usa en la operación suma 
      - ( ) fallaría con **array={1,2,4,8}**
      - ( ) no es correcta pero el error no se manifiesta en los ejemplos propuestos, o se manifiesta en ambos
     
-Explicacion: La orden distinta es `add $0, %[x]`, que se usa en la versión "oficial" `test %[x], %[x]`.
+<details>
+  <summary>Respuesta</summary>
+  <p>La orden distinta es `add $0, %[x]`, que se usa en la versión oficial `test %[x], %[x]`.</p>
+</details>
 
 241. La práctica "popcount" debía calcular la suma de bits (peso Hamming) de
     los elementos de un array. Un estudiante entrega la siguiente versión de
@@ -2228,7 +2408,10 @@ Explicacion: La orden distinta es `add $0, %[x]`, que se usa en la versión "ofi
     - (x) 1/8 (un fallo por cada 8 accesos).
     - ( ) 1 (todo son fallos).
 
-Explicacion: 288 repetida
+<details>
+  <summary>Respuesta</summary>
+  <p>288 repetida</p>
+</details>
 
 289. Con los mismos supuestos, imaginar que se modifica la última sentencia (el cuerpo anidado) por esta otra:
      `C[i][j] += A[i][k] * B[j][k];`
