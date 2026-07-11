@@ -41,13 +41,13 @@ async def imagen_a_latex(path: str) -> str:
     }
 """
 # Definimos los estados de la conversación
-MENU, CURSO, ASIGNATURA, DESCRIPCION, ARCHIVOS, CONTACTO, MATERIAL_ENLACE, CAPTURA, CORRECCION, ANIO_EXAMEN, PROFESOR_EXAMEN, ES_DEPARTAMENTO_EXAMEN, GRADO_EXAMEN, GRUPO_EXAMEN, FECHA_EXAMEN, DURACION_EXAMEN, MENU_OTRO, FORMA_AYUDA, ESCANEO = range(19)
+MENU, CURSO, ASIGNATURA, DESCRIPCION, ARCHIVOS, CONTACTO, MATERIAL_ENLACE, CAPTURA, CORRECCION, ANIO_EXAMEN, PROFESOR_EXAMEN, ES_DEPARTAMENTO_EXAMEN, GRADO_EXAMEN, GRUPO_EXAMEN, FECHA_EXAMEN, DURACION_EXAMEN, MENU_OTRO, FORMA_AYUDA, ESCANEO, RECUPERAR_METADATOS = range(20)
 
 # Token del bot
 TOKEN=os.getenv("TELEGRAM_TOKEN")
 
 # Define el directorio donde guardarás los archivos
-DOWNLOAD_BASEDIR = '/home/deibyss/Escritorio/LosDelDGIIM.github.io/Bot'
+DOWNLOAD_BASEDIR = os.getenv("DOWNLOAD_BASEDIR")
 #DOWNLOAD_BASEDIR = '/home/Desktop/LosDelDGIIM.github.io/Bot'
 #DOWNLOAD_BASEDIR = '/home/arturoolvrs/Documents'
 LOG_PATH = os.path.join(DOWNLOAD_BASEDIR, "log_file.log")
@@ -59,6 +59,7 @@ CALLBACK_CORREGIR = 'Correccion'
 CALLBACK_OTRO = 'Otro'
 CALLBACK_EXAMEN = 'Examen'
 CALLBACK_COLABORAR = 'Colaborar pasando a ordenador'
+CALLBACK_ESCANEO = 'Escanear examen con IA'
 
 # Constantes para los callback data del menú de OTRO
 CALLBACK_LINK = 'enlace'
@@ -376,7 +377,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             [InlineKeyboardButton("Corrección de erratas", callback_data=CALLBACK_CORREGIR)],
             [InlineKeyboardButton("Examen", callback_data=CALLBACK_EXAMEN)],
             [InlineKeyboardButton("Colaborar pasando a digital", callback_data=CALLBACK_COLABORAR)],
-            [InlineKeyboardButton("Escanear examen a LaTeX (IA)", callback_data='ESCANEAR_IA')],
+            #[InlineKeyboardButton("Escanear examen a LaTeX (IA)", callback_data=CALLBACK_ESCANEO)],
             [InlineKeyboardButton("Otro", callback_data=CALLBACK_OTRO)]
         ])
     )
@@ -440,11 +441,13 @@ async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
             "Por favor, indica con qué nos puedes ayudar (Latex, Markdown, programación, etc.)\n"
             "Nos pondremos en contacto contigo para informarte de cómo puedes colaborar."
         )
-
-    elif context.user_data[OPTION_KEY] == 'ESCANEAR_IA':
+    """
+    elif context.user_data[OPTION_KEY] == CALLBACK_ESCANEO:
         context.user_data['FOTOS_IA'] = []
-        await query.message.reply_text("Sube una foto clara del examen que quieres pasar a código LaTeX.")
-        return ESCANEO
+        await query.message.reply_text(
+            "Sube una foto clara del examen que quieres pasar a código LaTeX.\n"
+            "Recomendamos el uso de esta herramienta fuera del horario 14:00-22:00 ya que los servidores sufren mayor demanda en dichas horas.")
+        return ESCANEO"""
     #######################################
 
 
@@ -1215,7 +1218,7 @@ def send_email(asunto, remitente, mensaje, adjuntos=[]) -> None:
 
     mail_manager = MailManager()
     
-    receiver_email = "davileti.mg@gmail.com"
+    receiver_email = "losdeldgiim@gmail.com"
     cc = None
     bcc = None
     html = True     # Indica si el mensaje es en formato HTML
@@ -1294,6 +1297,11 @@ def gestionar_datos(datos: dict) -> bool:
     if LINK_KEY in datos:
         message_text += f"<li>{LINK_KEY}: <a target=_blanck href={datos.get(LINK_KEY)}>{datos.pop(LINK_KEY)}</a></li>\n"
 
+    # En el feature de escaneo de exámenes se hace uso de estas variables para solicitarle la información sobre el examen al usuario
+    # Como no queremos que su contenido sea enviado por correo las limpiamos aquí
+    datos.pop('FOTOS_IA',None)
+    datos.pop('codigo_latex',None)
+
     for key, value in datos.items():
         message_text += f"<li>{key}: {value}</li>\n"
 
@@ -1304,9 +1312,14 @@ def gestionar_datos(datos: dict) -> bool:
     
 
 
-
+# Aquí se inserta la API key de Google AI Studio pero la pilla automáticamente del .env
 client = genai.Client()
 
+"""
+Función que acumula las imágenes que le manda el usuario al bot para hacer una transcripción de examen
+
+Acumula los nombres de todas en la variable 'FOTOS_IA' de context.user_data y las descarga en el directorio de usuario
+"""
 async def acumular_fotos_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if update.message.photo:
         file = await context.bot.get_file(update.message.photo[-1].file_id)
@@ -1325,9 +1338,13 @@ async def acumular_fotos_handler(update: Update, context: ContextTypes.DEFAULT_T
         # Guardamos la ruta en la lista
         context.user_data['FOTOS_IA'].append(file_name)
         
-        await update.message.reply_text(f"Página {numero_foto} guardada. Sube la siguiente o escribe /finescaneo.")
+        await update.message.reply_text(f"Página {numero_foto} guardada. Sube la siguiente o escribe /finarchivos.")
     return ESCANEO
 
+"""
+Función auxiliar que rescata los distintos archivos cuyo contenido está presente en el prompt para la IA
+y luego los inyecta en un único string
+"""
 def construir_instrucciones_ia() -> str:
     ruta_plantilla = os.path.join(DOWNLOAD_BASEDIR, "../subjects/plantillas/Exámenes/Plantilla_Ex.tex")
     ruta_preambulo = os.path.join(DOWNLOAD_BASEDIR, "../subjects/_assets/preambulo.tex")
@@ -1347,6 +1364,21 @@ def construir_instrucciones_ia() -> str:
         texto_preambulo = texto_preambulo
     )
 
+
+"""
+Funcion que se encarga de manejar el flujo para hacer la transcripcion del examen a LaTeX
+
+Espera que el usuario haya mandado una serie de imagenes del examen, carga el prompt del archivo prompt_ocr.txt en el que le inyecta
+la plantilla de examen y el preambulo.
+
+Hace una llamada a la API de gemini de google AI studio y recibe el código LaTeX que transcribe el examen
+
+Por si acaso Gemini halucina, habla más de la cuenta o escribe algo que no sea LaTeX en el paso 4 se realiza un filtro para extraer solo un bloque de código LaTeX
+
+En caso de faltar información sobre el examen se lleva la conversación a un nuevo estado en el que entra en juego el manejador recuperar_metadatos_handler
+
+Una vez gestionado eso se prepara el correo y se envia el código LaTeX al usuario y por correo
+"""
 async def procesar_examen_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     # Nombres de los archivos
     fotos = context.user_data.get('FOTOS_IA', [])
@@ -1379,7 +1411,7 @@ async def procesar_examen_handler(update: Update, context: ContextTypes.DEFAULT_
 
     # 3. Llamada a la IA, a veces lanza un 503, por tanto probamos unos cuantos intentos
     max_intentos = 3
-    response = None # INICIALIZACIÓN CORRECTA EN PYTHON
+    response = None
 
     for intento in range(max_intentos):
         try:
@@ -1424,27 +1456,133 @@ async def procesar_examen_handler(update: Update, context: ContextTypes.DEFAULT_
     
     if match:
         codigo_limpio = match.group(1)
-        tex_filename = "Examen_TranscritoIA.tex"
-        tex_path = os.path.join(directorio_usuario, tex_filename)
-        with open(tex_path, "w", encoding="utf-8") as f:
-            f.write(codigo_limpio)
-        
-        await update.message.reply_document(
-            document=open(tex_path, 'rb'), 
-            caption="¡Examen completo procesado! Aquí tienes el código final listo para compilar."
-        )
-        # 5. Mandar correo
-        context.user_data[OPTION_KEY] = 'Transcripción IA Examen'
-        context.user_data[DESCRIPTION_KEY] = 'Examen transcrito automáticamente con Gemini 3.5 Flash. Se adjuntan escaneos originales y código LaTeX.'
 
-        context.user_data[FILES_KEY] = fotos + [tex_filename]
-                
-        return await terminar_handler(update,context)
+        metadatos_faltantes = re.findall(r'%\s*\\item\[(.*?)\]', codigo_limpio)
+
+        if not metadatos_faltantes:
+            tex_filename = "Examen_TranscritoIA.tex"
+            tex_path = os.path.join(directorio_usuario, tex_filename)
+            with open(tex_path, "w", encoding="utf-8") as f:
+                f.write(codigo_limpio)
+            
+            await update.message.reply_document(
+                document=open(tex_path, 'rb'), 
+                caption="¡Examen completo procesado! Aquí tienes el código final listo para compilar."
+            )
+
+            # 5. Enviar correo, en este caso ya tenemos todos los metadatos asegurados
+            context.user_data[OPTION_KEY] = 'Transcripción IA Examen'
+            context.user_data[DESCRIPTION_KEY] = 'Examen transcrito automáticamente con Gemini 3.5 Flash. Se adjuntan escaneos originales y código LaTeX.'
+
+            context.user_data[FILES_KEY] = fotos + [tex_filename]
+                    
+            return await terminar_handler(update,context)
+        else:
+            context.user_data['codigo_latex'] = codigo_limpio
+
+            mensaje_instrucciones = (
+                "¡Examen procesado por la IA!\n\n"
+                "Sin embargo, no he podido leer algunos datos del encabezado de la imagen. "
+                "Por favor, **copia el siguiente mensaje**, rellena los huecos y envíamelo de vuelta "
+                "(o escribe /omitir si prefieres dejarlo vacío):"
+            )
+
+            mensaje_plantilla = ""
+
+            for metadato in metadatos_faltantes:
+                mensaje_plantilla += f"{metadato}: \n"
+
+            await update.message.reply_text(mensaje_instrucciones,parse_mode= 'Markdown')
+            await update.message.reply_text(mensaje_plantilla)
+            return RECUPERAR_METADATOS
 
     else:
         await update.message.reply_text("La IA no ha podido generar una estructura LaTeX válida con estas fotos. Inténtalo con imágenes más claras.")
         return await cancel(update, context)
 
+async def recuperar_metadatos_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    respuesta_usuario = update.message.text
+    codigo_actualizado = context.user_data['codigo_latex']
+
+    # Si el usuario no ha escrito /omitir, habrá algún campo relleno
+    if respuesta_usuario != '/omitir':
+        lineas = respuesta_usuario.split('\n')
+
+        for linea in lineas:
+            if ':' in linea:
+                partes = linea.split(':',1)
+                clave = partes[0].strip()
+                valor = partes[1].strip()
+
+                # Si el usuario ha rellenado el campo
+                if valor:
+                    # Buscamos el item identificado por clave y lo rellenamos con valor
+                    patron = re.compile(r'%\s*\\item\[' + re.escape(clave) + r'\].*')
+
+                    # Al parecer si no usamos una función lambda aquí, el paquete re busca caracteres de escape como \1,\2 y al encontrar \i en \item peta
+                    codigo_actualizado = patron.sub(
+                        lambda m, cl=clave, vl=valor: f"\\item[{cl}] {vl}", 
+                        codigo_actualizado
+                    )
+
+                    context.user_data[f"Metadato aportado por el usuario ({clave})"] = valor
+    
+    directorio_usuario = context.user_data.get(DOWNLOADS_DIR_KEY, DOWNLOAD_BASEDIR)
+    tex_filename = "Examen_TranscritoIA.tex"
+    tex_path = os.path.join(directorio_usuario, tex_filename)
+
+    with open(tex_path, "w", encoding="utf-8") as f:
+        f.write(codigo_actualizado)
+    
+    await update.message.reply_document(
+        document=open(tex_path, 'rb'), 
+        caption="¡Examen completo procesado! Ya nos ha llegado y será subido a la web lo antes posible, aún así te animamos resolverlo y que nos lo envies para poder subirlo resuelto."
+    )
+
+    # 5. Enviar correo, en este caso ya tenemos todos los metadatos asegurados
+    context.user_data[OPTION_KEY] = 'Transcripción IA Examen'
+    context.user_data[DESCRIPTION_KEY] = 'Examen transcrito automáticamente con Gemini 3.5 Flash. Se adjuntan escaneos originales y código LaTeX.'
+
+    context.user_data[FILES_KEY] = context.user_data.get('FOTOS_IA', []) + [tex_filename]
+            
+    return await terminar_handler(update,context)
+
+"""
+Copia de funcion start pero que lleva directamente al estado de escaneo
+
+Funcion creada para el testeo del feature de escaneo de exámenes para estar oculta del menú público del bot y ser solo accesible
+a aquellos que conozcan el comando
+"""
+async def comando_IA(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    context.user_data[USERNAME_KEY] = update.message.from_user.username
+    context.user_data[NAME_KEY] = update.message.from_user.first_name
+    context.user_data[LAST_NAME_KEY] = update.message.from_user.last_name
+    context.user_data[INIT_TIME_KEY] = get_hora_str()
+
+    if has_exceeded_requests(context):
+        add_log(LOG_PATH, f"El usuario {get_userIdentifier(context.user_data)} ha excedido el límite de peticiones (IA).")
+        await update.message.reply_text(
+            f"Has excedido el límite de {REQUESTS_LIMIT} peticiones en {TIME_LIMIT} segundos. Por favor, inténtalo de nuevo más tarde."
+        )
+        context.user_data.clear()
+        return ConversationHandler.END
+    
+    add_log(LOG_PATH, f"Peticion secreta de IA iniciada por {get_userIdentifier(context.user_data)}.")
+    
+    file_name = context.user_data[INIT_TIME_KEY] + "_" + get_userIdentifier(context.user_data)
+    context.user_data[DOWNLOADS_DIR_KEY] = os.path.join(DOWNLOAD_BASEDIR, file_name)
+    os.makedirs(context.user_data[DOWNLOADS_DIR_KEY])
+
+    context.user_data[OPTION_KEY] = CALLBACK_ESCANEO
+    context.user_data['FOTOS_IA'] = []
+    
+    await update.message.reply_text(
+        "Has elegido escanear un examen con IA.\n\n"
+        "Sube fotos claras del examen que quieres pasar a código LaTeX.\n"
+        "Recuerda enviar /finarchivos al terminar.",
+        parse_mode='Markdown'
+    )
+    return ESCANEO
 
 
 """
@@ -1456,7 +1594,7 @@ def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
+        entry_points=[CommandHandler('start', start), CommandHandler('escaneo',comando_IA)],
         states={
             MENU:
                 [CallbackQueryHandler(menu_handler)],
@@ -1506,7 +1644,10 @@ def main() -> None:
                 [MessageHandler(filters.TEXT & ~filters.COMMAND, forma_ayuda_handler)],
             ESCANEO:
                 [MessageHandler(filters.PHOTO, acumular_fotos_handler),
-                 CommandHandler('finescaneo', procesar_examen_handler)],
+                 CommandHandler('finarchivos', procesar_examen_handler)],
+            RECUPERAR_METADATOS:
+                [MessageHandler(filters.TEXT & ~filters.COMMAND, recuperar_metadatos_handler),
+                 CommandHandler('omitir',recuperar_metadatos_handler)]
         },
         fallbacks=[CommandHandler('cancel', cancel)]
     )
