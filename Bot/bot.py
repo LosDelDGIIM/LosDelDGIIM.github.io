@@ -1,12 +1,14 @@
-from time import sleep
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Bot
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, ConversationHandler, ContextTypes
+from telegram.error import Forbidden
 
 
 from urllib.parse import urlparse       # Para analizar URLs
 import re                               # Para expresiones regulares
 from datetime import datetime, timedelta# Para se encarga der fechas
 import os                               # Para se encarga der archivos
+import httpx
+import traceback
 
 # Para enviar correos electrónicos de GMAIL
 from google.auth.transport.requests import Request
@@ -22,15 +24,21 @@ import base64
 import mimetypes
 
 # Definimos los estados de la conversación
-MENU, CURSO, ASIGNATURA, DESCRIPCION, ARCHIVOS, CONTACTO, MATERIAL_ENLACE, CAPTURA, CORRECCION, ANIO_EXAMEN, PROFESOR_EXAMEN, ES_DEPARTAMENTO_EXAMEN, GRADO_EXAMEN, GRUPO_EXAMEN, FECHA_EXAMEN, DURACION_EXAMEN, MENU_OTRO, FORMA_AYUDA = range(18)
+MENU, CURSO, ASIGNATURA, DESCRIPCION, ARCHIVOS, CONTACTO, MATERIAL_ENLACE, CAPTURA, CORRECCION, ANIO_EXAMEN, PROFESOR_EXAMEN, ES_DEPARTAMENTO_EXAMEN, GRADO_EXAMEN, GRUPO_EXAMEN, FECHA_EXAMEN, DURACION_EXAMEN, MENU_OTRO, FORMA_AYUDA, PETICION_ASIGNATURA, PASSWD, NOTIFICACION, NOTIFICACION_PROCESAR = range(22)
 
 # Token del bot
 TOKEN=""
+NOTIFICATION_PASSWORD = ""
+ADMINS_IDS = []
 
 # Define el directorio donde guardarás los archivos
 DOWNLOAD_BASEDIR = '/home/Desktop/LosDelDGIIM.github.io/Bot'
-#DOWNLOAD_BASEDIR = '/home/arturoolvrs/Documents'
 LOG_PATH = os.path.join(DOWNLOAD_BASEDIR, "log_file.log")
+CHAT_IDS_PATH = os.path.join(DOWNLOAD_BASEDIR, "chat_ids.log")
+
+# Valor por defecto de notificar
+DEFAULT_NOTIFY = True
+SEPARATOR = ";"
 
 # Constantes para los callback data del menú principal
 CALLBACK_NUEVO = 'Nuevo material'
@@ -47,6 +55,10 @@ CALLBACK_SCREENSHOTS = 'capturas'
 CALLBACK_DESCRIPTION = 'descripcion'
 CALLBACK_END = 'terminar'
 
+# Constantes para los callback del menú de notify
+CALLBACK_NOTIFICAR = 'notificar'
+CALLBACK_NO_NOTIFICAR = 'no_notificar'
+
 # Claves para el diccionario con los datos dados por el el usuario
 USERNAME_KEY = 'Username'
 NAME_KEY = 'Nombre'
@@ -56,6 +68,7 @@ END_TIME_KEY = 'Hora de Fin'
 DOWNLOADS_DIR_KEY = 'Directorio de Descargas'
 EMAIL_KEY = 'Email'
 PHONE_KEY = 'Telefono'
+CHATID_KEY = 'Chat ID'
 
 OPTION_KEY = 'Opción elegida'
 CURSO_KEY = 'Curso'
@@ -78,6 +91,16 @@ IS_DEPARTMENT_KEY = '¿Lo ha puesto el departamento?'
 
 # Comando para indicar que no sé una información de un examen
 UNKNOWN_COMMAND = '/desconocido'
+TODAY_COMMAND = '/today'
+ACTUAL_COMMAND = '/cursoActual'
+
+subjects = {
+    "1": ["Geometría I", "Álgebra I", "Cálculo I", "FP", "FFT", "TOC", "Cálculo II", "Geometría II", "MN I", "EDIP", "MP", "FS"],
+    "2": ["Análisis I", "EC", "ED", "Geometría III", "SO", "Topología I", "Algorítmica", "Análisis II", "AC", "LMD", "Modelos I", "PDOO"],
+    "3": ["Ec. Dif. I", "FR", "FBD", "MC", "Probabilidad", "SCD", "FIS", "ISE", "IA", "MN II", "VC I", "Álgebra II"],
+    "4": ["Análisis Funcional", "DDSI", "Inferencia", "IG", "Topología II", "Álgebra III", "Curvas y Superficies", "Ec. Dif. II", "Modelos II"],
+    "5": ["IES"]
+}
 
 
 # Constantes para evitar que se excedan las peticiones al servidor
@@ -193,7 +216,7 @@ def es_email(email):
 
 
 """
-Comprueba si una URL es un enlace válido a la web LosDelDGIIM.github.io.
+Comprueba si una URL es un enlace válido.
 
 Args:
     url (str): URL a validar.
@@ -211,8 +234,7 @@ def es_enlace(url: str) -> bool:
         # Analizar la URL
         parsed_url = urlparse(url)
         
-        # Verificar si el dominio coincide
-        return parsed_url.netloc == 'losdeldgiim.github.io'
+        return True
     except Exception as e:
         add_log(LOG_PATH, f"Error al analizar la URL {url}: {e}")
         return False
@@ -225,6 +247,15 @@ Returns:
 """
 def get_hora_str():
     return datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+
+"""
+Obtiene la hora actual en formato 'YYYY-MM-DD_HH:MM:SS'.
+
+Returns:
+    str: Hora actual en formato 'DD/MM/YYYY'.
+"""
+def get_fecha_str():
+    return datetime.now().strftime("%d/%m/%Y")
 
 
 """
@@ -239,6 +270,34 @@ def add_log(file: str, msg: str):
     # Abrimos el archivo en modo append
     with open(file, "a") as f:
         f.write(f"{get_hora_str()}\t- {msg}\n")
+
+
+def register_chat_id(file: str, chat_id):
+    """
+    Registra un chat_id en el archivo de chat_ids.
+
+    Args:
+        file (str): Ruta del archivo de chat_ids.
+        chat_id (int): ID del chat a registrar.
+    """
+    # Comprobar si el chat_id ya está registrado
+    with open(file, "r") as f:
+        lines = f.read().splitlines()
+
+    # Vemos si el chat_id ya está registrado
+    ya_registrado = False
+    for line in lines:
+        if str(chat_id) == line.strip().split(SEPARATOR)[0]:
+            ya_registrado = True
+            break
+    
+    
+    if not ya_registrado:
+        # Si no está registrado, añadirlo al archivo
+        with open(file, "a") as f:
+            f.write(f"{chat_id}{SEPARATOR}{DEFAULT_NOTIFY}\n")
+            add_log(LOG_PATH, f"Chat_id {chat_id} registrado correctamente.")
+    
 
 """
 Función que se encarga de controlar que no se excedan las peticiones en un tiempo determinado.
@@ -266,7 +325,7 @@ def has_exceeded_requests(context: ContextTypes.DEFAULT_TYPE) -> bool:
     for line in reversed(lines):
         # Obtener la hora de la línea. Si la línea no tiene el formato esperado, se ignora
         try:
-            line_time = datetime.strptime(line.split("\t")[0], "%Y-%m-%d_%H:%M:%S")
+            line_time = datetime.strptime(line.strip().split("\t")[0], "%Y-%m-%d_%H:%M:%S")
         except ValueError:
             continue
         
@@ -306,7 +365,9 @@ Returns:
     str: Identificador del usuario.
 """
 def get_userIdentifier(datos: dict) -> str:
-    return datos.get(USERNAME_KEY) or datos.get(NAME_KEY) or "Usuario sin nombre"
+    if datos is None:
+        return "Usuario sin nombre"
+    return datos.get(USERNAME_KEY) or datos.get(NAME_KEY) or datos.get(CHATID_KEY) or "Usuario sin nombre"
 
 
 
@@ -324,6 +385,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data[NAME_KEY] = update.message.from_user.first_name
     context.user_data[LAST_NAME_KEY] = update.message.from_user.last_name
     context.user_data[INIT_TIME_KEY] = get_hora_str()
+    context.user_data[CHATID_KEY] = update.message.chat_id
 
     # Comprobar si el usuario ha excedido el límite de peticiones
     if has_exceeded_requests(context):
@@ -335,7 +397,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         return ConversationHandler.END
     
     # Log de conv iniciada. Fecha + mensaje
-    add_log(LOG_PATH, f"Peticion iniciada por {get_userIdentifier(context.user_data)}.")
+    add_log(LOG_PATH, f"Peticion iniciada por {get_userIdentifier(context.user_data)}. Chat ID: {update.message.chat_id}.")
+    register_chat_id(CHAT_IDS_PATH, update.message.chat_id)
     
 
     # Modificamos la carpeta en la que se va a guardar todo.
@@ -409,7 +472,7 @@ async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     elif context.user_data[OPTION_KEY] == CALLBACK_OTRO:
         await query.edit_message_text(
             "Has elegido una opción diferente, ya que las anteriores no describen su situación.\n" + \
-            "En el caso de que este formulario no se ajuste a tu petición, recuerda que puedes escribirnos un correo directamente tal y como se indica en la web https://LosDelDGIIM.github.io/colaboracion.html."
+            "En el caso de que este formulario no se ajuste a tu petición, recuerda que puedes escribirnos un correo directamente tal y como se indica en la web LosDelDGIIM.github.io/colaboracion.html."
         )
 
     elif context.user_data[OPTION_KEY] == CALLBACK_COLABORAR:
@@ -444,7 +507,7 @@ Returns:
 async def forma_ayuda_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data[AYUDA_KEY] = update.message.text
     if not es_contactable(context.user_data):
-        await update.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).")
+        await update.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).\n\nTen en cuenta que se te solicitará cada vez que termines una colaboración, puesto que no dispones de username. Para evitar esto, puedes configurar un username en Telegram.")
         return CONTACTO
     else:
         return await terminar_handler(update, context)
@@ -481,7 +544,7 @@ async def solicitar_menu_otro(query, context: ContextTypes.DEFAULT_TYPE) -> None
     # Ya se han usado todas las opciones, tan solo se puede terminar    
     else:
         if not es_contactable(context.user_data):
-            await query.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).")
+            await query.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).\n\nTen en cuenta que se te solicitará cada vez que termines una colaboración, puesto que no dispones de username. Para evitar esto, puedes configurar un username en Telegram.")
             return CONTACTO
         else:
             return await terminar_handler(query, context)
@@ -500,9 +563,45 @@ async def solicitar_curso(query):
             [InlineKeyboardButton("Tercero (3º)", callback_data='3')],
             [InlineKeyboardButton("Cuarto (4º)", callback_data='4')],
             [InlineKeyboardButton("Quinto (5º)", callback_data='5')],
-            [InlineKeyboardButton("Optativas", callback_data='Optativas')]
+            [InlineKeyboardButton("Optativas", callback_data='Optativas')],
+            [InlineKeyboardButton("Desconocido", callback_data='Desconocido')]
         ])
     )
+
+
+"""Función que se encarga de solicitar la asignatura.
+No devuelve nada, tan solo muestra las distintas opciones.
+Args:
+    query (CallbackQuery): Consulta del usuario.
+    curso (str): Curso seleccionado por el usuario.
+"""
+async def solicitar_asignatura(query, curso):
+    asignaturas = subjects.get(curso, [])
+    opciones = []
+
+    # Calcular el punto medio
+    mitad = (len(asignaturas) + 1) // 2
+
+    # Rellenar las columnas
+    col_izq = asignaturas[:mitad]
+    col_der = asignaturas[mitad:]
+
+    # Construir filas de dos columnas
+    for i in range(mitad):
+        fila = []
+        fila.append(InlineKeyboardButton(col_izq[i], callback_data=col_izq[i]))
+        if i < len(col_der):
+            fila.append(InlineKeyboardButton(col_der[i], callback_data=col_der[i]))
+        opciones.append(fila)
+
+    opciones.append([InlineKeyboardButton("Otra asignatura", callback_data="Otra")])
+    await query.message.reply_text(
+        "Por favor, selecciona la asignatura:",
+        reply_markup=InlineKeyboardMarkup(opciones)
+    )
+
+    
+
 
 
 """
@@ -535,7 +634,6 @@ async def menu_otro_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             "Has elegido aportar archivos. "
             "Por favor, sube los archivos en cuestión.\n"
             "Puedes subir tantos archivos como desees.\n"
-            "Importante que sean archivos (las fotos también han de subirse como archivos).\n"
             "Para terminar, introduce /finarchivos."
         )
         return ARCHIVOS
@@ -544,7 +642,7 @@ async def menu_otro_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         context.user_data[SCREENSHOT_KEY] = []
         await query.message.reply_text(
             "Por favor, sube una captura. "
-            "Puedes subir tantas como desees. Para terminar, introduce /fincapturas."
+            "Puedes subir tantas como desees. Para terminar, introduce /fincapturas. "
             "Tienen que ser imágenes directamente, no documentos (aunque tengan formato de imagen)."
         )
         return CAPTURA
@@ -555,7 +653,7 @@ async def menu_otro_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     elif opcion == CALLBACK_END:
         if not es_contactable(context.user_data):
-            await query.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).")
+            await query.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).\n\nTen en cuenta que se te solicitará cada vez que termines una colaboración, puesto que no dispones de username. Para evitar esto, puedes configurar un username en Telegram.")
             return CONTACTO
         else:
             return await terminar_handler(query, context)
@@ -572,8 +670,12 @@ async def curso_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     await query.answer()
     context.user_data[CURSO_KEY] = query.data
 
+    if context.user_data[CURSO_KEY] not in ['1', '2', '3', '4', '5']:
+        await query.message.reply_text("Por favor, escribe el nombre de la asignatura.")
+        return PETICION_ASIGNATURA
+
     # Solicitar la asignatura
-    await query.edit_message_text("Por favor, indica la asignatura.")
+    await solicitar_asignatura(query, context.user_data[CURSO_KEY])
     return ASIGNATURA
 
 """
@@ -586,22 +688,42 @@ Returns:
             - ANIO_EXAMEN si se selecciona EXAMEN
 """
 async def asignatura_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    context.user_data[SUBJECT_KEY] = query.data
+
+    if context.user_data[SUBJECT_KEY] == "Otra":
+        await query.message.reply_text("Por favor, escribe el nombre de la asignatura.")
+        return PETICION_ASIGNATURA
+
+    return await post_asignatura_handler(update, context)
+
+async def peticion_asignatura_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    # Guardar la asignatura introducida por el usuario
     context.user_data[SUBJECT_KEY] = update.message.text
 
+    return await post_asignatura_handler(update, context)
+
+
+
+async def post_asignatura_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    # Detecta si viene de mensaje de texto o de callback
+    msg = update.message if update.message else update.callback_query.message
+
     if context.user_data[OPTION_KEY] == CALLBACK_NUEVO:
-        await update.message.reply_text("Por favor, describe lo que se va a añadir.")
+        await msg.reply_text("Por favor, describe lo que se va a añadir.")
         return DESCRIPCION
     
     elif context.user_data[OPTION_KEY] in [CALLBACK_COMPLEMENTAR, CALLBACK_CORREGIR]:
         tmp = "complementar" if context.user_data[OPTION_KEY] == CALLBACK_COMPLEMENTAR else "corregir"
-        await update.message.reply_text(
+        await msg.reply_text(
             f"Por favor, proporciona el enlace al material que se va a {tmp}.\n"
             f"En caso de no querer subir enlace, contestar con /noenlace, pero tendrá entonces que describir bien el material que va a {tmp}."
         )
         return MATERIAL_ENLACE
 
     elif context.user_data[OPTION_KEY] == CALLBACK_EXAMEN:
-        await update.message.reply_text(f"Por favor, indica el curso académico del examen (p.ej. 2023/2024).\n(En caso de no saberlo, contestar con {UNKNOWN_COMMAND}).")
+        await msg.reply_text(f"Por favor, indica el curso académico del examen (p.ej. 2023/2024).\nSi es el actual, puedes contestar con {ACTUAL_COMMAND}.\n(En caso de no saberlo, contestar con {UNKNOWN_COMMAND}).")
         return ANIO_EXAMEN
 
 
@@ -615,13 +737,23 @@ Returns:
 async def anio_examen_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     
     # Comprobación de si es /desconocido
-    if update.message.text != UNKNOWN_COMMAND:
+    if update.message.text != UNKNOWN_COMMAND and update.message.text != ACTUAL_COMMAND:
         anio = update.message.text
         if not re.match(r'^\d{4}[\/-]\d{4}$', anio):
             await update.message.reply_text("Por favor, introduce un año válido en formato 'aaaa/yyyy' o 'aaaa-yyyy', donde 'aaaa' es el año de inicio del curso y 'yyyy' el año siguiente.")
             return ANIO_EXAMEN
 
         context.user_data[YEAR_KEY] = update.message.text
+
+    elif update.message.text == ACTUAL_COMMAND:
+        mes = datetime.now().month
+        anio = datetime.now().year
+
+        # Si el mes es posterior a 8, entonces es anio/(anio+1). En caso contrario, es (anio-1)/anio
+        if mes > 8:
+            context.user_data[YEAR_KEY] = f"{anio}/{anio + 1}"
+        else:
+            context.user_data[YEAR_KEY] = f"{anio - 1}/{anio}"
 
 
     await update.message.reply_text(f"Por favor, indica el profesor que redactó el examen.\n(En caso de no saberlo, contestar con {UNKNOWN_COMMAND}).")
@@ -697,7 +829,7 @@ async def grupo_examen_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     if update.message.text != UNKNOWN_COMMAND:
         context.user_data[GROUP_KEY] = update.message.text
 
-    await update.message.reply_text(f"Por favor, indica la fecha del examen en formato dd/mm/aaaa.\n(En caso de no saberlo, contestar con {UNKNOWN_COMMAND}).")
+    await update.message.reply_text(f"Por favor, indica la fecha del examen en formato dd/mm/aaaa.\nSi es hoy, puedes contestar con {TODAY_COMMAND}.\n(En caso de no saberlo, contestar con {UNKNOWN_COMMAND}).")
     return FECHA_EXAMEN
 
 """
@@ -708,14 +840,21 @@ Returns:
 """
 async def fecha_examen_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     # Comprobación de si es /desconocido
-    if update.message.text != UNKNOWN_COMMAND:
+    if update.message.text != UNKNOWN_COMMAND and update.message.text != TODAY_COMMAND:
+        
         try:
+
             date = datetime.strptime(update.message.text, "%d/%m/%Y")
             date_str = date.strftime("%d/%m/%Y")
             context.user_data[DATE_EX_KEY] = date_str
         except ValueError:
             await update.message.reply_text("Por favor, introduce una fecha válida en formato dd/mm/aaaa.")
             return FECHA_EXAMEN
+        
+    elif update.message.text == TODAY_COMMAND:
+        # Si es hoy, guardamos la fecha de hoy
+        date_str = get_fecha_str()
+        context.user_data[DATE_EX_KEY] = date_str
     
     await update.message.reply_text(f"Por favor, describe el tipo de examen (Parcial, Convocatoria ordinaria, Extraordinaria, etc.).\n(En caso de no saberlo, contestar con {UNKNOWN_COMMAND}).")
     return DESCRIPCION
@@ -741,7 +880,6 @@ async def descripcion_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
         await update.message.reply_text(
             "Por favor, sube los archivos relacionados.\n"
             "Puedes subir tantos archivos como desees.\n"
-            "Importante que sean archivos (las fotos también han de subirse como archivos, no como fotos).\n"
             "Para terminar, introducir /finarchivos."
         )
         return ARCHIVOS
@@ -822,7 +960,7 @@ async def captura_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if update.message.photo:
 
         file = await context.bot.get_file(update.message.photo[-1].file_id)
-        file_name = file.file_path.split('/')[-1]
+        file_name = file.file_path.strip().split('/')[-1]
 
         #Añade la hora al nombre del archivo
         file_name = datetime.now().strftime("%H-%M-%S_") + file_name
@@ -884,7 +1022,7 @@ async def correccion_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
     context.user_data[CORRECTION_KEY] = update.message.text
     
     if not es_contactable(context.user_data):
-        await update.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).")
+        await update.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).\n\nTen en cuenta que se te solicitará cada vez que termines una colaboración, puesto que no dispones de username. Para evitar esto, puedes configurar un username en Telegram.")
         return CONTACTO
     else:
         return await terminar_handler(update, context)
@@ -896,14 +1034,30 @@ Returns:
     int: Nuevo estado de la conversación. ARCHIVOS, ya que se pueden subir más archivos
 """
 async def archivos_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    if update.message.document:
-        
+    if update.message.document or update.message.photo:
+
         document = update.message.document
-        file_id = document.file_id
-        file_name = document.file_name
-        
-        # Obtener información del archivo
-        file = await context.bot.get_file(file_id)
+
+        file_id, file_name, file = None, None, None
+
+        try:
+            if update.message.document:
+                file_id = document.file_id
+                file_name = document.file_name
+                file = await context.bot.get_file(file_id)
+            
+            if update.message.photo:
+                file_id = update.message.photo[-1].file_id
+                file = await context.bot.get_file(file_id)
+                file_name = file.file_path.strip().split('/')[-1]
+        except Exception as e:
+            if "File is too big" in str(e):
+                await update.message.reply_text("El archivo es demasiado grande. Por favor, sube un archivo más pequeño.")
+                return ARCHIVOS
+            else:
+                await update.message.reply_text("Ha ocurrido un error al procesar el archivo. Por favor, inténtalo de nuevo.")
+                add_log(LOG_PATH, f"Error al procesar el archivo de {get_userIdentifier(context.user_data)}: {str(e)}")
+                return ARCHIVOS
 
         #Añade la hora al nombre del archivo
         file_name = datetime.now().strftime("%H-%M-%S_") + file_name
@@ -949,7 +1103,7 @@ async def finarchivos_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
         return MENU_OTRO
     else:
         if not es_contactable(context.user_data):
-            await update.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).")
+            await update.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).\n\nTen en cuenta que se te solicitará cada vez que termines una colaboración, puesto que no dispones de username. Para evitar esto, puedes configurar un username en Telegram.")
             return CONTACTO
         else:
             return await terminar_handler(update, context)
@@ -1049,15 +1203,19 @@ async def help_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         "- /start - Iniciar la colaboración\n"
         "- /help - Mostrar este mensaje de ayuda\n"
         "- /cancel - Cancelar la colaboración\n"
+        "- /notify - Configuración de las notificaciones\n"
         "- /finarchivos - Finalizar la subida de archivos\n"
         "- /fincapturas - Finalizar la subida de capturas\n"
         "- /noenlace - Indicar que no se proporcionará un enlace\n"
-        "- /desconocido - Indicar que no se conoce la información solicitada\n\n"
+        "- /desconocido - Indicar que no se conoce la información solicitada\n"
+        "- /today - Fecha actual\n\n"
+        "- /cursoActual - Curso académico actual\n\n"
         "Para colaborar, tan solo tienes que seguir las instrucciones del bot.\n"
         "En el caso de detectar cualquier anomalía o bug, por favor, contacta con nosotros tal y como se indica en LosDelDGIIM.github.io/colaboracion.html.\n\n"
         "A continuación, siga por el paso en el que estaba, o bien indique /cancel para cancelar la colaboración y /start para iniciarla de nuevo.\n\n"
         "¡Gracias por colaborar con este proyecto!"
     )
+    register_chat_id(CHAT_IDS_PATH, update.message.chat_id)
     await update.message.reply_text(help_text)
 
 
@@ -1138,7 +1296,7 @@ class Mail:
         if content_type is None or encoding is not None:
             content_type = 'application/octet-stream'
 
-        main_type, sub_type = content_type.split('/', 1)
+        main_type, sub_type = content_type.strip().split('/', 1)
         with open(filename, 'rb') as file:
             my_file = MIMEBase(main_type, sub_type)
             my_file.set_payload(file.read())
@@ -1229,7 +1387,7 @@ def gestionar_datos(datos: dict) -> bool:
     adjuntos = []
     for file in datos.get(FILES_KEY, []) + datos.get(SCREENSHOT_KEY, []):
         # Quitamos la caption, si la hubiera
-        file_name = file.split(" : ")[0]
+        file_name = file.strip().split(" : ")[0]
         adjuntos.append(os.path.join(datos.get(DOWNLOADS_DIR_KEY), file_name))
     datos.pop(DOWNLOADS_DIR_KEY)
 
@@ -1242,7 +1400,7 @@ def gestionar_datos(datos: dict) -> bool:
 
     # Datos obligatorios
     message_text += f"<li>{USERNAME_KEY}: <a target=_blanck href='https://t.me/{datos.get(USERNAME_KEY)}'>{datos.pop(USERNAME_KEY)}</a></li>\n"
-    for key in [NAME_KEY, LAST_NAME_KEY, PHONE_KEY]:
+    for key in [NAME_KEY, LAST_NAME_KEY, PHONE_KEY, CHATID_KEY]:
         if key in datos:
             message_text += f"<li>{key}: {datos.pop(key)}</li>\n"
     if EMAIL_KEY in datos:
@@ -1278,8 +1436,243 @@ def gestionar_datos(datos: dict) -> bool:
     
 
 
+"""
+Función que se encarga de manejar los mensajes desconocidos.
+"""
+async def unknown_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    msg = "Lo siento, no he entendido tu mensaje. Puedes pulsar /cancel para cancelar la operación y volver a empezar."
+    if update.message:
+        await update.message.reply_text(msg)
+    elif update.callback_query:
+        await update.callback_query.answer()
+        await update.callback_query.message.reply_text(msg)
+
+"""
+Función que se encarga de manejar los mensajes antes de iniciar la conversación.
+"""
+async def unstarted_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    register_chat_id(CHAT_IDS_PATH, update.message.chat_id)
+    msg = "Lo siento, no he entendido tu mensaje.\nAún no has iniciado una colaboración. Por favor, pulsa /start para iniciar una colaboración.\nTambién puedes emplear algunos comandos de gestión, como /notify."
+    await update.message.reply_text(msg)
+
+"""
+    Envía un mensaje a todos los chat_ids registrados en el archivo chat_ids_path que tengan configurado la notificación
+"""
+async def notificar(chat_ids_path: str, message: str) -> None:
+    message = "<b>Aviso de LosDelDGIIM</b>:\n\n" + message + "\n\nSi no desea recibir estos avisos, pulsar /notify."
 
 
+    chat_ids = []
+    for line in open(chat_ids_path, 'r'):
+        if line.strip().split(SEPARATOR)[1] == 'True':  # Solo notificar a los que tienen la notificación activada
+            chat_ids.append(line.strip().split(SEPARATOR)[0])
+    
+    if not chat_ids:
+        add_log(LOG_PATH, "No hay usuarios registrados para enviar la notificación.")
+        return False
+    
+    hayError = False
+    for chat_id in chat_ids:
+        try:
+            bot = Bot(token=TOKEN)
+            await bot.send_message(chat_id=chat_id, text=message, parse_mode="HTML")
+        except Forbidden as e:
+            # El usuario ha bloqueado el bot, no es un error crítico
+            add_log(LOG_PATH, f"Usuario {chat_id} ha bloqueado el bot - omitiendo notificación")
+        except Exception as e:
+            add_log(LOG_PATH, f"Error al enviar la notificación a {chat_id}: {e}")
+            hayError = True
+
+            #Notificar al admin del error
+            try:
+                await bot.send_message(chat_id=ADMINS_IDS[0], text=f"Error al enviar la notificación a {chat_id}: {e}")
+            except:
+                pass
+    
+    if (not hayError):
+        add_log(LOG_PATH, "Notificación enviada correctamente a todos los usuarios registrados.")
+    
+    return not hayError
+
+
+async def send_notification(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    context.user_data[USERNAME_KEY] = update.message.from_user.username
+    context.user_data[NAME_KEY] = update.message.from_user.first_name
+    context.user_data[LAST_NAME_KEY] = update.message.from_user.last_name
+    context.user_data[INIT_TIME_KEY] = get_hora_str()
+    context.user_data[CHATID_KEY] = update.message.chat_id
+
+    register_chat_id(CHAT_IDS_PATH, update.message.chat_id)
+    add_log(LOG_PATH, f"Usuario {get_userIdentifier(context.user_data)} ha solicitado enviar una notificación.")
+
+    if context.user_data.get(CHATID_KEY) in ADMINS_IDS:
+        await update.message.reply_text("Mensaje a enviar:")
+        return NOTIFICACION
+    else:
+        msg = "Lo siento, no he entendido tu mensaje. Puedes pulsar /cancel para cancelar la operación y volver a empezar."
+        await update.message.reply_text(msg)
+        context.user_data.clear()
+        return ConversationHandler.END
+
+    """Anterior implementación, con contraseña
+    await update.message.reply_text("Contraseña:")
+    return PASSWD
+    """
+
+async def passwd_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    passwd = update.message.text
+    if passwd != NOTIFICATION_PASSWORD:
+        await update.message.reply_text("Contraseña incorrecta. Por favor, inténtalo de nuevo.\nSi no tienes contraseña, pulsa /cancel.")
+        return PASSWD
+    
+    await update.message.reply_text("Mensaje a enviar:")
+    return NOTIFICACION
+
+async def notification_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    message = update.message.text
+    if not message:
+        await update.message.reply_text("El mensaje no puede estar vacío. Por favor, inténtalo de nuevo.")
+        return NOTIFICACION
+    
+    # Enviar el mensaje a todos los chat_ids registrados
+    if (await notificar(CHAT_IDS_PATH, message)):
+        await update.message.reply_text("Notificación enviada a todos los usuarios registrados.")
+    else:
+        await update.message.reply_text("Error al enviar la notificación. Por favor, inténtalo de nuevo más tarde.")
+    
+    context.user_data.clear()  # Limpiar los datos de la conversación
+    return ConversationHandler.END
+
+
+async def ask_notification_conf(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    context.user_data[CHATID_KEY] = update.message.chat_id
+    register_chat_id(CHAT_IDS_PATH, update.message.chat_id)
+    add_log(LOG_PATH, f"Usuario {get_userIdentifier(context.user_data)} ha solicitado configurar las notificaciones.")
+    conf_anterior = True
+    for line in open(CHAT_IDS_PATH, 'r'):
+        if line.strip().split(SEPARATOR)[0] == str(update.message.chat_id):
+            conf_anterior = line.strip().split(SEPARATOR)[1] == 'True'
+            break
+
+    msg = "Aquí puedes configurar las notificaciones del bot.\n"
+    if conf_anterior:
+        msg += "Actualmente tienes las notificaciones <b>activadas</b>.\n\n"
+        msg += "🔘 Notifícame de los cambios más relevantes.\n\n"
+        msg += "⚫️ No quiero que me notifiques."
+    else:
+        msg += "Actualmente tienes las notificaciones <b>desactivadas</b>.\n\n"
+        msg += "⚫️ Notifícame de los cambios más relevantes.\n\n"
+        msg += "🔘 No quiero que me notifiques."
+
+
+    await update.message.reply_text(msg,
+        parse_mode="HTML",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("SÍ quiero que me avises", callback_data=CALLBACK_NOTIFICAR)],
+            [InlineKeyboardButton("NO quiero que me avises", callback_data=CALLBACK_NO_NOTIFICAR)]
+        ])
+    )
+    return NOTIFICACION_PROCESAR
+
+async def notification_conf_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.callback_query.answer()
+    nueva_conf = update.callback_query.data == CALLBACK_NOTIFICAR
+
+    tmp = "activado" if nueva_conf else "desactivado"
+
+    add_log(LOG_PATH, f"Usuario {get_userIdentifier(context.user_data)} ha {tmp} las notificaciones.")
+    
+    with open(CHAT_IDS_PATH, 'r') as f:
+        lines = f.readlines()
+    
+    with open(CHAT_IDS_PATH, 'w') as f:
+        for line in lines:
+            if line.strip().split(SEPARATOR)[0] == str(update.callback_query.message.chat_id):
+                f.write(f"{update.callback_query.message.chat_id}{SEPARATOR}{nueva_conf}\n")
+            else:
+                f.write(line)
+    
+    
+    tmp = "activadas" if nueva_conf else "desactivadas"
+    await update.callback_query.message.reply_text(f"Notificaciones {tmp} correctamente.")
+    context.user_data.clear()  # Limpiar los datos de la conversación
+    return ConversationHandler.END
+
+
+"""
+Función que se encarga de manejar los errores del bot.
+"""
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        user_identifier = (
+            get_userIdentifier(context.user_data)
+            if context.user_data
+            else "desconocido"
+        )
+    except Exception:
+        user_identifier = "desconocido"
+
+    error = context.error
+
+    # --- Traceback completo ---
+    tb = "".join(
+        traceback.format_exception(None, error, error.__traceback__)
+    ) if error else "No traceback disponible"
+
+    # --- Log principal ---
+    add_log(
+        LOG_PATH,
+        f"Error en el bot con el usuario {user_identifier}: {error}\n{tb}"
+    )
+
+    # --------------------------------------------------
+    # 🚦 CLASIFICACIÓN DE ERRORES
+    # --------------------------------------------------
+
+    # ❌ Errores de red / Telegram (no notificar usuarios ni admins)
+    if isinstance(error, (NetworkError, TimedOut, Conflict)):
+        add_log(LOG_PATH, f"Error de red/Telegram ignorado: {type(error).__name__}")
+        return
+
+    # ❌ Errores HTTPX (red)
+    if "httpx" in type(error).__module__:
+        add_log(LOG_PATH, "Error httpx detectado (red o respuesta incompleta)")
+        return
+
+    # --------------------------------------------------
+    # 👤 NOTIFICAR AL USUARIO (solo si procede)
+    # --------------------------------------------------
+    if isinstance(update, Update) and update.effective_user:
+        try:
+            await update.effective_user.send_message(
+                "⚠️ Ocurrió un error interno al procesar tu solicitud.\n"
+                "Intenta nuevamente más tarde.\n"
+                "Si el problema persiste, contacta con los administradores."
+            )
+        except Exception:
+            # Nunca relanzar desde el error handler
+            pass
+
+    # --------------------------------------------------
+    # 🚨 NOTIFICAR A ADMINS (con rate-limit básico)
+    # --------------------------------------------------
+    admin_msg = (
+        "🚨 *ALERTA BOT*\n\n"
+        f"👤 Usuario: `{user_identifier}`\n"
+        f"❌ Error: `{error}`\n\n"
+        f"📄 Traceback:\n```{tb[-3500:]}```"
+    )
+
+    for admin_id in ADMINS_IDS:
+        try:
+            await context.bot.send_message(
+                chat_id=admin_id,
+                text=admin_msg,
+                parse_mode="Markdown"
+            )
+            await asyncio.sleep(0.2)  # evita flood
+        except Exception:
+            pass
 
 
 """
@@ -1300,7 +1693,7 @@ def main() -> None:
             CURSO:
                 [CallbackQueryHandler(curso_handler)],
             ASIGNATURA:
-                [MessageHandler(filters.TEXT & ~filters.COMMAND, asignatura_handler)],
+                [CallbackQueryHandler(asignatura_handler)],
             DESCRIPCION:
                 [MessageHandler(filters.TEXT & ~filters.COMMAND, descripcion_handler),
                  CommandHandler('desconocido', descripcion_handler)],
@@ -1313,13 +1706,14 @@ def main() -> None:
             CORRECCION:
                 [MessageHandler(filters.TEXT & ~filters.COMMAND, correccion_handler)],
             ARCHIVOS:
-                [MessageHandler(filters.Document.ALL, archivos_handler),
+                [MessageHandler(filters.Document.ALL | filters.PHOTO, archivos_handler),
                  CommandHandler('finarchivos', finarchivos_handler)],
             CONTACTO:
                 [MessageHandler(filters.TEXT & ~filters.COMMAND, contacto_handler)],
             ANIO_EXAMEN: 
                 [MessageHandler(filters.TEXT & ~filters.COMMAND, anio_examen_handler),
-                 CommandHandler('desconocido', anio_examen_handler)],
+                 CommandHandler('desconocido', anio_examen_handler),
+                 CommandHandler('cursoActual', anio_examen_handler)],
             PROFESOR_EXAMEN:
                 [MessageHandler(filters.TEXT & ~filters.COMMAND, profesor_examen_handler),
                  CommandHandler('desconocido', profesor_examen_handler)],
@@ -1333,21 +1727,65 @@ def main() -> None:
                  CommandHandler('desconocido', grupo_examen_handler)],
             FECHA_EXAMEN:
                 [MessageHandler(filters.TEXT & ~filters.COMMAND, fecha_examen_handler),
-                 CommandHandler('desconocido', fecha_examen_handler)],
+                 CommandHandler('desconocido', fecha_examen_handler),
+                 CommandHandler('today', fecha_examen_handler)],
             DURACION_EXAMEN:
                 [MessageHandler(filters.TEXT & ~filters.COMMAND, duracion_examen_handler),
                  CommandHandler('desconocido', duracion_examen_handler)],
             FORMA_AYUDA:
                 [MessageHandler(filters.TEXT & ~filters.COMMAND, forma_ayuda_handler)],
+            PETICION_ASIGNATURA:
+                [MessageHandler(filters.TEXT & ~filters.COMMAND, peticion_asignatura_handler)],
         },
-        fallbacks=[CommandHandler('cancel', cancel)]
+        fallbacks=[
+            CommandHandler('cancel', cancel),
+            MessageHandler(filters.ALL, unknown_handler),
+            CallbackQueryHandler(unknown_handler)          # <-- Para callbacks inesperados
+        ]
+    )
+
+
+    conv_notification_handler = ConversationHandler(
+        entry_points=[CommandHandler('enviarAviso', send_notification)],
+        states={
+            PASSWD:
+                [MessageHandler(filters.TEXT & ~filters.COMMAND, passwd_handler)],
+            NOTIFICACION:
+                [MessageHandler(filters.TEXT & ~filters.COMMAND, notification_handler)]
+        },
+        fallbacks=[
+            CommandHandler('cancel', cancel),
+            MessageHandler(filters.ALL, unknown_handler),
+            CallbackQueryHandler(unknown_handler)          # <-- Para callbacks inesperados
+        ]
+    )
+
+
+    conv_conf_notification_handler = ConversationHandler(
+        entry_points=[CommandHandler('notify', ask_notification_conf)],
+        states={
+            NOTIFICACION_PROCESAR:
+                [CallbackQueryHandler(notification_conf_handler)]
+        },
+        fallbacks=[
+            CommandHandler('cancel', cancel),
+            MessageHandler(filters.ALL, unknown_handler),
+            CallbackQueryHandler(unknown_handler)          # <-- Para callbacks inesperados
+        ]
     )
 
     # Añadimos el handler a la aplicación
     application.add_handler(conv_handler)
+    application.add_handler(conv_notification_handler)
+    application.add_handler(conv_conf_notification_handler)
 
     # Añadimos el handler de /help fuera del ConversationHandler
     application.add_handler(CommandHandler('help', help_handler))
+    application.add_handler(MessageHandler(filters.ALL, unstarted_handler))  # Para mensajes inesperados antes de iniciar la conversación
+
+    # Handler de errores
+    application.add_error_handler(error_handler)
+
 
     # Crear directorio de descargas si no existe, para guardar los archivos
     os.makedirs(DOWNLOAD_BASEDIR, exist_ok=True)
@@ -1363,6 +1801,12 @@ def main() -> None:
         
         # Renombrar el archivo
         os.rename(LOG_PATH, log_file_path)
+
+    # Verificar si el archivo de CHAT_IDS ya existe
+    if not os.path.exists(CHAT_IDS_PATH):
+        # Crear el archivo de CHAT_ID si no existe
+        with open(CHAT_IDS_PATH, 'w') as f:
+            f.write("")
 
     msg_init = "-"*50 + "\n"
     msg_init += f"Bot iniciado a las {get_hora_str()}.\n"
