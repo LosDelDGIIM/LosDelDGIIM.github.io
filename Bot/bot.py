@@ -1,6 +1,6 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Bot
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, ConversationHandler, ContextTypes
-from telegram.error import Forbidden
+from telegram.error import Forbidden, NetworkError, TimedOut, Conflict
 
 
 from urllib.parse import urlparse       # Para analizar URLs
@@ -1619,12 +1619,6 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
         traceback.format_exception(None, error, error.__traceback__)
     ) if error else "No traceback disponible"
 
-    # --- Log principal ---
-    add_log(
-        LOG_PATH,
-        f"Error en el bot con el usuario {user_identifier}: {error}\n{tb}"
-    )
-
     # --------------------------------------------------
     # 🚦 CLASIFICACIÓN DE ERRORES
     # --------------------------------------------------
@@ -1638,6 +1632,12 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     if "httpx" in type(error).__module__:
         add_log(LOG_PATH, "Error httpx detectado (red o respuesta incompleta)")
         return
+
+    # --- Log principal ---
+    add_log(
+        LOG_PATH,
+        f"Error en el bot con el usuario {user_identifier}: {error}\n{tb}"
+    )
 
     # --------------------------------------------------
     # 👤 NOTIFICAR AL USUARIO (solo si procede)
