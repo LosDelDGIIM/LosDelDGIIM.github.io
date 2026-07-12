@@ -9,6 +9,7 @@ from datetime import datetime, timedelta# Para se encarga der fechas
 import os                               # Para se encarga der archivos
 import httpx
 import traceback
+import asyncio
 
 # Para enviar correos electrónicos de GMAIL
 from google.auth.transport.requests import Request
@@ -270,6 +271,7 @@ def add_log(file: str, msg: str):
     # Abrimos el archivo en modo append
     with open(file, "a") as f:
         f.write(f"{get_hora_str()}\t- {msg}\n")
+
 
 
 def register_chat_id(file: str, chat_id):
