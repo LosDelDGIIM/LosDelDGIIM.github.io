@@ -1,0 +1,128 @@
+\chapter{Photon Mapping}\label{ch:photon_mapping}
+
+As introduced in Chapter~\ref{ch:radiosity}, in this chapter we will cover photon mapping. One specific visual effect that other rendering techniques struggle to achieve is caustics, and photon mapping renders them efficiently.
+\begin{definicion}[Caustics]
+Caustics are the patterns of light that are formed when light rays are reflected or refracted by a curved surface or object. They are small bright regions of light that are concentrated in certain areas, creating a visually striking effect. These patterns can be seen in everyday life, such as:
+\begin{itemize}
+    \item The bright patterns of light at the bottom of a swimming pool on a sunny day.
+    \item The focused light patterns created by a glass of water or a crystal.
+    \item The shimmering light patterns on the surface of a body of water, such as a lake or ocean.
+\end{itemize}
+\end{definicion}
+
+Caustics are rare but high-energy events, and they are difficult to render with traditional ray tracing techniques. Photon mapping is a two-pass global illumination algorithm that can efficiently simulate caustics and other complex lighting effects. It consists of two phases:
+\begin{enumerate}
+    \item \ul{Photon Emission}: In this phase, photons are emitted from light sources and traced through the scene.
+    \item \ul{Rendering}: In this phase, the scene is rendered using the information from the first pass to compute the final image.
+\end{enumerate}
+The information gathered during the photon emission phase is stored in a data structure called a \emph{photon map}.
+
+\section{Photon Emission Phase}
+
+During the photon emission phase, photons are emitted from light sources and traced through the scene. The emission depends on the type of light source being used or the scene being rendered, but a total of $N$ photons are emitted. Each photon always consists of:
+\begin{itemize}
+    \item A position in 3D space. Initially, the position of the photon is the position of the light source.
+    \item A direction in 3D space. The initial direction of the photon is determined by the type of light source being used, and will change as the photon interacts with surfaces in the scene.
+    \item A power value on each of the RGB channels. The power of the photon is determined by the total power of the light source and the number of photons being emitted. The initial power of each photon is given by:
+    \begin{equation*}
+        \Phi_{\text{photon}} = \frac{\Phi_{\text{light source}}}{N}
+    \end{equation*}
+\end{itemize}
+
+With each interaction with a surface, the photon interacts with the surface and the intersection is stored in the photon map. When the photon interacts with the surface, it can result in:
+\begin{itemize}
+    \item \ul{Absorption}: The power of the photon is atenuated by the absorption coefficient of the surface (with a different absorption coefficient for each RGB channel), but the photon still continues to be traced through the scene.
+    \item \ul{Diffusion}: The photon is scattered in a random direction, depending on the properties of the surface. In addition, the photon is stored in the photon map.
+    \item \ul{Specular/Refraction}: The photon is reflected or refracted in a specific direction, depending on the properties of the surface and the angle of incidence.
+\end{itemize}
+    
+In order to understand what happens to the photon, two previous concepts are used:
+\begin{itemize}
+    \item The \emph{BSDF} (Bidirectional Scattering Distribution Function) is a function that describes how light is scattered by a surface. It is used to calculate the probability of each type of interaction (reflection, refraction, diffusion, or absorption) based on the material properties of the surface.
+    \item The \emph{Russian roulette} technique is a probabilistic method that consists of randomly choosing one of the possible interactions based on the probabilities calculated from the BSDF.
+\end{itemize}
+
+When a photon intersects with a surface, the BSDF is used to determine the probabilities of reflection, refraction, diffusion, or absorption. A random number is generated, and based on the probabilities, one of the interactions is chosen using the Russian roulette technique.
+In addition, the following information is stored in the photon map for each photon that intersects with a diffuse surface:
+\begin{itemize}
+    \item The position of the intersection.
+    \item The incoming direction of the photon.
+    \item The normal of the surface at the intersection.
+    \item The power of the photon at the intersection.
+\end{itemize}
+
+There are different data structures that can be used to store the photon map in order to optimize the search for nearby photons during the rendering phase, such as those seen in Section~\ref{sec:spatial-subdivision}. The most common data structure used is the \emph{kd tree}. Two different photon maps are usually created:
+\begin{itemize}
+    \item \ul{Caustic Photon Map}: This photon map stores only the photons that have been reflected or refracted by specular surfaces, and is used to render caustics.
+    \begin{equation*}
+        \text{Light} \rightarrow \text{Specular Chain} \rightarrow \text{Diffuse Surface} \rightarrow \text{Eye}
+    \end{equation*}
+
+    \item \ul{Global Photon Map}: This photon map stores all the other intersections of photons with surfaces, and is used to render the global illumination of the scene.
+\end{itemize}
+
+When photons are traced, they are either classified as caustic photons or global photons, depending on the type of the first specular surface they interact with. If a photon interacts with a diffuse surface before interacting with any specular surfaces, it is classified as a global photon. If a photon interacts with a specular surface before interacting with any diffuse surfaces, it is classified as a caustic photon.
+
+\section{Rendering Phase}
+
+During the rendering phase, the scene is rendered using the information stored in the photon map. It approximates the Rendering Equation (Equation~\ref{eq:rendering_equation}) by the following equation:
+\begin{equation*}
+    L_o(x, \omega, \lambda) = L_e(x, \omega, \lambda) + L_o^{\text{direct}}(x, \omega, \lambda) + L_o^{\text{indirect}}(x, \omega, \lambda) + L_o^{\text{caustics}}(x, \omega, \lambda) + L_o^{\text{specular}}(x, \omega, \lambda)
+\end{equation*}
+
+Let's break down each term in the equation:
+\begin{itemize}
+    \item $L_o(x, \omega, \lambda)$: The outgoing radiance at point $x$ in direction $\omega$ for wavelength $\lambda$.
+    \item $L_e$: The emitted radiance. This term accounts for any light that is emitted directly from the surface itself, such as light sources or emissive materials.
+    \item $L_o^{\text{direct}}$: The direct illumination represents the contribution via direct illumination by the light sources. It is calculated using shadow rays and Phong illumination.
+
+    \item $L_o^{\text{indirect}}$: The indirect illumination represents the contribution via indirect illumination by other surfaces in the scene. Instead of directly sampling the global photon map at the point of intersection, the indirect illumination is computed by a technique called \emph{final gathering}, that consists approximating the integral in the Rendering Equation using Monte Carlo integration. This involves shooting rays from the point of intersection in random directions and sampling the global photon map in each of these rays to estimate the contribution of indirect illumination. The contributions from all the sampled rays are then averaged to obtain an estimate of $L_o^{\text{indirect}}$.
+    
+    \item $L_o^{\text{caustics}}$: The caustics term represents the contribution of light that form caustics in the scene. It is computed by sampling the caustic photon map at the point of intersection and estimating the contribution of caustics to the outgoing radiance.
+    
+    \begin{observacion}
+    Since the caustic photon map is directly seen, it needs to have a high density of photons. The global photon map, on the other hand, is only indirectly seen (final gathering), so it can have a lower density of photons. This is because the final gathering technique averages the contributions from multiple rays, which helps to smooth out the noise in the estimate of $L_o^{\text{indirect}}$.
+    \end{observacion}
+    
+    \item $L_o^{\text{specular}}$: The specular term represents the contribution of light that is reflected or refracted by specular surfaces in the scene. It is computed by tracing rays from the point of intersection in the direction of reflection or refraction, and recursively computing the outgoing radiance at the new intersection points.
+\end{itemize}
+
+
+When a photon map is sampled at a point $x$ in order to obtain the outgoing radiance, the following approximation of the Rendering Equation (Equation~\ref{eq:rendering_equation}) is used:
+\begin{equation*}
+    L_o(x, \omega, \lambda) = \int_{\Omega} f_r(x, \omega', \omega, \lambda) L_i(x, \omega', \lambda) (\omega' \cdot n) d\omega' \approx \frac{1}{\pi r^2} \sum_{p\in N(x)} f_r(x, \omega_p, \omega, \lambda) \Phi_p(\lambda)
+\end{equation*}
+Where:
+\begin{itemize}
+    \item $N(x)$: The set of photons in the photon map that are considered to be near the point $x$. They are all contained within a sphere of radius $r$ centered at $x$\footnote{It is divided by $\pi r^2$ because, even though they are contained in a sphere, the photons are assumed to be uniformly distributed over a disk of radius $r$ centered at $x$ (with area $\pi r^2$).}.
+    \item $\Phi_p(\lambda)$: The power of the photon $p$ at wavelength $\lambda$.
+    \item $\omega_p$: The incoming direction of the photon $p$.
+\end{itemize}
+
+A key aspect in this approximation is $N(x)$, which is the set of photons that are considered to be near the point $x$. There are two main approaches:
+\begin{itemize}
+    \item \ul{Fixed radius}: In this approach, a fixed radius $r$ is used to define the sphere centered at $x$. All photons within this sphere are considered to be near the point $x$ and are included in the set $N(x)$, so the number of photons in $N(x)$ can vary depending on the density of photons in the scene.
+    \begin{itemize}
+        \item If the radius is too small, there may not be enough photons in $N(x)$ to accurately estimate the outgoing radiance, resulting in noise and artifacts in the final image.
+        \item If the radius is too large, the estimate of the outgoing radiance may be biased, as it may include photons that are not actually contributing to the illumination at the point $x$.
+    \end{itemize}
+    \item \ul{Fixed number of photons}: In this approach, a fixed number of photons $k$ is used to define the set $N(x)$. The $k$ nearest photons to the point $x$ are included in the set $N(x)$, so the radius of the sphere centered at $x$ can vary depending on the density of photons in the scene. The selection of the hyperparameter $k$ is important, as it can affect the accuracy and efficiency of the photon mapping algorithm.
+\end{itemize}
+
+\section{Bias and Consistency}
+
+An important aspect of photon mapping is that it is a biased rendering algorithm. This means that averaging infinitely many renders of the same scene using this method does not converge to a correct solution to the rendering equation. However, it is a consistent method, and the accuracy of a render can be increased by increasing the number of photons. As the number of photons approaches infinity, a render will get closer and closer to the solution of the rendering equation.
+
+Given that photon mapping is a biased rendering algorithm, the rare light paths are taken into account, which could be missed by other unbiased rendering algorithms.
+
+\section{Common Artifacts}
+
+Three common artifacts that can occur in photon mapping are:
+\begin{itemize}
+    \item \ul{Blotches}: Blotches are caused by a low density of photons in the photon map, which can result in areas of the image that appear darker or lighter than they should be. This can be mitigated by increasing the number of photons emitted during the photon emission phase.
+    \item \ul{Leaks}: Leaks occur when photons are taken into account through opace surfaces when sampling the photon map, which can result in light bleeding through surfaces that should be opaque. This can be mitigated by applying filters to the photon map to remove photons that are not contributing to the illumination at a given point.
+\end{itemize}
+
+\section{Progressive Photon Mapping}
+
+Progressive photon mapping is a variant of the photon mapping algorithm that addresses some of the limitations of the original algorithm. It is an iterative algorithm that progressively refines the photon map and the final image over multiple passes. In each pass, a fixed number of photons are emitted and traced through the scene, and the photon map is updated with the new information. The radius used to define the set of nearby photons $N(x)$ is also progressively reduced over multiple passes, which allows for a more accurate estimate of the outgoing radiance at each point in the scene. This approach can help to reduce artifacts such as blotches and leaks, and can also improve the overall quality of the final image.

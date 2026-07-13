@@ -1,3 +1,46 @@
-\chapter{Photon Mapping}\label{ch:photon_mapping}
+\chapter{Irradiance Volumes}
 
-As introduced in Chapter~\ref{ch:radiosity}, in this chapter we will cover photon mapping, one global illumination technique that ...
+Irradiance volumes are a technique used in computer graphics to approximate the global illumination of a scene. It works as follows:
+\begin{enumerate}
+    \item The scene is divided into a grid of cells (using spatial partitioning techniques such as octrees).
+    \item For each vertex of those cells, the irradiance in every direction is computed and stored in a data structure (e.g., spherical harmonics).
+    \item During rendering, the irradiance at a point in the scene is approximated by interpolating the irradiance values from the surrounding cells. Once the irradiance is known, using the Equation~\ref{eq:radiosity_irradiance}, the radiosity can be computed and used to shade the point (as explained in Chapter~\ref{ch:radiosity}).
+\end{enumerate}
+
+This technique is only useful under certain assumptions:
+\begin{itemize}
+    \item The object being shaded is affected by the scene's indirect lighting, but it does not affect the scene.
+    \item The scene (apart from the object being shaded) is static, so the irradiance values can be precomputed and reused.
+    \item The object being shaded is a diffuse surface (we will understand why).
+\end{itemize}
+
+\section{Generating the Irradiance Volume}
+
+In order to generate the irradiance volume, the irradiance at each vertex of the grid must be computed. Taking the Equation~\ref{eq:irradiance_radiance} into account, the irradiance at a point $x$ can be computed by integrating the incoming radiance over the hemisphere of directions above the point $x$; depending on the normal of the surface at point $x$. Therefore, the irradiance must be computed for every possible normal direction, so each vertex of the grid must store the irradiance as a spherical function.\\
+
+For each vertex of the grid, the following steps are performed in order to compute the irradiance:
+\begin{enumerate}
+    \item Only a finite set of directions over the sphere $\{\omega_1, \omega_2, \ldots, \omega_n\}$ is considered. The incoming radiance for those normal directions is computed by tracing rays from the vertex in those directions and computing the radiance that arrives (using ray tracing or other techniques). In this step, the assumption that the object being shaded is a diffuse surface is important, as it allows us to simplify its BRDF to a constant value.
+    \item Once the incoming radiance is computed, the irradiance can be computed using the Equation~\ref{eq:irradiance_radiance}, which can be approximated by a discrete sum:
+    \begin{equation*}
+    E(x,N) \approx \sum_{i=1}^{n} L_i(x, \omega_i) \cdot \max\{0, \omega_i \cdot N\} \cdot \Delta\omega_i
+    \end{equation*}
+    where $N$ is the normal of the surface at point $x$, and $\Delta\omega_i$ is the solid angle associated with the direction $\omega_i$.
+\end{enumerate}
+
+This process is repeated for every vertex of the grid, and the resulting spherical function of irradiance is stored in a data structure that allows for efficient interpolation during rendering.
+
+\section{Interpolating the Irradiance Volume}
+
+During rendering, the irradiance at a point in the scene is approximated by interpolating the irradiance values from the surrounding cells. Two main problems arise when interpolating the irradiance values:
+\begin{enumerate}
+    \item If the grid was not uniform, the interpolation must take into account the different sizes of the cells. For instance, if the point is inside a really large cell but is next to a vertex of a smaller neighboring cell, the irradiance value of that vertex should be taken into account. In order to solve this problem, two different approaches can be used:
+    \begin{itemize}
+        \item Instead of using trilinear interpolation, a weighted and more sophisticated interpolation method can be used.
+        \item Normal trilinear interpolation can be used, but the values of the vertex of subsequent smaller cells must match the corresponding interpolated irradiance value from the larger cell.
+    \end{itemize}
+    \item The irradiance values are stored as spherical functions, so the interpolation must take into account this spherical nature, as otherwise the interpolated result is the opposite of what is expected. In order to solve this, the irradiance value is not usually interpolated directly, but the gradients of the irradiance are interpolated instead.
+\end{enumerate}
+
+    
+    
