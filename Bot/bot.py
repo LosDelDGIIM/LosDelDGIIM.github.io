@@ -31,15 +31,6 @@ from google import genai
 from google.genai import types
 import asyncio
 import pathlib
-"""
-async def imagen_a_latex(path: str) -> str:
-    model = genai.GenerativeModel('gemini-1.5-pro')
-
-    imagen = {
-        'mime_type': 'image/jpeg',
-        'data': pathlib.Path(path).read_bytes()
-    }
-"""
 # Definimos los estados de la conversación
 MENU, CURSO, ASIGNATURA, DESCRIPCION, ARCHIVOS, CONTACTO, MATERIAL_ENLACE, CAPTURA, CORRECCION, ANIO_EXAMEN, PROFESOR_EXAMEN, ES_DEPARTAMENTO_EXAMEN, GRADO_EXAMEN, GRUPO_EXAMEN, FECHA_EXAMEN, DURACION_EXAMEN, MENU_OTRO, FORMA_AYUDA, ESCANEO, RECUPERAR_METADATOS = range(20)
 
@@ -1339,6 +1330,8 @@ async def acumular_fotos_handler(update: Update, context: ContextTypes.DEFAULT_T
         context.user_data['FOTOS_IA'].append(file_name)
         
         await update.message.reply_text(f"Página {numero_foto} guardada. Sube la siguiente o escribe /finarchivos.")
+    else:
+        await update.message.reply_text("Solo se aceptan imágenes del examen, este archivo ha sido ignorado. Por favor manda una imagen")
     return ESCANEO
 
 """
@@ -1355,7 +1348,11 @@ def construir_instrucciones_ia() -> str:
     with open(ruta_preambulo, "r", encoding="utf-8") as f:
         texto_preambulo_completo = f.read()
         partes = texto_preambulo_completo.split("% IA")
-        texto_preambulo = partes[1].strip() if len(partes) > 1 else "No hay macros concretas definidas."
+        if len(partes) > 1:
+            texto_preambulo = partes[1].strip()
+        else:
+            texto_preambulo = "No hay macros concretas definidas."
+            add_log(LOG_PATH, "Advertencia: No se encontraron macros definidas para IA en preambulo.tex, para añadirlas hay que escribir % IA y todo lo que venga detrás serán macros para la IA")
     with open(ruta_prompt, "r", encoding="utf-8") as f:
         plantilla_prompt = f.read()
 
@@ -1410,10 +1407,10 @@ async def procesar_examen_handler(update: Update, context: ContextTypes.DEFAULT_
     contenidos.append("Transcribe todo este examen en orden, respetando la plantilla.")
 
     # 3. Llamada a la IA, a veces lanza un 503, por tanto probamos unos cuantos intentos
-    max_intentos = 3
+    MAX_INTENTOS = 3
     response = None
 
-    for intento in range(max_intentos):
+    for intento in range(MAX_INTENTOS):
         try:
             response = client.models.generate_content(
                 model='gemini-3.5-flash',
@@ -1433,8 +1430,8 @@ async def procesar_examen_handler(update: Update, context: ContextTypes.DEFAULT_
             error_str = str(e)
             if "503" in error_str or "UNAVAILABLE" in error_str:
                 # Comprobamos si NO es el último intento (recuerda que empiezan en 0)
-                if intento < max_intentos - 1:
-                    await update.message.reply_text(f"Los servidores se encuentran saturados. Se hará un reintento automático en 30 segundos... (Intento {intento+1}/{max_intentos})")
+                if intento < MAX_INTENTOS - 1:
+                    await update.message.reply_text(f"Los servidores se encuentran saturados. Se hará un reintento automático en 30 segundos... (Intento {intento+1}/{MAX_INTENTOS})")
                     print(f"Error 503, reintentando (Intento {intento+1})...")
                     await asyncio.sleep(30)
                 else:
@@ -1467,7 +1464,7 @@ async def procesar_examen_handler(update: Update, context: ContextTypes.DEFAULT_
             
             await update.message.reply_document(
                 document=open(tex_path, 'rb'), 
-                caption="¡Examen completo procesado! Aquí tienes el código final listo para compilar."
+                caption="¡Examen completo procesado! Aun así te animamos resolverlo y que nos lo envíes para poder subirlo resuelto."
             )
 
             # 5. Enviar correo, en este caso ya tenemos todos los metadatos asegurados
@@ -1536,7 +1533,7 @@ async def recuperar_metadatos_handler(update: Update, context: ContextTypes.DEFA
     
     await update.message.reply_document(
         document=open(tex_path, 'rb'), 
-        caption="¡Examen completo procesado! Ya nos ha llegado y será subido a la web lo antes posible, aún así te animamos resolverlo y que nos lo envies para poder subirlo resuelto."
+        caption="¡Examen completo procesado! Aun así te animamos resolverlo y que nos lo envíes para poder subirlo resuelto."
     )
 
     # 5. Enviar correo, en este caso ya tenemos todos los metadatos asegurados
@@ -1643,7 +1640,7 @@ def main() -> None:
             FORMA_AYUDA:
                 [MessageHandler(filters.TEXT & ~filters.COMMAND, forma_ayuda_handler)],
             ESCANEO:
-                [MessageHandler(filters.PHOTO, acumular_fotos_handler),
+                [MessageHandler(filters.ALL & ~filters.COMMAND, acumular_fotos_handler),
                  CommandHandler('finarchivos', procesar_examen_handler)],
             RECUPERAR_METADATOS:
                 [MessageHandler(filters.TEXT & ~filters.COMMAND, recuperar_metadatos_handler),
