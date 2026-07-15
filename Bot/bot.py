@@ -57,7 +57,7 @@ CHAT_IDS_PATH = os.path.join(DOWNLOAD_BASEDIR, "chat_ids.log")
 
 # Rutas para los archivos que requiere la transcripción con IA
 PREAMBULO_PATH = os.path.join(PLANTILLAS_BASEDIR,PREAMBULO)
-PLATNILLA_PATH = os.path.join(PLANTILLAS_BASEDIR,PLANTILLA_EXAMEN)
+PLANTILLA_PATH = os.path.join(PLANTILLAS_BASEDIR,PLANTILLA_EXAMEN)
 # Aquí poner en vez de download basedir, donde sea que se quiera poner el txt del prompt
 PROMPT_PATH = os.path.join(DOWNLOAD_BASEDIR, PROMPT)
 
@@ -513,6 +513,13 @@ async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     """
     elif context.user_data[OPTION_KEY] == CALLBACK_ESCANEO:
         context.user_data['FOTOS_IA'] = []
+
+        # Se llama a la función para actualizar las plantillas cada vez que se hace una petición
+        try:
+            actualizar_plantillas_desde_github()
+        except Exception as e:
+            os.system(f"rm -rf {context.user_data.get(DOWNLOADS_DIR_KEY)}")
+            raise
         await query.message.reply_text(
             "Sube una foto clara del examen que quieres pasar a código LaTeX.\n"
             "Recomendamos el uso de esta herramienta fuera del horario 14:00-22:00 ya que los servidores sufren mayor demanda en dichas horas.")
@@ -1512,7 +1519,7 @@ y luego los inyecta en un único string
 """
 def construir_instrucciones_ia() -> str:
     # Importante tener bien la ruta del prompt, pues partimos del DOWNLOAD_BASEDIR que es distinto en el server
-    with open(PLATNILLA_PATH, "r", encoding="utf-8") as f:
+    with open(PLANTILLA_PATH, "r", encoding="utf-8") as f:
         texto_plantilla = f.read()
     with open(PREAMBULO_PATH, "r", encoding="utf-8") as f:
         texto_preambulo_completo = f.read()
@@ -1728,13 +1735,21 @@ async def comando_IA(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         return ConversationHandler.END
     
     add_log(LOG_PATH, f"Peticion secreta de IA iniciada por {get_userIdentifier(context.user_data)}.")
-    
+
     file_name = context.user_data[INIT_TIME_KEY] + "_" + get_userIdentifier(context.user_data)
     context.user_data[DOWNLOADS_DIR_KEY] = os.path.join(DOWNLOAD_BASEDIR, file_name)
     os.makedirs(context.user_data[DOWNLOADS_DIR_KEY])
 
     context.user_data[OPTION_KEY] = CALLBACK_ESCANEO
     context.user_data['FOTOS_IA'] = []
+
+    # Se llama a la función para actualizar las plantillas cada vez que se hace una petición
+    try:
+        actualizar_plantillas_desde_github()
+    except Exception as e:
+        # Error critico, sin plantillas no podemos transcribir el examen
+        os.system(f"rm -rf {context.user_data.get(DOWNLOADS_DIR_KEY)}")
+        raise
     
     await update.message.reply_text(
         "Has elegido escanear un examen con IA.\n\n"
@@ -2000,18 +2015,13 @@ def actualizar_plantillas_desde_github():
     # Crear el directorio para las plantillas
     os.makedirs(PLANTILLAS_BASEDIR, exist_ok=True)
     
-    try:
-        for nombre, url in archivos.items():
-            respuesta = httpx.get(url, timeout=10.0)
-            respuesta.raise_for_status() # Asegura que la descarga fue exitosa (HTTP 200)
-            
-            ruta_local = os.path.join(PLANTILLAS_BASEDIR, nombre)
-            with open(ruta_local, "w", encoding="utf-8") as f:
-                f.write(respuesta.text)
-                
-        add_log(LOG_PATH, "Plantillas de GitHub descargadas y actualizadas con éxito.")
-    except Exception as e:
-        add_log(LOG_PATH, f"Error crítico al descargar plantillas de GitHub: {e}")
+    for nombre, url in archivos.items():
+        respuesta = httpx.get(url, timeout=10.0)
+        respuesta.raise_for_status() # Asegura que la descarga fue exitosa (HTTP 200)
+        
+        ruta_local = os.path.join(PLANTILLAS_BASEDIR, nombre)
+        with open(ruta_local, "w", encoding="utf-8") as f:
+            f.write(respuesta.text)
 
 
 """
@@ -2164,8 +2174,6 @@ def main() -> None:
     print(msg_init)
     print("Pulsar Ctrl+C para detener el bot.\n\n")
 
-    # Descargar la plantilla y preambulo del repo
-    actualizar_plantillas_desde_github()
         
     # Inicia el bot
     application.run_polling()
