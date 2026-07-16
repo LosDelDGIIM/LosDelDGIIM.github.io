@@ -10,6 +10,7 @@ import os                               # Para se encarga der archivos
 import httpx
 import traceback
 import asyncio
+import json
 
 # Para trabajar con .env
 from dotenv import load_dotenv
@@ -32,16 +33,16 @@ import mimetypes
 #Modificaciones para añadir funcionalidad para generar los enunciados con IA
 from google import genai
 from google.genai import types
-import asyncio
-import pathlib
+import urllib.parse
 # Definimos los estados de la conversación
 
 MENU, CURSO, ASIGNATURA, DESCRIPCION, ARCHIVOS, CONTACTO, MATERIAL_ENLACE, CAPTURA, CORRECCION, ANIO_EXAMEN, PROFESOR_EXAMEN, ES_DEPARTAMENTO_EXAMEN, GRADO_EXAMEN, GRUPO_EXAMEN, FECHA_EXAMEN, DURACION_EXAMEN, MENU_OTRO, FORMA_AYUDA, PETICION_ASIGNATURA, PASSWD, NOTIFICACION, NOTIFICACION_PROCESAR, ESCANEO, RECUPERAR_METADATOS = range(24)
 
-# Token del bot
 TOKEN=os.getenv("TELEGRAM_TOKEN")
-NOTIFICATION_PASSWORD = ""
-ADMINS_IDS = []
+NOTIFICATION_PASSWORD = os.getenv("NOTIFICATION_PASSWORD")
+admins_raw = os.getenv("ADMINS_IDS", "[]")
+ADMINS_IDS = json.loads(admins_raw)
+
 
 # Define el directorio donde guardarás los archivos
 DOWNLOAD_BASEDIR = os.getenv("DOWNLOAD_BASEDIR")
@@ -50,7 +51,7 @@ PLANTILLAS_BASEDIR = os.path.join(DOWNLOAD_BASEDIR, "plantillas_ia")
 # Por si cambiaran los nombres de estos archivos, solo hace falta modificarlos aqui
 PREAMBULO = "preambulo.tex"
 PLANTILLA_EXAMEN = "Plantilla_Ex.tex"
-PROMPT = "prompt_ocr.tex"
+PROMPT = "prompt_ocr.txt"
 
 LOG_PATH = os.path.join(DOWNLOAD_BASEDIR, "log_file.log")
 CHAT_IDS_PATH = os.path.join(DOWNLOAD_BASEDIR, "chat_ids.log")
@@ -1510,7 +1511,7 @@ async def acumular_fotos_handler(update: Update, context: ContextTypes.DEFAULT_T
         
         await update.message.reply_text(f"Página {numero_foto} guardada. Sube la siguiente o escribe /finarchivos.")
     else:
-        await update.message.reply_text("Solo se aceptan imágenes del examen, este archivo ha sido ignorado. Por favor manda una imagen")
+        await update.message.reply_text("Solo se aceptan imágenes del examen, por lo que este mensaje ha sido ignorado. Por favor manda una imagen.")
     return ESCANEO
 
 """
@@ -1639,7 +1640,7 @@ async def procesar_examen_handler(update: Update, context: ContextTypes.DEFAULT_
             
             await update.message.reply_document(
                 document=open(tex_path, 'rb'), 
-                caption="¡Examen completo procesado! Aun así te animamos resolverlo y que nos lo envíes para poder subirlo resuelto."
+                caption="¡Examen completo procesado! Aun así te animamos a resolverlo y que nos lo envíes para poder subirlo resuelto. Nosotros mientras tanto lo subiremos sin resolver."
             )
 
             # 5. Enviar correo, en este caso ya tenemos todos los metadatos asegurados
@@ -1652,20 +1653,43 @@ async def procesar_examen_handler(update: Update, context: ContextTypes.DEFAULT_
         else:
             context.user_data['codigo_latex'] = codigo_limpio
 
+            plantilla_limpia = ""
+            for metadato in metadatos_faltantes:
+                plantilla_limpia += f"{metadato}: \n"
+
+            # Codificamos el texto para que sea seguro ponerlo en una URL
+            texto_url = urllib.parse.quote(plantilla_limpia)
+
+            bot_username = context.bot.username
+           
+            # Al hacer clic, Telegram abrirá tu bot y escribirá el texto automáticamente
+            # enlace_rellenar = f"https://t.me/{bot_username}?startgroup=true&copy={texto_url}"     # Version para grupos, no usada
+            enlace_directo = f"https://t.me/{bot_username}?text={texto_url}"
+
+            keyboard = [
+                [InlineKeyboardButton("✍️ Rellenar plantilla", url=enlace_directo)]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+
             mensaje_instrucciones = (
                 "¡Examen procesado por la IA!\n\n"
-                "Sin embargo, no he podido leer algunos datos del encabezado de la imagen. "
-                "Por favor, **copia el siguiente mensaje**, rellena los huecos y envíamelo de vuelta "
-                "(o escribe /omitir si prefieres dejarlo vacío):"
+                "Sin embargo, no he podido leer algunos datos del encabezado. "
+                "Haz clic en el botón de abajo para <b>escribir la plantilla automáticamente</b> en tu chat."
             )
 
-            mensaje_plantilla = ""
+            await update.message.reply_text(
+                mensaje_instrucciones, 
+                parse_mode="HTML"
+            )
 
-            for metadato in metadatos_faltantes:
-                mensaje_plantilla += f"{metadato}: \n"
+            # Enviamos la plantilla copiable clásica (como respaldo) con el botón incorporado
+            mensaje_plantilla = f"<code>{plantilla_limpia}</code>"
+            await update.message.reply_text(
+                mensaje_plantilla, 
+                parse_mode="HTML", 
+                reply_markup=reply_markup
+            )
 
-            await update.message.reply_text(mensaje_instrucciones,parse_mode= 'Markdown')
-            await update.message.reply_text(mensaje_plantilla)
             return RECUPERAR_METADATOS
 
     else:
@@ -1708,7 +1732,7 @@ async def recuperar_metadatos_handler(update: Update, context: ContextTypes.DEFA
     
     await update.message.reply_document(
         document=open(tex_path, 'rb'), 
-        caption="¡Examen completo procesado! Aun así te animamos resolverlo y que nos lo envíes para poder subirlo resuelto."
+        caption="¡Examen completo procesado! Aun así te animamos a resolverlo y que nos lo envíes para poder subirlo resuelto. Nosotros mientras tanto lo subiremos sin resolver."
     )
 
     # 5. Enviar correo, en este caso ya tenemos todos los metadatos asegurados
@@ -1726,6 +1750,12 @@ Funcion creada para el testeo del feature de escaneo de exámenes para estar ocu
 a aquellos que conozcan el comando
 """
 async def comando_IA(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    context.user_data[USERNAME_KEY] = update.message.from_user.username
+    context.user_data[NAME_KEY] = update.message.from_user.first_name
+    context.user_data[LAST_NAME_KEY] = update.message.from_user.last_name
+    context.user_data[INIT_TIME_KEY] = get_hora_str()
+    context.user_data[CHATID_KEY] = update.message.chat_id
+    
     if has_exceeded_requests(context):
         add_log(LOG_PATH, f"El usuario {get_userIdentifier(context.user_data)} ha excedido el límite de peticiones (IA).")
         await update.message.reply_text(
