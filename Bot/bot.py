@@ -11,6 +11,11 @@ import httpx
 import traceback
 import asyncio
 
+# Para trabajar con .env
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Para enviar correos electrónicos de GMAIL
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -24,18 +29,37 @@ from email import encoders
 import base64
 import mimetypes
 
+#Modificaciones para añadir funcionalidad para generar los enunciados con IA
+from google import genai
+from google.genai import types
+import asyncio
+import pathlib
 # Definimos los estados de la conversación
-MENU, CURSO, ASIGNATURA, DESCRIPCION, ARCHIVOS, CONTACTO, MATERIAL_ENLACE, CAPTURA, CORRECCION, ANIO_EXAMEN, PROFESOR_EXAMEN, ES_DEPARTAMENTO_EXAMEN, GRADO_EXAMEN, GRUPO_EXAMEN, FECHA_EXAMEN, DURACION_EXAMEN, MENU_OTRO, FORMA_AYUDA, PETICION_ASIGNATURA, PASSWD, NOTIFICACION, NOTIFICACION_PROCESAR = range(22)
+
+MENU, CURSO, ASIGNATURA, DESCRIPCION, ARCHIVOS, CONTACTO, MATERIAL_ENLACE, CAPTURA, CORRECCION, ANIO_EXAMEN, PROFESOR_EXAMEN, ES_DEPARTAMENTO_EXAMEN, GRADO_EXAMEN, GRUPO_EXAMEN, FECHA_EXAMEN, DURACION_EXAMEN, MENU_OTRO, FORMA_AYUDA, PETICION_ASIGNATURA, PASSWD, NOTIFICACION, NOTIFICACION_PROCESAR, ESCANEO, RECUPERAR_METADATOS = range(24)
 
 # Token del bot
-TOKEN=""
+TOKEN=os.getenv("TELEGRAM_TOKEN")
 NOTIFICATION_PASSWORD = ""
 ADMINS_IDS = []
 
 # Define el directorio donde guardarás los archivos
-DOWNLOAD_BASEDIR = '/home/Desktop/LosDelDGIIM.github.io/Bot'
+DOWNLOAD_BASEDIR = os.getenv("DOWNLOAD_BASEDIR")
+PLANTILLAS_BASEDIR = os.path.join(DOWNLOAD_BASEDIR, "plantillas_ia")
+
+# Por si cambiaran los nombres de estos archivos, solo hace falta modificarlos aqui
+PREAMBULO = "preambulo.tex"
+PLANTILLA_EXAMEN = "Plantilla_Ex.tex"
+PROMPT = "prompt_ocr.tex"
+
 LOG_PATH = os.path.join(DOWNLOAD_BASEDIR, "log_file.log")
 CHAT_IDS_PATH = os.path.join(DOWNLOAD_BASEDIR, "chat_ids.log")
+
+# Rutas para los archivos que requiere la transcripción con IA
+PREAMBULO_PATH = os.path.join(PLANTILLAS_BASEDIR,PREAMBULO)
+PLANTILLA_PATH = os.path.join(PLANTILLAS_BASEDIR,PLANTILLA_EXAMEN)
+# Aquí poner en vez de download basedir, donde sea que se quiera poner el txt del prompt
+PROMPT_PATH = os.path.join(DOWNLOAD_BASEDIR, PROMPT)
 
 # Valor por defecto de notificar
 DEFAULT_NOTIFY = True
@@ -48,6 +72,7 @@ CALLBACK_CORREGIR = 'Correccion'
 CALLBACK_OTRO = 'Otro'
 CALLBACK_EXAMEN = 'Examen'
 CALLBACK_COLABORAR = 'Colaborar pasando a ordenador'
+CALLBACK_ESCANEO = 'Escanear examen con IA'
 
 # Constantes para los callback data del menú de OTRO
 CALLBACK_LINK = 'enlace'
@@ -421,6 +446,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             [InlineKeyboardButton("Corrección de erratas", callback_data=CALLBACK_CORREGIR)],
             [InlineKeyboardButton("Examen", callback_data=CALLBACK_EXAMEN)],
             [InlineKeyboardButton("Colaborar pasando a digital", callback_data=CALLBACK_COLABORAR)],
+            #[InlineKeyboardButton("Escanear examen a LaTeX (IA)", callback_data=CALLBACK_ESCANEO)],
             [InlineKeyboardButton("Otro", callback_data=CALLBACK_OTRO)]
         ])
     )
@@ -484,6 +510,20 @@ async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
             "Por favor, indica con qué nos puedes ayudar (Latex, Markdown, programación, etc.)\n"
             "Nos pondremos en contacto contigo para informarte de cómo puedes colaborar."
         )
+    """
+    elif context.user_data[OPTION_KEY] == CALLBACK_ESCANEO:
+        context.user_data['FOTOS_IA'] = []
+
+        # Se llama a la función para actualizar las plantillas cada vez que se hace una petición
+        try:
+            actualizar_plantillas_desde_github()
+        except Exception as e:
+            os.system(f"rm -rf {context.user_data.get(DOWNLOADS_DIR_KEY)}")
+            raise
+        await query.message.reply_text(
+            "Sube una foto clara del examen que quieres pasar a código LaTeX.\n"
+            "Recomendamos el uso de esta herramienta fuera del horario 14:00-22:00 ya que los servidores sufren mayor demanda en dichas horas.")
+        return ESCANEO"""
     #######################################
 
 
@@ -1428,6 +1468,11 @@ def gestionar_datos(datos: dict) -> bool:
     if LINK_KEY in datos:
         message_text += f"<li>{LINK_KEY}: <a target=_blanck href={datos.get(LINK_KEY)}>{datos.pop(LINK_KEY)}</a></li>\n"
 
+    # En el feature de escaneo de exámenes se hace uso de estas variables para solicitarle la información sobre el examen al usuario
+    # Como no queremos que su contenido sea enviado por correo las limpiamos aquí
+    datos.pop('FOTOS_IA',None)
+    datos.pop('codigo_latex',None)
+
     for key, value in datos.items():
         message_text += f"<li>{key}: {value}</li>\n"
 
@@ -1436,6 +1481,283 @@ def gestionar_datos(datos: dict) -> bool:
 
     return send_email(asunto, remitente, message_text, adjuntos)
     
+
+# Aquí se inserta la API key de Google AI Studio pero la pilla automáticamente del .env
+client = genai.Client()
+
+"""
+Función que acumula las imágenes que le manda el usuario al bot para hacer una transcripción de examen
+
+Acumula los nombres de todas en la variable 'FOTOS_IA' de context.user_data y las descarga en el directorio de usuario
+"""
+async def acumular_fotos_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    if update.message.photo:
+        file = await context.bot.get_file(update.message.photo[-1].file_id)
+
+        directorio_usuario = context.user_data.get(DOWNLOADS_DIR_KEY, DOWNLOAD_BASEDIR)
+
+        if 'FOTOS_IA' not in context.user_data:
+            context.user_data['FOTOS_IA'] = []
+        
+        # Le damos un nombre único a cada foto basándonos en cuántas hay ya guardadas
+        numero_foto = len(context.user_data.get('FOTOS_IA', [])) + 1
+        file_name = f"temp_examen_{numero_foto}.jpg"
+        file_path = os.path.join(directorio_usuario, file_name)
+        await file.download_to_drive(file_path)
+        
+        # Guardamos la ruta en la lista
+        context.user_data['FOTOS_IA'].append(file_name)
+        
+        await update.message.reply_text(f"Página {numero_foto} guardada. Sube la siguiente o escribe /finarchivos.")
+    else:
+        await update.message.reply_text("Solo se aceptan imágenes del examen, este archivo ha sido ignorado. Por favor manda una imagen")
+    return ESCANEO
+
+"""
+Función auxiliar que rescata los distintos archivos cuyo contenido está presente en el prompt para la IA
+y luego los inyecta en un único string
+"""
+def construir_instrucciones_ia() -> str:
+    # Importante tener bien la ruta del prompt, pues partimos del DOWNLOAD_BASEDIR que es distinto en el server
+    with open(PLANTILLA_PATH, "r", encoding="utf-8") as f:
+        texto_plantilla = f.read()
+    with open(PREAMBULO_PATH, "r", encoding="utf-8") as f:
+        texto_preambulo_completo = f.read()
+        partes = texto_preambulo_completo.split("% IA")
+        if len(partes) > 1:
+            texto_preambulo = partes[1].strip()
+        else:
+            texto_preambulo = "No hay macros concretas definidas."
+            add_log(LOG_PATH, "Advertencia: No se encontraron macros definidas para IA en preambulo.tex, para añadirlas hay que escribir % IA y todo lo que venga detrás serán macros para la IA")
+    with open(PROMPT_PATH, "r", encoding="utf-8") as f:
+        plantilla_prompt = f.read()
+
+    return plantilla_prompt.format(
+        texto_plantilla = texto_plantilla,
+        texto_preambulo = texto_preambulo
+    )
+
+
+"""
+Funcion que se encarga de manejar el flujo para hacer la transcripcion del examen a LaTeX
+
+Espera que el usuario haya mandado una serie de imagenes del examen, carga el prompt del archivo prompt_ocr.txt en el que le inyecta
+la plantilla de examen y el preambulo.
+
+Hace una llamada a la API de gemini de google AI studio y recibe el código LaTeX que transcribe el examen
+
+Por si acaso Gemini halucina, habla más de la cuenta o escribe algo que no sea LaTeX en el paso 4 se realiza un filtro para extraer solo un bloque de código LaTeX
+
+En caso de faltar información sobre el examen se lleva la conversación a un nuevo estado en el que entra en juego el manejador recuperar_metadatos_handler
+
+Una vez gestionado eso se prepara el correo y se envia el código LaTeX al usuario y por correo
+"""
+async def procesar_examen_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    # Nombres de los archivos
+    fotos = context.user_data.get('FOTOS_IA', [])
+    directorio_usuario = context.user_data.get(DOWNLOADS_DIR_KEY, DOWNLOAD_BASEDIR)
+    
+    if not fotos:
+        await update.message.reply_text("No has subido ninguna foto. Sube alguna o escribe /cancel.")
+        return ESCANEO
+
+    await update.message.reply_text(f"Procesando {len(fotos)} páginas con la IA y aplicando la plantilla... Esto tardará un poco.")
+
+    
+    # 1. Plantilla y preámbulo obtenidos del repo
+    try:
+        instrucciones_sistema = construir_instrucciones_ia()
+    except Exception as e:
+        os.system(f"rm -rf {context.user_data.get(DOWNLOADS_DIR_KEY)}")
+        raise
+    
+    # 2. Añadimos las fotos
+    contenidos = []
+    for foto in fotos:
+        ruta_completa = os.path.join(directorio_usuario,foto)
+        with open(ruta_completa, "rb") as f:
+            contenidos.append(types.Part.from_bytes(data=f.read(), mime_type='image/jpeg'))
+            
+    # Añadimos la orden de texto al final de las fotos
+    # Con esto terminamos el prompt normal, el que se le escribe
+    contenidos.append("Transcribe todo este examen en orden, respetando la plantilla.")
+
+    # 3. Llamada a la IA, a veces lanza un 503, por tanto probamos unos cuantos intentos
+    MAX_INTENTOS = 3
+    response = None
+
+    for intento in range(MAX_INTENTOS):
+        try:
+            response = client.models.generate_content(
+                model='gemini-3.5-flash',
+                contents=contenidos,
+                config=types.GenerateContentConfig(
+                    system_instruction=instrucciones_sistema,
+                    # Este factor es importante mantenerlo en 0
+                    # Parecido al enfriamiento simulado, el algoritmo de la IA para generar palabras tiene una temperatura
+                    # que a mayor valor aplana más la distribución de probabilidad en la que se basa para elegir palabras
+                    # resultando en respuestas aleatorias, impredecibles y para nada relacionadas con lo que queremos.
+                    temperature=0.0
+                )
+            )
+            break # Si funciona, salimos del bucle inmediatamente
+
+        except Exception as e:
+            error_str = str(e)
+            if "503" in error_str or "UNAVAILABLE" in error_str:
+                # Comprobamos si NO es el último intento (recuerda que empiezan en 0)
+                if intento < MAX_INTENTOS - 1:
+                    await update.message.reply_text(f"Los servidores se encuentran saturados. Se hará un reintento automático en 30 segundos... (Intento {intento+1}/{MAX_INTENTOS})")
+                    await asyncio.sleep(30)
+                else:
+                    # Es el último intento, avisamos y ABORTAMOS
+                    await update.message.reply_text("Los servidores están demasiado saturados en este momento. Por favor, inténtalo más tarde.")
+                    add_log(LOG_PATH,"Se agotaron los intentos por error 503.")
+                    
+                    return await cancel(update,context)
+            else:
+                # Si es un error grave distinto a 503, también abortamos
+                
+                os.system(f"rm -rf {context.user_data.get(DOWNLOADS_DIR_KEY)}")
+                raise
+ 
+    # 4. Filtrado
+    # Si el código ha llegado hasta esta línea, es matemáticamente seguro que 'response' 
+    # tiene la respuesta de la IA (si no, el 'return' del bloque anterior nos habría sacado de la función).
+    match = re.search(r'(\\documentclass.*?\\end\{document\})', response.text, re.DOTALL)
+    
+    if match:
+        codigo_limpio = match.group(1)
+
+        metadatos_faltantes = re.findall(r'%\s*\\item\[(.*?)\]', codigo_limpio)
+
+        if not metadatos_faltantes:
+            tex_filename = "Examen_TranscritoIA.tex"
+            tex_path = os.path.join(directorio_usuario, tex_filename)
+            with open(tex_path, "w", encoding="utf-8") as f:
+                f.write(codigo_limpio)
+            
+            await update.message.reply_document(
+                document=open(tex_path, 'rb'), 
+                caption="¡Examen completo procesado! Aun así te animamos resolverlo y que nos lo envíes para poder subirlo resuelto."
+            )
+
+            # 5. Enviar correo, en este caso ya tenemos todos los metadatos asegurados
+            context.user_data[OPTION_KEY] = 'Transcripción IA Examen'
+            context.user_data[DESCRIPTION_KEY] = 'Examen transcrito automáticamente con Gemini 3.5 Flash. Se adjuntan escaneos originales y código LaTeX.'
+
+            context.user_data[FILES_KEY] = fotos + [tex_filename]
+                    
+            return await terminar_handler(update,context)
+        else:
+            context.user_data['codigo_latex'] = codigo_limpio
+
+            mensaje_instrucciones = (
+                "¡Examen procesado por la IA!\n\n"
+                "Sin embargo, no he podido leer algunos datos del encabezado de la imagen. "
+                "Por favor, **copia el siguiente mensaje**, rellena los huecos y envíamelo de vuelta "
+                "(o escribe /omitir si prefieres dejarlo vacío):"
+            )
+
+            mensaje_plantilla = ""
+
+            for metadato in metadatos_faltantes:
+                mensaje_plantilla += f"{metadato}: \n"
+
+            await update.message.reply_text(mensaje_instrucciones,parse_mode= 'Markdown')
+            await update.message.reply_text(mensaje_plantilla)
+            return RECUPERAR_METADATOS
+
+    else:
+        await update.message.reply_text("La IA no ha podido generar una estructura LaTeX válida con estas fotos. Inténtalo con imágenes más claras.")
+        return await cancel(update, context)
+
+async def recuperar_metadatos_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    respuesta_usuario = update.message.text
+    codigo_actualizado = context.user_data['codigo_latex']
+
+    # Si el usuario no ha escrito /omitir, habrá algún campo relleno
+    if respuesta_usuario != '/omitir':
+        lineas = respuesta_usuario.split('\n')
+
+        for linea in lineas:
+            if ':' in linea:
+                partes = linea.split(':',1)
+                clave = partes[0].strip()
+                valor = partes[1].strip()
+
+                # Si el usuario ha rellenado el campo
+                if valor:
+                    # Buscamos el item identificado por clave y lo rellenamos con valor
+                    patron = re.compile(r'%\s*\\item\[' + re.escape(clave) + r'\].*')
+
+                    # Al parecer si no usamos una función lambda aquí, el paquete re busca caracteres de escape como \1,\2 y al encontrar \i en \item peta
+                    codigo_actualizado = patron.sub(
+                        lambda m, cl=clave, vl=valor: f"\\item[{cl}] {vl}", 
+                        codigo_actualizado
+                    )
+
+                    context.user_data[f"Metadato aportado por el usuario ({clave})"] = valor
+    
+    directorio_usuario = context.user_data.get(DOWNLOADS_DIR_KEY, DOWNLOAD_BASEDIR)
+    tex_filename = "Examen_TranscritoIA.tex"
+    tex_path = os.path.join(directorio_usuario, tex_filename)
+
+    with open(tex_path, "w", encoding="utf-8") as f:
+        f.write(codigo_actualizado)
+    
+    await update.message.reply_document(
+        document=open(tex_path, 'rb'), 
+        caption="¡Examen completo procesado! Aun así te animamos resolverlo y que nos lo envíes para poder subirlo resuelto."
+    )
+
+    # 5. Enviar correo, en este caso ya tenemos todos los metadatos asegurados
+    context.user_data[OPTION_KEY] = 'Transcripción IA Examen'
+    context.user_data[DESCRIPTION_KEY] = 'Examen transcrito automáticamente con Gemini 3.5 Flash. Se adjuntan escaneos originales y código LaTeX.'
+
+    context.user_data[FILES_KEY] = context.user_data.get('FOTOS_IA', []) + [tex_filename]
+            
+    return await terminar_handler(update,context)
+
+"""
+Copia de funcion start pero que lleva directamente al estado de escaneo
+
+Funcion creada para el testeo del feature de escaneo de exámenes para estar oculta del menú público del bot y ser solo accesible
+a aquellos que conozcan el comando
+"""
+async def comando_IA(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    if has_exceeded_requests(context):
+        add_log(LOG_PATH, f"El usuario {get_userIdentifier(context.user_data)} ha excedido el límite de peticiones (IA).")
+        await update.message.reply_text(
+            f"Has excedido el límite de {REQUESTS_LIMIT} peticiones en {TIME_LIMIT} segundos. Por favor, inténtalo de nuevo más tarde."
+        )
+        context.user_data.clear()
+        return ConversationHandler.END
+    
+    add_log(LOG_PATH, f"Peticion secreta de IA iniciada por {get_userIdentifier(context.user_data)}.")
+
+    file_name = context.user_data[INIT_TIME_KEY] + "_" + get_userIdentifier(context.user_data)
+    context.user_data[DOWNLOADS_DIR_KEY] = os.path.join(DOWNLOAD_BASEDIR, file_name)
+    os.makedirs(context.user_data[DOWNLOADS_DIR_KEY])
+
+    context.user_data[OPTION_KEY] = CALLBACK_ESCANEO
+    context.user_data['FOTOS_IA'] = []
+
+    # Se llama a la función para actualizar las plantillas cada vez que se hace una petición
+    try:
+        actualizar_plantillas_desde_github()
+    except Exception as e:
+        # Error critico, sin plantillas no podemos transcribir el examen
+        os.system(f"rm -rf {context.user_data.get(DOWNLOADS_DIR_KEY)}")
+        raise
+    
+    await update.message.reply_text(
+        "Has elegido escanear un examen con IA.\n\n"
+        "Sube fotos claras del examen que quieres pasar a código LaTeX.\n"
+        "Recuerda enviar /finarchivos al terminar.",
+        parse_mode='Markdown'
+    )
+    return ESCANEO
 
 
 """
@@ -1677,6 +1999,31 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
             pass
 
 
+def actualizar_plantillas_desde_github():
+    """
+    Descarga la última versión del preámbulo y la plantilla directamente 
+    desde GitHub al arrancar el bot y los guarda localmente.
+    """
+    # URLs crudas de los archivos en el repo
+    url_base = "https://raw.githubusercontent.com/LosDelDGIIM/LosDelDGIIM.github.io/main/subjects"
+    
+    archivos = {
+        "Plantilla_Ex.tex": f"{url_base}/plantillas/Exámenes/Plantilla_Ex.tex",
+        "preambulo.tex": f"{url_base}/_assets/preambulo.tex"
+    }
+    
+    # Crear el directorio para las plantillas
+    os.makedirs(PLANTILLAS_BASEDIR, exist_ok=True)
+    
+    for nombre, url in archivos.items():
+        respuesta = httpx.get(url, timeout=10.0)
+        respuesta.raise_for_status() # Asegura que la descarga fue exitosa (HTTP 200)
+        
+        ruta_local = os.path.join(PLANTILLAS_BASEDIR, nombre)
+        with open(ruta_local, "w", encoding="utf-8") as f:
+            f.write(respuesta.text)
+
+
 """
 Función principal que inicia el bot.
 
@@ -1686,7 +2033,7 @@ def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
+        entry_points=[CommandHandler('start', start), CommandHandler('escaneo',comando_IA)],
         states={
             MENU:
                 [CallbackQueryHandler(menu_handler)],
@@ -1736,6 +2083,12 @@ def main() -> None:
                  CommandHandler('desconocido', duracion_examen_handler)],
             FORMA_AYUDA:
                 [MessageHandler(filters.TEXT & ~filters.COMMAND, forma_ayuda_handler)],
+            ESCANEO:
+                [MessageHandler(filters.ALL & ~filters.COMMAND, acumular_fotos_handler),
+                 CommandHandler('finarchivos', procesar_examen_handler)],
+            RECUPERAR_METADATOS:
+                [MessageHandler(filters.TEXT & ~filters.COMMAND, recuperar_metadatos_handler),
+                 CommandHandler('omitir',recuperar_metadatos_handler)],
             PETICION_ASIGNATURA:
                 [MessageHandler(filters.TEXT & ~filters.COMMAND, peticion_asignatura_handler)],
         },
@@ -1821,7 +2174,6 @@ def main() -> None:
     print(msg_init)
     print("Pulsar Ctrl+C para detener el bot.\n\n")
 
-    
         
     # Inicia el bot
     application.run_polling()
