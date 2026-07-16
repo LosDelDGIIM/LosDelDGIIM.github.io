@@ -190,6 +190,9 @@ En el caso de CALLBACK_COLABORAR:
 1. Se solicita la forma en la que desea colaborar (Latex, Markdown, etc.)
 2. Se solicita el contacto (si no tiene username)
 
+En el caso de CALLBACK_ESCANEO:
+1. Se solicita la foto del examen
+2. Se solicita el contacto (si no tiene username)
 '''
 
 
@@ -447,7 +450,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             [InlineKeyboardButton("Corrección de erratas", callback_data=CALLBACK_CORREGIR)],
             [InlineKeyboardButton("Examen", callback_data=CALLBACK_EXAMEN)],
             [InlineKeyboardButton("Colaborar pasando a digital", callback_data=CALLBACK_COLABORAR)],
-            #[InlineKeyboardButton("Escanear examen a LaTeX (IA)", callback_data=CALLBACK_ESCANEO)],
+            [InlineKeyboardButton("Escanear examen a LaTeX (IA)", callback_data=CALLBACK_ESCANEO)],
             [InlineKeyboardButton("Otro", callback_data=CALLBACK_OTRO)]
         ])
     )
@@ -511,20 +514,16 @@ async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
             "Por favor, indica con qué nos puedes ayudar (Latex, Markdown, programación, etc.)\n"
             "Nos pondremos en contacto contigo para informarte de cómo puedes colaborar."
         )
-    """
     elif context.user_data[OPTION_KEY] == CALLBACK_ESCANEO:
         context.user_data['FOTOS_IA'] = []
 
         # Se llama a la función para actualizar las plantillas cada vez que se hace una petición
-        try:
-            actualizar_plantillas_desde_github()
-        except Exception as e:
-            os.system(f"rm -rf {context.user_data.get(DOWNLOADS_DIR_KEY)}")
-            raise
+        actualizar_plantillas_desde_github()
+
         await query.message.reply_text(
             "Sube una foto clara del examen que quieres pasar a código LaTeX.\n"
             "Recomendamos el uso de esta herramienta fuera del horario 14:00-22:00 ya que los servidores sufren mayor demanda en dichas horas.")
-        return ESCANEO"""
+        return ESCANEO
     #######################################
 
 
@@ -549,11 +548,8 @@ Returns:
 """
 async def forma_ayuda_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data[AYUDA_KEY] = update.message.text
-    if not es_contactable(context.user_data):
-        await update.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).\n\nTen en cuenta que se te solicitará cada vez que termines una colaboración, puesto que no dispones de username. Para evitar esto, puedes configurar un username en Telegram.")
-        return CONTACTO
-    else:
-        return await terminar_handler(update, context)
+    
+    return await terminar_handler(update, context)
 
 """
 Función que se encarga de la selección del menú de OTRO.
@@ -586,11 +582,7 @@ async def solicitar_menu_otro(query, context: ContextTypes.DEFAULT_TYPE) -> None
 
     # Ya se han usado todas las opciones, tan solo se puede terminar    
     else:
-        if not es_contactable(context.user_data):
-            await query.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).\n\nTen en cuenta que se te solicitará cada vez que termines una colaboración, puesto que no dispones de username. Para evitar esto, puedes configurar un username en Telegram.")
-            return CONTACTO
-        else:
-            return await terminar_handler(query, context)
+        return await terminar_handler(query, context)
 
 """
 Función que se encarga de la selección del curso.
@@ -695,11 +687,7 @@ async def menu_otro_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         return DESCRIPCION
 
     elif opcion == CALLBACK_END:
-        if not es_contactable(context.user_data):
-            await query.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).\n\nTen en cuenta que se te solicitará cada vez que termines una colaboración, puesto que no dispones de username. Para evitar esto, puedes configurar un username en Telegram.")
-            return CONTACTO
-        else:
-            return await terminar_handler(query, context)
+        return await terminar_handler(query, context)
 
 
 """
@@ -1064,11 +1052,7 @@ Returns:
 async def correccion_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data[CORRECTION_KEY] = update.message.text
     
-    if not es_contactable(context.user_data):
-        await update.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).\n\nTen en cuenta que se te solicitará cada vez que termines una colaboración, puesto que no dispones de username. Para evitar esto, puedes configurar un username en Telegram.")
-        return CONTACTO
-    else:
-        return await terminar_handler(update, context)
+    return await terminar_handler(update, context)
 
 """
 Función que se encarga de la recepción de archivos.
@@ -1145,11 +1129,7 @@ async def finarchivos_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
         await solicitar_menu_otro(update, context)
         return MENU_OTRO
     else:
-        if not es_contactable(context.user_data):
-            await update.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).\n\nTen en cuenta que se te solicitará cada vez que termines una colaboración, puesto que no dispones de username. Para evitar esto, puedes configurar un username en Telegram.")
-            return CONTACTO
-        else:
-            return await terminar_handler(update, context)
+        return await terminar_handler(update, context)
 
 """
 Función que se encarga de la recepción del contacto.
@@ -1169,16 +1149,33 @@ async def contacto_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         return CONTACTO
     
     # Finalizar la conversación
-    return await terminar_handler(update, context)
-        
+    return await procesar_peticion_y_terminar(update, context)
 
 """
-Función que se encarga de finalizar la conversación.
+Función que se encarga de terminar la conversación.
+
+Se asegura de que el usuario es contactable.
 
 Returns:
     int: Nuevo estado de la conversación. END
 """
 async def terminar_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    # Si no se proporcionó un correo o número de teléfono válido, solicitarlo de nuevo
+    if not es_contactable(context.user_data):
+        await update.message.reply_text("Por favor, proporciona un correo o número de teléfono de contacto (tan solo uno).\n\nTen en cuenta que se te solicitará cada vez que termines una colaboración, puesto que no dispones de username. Para evitar esto, puedes configurar un username en Telegram.")
+        return CONTACTO
+    
+    # Finalizar la conversación
+    return await procesar_peticion_y_terminar(update, context)
+        
+
+"""
+Función que se encarga de procerar la petición y terminar.
+
+Returns:
+    int: Nuevo estado de la conversación. END
+"""
+async def procesar_peticion_y_terminar(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     # Guardar la hora de finalización
     context.user_data[END_TIME_KEY] = get_hora_str()
@@ -1566,11 +1563,7 @@ async def procesar_examen_handler(update: Update, context: ContextTypes.DEFAULT_
 
     
     # 1. Plantilla y preámbulo obtenidos del repo
-    try:
-        instrucciones_sistema = construir_instrucciones_ia()
-    except Exception as e:
-        os.system(f"rm -rf {context.user_data.get(DOWNLOADS_DIR_KEY)}")
-        raise
+    instrucciones_sistema = construir_instrucciones_ia()
     
     # 2. Añadimos las fotos
     contenidos = []
@@ -1618,8 +1611,6 @@ async def procesar_examen_handler(update: Update, context: ContextTypes.DEFAULT_
                     return await cancel(update,context)
             else:
                 # Si es un error grave distinto a 503, también abortamos
-                
-                os.system(f"rm -rf {context.user_data.get(DOWNLOADS_DIR_KEY)}")
                 raise
  
     # 4. Filtrado
@@ -1742,52 +1733,6 @@ async def recuperar_metadatos_handler(update: Update, context: ContextTypes.DEFA
     context.user_data[FILES_KEY] = context.user_data.get('FOTOS_IA', []) + [tex_filename]
             
     return await terminar_handler(update,context)
-
-"""
-Copia de funcion start pero que lleva directamente al estado de escaneo
-
-Funcion creada para el testeo del feature de escaneo de exámenes para estar oculta del menú público del bot y ser solo accesible
-a aquellos que conozcan el comando
-"""
-async def comando_IA(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    context.user_data[USERNAME_KEY] = update.message.from_user.username
-    context.user_data[NAME_KEY] = update.message.from_user.first_name
-    context.user_data[LAST_NAME_KEY] = update.message.from_user.last_name
-    context.user_data[INIT_TIME_KEY] = get_hora_str()
-    context.user_data[CHATID_KEY] = update.message.chat_id
-    
-    if has_exceeded_requests(context):
-        add_log(LOG_PATH, f"El usuario {get_userIdentifier(context.user_data)} ha excedido el límite de peticiones (IA).")
-        await update.message.reply_text(
-            f"Has excedido el límite de {REQUESTS_LIMIT} peticiones en {TIME_LIMIT} segundos. Por favor, inténtalo de nuevo más tarde."
-        )
-        context.user_data.clear()
-        return ConversationHandler.END
-    
-    add_log(LOG_PATH, f"Peticion secreta de IA iniciada por {get_userIdentifier(context.user_data)}.")
-
-    file_name = context.user_data[INIT_TIME_KEY] + "_" + get_userIdentifier(context.user_data)
-    context.user_data[DOWNLOADS_DIR_KEY] = os.path.join(DOWNLOAD_BASEDIR, file_name)
-    os.makedirs(context.user_data[DOWNLOADS_DIR_KEY])
-
-    context.user_data[OPTION_KEY] = CALLBACK_ESCANEO
-    context.user_data['FOTOS_IA'] = []
-
-    # Se llama a la función para actualizar las plantillas cada vez que se hace una petición
-    try:
-        actualizar_plantillas_desde_github()
-    except Exception as e:
-        # Error critico, sin plantillas no podemos transcribir el examen
-        os.system(f"rm -rf {context.user_data.get(DOWNLOADS_DIR_KEY)}")
-        raise
-    
-    await update.message.reply_text(
-        "Has elegido escanear un examen con IA.\n\n"
-        "Sube fotos claras del examen que quieres pasar a código LaTeX.\n"
-        "Recuerda enviar /finarchivos al terminar.",
-        parse_mode='Markdown'
-    )
-    return ESCANEO
 
 
 """
@@ -2063,7 +2008,7 @@ def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start), CommandHandler('escaneo',comando_IA)],
+        entry_points=[CommandHandler('start', start)],
         states={
             MENU:
                 [CallbackQueryHandler(menu_handler)],
