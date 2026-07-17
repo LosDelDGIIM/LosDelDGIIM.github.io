@@ -1,0 +1,102 @@
+\chapter{Sampling}
+
+In this chapter we will discuss the sampling of continuous signals. Signals are everywhere, and some specific examples that will help the reader to understand the concepts are the following: 
+\begin{itemize}
+    \item \ul{Audio signals}: Even though sound is a 3-dimensional phenomenon, a microphone captures the variations of the air pressure in a single point, and therefore it is recorded as a 1-dimensional signal, which captures the variations of the air pressure over time.
+    
+    Even though it is not the main focus of this course, given its 1-dimensional nature, audio signals are easier to understand and visualize than images, and should therefore be taken into account when trying to understand the concepts of this chapter.
+    \item \ul{Image signals}: Images are 2-dimensional signals, which capture the variations of light intensity over a 2D surface.
+\end{itemize}
+
+These signals, as most of the signals in the real world, are continuous signals, which means that they can take any value in a continuous range. However, in order to process these signals with digital computers, we need to convert them into discrete signals, which can only take a finite number of values. This process is called \ul{sampling}, and it is the main topic of this chapter. In order to obtain the original continuous signal from the sampled discrete signal, we need to perform a process called \ul{reconstruction}, which is also discussed in this chapter.
+\begin{itemize}
+    \item The sampled audio signal records the variations of the air pressure at discrete time intervals, and it needs to be reconstructed in order to obtain the original continuous signal that can be played back through a speaker.
+    \item The sampled light signal records the variations of the light intensity (and color) at discrete spatial intervals (pixels), and it needs to be reconstructed in order to obtain the original continuous image that should be displayed through a screen.
+\end{itemize}
+
+The process of sampling and reconstructing a signal is not trivial, and some visual examples in an interactive notebook can be found \myhref{https://github.com/LosDelDGIIM/LosDelDGIIM.github.io/tree/main/subjects/Erasmus-DUE/CG/img/Sampling/sampling.ipynb}{here}. In order to achieve a good reconstruction of the original signal, two aspects need to be taken into account:
+\begin{enumerate}
+    \item The sampling rate, which is the number of samples that are taken per second (for audio signals) or per unit of space (for image signals). The sampling rate needs to be high enough in order to capture the variations of the original signal.
+    \item The reconstruction filter, which is the mathematical function that is used to reconstruct the original signal from the sampled signal. The reconstruction filter needs to be chosen carefully in order to avoid artifacts in the reconstructed signal.
+    
+    Even though the reconstruction filter is an important aspect of the sampling process, it is not discussed in this course, as for 2D images, the reconstruction filter is usually a constant value for each pixel.
+\end{enumerate}
+
+If the sampling rate is too low, the reconstructed signal will not be a good approximation of the original signal, and it will contain artifacts that were not present in the original signal. Some of these artifacts are the following:
+\begin{itemize}
+    \item \ul{Jagged profiles}: The reconstructed signal will have a jagged profile, which means that it will have stair-like steps instead of smooth curves.
+    \item \ul{Loss of detail}: The reconstructed signal will have a loss of detail, as it will not be able to reproduce the fine details of the original signal.
+    \item \ul{Moiré patterns}: The reconstructed signal will have Moiré patterns, which are interference patterns that are created when two regular patterns are overlaid. In the case of images, these patterns are really common when sampling textures. This problem will be discussed in more detail in Section \ref{sec:mipmaps}.
+\end{itemize}
+
+These artifacts are known as \ul{aliasing}\footnote{The \emph{alias} is the name given to the fake signal that is created by the aliasing artifacts.}. It is caused by \emph{undersampling}, which means that the sampling rate is too low to capture the variations of the original signal. In order to determine the optimal sampling rate, we need to take into account the \ul{frequency} of the original signal, which is a measure of how fast the signal changes over time (for audio signals) or space (for image signals).
+\begin{itemize}
+    \item The frequency of an audio signal represents the pitch of the sound. Higher frequencies correspond to more acute sounds, while lower frequencies correspond to more grave sounds.
+    \item The frequency of an image signal represents the level of detail of the image. Higher frequencies represent that the image changes rapidly in a small area (meaning that it has a lot of detail), while lower frequencies represent that the image changes slowly in a large area (meaning that it has little detail).
+    
+    In real life, in order for images to have real sharp edges, their frequency is \emph{infinite}.
+\end{itemize}
+\begin{teo}[Shannon's Sampling Theorem]
+    The minimum sampling rate that is needed to reconstruct a continuous signal from its samples is twice the maximum frequency of the original signal. This minimum sampling rate is known as the \ul{Nyquist rate}, and it is given by the following formula:
+    \begin{equation}
+        f_s \geq 2 f_{max}
+    \end{equation}
+    where $f_s$ is the sampling rate, and $f_{max}$ is the maximum frequency of the original signal.
+\end{teo}
+
+Therefore, according to the Shannon's Sampling Theorem, if the sampling rate is higher than the Nyquist rate, no alias will be produced, and the reconstructed signal can be the same as the original signal. As selecting the exact value of the maximum frequency of a signal is not always possible, there are two possible outcomes when sampling a signal:
+\begin{itemize}
+    \item If the sampling rate is higher than the Nyquist rate, the reconstructed signal will be a good approximation of the original signal, and it will not contain aliasing artifacts. However, more samples than necessary will be taken, which will increase the amount of data that needs to be stored and processed.
+    \item If the sampling rate is lower than the Nyquist rate, the reconstructed signal will contain aliasing artifacts, which will make it a poor approximation of the original signal.
+\end{itemize}
+
+Therefore, in order to avoid aliasing artifacts, the sampling rate should be higher than the Nyquist rate, but as low as possible in order to reduce the amount of data that needs to be stored and processed.
+
+\section{Antialiasing}
+
+However, as we previously mentioned, in real life, images have infinite frequency. Applying the Nyquist theorem to images would mean that we would need to sample them at an infinite rate, which is not possible. Therefore, we will always have aliasing artifacts in images, and we need to find a way to reduce them. This process is known as \ul{antialiasing}, and it is the main topic of this section. The possible solutions to reduce aliasing artifacts are the following:
+\begin{itemize}
+    \item \ul{Supersampling}: It is a method to reduce aliasing artifacts in images by increasing the sampling rate.
+
+    \item \ul{Prefiltering}: It is a method to reduce aliasing artifacts in images by filtering the original signal before sampling it.
+    
+    In terms of audio signals, prefiltering is usually implemented by using a low-pass filter that removes the high frequencies of the original signal before sampling it. In terms of images, however, would mean deleting the edges of the image, which is usually not a good solution. Therefore, in terms of images, it is only implemented in some specific cases, such as in MIP maps (see Section \ref{sec:mipmaps}).
+
+    \item \ul{Postfiltering}: It is a method to reduce aliasing artifacts in images by filtering the sampled signal after it has been reconstructed.
+    
+    In terms of images, postfiltering just blurs the image, which is not a good solution. Therefore, in terms of images, postfiltering isn't usually implemented.
+\end{itemize}
+
+Therefore, the only solution to reduce aliasing artifacts in images is supersampling, which is the main topic of this section. As we can't increase the sampling rate more than the number of pixels that the screen can display, supersampling is usually virtually implemented.
+\begin{itemize}
+    \item More than one sample is taken per pixel. It can be implemented by taking samples at different positions within the pixel, or by shooting more than one ray per pixel in a ray tracing algorithm. The sampling can be done using two approaches:
+    \begin{itemize}
+        \item \ul{Regular sampling}: The samples are taken at regular intervals within the pixel. This method is easy to implement, but it incites stright artifacts in the line. Since our brain is designed to recognize stright lines, it will incite them even more, resulting in artifacts that are noticeable.
+        
+        \item \ul{Stochastic sampling}: The samples are taken at random positions within the pixel. This method is more difficult to implement, but it avoids the stright artifacts already mentioned. Three methods to implement stochastic sampling are the following:
+        \begin{itemize}
+            \item \ul{Poisson disk sampling}: The samples are taken at random positions within the pixel, but they are not allowed to be too close to each other. This method avoids the stright artifacts, and it also avoids \emph{clustering of the samples}.
+            \item \ul{Stratified random sampling}: The pixel is divided into a grid of subpixels, and one sample is taken at a random position within each subpixel.
+            \item \ul{Jittered sampling}: The pixel is divided into a grid of subpixels, and each sample is always placed in center of each subpixel. In order to add randomness to the sampling, a random offset is added to each sample, which is smaller than half the size of the subpixel.
+        \end{itemize}
+    \end{itemize}
+
+
+    \item The final color of the pixel is obtained by combining the colors of all the samples that were taken for that pixel. This way, the final color of the pixel will be a better approximation of the original signal, and it will contain less aliasing artifacts. The combination of the colors of the samples can be done by:
+    \begin{itemize}
+        \item \ul{Averaging}: The final color of the pixel is obtained by averaging the colors of all the samples that were taken for that pixel.
+        \item \ul{Weighted averaging}: The final color of the pixel is obtained by taking a weighted average of the colors of all the samples that were taken for that pixel. Following a Gaussian distribution, the samples that are closer to the center of the pixel are given more importance than the samples that are farther away from the center of the pixel. For a $3\times3$ supersampling (which means that 9 samples are taken per pixel), the weights of the samples are the following:
+        \begin{equation*}
+            \dfrac{1}{16}\begin{bmatrix}
+                1 & 2 & 1 \\
+                2 & 4 & 2 \\
+                1 & 2 & 1
+            \end{bmatrix}
+        \end{equation*}
+    \end{itemize}
+\end{itemize}
+
+
+\section{MIP maps}\label{sec:mipmaps}
+
+
