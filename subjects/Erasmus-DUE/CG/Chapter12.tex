@@ -99,4 +99,55 @@ Therefore, the only solution to reduce aliasing artifacts in images is supersamp
 
 \section{MIP maps}\label{sec:mipmaps}
 
+When a texture is applied to a 3D model, it is usually displayed at different distances from the camera. When the texture is displayed at a distance, it is usually displayed at a smaller size than its original size. In this case, if the texture is sampled at its original size, aliasing artifacts will be produced, as the sampling rate will be much lower than the Nyquist rate. In order to avoid these aliasing artifacts, the texture needs to be prefiltered before it is sampled.
 
+In audio signals, prefiltering was usually implemented by using a low-pass filter that removes the high frequencies of the original signal before sampling it. Similarly, in images, prefiltering is usually implemented by blurring the image before it is sampled. Normally it would not be a good solution, as it would remove the edges of the image, but in this case, since the image is going to be displayed at a smaller size, the edges will be blurred anyway, and therefore it is not a problem and helps to avoid aliasing artifacts. Depending on the distance from the camera, the texture will be displayed at different sizes, and therefore it needs to be prefiltered at different levels of blurriness.
+
+\emph{MIP Maps} are a technique to prefilter a texture at different levels of blurriness, and they are the main topic of this section. The MIP maps of a texture are a set of downscaled versions of the original texture (each one half the size of the previous one). Each downscaled version of the texture is called \emph{level} of the MIP map. The process of selecting the level of the MIP map that a fragment of the texture should be sampled from is as follows:
+\begin{enumerate}
+    \item The change rate of the texture coordinates of the fragment is calculated.
+    \begin{align*}
+        \left(\dfrac{\partial u}{\partial x}, \dfrac{\partial v}{\partial x}\right) \text{ and } \left(\dfrac{\partial u}{\partial y}, \dfrac{\partial v}{\partial y}\right)
+    \end{align*}
+
+    They represent the change rate of the texture coordinates in the $x$ and $y$ directions, respectively. In practice, they are calculated by using the texture coordinates of the fragment and its neighboring fragments.
+    \begin{align*}
+        \left(\dfrac{\partial u}{\partial x}, \dfrac{\partial v}{\partial x}\right) &= \left(u_{x+1,y}-u_{x,y}, v_{x+1,y}-v_{x,y}\right) \\
+        \left(\dfrac{\partial u}{\partial y}, \dfrac{\partial v}{\partial y}\right) &= \left(u_{x,y+1}-u_{x,y}, v_{x,y+1}-v_{x,y}\right)
+    \end{align*}
+
+    \item The length of the change rate vectors is calculated, as they represent the change rate of the texture coordinates in the $x$ and $y$ directions, respectively.
+    \begin{align*}
+        d_x &= \left\|\left(\dfrac{\partial u}{\partial x}, \dfrac{\partial v}{\partial x}\right)\right\| \\
+        d_y &= \left\|\left(\dfrac{\partial u}{\partial y}, \dfrac{\partial v}{\partial y}\right)\right\|
+    \end{align*}
+
+    The values $d_x$ and $d_y$ represent the change rate of the texture coordinates in the $x$ and $y$ directions, respectively. A value of $d_x=N\in \bb{N}$ means that when moving one pixel in the $x$ direction, the texture coordinates change by $N$ pixels. The bigger the value of $d_x$, the bigger the change rate of the texture coordinates in the $x$ direction, and therefore the smaller the size of the texture that is being displayed. The same applies to $d_y$.
+
+    \item In order to obtain a general value of the change rate of the texture coordinates, the maximum value of $d_x$ and $d_y$ is taken:
+    \begin{align*}
+        d = \max(d_x, d_y)
+    \end{align*}
+
+    This produces a blurrier texture, so a more advanced method is to obtain a different level of the MIP map for each direction. This is called \emph{anisotropic filtering}.
+
+    \item Since the MIP maps are downscaled versions of the original texture where each level is half the size of the previous one, the level of the MIP map that should be sampled from is calculated as follows:
+    \begin{align*}
+        \text{level} = \log_2(d)
+    \end{align*}
+
+    Some examples are:
+    \begin{itemize}
+        \item If $d=1$, the texture is being displayed at its original size, and therefore the level of the MIP map that should be sampled from is $0$ (the original texture).
+        \item If $d=2$, the texture is being displayed at half its original size, and therefore the level of the MIP map that should be sampled from is $1$ (the first downscaled version of the texture).
+        \item If $d=4$, the texture is being displayed at a quarter of its original size, and therefore the level of the MIP map that should be sampled from is $2$ (the second downscaled version of the texture).
+    \end{itemize}
+
+    However, since $d\in \bb{R}^+$, then $\text{level}\in \bb{R}$. Some specific cases are:
+    \begin{itemize}
+        \item If $d\in \left]0,1\right]$, then $\text{level}\in \bb{R}^-_0$. In this case, the texture is being displayed at a size bigger than its original size, and therefore the level of the MIP map that should be sampled from is $0$ (the original texture).
+        \item If $d\geq 1$, then $\text{level}\in \bb{R}^+_0$. If the level is not an integer, then the two closest levels of the MIP map are sampled from, and their colors are combined by using a weighted average taking into account the decimal part of the level.
+        
+        For example, if $\text{level}=1.3$, then the levels $1$ and $2$ of the MIP map are sampled from, and their colors are combined by using a weighted average with weights $0.7$ and $0.3$, respectively.
+    \end{itemize}
+\end{enumerate}
