@@ -1,0 +1,93 @@
+\chapter{Recognition}
+
+\noindent
+El reconocimiento en visión por computador consiste en dotar a un sistema informático de la capacidad de interpretar el contenido semántico de una imagen digital. A diferencia de las etapas de bajo nivel (como el filtrado de imágenes o la detección de bordes), el reconocimiento opera en el nivel más alto de la jerarquía de abstracción visual. \\
+
+\noindent
+Históricamente, los primeros intentos en las décadas pasadas se basaban en la ingeniería de características manuales (\textit{hand-crafted features}) tratando de buscar patrones geométricos rígidos, bordes o esquinas. Sin embargo, este enfoque fracasó ante la inmensa variabilidad del mundo real. El paradigma moderno se fundamenta en el \textbf{Aprendizaje Supervisado (Supervised Learning)}, donde el sistema aprende las reglas de reconocimiento de forma automática exponiéndose a grandes volúmenes de datos etiquetados.
+
+\subsection{Taxonomía de las Tareas de Reconocimiento Visual}
+\noindent
+Dependiendo del nivel de granularidad espacial y del objetivo semántico, el reconocimiento se divide en cuatro tareas principales:
+
+\begin{enumerate}
+    \item \textbf{Clasificación de Imágenes (Image Classification):} El objetivo es asignar una única etiqueta categórica global a toda la imagen. No discrimina la ubicación ni la cantidad de objetos presentes.
+    \item \textbf{Detección de Objetos (Object Detection):} Consiste en localizar de forma espacial la presencia de uno o múltiples objetos dentro de la imagen, dibujando una caja delimitadora (\textit{Bounding Box}) alrededor de cada uno y asignándoles una clase.
+    \item \textbf{Segmentación Semántica (Semantic Segmentation):} Implica clasificar cada uno de los píxeles de la imagen en una categoría semántica específica (ej. píxel de carretera, píxel de cielo, píxel de coche). Agrupa las instancias de una misma categoría bajo una única máscara común.
+    \item \textbf{Segmentación de Instancias (Instance Segmentation):} Es una combinación híbrida de alta precisión. No solo clasifica los píxeles semánticamente, sino que discrimina de forma exacta e individualizada cada instancia u objeto independiente (ej. diferencia el coche A del coche B aunque estén adyacentes).
+\end{enumerate}
+
+\section{Classification Concepts}
+\noindent
+La clasificación de imágenes actúa como el pilar fundamental sobre el cual se construyen los algoritmos de reconocimiento más complejos. 
+
+\subsection{Data-Driven Approach}
+\noindent
+Dado que no existe un algoritmo matemático explícito para definir visualmente qué es un objeto (debido a las variaciones de iluminación, deformaciones, oclusión y puntos de vista), el diseño se basa en tres etapas:
+\begin{align*}
+    \text{Dataset Labeling} &\longrightarrow \text{Training a Classifier} \longrightarrow \text{Evaluation on Test Set}
+\end{align*}
+Un clasificador se formaliza matemáticamente mediante una función de predicción $f(\mathbf{x}, \mathbf{W})$ que toma un vector de características de imagen $\mathbf{x}$ y un conjunto de parámetros o pesos entrenables $\mathbf{W}$, y devuelve una puntuación para cada clase.
+
+\subsection{Linear Classifier}
+\noindent
+Es el modelo fundamental base. Asumiendo una imagen de entrada aplanada en un vector columna $\mathbf{x} \in \mathbb{R}^{D \times 1}$ (donde $D$ es el número total de píxeles) y un problema con $K$ clases posibles, el clasificador lineal se define analíticamente como:
+\begin{equation}
+    \mathbf{f}(\mathbf{x}, \mathbf{W}) = \mathbf{W}\mathbf{x} + \mathbf{b}
+\end{equation}
+donde:
+\begin{itemize}
+    \item $\mathbf{W} \in \mathbb{R}^{K \times D}$ es la matriz de pesos (\textit{weights}). Cada fila de esta matriz actúa matemáticamente como una plantilla o \textit{template} para una clase específica.
+    \item $\mathbf{b} \in \mathbb{R}^{K \times 1}$ es el vector de sesgos (\textit{bias}), que parametriza las preferencias independientes de la escala de los datos para ciertas clases.
+\end{itemize}
+
+\subsubsection{Interpretación Geométrica del Clasificador Lineal}
+\noindent
+Desde una perspectiva geométrica, el clasificador lineal establece hiperplanos de decisión de alta dimensionalidad en el espacio de características. Cada clase está delimitada por una frontera lineal. Si los datos correspondientes a una clase no son linealmente separables (debido a distribuciones complejas o texturas entrelazadas), el clasificador lineal sufrirá una degradación severa en su rendimiento, lo que justifica la necesidad histórica de transicionar hacia modelos no lineales profundos (como las Redes Neuronales Convocucionales).
+
+\subsection{Loss Functions y Optimización}
+\noindent
+Para entrenar los pesos $\mathbf{W}$, se necesita cuantificar el error del modelo mediante una función de pérdida:
+
+\begin{itemize}
+    \item \textbf{Pérdida SVM Multiclase (Hinge Loss):} Evalúa que la puntuación de la clase correcta $s_{y_i}$ supere a las puntuaciones de las clases incorrectas $s_j$ por un margen de seguridad fijo $\Delta$:
+    \begin{equation}
+        L_i = \sum_{j \neq y_i} \max(0, s_j - s_{y_i} + \Delta)
+    \end{equation}
+    
+    \item \textbf{Clasificador Softmax (Pérdida de Entropía Cruzada):} Convierte las puntuaciones brutas (\textit{logits}) en una distribución de probabilidad normalizada mediante la función Softmax:
+    \begin{equation}
+        P(Y = k \mid X = \mathbf{x}_i) = \frac{e^{s_{k}}}{\sum_{j} e^{s_j}}
+    \end{equation}
+    La pérdida asociada para la muestra busca maximizar el logaritmo de la probabilidad de la clase correcta:
+    \begin{equation}
+        L_i = -\log \left( \frac{e^{s_{y_i}}}{\sum_{j} e^{s_j}} \right)
+    \end{equation}
+\end{itemize}
+\noindent
+El ajuste óptimo de los parámetros se realiza mediante la minimización de la pérdida total balanceada con un término de Regularización ($R(\mathbf{W})$) para evitar el sobreajuste (\textit{overfitting}):
+\begin{equation}
+    L = \frac{1}{N} \sum_{i=1}^{N} L_i + \lambda R(\mathbf{W})
+\end{equation}
+La optimización se ejecuta de forma iterativa calculando el gradiente analítico mediante el algoritmo de \textbf{Descenso de Gradiente Estocástico (SGD)}: $\mathbf{W} \leftarrow \mathbf{W} - \eta \nabla_{\mathbf{W}}L$.
+
+\section{Segmentation Idea}
+
+La segmentación avanza un paso más allá de la clasificación global al intentar comprender la escena a nivel de píxel individual. Conceptualmente, busca responder a la pregunta: \textit{¿A qué categoría pertenece geométrica y semánticamente este píxel exacto de la coordenada $(u, v)$?}
+
+\subsection{Segmentación Semántica Tradicional frente a Profunda}
+\begin{itemize}
+    \item \textbf{Aproximaciones Primitivas:} Se basaban fuertemente en algoritmos de clustering de color (como $K$-Means en el espacio de color CIE Lab) o en cortes de grafos (\textit{Graph Cuts}) buscando discontinuidades abruptas en los gradientes de brillo de la imagen. No tenían noción semántica real; solo agrupaban regiones homogéneas de color o textura.
+    \item \textbf{Aproximaciones Modernas (Fully Convolutional Networks - FCN):} Diseñadas por Long et al., reemplazan las capas densas terminales de un clasificador por capas puramente convolucionales. Esto permite que la red reciba una imagen de cualquier resolución y devuelva un mapa de puntuaciones con correspondencia espacial directa píxel a píxel.
+\end{itemize}
+
+
+
+\subsection{El Mecanismo de Downsampling y Upsampling}
+\noindent
+Para procesar la información de segmentación de forma eficiente, las arquitecturas estándar emplean un diseño simétrico:
+\begin{enumerate}
+    \item \textbf{Ruta de Contracción (Encoder / Downsampling):} Utiliza circunvoluciones y capas de Pooling para reducir progresivamente el tamaño espacial de la imagen mientras incrementa la profundidad de los canales de características. Esto permite capturar el contexto semántico global (\textit{``qué''} hay en la escena), sacrificando la resolución espacial exacta (\textit{``dónde''} está).
+    \item \textbf{Ruta de Expansión (Decoder / Upsampling):} Utiliza operaciones de convolución transpuesta (\textit{Transposed Convolution}) o interpolaciones bilineales para proyectar los mapas de características abstractos de baja resolución de vuelta a las dimensiones espaciales originales de la imagen de entrada. Esto recupera la localización geométrica precisa de los bordes de los objetos.
+\end{enumerate}
+

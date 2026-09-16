@@ -1,0 +1,100 @@
+\chapter{Monocular Depth Estimation and Efficiency}
+\noindent
+No relevante.\\
+
+
+\noindent
+La pérdida de la tercera dimensión es la primera consecuencia directa e irreversible del proceso de captura de una cámara fotográfica. Al proyectar una escena tridimensional $3\text{D}$ sobre un plano bidimensional $2\text{D}$ (el sensor), la información de la profundidad ($Z$) desaparece. \\
+
+\noindent
+Para poder estimar la distancia a partir de imágenes, la visión artificial y los sistemas biológicos se apoyan en diferentes pistas visuales o estímulos conocidos como \textbf{Depth Cues}:
+
+\begin{itemize}
+    \item \textbf{Pistas Binoculares (Estéreo):} Dependen de la disparidad y la triangulación entre dos puntos de vista ligeramente desplazados (visión estéreo, como vimos en temas anteriores).
+    \item \textbf{Pistas Monoculares:} Estímulos visuales contenidos dentro de una única imagen plana que permiten inferir relaciones espaciales relativas. Se dividen en:
+    \begin{itemize}
+        \item \textit{Perspectiva lineal:} Convergencia de líneas paralelas en la distancia hacia un punto de fuga.
+        \item \textit{Tamaño relativo / familiar:} Si conocemos el tamaño real de un objeto (ej. un coche o un peatón), su escala en la imagen nos indica si está cerca o lejos.
+        \item \textit{Oclusión:} Un objeto que tapa o cubre a otro está, inequívocamente, más cerca del observador.
+        \item \textit{Gradiente de textura:} Los detalles se vuelven más densos y difusos a medida que se alejan en el fondo.
+        \item \textit{Perspectiva atmosférica:} Los objetos lejanos pierden contraste y adquieren un tono azulado o neblinoso debido a la dispersión de la luz en el aire.
+    \end{itemize}
+\end{itemize}
+
+\section{Monocular Depth Estimation}
+La estimación monocular de profundidad (\textit{Monocular Depth Estimation - MDE}) consiste en predecir un mapa de distancias continuas utilizando como única entrada una sola imagen estática RGB.
+
+\subsubsection{¿Por qué MDE es un problema matemáticamente mal propuesto (ill-posed)?}
+\noindent
+Bajo el modelo de proyección de una cámara pinhole, un punto del espacio tridimensional $\mathbf{P} = [X, Y, Z]^{\top}$ se mapea en un píxel $\mathbf{x} = [u, v]^{\top}$ mediante las ecuaciones de proyección:
+\begin{equation}
+    u = f_x \frac{X}{Z} + c_x, \quad v = f_y \frac{Y}{Z} + c_y
+\end{equation}
+
+\noindent
+Si disponemos únicamente de la imagen $2\text{D}$, conocemos los píxeles $(u, v)$ y los parámetros de calibración interna de la cámara, pero las coordenadas reales $(X, Y, Z)$ en metros son incógnitas. Este sistema matemático posee \textbf{infinitas soluciones correctas}. Un punto pequeño situado muy cerca de la lente proyectará exactamente el mismo píxel en la pantalla que un objeto idéntico pero gigante situado en el fondo de la escena (un fenómeno conocido en el arte como \textit{ilusión de perspectiva de Ames}). \\
+
+\noindent
+Al existir infinitas escenas tridimensionales distintas que generan la misma imagen exacta de dos dimensiones, el problema es matemáticamente imposible de resolver de forma determinista mediante geometría pura. Por este motivo, el software moderno recurre al \textbf{Deep Learning}, utilizando redes neuronales para que aprendan el \textit{prior} de la escena (es decir, que memoricen el contexto semántico y las pistas monoculares del entorno) para deducir cuál de las infinitas soluciones es la correcta.
+
+\section{Paradigmas de Entrenamiento de Redes Neuronales para MDE}
+
+Para resolver este problema ambiguo, una Red Neuronal Convolucional (CNN) o un Vision Transformer (ViT) toma una imagen RGB y produce una matriz del mismo tamaño denominada mapa de profundidad predicho $\hat{D}$. Existen dos formas principales de entrenar este modelo:
+
+\subsection{Supervised Learning con LiDAR }
+\noindent
+Es el enfoque más directo y tradicional. Consiste en alimentar la red neuronal con una imagen y contrastar su predicción píxel a píxel contra una medición real, física y exacta del terreno (\textit{Ground Truth}).
+
+\begin{enumerate}
+    \item \textbf{Recolección de Datos:} Se utilizan vehículos instrumentados equipados con sensores \textbf{LiDAR} (dispositivos láser de barrido activo). Mientras la cámara toma la fotografía RGB, el LiDAR dispara haces de luz y mide el tiempo de retorno para esculpir una nube de puntos $3\text{D}$ milimétrica de la escena.
+    \item \textbf{Proyección de Nube a Matriz:} Los puntos $3\text{D}$ del LiDAR se proyectan matemáticamente sobre el plano de la cámara usando matrices de transformación, generando una matriz dispersa de profundidad real ($D$).
+    \item \textbf{Cálculo de la Función de Pérdida:} La red neuronal realiza una predicción $\hat{D}$. El error se calcula penalizando las desviaciones numéricas frente al LiDAR mediante funciones de pérdida regresiva, tales como el Error Cuadrático Medio ($L_2$) o el Error Absoluto Medio ($L_1$):
+    \begin{equation}
+        \mathcal{L}_{\text{supervisada}} = \frac{1}{N} \sum_{i=1}^{N} \|\hat{D}(s_i) - D(s_i)\|^2
+    \end{equation}
+\end{enumerate}
+\textbf{Desventaja Principal:} Conseguir datos de LiDAR es extremadamente costoso, los sensores son caros, requieren una calibración de hardware muy compleja y el mapa resultante es \textit{disperso} (tiene huecos vacíos donde el láser no rebotó).
+
+\subsection{Self-Supervised Learning}
+\noindent
+Este enfoque elimina la necesidad de contar con sensores LiDAR caros. El modelo aprende a estimar la profundidad analizando únicamente \textbf{secuencias de vídeo normales}. Su pilar fundamental es el principio de la \textbf{Consistencia Fotométrica (Photometric Consistency)}. \\
+
+\noindent
+Veámos cómo funciona este mecanismo de aprendizaje paso a paso:
+\begin{enumerate}
+    \item \textbf{Configuración de Entrada:} Tomamos dos fotogramas consecutivos de un vídeo: el fotograma actual ($I_t$) y el fotograma siguiente ($I_{t+1}$). Entre ambas capturas, la cámara se ha movido (el coche ha avanzado).
+    \item \textbf{Redes Neuronales en Paralelo:} 
+    \begin{itemize}
+        \item La red \textit{Depth Network} analiza el fotograma $I_t$ y estima su mapa de profundidad monocular $\hat{D}_t$.
+        \item Una segunda red auxiliar, llamada \textit{Pose Network}, analiza ambos fotogramas en paralelo ($I_t, I_{t+1}$) y estima el movimiento rígido relativo en $3\text{D}$ que sufrió la cámara (la rotación $R$ y traslación $\mathbf{t}$).
+    \end{itemize}
+    \item \textbf{Deformación Geométrica (Inverse Warping):} Usando la profundidad estimada $\hat{D}_t$ y el movimiento relativo $[R \mid \mathbf{t}]$, la geometría proyectiva nos permite tomar los píxeles del fotograma siguiente ($I_{t+1}$) y ``re-proyectarlos'' hacia atrás en el tiempo para reconstruir sintéticamente cómo debería verse el fotograma actual. A esta imagen reconstruida la llamamos \textbf{Imagen Deformada} ($\hat{I}_t$).
+    \item \textbf{La Pérdida Fotométrica:} Si la profundidad predicha $\hat{D}_t$ y la pose estimada son correctas, la imagen sintética inventada $\hat{I}_t$ debería ser visualmente idéntica en colores y texturas a la imagen real capturada $I_t$. La función de pérdida evalúa el error de brillo píxel a píxel:
+    \begin{equation}
+        \mathcal{L}_{\text{fotométrica}} = \|I_t - \hat{I}_t\|
+    \end{equation}
+\end{enumerate}
+El sistema se optimiza minimizando este error de reconstrucción de imágenes. La red se entrena de forma completamente gratuita (\textit{self-supervised}) porque la propia consistencia de la secuencia de vídeo actúa como el supervisor supervisor.
+
+\section{Efficiency y Trade-offs en Hardware Limitado}
+Una vez que el modelo es capaz de estimar la profundidad, se enfrenta al desafío del despliegue en entornos reales (como los chips embebidos de drones, robots autónomos o smartphones), donde los recursos energéticos y de memoria son severamente escasos. \\
+
+\noindent
+Analicemos el \textbf{Trade-off entre Tiempo de Inferencia y Rendimiento} (Métricas de error frente a velocidad):
+
+\begin{itemize}
+    \item \textbf{Métricas de Rendimiento:} Se miden usando el error RMSE (Root Mean Squared Error) o el error relativo absoluto ($AbsRel$). Cuanto más bajo sea el valor, más precisa es la estimación del relieve.
+    \item \textbf{Métricas de Eficiencia de Hardware:}
+    \begin{itemize}
+        \item \textit{Número de Parámetros:} El tamaño que ocupa el modelo en la memoria RAM/VRAM.
+        \item \textit{FLOPs (Floating Point Operations):} La cantidad de operaciones de coma flotante que necesita ejecutar el procesador por segundo para dar una respuesta.
+        \item \textit{Latencia / Tiempo de Inferencia:} Los milisegundos que tarda la red en procesar un fotograma.
+    \end{itemize}
+\end{itemize}
+\textbf{Conclusión de Optimización (Métrica EER):}
+Para equilibrar estas métricas y poder comparar modelos de forma objetiva, usaremos la métrica \tbf{EER (Efficient Evaluation Ratio)}, que promedia el coste relativo de los parámetros y las operaciones aritméticas frente a un modelo de referencia:
+\begin{equation}
+    EER = \frac{1}{\|i\|} \cdot \sum_{i} \left( \frac{M_i}{R_i} \right)
+\end{equation}
+El diseño de ingeniería moderno busca reducir drásticamente los FLOPs (mediante convoluciones separables en profundidad o mecanismos de atención eficientes en Transformers) para lograr que el error RMSE se mantenga bajo pero permitiendo que el tiempo de ejecución caiga de segundos a milisegundos, garantizando que el sistema opere a tiempo real crítico en sistemas embebidos de automoción.
+

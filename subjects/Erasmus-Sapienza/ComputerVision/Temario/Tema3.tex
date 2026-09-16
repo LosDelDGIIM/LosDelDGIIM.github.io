@@ -1,0 +1,143 @@
+\chapter{Gaussian image pyramid}
+\noindent
+En el procesamiento de imágenes analógicas o digitales tradicionales, las características de la imagen están fuertemente ligadas a su resolución original. El \textbf{enfoque multiescala} (Multi-Resolution Representation) surge de una idea fundamental:
+\begin{quote}
+    ``Dado que una gran cantidad de suavizado limita la frecuencia de las características de una imagen, ¡no necesitamos mantener todos los píxeles a nuestro alrededor!''
+\end{quote}
+La estrategia consiste en \textbf{reducir progresivamente el número de píxeles a medida que suavizamos más y más la imagen}, lo que da lugar a una estructura jerárquica conocida como \textbf{pirámide de imágenes}. \\
+
+
+\section{Gaussian Pyramid}
+La pirámide gaussiana es una secuencia de imágenes submuestreadas donde cada nivel representa una versión cada vez más borrosa y pequeña del nivel anterior. \\
+
+\noindent
+En la construcción de la pirámide gaussiana, el uso del filtro gaussiano no es una elección arbitraria; se debe principalmente a una propiedad matemática y física crucial llamada \tbf{auto-reproducibilidad} (o propiedad de cascada del filtro gaussiano) y a la prevención del fenómeno de aliasing. \\
+
+\noindent
+La propiedad de \tbf{self-reproducing property}, matemáticamente indica que si realizas la convolución de una señal con una función gaussiana de desviación estándar $\sigma_1$, y el resultado lo vuelves a convolucionar con otra gaussiana de desviación estándar $\sigma_2$, el resultado final es exactamente equivalente a haber filtrado la imagen original una sola vez con una única función gaussiana cuya varianza es la suma de las varianzas
+
+$$\sigma_{\text{final}} = \sqrt{\sigma_1^2 + \sigma_2^2}$$
+esto permite un suavizado incremental y constante en cada nivel.
+
+\subsection{Algoritmo de Construcción}
+\noindent
+El proceso es iterativo (síntesis recursiva). Para cada nivel $i$, la imagen se construye aplicando dos operaciones consecutivas:
+
+\begin{enumerate}
+    \item Start with the original image $G_0$.
+    \item Repeat until minimum resolution is reached:
+    \begin{enumerate}
+        \item \textbf{Filtrado (Suavizado):}  apply Gaussian blur to the current level $G_k$. Se utiliza el filtro Gaussiano porque es \textit{auto-reproducible}, lo que permite un suavizado incremental estable.
+        \item \textbf{Submuestreo (Downsampling):} reducción del tamaño de la imagen (típicamente eliminando filas y columnas alternas, reduciendo cada dimensión a la mitad, es decir, un 25\% del área por paso), obteniendo $G_{k+1}$.
+    \end{enumerate}
+\end{enumerate}
+\noindent
+Este bucle se repite:
+$$\text{Filtrar} \longrightarrow \text{Submuestrear}$$
+hasta alcanzar una resolución mínima predefinida (por ejemplo, plantillas de $8 \times 8$ píxeles).
+
+\subsection{Tamaño Total en Memoria}
+\noindent
+Una pregunta matemática clave planteada en clase es: \textit{¿Cuánto más grande es la pirámide completa en comparación con la imagen original?} \\ 
+
+\noindent
+Si la imagen original tiene un tamaño (área) de $1$, los niveles sucesivos ocuparán $\frac{1}{4}$, $\frac{1}{16}$, $\frac{1}{64}$, etc. La suma geométrica infinita es:
+
+$$\text{Tamaño Total} = 1 + \frac{1}{4} + \frac{1}{16} + \frac{1}{64} + \dots = \sum_{k=0}^{\infty} \left(\frac{1}{4}\right)^k = \frac{1}{1 - \frac{1}{4}} = \frac{4}{3}$$
+Por lo tanto, \textbf{la pirámide completa ocupa solo $\frac{4}{3}$ (aproximadamente $1.33$) del tamaño de la imagen original}. Es una representación muy compacta y eficiente.
+
+\subsection{Propiedades de la Pirámide Gaussiana}
+\begin{itemize}
+    \item \textbf{Pérdida de detalles:} a medida que ascendemos a niveles superiores (resolución más baja), los detalles finos y las altas frecuencias se difuminan (pérdida de información).
+    \item \textbf{Preservación de estructuras:} en los niveles más altos se preservan únicamente las \textbf{grandes regiones uniformes} de la imagen original.
+    \item \textbf{Irreversibilidad:} debido al submuestreo y al filtrado (operación ``lossy'' o con pérdida), \textbf{no es posible} reconstruir la imagen original exacta a partir de una capa superior borrosa de la pirámide gaussiana.
+\end{itemize}
+
+\section{Laplacian Pyramid}
+Para solucionar el problema de la pérdida de información y poder lograr una representación \tbf{lossless} (sin pérdida), Burt y Adelson (1983) propusieron la pirámide laplaciana. \\
+
+\noindent
+En lugar de almacenar las imágenes borrosas, en cada nivel de la pirámide laplaciana retenemos únicamente el \textbf{residuo} (la diferencia o detalle perdido). 
+
+\begin{notacion}
+    Let $G_k$ be the $k-$th level of the Gaussian pyramid. Define:
+    \begin{equation*}
+        L_k = G_k - \text{upsample}(G_{k+1})
+    \end{equation*}
+    where ``upsample'' means expanding $G_{k+1}$ back to the size of $G_k$ (typically by inserting zeros and blurring).
+\end{notacion}
+
+\subsection{Algoritmo de Construcción}
+\noindent
+El algoritmo de construcción de cada nivel funciona de la siguiente manera:
+\begin{enumerate}
+    \item \tbf{Filter}: se toma la imagen del nivel actual ($G_i$) y se suaviza (Blur).
+    \item \tbf{Compute residual}: se calcula el \textbf{residuo} (imagen residual $L_i$) mediante la resta:
+    $$L_i = G_i - \text{Blur}(G_i)$$
+    Este residuo captura la información de los bordes y los detalles finos que el filtro Gaussiano elimina.
+    \item \tbf{Subsample}: se submuestrea la imagen borrosa para generar el siguiente nivel inferior de resolución ($G_{i+1}$).
+\end{enumerate}
+
+
+\subsection{Reconstrucción de la Imagen Original}
+\noindent
+A diferencia de la Gaussiana, la pirámide Laplaciana sí permite reconstruir la imagen original de forma exacta. Para reconstruir, necesitamos almacenar únicamente:
+\begin{enumerate}
+    \item Todos los \tbf{residuos} de cada nivel ($L_0, L_1, \dots$).
+    \item La \tbf{imagen más pequeña} del último nivel de la pirámide (la aproximación más baja), $G_N$.
+\end{enumerate}
+\noindent
+El \tbf{proceso de reconstrucción} (colapsar la pirámide) se realiza de forma inversa de arriba hacia abajo (\underline{Coarse-to-Fine}):
+$$\text{Nivel Superior Up-sampled \& Blurred} + \text{Residuo del nivel actual} = \text{Imagen Reconstruida del Nivel Actual}$$
+donde el \tbf{algoritmo de reconstrucción} se define recursivamente como:
+\begin{enumerate}
+    \item Start from $G_N$ (the coarsest level).
+    \item Repeat until original resolution:
+    \begin{enumerate}
+        \item \textbf{Upsample \& Blur}: se toma la imagen del nivel superior ($G_{k+1}$), se expande (upsample) y se suaviza (blur) para obtener una versión borrosa del nivel actual.
+        \item \textbf{Add the residual}: se suma el residuo almacenado en el nivel actual ($L_k$) a la imagen borrosa obtenida en el paso anterior para recuperar la imagen del nivel actual:
+        $$G_k = \text{upsample}(G_{k+1}) + L_k$$
+    \end{enumerate}
+\end{enumerate}
+
+\noindent
+Nos podemos preguntar entonces, ¿por qué se llama Laplaciana? \\ \\
+\noindent
+Se denomina así porque el residuo obtenido al restar una imagen borrosa de su versión original equivale matemáticamente a aplicar un filtro \textbf{Laplaciano de Gaussiano (LoG)}.
+
+\noindent
+Una \tbf{Diferencia de Gaussianas (DoG)} aproxima de manera excelente el operador diferencial Laplaciano, sirviendo como un excelente detector de bordes debido a los ``zero crossings'' (cruces por cero) en las transiciones de intensidad.
+
+\begin{observacion}
+    El término \tbf{coarse-to-fine} (que se traduce conceptualmente como ``de lo grueso a lo fino'' o ``de menor a mayor resolución'') describe una estrategia para analizar, procesar o buscar estructuras dentro de una imagen a través de diferentes escalas. Imaginemoslo de la siguiente manera:
+    \begin{itemize}
+        \item \textbf{Coarse (Lo grueso / Alta jerarquía):} corresponde a los niveles superiores de la pirámide, aquí la imagen ha sufrido mucho suavizado (blurring). Las texturas y los detalles finos han desaparecido , dejando únicamente las estructuras globales y las regiones uniformes grandes de la imagen original.
+        \item \textbf{Fine (Lo fino / Base de la pirámide):} corresponde a los niveles inferiores o a la imagen original, aquí es donde residen los detalles de alta frecuencia, bordes definidos y texturas precisas.
+    \end{itemize}
+\end{observacion}
+
+
+\section{Aplicaciones Esenciales en Computer Vision}
+Las pirámides de imágenes se utilizan de forma masiva en la disciplina debido a cinco aplicaciones principales:
+\begin{enumerate}
+    \item \textbf{Compresión de imágenes:} el almacenamiento de residuos laplacianos tiende a tener menos entropía.
+    \item \textbf{Denoising (Eliminación de ruido):} separación de frecuencias para filtrar ruidos de alta frecuencia.
+    \item \textbf{Detección Multiescala (Multi-scale Detection):} permite buscar objetos usando plantillas fijas (Templates). Si una plantilla de búsqueda tiene un tamaño fijo en píxeles (ej. caja roja para detectar aves), solo detectará objetos que encajen perfectamente. Al pasar la misma plantilla fija a través de todos los niveles de la pirámide, podemos detectar instancias del objeto a diferentes escalas en la escena (aves pequeñas, medianas y grandes).
+    \item \textbf{Mezcla de imágenes (Image Blending):} permite realizar fusiones suaves (como la fusión de una manzana y una naranja) combinando las pirámides laplacianas de ambas imágenes ponderadas por una pirámide gaussiana de una máscara de transición.
+    \item \textbf{Registro de imágenes y mejora del Flujo Óptico (Optical Flow Improvement).}
+\end{enumerate}
+
+
+\section{Pirámides aplicadas al Flujo Óptico}
+El cálculo del flujo óptico asume pequeños desplazamientos de píxeles entre fotogramas consecutivos. Cuando hay movimientos grandes, los algoritmos estándar fallan por completo. Las pirámides de imágenes resuelven este problema mediante una estimación de \textbf{grueso a fino (Coarse-to-fine estimation)}.
+
+\begin{definicion}[Flujo óptico]
+    El \tbf{flujo óptico} es el patrón del movimiento aparente de los objetos, superficies y bordes en una escena visual, causado por el movimiento relativo entre el observador (la cámara) y la escena. En términos sencillos: es el vector de desplazamiento que nos dice hacia dónde y cuántos píxeles se ha movido cada punto de la imagen de un fotograma al siguiente (del tiempo $t$ al tiempo $t+1$).
+\end{definicion}
+
+\subsection{\textquestiondown Por qué se usan pirámides en el Flujo Óptico?}
+\begin{itemize}
+    \item \textbf{Gestión de Grandes Movimientos (Handle large motion):} si un objeto se desplaza 32 píxeles en la imagen original, un algoritmo local no lo encontrará. Sin embargo, en el nivel superior de la pirámide (por ejemplo, tras reducir el tamaño 4 veces), ese desplazamiento de 32 píxeles se convierte en un movimiento de solo $32 / 2^4 = 2$ píxeles. ¡Un movimiento grande a escala completa se transforma en un movimiento pequeño a escala reducida!
+    \item \textbf{Estimación Coarse-to-Fine:} se calcula el flujo óptico primero en el nivel más pequeño y borroso (coarse). Esa estimación se escala (upsample) y se utiliza como una suposición inicial para corregir y refinar el flujo óptico en el nivel de resolución inmediatamente inferior, repitiendo el proceso hasta llegar a la resolución completa (fine).
+    \item \textbf{Mejora de la Robustez y Velocidad (Improve robustness \& Faster tracking):} al guiar la búsqueda con suposiciones iniciales macroscópicas muy sólidas, el algoritmo evita caer en mínimos locales causados por texturas repetitivas y reduce el área de búsqueda local, logrando un rastreo mucho más rápido y computacionalmente eficiente.
+\end{itemize}

@@ -1,0 +1,126 @@
+\chapter{Optical flow}
+
+El \textbf{Flujo Óptico} es el patrón del movimiento aparente de los objetos, superficies y bordes en una escena visual, causado por el movimiento relativo entre el observador (la cámara) y la escena misma, es decir, se busca rastrear a dónde se ha ido cada píxel en el siguiente fotograma. \\
+
+\begin{observacion}
+    Es importante destacar la parte de ``movimiento \tbf{aparente}'' en la definición de flujo óptico. El flujo óptico no es una representación directa del movimiento físico real en el espacio 3D, sino una estimación basada únicamente en las variaciones de brillo captadas por la cámara, lo que puede hacer que haya situaciones en las que el flujo óptico no refleje fielmente la dinámica real de la escena (por ejemplo, en presencia de sombras, cambios de iluminación o texturas homogéneas). \\
+\end{observacion}
+
+\noindent
+Mientras que el \textit{Motion Field} (Campo de Movimiento) representa la proyección geométrica 3D real de las velocidades de los puntos del espacio sobre el plano de la imagen, el Flujo Óptico es una aproximación basada puramente en las variaciones espacio-temporales del brillo captadas por el sensor. El objetivo del flujo óptico es estimar un vector de desplazamiento bidimensional $\tbf{v} = [u, v]^T$ para cada píxel entre fotogramas consecutivos en el tiempo $t$ y $t+1$. \\
+
+\noindent
+Lo que vamos a obtener con todo este despliegue matemático es pasar de ver imágenes estáticas inconexas a entender la dinámica cinemática del espacio 3D a través de los cambios de luz en 2D. Estamos convirtiendo un sensor pasivo (una cámara que solo captura color) en un sensor activo capaz de medir velocidades, predecir impactos y separar objetos en movimiento.
+
+
+\section{Brightness constancy}
+Para poder rastrear un píxel de un fotograma a otro, el algoritmo requiere imponer restricciones físicas en el mundo visual. La hipótesis central y más importante es la \textbf{Asunción de Constancia de Brillo (Brightness Constancy Assumption)}:
+
+$$\text{El brillo de un punto en movimiento permanece constante a lo largo del tiempo.}$$
+Matemáticamente, si un píxel en la coordenada espacial $(x, y)$ en el instante de tiempo $t$ se desplaza una distancia $(\Delta x, \Delta y)$ en el siguiente instante $t + \Delta t$, su intensidad de iluminación $I$ debe cumplir la igualdad:
+$$I(x, y, t) = I(x + \Delta x, y + \Delta y, t + \Delta t)$$
+
+
+\section{Optical flow equation}
+A partir de la asunción de constancia de brillo, si \underline{asumimos} que el movimiento $(\Delta x, \Delta y, \Delta t)$ es infinitesimalmente **pequeño**, podemos aplicar una aproximación por **Serie de Taylor de primer orden** al lado derecho de la ecuación:
+
+$$I(x + \Delta x, y + \Delta y, t + \Delta t) \approx I(x, y, t) + \frac{\partial I}{\partial x}\Delta x + \frac{\partial I}{\partial y}\Delta y + \frac{\partial I}{\partial t}\Delta t$$
+Sustituyendo esta aproximación en la igualdad original de constancia de brillo:
+$$I(x, y, t) = I(x, y, t) + \frac{\partial I}{\partial x}\Delta x + \frac{\partial I}{\partial y}\Delta y + \frac{\partial I}{\partial t}\Delta t$$
+Cancelando el término $I(x,y,t) $ en ambos lados obtendremos:
+$$\frac{\partial I}{\partial x}\Delta x + \frac{\partial I}{\partial y}\Delta y + \frac{\partial I}{\partial t}\Delta t = 0$$
+Si dividimos toda la expresión entre el diferencial de tiempo $\Delta t$ para obtener tasas de cambio continuas:
+$$\frac{\partial I}{\partial x}\frac{\Delta x}{\Delta t} + \frac{\partial I}{\partial y}\frac{\Delta y}{\Delta t} + \frac{\partial I}{\partial t} = 0$$
+Definiendo los componentes de velocidad del flujo como $u = \frac{\Delta x}{\Delta t}$ (velocidad horizontal) y $v = \frac{\Delta y}{\Delta t}$ (velocidad vertical), y reescribiendo las derivadas parciales como subíndices ($I_x, I_y, I_t$), llegamos a la \tbf{Ecuación del Flujo Óptico (Optical Flow Constraint Equation)}:
+
+$$\mathbf{I_x u + I_y v + I_t = 0} \quad \Longleftrightarrow \quad \nabla I \cdot \tbf{v} + I_t = 0$$
+donde $\nabla I = [I_x, I_y]^T$ representa el gradiente espacial de la imagen y $\tbf{v} = [u, v]^T$ representa el vector de velocidad buscado.
+
+\section{Aperture Problem}
+La ecuación fundamental del flujo óptico presenta una limitación matemática crítica conocida como el \tbf{Problema de la Apertura}: 
+\begin{itemize}
+    \item Para cada píxel individual disponemos de \underline{una sola ecuación}
+    $$I_x u + I_y v + I_t = 0$$
+    pero tenemos \underline{dos incógnitas} por resolver ($u$ y $v$). El sistema está subdeterminado (infinitas soluciones válidas), lo que significa que el conjunto de soluciones es una línea recta en el espacio de velocidades $(u, v)$, y no un punto único.
+    \item \textbf{Implicación Física:} Cuando observamos una estructura a través de una apertura local pequeña, **el movimiento a lo largo de la dirección de un borde recto no se puede estimar de forma fiable**. Solo somos capaces de medir la componente de la velocidad perpendicular al borde (normal al gradiente $\nabla I$). El movimiento paralelo al borde es completamente invisible para las derivadas locales de brillo.
+\end{itemize}
+
+\begin{ejemplo}
+    Imagina que tienes una pared blanca y una línea negra diagonal (en este sentido ``/'') pintada en ella. Ahora, coges un trozo de cartulina negra, le haces un agujero pequeño y circular en el centro (una apertura), y lo pones sobre la pantalla de modo que solo puedas ver un trozo de la línea diagonal a través del agujero. \\
+
+    \noindent
+    Si yo muevo la línea real físicamente hacia la derecha, ¿qué verás tú a través del agujero? Verás que la línea se mueve. Pero, ¿qué pasa si muevo la línea diagonal hacia abajo? ¡Verás exactamente el mismo movimiento! De hecho, si muevo la línea en una combinación diagonal de derecha y abajo, la percepción visual dentro de tu pequeño agujero será idéntica.\\
+
+    \noindent
+    ¿Por qué ocurre esto? Porque cuando miras un borde liso a través de una apertura pequeña, cualquier movimiento que ocurra de forma paralela a la dirección del propio borde es completamente invisible. Los píxeles que entran por un lado del borde tienen exactamente el mismo color y brillo que los que salen por el otro. Solo eres capaz de percibir el movimiento que ocurre en dirección perpendicular (normal) al borde de la línea diagonal.\\
+\end{ejemplo}
+
+\section{La Solución de Lucas-Kanade}
+\noindent
+Como bien aprendimos en el paso anterior, si analizas un píxel individual flotando en mitad de un borde recto, estás ciego ante el movimiento paralelo: tienes una sola ecuación para dos incógnitas ($u$ y $v$). \\
+
+\noindent
+La  \tbf{genialidad} de Bruce Lucas y Takeo Kanade en 1981, y en la que se basa el \tbf{algoritmo de Lucas-Kanade} fue decir: «Es verdad que un píxel por sí solo no tiene información suficiente. Pero los píxeles en el mundo real no se mueven de forma caótica e independiente; pertenecen a objetos sólidos». \\
+
+\noindent
+Viendo esto, las tres suposiciones clave que hicieron fueron:
+\begin{enumerate}
+    \item \tbf{Brightness Constancy:} el brillo de un punto se mantiene constante a lo largo del tiempo.
+    \item \textbf{Small motion:} el desplazamiento entre fotogramas es lo suficientemente pequeño como para justificar la aproximación de Taylor de primer orden.
+    \item \textbf{Spatial coherence:} los píxeles vecinos dentro de una pequeña ventana cuadrada se mueven de forma similar, compartiendo el mismo vector de velocidad, es decir, **asume que el movimiento es pequeño y prácticamente idéntico para todos los píxeles vecinos dentro de una pequeña ventana cuadrada $\Omega$ (por ejemplo, de tamaño $5 \times 5$ o $3 \times 3$) centrada en el píxel de interés.** \\
+\end{enumerate}
+donde $(1)$ y $(2)$ ya los habíamos visto antes, pero la verdadera innovación de Lucas-Kanade fue introducir la tercera suposición de coherencia espacial local para resolver el problema de la apertura. \\
+
+\noindent
+Veremos ahora el desarrollo matemático que concluye de haber asumido estas tres premisas. Si una ventana de trabajo contiene $n$ píxeles (ej. para una ventana de $5\times5$, $n=25$), y todos comparten la misma velocidad $(u,v)$, podemos plantear un sistema de $n$ ecuaciones con 2 incógnitas:
+$$\begin{matrix}
+I_{x1}u + I_{y1}v = -I_{t1} \\
+I_{x2}u + I_{y2}v = -I_{t2} \\
+\vdots \\
+I_{xn}u + I_{yn}v = -I_{tn}
+\end{matrix}$$
+Este sistema se puede unificar de forma matricial compacta como $A\tbf{v} = b$:
+$$\begin{bmatrix} I_{x1} & I_{y1} \\ I_{x2} & I_{y2} \\ \vdots & \vdots \\ I_{xn} & I_{yn} \end{bmatrix} \begin{bmatrix} u \\ v \end{bmatrix} = - \begin{bmatrix} I_{t1} \\ I_{t2} \\ \vdots \\ I_{tn} \end{bmatrix}$$
+Tenemos que el sistema está sobredeterminado ($n > 2$) con 25 líneas rectas en el espacio de velocidades y, debido al ruido de la cámara y a las imperfecciones del mundo real, no se van a cortar exactamente todas en el mismo punto infinitesimal. No existe una solución perfecta que cumpla las 25 ecuaciones a la vez. Por lo tanto, aplicamos el método de \tbf{Mínimos Cuadrados} multiplicando por la transpuesta $A^T$ en ambos lados ($A^T A \tbf{v} = A^T b$):
+
+$$\begin{bmatrix} \sum I_x^2 & \sum I_x I_y \\ \sum I_x I_y & \sum I_y^2 \end{bmatrix} \begin{bmatrix} u \\ v \end{bmatrix} = - \begin{bmatrix} \sum I_x I_t \\ \sum I_y I_t \end{bmatrix}$$
+La matriz cuadrada de $2 \times 2$ resultante ($A^T A$) es exactamente la \tbf{matriz de estructura o tensor de estructura}, idéntica a la utilizada en el detector de esquinas de Harris. Para poder despejar de forma única el vector de velocidad $\tbf{v} = (A^T A)^{-1} A^T b$, la matriz debe ser invertible, lo que exige que ambos autovalores sean grandes ($\lambda_1, \lambda_2 \gg 0$). Esto significa físicamente que Lucas-Kanade solo funciona con precisión si la ventana se posiciona sobre \tbf{esquinas o regiones con texturas ricas en dos direcciones}.
+
+
+\section{Limitaciones de Lucas-Kanade y la Solución por Pirámides}
+
+
+\noindent
+El algoritmo estándar de Lucas-Kanade falla de forma inmediata si se rompen sus hipótesis de partida. Su debilidad principal es que \tbf{asume movimientos muy pequeños} (debido al truncamiento de la serie de Taylor de primer orden). Si un objeto se desplaza a gran velocidad, saltándose el vecindario inmediato de los píxeles adyacentes, las derivadas locales dejan de tener sentido físico y el método diverge.
+
+\subsection{¿Por qué ayudan las Pirámides Gaussianas? (Coarse-to-Fine)}
+\noindent
+Para poder gestionar \tbf{grandes desplazamientos (large displacements)} y garantizar la convergencia matemática, el flujo óptico se procesa de forma jerárquica mediante una estructura de \tbf{Pirámide Gaussiana (Coarse-to-Fine computation)}:
+
+\begin{enumerate}
+    \item \textbf{Construcción:} se reduce el tamaño de la imagen original sucesivamente dividiendo su resolución a la mitad en cada nivel superior de la pirámide.
+    \item \textbf{Procesamiento en Escala Macro (Cúspide de la pirámide):} en los niveles más altos y pequeños, un desplazamiento que originalmente medía 30 píxeles de distancia en la imagen original pasa a medir, por ejemplo, \underline{menos de 1 píxel}. Al volverse un movimiento microscópico, la asunción de Lucas-Kanade se cumple a la perfección y el algoritmo estima un flujo óptico inicial aproximado 
+    $$\mathbf{v}_{\text{cúspide}}=[u_{\text{cúspide}}, v_{\text{cúspide}}]$$
+    \item \textbf{Propagación y Refinamiento (Warping):} ese flujo estimado en la escala superior $$\mathbf{v}_{\text{cúspide}}=[u_{\text{cúspide}}, v_{\text{cúspide}}]$$
+    se proyecta al nivel inferior duplicando su magnitud
+    $$\mathbf{v}_{\text{cúspide}} = 2 \cdot \mathbf{v}_{\text{cúspide}}$$
+    y se hereda como una estimación inicial del movimiento a ese nivel intermedio. Se utiliza este valor para \underline{deformar geométricamente (\textit{warp})} la imagen intermedia, acercándola ópticamente a la posición esperada, como sigue
+    \begin{itemize}
+        \item Tomas la Foto 1 intermedia ($I_{\text{inter}}$) y, usando ese movimiento de $\mathbf{v}_{\text{cúspide}}$ píxeles que acabas de heredar de la cúspide, la deformas (la empujas $u_{\text{cúspide}}$ píxeles hacia la derecha y $v_{\text{cúspide}}$ píxeles hacia abajo). 
+        \item Creas una imagen nueva artificial: la Foto 1 Deformada ($I_{\text{warp1}}$).
+    \end{itemize}
+    A continuación, Lucas-Kanade calcula únicamente el ``residuo de corrección'' del movimiento restante de grano fino, es decir, comparamos la Foto 2 intermedia ($I_{\text{inter2}}$) con la Foto 1 Deformada ($I_{\text{warp1}}$), y como el desplazamiento del objeto va a ser mínimo (ya lo hemos acercado con la deformación), entonces Lucas-Kanade se puede aplicar (cumple los requisitos) y calcula con éxito ese residuo milimétrico de movimiento que falta para alcanzar la posición exacta.\\
+
+    \noindent
+    Tenemos por tanto que el movimiento real exacto para este nivel intermedio es 
+    \begin{align*}
+        \mathbf{v}_{\text{inter}} = [u_{\text{inter}}, v_{\text{inter}} ]\quad \text{ donde } \begin{cases}
+        u_{\text{inter}} &= u_{\text{cúspide}} + u_{\text{residuo}} \\
+        v_{\text{inter}} &= v_{\text{cúspide}} + v_{\text{residuo}}
+        \end{cases}
+    \end{align*}
+    y este proceso se realiza iterativamente hasta llegar a la escala original, refinando el movimiento a cada nivel de la pirámide.
+
+    \item \textbf{Resultado:} este enfoque iterativo mejora drásticamente la convergencia del algoritmo, permitiendo capturar dinámicas de movimiento de objetos veloces manteniendo la precisión matemática local del gradiente.
+\end{enumerate}
+
