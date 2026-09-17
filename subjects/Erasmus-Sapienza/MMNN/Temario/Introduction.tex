@@ -1,0 +1,125 @@
+\chapter{Introduction to Stochastic and Mechanical Statistics}
+
+En esta sección se introducen los conceptos básicos de la estadística estocástica y mecánica, necesarios para el estudio de los modelos matemáticos en redes neuronales.
+
+\section{Stochastic Statistics}
+\noindent
+La estadística estocástica se ocupa del análisis de sistemas que involucran incertidumbre y aleatoriedad. 
+
+\begin{definicion}(Sistema estocástico)
+    Un sistema determinista es un sistema predecible, donde sabiendo las reglas y el estado inicial puedes predecir el estado futuro, mientras un \tbf{sistema estocástico} es un sistema que incorpora elementos de aleatoriedad o incertidumbre, lo que significa que su comportamiento futuro no puede predecirse con certeza absoluta, incluso si se conoce el estado inicial y las reglas que rigen el sistema.
+\end{definicion}
+
+\subsection{Cadena de Markov}
+
+\noindent
+La cadena de Markov es un modelo matemático que usaremos en las redes neuronales, donde destacaremos la \tbf{Propiedad de Markov}.
+
+\begin{teo}[Propiedad de Markov]
+    El futuro del sistema no depende del pasado, solo del presente, es decir, del estado en el que se encuentra el sistema en un momento dado, y no de como llegó a él.
+\end{teo}
+
+\observacion{
+    En la apliación a las redes neuronales, el estado de la red en el momento $t+1$ depende únicamente del estado en el momento $t$, y no de los estados anteriores.
+}
+
+\section{El Modelo de Ising y su Interpretación Neuronal}
+
+El modelo de Ising proporciona el marco de la mecánica estadística para estudiar el comportamiento colectivo de las redes neuronales recurrentes. Al mapear neuronas a espines, transformamos el problema de "procesamiento de información" en un problema de "relajación de energía", es decir, el modelo busca minimizar la energía (Hamiltoniano) del sistema.
+
+\subsection{Componentes del Modelo}
+\begin{itemize}
+    \item \textbf{Variables de estado:} $\sigma_i \in \{-1, +1\}$. La simetría alrededor de cero facilita el cálculo de correlaciones $\langle \sigma_i \sigma_j \rangle$.
+
+    \item \textbf{Energía (Hamiltoniano):} 
+    \begin{equation}
+        E(\sigma) = -\frac{1}{2} \sum_{i \neq j} J_{ij} \sigma_i \sigma_j - \sum_i h_i \sigma_i
+    \end{equation}
+    En física, los sistemas siempre buscan el estado de "mínima energía" (como una pelota que siempre rueda hacia el fondo del valle). En una red neuronal, esa "energía" o Hamiltoniano es una medida de la frustración del sistema.¿Cómo se lee la fórmula?
+    $$E(\sigma) = \underbrace{-\frac{1}{2} \sum_{i \neq j} J_{ij} \sigma_i \sigma_j}_{\text{Interacciones}} \quad \underbrace{- \sum_i h_i \sigma_i}_{\text{Presión externa}}$$
+    
+    \begin{enumerate}
+        \item El primer término (Interacciones): mide cuánto "caso" se hacen las neuronas entre sí. \begin{itemize}
+            \item Si $J_{ij}$ es positivo (amigos), la energía baja si ambas neuronas están en el mismo estado (ambas $+1$ o ambas $-1$).
+            \item Si están en desacuerdo, la energía sube.
+            \item La red está ``feliz'' (baja energía) cuando las neuronas que deben estar juntas, lo están.
+        \end{itemize}
+        \item El segundo término (Campo externo): es como un viento o una fuerza que empuja a una neurona hacia un lado específico, sin importar lo que digan las demás.
+    \end{enumerate}
+    \tbf{Conclusión:} el Hamiltoniano es una función que nos dice qué tan estable es una configuración. Si la energía es baja, el sistema ha encontrado un "recuerdo" o un estado estable. Si es alta, el sistema está en un estado de confusión o transición
+
+    \item \textbf{Matriz de interacción:} $J_{ij}$. En modelos de memoria (Hopfield), se construye mediante la regla de Hebb: $J_{ij} = \frac{1}{N} \sum_{\mu} \xi_i^\mu \xi_j^\mu$. \\
+    \noindent
+    Si el Hamiltoniano nos dice dónde están los valles, la \textbf{Regla de Hebb} es el proceso mediante el cual "cavamos" esos valles en el paisaje para guardar información.
+
+    Se basa en la premisa biológica: \textit{"Neuronas que se disparan juntas, se conectan juntas"}. Matemáticamente, si queremos que la red memorice $P$ patrones distintos (llamados $\xi^\mu$), definimos los pesos $J_{ij}$ como:
+
+    \begin{equation}
+        J_{ij} = \frac{1}{N} \sum_{\mu=1}^{P} \xi_i^\mu \xi_j^\mu
+    \end{equation}
+
+    \textbf{¿Cómo funciona la lógica de esta suma?}
+    \begin{enumerate}
+        \item Tomamos un patrón que queremos recordar (por ejemplo, una imagen de una letra "A").
+        \item Miramos dos neuronas cualesquiera, $i$ y $j$.
+        \item Si en el patrón ambas están encendidas ($+1 \cdot +1$) o ambas apagadas ($-1 \cdot -1$), su producto es \textbf{$+1$}. Esto hace que el peso $J_{ij}$ aumente: la red aprende que estas dos neuronas suelen ir de la mano.
+        \item Si una está encendida y la otra apagada, el producto es \textbf{$-1$}. El peso disminuye: la red aprende que cuando una se activa, la otra debe callarse.
+    \end{enumerate}
+
+    \textbf{Conclusión:} la matriz $J_{ij}$ no es más que un "promedio" de todas las correlaciones de los patrones que le hemos enseñado a la red.
+    \item El \tbf{campo local} ($\phi_i$): es la suma $\sum J_{ik} \sigma_k + h_i$. Representa la "fuerza total" que siente la neurona $i$ en un momento dado.
+\end{itemize}
+
+\subsection{¿Qué es exactamente $\xi_i^\mu$?}
+\noindent
+Para entender la matriz de pesos $J_{ij}$, debemos entender los "ladrillos" con los que se construye: los vectores $\xi$. 
+
+\noindent
+\textbf{Definición:} $\xi^\mu$ representa un \textbf{patrón de memoria} específico (una imagen, una palabra, un estado). Si tenemos una red de $N$ neuronas y queremos que memorice $P$ cosas distintas, tendremos $P$ vectores diferentes.
+
+\textbf{Desglose de la notación:}
+En la expresión $\xi_i^\mu$:
+\begin{itemize}
+    \item \textbf{El índice superior $\mu$ (mu):} Indica \textit{cuál} recuerdo estamos mirando. Si $\mu=1$ es la cara de tu abuela, si $\mu=2$ es el número de tu teléfono. Va desde $1$ hasta $P$.
+    \item \textbf{El índice inferior $i$:} Indica \textit{qué neurona} del recuerdo estamos mirando. Va desde $1$ hasta $N$.
+    \item \textbf{El valor $\xi_i^\mu \in \{-1, +1\}$:} Es el estado que \textit{debería} tener la neurona $i$ para representar correctamente el recuerdo $\mu$.
+\end{itemize}
+
+\textbf{Ejemplo Visual:}
+Imagina una cuadrícula de $3 \times 3$ neuronas ($N=9$) para representar letras. Si queremos guardar la letra "X" (nuestro patrón $\mu=1$):
+\begin{itemize}
+    \item $\xi_1^1 = +1, \xi_3^1 = +1$ (las esquinas superiores se encienden).
+    \item $\xi_5^1 = +1$ (el centro se enciende).
+    \item $\xi_2^1 = -1$ (la neurona de la parte superior central se queda apagada).
+\end{itemize}
+
+
+
+\subsection{El papel de $\xi$ en la Regla de Hebb}
+
+Recordando la fórmula:
+\begin{equation}
+    J_{ij} = \frac{1}{N} \sum_{\mu=1}^{P} \xi_i^\mu \xi_j^\mu
+\end{equation}
+
+Aquí, el producto $\xi_i^\mu \xi_j^\mu$ actúa como un \textbf{comparador}:
+\begin{itemize}
+    \item Si en el recuerdo $\mu$, las neuronas $i$ y $j$ deben estar igual (ambas $+1$ o ambas $-1$), el producto es $+1$. La conexión $J_{ij}$ se fortalece.
+    \item Si deben estar opuestas, el producto es $-1$. La conexión se debilita.
+\end{itemize}
+
+\textbf{Conclusión:} Los $\xi_i^\mu$ son las "instrucciones de montaje" para los valles del Hamiltoniano. Al sumar todos los productos $\xi_i \xi_j$ de todos los patrones, el peso $J_{ij}$ acaba siendo un compromiso (un promedio) de cómo deben relacionarse esas dos neuronas para satisfacer todos los recuerdos a la vez.
+
+\subsection{El efecto de la Temperatura}
+La temperatura $T$ en este modelo no es calor físico, sino una medida del \textit{ruido sináptico}. 
+\begin{itemize}
+    \item Para $T < T_c$ (Temperatura crítica): El sistema presenta \textbf{ruptura de ergodicidad}. La red puede quedar "atrapada" en un valle de energía, lo que equivale a recordar un patrón de forma estable.
+    \item Para $T > T_c$: El sistema se vuelve desordenado. El ruido impide que las neuronas colaboren para mantener el patrón.
+\end{itemize}
+
+\subsection{Mapeo de Sistemas}
+La relación entre el umbral de una neurona MP ($U_i^*$) y el campo externo de Ising ($h_i$) es:
+\begin{equation}
+    h_i = \sum_{j=1}^N J_{ij} - 2U_i^*
+\end{equation}
+Este mapeo demuestra que cualquier red de neuronas binarias puede ser analizada como un sistema físico de espines interactuantes bajo un campo magnético.

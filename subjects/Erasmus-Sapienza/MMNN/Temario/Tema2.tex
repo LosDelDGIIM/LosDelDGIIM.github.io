@@ -1,0 +1,331 @@
+\chapter{Neural networks for pattern retrieval}
+In a network of such units, updates can be carried on either synchronously (in parallel) or randomly asynchronously (one after the other). Veámos como calcular la probabilidad de que una red de este tipo recupere un patrón almacenado a partir de una versión ruidosa del mismo, es decir, la probabilidad de llegar a un estado concreto a partir de uno dado. \\
+
+\noindent
+Tenemos a continuación los dos casos posibles, synchronously and asynchronously:
+\begin{enumerate}
+    \item[Synchronously] La probabilidad combinada de encontrar un estado \mbox{$\sigma(t+\Delta t)=\{\sigma_1, \sigma_2, \ldots, \sigma_N\} \in \{1,1\}^N$} en un sistema de $N$ unidades estocásticas actualizadas en \tbf{paralelo} es el producto de las probabilidades individuales de cada unidad, es decir,
+    \begin{equation*}
+        P(\sigma(t+\Delta t)) = \prod_{i=1}^N g(\sigma_i(t+\Delta t)\dfrac{\varphi_i}{T}).
+    \end{equation*}
+    \item[Asynchronously] We have to take into account that only one neuron changes its state at a time, so we can choose $i$ randomly from $1, \ldots, n$ or following a certain sequence $[1 : N ]$, and
+    \begin{equation*}
+        P[\sigma_i (t + \Delta t)] = g\left(\sigma_i (t + \Delta t)\dfrac{\varphi_i(t)}{T}\right).
+    \end{equation*}
+\end{enumerate}
+
+
+\observacion{
+    We stress that the parameter $T$ controls the impact of this noise, in fact, it adjusts the stochasticity level affecting the neuronal dynamics and, specifically,
+    \begin{equation*}
+        \left\{ \begin{array}{l}
+            T=0 \Longrightarrow \text{deterministic process such that } \sigma_i(t+ \Delta t)=sgn[\varphi_i(\sigma(t))] \\
+            T\mapsto \infty \Longrightarrow \text{fully random process}
+        \end{array}\right.
+    \end{equation*}
+}
+
+
+\section{Noiseless Dynamics ($T=0$)}
+
+In this subsection we focus on the noiseless case, whence the dynamics can take the
+following form (hereafter we shall set $\Delta t\equiv 1$ to lighten the notation)
+
+\begin{description}
+    \item[Parallel.] The state of neuron $i$ at time $t + 1$ is given by the sign function
+    \begin{equation*}
+        \sigma_i (t + 1) = sgn\left(\sum_{j} J_{ij} \sigma_j (t) + h_i\right) \quad \forall i
+    \end{equation*}
+    \item[Sequential.] A neuron $i$ is extracted (either randomly of following a deterministic sequence) and updated according to the sign function
+    \begin{equation*}
+        \text{choose } \left\{ \begin{array}{l}
+            i \text{ randomly from } \{1, \ldots, N \} \\
+            \sigma_i(t + 1) = sgn\left(\sum_{j} J_{ij} \sigma_j (t) + h_i\right)
+        \end{array} \right.
+    \end{equation*} 
+\end{description}
+\noindent
+Imagina que tu red tiene $N$ neuronas. Como cada una puede estar en $+1$ o $-1$, el número total de configuraciones posibles es $2^N$. Esto se llama el espacio de estados. Como el número de estados es finito, si el sistema es determinista, tarde o temprano tiene que volver a un estado en el que ya estuvo. En ese momento, se cierra un ciclo.
+
+\begin{itemize}
+    \item Punto fijo (Periodo 1): es el escenario ideal. La red llega a una configuración (un recuerdo) y se queda ahí para siempre ($\sigma(t+1) = \sigma(t)$).
+    \item Ciclo límite (Periodo $> 1$): la red no se queda quieta, sino que "oscila" entre varios estados en un bucle infinito (por ejemplo: A $\to$ B $\to$ C $\to$ A...).
+\end{itemize}
+
+Hay varios \underline{ejemplos de dinámica paralela} en la página 44 del libro de referencia.
+
+\subsection{Sequential dynamics}
+En esta sección nos centraremos en la dinámica secuencial, donde estudiaremos la interacción de simetría y las Lyapunov functions.
+
+\begin{prop}
+    Given a noiseless system ($T=0$), if interactions are symmetric ($J_{ij} = J_{ji} \ \forall (i,j)$), self-interaction are non-negative ($J_{ii} \geq 0 \ \forall i$), and the external field $h$ is stationary , then
+    \begin{equation*}
+        L_{N,J,h}(\sigma) = -\dfrac{1}{2} \sum_{i} \sum_{j} J_{ij} \sigma_i \sigma_j - \sum_{i} h_i \sigma_i
+    \end{equation*}
+    is a bounded \tbf{Lyapunov function} for the sequential dynamics
+    \begin{equation*}
+        \begin{cases}
+            \sigma_i (t + 1) = sgn\left(\sum\limits_{k=1}^N J_{ik} \sigma_k (t) + h_i\right) \\
+            \sigma_k (t + 1) = \sigma_k (t) \quad \forall k \neq i
+        \end{cases}
+    \end{equation*}
+    with $i$ drawn randomly and uniformly at each step.
+    \begin{proof}
+        % //TODO: copiar y entender demostración.
+    \end{proof}
+\end{prop}
+\noindent
+During the iteration of the map, $L_{N,J,h}(\sigma)$ decreases monotonically and, due to its \underline{boundedness}, a stage is eventually reached where $\sigma_i(t + 1) = \sigma_i(t), \forall i$. \\
+
+\noindent
+In the deterministic limit ($T=0$), the sequential (parallel) dynamics with symmetric interactions, non-negative self-interaction (not needed for parallel dynamics) and stationary external fields will always end up in a fixed point (limit cycle with period $\leq 2$). Es importante notar, que en el caso secuencial siempre se acabará en un punto fijo, mientras en el caso paralelo, puede ser un dos ciclo o un punto fijo. \\
+
+\begin{observacion}
+    La función de Lyapunov $L(\sigma)$ mide la "energía" del sistema en una configuración dada, es decir, actúa de forma equivalente a lo que llamamos Hamiltoniano en el modelo de Ising de espines.
+\end{observacion}
+
+\begin{observacion}
+    Tenemos dos aspectos importantes a destacar:
+    \begin{itemize}
+        \item La simetría de las interacciones ($J_{ij} = J_{ji}$) es crucial para que no existan corrientes de probabilidad, es decir, evoluciona hacia un estado de equilibrio estático donde la probabilidad de pasar del estado A al B es igual a la de pasar de B al A.
+        \item La condición $J_{ii} \geq 0$ es necesaria para garantizar que la función de Lyapunov disminuya en cada paso. Si $J_{ii} < 0$, podría darse el caso de que la actualización de una neurona aumente la función de Lyapunov, impidiendo la convergencia a un punto fijo. Veámos un caso simple:
+        \begin{equation*}
+            \text{si } J_{ij} = J\delta_{ij}, \quad J < 0 \Longrightarrow \begin{cases}
+                \sigma_i (t + 1) = sgn(J) \sigma_i (t) = -\sigma_i (t) \\
+                \sigma_k (t + 1) = \sigma_k (t)
+            \end{cases}
+        \end{equation*}
+        provocando que el sistema no converja a un punto fijo, sino que oscile indefinidamente entre dos estados.
+    \end{itemize}
+\end{observacion}
+
+\section{Fundamentos de la Memoria Asociativa}
+
+Una red neuronal recurrente, como la \tbf{red de Hopfield}, puede ser utilizada como una \textbf{memoria asociativa} para almacenar patrones (palabras, imágenes, etc.) mediante la creación de atractores de punto fijo en su espacio de estados. 
+
+\begin{definicion}
+    Un \tbf{atractor} representa una configuración estable en el ``espacio de estados'' (el conjunto de todas las combinaciones posibles de las neuronas) hacia la cual el sistema evoluciona con el tiempo. En las redes de memoria asociativa, los atractores son los recuerdos almacenados: cuando el sistema recibe una entrada ruidosa o incompleta, la dinámica de la red lo "empuja" hacia el atractor más cercano para recuperar la información original.
+
+\end{definicion}
+
+\subsection{Configuración del Sistema}
+\begin{itemize}
+    \item \textbf{Arquitectura}: Red totalmente conectada donde cada nodo es una neurona de McCulloch-Pitts (MP).
+    \item \textbf{Parámetros Congelados (\textit{Quenched})}: Los acoplamientos sinápticos $J$ y los campos externos $h$ se mantienen constantes durante la evolución de la red.
+    \item \textbf{Dinámica sin Ruido ($T=0$)}: La red evoluciona de forma determinista hacia un atractor determinado por los parámetros del sistema.
+\end{itemize}
+
+\noindent
+A modo de resumen, trabajaremos con un modelo de red neuronal recurrente sin ruido ($T=0$), es decir, la dinámica es determinista (no depende de ninguna variable aleatoria), donde cada nodo es una MP neurona y las interacciones $J$ y los campos externos $h$ son "quenched" (fijos en el tiempo).
+
+\subsection{Representación de Patrones ($\xi$)}
+\noindent
+Los elementos que deseamos almacenar se representan como vectores de $N$ bits en un espacio bipolar:
+\begin{equation}
+    \xi^{\mu} = (\xi_{1}^{\mu}, \xi_{2}^{\mu}, \dots, \xi_{N}^{\mu}) \in \{-1, +1\}^{N}, \quad \mu = 1, \dots, P
+\end{equation}
+Donde $P$ es el número total de patrones almacenados. Cada componente $\xi_{i}^{\mu}$ indica el estado deseado de la neurona $i$ para el patrón $\mu$.
+
+\begin{definicion}
+    Se define el solapamiento o actividad promedio $m(t)$ respecto a un patrón como la semejanza entre el estado actual $\sigma(t)$ y el patrón $\xi$:
+    \begin{equation}
+        m(t) := \frac{1}{N} \sum_{i=1}^{N} \xi_{i} \sigma_{i}(t)
+    \end{equation}
+    La recuperación exitosa ocurre cuando $m(0)$ es suficientemente grande, permitiendo que la red ``caiga'' en la cuenca de atracción del recuerdo.
+\end{definicion}
+
+\section{La Regla de Hebb}
+
+El \textbf{problema inverso} consiste en calcular los pesos $J_{ij}$ para que los vectores $\xi^{\mu}$ sean puntos fijos estables. La solución clásica es la \tbf{regla de Hebb}: \textit{``Neurons that fire together wire together''}, que nos permitirá definir las conexiones sinápticas ($J_{ij}$) en función de los patrones a almacenar ($\xi$).
+
+\subsection{Almacenamiento de un Único Patrón ($P=1$)}
+\noindent
+Para un solo patrón $\xi$, definimos las conexiones como:
+\begin{equation}
+    J_{ij} = \frac{1}{N} \xi_{i} \xi_{j}
+\end{equation}
+\begin{itemize}
+    \item Si $\xi_i$ y $\xi_j$ tienen el mismo signo, la conexión es excitatoria ($J_{ij} > 0$).
+    \item Si tienen signos opuestos, la conexión es inhibitoria ($J_{ij} < 0$).
+    \item \textbf{Simetría}: Debido a la naturaleza de la regla, tanto $\xi$ como su inverso $-\xi$ se convierten en atractores.
+\end{itemize}
+Si en este caso definimos $h_i=h \ \forall i$, donde $|h|<1$, tenemos tres posibles casos:
+\begin{itemize}
+    \item \tbf{Recuperación Exitosa} ($\sigma = \xi$): Si el solapamiento inicial es mayor que la intensidad del campo ($m(0) > |h|$), la red converge al patrón deseado ($\tau^+$, donde todos los $\tau_i = 1$, donde $\tau_i = \xi_i \sigma_i$).
+    \item \tbf{Recuperación Inversa} ($\sigma = -\xi$): Si la red empieza muy ``desalineada'' ($m(0) < -|h|$), converge al patrón invertido debido a la simetría del modelo.
+    \item \tbf{Estado Dominado por el Campo}: Si el solapamiento inicial es débil ($-|h| < m(0) < +|h|$), las neuronas simplemente se alinean con el campo externo $h$, resultando en un estado que no corresponde al patrón original.
+\end{itemize}
+
+\subsection{Almacenamiento de Múltiples Patrones ($P > 1$)}
+\noindent
+Para almacenar $P$ patrones, la regla de Hebb se generaliza sumando las contribuciones de cada uno:
+\begin{equation}
+    J_{ij} = \frac{1}{N} (1 - \delta_{ij}) \sum_{\mu=1}^{P} \xi_{i}^{\mu} \xi_{j}^{\mu}
+\end{equation}
+pero para que la red funcione correctamente, se establecen tres requisitos fundamentales:
+\begin{itemize}
+    \item \tbf{Ortogonalidad} ($\xi^\mu \perp \xi^\nu$): los patrones deben ser linealmente independientes u ortogonales. Matemáticamente, su solapamiento debe ser nulo 
+    $$\frac{1}{N} \sum_{i=1}^{N} \xi_i^\mu \xi_i^\nu = \delta_{\mu\nu} \quad \forall \mu\neq \nu$$
+    Esto limita el número de patrones a $P \le N$.
+    \item \tbf{Sin Auto-interacción} ($J_{ii} = 0$): las neuronas no se conectan consigo mismas para evitar inestabilidades.
+    \item \tbf{Sin Campo Externo} ($h_i = 0$): se asume que no hay un sesgo externo que favorezca un estado sobre otro, permitiendo que la red se guíe solo por sus recuerdos.
+\end{itemize}
+\noindent
+Si analizamos la expresión de los $J_{ij}$, vemos que el término $(1 - \delta_{ij})$ es el que garantiza que $J_{ii} = 0$. \\
+
+\noindent
+Para el caso de múltiples patrones ortogonales, la función de energía (Lyapunov) se expresa como:
+\begin{align*}
+    L(\sigma) = -\dfrac{1}{2} \sum_{i} \sum_{j} J_{ij} \sigma_i \sigma_j - \sum_{i} h_i \sigma_i= -\frac{1}{2} \sum_{i,j} \sigma_i \left[ \frac{1}{N} (1 - \delta_{ij}) \sum_{\mu=1}^P \xi_i^\mu \xi_j^\mu \right] \sigma_j
+\end{align*}
+donde tenemos los siguientes desarrollos
+
+\begin{align*}
+    &+\frac{1}{2} \sum_i \sigma_i \left( \frac{1}{N} \sum_{\mu=1}^P \xi_i^\mu \xi_i^\mu \right) \sigma_i\overset{(*)}{=} \frac{1}{2N} \sum_i \sum_{\mu=1}^P 1 = \frac{1}{2N} NP = \frac{P}{2} \\
+    &-\frac{1}{2} \sum_i \sum_j \sigma_i \left( \frac{1}{N} \sum_{\mu=1}^P \xi_i^\mu \xi_j^\mu \right) \sigma_j = -\frac{1}{2N} \sum_{\mu=1}^P \sum_{i,j} (\xi_i^\mu \sigma_i) (\xi_j^\mu \sigma_j) = -\frac{1}{2N} \sum_{\mu=1}^P \left( \sum_{i=1}^N \xi_i^\mu \sigma_i \right)^2
+\end{align*}
+donde $(*)$ se cumple porque $\xi_i^\mu \in \{-1,+1\} \Longrightarrow (\xi_i^\mu)^2 = 1$, y por tanto, la función de energía queda como
+\begin{equation*}
+    L(\sigma) = \frac{1}{2} P - \frac{1}{2} \sum_{\mu=1}^{P} \left( \frac{1}{\sqrt{N}} \sum_{i=1}^{N} \xi_i^\mu \sigma_i \right)^2
+\end{equation*}
+Ahora a partir de los patrones definimos una base de vectores normalizados
+
+$$\hat{e}^\mu = \frac{1}{\sqrt{N}} \xi^\mu$$
+y como los patrones son ortogonales ($\frac{1}{N} \sum \xi_i^\mu \xi_i^\nu = \delta_{\mu\nu}$), este conjunto $\{\hat{e}^\mu\}$ forma una base ortonormal en el espacio $\mathbb{R}^N$. Tenemos ahora la siguiente propiedad fundamental
+
+$$x^2 \geq \sum_{\mu=1}^P (\hat{e}^\mu \cdot x)^2, \quad x \in \mathbb{R}^N$$
+donde en nuestro caso el vector $x$ es el estado actual de la red, $\sigma$. La desigualdad nos dice que la magnitud total de un vector ($\sigma^2$) siempre es mayor o igual a la suma de los cuadrados de sus proyecciones sobre un conjunto de ejes ortogonales (los patrones), de modo que podemos escribir
+\begin{equation*}
+   L(\sigma) = \frac{1}{2} P - \frac{1}{2} \sum_{\mu=1}^{P} (\hat{e}^\mu \cdot \sigma)^2  \geq \frac{1}{2} P - \frac{1}{2} \sigma^2 = \dfrac{1}{2} (P-N)
+\end{equation*}
+On the other hand, if we choose the state $\sigma$ to be exactly one of the patterns, that is, $\sigma = \xi^{\mu}$ for some $\mu$, we see that we satisfy exactly the lower bound
+\begin{equation*}
+    L(\pm \xi^{\mu}) = \frac{1}{2} (P - N)
+\end{equation*}
+Thus, all patterns and their inverses are stationary points for the dynamics because, by choosing the coupling between neurons according to Hebb’s rule, the resulting Lyapunov function has configurations as minimum points $\sigma =\pm \xi^{\mu} \Rightarrow$ each $\pm\xi^{\mu}$ is a fixed point for this system. \\
+
+\noindent
+\tbf{Conclusión}: esta desigualdad garantiza que ningún estado de la red puede tener menos energía que los patrones almacenados. Esto convierte a los recuerdos en "pozos" de energía donde la dinámica de la red tiende a caer y quedarse atrapada.
+
+\begin{observacion}
+    Es importante destacar que puede haber otros mínimos locales en la función de energía que no correspondan a los patrones almacenados. Estos mínimos adicionales pueden actuar como "falsos recuerdos" formados por mezcla de patrones, donde la red puede quedar atrapada, impidiendo la recuperación correcta de los patrones deseados.
+\end{observacion}
+
+\section{Noisy dynamics ($T>0$)}
+A diferencia de la dinámica sin ruido ($T=0$), aquí el estado de la neurona $\sigma_i(t+1)$ no está determinado únicamente por el campo local, sino que se le suma un término de ruido aleatorio $T z_i(t)$, es decir, tenemos
+$$\sigma_i(t+1) = \text{sign}\left[\sum_{k=1}^N J_{ik}\sigma_k(t) + h_i + T z_i(t)\right], \quad T > 0$$
+donde $T$ es la temperatura (representa el nivel de ruido en el sistema), y $z_i(t)$ son números aleatorios extraídos de una distribución de probabilidad $\mathcal{P}(z)$. En esta caso en particular, tomaremos $\mathcal{P}(z)$ como sigue 
+\begin{equation*}
+    \mathcal{P}(z) = \dfrac{1}{2} [1-\tanh(z)] \quad \Longrightarrow \quad g(x) = \dfrac{1}{2} [1 + \tanh(x)]
+\end{equation*}
+de manera que siguiendo el calculo de probabilidades que hicimos en el Tema 2, tenemos que 
+\begin{align*}
+    \text{parallel: } \quad P(\sigma(t+1)) &= \prod_{i=1}^N g\left(\sigma_i(t+1)\dfrac{\varphi_i(t)}{T}\right)= \prod_{i=1}^N \dfrac{1}{2}\left[1+\sigma_i(t+1)\tanh\left(\beta \varphi_i(\sigma(t))\right)\right] \\
+    \text{sequential: } \quad P[\sigma_i(t+1)] &= g\left(\sigma_i(t+1)\dfrac{\varphi_i(t)}{T}\right)= \dfrac{1}{2}\left[1+\sigma_i(t+1)\tanh\left(\beta \varphi_i(\sigma(t))\right)\right] \ \forall i
+\end{align*}
+donde $\beta=T^{-1}$, $\varphi_i(\sigma) = \sum\limits_{j=1}^N J_{ij}\sigma_j + h_i$ es el campo local en la neurona $i$, y se ha usado la propiedad de la función tangente hiperbólica $\tanh(ax) = a\tanh(x)$ para $a\in \R$. \\
+
+\subsection{Markov Chains (MCs)}
+
+\noindent
+MC is a model of the random evolution of a system in a discrete set $\mathcal{S}$ of possible states. There are two versions:
+\begin{itemize}
+    \item \tbf{Discrete time}: the state of the MC is recorded every unit of time, that is, at times $0, 1, 2,$ and so on.
+    \item \tbf{Continuous time}: the state is observed at all times $t \geq 0$.
+\end{itemize}
+
+\begin{definicion}[Markov property]
+    Sea un proceso estocástico $\{X_t, t = 0,1,2,...\}$ que toma un número finito o numerable de valores posibles. Se dice que tiene la \tbf{propiedad de Markov} si estando en el estado $i \in \mathcal{S}$ en el tiempo $t$ si $X_t = i$; se asume que existe una probabilidad fija $W_{ij}$ de que si el proceso está en el estado $i$ pase al estado $j$ en el siguiente paso, lo que viene dado por
+    \begin{equation*}
+        P(X_{t+1} = j | X_t = i, X_{t-1} = i_{t-1}, \ldots, X_0 = i_0) = P(X_{t+1} = j | X_t = i) = W_{ij}
+    \end{equation*}
+    Esto equivale a decir que la probabilidad de transición depende únicamente del estado actual y no de los estados anteriores, lo que caracteriza la \tbf{propiedad de Markov}.
+\end{definicion}
+
+\begin{definicion}[Cadena de markov]
+    Una \tbf{cadena de Markov} es un proceso estocástico $\{X_t, t = 0,1,2,...\}$ con la propiedad de Markov y un conjunto finito o numerable de estados posibles $\mathcal{S}$. La dinámica de la cadena está completamente determinada por la \tbf{matriz de transición} $W\in [0,1]^{|\mathcal{S}|\times |\mathcal{S}|}$, donde $W_{ij}$ representa la probabilidad de pasar del estado $i$ al estado $j$ en un solo paso de tiempo.
+\end{definicion}
+
+\noindent
+Como un proceso debe hacer una transición a algún estado, se cumple que
+\begin{equation*}
+    \sum_{j \in \mathcal{S}} W_{ij} = 1 \quad \forall i
+\end{equation*}
+No todas las cadenas se comportan igual. Para que una red neuronal "recuerde" de forma estable bajo ruido, la cadena debe tener ciertas propiedades:
+\begin{itemize}
+    \item \tbf{Homogeneous}: If the transition probabilities $W$ do not change over time.
+    \item \tbf{Irreducible}: If it is possible to reach any state from any other (the state graph is fully connected).
+    \item \tbf{Ergodic}: This is the most important property. A chain is ergodic if it is irreducible, aperiodic (it has no fixed cycles) and positive recurrent (it returns to states in finite time).
+\end{itemize}
+
+\begin{definicion}[Homogeneity]
+    A MC is referred to as \tbf{homogeneous} if W is independent of time, then:
+    \begin{equation*}
+        Prob[X_{m+1} = j|X_m = i] = Prob[X_1 = j|X_0 = i] = W_{ij}
+    \end{equation*}
+    \begin{equation*}
+        Prob[X_{m+n} = j|X_m = i] = W_{ij}^m
+    \end{equation*}
+\end{definicion}
+
+\begin{definicion}[Irreducibility]
+    A MC is \tbf{irreducible} when all its states communicate. When representing the set of states by a graph, where two nodes are connected iff there exists a non-null probability to move from state to the other, this property equals to say that the graph is connected.
+\end{definicion}
+
+\begin{definicion}[Absorbing]
+    A MC is said \tbf{absorbing} if one of its states is absorbing (i.e., it is impossible to leave once it has been entered $P_{i\neq j} W_{ij} = 0$ ) and from a non-absorbing state we can reach an absorbing state.
+\end{definicion}
+
+\begin{definicion}[Periodicity]
+    A state $i$ is said to have a \tbf{period} $k$ if 
+    $$k = gcd\{t > 0 : Prob[X_t = i|X_0 = i] > 0\}$$ 
+    Further, A MC is \tbf{aperiodic} if every state is not periodic.
+\end{definicion}
+\begin{definicion}[Transience and recurrence]
+    A state $i$ is \tbf{transient} if, starting from $i$, there is a non-zero probability that the chain will never return to $i$. It is \tbf{recurrent} otherwise, and \tbf{positive recurrent} if the mean time to return in $i$ is finite.
+\end{definicion}
+
+\begin{definicion}[Ergodicity]
+    A MC is \tbf{ergodic} if there exists a positive integer $\tau$ such that for all pairs of states $(i, j) \in \mathcal{S} \times \mathcal{S}$, then 
+    $$Prob[X_t = j|X_0 = i] > 0 \quad \forall t > \tau$$
+    Irreducibile MC whose states are aperiodic and positive recurrent is ergodic.
+\end{definicion}
+
+\begin{definicion}[Invariance]
+    A distribution $p(X|X_0 )$ over the possible states that can be taken by the MC is \tbf{invariant} if $p(X|X_0 )W = p(X|X_0 )$.
+\end{definicion}
+
+\begin{teo}
+    For any ergodic MC, there is an unique invariant distribution $p_{\infty} (X)$ that is the principal left eigenvector of $W$, such that if $\nu(i, t)$ is the number of visits to state $i$ in $t$ steps,
+    \begin{equation*}
+        \lim_{t\to\infty} \dfrac{\nu(i,t)}{t} = p_{\infty}
+    \end{equation*}
+    Lo que equivale a decir que, independientemente del estado inicial, la distribución de probabilidad sobre los estados converge a $p_{\infty}$ conforme $t \to \infty$.
+\end{teo}
+
+\begin{definicion}[Detailed balance]
+    A stochastic matrix W and a measure p(X) are said to be \tbf{in detailed balance} if 
+    \begin{equation*}
+        p(X = i)W_{ij} = p(X = j)W_{ji} \quad \forall i, j
+    \end{equation*}
+\end{definicion}
+\noindent
+En dinámicas secuenciales, si la matriz de pesos es simétrica ($J_{ij} = J_{ji}$), el sistema cumple automáticamente con el balance detallado.
+
+\subsection{Distribución de Boltzmann}
+\noindent
+Este es el concepto más importante para entender por qué la red sigue funcionando con ruido:
+
+\begin{itemize}
+    \item La probabilidad de encontrar la red en una configuración $\sigma$ en el equilibrio es:$$p_{\infty}(\sigma) \propto e^{-\mathcal{H}(\sigma)/T}$$
+    \item ¿Qué significa esto? Que los estados con menor energía (donde $\mathcal{H}$ es mínimo) son los más probables. Como diseñamos la red (vía Hebb) para que los patrones guardados sean mínimos de energía, el ruido no impide que la red pase la mayor parte del tiempo en esos recuerdos.
+\end{itemize}
+
+\noindent
+¿Por qué no se pierde el recuerdo? Cuando la red es muy grande ($N \to \infty$), ocurre lo que se llama Ruptura de Ergodicidad o Confinamiento:
+\begin{itemize}
+    \item Las "montañas" de energía entre un recuerdo y otro se vuelven tan altas que el ruido no es suficiente para que la red salte de un patrón a otro.
+    \item El sistema se queda "atrapado" en el valle del patrón más cercano al input inicial, lo que permite una recuperación robusta.
+\end{itemize}
+
+
