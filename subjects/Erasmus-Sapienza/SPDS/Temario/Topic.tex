@@ -1,0 +1,223 @@
+\chapter{¿Por qué funcionan los algoritmos MCMC?}
+\section{Introducción}
+Buenos días a todos. Hoy vamos a responder a una pregunta fundamental en la computación y la física moderna: ¿Por qué funcionan los algoritmos MCMC?\\
+
+\noindent
+Antes de entrar en las ecuaciones, descifremos qué significan estas siglas. MCMC significa Markov Chain Monte Carlo (o Monte Carlo por Cadenas de Markov en español). Este nombre une dos mundos de la probabilidad en un solo atajo genial:
+
+\begin{itemize}
+    \item Monte Carlo: Es la filosofía de resolver problemas matemáticos imposibles mediante el azar, usando una computadora para generar miles de muestras aleatorias y quedarnos con su promedio.
+    \item Cadenas de Markov: Es un mecanismo dinámico, un caminante aleatorio que se mueve paso a paso por un mapa de estados, donde su siguiente posición depende únicamente de dónde está parado justo ahora (falta de memoria).
+\end{itemize}
+¿Qué es lo más importante de MCMC y por qué lo necesitamos? En el mundo real —como en el Modelo de Ising que vimos en el Tema 3 o en la Estadística Bayesiana— a menudo queremos analizar una distribución de probabilidad que llamaremos $\pi(x)$. El gran drama es que esta función tiene un denominador, una constante de normalización (como la función de partición $Z(\beta)$ en física, o la evidencia en Bayes), que requiere sumar o integrar sobre espacios de estados gigantescos (¡del orden de $2^{10^{23}}$ configuraciones!). Enumerar ese espacio es físicamente imposible para cualquier ordenador. \\
+
+\noindent
+La genialidad de MCMC es la siguiente: En lugar de intentar calcular esa constante imposible desde arriba, programamos a un caminante aleatorio inteligente (la Cadena de Markov) para que deambule por el espacio de estados. Al diseñar sus reglas de movimiento de forma astuta, el caminante visitará más seguido las zonas de alta probabilidad y menos seguido las de baja probabilidad. Al final, la trayectoria de sus pasos ``dibujará'' la forma exacta de la distribución $\pi(x)$. \\
+
+\noindent
+Gracias a esto, podemos estimar esperanzas y generar muestras de $\pi$ sin necesidad de conocer jamás la constante de normalización. En otras palabras, MCMC nos permite \textbf{simular} la distribución que nos interesa sin tener que calcularla explícitamente, con el objetivo de obtener resultados prácticos en problemas de física, estadística y aprendizaje automático, que suelen ser los valores promedio de ciertas funciones bajo $\pi$, por ejemplo
+\begin{itemize}
+    \item ¿Cuál es la energía interna promedio ($\langle H \rangle$) del material a esta temperatura?
+    \item ¿Cuál es la magnetización promedio ($\langle M \rangle$) para saber si el material es magnético?
+    \item ¿Cuál es el valor medio esperado ($\langle \theta \rangle$) de este parámetro?
+\end{itemize}
+Matemáticamente, cualquiera de estas preguntas se traduce exactamente en la definición de esperanza
+$$\mathbb{E}_\pi[f] = \sum_{i\in S} \pi(i) f(i)$$
+donde $f(i)$ es la propiedad que mides (la energía, la magnetización, etc.) en la configuración $i$, multiplicada por su peso estadístico $\pi(i)$. \\
+
+\noindent
+Hoy vamos a demostrar formalmente por qué este ``atajo'' de usar pasos correlacionados de un caminante funciona exactamente igual de bien que tomar muestras independientes de la distribución real, y todo ello sin necesidad de conocer jamás esa constante de normalización.
+
+
+\section{Motivación: el problema que resuelve MCMC}
+
+\noindent
+Recordemos el contexto (\textbf{Tema 1} y el \textbf{Modelo de Ising} del Tema 3): muchas veces queremos calcular esperanzas, o simplemente \textbf{generar muestras}, de una distribución de probabilidad $\pi$ definida sobre un espacio de estados $S$ \textbf{enorme}. Dos ejemplos que ya conocemos:
+\begin{itemize}
+    \item \textbf{Modelo de Ising:} $\pi(\underline{s}) = \dfrac{e^{-\beta H(\underline{s})}}{Z(\beta)}$, con $|S| = 2^N$ configuraciones de espín. Para $N\sim 10^{23}$ (como en el Tema 1), enumerar el espacio es \textbf{imposible}: ni siquiera podemos calcular $Z(\beta)=\sum_{\underline s} e^{-\beta H(\underline s)}$.
+    \item \textbf{Estadística Bayesiana:} $\pi(\theta) \propto \text{verosimilitud}(\theta)\cdot \text{prior}(\theta)$, donde la constante de normalización (la evidencia) es una integral intratable.
+\end{itemize}
+
+\begin{observacion}[La idea central de MCMC]
+En vez de calcular $\pi$ directamente, \textbf{construimos una cadena de Markov} $(X_m)_{m\ge0}$ cuya \textbf{distribución estacionaria sea exactamente $\pi$}. Si simulamos esa cadena durante suficientes pasos, las muestras $X_m$ se comportan (aproximadamente) como muestras de $\pi$, y los promedios temporales de la trayectoria nos dan las esperanzas que buscábamos. \textbf{Toda la pregunta de "por qué funciona MCMC" se reduce a justificar rigurosamente esta frase.}
+\end{observacion}
+
+\section{Construcción general: el Algoritmo de Metropolis-Hastings}
+
+\noindent
+En el Tema 3 vimos el algoritmo de Metropolis aplicado al modelo de Ising (propuesta = voltear un espín al azar, aceptar con $\min(1,e^{-\beta\Delta H})$). Generalicemos esa idea a \textbf{cualquier} distribución objetivo $\pi$ sobre un espacio de estados $S$.
+
+\begin{observacion}
+    Cuando hablamos de una distribución objetivo sobre la que trabajar $\pi$ \textbf{no necesitamos conocer su constante de normalización}, es decir, si 
+    $$\pi(x) = \dfrac{f(x)}{Z}$$ 
+    basta con conocer $f(x)$ (la parte ``salvo constante multiplicativa'') para poder construir la cadena de Markov. Esto es lo que hace que MCMC sea útil en la práctica: nunca necesitamos calcular $Z$ ni la evidencia bayesiana. \\
+\end{observacion}
+
+
+\begin{definicion}[Metropolis-Hastings]
+Dada una distribución objetivo $\pi$ (que solo necesitamos conocer \textbf{salvo constante multiplicativa}) y una \textbf{distribución de propuesta} $q(x,\cdot)$ (fácil de simular), el algoritmo construye una cadena de Markov $(X_m)$ así:
+\begin{enumerate}
+    \item Estando en el estado $x$, proponemos un estado candidato $y \sim q(x,\cdot)$.
+    \item Calculamos la \textbf{probabilidad de aceptación}:
+    \[
+    \alpha(x,y) = \min\left(1,\ \frac{\pi(y)\,q(y,x)}{\pi(x)\,q(x,y)}\right)
+    \]
+    \item Con probabilidad $\alpha(x,y)$ aceptamos: $X_{m+1}=y$. En caso contrario, rechazamos y nos quedamos: $X_{m+1}=x$.
+\end{enumerate}
+\end{definicion}
+
+\begin{observacion}
+    La distribución de propuesta 
+    $$q(x, \cdot)$$
+    es simplemente la regla de exploración del ordenador. Si el caminante está en el estado $x$, $q(x, y)$ es la probabilidad de que al ordenador se le ocurra sugerir el estado $y$ como próximo destino. Es una distribución completamente arbitraria que elegimos nosotros porque es sumamente fácil y rápida de simular (generar números aleatorios con ella toma microsegundos). 
+\end{observacion}
+
+\begin{observacion}
+    para entender con detalle el segundo paso, conviene escribir el cociente de aceptación como
+    $$\frac{\pi(y) \, q(y,x)}{\pi(x) \, q(x,y)} = \underbrace{\left( \frac{\pi(y)}{\pi(x)} \right)}_{\text{Filtro Espacial}} \times \underbrace{\left( \frac{q(y,x)}{q(x,y)} \right)}_{\text{Filtro Temporal}}$$
+    donde explicaremos el concepto de ambos términos como sigue
+    \begin{itemize}
+        \item \tbf{Primer componente}: este bloque compara la altura o el peso real de los dos estados en nuestro ``mapa objetivo''  
+        \begin{itemize}
+            \item Imagina el escenario: El caminante está en la casilla actual $x$ y el ordenador le propone viajar a la casilla $y$.
+            \item Si el destino es mejor ($\pi(y) > \pi(x)$): Este cociente será un número mayor que 1. Al multiplicarlo por el segundo bloque, tenderá a hacer que la aceptación $\alpha$ sea alta. El algoritmo premia el movimiento hacia las cumbres de probabilidad. 
+            \item Si el destino es peor ($\pi(y) < \pi(x)$): El cociente será un número menor que 1. Esto reduce el valor de $\alpha$, obligando al caminante a "pensárselo dos veces" (lanzando la moneda estocástica) antes de descender a un valle. 
+        \end{itemize}
+        \item \tbf{Segundo componente}: este bloque compara la facilidad de ir de $x$ a $y$ con la facilidad de volver de $y$ a $x$ según la distribución de propuesta. Se llama \tbf{Factor de Corrección de Hastings} y sirve para compensar los sesgos del propio software de exploración. \\
+        
+        \noindent
+        Es de vital importancia, pues si diseñamos un algoritmo de exploración que, por culpa de cómo está programado, tiene una enorme tendencia natural a proponer pasos hacia la derecha y casi nunca propone pasos hacia la izquierda 
+        $$q(\text{izquierda},\text{derecha}) \gg q(\text{derecha},\text{izquierda})$$ entonces nuestro caminante pasará la vida en el lado derecho de la pizarra, por lo que el 
+        factor de corrección de Hastings compensará este sesgo, de la siguiente manera. \\
+
+        \noindent
+        Este bloque evalúa la proporción inversa
+        $$\frac{\text{Probabilidad de regresar }(y \to x)}{\text{Probabilidad de ir }(x \to y)}$$
+        si ir de $x$ a $y$ era ``demasiado fácil'' para el ordenador, el denominador $q(x,y)$ será muy grande, lo que hará que este factor de corrección se vuelva muy pequeño. Al multiplicar, penaliza y frena el paso. Castiga los caminos que son ``autopistas fáciles'' de propuesta y premia los caminos que son ``difíciles'' de proponer, garantizando que el caminante se mueva guiado por la física del problema ($\pi$) y no por los caprichos del programador ($q$)
+    \end{itemize}
+\end{observacion}
+
+\observacion{
+    El algoritmo de Metropolis del Tema 3 es el caso particular donde $q$ es \textbf{simétrica} ($q(x,y)=q(y,x)$, p. ej. "elige un espín al azar y vuélcalo"), por lo que el cociente se reduce a 
+    \begin{equation*}
+        \frac{\pi(y)\,q(y,x)}{\pi(x)\,q(x,y)} = \frac{\pi(y)}{\pi(x)}= e^{-\beta\Delta H}
+    \end{equation*}
+    que es exactamente la fórmula que ya conocíamos.
+}
+
+\noindent
+\textbf{Punto clave (escribir en la pizarra):} en el cociente 
+$$\dfrac{\pi(y)}{\pi(x)}$$ 
+\textbf{la constante de normalización se cancela}. Esto es lo que hace que MCMC sea útil en la práctica: \underline{nunca necesitamos calcular $Z(\beta)$} ni la evidencia bayesiana.
+
+\section{Pilar 1: la construcción garantiza que $\pi$ es estacionaria}
+
+\noindent
+La probabilidad de transición resultante es
+
+\begin{equation*}
+    P(x,y) = q(x,y)\,\alpha(x,y), \quad \forall x\neq y \in S
+\end{equation*}
+Es importante tener claro desde el primer momento que la probabilidad de transición usada aquí, la matriz enorme $P$, no sabemos si realmente va a hacer el correcto trabajo a largo plazo en función de $\pi$. Para ello viendo que se cumple la condición de balance detallado (lo demostramos más adelante), tenemos que queda demostrado matemáticamente que, sin importar lo caprichosa que fuera tu $q$ original, el filtro $\alpha$ corrige la trayectoria de tal manera que el caminante se ve obligado a mantener un equilibrio perfecto respecto a la distribución real $\pi$.  
+
+\begin{prop}[La cadena de Metropolis-Hastings es reversible respecto a $\pi$]
+    La matriz $P$ construida arriba satisface la condición de \textbf{balance detallado}:
+    \[
+    \pi(x)P(x,y) = \pi(y)P(y,x) \qquad \forall\, x,y\in S.
+    \]
+\begin{proof}
+    Sin pérdida de generalidad supongamos $\pi(x)q(x,y) \le \pi(y)q(y,x)$, con $x\neq y$, puesto que el caso $x=y$ es trivial. Entonces:
+    \[
+    \alpha(x,y) = 1, \qquad \alpha(y,x) = \frac{\pi(x)q(x,y)}{\pi(y)q(y,x)}.
+    \]
+    Por tanto:
+    \[
+    \pi(x)P(x,y) = \pi(x)q(x,y)\cdot 1 = \pi(x)q(x,y),
+    \]
+    \[
+    \pi(y)P(y,x) = \pi(y)q(y,x)\cdot \frac{\pi(x)q(x,y)}{\pi(y)q(y,x)} = \pi(x)q(x,y).
+    \]
+    como ambos lados coinciden, entonces se cumple el balance detallado. 
+\end{proof}
+\end{prop}
+
+\begin{coro}
+Como ya vimos en el Tema 3 (Cadenas de Markov Reversibles), \textbf{el balance detallado implica estacionariedad}: sumando sobre $x$ la igualdad anterior,
+\[
+\sum_{x\in S} \pi(x)P(x,y) = \sum_{x\in S}\pi(y)P(y,x) = \pi(y)\sum_{x\in S}P(y,x) = \pi(y), \quad \forall y\in S
+\]
+es decir, $\pi P = \pi$. \textbf{$\pi$ es, por construcción, la distribución invariante de la cadena}, sin importar lo complicada que sea $\pi$ ni si conocemos su constante de normalización.
+\end{coro}
+
+\section{Pilar 2: la cadena converge a $\pi$ (sin importar el punto de partida)}
+
+\noindent
+Que $\pi$ sea \textbf{una} distribución estacionaria no basta: necesitamos que la cadena realmente \textbf{llegue} a ella partiendo de cualquier estado inicial. Aquí es donde entra el \textbf{Teorema de Convergencia Estacionaria} que ya demostramos en el Tema 3:
+
+\begin{teo}[Recordatorio: Teorema de Convergencia Estacionaria]
+Si una cadena de Markov es \textbf{irreducible}, \textbf{aperiódica} y positivo recurrente, con distribución invariante única $\pi$, entonces para cualquier distribución inicial $\alpha$:
+\[
+\lim_{m\to\infty} P(X_m = j) = \pi(j) \qquad \forall j\in S.
+\]
+\end{teo}
+\noindent
+Este límite realmente significa que, después de un número suficientemente grande de pasos, la distribución de probabilidad del caminante se vuelve indistinguible de $\pi$, sin importar dónde empezó. En otras palabras, la cadena ``olvida'' su punto de partida y se estabiliza en la distribución objetivo, lo que significa que en la práctica sabemos que si descartamos los primeros $K$ pasos de nuestra simulación, el resto de la trayectoria ya estará "limpia" del sesgo del punto de partida $X_0$.\\
+
+\noindent
+Aplicado a Metropolis-Hastings, necesitamos verificar dos condiciones \textbf{sobre el diseño del algoritmo} (no son automáticas, ¡hay que elegir bien $q$!):
+
+\begin{itemize}
+    \item \textbf{Irreducibilidad:} la propuesta $q$ debe permitir, en un número finito de pasos, llegar desde cualquier estado a cualquier otro (con probabilidad positiva). Por ejemplo, en Ising: si solo pudiéramos voltear espines en bloques fijos, podríamos quedar atrapados en una sub-región del espacio de estados.
+    \item \textbf{Aperiodicidad:} significa que la cadena no se mueva en ciclos fijos de longitud estructurada, lo cual se obtiene con que exista \textbf{algún} estado donde la cadena pueda quedarse parada en un paso, es decir $P(x,x)>0$. Esto ocurre automáticamente en Metropolis-Hastings en cuanto hay \textbf{algún rechazo posible} ($\alpha(x,y)<1$ para algún $y$), lo cual es casi siempre el caso salvo en ejemplos degenerados.
+\end{itemize}
+
+\begin{observacion}
+Si el espacio de estados es \textbf{finito} (como en el Ising con $|S|=2^N$), recordemos que "Finito + Irreducible" ya implica automáticamente positivo recurrencia (Tema 3). Así que en la práctica solo hay que preocuparse de diseñar $q$ para que la cadena sea irreducible y aperiódica, y la convergencia hacia $\pi$ queda \textbf{garantizada matemáticamente}. \\
+\end{observacion}
+
+\noindent
+El problema que tenemos actualmente, es que el teorema de convergecia nos da la distribución $\pi$ para un estado $j\in S$, que es el estado final de nuestra cadena de Markov después de $m$ pasos, es decir, $P(X_m=j)$, por lo que para poder hacer el promedio (esperanza), necesitaríamos ejecutar miles de cadenas de Markov independientes y tomar el promedio de sus estados finales. Esto es lo que nos lleva al siguiente pilar: el Teorema Ergódico, que nos permite usar \textbf{una sola trayectoria larga} para estimar esperanzas bajo $\pi$.
+
+\section{Pilar 3: el Teorema Ergódico -- por qué podemos \textit{estimar} con MCMC}
+
+\noindent
+Hasta aquí hemos justificado que $X_m$ se parece a una muestra de $\pi$ cuando $m$ es grande. Pero en la práctica \textbf{no relanzamos la cadena miles de veces}: simulamos \textbf{una única trayectoria larga} y usamos sus valores para estimar esperanzas. Esto se justifica con el resultado que también demostramos en el Tema 3:
+
+\begin{teo}[Recordatorio: Teorema Ergódico / Corolario de promedios temporales]
+Si la cadena es positivo recurrente con invariante $\pi$, entonces para toda función acotada $f:S\to\mathbb{R}$:
+\[
+\lim_{m\to\infty} \frac{1}{m}\sum_{k=0}^{m-1} f(X_k) = \sum_{i\in S} \pi(i) f(i) = E_\pi[f] \qquad \text{c.s.}
+\]
+\end{teo}
+
+\begin{observacion}[Por qué esto es la pieza que faltaba]
+Este teorema es la versión markoviana de la \textbf{Ley Fuerte de los Grandes Números}: aunque los $X_k$ de una misma trayectoria están \textbf{correlacionados} (no son i.i.d.), su promedio temporal converge igualmente al promedio espacial bajo $\pi$. Es exactamente lo que se necesita para que el "Monte Carlo" en MCMC tenga sentido: \textbf{una sola simulación larga es suficiente} para estimar $E_\pi[f]$ (por ejemplo, la energía interna $\langle H\rangle$ del Ising, o la media a posteriori de un parámetro bayesiano $\theta$).
+\end{observacion}
+
+\section{Resumen: los tres pilares}
+
+\noindent
+\textbf{Para la pizarra, esquema final:}
+\[
+\boxed{
+\begin{array}{ll}
+\textbf{1. Balance detallado (diseño)} & \Longrightarrow \ \pi \text{ es invariante: } \pi P = \pi \\[4pt]
+\textbf{2. Irreducible + aperiódica} & \Longrightarrow \ P(X_m=\cdot)\xrightarrow[m\to\infty]{} \pi \text{ (converge sea cual sea } X_0) \\[4pt]
+\textbf{3. Teorema Ergódico} & \Longrightarrow \ \dfrac{1}{m}\sum\limits_{k=0}^{m-1} f(X_k) \xrightarrow[m\to\infty]{\text{c.s.}} E_\pi[f]
+\end{array}}
+\]
+
+\begin{observacion}[Conclusión, en una frase]
+MCMC funciona porque \textbf{(1)} construimos la cadena a propósito para que $\pi$ sea su distribución de equilibrio, \textbf{(2)} la teoría de cadenas de Markov garantiza que ese equilibrio se alcanza sin importar dónde empecemos, y \textbf{(3)} el Teorema Ergódico convierte una única trayectoria simulada en un estimador válido de cualquier esperanza bajo $\pi$ -- todo ello \textbf{sin necesitar jamás conocer la constante de normalización de $\pi$}.
+\end{observacion}
+
+\bigskip
+\hrule
+\bigskip
+
+\noindent\textit{Notas para la exposición oral:}
+\begin{itemize}
+    \item Si sobra tiempo, se puede mencionar (sin demostrar) que la \textbf{velocidad} de convergencia hacia $\pi$ está gobernada por el segundo autovalor más grande en módulo de $P$ (Tema 3, Teorema Espectral para Cadenas Reversibles): cuanto más cerca de $1$ esté $|\lambda_2|$, más lento es el "mixing" de la cadena.
+    \item Conviene dibujar en la pizarra el esquema circular: \texttt{Distribución objetivo $\pi$} $\to$ \texttt{Cadena de Markov diseñada (Metropolis-Hastings)} $\to$ \texttt{Simulación larga} $\to$ \texttt{Muestras / Estimaciones}.
+    \item Buen cierre: enlazar con el Tema 1 -- el Teorema de Recurrencia de Poincaré mostraba que esperar a que un sistema determinista "visite" sus estados de interés es inviable en alta dimensión; MCMC es la respuesta probabilística a ese mismo problema: en vez de esperar recurrencias deterministas, \textbf{diseñamos} una dinámica aleatoria que converge rápidamente al lugar que nos interesa.
+\end{itemize}

@@ -1,0 +1,131 @@
+\chapter{Introduction}
+
+
+A stochastic process can be motivated by the fundamental problem of \textbf{forecasting} (prediction). Given a sequence of observations up to the current time $m$:
+\[
+x_0, x_1, \dots, x_m
+\]
+Our objective is to determine the next state via an evolution function $G$ characterized by a set of parameters $\theta$:
+\[
+x_{m+1} = G(x_0, \dots, x_m; \theta)
+\]
+
+Depending on our priori knowledge of the system, we can classify the forecasting problem into three distinct scenarios:
+\begin{enumerate}
+    \item \textbf{Scenario 1:} We know the relevant variables and the exact time-evolution equations.
+    \item \textbf{Scenario 2:} We know the relevant variables, \textit{but} we do not know the governing equations.
+    \item \textbf{Scenario 3:} We know neither the relevant variables nor the underlying equations.
+\end{enumerate}
+
+\subsection*{Analysis of Scenario 1: Classical Determinism and Chaos}
+
+As an illustrative example, consider \textbf{Newtonian dynamics} governing the state of a particle, where positions $x_m$ and velocities $v_m$ are tracked over discrete time increments $\Delta t$:
+\begin{equation*}
+    \begin{cases} 
+        x_{m+1} = x_m + v_m \Delta t \\ 
+        v_{m+1} = v_m + a_m \Delta t 
+    \end{cases}
+    \quad \text{where } a_m = \frac{F}{m}
+\end{equation*}
+
+
+
+Let $\delta_0$ denote the initial measurement error at $t = 0$. In chaotic systems characterized by a maximum positive \textbf{Lyapunov exponent} $\lambda_1 > 0$, the error at time $t$ diverges exponentially:
+\[
+\delta_t \simeq \delta_0 e^{\lambda_1 t}
+\]
+
+If we establish $\Delta$ as the maximum acceptable error threshold ($\delta_T = \Delta$), the absolute \textbf{prediction horizon} $T$ is strictly bounded by:
+\[
+\Delta = \delta_0 e^{\lambda_1 T} \implies T(\delta_0, \Delta) \approx \frac{1}{\lambda_1} \log \left( \frac{\Delta}{\delta_0} \right)
+\]
+
+\begin{definicion}
+    The \textbf{prediction horizon} $T$ es, sencillamente, el tiempo exacto en el que el error acumulado alcanza tu límite de tolerancia ($\Delta$). Es decir, es el momento en el que el error se vuelve tan grande que la predicción deja de ser úti
+\end{definicion}
+
+\subsection*{Implicación para la Ciencia de Datos}
+La presencia del operador logarítmico revela la ``trampa del caos'': incluso si invertimos recursos masivos en mejorar los instrumentos de medición reduciendo el error inicial $\delta_0$ por un factor de 1000, el horizonte temporal de predicción $T$ solo aumentará de forma lineal y marginal. Por lo tanto, el determinismo físico no garantiza la predictibilidad.
+
+
+\section{El Teorema de Recurrencia de Poincaré y Ergodicidad}
+
+Frente a la pérdida de predictibilidad individual, cabe preguntarse si un sistema determinista, al menos macroscópicamente, regresa a sus configuraciones pasadas. Esto nos conduce al análisis del espacio de fases acotado.
+
+\begin{teo}[\textbf{Teorema de Recurrencia de Poincaré}]
+Sea un sistema dinámico determinista que preserva el volumen (como los sistemas hamiltonianos donde la energía total $T+V=E$ es constante) y cuya evolución ocurre en un dominio acotado o conjunto compacto. Para cualquier estado inicial $\underline{x}_0$ y cualquier entorno abierto $\sigma$ alrededor de él (definido por una distancia máxima de tolerancia $\varepsilon > 0$), existen infinitos instantes de tiempo discretos $k$ tales que el estado del sistema regresa al entorno original:
+\begin{equation}
+    \exists \, k \geq 1 : \quad d(\underline{x}_k, \underline{x}_0) < \varepsilon \implies \underline{x}_k \in \sigma
+\end{equation}
+\end{teo}
+
+Para estudiar este fenómeno, definimos formalmente el \textbf{Tiempo de Retorno} o primer tiempo de entrada $\tau_\sigma(\underline{x}_0)$ como el ínfimo de los pasos temporales en los que el sistema vuelve a la región de interés:
+\begin{equation}
+    \tau_\sigma(\underline{x}_0) = \inf \big\{ k \geq 1 \ \big| \ \underline{x}_0 \in \sigma \ \cap \ \underline{x}_k \in \sigma \big\}
+\end{equation}
+
+Dado que evaluar el tiempo de retorno exacto para una sola trayectoria es impracticable, recurrimos a su valor esperado o promedio estadístico $\mathbb{E}[\tau_\sigma(\underline{x}_0)]$. Introduciendo una medida de probabilidad invariante $\mu$ en el espacio de fases (asociada al hipervolumen de la región), la esperanza se modela como:
+\begin{equation}
+    \mathbb{E}[\tau_\sigma(\underline{x}_0)] = \frac{1}{\mu(\sigma)} \int_{\underline{x} \in \sigma} \tau_\sigma(x) \, d\mu(x)
+\end{equation}
+
+\subsection{La Hipótesis de Ergodicidad y el Lema de Kac}
+
+\begin{definicion}
+    La hipótesis de \textbf{ergodicidad} establece que, para un sistema dinámico ergódico, el promedio temporal de una trayectoria individual es equivalente al promedio sobre todo el conjunto (\textit{ensemble}) del espacio de fases. En otras palabras, si se espera un tiempo suficientemente largo ($t \to \infty$), ambos promedios convergen al mismo valor.
+\end{definicion}
+
+\begin{ejemplo}
+    Para entender a que nos referimos con la \tbf{hipótesis de ergodicidad}, imagínate que quieres estudiar el comportamiento de los clientes en un supermercado. Tienes dos formas de calcular un promedio:  
+    \begin{itemize}
+        \item \tbf{Promedio de Conjunto (Espacio de fases):} Congelas el tiempo en un instante exacto, sacas una ``fotografía'' de todo el supermercado y calculas el promedio usando a todos los clientes a la vez en ese momento.
+        \item \tbf{Promedio Temporal:} eliges a un único cliente y lo sigues con una cámara durante 10 años, registrando su comportamiento a lo largo del tiempo para luego hacer el promedio.
+    \end{itemize}
+    La hipótesis de ergodicidad afirma que, si el sistema es ergódico y esperas el tiempo suficiente ($t \to \infty$), ambos promedios darán exactamente el mismo resultado. \\
+\end{ejemplo}
+\noindent
+Si asumimos que el sistema es ergódico, podemos enunciar el \textbf{Lema de Kac}, que establece una relación fundamental entre el tiempo de retorno y la medida del conjunto de estados admisibles.
+
+\begin{lema}[\textbf{Lema de Kac}]
+Para cualquier sistema dinámico ergódico que preserva la medida $\mu$, la integral del tiempo de retorno sobre el conjunto de estados admisibles está estrictamente normalizada a la unidad:
+\begin{equation}
+    \int_{\underline{x} \in \sigma} \tau_\sigma(x) \, d\mu(x) = 1
+\end{equation}
+\end{lema}
+\noindent
+Sustituyendo el Lema de Kac en la definición de la esperanza matemática, se llega a una de las conclusiones más elegantes de la física estadística:
+\begin{equation}
+    \mathbb{E}[\tau_\sigma(x)] = \frac{1}{\mu(\sigma)}
+\end{equation}
+O lo que es lo mismo, el tiempo promedio de recurrencia a una región es exactamente el \textbf{inverso del hipervolumen} (medida) de dicho conjunto.
+
+
+\section{La Paradoja de los Sistemas de Alta Dimensión}
+
+Evaluemos cuantitativamente la magnitud física de este resultado. Supongamos que la región objetivo $\sigma$ tiene una dimensión lineal de tolerancia $\varepsilon$ (un error permitido) dentro de un dominio espacial acotado por una longitud máxima de excursión $L$. Si el sistema posee $N$ grados de libertad independientes, el volumen relativo o medida de la región se escala exponencialmente con la dimensión:
+\begin{equation}
+    \mu(\sigma) \propto \left( \frac{\varepsilon}{L} \right)^N \quad \text{donde } \frac{L}{\varepsilon} \gg 1
+\end{equation}
+\noindent
+Por consiguiente, aplicando el resultado de Kac, el tiempo esperado de retorno es:
+\begin{equation}
+    \mathbb{E}[\tau_\sigma(x)] \propto \left( \frac{L}{\varepsilon} \right)^N
+\end{equation}
+\noindent
+En un sistema físico macroscópico real (por ejemplo, las partículas de aire en una habitación o variables en problemas complejos de datos), los grados de libertad escalan con el \textbf{Número de Avogadro} ($N \sim 10^{23}$). 
+\noindent
+Al elevar una base mayor que uno a una potencia de $10^{23}$, el valor numérico resultante es inconmensurable: \textbf{el tiempo que tardaría el sistema en regresar a su configuración inicial supera por órdenes de magnitud la edad estimada de nuestro universo}.
+
+
+\section{Conclusión: El Nacimiento de los Procesos Estocásticos}
+
+Este colapso analítico nos obliga a replantear las estrategias de modelado en Ciencia de Datos cuando salimos de las condiciones controladas del Caso 1:
+
+\begin{itemize}
+    \item \textbf{Limitación del Método de Análogos (Caso 2):} Cuando conocemos las variables pero no las leyes dinámicas, una técnica intuitiva es buscar estados pasados idénticos o ``análogos'' para proyectar el futuro. Sin embargo, debido a la inmensidad del espacio de fases impulsada por los altos grados de libertad ($N \gg 1$), el método de análogos \textbf{fracasa rotundamente}, puesto que la probabilidad de encontrar dos configuraciones verdaderamente cercanas en un histórico de datos tiende a cero.
+    \item \textbf{Incertidumbre Absoluta (Caso 3):} Cuando no hay leyes ni variables claras, el determinismo queda completamente invalidado.
+\end{itemize}
+
+El Teorema de Poincaré y el Caos demuestran de forma conjunta que la descripción microscópica detallada y exacta es una utopía matemática inaccesible en sistemas complejos. 
+
+Para poder realizar pronósticos robustos en finanzas, meteorología o comportamiento computacional, debemos abandonar las trayectorias rígidas y deterministas y adoptar un paradigma probabilístico. Es precisamente en esta frontera donde concluye la física clásica y \textbf{comienza el estudio formal de los Procesos Estocásticos}.

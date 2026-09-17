@@ -1,0 +1,1724 @@
+\documentclass[10pt]{book}
+
+\input{../../../assetsDGIIM/portada.tex}
+\input{../../../assetsDGIIM/preambulo.tex}
+
+
+\newcommand{\tbf}{\textbf}
+\DeclareMathOperator{\Var}{Var}
+
+\usepackage{tikz-cd}
+\usetikzlibrary{babel}
+
+\begin{document}
+
+\portada{sapienza.jpg}{Stochastic \\ Processes for \\ Data Science}{SPDS}{MidnightBlue}{-8}{28}{2025-2026}{Joaquín Avilés de la Fuente}
+\newpage
+\tableofcontents
+
+\chapter{Introduction}
+
+El tema aborda el problema de la predicción (forecasting) en sistemas complejos. Tradicionalmente, la física clásica asumía que conocer las variables y las ecuaciones (Escenario 1) garantizaba predecir el futuro de forma exacta. Sin embargo, el texto desmonta esta ilusión a través de tres barreras analíticas:  
+
+\begin{itemize}
+    \item \tbf{La Trampa del Caos:} En sistemas caóticos, los errores de medición iniciales ($\delta_0$) crecen de forma exponencial en el tiempo. El horizonte de predicción ($T$) tiene un límite logarítmico: aunque gastes millones en mejorar la precisión de los sensores por un factor de 1000, el tiempo útil de predicción solo aumenta una minucia lineal. El determinismo no implica predictibilidad.
+    \item \tbf{La Paradoja de la Alta Dimensión:} Si intentamos predecir usando el "Método de Análogos" (buscar en el pasado una situación idéntica a la actual para copiar su evolución), el espacio de fases se vuelve tan gigantesco debido al número de variables ($N$) que la probabilidad de que el sistema repita una configuración idéntica es prácticamente cero en tiempos humanos.
+    \item \tbf{El Nacimiento del Paradigma Probabilístico:} Como es imposible realizar un seguimiento microscópico exacto, la Ciencia de Datos se ve obligada a abandonar las trayectorias rígidas y tratar el caos y la falta de información mediante Procesos Estocásticos.
+\end{itemize}
+
+\section{Teorema de Recurrencia de Poincaré}
+\begin{teo}[\textbf{Teorema de Recurrencia de Poincaré}]
+Sea un sistema dinámico determinista que preserva el volumen (como los sistemas hamiltonianos donde la energía total $T+V=E$ es constante) y cuya evolución ocurre en un dominio acotado o conjunto compacto. Para cualquier estado inicial $\underline{x}_0$ y cualquier entorno abierto $\sigma$ alrededor de él (definido por una distancia máxima de tolerancia $\varepsilon > 0$), existen infinitos instantes de tiempo discretos $k$ tales que el estado del sistema regresa al entorno original:
+\begin{equation}
+    \exists \, k \geq 1 : \quad d(\underline{x}_k, \underline{x}_0) < \varepsilon \implies \underline{x}_k \in \sigma
+\end{equation}
+\end{teo}
+¿Qué nos dice el resultado? Establece que si tienes un sistema dinámico determinista, que se mueve en un espacio acotado (cerrado y limitado) y que conserva su volumen (como la energía en un sistema físico), el sistema siempre terminará volviendo a pasar muy cerca de donde empezó.  Analíticamente, si partes de un estado inicial $\underline{x}_0$ con un margen de error tolerado $\varepsilon$, existirán infinitos momentos en el futuro ($k$) donde el estado de la trayectoria regresará a estar a una distancia menor que $\varepsilon$ de su origen:
+  $$\exists \, k \geq 1 : \quad d(\underline{x}_k, \underline{x}_0) < \varepsilon$$ 
+Imagínate una caja cerrada llena de gas donde todas las partículas se mueven de forma caótica. Si sacas una foto inicial, el teorema de Poincaré te garantiza que, si esperas lo suficiente, las partículas se moverán de tal manera que eventualmente volverán a colocarse casi exactamente en la misma posición de la foto inicial, infinitas veces.  \\
+
+
+\section{Ergodicidad y el Lema de Kac}
+Para calcular cuánto tarda el sistema en regresar a ese estado inicial (el Tiempo de Retorno $\tau_\sigma$), necesitamos introducir el concepto de Ergodicidad.  Ergodicidad (Definición intuitiva): Un sistema es ergódico si seguir a un único individuo a lo largo de un tiempo infinito (Promedio Temporal) da exactamente el mismo resultado estadístico que congelar el tiempo y promediar a todos los individuos del sistema a la vez en ese instante (Promedio de Conjunto).  El Lema de KacSi asumimos que el sistema cumple la hipótesis de ergodicidad, el Lema de Kac formaliza matemáticamente la normalización del tiempo de retorno respecto a la medida del espacio. Nos da el siguiente resultado analítico:
+  $$\int_{\underline{x} \in \sigma} \tau_\sigma(x) \, d\mu(x) = 1$$Al sustituir este lema en la fórmula clásica de la esperanza matemática, obtenemos una conclusión brillantemente simple:
+  $$\mathbb{E}[\tau_\sigma(x)] = \frac{1}{\mu(\sigma)}$$
+El resultado fundamental: El tiempo promedio que tarda un sistema en regresar a una región de su espacio de estados es exactamente el inverso del volumen (medida $\mu$) de esa región. \\
+
+\noindent
+La gran conclusión (Unión de Poincaré, Kac y Ciencia de Datos)Aquí es donde los profesores conectan todo. Si un sistema tiene $N$ variables independientes (grados de libertad), el volumen de la región objetivo se encoge exponencialmente: $\mu(\sigma) \propto \left( \frac{\varepsilon}{L} \right)^N$.  Al aplicar el Lema de Kac, el tiempo esperado de retorno se dispara hacia arriba de forma exponencial:
+  $$\mathbb{E}[\tau_\sigma(x)] \propto \left( \frac{L}{\varepsilon} \right)^N$$
+En Ciencia de Datos, cuando manejas problemas con cientos o miles de variables ($N \gg 1$), el tiempo promedio que debes esperar para que una trayectoria regrese a un estado pasado (paradoja de los sistemas de alta dimensión) es mayor que la edad del universo.  ¿Por qué fracasa el método de análogos? Porque el tiempo de recurrencia de Kac nos demuestra que nunca encontrarás en tu base de datos histórica un día que sea "exactamente igual" al de hoy para poder predecir el de mañana. El pasado exacto no se repite en sistemas de alta dimensión.  
+
+
+\chapter{Stochastic Processes}
+\noindent
+Antes de empezar a trabajar con procesos estocásticos vamos a recordar los \tbf{axiomas de Kolmogoron}, que son las tres condiciones fundamentales que definen matemáticamente una medida de probabilidad. Dado un espacio muestral $\Omega$ y una colección de sucesos $\mathcal{F}$, tenemos
+
+\begin{itemize}
+    \item \tbf{Axioma de No Negatividad:} La probabilidad de cualquier suceso $A$ es un número real mayor o igual a cero
+    \begin{equation*}
+        P(A) \geq 0 \quad \forall A \in \mathcal{F}
+    \end{equation*}
+    \item \tbf{Axioma de Certidumbre:} La probabilidad de que ocurra el espacio muestral completo $\Omega$ (el suceso seguro) es exactamente igual a $1$
+    \begin{equation*}
+        P(\Omega) = 1
+    \end{equation*}
+    \item \tbf{Axioma de Aditividad Sigma ($\sigma$-aditividad):} Si tienes una secuencia infinita de sucesos mutuamente excluyentes o disjuntos entre sí ($A_i \cap A_j = \emptyset$ para todo $i \neq j$), la probabilidad de su unión es la suma de sus probabilidades individuales
+    \begin{equation*}
+        P\left(\bigcup_{i=1}^{\infty} A_i\right) = \sum_{i=1}^{\infty} P(A_i)
+    \end{equation*}
+\end{itemize}
+
+\section{Fundamentos y la Dualidad del Proceso Estocástico}
+
+Un \textbf{proceso estocástico} $X(\omega, t)$ es una colección de variables aleatorias indexadas en el tiempo, definidas sobre un mismo espacio de probabilidad $(\Omega, \mathcal{F}, \mathbb{P})$. Su comprensión profunda radica en su \textbf{naturaleza dual}:
+
+\begin{itemize}
+    \item \textbf{Realización o Trayectoria ($\omega$ fijo, $t$ variable):} Al fijar el azar, el proceso se convierte en una función totalmente determinista del tiempo ($X(\bar{\omega}, t)$). Representa la evolución histórica concreta que ha seguido el fenómeno (por ejemplo, el gráfico de una acción de la bolsa ya cerrada).
+    \item \textbf{Variable Aleatoria ($t$ fijo, $\omega$ variable):} Al congelar el reloj en un instante preciso $\bar{t}$, el objeto colapsa en una variable aleatoria tradicional. Para poder asignarle probabilidades válidas en el mundo real, debe cumplir la condición analítica de \textbf{medibilidad} respecto a la $\sigma$-álgebra $\mathcal{F}$:
+    \begin{equation}
+        X^{-1}(B, \bar{t}) = \{ \omega \in \Omega \mid X(\omega, \bar{t}) \in B \} \in \mathcal{F}
+    \end{equation}
+\end{itemize}
+
+\section{Propiedades de las Distribuciones Finito-Dimensionales (FDD)}
+
+Para caracterizar estadísticamente una sucesión ordenada de variables discretas $X_1, X_2, \dots, X_m$, recurrimos a las \textbf{Distribuciones Finito-Dimensionales}, las cuales representan la probabilidad de la intersección lógica de que cada variable tome un valor simultáneamente.
+
+Para que el proceso sea consistente (garantizado por el \textit{Teorema de Consistencia de Kolmogorov}), las FDD deben cumplir obligatoriamente dos propiedades esenciales:
+\begin{enumerate}
+    \item \textbf{Simetría ante Permutaciones:} La distribución conjunta es invariante respecto al orden en el que se listen las componentes:
+    \begin{equation*}
+        \mathbb{P}\big( \{X_1 = x_1\} \cap \dots \cap \{X_m = x_m\} \big) = \mathbb{P}\big( \{X_{\sigma_1} = x_{\sigma_1}\} \cap \dots \cap \{X_{\sigma_m} = x_{\sigma_m}\} \big)
+    \end{equation*}
+    \item \textbf{Consistencia de Marginalización:} Permite colapsar la dimensión del problema eliminando las variables no deseadas mediante el Teorema de la Probabilidad Total.
+\end{enumerate}
+
+\subsection{Desarrollo matemático de la Marginalización}
+Para demostrar que una estructura conjunta es consistente, colapsamos un sistema tridimensional eliminando el tercer lanzamiento $X_3$ sobre su soporte elemental $x_3 \in \{0, 1\}$ en una distribución intercambiable de Bernoulli ($q = 1-p$):
+\begin{align*}
+    P(X_1 = 0, X_2 = 0) &= \sum_{x_3 \in \{0,1\}} P(X_1 = 0, X_2 = 0, X_3 = x_3) \\
+    &= P(0,0,1) + P(0,0,0) \\
+    &= (1-p)^2 p + (1-p)^3 \\
+    &= (1-p)^2 \big[ p + (1-p) \big] \\
+    &= (1-p)^2 \cdot [1] = (1-p)^2
+\end{align*}
+El resultado recupera con total fidelidad la probabilidad marginal del sistema de menor dimensión ($P(X_1=0) \cdot P(X_2=0)$), probando su consistencia.
+
+\section{Intercambiabilidad sin Independencia}
+
+Una \textbf{distribución intercambiable} es aquella en la que cualquier permutación de una secuencia de variables aleatorias comparte exactamente la misma probabilidad. Las secuencias que contienen \textit{el mismo número de éxitos y fracasos} tienen idéntica probabilidad, sin importar el orden temporal.
+
+\begin{itemize}
+    \item \textbf{Muestreo sin Reemplazo (Distribución Hipergeométrica):} La probabilidad de la secuencia $(W, W, B)$ es $\frac{W}{N} \cdot \frac{W-1}{N-1} \cdot \frac{B}{N-2}$, mientras que la de $(W, B, W)$ es $\frac{W}{N} \cdot \frac{B}{N-1} \cdot \frac{W-1}{N-2}$. Los valores numéricos son idénticos porque los numeradores y denominadores contienen los mismos factores en diferente orden.
+    \item \textbf{Muestreo con Reforzamiento (Urna de Pólya):} Cada vez que se extrae una bola, se devuelve y se añade otra de su mismo color. Utilizando el \textbf{factorial ascendente} ($x^{(y)} = x(x+1)\cdots(x+y-1)$), la probabilidad de una trayectoria ordenada se reduce a:
+    \begin{equation}
+        P(\text{Trayectoria}) = \frac{W^{(w)} B^{(b)}}{N^{(n)}}
+    \end{equation}
+    Como el orden de los factores en el numerador no altera el producto, el proceso es estrictamente intercambiable pero claramente dependiente.
+\end{itemize}
+
+\section{Modelos de Asignación Combinatoria y F.O.F.}
+
+Para modelar la asignación de $m$ objetos en $g$ categorías de mayor a menor detalle:
+\begin{enumerate}
+    \item \textbf{Descripción Individual (Microscópica):} Registra qué objeto cae en qué caja. Total: $g^m$.
+    \item \textbf{Descripción Estadística (Macroscópica):} Registra únicamente el conteo de ocupación de cada caja ($Y_i = m_i$). Total mediante combinaciones con repetición: $\binom{m+g-1}{g-1}$.
+    \item \textbf{Frecuencias de Frecuencias / F.O.F. (Máxima Compresión):} Variable $Z_i = j$, que significa \textit{"existen exactamente $j$ categorías que contienen $i$ objetos"}.
+\end{enumerate}
+
+\subsection*{Restricciones Algebraicas de las f.o.f.}
+Cualquier vector válido f.o.f. $\underline{Z}$ debe satisfacer obligatoriamente dos leyes de conservación:
+\begin{itemize}
+    \item \textbf{Conservación de Categorías:} $\sum_{i=0}^{m} Z_i = g$
+    \item \textbf{Conservación de Objetos:} $\sum_{i=0}^{m} i \cdot Z_i = m$
+\end{itemize}
+Para calcular cuántas descripciones estadísticas $\underline{Y}$ corresponden a un vector f.o.f. dado $\underline{z}$:
+\begin{equation}
+    \text{Número de descripciones estadísticas} = \frac{g!}{Z_0! \cdot Z_1! \cdot Z_2! \cdot \dots \cdot Z_m!}
+\end{equation}
+
+\section{El Teorema de de Finetti (Versión Finita)}
+
+\begin{teo}[De Finetti - Versión Finita]
+Si una distribución de probabilidad es estrictamente intercambiable sobre una secuencia finita de longitud $n$, existe una única distribución de probabilidad discreta a priori $\mu(h)$ tal que la probabilidad de cualquier trayectoria se puede expresar como una mixtura ponderada de densidades hipergeométricas uniformes:
+\begin{equation}
+    P(X_1 = x_1, \dots, X_n = x_n) = \sum_{h=0}^{n} \frac{1}{\binom{n}{h}} \mu(h)
+\end{equation}
+\end{teo}
+
+\begin{proof}
+Definiendo la trayectoria microscópica como el suceso $A = \bigcap_{i=1}^{n} \{X_i = x_i\}$, aplicamos el Teorema de la Probabilidad Total condicionándolo sobre el número total de éxitos reales $h$:
+\begin{equation*}
+    P(A) = \sum_{h=0}^{n} P\left(A \ \middle| \ \sum_{i=1}^{n} X_i = h\right) P\left(\sum_{i=1}^{n} X_i = h\right)
+\end{equation*}
+Por la hipótesis fundamental de \textbf{intercambiabilidad}, la distribución asigna un peso idéntico a cada una de las $\binom{n}{h}$ secuencias que comparten el mismo número de éxitos. Por tanto, la probabilidad condicional de observar la trayectoria exacta $A$ colapsa a:
+\begin{equation*}
+    P\left(A \ \middle| \ \sum_{i=1}^{n} X_i = h\right) = \frac{1}{\binom{n}{h}}
+\end{equation*}
+Sustituyendo esta equivalencia combinatoria, y definiendo la medida de ponderación discreta como la probabilidad marginal del conteo de éxitos ($\mu(h) = P(\sum X_i = h)$), obtenemos el resultado del teorema:
+\begin{equation*}
+    P(A) = \sum_{h=0}^{n} \frac{1}{\binom{n}{h}} \mu(h)
+\end{equation*}
+\end{proof}
+
+
+\section{Modelos de urnas}
+ 
+\subsection{Sin reemplazo (Hipergeométrica)}
+Al extraer sin reposición, las probabilidades dependen del historial (no hay independencia), pero el proceso sigue siendo intercambiable: el orden no altera la probabilidad de una trayectoria con $w$ blancas y $b$ negras. Esto da lugar a la \textbf{distribución hipergeométrica}.
+ 
+\subsection{Con reforzamiento: Urna de Pólya}
+Cada bola extraída se devuelve junto con una bola extra del mismo color (refuerzo positivo, genera correlación). Para $g$ categorías con parámetros iniciales $\alpha_1,\dots,\alpha_g$ ($\alpha=\sum_i \alpha_i$), la \textbf{probabilidad predictiva} de observar la categoría $1$ tras $n$ extracciones es
+\begin{equation*}
+    P(X_{n+1}=1 \mid X_1=x_1,\dots,X_n=x_n) = \frac{\alpha_1+n_1}{\alpha+n}.
+\end{equation*}
+ 
+\noindent
+Esta es la idea más importante del modelo: la predicción combina la "masa inicial" (creencia previa) con el conteo observado. La distribución conjunta resultante (agrupando categorías) es la \textbf{Distribución de Pólya Multivariante}, y en el límite $\alpha\to\infty$ (urna "infinita") el efecto de refuerzo se diluye y el proceso converge a la \textbf{Multinomial} de ensayos independientes.
+ 
+
+\section{Teorema de Johnson y el Aprendizaje Inductivo}
+
+El teorema de W.E. Johnson demuestra que la probabilidad predictiva de observar una categoría en el futuro se reduce a una \textbf{combinación convexa} entre la información empírica real y las creencias teóricas iniciales:
+\begin{equation}
+    P(X_{m+1} = j \mid m_j, m) = \left( \frac{m}{m + \alpha} \right) \left( \frac{m_j}{m} \right) + \left( \frac{\alpha}{m + \alpha} \right) \left( \frac{\alpha_j}{\alpha} \right)
+\end{equation}
+
+\subsection*{Análisis matemático de los dos Regímenes Extremos}
+\begin{itemize}
+    \item \textbf{Régimen de Datos Escasos ($m \to 0$):} El peso del primer término se desvanece ($\frac{m}{m+\alpha} \to 0$), provocando que la predicción dependa exclusivamente de la estructura a priori:
+    \begin{equation*}
+        \lim_{m \to 0} P(X_{m+1} = j \mid m_j, m) = \frac{\alpha_j}{\alpha}
+    \end{equation*}
+    \item \textbf{Régimen de Datos Masivos ($m \to \infty$):} El factor de ponderación empírica tiende a la unidad ($\frac{m}{m+\alpha} \to 1$), mientras que el peso de la opinión a priori se diluye hacia cero. El sistema olvida su sesgo inicial y converge a la proporción empírica observada:
+    \begin{equation*}
+        \lim_{m \to \infty} P(X_{m+1} = j \mid m_j, m) = \frac{m_j}{m}
+    \end{equation*}
+\end{itemize}
+
+\section{Resumen conceptual}
+ 
+\begin{itemize}
+    \item Un proceso estocástico tiene una doble lectura: trayectoria (determinista) vs. variable aleatoria (en un instante).
+    \item La consistencia de Kolmogorov (simetría + marginalización) garantiza que una familia de FDD define un proceso bien definido.
+    \item La \textbf{intercambiabilidad} es más débil que la independencia, pero suficiente para que aparezcan regularidades fuertes (como en la urna de Pólya).
+    \item La urna de Pólya y el Teorema de Johnson muestran cómo la predicción óptima es siempre una mezcla convexa entre prior y evidencia empírica.
+    \item El \textbf{Teorema de de Finetti} es la conclusión final: toda secuencia infinita intercambiable es, necesariamente, una mixtura de procesos i.i.d.\ Bernoulli($\theta$) sobre un prior $Q(\theta)$ — el fundamento teórico del enfoque bayesiano.
+\end{itemize}
+
+\chapter{Markov Chain}
+
+
+\begin{definicion}
+    La \tbf{propieda de markov local} establece que para cada nodo $X_i$ de un DAG, la variable aleatoria $X_i$ es condicionalmente independiente de sus antepasados remotos dado el conjunto de sus padres directos, es decir, se obtiene toda su información relevante para predecir $X_i$ a partir de sus padres directos.
+\end{definicion}
+
+
+\begin{definicion}[Cadena de Márkov]
+    Un proceso estocástico en tiempo discreto $\{X_m\}_{m \geq 0}$ definido sobre un \textbf{espacio de estados} $S$ discreto (finito o infinito numerable, tal que $S = \{1, \dots, g\}$, $S = \mathbb{N}$ o $S = \mathbb{Z}$) se denomina \textbf{cadena de márkov} si cumple con la \textbf{Propiedad de Márkov}:
+    \begin{equation*}
+        P(X_{m+1} = x_{m+1} \mid X_0 = x_0, X_1 = x_1, \dots, X_m = x_m) = P(X_{m+1} = x_{m+1} \mid X_m = x_m)
+    \end{equation*}
+    para todo $m \geq 0$ y para cualquier secuencia de estados $\{x_0, x_1, \dots, x_{m+1}\} \in S$ tales que \\ \mbox{$P(X_0 = x_0, \dots, X_m = x_m) > 0$}.
+\end{definicion}
+
+
+\section{El Proceso de Simplificación Analítica}
+
+\subsubsection{Descomposición de la Distribución Conjunta}
+\noindent
+Por la regla de la cadena de la probabilidad elemental, la distribución finito-dimensional conjunta de una trayectoria de longitud $m$ requiere almacenar toda la memoria histórica acumulada:
+\begin{align*}
+    P(X_1 = x_1, \dots, X_m = x_m) = & \; P(X_m = x_m \mid X_1 = x_1, \dots, X_{m-1} = x_{m-1}) \\
+    & \cdot P(X_{m-1} = x_{m-1} \mid X_1 = x_1, \dots, X_{m-2} = x_{m-2}) \\
+    & \;\; \vdots \\
+    & \cdot P(X_2 = x_2 \mid X_1 = x_1) \cdot P(X_1 = x_1)
+\end{align*}
+Al invocar formalmente la Propiedad de Márkov, el condicionamiento masivo colapsa hacia el eslabón cronológico inmediato anterior, reduciendo la probabilidad conjunta al producto de transiciones locales:
+\begin{equation*}
+    P(X_1 = x_1, \dots, X_m = x_m) = P(X_1 = x_1) \prod_{i=2}^{m} P(X_i = x_i \mid X_{i-1} = x_{i-1})
+\end{equation*}
+
+\subsubsection{Homogeneidad Temporal}
+\noindent
+En una cadena de Márkov general, la regla de transición entre dos estados puede mutar según la edad del proceso, dependiendo intrínsecamente del paso del tiempo $m-1$:
+\begin{equation*}
+    P(X_m = y \mid X_{m-1} = x) = P_{m-1}(x, y)
+\end{equation*}
+Para estabilizar dinámicamente el modelo, se introduce el supuesto de \textbf{Homogeneidad en el Tiempo}. Se asume que las leyes que rigen los saltos son estacionarias e invariantes respecto al eje temporal:
+\begin{equation*}
+    P(X_m = y \mid X_{m-1} = x) = P(x, y) \quad \forall m \geq 1
+\end{equation*}
+
+
+Dadas estas dos condiciones, la convergencia de la propiedad de Márkov y la homogeneidad temporal, una Cadena de Márkov queda unívocamente determinada y gobernada por la interacción de solo dos elementos matemáticos:
+\begin{enumerate}
+    \item \textbf{Distribución Inicial ($p(x)$):} un vector de probabilidad que dicta el estado de arranque del sistema en el instante inicial:
+    \begin{equation*}
+        P(X_1 = x) = p(x) \quad \forall x \in S
+    \end{equation*}
+    \item \textbf{Probabilidad de Transición ($P(x,y)$):} la probabilidad estática de migrar desde un estado origen $x$ hacia un estado destino $y$ en un solo paso temporal discreto:
+    \begin{equation*}
+        P(X_{m+1} = y \mid X_m = x) = P(x, y) \quad \forall x,y \in S
+    \end{equation*}
+\end{enumerate}
+
+
+\section{Time Homogeneous Markov Chains}
+
+\begin{definicion}
+    Un proceso estocástico en tiempo discreto $\{X_n\}_{n \ge 0}$ con espacio de estados finito o ajustable $S$ es una \textbf{cadena de markov homogénea en el tiempo} si sus probabilidades de transición condicionales satisfacen que, para todo paso temporal $m$, la probabilidad no depende del índice global sino únicamente de la distancia entre los estados:
+    \begin{equation*}
+        P(x, y) = P(X_{m+1} = y \mid X_m = x) = P(X_1 = y \mid X_0 = x) \quad \forall x, y \in S
+    \end{equation*}
+\end{definicion}
+
+
+
+\noindent Las probabilidades de transición deben preservar la medida de probabilidad unitaria en su espacio mapeado:
+\begin{equation*}
+    \sum_{y \in S} P(x, y) = 1 \quad \forall x \in S
+\end{equation*}
+
+\begin{definicion}
+    Una \textbf{matriz estocástica (o matriz de Markov)} es una matriz cuadrada cuyas entradas son no negativas y cumplen con la condición de que la suma de los elementos de cada una de sus filas es estrictamente igual a la unidad, es decir,
+    $$\sum_{y \in S} P(x, y) = 1, \, \forall x \in S$$
+\end{definicion}
+
+\subsubsection{Distribución Marginal y Transición en $n$ Pasos}
+\noindent
+En esta sección, cambiaremos un poco la mentalidad, esta vez diremos ``No me importa el camino intermedio; solo quiero saber la probabilidad de estar en el estado $x_n$ en el paso $n$, habiendo empezado en algún lado", lo que significa que vamos a marginalizar sobre todos los estados intermedios posibles $x_0, x_1, \dots, x_{n-1} \in S$. \\
+
+\noindent
+Para recuperar la distribución marginal en cualquier etapa futura arbitraria $n$, denotada como $p_n(x_n) = P(X_n = x_n)$, aplicamos el Teorema de Probabilidad Total sumando sobre todas las historias o trayectorias internas posibles de los estados previos $x_0, x_1, \dots, x_{n-1} \in S$:
+\begin{equation*}
+    p_n(x_n) = \sum_{x_0 \in S} \sum_{x_1 \in S} \dots \sum_{x_{n-1} \in S} P(X_0 = x_0, X_1 = x_1, \dots, X_n = x_n)
+\end{equation*}
+
+\noindent Sustituyendo la ecuación estructural de la trayectoria conjunta de la sección anterior, el cálculo se reduce algebraicamente a:
+\begin{align*}
+    p_n(x_n) &= \sum_{x_0 \in S} \left[ \sum_{x_1, \dots, x_{n-1} \in S^{n-1}} P(x_{n-1}, x_n) \cdot P(x_{n-2}, x_{n-1}) \cdots P(x_0, x_1) \right] p_0(x_0) \nonumber \\
+    &= \sum_{x_0 \in S} P^{(n)}(x_0, x_n) \, p_0(x_0)
+\end{align*}
+donde $P^{(n)}(x_0, x_n)$ representa la probabilidad de transición en $n$ pasos desde el estado inicial $x_0$ hasta el estado final $x_n$, obtenida al sumar sobre todos los caminos intermedios posibles. \\
+
+\noindent
+La sumatoria interna anidada representa algebraicamente la multiplicación iterada fila por columna de la matriz de transiciones $P$, dando lugar al elemento indexado de la matriz potencia $P^n$. Definimos matemáticamente dicho comportamiento como:
+\begin{equation*}
+    P^{(n)}(x_0, x_n) = P^n(x_0, x_n)
+\end{equation*}
+donde lo que se está haciendo es multiplicar la matriz de transición $P$ consigo misma $n$ veces, y luego tomar el elemento correspondiente a la fila $x_0$ y la columna $x_n$. Esto nos permite calcular la probabilidad de transición en $n$ pasos de manera eficiente utilizando álgebra lineal.
+
+\observacion{
+    Para ver la igualdad aplicada anteriormenten haremos este desarrollo paso a paso. Existe una equivalencia exacta entre el \textbf{Teorema de la Probabilidad Total} (sumar las rutas intermedias de una cadena) y la \textbf{multiplicación de matrices} (producto escalar de fila por columna). \\
+ 
+    \noindent
+    Sean dos matrices $A$ y $B$, su multiplicación para una celda específica se define mediante un índice compartido $k$:
+    \begin{equation*}
+        (A \times B)_{i,j} = \sum_{k} A(i,k) \cdot B(k,j)
+    \end{equation*}
+    Al calcular la probabilidad de transicionar de un estado inicial $x_0$ a un estado final $x_2$ en exactamente \textbf{2 pasos}, la teoría probabilística nos obliga a marginalizar sobre todos los estados intermedios posibles $x_1 \in S$:
+    \begin{equation*}
+        P^{(2)}(x_0, x_2) = \sum_{x_1 \in S} \underbrace{P(x_0, x_1)}_{\text{Fila } x_0 \text{ de } P} \cdot \underbrace{P(x_1, x_2)}_{\text{Columna } x_2 \text{ de } P}
+    \end{equation*}
+    Como el índice de la etapa intermedia $x_1$ ocupa la posición de columna en la primera matriz y de fila en la segunda, la estructura matemática es idéntica. Por lo tanto:
+    \begin{itemize}
+        \item Un sumatorio indexado ($\sum_{x_1}$) equivale a operar \textbf{un producto matricial} ($P \times P$).
+        \item Una sumatoria anidada de $n-1$ variables temporales ($\sum_{x_1} \dots \sum_{x_{n-1}}$) equivale a la \textbf{multiplicación iterada} de la matriz por sí misma, resultando directamente en la matriz potencia $P^n$.
+    \end{itemize}
+}
+
+\section{Master Equation}
+\begin{definicion}
+    Para una cadena de Markov homogénea en el tiempo, la probabilidad de transicionar desde un estado $x$ a un estado $y$ en exactamente dos pasos se calcula sumando sobre todos los estados intermedios posibles $z \in S$:
+    \begin{equation*}
+        P^{(2)}(x, y) = \sum_{z \in S} P(x, z) \cdot P(z, y)
+    \end{equation*}
+    lo que se llama \tbf{Chapman-Kolmogorov equation} para $n=2$. Para el caso general $n$, tenemos 
+    \begin{equation*}
+        P^{(n)}(x,y) = \sum_{i_1, \dots, i_{n-1} \in S} P(x, i_1) P(i_1, i_2) \dots P(i_{n-1}, y)
+    \end{equation*}
+\end{definicion}
+
+
+\begin{teo}[Chapman-Kolmogorov Equation]
+    Sea $\{X_n\}_{n \ge 0}$ una cadena de Markov homogénea en el tiempo. Para cualesquiera pasos temporales $n, m \ge 1$ y estados $x, y \in S$, la probabilidad de transicionar de $x$ a $y$ en $n+m$ pasos satisface
+    $$P^{(n+m)}(x, y) = \sum_{z \in S} P^{(n)}(x, z) \cdot P^{(m)}(z, y)$$
+\begin{proof}
+    Para demostrarlo, debes apoyarnos firmemente en el Teorema de la Probabilidad Total condicionando en un ``tiempo intermedio'' exacto (el paso $n$).
+    \begin{description}
+        \item[\tbf{Paso 1.}] Plantear el objetivo analítico. Queremos calcular $P(X_{n+m} = y \mid X_0 = x)$.
+        \item[\tbf{Paso 2.}] Introducir el estado intermedio. Para llegar a $y$ en el paso $n+m$, el sistema obligatoriamente tuvo que pasar por algún estado $z$ en el paso intermedio $n$. Aplicas el Teorema de la Probabilidad Total sumando sobre todo el espacio de estados $S$
+        $$P(X_{n+m} = y \mid X_0 = x) = \sum_{z \in S} P(X_{n+m} = y, X_n = z \mid X_0 = x)$$
+        \item[\tbf{Paso 3.}] Separar por la Regla de la Cadena, es decir, usando
+        \begin{equation*}
+            P(A\cap B) = P(A \mid B) \cdot P(B )
+        \end{equation*}
+        entonces abrimos la probabilidad conjunta del sumatorio
+        $$\sum_{z \in S} P(X_{n+m} = y, X_n = z \mid X_0 = x)= \sum_{z \in S} P(X_{n+m} = y \mid X_n = z, X_0 = x) \cdot P(X_n = z \mid X_0 = x)$$
+        \item[\tbf{Paso 4.}] Por la Propiedad de Markov, el futuro ($n+m$) solo depende del presente ($n$), por lo que el pasado ($X_0 = x$) se olvida en el primer factor
+        $$P(X_{n+m} = y \mid X_n = z, X_0 = x) = P(X_{n+m} = y \mid X_n = z)$$
+        Por Homogeneidad temporal, avanzar $m$ pasos desde el instante $n$ al $n+m$ es exactamente lo mismo que avanzar $m$ pasos desde el cero
+        $$P(X_{n+m} = y \mid X_n = z) = P^{(m)}(z, y)$$
+        \item[\tbf{Paso 5.}] Sustituyendo los términos simplificados, llegas directamente a la igualdad del teorema
+        $$P^{(n+m)}(x, y) = \sum_{z \in S} P^{(m)}(z, y) \cdot P^{(n)}(x, z)$$
+    \end{description}
+\end{proof}
+\end{teo}
+
+
+\begin{definicion}
+    Decimos que un vector de probabilidad $\pi = (\pi(x))_{x \in S}$ constituye una \textbf{distribución invariante} (o estacionaria) de la cadena si actúa como un punto fijo bajo el operador de transición, lo que significa que no sufre variaciones con el transcurso del tiempo:
+    \begin{equation*}
+        \pi P=\pi \quad \equiv \quad \pi(y) = \sum_{x \in S} \pi(x) P(x, y) \quad \forall y \in S
+    \end{equation*}
+    donde $P$ es la matriz de transición de la cadena de Markov en el caso discreto, y en el caso continuo sería $Q$.
+\end{definicion}
+
+
+
+
+\subsection{Global Balance vs Detailed Balance}
+\noindent
+\begin{definicion}
+    Para cualquier cadena de Markov, si existe una distribución invariante $\pi$, esta satisface de forma general la ecuación de \textbf{global balance}, lo que significa que el cambio neto de probabilidad en el equilibrio es nulo
+    \begin{equation*}
+        0 = \sum_{x \in S} \big[ P(x, j)\pi(x) - P(j, x)\pi(j) \big] \quad \forall j \in S
+    \end{equation*}
+    Una condición mucho más restrictiva (y sumamente útil en algoritmos de Data Science como MCMC) es el principio de \textbf{detailed balance}. Si existe un vector de probabilidad $\pi$ tal que el flujo de probabilidad entre cada par de estados se equilibra de forma aislada y simétrica:
+    \begin{equation*}
+        P(x, j)\pi(x) = P(j, x)\pi(j) \quad \forall x, j \in S
+    \end{equation*}
+\end{definicion}
+
+\begin{definicion}
+    Una cadena de Markov se dice \textbf{reversible} si existe una distribución invariante $\pi$ que satisface la condición de detailed balance, dada por la ecuación:
+    \begin{equation*}
+        P(x, j)\pi(x) = P(j, x)\pi(j) \quad \forall x, j \in S
+    \end{equation*}
+    donde para cada par de estados $x, j \in S$, el flujo de probabilidad desde $x$ hacia $j$ es exactamente igual al flujo de probabilidad desde $j$ hacia $x$ cuando el sistema está en equilibrio.
+\end{definicion}
+
+\section{Ehrenfest Urn Model}
+
+\noindent 
+El Modelo de Ehrenfest es el ejemplo académico perfecto para evaluar si entiendes la diferencia entre \textbf{microestados} y \textbf{macroestados}, y cómo la \textbf{periodicidad} puede arruinar la convergencia de una cadena.
+
+\subsection{Configuración y Espacio de Microestados ($S_I$)}
+\begin{itemize}
+    \item \textbf{Concepto:} Describe la posición exacta e individual de cada una de las $n$ partículas mediante un vector binario (e.g., $101$ significa que las bolas 1 y 3 están a la izquierda y la 2 a la derecha).
+    \item \textbf{Tamaño del espacio:} Tiene exactamente $2^n$ estados posibles (para $n=3$, son $8$ estados).
+    \item \textbf{Distribución invariante $\pi_I$:} Es estrictamente \textbf{uniforme} debido a la simetría del problema: 
+    $$\pi_I = \left(\frac{1}{2^n}, \dots, \frac{1}{2^n}\right)$$
+\end{itemize}
+
+\subsection{Cadena de Macroestados o de Conteo ($S_S$)}
+\begin{itemize}
+    \item \textbf{Concepto:} Simplifica el sistema fijándose únicamente en una variable agregada: $Y_1 = \sum X_i$ (el número total de bolas en el compartimento izquierdo, $L$).
+    \item \textbf{Tamaño del espacio:} Se reduce drásticamente a solo $n+1$ estados (de $0$ a $n$).
+    \item \textbf{Leyes de Transición (¡Aprender de memoria!):} Estando en el estado $k$:
+    \begin{itemize}
+        \item Probabilidad de Muerte ($k \longrightarrow k-1$): $\frac{k}{n}$ \textit{(eliges una bola de la izquierda para moverla a la derecha)}.
+        \item Probabilidad de Nacimiento ($k \longrightarrow k+1$): $\frac{n-k}{n}$ \textit{(eliges una bola de la derecha para moverla a la izquierda)}.
+        \item Probabilidad de Permanencia ($k \longrightarrow k$): $0$ \textit{(en el modelo estándar obligatorio cambia una bola)}.
+    \end{itemize}
+    \item \textbf{Distribución estacionaria $\pi_S$:} Sigue una forma \textbf{Binomial}. Para $n=3$ es $\pi_S = \left(\frac{1}{8}, \frac{3}{8}, \frac{3}{8}, \frac{1}{8}\right)$.
+    \item \textbf{El Gran Problema Analítico (Pregunta de examen):} Esta cadena de conteo es irreducible pero \textbf{PERIÓDICA (Periodo $d=2$)}. Al no poder quedarse quieta en un paso ($P(x,x)=0$), la cadena oscila eternamente entre estados pares e impares. Por lo tanto, \textbf{NO convergeasintóticamente} (falla la hipótesis de aperiodicidad del Teorema de Convergencia Estacionaria).
+\end{itemize}
+
+\subsection{Definición de Birth-Death Chains}
+\begin{itemize}
+    \item Es una cadena de Markov en un retículo entero donde las únicas transiciones permitidas con probabilidad mayor que cero en un paso son hacia sus vecinos inmediatos ($k-1$ o $k+1$) o quedarse en el mismo estado ($k$). Los saltos de largo alcance están prohibidos. El modelo de Ehrenfest pertenece a esta familia.
+\end{itemize}
+
+\subsection{La Solución: Versión Perezosa ($\alpha$-retrasada)}
+\begin{itemize}
+    \item \textbf{Objetivo fundamental:} \textbf{Romper la periodicidad} para forzar la convergencia al equilibrio.
+    \item \textbf{Mecanismo:} Se introduce un parámetro de pereza $\alpha \in (0,1)$. En cada paso, con probabilidad $\alpha$ la cadena se congela ($k \to k$), y con probabilidad $1-\alpha$ se mueve una partícula al azar usando las leyes normales.
+    \item \textbf{Consecuencia analítica (El argumento ganador):} Al añadir $\alpha$ en la diagonal principal, consigues que $P(x,x) = \alpha > 0$, lo que destruye los ciclos rígidos de oscilación par/impar y vuelve a la cadena \textbf{APERIÓDICA}.
+    \item \textbf{Conclusión asintótica:} Al ser ahora simultáneamente \textbf{irreducible y aperiódica}, el Teorema Ergódico/Estacionario se cumple con rigor. Al elevar la matriz estocástica perezosa a una potencia $n \to \infty$, el sistema olvida por completo el estado inicial y todas sus filas convergen exactamente al vector de equilibrio binomial $\pi_S$.
+\end{itemize}
+
+\section{Clasificación Topológica de Cadenas de Markov}
+
+
+La estructura analítica de un espacio de estados $S$ se clasifica según la probabilidad de retorno a largo plazo:
+\begin{itemize}
+    \item \textbf{Estado Transitorio:} existe una probabilidad estrictamente positiva de que, una vez abandonado el estado, el proceso jamás regrese a él.
+    \item \textbf{Estado Recurrente:} el proceso regresa al estado con probabilidad igual a la unidad de forma casi segura.
+    \item \textbf{Conjunto Absorbente / Cerrado:} un subconjunto de estados del cual la cadena es incapaz de escapar una vez que ha ingresado en él.
+\end{itemize}
+
+\begin{definicion}
+    El \tbf{fenómeno de metaestabilidad} se refiere a la situación en la que un sistema estocástico parece estar en un estado estable durante un período prolongado, pero eventualmente transiciona a otro estado estable debido a perturbaciones pequeñas o aleatorias. Viene dado por una cadena con dos trampas absorbentes aisladas cuya matriz es la Identidad ($I$), donde introducimos una perturbación infinitesimal $\varepsilon > 0$ (donde $\varepsilon \ll 1$, por ejemplo $\varepsilon = 10^{-20}$), los muros puros se rompen:
+    \[
+    \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix} \quad \xrightarrow{\quad \text{Perturbación} \quad} \quad \begin{pmatrix} 1-\varepsilon & \varepsilon \\ \varepsilon & 1-\varepsilon \end{pmatrix}
+    \]
+\end{definicion}
+
+\begin{observacion}
+    Este fenómeno recibe el nombre de metaestabilidad, pues el sistema parece estable y congelado localmente, pero macroscópicamente evoluciona de manera lenta hacia una distribución uniforme.
+\end{observacion}
+El comportamiento en este fenómeno se ve de dos formas
+
+\begin{itemize}
+    \item \tbf{Comportamiento a corto plazo:} Si el proceso inicia en $A$, se mantendrá atrapado en $A$ durante un tiempo extremadamente largo ($1-\varepsilon \approx 1$). Localmente parece una cadena absorbente estática.
+    \item \tbf{Comportamiento asintótico (Long-run):} Al ser una matriz simétrica perturbada, los estados se comunican y la cadena se vuelve \textbf{irreducible}. A largo plazo ($n \to \infty$), el sistema alcanzará un equilibrio perfecto y balanceado:
+    \[ 
+    \pi_A = \pi_B = \frac{1}{2} 
+    \]
+\end{itemize}
+
+\section{Class Structures}
+
+\begin{definicion}[Accesibilidad o Conducción]
+    Se dice que el estado $i$ \textbf{conduce al} estado $j$ (notado como $i \to j$) si existe una probabilidad estrictamente positiva de visitar el estado $j$ en algún momento, dado que el sistema comenzó en el estado $i$:
+    \[
+    P(\exists n \geq 0 : X_n = j \mid X_0 = i) > 0
+    \]
+\end{definicion}
+
+\begin{definicion}[Comunicación]
+Se dice que el estado $i$ \textbf{se comunica con} el estado $j$ (notado como $i \longleftrightarrow j$) si se cumplen simultáneamente que $i \to j$ y $j \to i$.
+\end{definicion}
+
+\begin{teo}
+    Para dos estados distintos $i \neq j$, las siguientes afirmaciones son equivalentes:
+    \begin{enumerate}
+        \item $i \to j$.
+        \item Existen estados intermedios $i_1, i_2, \dots, i_{n-1}$ tales que $P_{i i_1} P_{i_1 i_2} \dots P_{i_{n-1} j} > 0$.
+        \item $P_{ij}^{(n)} > 0$ para algún $n \geq 1$.
+    \end{enumerate}
+\end{teo}
+
+
+\begin{prop}
+    La relación de comunicación ``$\longleftrightarrow$'' es una \textbf{relación de equivalencia} sobre el espacio de estados $S$, de cadenas de Márkov.
+
+\begin{proof}
+    Debemos verificar tres propiedades fundamentales:
+    \begin{enumerate}
+        \item \textbf{Reflexiva ($i \longleftrightarrow i$):} Por definición, en el paso $n=0$, 
+        $$P_{ii}^{(0)} = P(X_0 = i \mid X_0 = i) = 1 > 0$$ 
+        por lo que $i \to i$.
+        \item \textbf{Simétrica ($i \longleftrightarrow j \implies j \longleftrightarrow i$):} Se deriva directamente de la conmutatividad de la conjunción lógica en la definición del operador ($\longleftrightarrow$), veámoslo
+        \begin{equation*}
+            i \longleftrightarrow j \iff (i \to j) \land (j \to i) \iff (j \to i) \land (i \to j) \iff j \longleftrightarrow i
+        \end{equation*}
+        \item \textbf{Transitiva ($i \longleftrightarrow j \land j \longleftrightarrow k \implies i \longleftrightarrow k$):} 
+        Si $i \to j$ y $j \to k$, existen $n, m \geq 0$ tales que $P_{ij}^{(n)} > 0$ y $P_{jk}^{(m)} > 0$. Por Chapman-Kolmogorov:
+        \[
+        P_{ik}^{(n+m)} = \sum_{l \in S} P_{il}^{(n)}P_{lk}^{(m)} \geq P_{ij}^{(n)}P_{jk}^{(m)} > 0 \implies i \to k
+        \]
+        Siguiendo el mismo argumento de forma inversa para $k \to j \to i$, se obtiene $k \to i$. Por lo tanto, $i \longleftrightarrow k$.
+    \end{enumerate}
+\end{proof}
+\end{prop}
+
+
+\begin{observacion}
+    Como toda relación de equivalencia, la \underline{comunicación} divide al conjunto $S$ en clases de equivalencia mutuamente disjuntas llamadas \textbf{clases de comunicación}. Si todos los estados pertenecen a una única clase, la cadena se denomina \textbf{irreducible}.
+\end{observacion}
+
+\begin{definicion}[Clase Cerrada]
+    Una clase de comunicación $C$ se dice que es \textbf{cerrada} si para todo estado $i \in C$, la condición $i \to j$ implica obligatoriamente que $j \in C$. Es decir, una vez que el proceso entra en una clase cerrada, no puede salir de ella.
+\end{definicion}
+
+\begin{definicion}[Estado Absorbente]
+    Un estado $i \in S$ es \textbf{absorbente} si el subconjunto unipersonal $\{i\}$ forma por sí mismo una clase cerrada. Esto equivale a decir que $P_{ii} = 1$.
+\end{definicion}
+
+\begin{definicion}[Irreducibilidad]
+    Una cadena de Markov se denomina \textbf{irreducible} si el espacio de estados total $S$ está constituido por una única clase de comunicación común. En otras palabras, todos los estados de la cadena se comunican mutuamente entre sí.
+\end{definicion}
+
+\subsection{Hitting Time \& Absorption Probabilities}
+\noindent
+Consideremos una cadena de Markov en tiempo discreto $(X_n)_{n \geq 0}$ con matriz de probabilidad de transición $P$ que opera sobre el espacio de estados $S$.
+
+\begin{definicion}[Tiempo de Llegada / Hitting Time]
+    El \textbf{tiempo de primera llegada} a un subconjunto de estados $A \subseteq S$ es una variable aleatoria $H^A: \Omega \to \{0, 1, 2, \dots\} \cup \{\infty\}$ que cuantifica el número mínimo de pasos necesarios para intersectar la región $A$:
+    \[ 
+    H^A(\omega) = \inf\{n \geq 0 : X_n(\omega) \in A\} 
+    \]
+    Bajo el convenio matemático estándar, si el conjunto es vacío, adoptamos que $\inf \emptyset = \infty$.
+\end{definicion}
+
+\begin{definicion}[Probabilidad de Llegada]
+    La \tbf{probabilidad de llegada} o \textbf{hitting probability} es la probabilidad de alcanzar el conjunto de estados $A$ en tiempo finito partiendo inicialmente desde un estado específico $i$ se define como:
+    \[ 
+    h_i^A = P_i(H^A < \infty) = P(H^A < \infty \mid X_0 = i) 
+    \]
+\end{definicion}
+
+\begin{observacion}
+    Si la región de destino $A$ se corresponde con una clase cerrada de la cadena de Markov, la métrica $h_i^A$ adopta el nombre específico de \textbf{probabilidad de absorción}.
+\end{observacion}
+
+\begin{definicion}[Distribución Impropia]
+    La variable aleatoria $H^A$ puede presentar una \tbf{distribución de probabilidad de carácter impropio} si existe una probabilidad residual no nula de no alcanzar nunca el conjunto objetivo $A$. En tal escenario, la suma sobre la trayectoria finita cumple:
+    \[
+    P_i(H^A < \infty) = \sum_{n=0}^{\infty} P_i(H^A = n) = \eta \leq 1
+    \]
+    De lo cual se deduce de forma inmediata la \tbf{probabilidad complementaria} para el horizonte infinito:
+    \[
+    P_i(H^A = \infty) = 1 - \eta
+    \]
+\end{definicion}
+
+\begin{definicion}[Tiempo Medio de Llegada]
+    El \textbf{tiempo esperado de llegada} al subconjunto $A$ partiendo desde el estado inicial $i$ viene dado por el valor esperado estadístico $E_i[H^A]$:
+    \[ 
+    k_i^A = E_i[H^A] = \sum_{n=0}^{\infty} n \, P_i(H^A = n) + \infty \cdot P_i(H^A = \infty) 
+    \]
+    donde si la probabilidad de no alcanzar el conjunto objetivo es nula ($P_i(H^A = \infty) = 0$), el término asintótico indeterminado desaparece de la ecuación de forma directa.
+\end{definicion}
+
+\subsubsection*{Interpretación Intuitiva de las Variables}
+\begin{itemize}
+    \item $h_i^A$: Cuantifica la probabilidad pura de lograr alcanzar el conjunto $A$ en algún punto de la historia futura.
+    \item $k_i^A$: Modela el número esperado de pasos temporales que el sistema consumirá antes de tocar por primera vez la región $A$.
+\end{itemize}
+
+
+\begin{teo}
+    El vector de probabilidades de primera llegada $h^A = (h_i^A)_{i \in S}$ es la solución no negativa mínima para el sistema de ecuaciones lineales:
+    \[
+    \begin{cases} 
+        h_i^A = 1 & \text{para } i \in A \\ 
+        h_i^A = \sum\limits_{j \in S} P_{ij} h_j^A & \text{para } i \notin A 
+    \end{cases} \qquad (1)
+    \]
+    Minimalidad significa que si $x = (x_i)_{i \in S}$ es otra solución con $x_i \geq 0 \ \forall i$, entonces $x_i \geq h_i^A \ \forall i$.
+\begin{proof}
+    Analizaremos el comportamiento dinámico del sistema dividiéndolo según la naturaleza del estado inicial respecto al conjunto objetivo $A$:
+    \begin{itemize}
+        \item Si $X_0 = i$ con $i \in A$, entonces por definición el tiempo de llegada es inmediato, $H^A = 0$, por lo que 
+        $$h_i^A = P_i(H^A < \infty) = 1$$
+        \item Si $X_0 = i$ con $i \notin A$, entonces necesariamente el tiempo de primera llegada cumple que $H^A \geq 1$. Utilizando la propiedad de Markov espacial (pérdida de memoria) y la homogeneidad en el tiempo (la probabilidad pasar de $i$ a $j$ es la misma independientemente del instante $n$), evaluamos el condicionamiento al primer paso de la trayectoria:
+        \[ 
+        P(H^A < \infty \mid X_0 = i, X_1 = j) = P(H^A < \infty \mid X_1 = j) = h_j^A
+        \]
+        \noindent
+        Aplicando el teorema de la probabilidad total mediante el condicionamiento exhaustivo sobre el primer estado visitado $X_1$, obtenemos:
+        \begin{align*}
+            h_i^A = P_i(H^A < \infty) &= \sum_{j \in S} P_i(H^A < \infty, X_1 = j) \\
+            &\overset{(*)}{=} \sum_{j \in S} P(H^A < \infty \mid X_0 = i, X_1 = j) \, P(X_1 = j \mid X_0 = i) \\
+            &= \sum_{j \in S} (P_{ij} \, h_j^A) = \sum_{j \in S} P_{ij} h_j^A
+        \end{align*}
+        donde en $(*)$ se ha aplicado $P(A \cap B) = P(A \mid B)P(B)$.
+    \end{itemize}
+    Esto demuestra que el vector real de probabilidades de llegada $h^A$ satisface formalmente el sistema lineal $(1)$. \\
+
+    \noindent
+    Demostraremos ahora la \underline{minimalidad}. Sea $x = (x_i)_{i \in S}$ un vector que representa cualquier solución no negativa arbitraria del sistema $(1)$. Evaluamos de igual forma por casos:
+    \begin{itemize}
+        \item Si $i \in A$, por diseño del sistema lineal se cumple de forma directa que $x_i = 1 = h_i^A$.
+        \item Si $i \notin A$, la ecuación correspondiente nos permite descomponer el sumatorio sobre el espacio de estados separando la región objetivo $A$ de su complemento:
+        \[
+        x_i = \sum_{j \in S} P_{ij} x_j = \sum_{j \in A} P_{ij} x_j + \sum_{j \notin A} P_{ij} x_j
+        \]
+        Sustituyendo el valor fijo $x_j = 1$ para $j \in A$, y reconociendo que $\sum\limits_{j \in A} P_{ij} = P_i(X_1 \in A)$, el término se reescribe como:
+        \[
+        x_i = P_i(X_1 \in A) + \sum_{j \notin A} P_{ij} x_j
+        \]
+    \end{itemize}
+    Procedemos a expandir la ecuación de forma iterativa sustituyendo la estructura analógica para el término no acotado $x_j$ dentro del sumatorio complementario:
+    \[
+    x_i = P_i(X_1 \in A) + \sum_{j \notin A} P_{ij} \left( P_j(X_1 \in A) + \sum_{k \notin A} P_{jk} x_k \right)
+    \]
+    Expandiendo los productos e identificando las probabilidades de transición conjuntas mediante la propiedad de Markov, obtenemos:
+    \[
+    x_i = P_i(X_1 \in A) + P_i(X_1 \notin A, X_2 \in A) + \sum_{j \notin A} \sum_{k \notin A} P_{ij} P_{jk} \, x_k
+    \]
+    donde para el término sumatorio del medio, hemos usado que 
+    $$ P_j(X_1 \in A) = P(X_2 \in A \mid X_1 = j) $$
+    gracias a aplicar la homogeneidad del tiempo, es decir, es lo mismo partir de $j$ (instante $0$) y tener en el instante $1$ un estado en $A$, a estar en el instante $1$ con estado $j$ y que el instante siguiente $2$ caiga en un estado de $A$. \\
+
+    \noindent
+    Al reiterar este procedimiento inductivo un número finito $m$ de pasos, la expresión adopta la siguiente forma generalizada:
+    \begin{align*}
+        x_i &= P_i(X_1 \in A) + P_i(X_1 \notin A, X_2 \in A) + \dots \\
+        &\quad + P_i(X_1 \notin A, \dots, X_{m-1} \notin A, X_m \in A) + \sum_{j_1 \notin A} \dots \sum_{j_m \notin A} P_{i j_1} \dots P_{j_{m-1} j_m} x_{j_m}
+    \end{align*}
+    Reconociendo que la suma finita de probabilidades de trayectorias truncadas modela exactamente la probabilidad acumulada de alcanzar el conjunto $A$ en el paso $m$ o antes, simplificamos la expresión como:
+    \[
+    x_i = P_i(H^A \leq m) + \sum_{j_1 \notin A} \dots \sum_{j_m \notin A} P_{i j_1} P_{j_1 j_2} \dots P_{j_{m-1} j_m} x_{j_m}
+    \]
+    Dado que el vector de soluciones alternativo es estrictamente no negativo por hipótesis ($x \geq 0$) y las probabilidades de transición $P_{kl}$ son no negativas, el término del sumatorio múltiple residual es mayor o igual a cero. Por lo tanto, podemos establecer la siguiente desigualdad válida para cualquier entero $m$:
+    \[
+    x_i \geq P_i(H^A \leq m) \quad \forall m \geq 1
+    \]
+    Tomando el límite matemático cuando el horizonte de pasos tiende a infinito en ambos lados de la desigualdad, y aplicando la propiedad de continuidad de la medida de probabilidad para eventos monótonos crecientes, concluimos formalmente que:
+    \[
+    x_i \geq \lim_{m \to \infty} P_i(H^A \leq m) = P_i(H^A < \infty) = h_i^A
+    \]
+    Por lo tanto, queda demostrado que $x_i \geq h_i^A$ para todo estado $i \in S$, lo que confirma que el vector real $h^A$ constituye la solución mínima no negativa del sistema.
+\end{proof}
+\end{teo}
+
+
+\begin{teo}
+    El vector de tiempos esperados de primera llegada $k^A = (k_i^A)_{i \in S}$ es la solución no negativa mínima para el sistema de ecuaciones lineales:
+    \[
+    \begin{cases} 
+        k_i^A = 0 & \text{para } i \in A \\ 
+        k_i^A = 1 + \sum\limits_{j \notin A} P_{ij} k_j^A & \text{para } i \notin A 
+    \end{cases} \qquad (2)
+    \]
+    Minimalidad significa que si $x = (x_i)_{i \in S}$ es otra solución con $x_i \geq 0 \ \forall i$, then $x_i \geq k_i^A \ \forall i$.
+\end{teo}
+
+
+\subsection{Stopping Times \& Strong Markov Property}
+
+\begin{definicion}[Tiempo de Parada / Stopping Time]
+    Una variable aleatoria 
+    $$T: \Omega \rightarrow \{0, 1, 2, \dots\} \cup \{\infty\}$$ 
+    se denomina \textbf{tiempo de parada} si para cada instante finito $n \in \{0, 1, 2, \dots\}$, la ocurrencia o no del suceso $\{T = n\}$ está determinada única y exclusivamente por la trayectoria histórica acumulada del proceso hasta ese momento, es decir, depende únicamente de los valores de las variables aleatorias $X_0, X_1, \dots, X_n$.
+\end{definicion}
+
+
+\begin{teo}[Strong Markov Property]
+    Sea $(X_n)_{n \geq 0}$ una cadena de Markov homogénea con vector de probabilidad inicial $\lambda$ y matriz de probabilidad de transición $P$. Sea $T$ un tiempo de parada respecto a la filtración natural del proceso $(X_n)_{n \geq 0}$. \\
+
+    \noindent
+    Entonces, condicionado al suceso $\{T < \infty\}$ y $\{X_T = i\}$, el proceso reiniciado $(X_{T+n})_{n \geq 0}$ es una cadena de Markov autónoma con vector de probabilidad inicial $\delta_i = (0, \dots, 0, 1, 0, \dots, 0)$ y matriz de probabilidad de transición $P$. Además, el proceso futuro $(X_{T+n})_{n \geq 0}$ es estadísticamente independiente de la trayectoria histórica pasada $X_0, X_1, \dots, X_T$. \\
+\end{teo}
+
+\begin{observacion}
+    Si nos fijamos, lo que  nos dice el teorema es que si el proceso alcanza un estado $i$ en un tiempo de parada $T$, entonces el proceso reiniciado a partir de ese instante $T$ se comporta exactamente como si hubiéramos comenzado la cadena de Markov desde cero con estado inicial $i$. Es decir, el proceso ``olvida'' su historia pasada y se reinicia con las mismas probabilidades de transición que al inicio, lo que refleja la esencia de la propiedad de Markov fuerte. \\
+
+    \noindent
+    Esto realmente parece muy parecido a la \underline{propiedad de Markov normal}, que simplemente indica un instante de tiempo $n$ y dice que el futuro no está determinado por su pasado, pero la diferencia clave con la \underline{propiedad de Markov fuerte} es que entra en juego cuando el instante $T$ es una variable aleatoria, es decir, un instante que tú no sabes qué número será hasta que ves evolucionar la cadena, porque depende del propio comportamiento del proceso. \\
+
+    \noindent
+    En resumen, la propiedad normal solo sabe congelar el tiempo en números fijos ($n=5$). No sabe lidiar con un tiempo que ``flitrea'' y cambia de valor según la suerte de la cadena. El Teorema Fuerte de Markov es el que viene al rescate para demostrar matemáticamente que, incluso si el instante $T$ es una sorpresa aleatoria, la cadena también se reseteará en ese momento.
+\end{observacion}
+
+
+\begin{definicion}[Estados Recurrentes y Transitorios]
+Sea $(X_n)_{n \geq 0}$ una cadena de Markov que opera con vector de probabilidad inicial $\lambda$ y matriz de probabilidad de transición $P$. Se define la clasificación fundamental de un estado $i \in S$ según las siguientes condiciones asintóticas:
+\begin{itemize}
+    \item Se dice que el estado $i$ es \textbf{recurrente} si la probabilidad de regresar a él una cantidad infinita de veces es exactamente igual a la certeza:
+    \[
+    P_i(X_n = i \text{ infinitas veces}) = 1
+    \]
+    \item Se dice que el estado $i$ es \textbf{transitorio} si la probabilidad de regresar a él una cantidad infinita de veces es nula:
+    \[
+    P_i(X_n = i \text{ infinitas veces}) = 0
+    \]
+\end{itemize}
+
+\end{definicion}
+\noindent
+Recordemos que el \textbf{tiempo de primer paso} o llegada a un estado específico $i$ viene gobernado por la variable aleatoria: 
+\[
+T_i(\omega) = \inf\{n \geq 1 : X_n(\omega) = i\}, \qquad \text{bajo el convenio } \inf \emptyset = \infty
+\]
+
+\begin{definicion}[$n$-ésimo Tiempo de Paso e Intervalo de Recurrencia]
+    Para caracterizar las visitas sucesivas de la cadena, definimos el \tbf{$r$-ésimo tiempo de paso a un estado $i$}, denotado por $T_i^{(r)}$, de forma recursiva mediante las siguientes identidades:
+    \[
+    \begin{array}{l}
+        T_i^{(0)}(\omega) = 0 \\
+        T_i^{(1)}(\omega) = T_i(\omega) \\
+        \text{Para todo } r \geq 1: \quad T_i^{(r+1)}(\omega) = \inf\{n > T_i^{(r)} : X_n(\omega) = i\}
+    \end{array}
+    \]
+    De manera complementaria, el tiempo transcurrido entre dos visitas consecutivas al estado $i$ se define como el $n$-ésimo \textbf{intervalo de recurrencia} $S_i^{(n)}$, el cual adopta la estructura:
+    \[
+    S_i^{(n)} = \begin{cases} T_i^{(n)} - T_i^{(n-1)} & \text{si } T_i^{(n-1)} < \infty \\ 0 & \text{en otro caso} \end{cases}
+    \]
+\end{definicion}
+
+
+\begin{definicion}[Número de Visitas a un Estado]
+    Sea $(X_n)_{n \geq 0}$ una cadena de Markov. Se define la variable aleatoria discreta $V_i$, que cuantifica el \textbf{número total de visitas al estado $i$}, mediante la suma de funciones indicadoras a lo largo de toda la trayectoria infinita del proceso:
+    \[
+    V_i = \sum_{n=0}^{\infty} I_{\{X_n = i\}}
+    \]
+\end{definicion}
+
+
+\begin{observacion}
+    Haciendo uso de la linealidad del operador del valor esperado, el número esperado de visitas que realiza la cadena al estado $i$ equivale a la suma de las probabilidades marginales de ocupación:
+    \[
+    E(V_i) = E\left( \sum_{n=0}^{\infty} I_{\{X_n = i\}} \right) = \sum_{n=0}^{\infty} E\left[ I_{\{X_n = i\}} \right] = \sum_{n=0}^{\infty} P(X_n = i)
+    \]
+    Cuando asumimos que el proceso inicia con total certeza en dicho estado de referencia ($X_0 = i$), esta identidad se reduce de forma directa a la suma del término diagonal de las matrices de transición en $n$ pasos:
+    \[
+    E_i(V_i) = \sum_{n=0}^{\infty} P_i(X_n = i) = \sum_{n=0}^{\infty} P_{ii}^{(n)}
+    \]
+\end{observacion}
+
+\begin{definicion}[Probabilidad de Retorno]
+    La \textbf{probabilidad de retorno} $h_i$ se define como la medida de probabilidad de que la cadena regrese al estado de origen $i$ en algún instante de tiempo estrictamente positivo y finito:
+    \[
+    h_i = P_i(T_i < \infty)
+    \]
+    donde $T_i = \inf\{n \geq 1 : X_n = i\}$ representa el tiempo de primer paso al estado $i$.
+\end{definicion}
+
+
+\section{Estados Recurrentes y Transitorios}
+
+\begin{lema}
+    Para todo índice entero de visitas $r = 0, 1, 2, \dots$, la probabilidad de que la cadena de Markov visite el estado $i$ estrictamente más de $r$ veces, dado que inició en $i$, sigue una distribución geométrica de supervivencia gobernada por la potencia de la probabilidad de retorno:
+    \[
+    P_i(V_i > r) = h_i^r
+    \]
+    \textit{Nota aclaratoria estructural:} Recuerda que el $(r+1)$-ésimo tiempo absoluto de paso se construye de forma aditiva mediante $T_i^{(r+1)} = T_i^{(r)} + S_i^{(r+1)}$, donde $S_i^{(r+1)}$ representa el correspondiente intervalo de recurrencia relativo.
+\end{lema}
+
+\begin{teo}[Dicotomía Fundamental de los Estados]
+    Para todo estado $i \in S$ de una cadena de Markov, se satisface de forma estricta y excluyente una de las siguientes dos condiciones analíticas asintóticas:
+    \begin{enumerate}
+        \item Si $P_i(T_i < \infty) = 1$, entonces el estado $i$ es \textbf{recurrente} y la serie infinita de sus probabilidades de transición diagonal \textbf{DIVERGE}:
+        \[
+        \sum_{m=0}^{\infty} P_{ii}^{(m)} = \infty
+        \]
+        \item Si $P_i(T_i < \infty) < 1$, entonces el estado $i$ es \textbf{transitorio} y la serie infinita de sus probabilidades de transición diagonal \textbf{CONVERGE}:
+        \[
+        \sum_{m=0}^{\infty} P_{ii}^{(m)} < \infty
+        \]
+    \end{enumerate}
+
+\begin{proof}
+    Evaluamos de forma separada los dos comportamientos mutuamente excluyentes de la probabilidad de retorno $h_i = P_i(T_i < \infty)$:
+    \begin{itemize}
+        \item[\textbf{Caso i)}] Supongamos que la probabilidad de primer retorno es unitaria: $P_i(T_i < \infty) = 1$, lo que implica que $h_i = 1$. Evaluando el límite de la probabilidad acumulada de colas para el número de visitas obtenemos:
+        \[ 
+        P_i(V_i = \infty) = \lim_{r \to \infty} P_i(V_i > r) = \lim_{r \to \infty} h_i^r = \lim_{r \to \infty} 1^r = 1 
+        \]
+        Esto confirma que el estado $i$ es recurrente. Adicionalmente, aplicando la expansión lineal para el valor esperado de la variable, la serie de transiciones diagonales diverge:
+        \[
+        \sum_{m=0}^{\infty} P_{ii}^{(m)} = E_i(V_i) \overset{(*)}{=} \sum_{r=0}^{\infty} P_i(V_i > r) = \sum_{r=0}^{\infty} 1^r = \infty
+        \]
+        donde en $(*)$ hemos usado lo obtenido a continuación
+        \begin{align*}
+            E(X)& = \sum_{k=1}^{\infty} k \cdot P(X = k) \implies E(X) \overset{(**)}{=} \sum_{k=1}^{\infty} \left( \sum_{r=0}^{k-1} 1 \right) P(X = k) = \sum_{k=1}^{\infty} \sum_{r=0}^{k-1} P(X = k) \implies \\
+            & \implies E(X) = \sum_{r=0}^{\infty} \sum_{k=r+1}^{\infty} P(X = k)= \sum_{r=0}^{\infty} P(X > r)
+        \end{align*}
+        donde en $(**)$ hemos utilizado que $k=\sum\limits_{r=0}^{k-1} 1$.
+        
+        \item[\textbf{Caso ii)}] Supongamos ahora que la probabilidad de primer retorno es estrictamente fraccionaria: $P_i(T_i < \infty) < 1$, de manera que $h_i < 1$. Al calcular de igual forma el comportamiento límite de la sucesión geométrica se deduce que:
+        \[ 
+        P_i(V_i = \infty) = \lim_{r \to \infty} P_i(V_i > r) = \lim_{r \to \infty} h_i^r = 0 
+        \]
+        Lo que define al estado $i$ como transitorio. Evaluando la esperanza matemática del número de visitas a través del sumatorio de su función de supervivencia, recuperamos de forma exacta la suma de una serie geométrica convergente de razón $h_i$:
+        \[ 
+        \sum_{m=0}^{\infty} P_{ii}^{(m)} = E_i(V_i) = \sum_{r=0}^{\infty} P_i(V_i > r) = \sum_{r=0}^{\infty} h_i^r = \frac{1}{1 - h_i} < \infty 
+        \]
+        Al ser $h_i < 1$, el denominador es estrictamente positivo, asegurando la convergencia finita de la serie de probabilidades, completando formalmente la demostración del teorema.
+    \end{itemize}
+\end{proof}
+\end{teo}
+
+\begin{teo}
+    Toda clase de comunicación recurrente es matemáticamente cerrada.
+\end{teo}
+
+\begin{teo}
+    Toda clase de comunicación que sea cerrada y finita es recurrente.
+\end{teo}
+
+
+\begin{definicion}[Variables de Ocupación antes del Retorno]
+    Sea $(X_n)_{n \geq 0}$ una cadena de Markov que evoluciona sobre un espacio de estados arbitrario $E$. Fijado un estado de referencia base $k \in E$, definimos el tiempo de primera llegada como la variable aleatoria:
+    \[ 
+    T_k = \inf\{n \geq 1 : X_n = k\} \in \mathbb{N} \cup \{\infty\} 
+    \]
+    A partir de este hito temporal, se define la variable estadística $\gamma_i^{(k)}$ como el \textbf{número esperado de visitas realizadas al estado $i$ antes de que la cadena regrese por primera vez al estado original $k$}:
+    \[ 
+    \gamma_i = \gamma_i^{(k)} = E_k \left( \sum_{n=0}^{T_k - 1} I_{\{X_n = i\}} \right) \in [0, +\infty] 
+    \]
+    donde hemos usado que $E_k(\cdot) \equiv E(\cdot \mid X_0 = k) $.
+\end{definicion}
+
+
+
+\begin{teo}[Teorema de existencia general de medida invariante]
+    Para una cadena de Markov irreducible y recurrente que comienza su trayectoria en el estado de referencia $k \in E$, la medida del número esperado de visitas intermedias $\gamma = (\gamma_i)_{i \in E}$ cumple rigurosamente las siguientes tres propiedades estructurales:
+    \begin{enumerate}
+        \item $\gamma_k = \gamma_k^{(k)} = 1$
+        \item Para todo estado $i \in E$, el valor está estrictamente acotado: $0 < \gamma_i < \infty$.
+        \item El vector $\gamma = (\gamma_i)_{i \in E}$ constituye una \textbf{medida invariante} del sistema, es decir
+        \begin{equation*}
+            \gamma P =\gamma
+        \end{equation*}
+    \end{enumerate}
+
+\begin{proof}
+    Desglosamos la verificación analítica para cada uno de los tres apartados del teorema:
+    \begin{description}
+        \item[$(1)$] Por definición constructiva de la variable aleatoria de ocupación, evaluamos la esperanza de la suma indicadora partiendo del estado $k$:
+            \[ 
+            \gamma_k = E_k \left( \sum_{m=0}^{T_k - 1} I_{\{X_m = k\}} \right) 
+            \]
+            Dado que el proceso arranca con certeza en $k$ ($X_0 = k$), la primera indicadora toma el valor de 1. Para cualquier instante de tiempo posterior $1 \leq m \leq T_k - 1$, por la propia definición matemática del tiempo de primer retorno ($T_k = \inf\{n \geq 1 : X_n = k\}$), la cadena tiene estrictamente prohibido regresar a $k$. Por lo tanto, el sumatorio se reduce únicamente a su término inicial:
+            \[
+            \gamma_k = E_k(I_{\{X_0 = k\}}) = E_k(1) = 1
+            \]
+        \item[$(3)$] Para demostrar analíticamente que $\gamma$ es una medida invariante bajo la acción de la matriz de transición, debemos verificar el cumplimiento exacto de la ecuación algebraico-lineal de balance para cualquier estado de destino $j \in E$:
+            \[
+            \gamma_j = \sum_{i \in E} \gamma_i P_{ij}
+            \]
+            Dado que la hipótesis del teorema nos asegura que la cadena es recurrente, el tiempo de primer retorno ocurre de forma finita casi con total certeza ($T_k < \infty$ c.s.), lo que implica la identidad de fronteras $X_0 = k = X_{T_k}$. Mediante un desplazamiento cíclico del índice temporal, alteramos los extremos del sumatorio interior:
+            \[
+            \gamma_j = E_k \left( \sum_{m=0}^{T_k - 1} I_{\{X_m = j\}} \right) 
+            = E_k \left( \sum_{m=1}^{T_k} I_{\{X_m = j\}} \right) 
+            \]
+            Extendiendo el sumatorio formalmente hacia el horizonte infinito mediante la introducción de la condición indicadora $\{m \leq T_k\}$ y explotando la linealidad del operador valor esperado, desarrollamos:
+            \[
+            = E_k \left( \sum_{m=1}^{\infty} I_{\{X_m = j, \, m \leq T_k\}} \right) 
+            = \sum_{m=1}^{\infty} E_k \left( I_{\{X_m = j, \, m \leq T_k\}} \right) 
+            = \sum_{m=1}^{\infty} P_k (X_m = j, \, m \leq T_k)
+            \]
+            Aplicamos el Teorema de la Probabilidad Total introduciendo una partición exhaustiva sobre el espacio de estados intermedios visitados en el paso temporal inmediatamente anterior $X_{m-1} = i$, pues si sumamos la probabilidad de transición desde todos los estados posibles $i \in E$, obtenemos la probabilidad total de alcanzar el estado $j$ en el paso $m$
+            \[
+            = \sum_{i \in E} \sum_{m=1}^{\infty} P_k (X_m = j, \, X_{m-1} = i, \, T_k \geq m)
+            \]
+            Invocando la \textbf{Propiedad de Markov} ordinaria, el comportamiento dinámico del paso $m$ se desvincula de las restricciones históricas del pasado acumuladas en el evento $\{T_k \geq m\}$, es decir, aplicando esto en $(**)$ y la probabilidad condicionada en $(*)$ tenemos
+
+            \begin{align*}
+                P_k (X_m = j, \, X_{m-1} = i, \, T_k \geq m) &\overset{(*)}{=} P_k (X_m = j \mid X_{m-1} = i, \, T_k \geq m) \, P_k (X_{m-1} = i, \, T_k \geq m) =\\
+                &\overset{(**)}{=} P_k (X_m = j \mid X_{m-1} = i) \, P_k (X_{m-1} = i, \, T_k \geq m)
+            \end{align*}
+            y aplicando la homogeneidad temporal tenemos
+            \[
+            \gamma_j=\sum_{i \in E} \sum_{m=1}^{\infty} P_{ij} \, P_k (X_{m-1} = i, \, T_k \geq m)
+            \]
+            Efectuamos un cambio de variable elemental sobre el índice temporal de la serie interior fijando $m' = m - 1$:
+            \[
+            = \sum_{i \in E} \sum_{m'=0}^{\infty} P_{ij} \, P_k (X_{m'} = i, \, T_k \geq m' + 1)
+            \]
+            Restaurando la variable indicadora dentro de la esperanza matemática y traduciendo la condición de cota superior $\{T_k \geq m + 1\}$ como $\{T_k - 1 \geq m\}$, la igualdad de balance se consolida al reagrupar los términos:
+            \[
+            = \sum_{i \in E} \sum_{m=0}^{\infty} P_{ij} \, E_k \left( I_{\{X_m = i, \, T_k \geq m + 1\}} \right) 
+            = \sum_{i \in E} P_{ij} \, \underbrace{E_k \left( \sum_{m=0}^{T_k - 1} I_{\{X_m = i\}} \right)}_{\gamma_i} 
+            = \sum_{i \in E} \gamma_i P_{ij}
+            \]
+            Por lo tanto, queda formalmente demostrado que el vector $\gamma$ constituye una medida invariante de la cadena.
+        \item[$(2)$] Debido a la hipótesis de irreducibilidad del sistema, sabemos que todos los estados se comunican libremente entre sí. Por consiguiente, fijado un estado arbitrario $i \in E$, se garantiza de forma deductiva la existencia de dos horizontes de pasos finitos $m, n \geq 0$ tales que las probabilidades de transición en múltiples pasos satisfacen que $P_{ki}^{(m)} > 0$ y $P_{ik}^{(n)} > 0$.
+
+            Haciendo uso de la propiedad de invarianza de la medida demostrada en el apartado anterior ($\gamma = \gamma P^m$), desglosamos el sumatorio matricial para aislar la contribución del estado de referencia $k$:
+            \[ 
+            \gamma_i = \sum_{j \in E} \gamma_j P_{ji}^{(m)} \geq \gamma_k P_{ki}^{(m)} 
+            \]
+            Sustituyendo el valor unitario de la frontera obtenido en el primer apartado ($\gamma_k = 1$), establecemos la acotación inferior estricta:
+            \[
+            \gamma_i \geq (1) \cdot P_{ki}^{(m)} = P_{ki}^{(m)} > 0
+            \]
+            Para verificar la cota superior, evaluamos de igual forma la invarianza de la medida sobre el estado $k$ tras un horizonte de $n$ pasos ($\gamma = \gamma P^n$), aislando en esta ocasión el aporte del estado intermedio $i$:
+            \[ 
+            1 = \gamma_k = \sum_{j \in E} \gamma_j P_{jk}^{(n)} \geq \gamma_i P_{ik}^{(n)} 
+            \]
+            Despejando el término de interés, dado que la intensidad de transición es estrictamente positiva ($P_{ik}^{(n)} > 0$), la componente queda confinada superiormente por un valor real real finito:
+            \[ 
+            \gamma_i \leq \frac{1}{P_{ik}^{(n)}} < \infty 
+            \]
+            Al haber demostrado que la componente es estrictamente positiva y finita para cualquier estado del espacio, se completa la demostración de todas las tesis del teorema.
+    \end{description} 
+\end{proof}
+\end{teo}
+
+\begin{teo}[Teorema del núcleo fundamental de medida invariante]
+    Sea $(X_n)_{n \geq 0}$ una cadena de Markov irreducible y recurrente que opera sobre un espacio de estados discreto $E$. Fijemos un estado arbitrario de referencia $k \in E$. Entonces, cualquier medida invariante $\lambda = (\lambda_j)_{j \in E}$ asociada al sistema es única salvo por un factor de proporcionalidad constante. Es decir, se puede escribir de forma unívoca como:
+    \[ 
+    \lambda_j = c \gamma_j^{(k)} \qquad \forall j \in E 
+    \]
+    donde la constante multiplicativa viene dada por la masa del estado de referencia, $c = \lambda_k$, la cual es estrictamente independiente del estado de destino $j$.
+\end{teo}
+
+
+\begin{observacion}
+    Como consecuencia directa de este teorema, se establece que una cadena de Markov que es simultáneamente irreducible y recurrente posee una \textbf{única medida invariante} salvo por un factor de escala constante multiplicativo. Dependiendo de las propiedades de sumabilidad de la trayectoria, esta medida invariante única puede adoptar una masa total finita ($\sum \lambda_i < \infty$, caso recurrente positivo) o bien una masa total infinita ($\sum \lambda_i = \infty$, caso recurrente nulo). \\
+\end{observacion}
+
+
+\begin{coro}
+    Toda cadena de Markov que sea irreducible y opere sobre un espacio de estados finito posee una \textbf{única medida de probabilidad invariante}.
+\begin{proof}
+    Desglosamos la verificación analítica en dos fases fundamentales: la construcción de una medida normalizada (de probabilidad) y la demostración formal de su unicidad.
+    \begin{description}
+        \item[\tbf{Fase 1.}] Por resultados previos del temario, sabemos que toda cadena de Markov que es simultáneamente cerrada (por ser irreducible) y finita cumple de forma obligatoria con la condición de ser \textbf{recurrente}.
+
+    Al haber demostrado la recurrencia, podemos invocar el teorema de existencia general, el cual nos garantiza que existe una medida invariante $\lambda = (\lambda_i)_{i \in E}$ que es única salvo por una constante multiplicativa escalar. Además, sabemos que todos sus componentes son estrictamente positivos y reales ($\lambda_i > 0$).
+
+    \begin{enumerate}
+        \item \textbf{Finitud de la masa total:} 
+        Dado que el espacio de estados $E$ es estrictamente \textbf{finito}, podemos asegurar con total rigor matemático que la suma de todos los componentes de la medida $\lambda$ no diverge. Definimos esta masa total como la constante $M$:
+        \[
+        M = \sum_{i \in E} \lambda_i < \infty
+        \]
+        Si el espacio $E$ fuese infinito, esta suma podría divergir a infinito, impidiendo el proceso de normalización.
+        
+        \item \textbf{Construcción de la medida de probabilidad ($\lambda'$):}
+        Para transformar nuestra medida general $\lambda$ en una medida de probabilidad (cuya suma total sea exactamente $1$), procedemos a dividir cada componente individual por la masa total $M$. Definimos algebraicamente este nuevo vector como $\lambda'$ (``lambda prima''):
+        \[
+        \lambda'_i = \frac{\lambda_i}{M} \quad \forall i \in E
+        \]
+        
+        \item \textbf{Verificación del axioma de probabilidad:}
+        Haciendo uso de la linealidad del operador sumatorio, verificamos analíticamente que $\lambda'$ distribuye una masa de probabilidad unitaria sobre todo el espacio:
+        \[
+        \sum_{i \in E} \lambda'_i = \sum_{i \in E} \frac{\lambda_i}{M} = \frac{1}{M} \sum_{i \in E} \lambda_i = \frac{1}{M} \cdot M = 1
+        \]
+        Dado que $\lambda P = \lambda$, por linealidad se cumple inmediatamente que $\lambda' P = \lambda'$, consolidando a $\lambda'$ como una medida de probabilidad invariante legítima.
+    \end{enumerate}
+
+    \item[\tbf{Fase 2.}] Para demostrar que no puede existir otra medida de probabilidad invariante distinta, utilizaremos el método directo de reducción analítica por igualación de constantes. \\
+
+    \noindent
+    Supongamos hipotéticamente que existen dos medidas de probabilidad invariantes del sistema, a las que denominaremos $\nu'$ y $\nu''$. Fijemos un estado arbitrario de referencia $k \in E$.
+
+    \begin{enumerate}
+        \item \textbf{Relación con el vector de visitas esperadas ($\gamma^{(k)}$):}
+        Por el teorema del núcleo fundamental, cualquier medida invariante del sistema debe ser un múltiplo escalar del vector fundamental de visitas intermedias esperado $\gamma^{(k)} = (\gamma_i^{(k)})_{i \in E}$. Consiguientemente, deben existir dos constantes reales estrictamente positivas $c'$ y $c''$ tales que:
+        \[
+        \nu'_i = c' \gamma_i^{(k)} \quad \text{y} \quad \nu''_i = c'' \gamma_i^{(k)} \quad \forall i \in E
+        \]
+        
+        \item \textbf{Aplicación de la condición de normalización:}
+        Como por hipótesis tanto $\nu'$ como $\nu''$ son medidas de probabilidad, la suma de sus componentes sobre el espacio exhaustivo $E$ debe ser idéntica a la unidad. Expandiendo ambas series mediante sustitución, obtenemos:
+        \begin{align*}
+            1 &= \sum_{i \in E} \nu'_i = \sum_{i \in E} c' \gamma_i^{(k)} = c' \sum_{i \in E} \gamma_i^{(k)} \\
+            1 &= \sum_{i \in E} \nu''_i = \sum_{i \in E} c'' \gamma_i^{(k)} = c'' \sum_{i \in E} \gamma_i^{(k)}
+        \end{align*}
+        
+        \item \textbf{Colapso e igualdad de constantes:}
+        Despejando algebraicamente de forma directa los escalares $c'$ y $c''$ de las ecuaciones de balance anteriores, observamos que quedan unívocamente determinados por el mismo valor numérico real:
+        \[
+        c' = \frac{1}{\sum_{i \in E} \gamma_i^{(k)}} \quad \text{y} \quad c'' = \frac{1}{\sum_{i \in E} \gamma_i^{(k)}}
+        \]
+        Por transitividad algebraica, se deduce de forma inmediata que:
+        \[
+        c' = c''
+        \]
+        
+        \item \textbf{Conclusión:}
+        Al ser los escalares idénticos ($c' = c''$), los vectores constituyentes se igualan componente a componente para todo el espacio:
+        \[
+        \nu'_i = c' \gamma_i^{(k)} = c'' \gamma_i^{(k)} = \nu''_i \implies \nu' = \nu''
+        \]
+        Queda formalmente demostrado que cualquier medida de probabilidad invariante alternativa colapsa necesariamente en la misma estructura vector-espacio, confirmando la estricta unicidad de la solución.
+    \end{enumerate}
+    \end{description} 
+\end{proof}
+\end{coro}
+
+
+\observacion{
+La discrepancia fundamental entre \tbf{medida invariante} y \tbf{medida invariante de probabilidad} radica única y exclusivamente en la \textbf{masa total} del sistema (la suma de sus componentes), lo cual determina su interpretación matemática y su aplicabilidad en Data Science:
+    \begin{itemize}
+        \item \textbf{Medida Invariante ($\gamma$):} Es un vector de pesos no negativos que satisface la ecuación de balance algebraico $\gamma P = \gamma$. Su masa total es arbitraria y puede ser finita o infinita, es decir:
+        \[
+        M = \sum_{i \in E} \gamma_i \in (0, \infty]
+        \]
+        No representa probabilidades directas, sino proporciones relativas de tiempo o visitas esperadas entre los estados.
+        
+        \item \textbf{Medida de Probabilidad Invariante ($\pi$):} Es un caso particular de medida invariante ($\pi P = \pi$) que cumple estrictamente con los axiomas de Kolmogorov. Exige obligatoriamente que la masa total esté normalizada a la unidad:
+        \[
+        \sum_{i \in E} \pi_i = 1
+        \]
+        Permite una interpretación estadística asintótica directa (probabilidad de hallar a la cadena en el estado $i$ en un horizonte temporal lejano, $n \to \infty$).
+    \end{itemize}
+}
+
+\begin{observacion}
+    Si el espacio de estados $E$ es \textbf{finito}, toda medida invariante $\gamma$ posee una masa total finita ($M < \infty$), lo que garantiza que siempre se puede construir su correspondiente medida de probabilidad mediante el operador de normalización lineal $\pi_i = \frac{\gamma_i}{M}$. Si el espacio $E$ es infinito, la suma puede divergir ($M = \infty$), imposibilitando dicha normalización (cadenas recurrentes nulas).
+\end{observacion}
+
+\observacion{
+    Este corolario es brillante, porque aparte de sustituir la recurrencia que nombrabamos en el teorema anterior por la dimensión finita del espacio de estados, nos da una medida de probabilidad única, contando \underline{incluso multiplicaciones por constantes}, es decir, es realmente única. \\
+}
+
+\begin{observacion}
+    Es fundamental advertir que para el escenario complementario de una cadena de Markov que sea \textbf{transitoria} e irreducible, el comportamiento asintótico se desestabiliza y \textbf{todo es posible}, pudiendo clasificar los sistemas en tres categorías excluyentes:
+    \begin{enumerate}
+        \item El proceso no admite ninguna medida invariante no trivial en absoluto.
+        \item El proceso admite una única medida invariante salvo constante.
+        \item El proceso admite al menos dos medidas invariantes linealmente independientes que no constituyen múltiplos multiplicativos una de la otra.
+    \end{enumerate}
+\end{observacion}
+
+\section{Positive recurrence vs Null recurrence}
+
+Sea $(X_n)_{n \geq 0}$ una cadena de Markov que evoluciona sobre un espacio de estados discreto $S$. Tomemos un estado genérico $i \in S$, asumamos la condición de inicio fija $X_0 = i$ y definimos el tiempo de primer paso o retorno al estado de origen mediante la variable aleatoria:
+\[
+T_i = \inf \{m \geq 1 : X_m = i\} \in \{1, 2, \dots\} \cup \{\infty\}
+\]
+Definimos el \textbf{tiempo medio de primer retorno} al estado $i$ como el primer momento teórico de dicha variable aleatoria, denotado por $m_i = E_i[T_i]$. \\
+
+\noindent
+Bajo este marco, se desprenden los siguientes comportamientos asintóticos:
+\begin{itemize}
+    \item Si el estado $i$ es \textbf{transitorio}, la variable toma el valor infinito con probabilidad estrictamente positiva, es decir
+    $$P_i(T_i = \infty) = 1 - h_i > 0$$ 
+    lo que fuerza a que el tiempo medio de retorno diverja de manera automática: $m_i := \infty$, veámoslo fácilmente así
+
+    \begin{equation*}
+        m_i = \sum_{n=1}^{\infty} n \cdot P_i(T_i = n) + \underbrace{\infty \cdot P_i(T_i = \infty)}_{\text{Miramos este término}} =\text{(Algo positivo)} + \infty(1-h_i) \overset{(*)}{=} \infty 
+    \end{equation*}
+    donde en $(*)$ hemos usado que $1-h_i > 0$.
+    \item Si el estado $i$ es \textbf{recurrente}, el sistema regresa con total certeza en tiempo finito, es decir
+    $$P_i(T_i < \infty) = h_i = 1 \quad \text{ y } \quad P_i(T_i=\infty)=0$$
+    No obstante, la serie del valor esperado puede converger o divergir, pues la serie queda así definida
+    \begin{equation*}
+        m_i = \sum_{n=1}^{\infty} n \cdot P_i(T_i = n) + \infty \cdot P_i(T_i = \infty) =\sum_{n=1}^{\infty} n \cdot P_i(T_i = n) + \infty(0) = \sum_{n=1}^{\infty} n \cdot P_i(T_i = n)
+    \end{equation*}
+    
+    dando lugar a una subdivisión fundamental de los estados recurrentes
+\end{itemize}
+
+\begin{definicion}[Estado Positivo Recurrente]
+    Se dice que un estado $i \in S$ es \textbf{positivo recurrente} si su tiempo medio de primer retorno es estrictamente finito:
+    \[
+    m_i = E_i[T_i] < \infty
+    \]
+\end{definicion}
+\begin{observacion}
+    Todo estado positivo recurrente es, por implicación directa, un estado recurrente.
+\end{observacion}
+
+\begin{definicion}[Estado Nulo Recurrente]
+    Se dice que un estado $i \in S$ es \textbf{nulo recurrente} si el proceso regresa a él con probabilidad unitaria pero el valor esperado del tiempo necesario para que se efectúe dicho retorno es infinito:
+    \[
+    m_i = E_i[T_i] = \infty \quad \text{e} \quad i \text{ es recurrente}
+    \]
+\end{definicion}
+
+\subsection{Convergencia a la Medida de Probabilidad Invariante}
+
+\begin{teo}[Ley Fuerte de los Grandes Números - Caso Clásico]
+    Sea $\{Y_i\}_{i \geq 1}$ una sucesión de variables aleatorias independientes e idénticamente distribuidas (\textit{i.i.d.}) definidas sobre un espacio de probabilidad común $(\Omega, \mathcal{F}, P)$, cuyo primer momento absoluto es estrictamente finito ($E[|Y_1|] < \infty$). Entonces, el promedio muestral converge con certeza casi segura (\textit{c.s.}) hacia su esperanza matemática teórica:
+    \[
+    \lim_{m \to \infty} \frac{1}{m} \sum_{i=1}^{m} Y_i \overset{\text{c.s.}}{=} E[Y_1]
+    \]
+    Expresado formalmente mediante la medida de probabilidad de los sucesos del espacio muestral, la identidad se escribe como:
+    \[
+    P\left( \omega \in \Omega \text{ tal que } \lim_{m \to \infty} \frac{1}{m} \sum_{i=1}^{m} Y_i(\omega) = E[Y_1] \right) = 1
+    \]
+\end{teo}
+
+\begin{observacion}[Temario de Repaso Metodológico]
+    Para la correcta interpretación de los teoremas ergódicos de convergencia asintótica, es imperativo realizar un repaso riguroso de los cuatro modos fundamentales de convergencia de sucesiones de variables aleatorias:
+    \begin{enumerate}
+        \item \textbf{Convergencia en Distribución (o en Ley):} enfocada en el límite de las funciones de distribución acumulada, dado como sigue
+        $$ X_n \xrightarrow{d} X \iff \lim_{n \to \infty} F_n(x) = F(x) \quad \forall x \in \mathbb{R} \text{ donde } F \text{ es continua} $$
+        donde $F_n(x) = P(X_n \leq x)$ y $F(x) = P(X \leq x)$.
+        \item \textbf{Convergencia en Probabilidad:} Gobernada por el colapso de la medida de las desviaciones épsilon, dado como sigue
+        $$ X_n \xrightarrow{P} X \iff \forall \epsilon > 0, \quad \lim_{n \to \infty} P(|X_n - X| \geq \epsilon) = 0 $$
+        \item \textbf{Convergencia Casi Seguro (c.s.):} Concentrada en la certeza unitaria del límite puntual de las trayectorias $\omega$, dado como sigue
+        $$ X_n \xrightarrow{c.s.} X \iff P\left( \{\omega \in \Omega : \lim_{n \to \infty} X_n(\omega) = X(\omega)\} \right) = 1 $$
+        \item \textbf{Convergencia en Media $r$-ésima (o en espacios $L^r$):} Basada en la norma del límite de los momentos del error, dado como sigue
+        $$ X_n \xrightarrow{L^r} X \iff \lim_{n \to \infty} E\left[ |X_n - X|^r \right] = 0 $$
+    \end{enumerate}
+    \begin{center}
+        \textit{Esquema de implicaciones fundamentales de repaso:} \quad $\text{Casi Seguro} \implies \text{En Probabilidad} \implies \text{En Distribución}$
+    \end{center}
+\end{observacion}
+
+\begin{teo}[Teorema Ergódico de Ocupación]
+    Considere una cadena de Markov irreducible $(X_n)_{n \geq 0}$ que opera sobre un espacio de estados $S$ con una distribución inicial arbitraria \mbox{$\alpha = (\alpha_i)_{i \in S}$}. Se verifican los siguientes comportamientos asintóticos para las frecuencias de visita:
+    \begin{enumerate}
+        \item Si la cadena de Markov es transitoria o nulo recurrente, entonces para todo estado $i \in S$ se tiene que la proporción temporal de permanencia colapsa a cero casi con total certeza (\textit{c.s.}):
+        \[
+        \lim_{m \to \infty} \frac{V_i(m)}{m} = 0 \qquad \text{c.s.}
+        \]
+        donde la variable aleatoria $V_i(m)$ cuantifica el número acumulado de visitas realizadas al estado $i$ dentro del horizonte temporal $m$:
+        \[ 
+        V_i(m) = \sum_{k=0 }^{m-1} I_{\{X_k = i\}} 
+        \]
+        
+        \item Si la cadena de Markov es positivo recurrente con medida de probabilidad invariante \mbox{$\lambda = (\lambda_i)_{i \in S}$}, entonces para todo estado $i \in S$ la proporción temporal de visitas converge con certeza casi segura hacia dicha masa estacionaria:
+        \[
+        \lim_{m \to \infty} \frac{V_i(m)}{m} = \lambda_i \qquad \text{c.s.}
+        \]
+    \end{enumerate}
+\end{teo}
+
+
+\begin{coro}
+    Consideremos una cadena de Markov positivo recurrente $(X_n)_{n \geq 0}$ dotada de una probabilidad invariante \mbox{$\pi = (\pi_i)_{i \in S}$}, y sea $f: S \to R$ una función acotada real discreta definida sobre el espacio de estados. Entonces, el promedio muestral de la función a lo largo de la trayectoria converge casi seguro hacia su media espacial teórica de equilibrio:
+    \[
+    \lim_{n \to \infty} \frac{1}{n} \sum_{k=0}^{n-1} f(X_k) = \sum_{i \in S}\pi_i f_i=E_{\pi}[f] \qquad \text{c.s.}
+    \]
+    donde denotamos de forma abreviada las evaluaciones locales como $f_i = f(i)$.
+\begin{proof}
+Para la demostración tendremos en cuenta estos puntos:
+\begin{enumerate}
+    \item Denotamos la esperanza espacial límite como la constante escalar 
+    $$E_{\pi}[f] = \sum_{i \in S} f_i \pi_i$$
+    \item Sin pérdida de generalidad , asumimos que la función está acotada en norma por la unidad, es decir
+    $$\|f\| = \max_{i \in S} |f_i| \le 1$$ 
+    Cualquier función acotada general se puede reducir a este caso dividiendo toda la expresión por su norma máxima, sin alterar la convergencia.
+    \item Definimos 
+    $$V_i(n) = \sum_{k=0}^{n-1} I_{\{X_k = i\}}$$
+    como la variable aleatoria que cuenta el número de visitas totales de la trayectoria al estado $i$ hasta el horizonte temporal $n-1$.
+\end{enumerate}
+Reagrupando los términos del promedio temporal según los estados visitados, se cumple la identidad exacta:
+\[
+\frac{1}{n} \sum_{k=0}^{n-1} f(X_k) = \frac{1}{n} \sum_{i \in S} V_i(n) f_i = \sum_{i \in S} \frac{V_i(n)}{n} f_i
+\]
+donde el término $\frac{V_i(n)}{n}$ representa la proporción de tiempo de estancia en el estado $i$, y $f(X_k)$ es la evaluación de la función en el estado $j$ visitado en el paso $k$. \\
+
+\begin{description}
+    \item[\tbf{Fase 1.}] Fijamos un subconjunto arbitrario y finito de estados $\mathcal{J} \subseteq S$. Estudiamos el módulo de la diferencia entre el promedio temporal y la media espacial límite mediante la propiedad del valor absoluto y la desigualdad triangular:
+        \[
+        \left| \frac{1}{n} \sum_{k=0}^{n-1} f(X_k) - E_{\pi}[f] \right| = \left| \sum_{i \in S} \frac{V_i(n)}{n} f_i - \sum_{i \in S} \pi_i f_i \right| = \left| \sum_{i \in S} \left( \frac{V_i(n)}{n} - \pi_i \right) f_i \right|
+        \]
+        Aplicando la propiedad distributiva del módulo sobre el sumatorio, y sabiendo que por hipótesis $|f_i| \le 1$:
+        \[
+        \left| \sum_{i \in S} \left( \frac{V_i(n)}{n} - \pi_i \right) f_i \right| \le \sum_{i \in S} \left| \frac{V_i(n)}{n} - \pi_i \right| \cdot |f_i| \le \sum_{i \in S} \left| \frac{V_i(n)}{n} - \pi_i \right|
+        \]
+        Para gestionar un espacio $S$ potencialmente infinito, descomponemos analíticamente el sumatorio en dos regiones complementarias usando nuestro conjunto finito $\mathcal{J}$ y su complemento $\mathcal{J}^c$ (los estados que no pertenecen a $\mathcal{J}$):
+        \[
+        = \sum_{i \in \mathcal{J}} \left| \frac{V_i(n)}{n} - \pi_i \right| + \sum_{i \notin \mathcal{J}} \left| \frac{V_i(n)}{n} - \pi_i \right|
+        \]
+        En el segundo sumatorio (el de la "cola" infinita del espacio, $i \notin \mathcal{J}$), aplicamos de forma directa la desigualdad triangular standard $|a - b| \le |a| + |b|$. Como tanto $\frac{V_i(n)}{n}$ como $\pi_i$ son magnitudes no negativas, sus valores absolutos se eliminan:
+        \[
+        \left| \frac{1}{n} \sum_{k=0}^{n-1} f(X_k) - E_{\pi}[f] \right|  \le \sum_{i \in \mathcal{J}} \left| \frac{V_i(n)}{n} - \pi_i \right| + \sum_{i \notin \mathcal{J}} \frac{V_i(n)}{n} + \sum_{i \notin \mathcal{J}} \pi_i
+        \]
+        Antes de seguir con el proceso hay que tener claro estas dos igualdades
+
+        \begin{align*}
+            \sum_{i \in S} \frac{V_i(n)}{n} &= 1 \implies\sum_{i \notin \mathcal{J}} \frac{V_i(n)}{n} = 1 - \sum_{i \in \mathcal{J}} \frac{V_i(n)}{n}\\
+            \sum_{i \in S} \pi_i &= 1\implies 1 = \sum_{i \in \mathcal{J}} \pi_i + \sum_{i \notin \mathcal{J}} \pi_i
+        \end{align*}
+        Para eliminar la dependencia muestral de la variable aleatoria $V_i(n)$ en el término central de la cola, usaremos las igualdades indicadas antes así
+        \begin{align*}
+            \sum_{i \notin \mathcal{J}} \frac{V_i(n)}{n} &= \left( \sum_{i \in \mathcal{J}} \pi_i + \sum_{i \notin \mathcal{J}} \pi_i \right) - \sum_{i \in \mathcal{J}} \frac{V_i(n)}{n}=\\
+            &=\sum_{i \notin \mathcal{J}} \pi_i + \sum_{i \in \mathcal{J}} \left( \pi_i - \frac{V_i(n)}{n} \right) \le \\ 
+            &\le \sum_{i \notin \mathcal{J}} \pi_i + \sum_{i \in \mathcal{J}} \left| \frac{V_i(n)}{n} - \pi_i \right|
+        \end{align*}
+        Aplicando esta última desigualdad obtenida tenemos finalmente que
+        \begin{align*}
+            \left| \frac{1}{n} \sum_{k=0}^{n-1} f(X_k) - E_{\pi}[f] \right|&\le \sum_{i \in \mathcal{J}} \left| \frac{V_i(n)}{n} - \pi_i \right| + \left( \sum_{i \in \mathcal{J}} \left| \frac{V_i(n)}{n} - \pi_i \right| + \sum_{i \notin \mathcal{J}} \pi_i \right) + \sum_{i \notin \mathcal{J}} \pi_i= \\
+            &= 2 \sum_{i \in \mathcal{J}} \left| \frac{V_i(n)}{n} - \pi_i \right| + 2 \sum_{i \notin \mathcal{J}} \pi_i
+        \end{align*}
+    \item[\tbf{Fase 2.}] Por el Teorema Ergódico de Ocupación a largo plazo en cadenas positivo recurrentes, sabemos que la proporción del tiempo de ocupación converge casi con certeza a la probabilidad invariante del estado:
+        \[
+        P\left(\lim_{m \to \infty} \frac{V_i(m)}{m} = \pi_i\right) = 1 \quad \forall \, i \in S
+        \]
+        Dado un umbral de tolerancia arbitrario $\varepsilon > 0$, procedemos a controlar los dos bloques de la cota mediante elecciones de diseño secuenciales:
+
+        \begin{enumerate}
+            \item \textbf{Control de la cola infinita ($\mathcal{J}^c$):} Dado que 
+            $$\sum_{i \in S} \pi_i = 1$$ 
+            es una serie convergente, la masa de probabilidad residual de las colas tiende a cero. Por tanto, existe y podemos elegir un subconjunto finito $\mathcal{J}$ lo suficientemente grande tal que la masa de probabilidad fuera de él sea inferior a $\frac{\varepsilon}{4}$:
+            \[
+            \sum_{i \notin \mathcal{J}} \pi_i < \frac{\varepsilon}{4}
+            \]
+            
+            \item \textbf{Control de la región finita ($\mathcal{J}$):} Una vez fijado y estabilizado el conjunto finito $\mathcal{J}$ en el paso anterior, invocamos la convergencia puntual de las variables de ocupación. Al ser una suma de un número finito de términos convergiendo a cero, se garantiza que existe un horizonte temporal determinista $N(\omega)$ tal que, para todo instante $m > N(\omega)$, la desviación acumulada es menor a $\frac{\varepsilon}{4}$:
+            \[
+            \sum_{i \in \mathcal{J}} \left| \frac{V_i(m)}{m} - \pi_i \right| < \frac{\varepsilon}{4}
+            \]
+            de aquí se hereda la convergencia \underline{casi segura}.
+        \end{enumerate}
+
+        Sustituyendo ambas acotaciones de control en la desigualdad obtenida al final de la Fase 1, la expresión colapsa directamente en el umbral $\varepsilon$:
+        \[
+        2 \sum_{i \in \mathcal{J}} \left| \frac{V_i(m)}{m} - \pi_i \right| + 2 \sum_{i \notin \mathcal{J}} \pi_i \le 2 \left( \frac{\varepsilon}{4} \right) + 2 \left( \frac{\varepsilon}{4} \right) = \frac{\varepsilon}{2} + \frac{\varepsilon}{2} = \varepsilon
+        \]
+        Al cumplirse la cota superior para cualquier valor real positivo de $\varepsilon$, queda formalmente demostrado que el límite de la diferencia es cero, consolidando la convergencia del teorema ergódico.
+
+\end{description}
+\end{proof}
+\end{coro}
+
+
+
+\begin{definicion}[Estado Aperiódico]
+    Se dice que un estado $i \in S$ de una cadena de Markov es \textbf{aperiódico} si existe un horizonte de pasos finito a partir del cual las probabilidades de retorno diagonal son estrictamente positivas de forma ininterrumpida, es decir, $P_{ii}^{(m)} > 0$ para todo $m$ suficientemente grande.
+\end{definicion}
+
+
+\begin{lema}[Solidaridad de la Aperiodicidad]
+    Supongamos que la cadena de Markov $(X_n)_{n \geq 0}$ es irreducible y cuenta con al menos un estado aperiódico $i \in S$. Entonces, para cada par de estados del espacio $j, k \in S$, se verifica que $P_{jk}^{(m)} > 0$ para todo paso $m$ suficientemente grande. En particular, la aperiodicidad es una propiedad de clase, lo que implica que todos los estados de la cadena son aperiódicos.
+\begin{proof}
+    Debido a que la cadena de Markov es irreducible, todos los estados del espacio se comunican entre sí. Por lo tanto, para cualquier par de estados arbitrarios $j, k \in S$:
+    \begin{itemize}
+        \item Existe un camino para viajar de $j$ a $i$ en un número finito de pasos $r \ge 0$, tal que $p_{ji}^{(r)} > 0$.
+        \item Existe un camino para viajar de $i$ a $k$ en un número finito de pasos $s \ge 0$, tal que $p_{ik}^{(s)} > 0$.
+    \end{itemize}
+    Evaluamos la probabilidad de transición de $j$ a $k$ en un horizonte temporal de $r + m + s$ pasos. Utilizando las ecuaciones de Chapman-Kolmogorov, forzamos al sistema a pasar por el estado intermedio $i$ y acotamos inferiormente:
+    \[
+    p_{jk}^{(r+m+s)} = \sum_{x \in S} \sum_{y \in S} p_{jx}^{(r)} \, p_{xy}^{(m)} \, p_{yk}^{(s)} \ge p_{ji}^{(r)} \, p_{ii}^{(m)} \, p_{ik}^{(s)}
+    \]
+
+    Analizando los tres términos del producto del extremo derecho:
+    \begin{itemize}
+        \item Por ser irreducible dijimos que $p_{ji}^{(r)} > 0$ y $p_{ik}^{(s)} > 0$.
+        \item Por hipótesis, sabemos que $p_{ii}^{(m)} > 0$ para todo $m \ge M_i$.
+    \end{itemize}
+    Dado que el producto de términos estrictamente positivos es positivo, se cumple analíticamente que:
+    \[
+    p_{jk}^{(r+m+s)} \ge p_{ji}^{(r)} \, p_{ii}^{(m)} \, p_{ik}^{(s)} > 0 \qquad \forall \, m \ge M_i
+    \]
+    Haciendo un cambio de variable para el tiempo total $n = r + m + s$, tenemos que para $n$ suficientemente grande ($m$ era suficientemente grande), tenemos que
+
+    \begin{equation*}
+        p_{jk}^{(n)} > 0 
+    \end{equation*}
+    Para la segunda parte del enunciado que dice que todos los estados son aperiódicos, es tan fácil como realizar el mismo desarrollo para $k=j$ y lo tendríamos.
+\end{proof}
+\end{lema}
+
+
+\begin{teo}[Teorema de Convergencia Estacionaria]
+    Considere una cadena de Markov $(X_n)_{n \geq 0}$ que sea simultáneamente aperiódica, irreducible y positivo recurrente, gobernada por una matriz de probabilidad de transición $P$ y dotada de una medida de probabilidad invariante $\lambda = (\lambda_i)_{i \in S}$. \\
+
+    \noindent
+    Entonces, bajo cualquier distribución inicial arbitraria del sistema, la distribución marginal de ocupación de cada estado en el paso $m$ converge de forma asintótica hacia su correspondiente masa de probabilidad estacionaria pura:
+    \[ 
+    \lim_{m \to \infty} P[X_m = j] = \lambda_j \qquad \forall j \in S 
+    \]
+\begin{proof}
+Para demostrar este resultado en espacios de estados generales, utilizaremos una técnica probabilística avanzada conocida como \textbf{método de acoplamiento} (\textit{coupling}). La estrategia consiste en construir un espacio de probabilidad ampliado donde coexistan dos realizaciones independientes de la cadena y estudiar el instante probabilístico en el que sus trayectorias se intersectan geométricamente.
+
+\begin{description}
+    \item[\tbf{Step 1.}] Definimos dos procesos estocásticos de tiempo discreto, denotados como $(X_m)_{m \ge 0}$ y $(Y_m)_{m \ge 0}$, gobernados bajo el mismo espacio de probabilidad subyacente y caracterizados por las siguientes condiciones estructurales:
+    \begin{enumerate}
+        \item[\textbf{1)}] \textbf{Cadena Original:} El proceso $(X_m)_{m \ge 0}$ es la cadena de Markov objeto de nuestro estudio, cuya evolución temporal está determinada por la matriz de transición $P$ y arranca con la distribución inicial arbitraria $\alpha$, es decir
+        $$P[X_0 = i] = \alpha_i$$
+        \item[\textbf{2)}] \textbf{Cadena Estacionaria de Referencia:} El proceso $(Y_m)_{m \ge 0}$ es una réplica exacta en su dinámica, lo que significa que posee la \textbf{misma} matriz de probabilidad de transición $P$. Sin embargo, se inicializa de forma idealizada utilizando la medida invariante $\lambda$ como su distribución inicial, es decir
+        $$P[Y_0 = k] = \lambda_k$$
+        Por las propiedades de la estacionariedad, sabemos analíticamente que $Y_m$ mantiene dicha distribución para todo instante de tiempo:
+        \[
+        P[Y_m = j] = \lambda_j \qquad \forall \, m \ge 0, \ \forall \, j \in S
+        \]
+        esto lo vemos fácilmente con inducción como sigue
+        \begin{itemize}
+            \item Para el instante inicial ($m=0$)
+            $$P[Y_0 = j] = \lambda_j \qquad \forall j \in S$$
+            \item Para el paso 1 ($m=1$)
+            $$P[Y_1 = j] = \sum_{i \in S} P[Y_0 = i] \cdot P[Y_1 = j \mid Y_0 = i]=\sum_{i \in S} \lambda_i p_{ij}\overset{(*)}{=} \lambda_j$$
+            donde en $(*)$ hemos usado la propiedad de que $\lambda$ es estacionaria ($\lambda P = \lambda$).
+            \item Por inducción para cualquier paso $m$ ($m \ge 0$):
+            $$P[Y_m = j] = \sum_{i \in S} P[Y_{m-1} = i] \cdot P[Y_m = j \mid Y_{m-1} = i]\overset{(*)}{=}\sum_{i \in S} \lambda_i p_{ij}=\lambda_j$$
+            donde en $(*)$ hemos usado la hipótesis de inducción que dice que $P[Y_{m-1} = i] = \lambda_i$.
+        \end{itemize}
+        \item[\textbf{3)}] \textbf{Independencia Estructural:} Los dos procesos son completamente independientes entre sí desde el origen del tiempo, lo que formalmente denotamos mediante el símbolo de ortogonalidad estocástica:
+        \[
+        (X_m)_{m \ge 0} \perp\!\!\!\perp (Y_m)_{m \ge 0}
+        \]
+    \end{enumerate}
+    \noindent
+    Fijamos un estado testigo cualquiera del espacio de estados, al que denotaremos como $b \in S$. Definimos la variable aleatoria $T$ como el primer instante del reloj en el cual ambas cadenas coinciden físicamente sobre dicho estado de referencia $b$:
+    \[
+    T = \inf \left\{ m \ge 0 : X_m = Y_m = b \right\} \in \mathbb{N} \cup \{\infty\}
+    \]
+    Esta variable mapea el primer "choque" o cruce de trayectorias. Si las dos cadenas de Markov evolucionaran de forma paralela sin intersectarse jamás en el punto $b$, el conjunto evaluado sería vacío y, por convención, el tiempo de acoplamiento tomaría el valor infinito ($T = \infty$).
+
+    \item[\tbf{Step 2.}] Para garantizar que las cadenas se van a cruzar con total certeza, necesitamos demostrar rigurosamente que el evento de colisión ocurre en tiempo finito casi seguro, es decir:
+    \[
+    P(T < \infty) = 1
+    \]
+    Para analizar matemáticamente este comportamiento, fusionamos los dos procesos individuales en un único sistema vectorial dinámico. Definimos el proceso bidimensional agrupado $W_m = (X_m, Y_m)$, el cual toma valores sobre el espacio de estados producto cartesiano denotado como $\widetilde{S} = S \times S$.
+
+    
+    Debido a la independencia mutua de las componentes de partida decretada en el Paso 1, el proceso conjunto $W_m$ hereda de forma limpia la estructura de una cadena de Markov homogénea en el tiempo. Sus parámetros analíticos quedan determinados por las siguientes componentes:
+
+    \begin{itemize}
+        \item \textbf{Probabilidades de Transición Conjuntas:} la probabilidad de pasar del estado compuesto $(i,k)$ al estado compuesto $(j,l)$ en un paso se calcula mediante el producto directo de las probabilidades marginales individuales, dado que las cadenas se mueven sin afectarse entre sí:
+        \[
+        \widetilde{p}_{(i,k), \, (j,l)} = P\left[X_{m+1}=j, Y_{m+1}=l \mid X_m=i, Y_m=k\right] = p_{ij} \cdot p_{kl}
+        \]
+        
+        \item \textbf{Distribución Inicial del Espacio Producto:} la ley de probabilidad inicial de la cadena conjunta en el origen del tiempo $W_0 = (X_0, Y_0)$ se construye multiplicando las respectivas distribuciones de arranque de los procesos marginales:
+        \[
+        \mu_{(i,k)} = P[W_0 = (i,k)] = P[X_0 = i, Y_0 = k] = \alpha_i \cdot \lambda_k
+        \]
+    \end{itemize}
+    Por aperiodicidad e irreducibilidad, tenemos que $\exists \, N = N(i,j,k,l)$ tal que para $m > N$ tenemos:
+    \[
+    \widetilde{p}_{(i,k), \, (j,l)}^{(m)} = p_{ij}^{(m)} \cdot p_{kl}^{(m)} > 0
+    \]
+    Por lo tanto, $W_m$ es irreducible, y $\tilde{\lambda} = \lambda_i \cdot \lambda_k$ es su distribución de probabilidad invariante, entonces
+    \[
+    W_m \text{ es positivo recurrente} \implies P(T < \infty) = 1
+    \]
+    donde sabemos la implicación final, porque al ser positivo recurrente, irreducible y aperiódico, tenemos que el estado $(b,b)$ es visitado infinitas veces casi seguro, y por lo tanto, la primera visita a $(b,b)$ ocurre en un tiempo finito con probabilidad 1.
+    
+    \item[\tbf{Step 3.}] Definamos el proceso:
+        \[
+        Z_m = \begin{cases} 
+        X_m & m < T \\ 
+        Y_m & m \ge T 
+        \end{cases}
+        \]
+        donde $Z_m$ sigue la trayectoria de la cadena original $X_m$ al principio. En el momento exacto $T$ en el que se cruza con $Y_m$, $Z_m$ se ``salta'' a la trayectoria de $Y_m$ y la sigue para siempre. \\
+
+        \noindent 
+        Este proceso es una cadena de Markov con distribución de probabilidad inicial $\alpha$ y las mismas probabilidades de transición $P$ que $X_m, Y_m$.
+
+        \noindent 
+        Como $Y_m$ comienza en la distribución estacionaria $\lambda$, se cumple que 
+        $$P(Y_m = j) = \lambda_j \quad \forall \, j \in S$$
+
+        \noindent Por construcción, $X_m$ y $Z_m$ tienen la misma distribución en cada paso de tiempo $m$
+        $$P(X_m = j) = P(Z_m = j) \quad \forall \, j \in S$$
+        pues antes de $T$ son idénticas y después de $T$ se comporta como $Y_m$, pero como ya se tiene un punto de partida se usa la matriz $P$ (la misma para $Y_m$ y para $X_m$) y no la medida $\lambda$. Tenemos por tanto el siguiente desarollo
+        \begin{align*}
+            0\le \left| P(X_m = j) - \lambda_j \right| &= \left| P(X_m = j) - P(Y_m = j) \right| = \left| P(Z_m = j) - P(Y_m = j) \right| = \\
+            &= \left| P(X_m = j, \, m < T) + P(Y_m = j, \, m \ge T) - P(Y_m = j) \right| = \\
+            &= \left| P(X_m = j, \, m < T) - P(Y_m = j, \, m < T) \right| \le \\
+            &\le \left| P(X_m = j, \, m < T) \right| + \left| P(Y_m = j, \, m < T) \right| \le \\
+            &\overset{(*)}{\le} P(m < T) + P(m < T) = 2P(T > m)
+        \end{align*}
+        donde en $(*)$ hemos usado que $P(A \cap B) \le P(B)$. Tenemos finalmente
+
+
+        \begin{align*}
+            \lim_{m \to \infty} 0 &\le \lim_{m \to \infty} \left| P(X_m = j) - \lambda_j \right| \le 2 \lim_{m \to \infty} P(T > m) \implies \\
+            &\implies  0\le \lim_{m \to \infty} \left| P(X_m = j) - \lambda_j \right| \le P(T = \infty) = 0 \implies \\
+            &\implies \lim_{m \to \infty} \left| P(X_m = j) - \lambda_j \right| = 0
+        \end{align*}
+
+\end{description}
+\end{proof}
+\end{teo}
+
+
+
+
+\section{Reversible Markov Chain}
+Recordemos la definición de cadena de Márkov reversible.
+\begin{definicion}[Balance Detallado]
+    Se dice que una cadena de Markov discreta con matriz de transición $P = (p_{ij})$ es \textbf{reversible} respecto a una distribución de probabilidad macroscópica $\pi = (\pi_i)_{i \in \mathcal{S}}$ si satisface de manera unívoca el sistema de ecuaciones algebraicas lineales denominado \textbf{Condición de Balance Detallado}:
+    \[
+    p_{ij} \pi_j = p_{ji} \pi_i \quad \forall \, (i,j) \in \mathcal{S} \times \mathcal{S}
+    \]
+    Físicamente, esta condición impone una simetría estadística temporal absoluta: el flujo neto de probabilidad que transita desde el estado $j$ hacia el estado $i$ en equilibrio es idéntico al flujo en sentido inverso. Una consecuencia analítica directa de este principio es que cualquier distribución $\pi$ que verifique el balance detallado constituye automáticamente una \textbf{distribución estacionaria e invariante} del proceso ($\pi = \pi P$).
+\end{definicion}
+
+
+\subsection{Metropolis Algorithm}
+
+\noindent 
+Para garantizar de manera unívoca el cumplimiento de la relación cinemática 
+$$\frac{P(\underline{s}' \mid \underline{s})}{P(\underline{s} \mid \underline{s}')} = e^{-\beta \Delta H}$$ 
+sobre un computador, Metropolis y su equipo dividieron la probabilidad de transición en dos fases consecutivas independientes: la probabilidad de proponer un estado $q(\underline{s}' \mid \underline{s})$ (simétrica) y la probabilidad de aceptarlo $\alpha(\underline{s}' \mid \underline{s})$. Esto formaliza el siguiente procedimiento iterativo de muestreo estocástico:
+
+
+\begin{teo}[Metropolis Algorithm]
+Dada una configuración de partida y una temperatura inversa fija $\beta$, el proceso evoluciona de acuerdo con las siguientes reglas estocásticas paso a paso:
+\begin{enumerate}
+    \item[\textbf{\color{red}1)}] \textbf{Inicialización:} Comenzar la simulación desde un estado de espín macroscópico inicial $\underline{s}$.
+    
+    \item[\textbf{\color{red}2)}] \textbf{Mutación Local:} Seleccionar un único espín de la red cristalina de forma aleatoria uniforme e invertir su orientación ($S_i \to -S_i$) para construir una configuración de prueba tentativa denotada como $\underline{s}'$.
+    
+    \item[\textbf{\color{red}3)}] \textbf{Evaluación Energética:} Computar la barrera de energía potencial entre ambos estados calculando el gradiente local del Hamiltoniano:
+    \[
+    \Delta H = H(\underline{s}') - H(\underline{s})
+    \]
+    
+    \item[\textbf{\color{red}4)}] \textbf{Criterio de Descenso Energético:} Si $\Delta H \le 0$, el movimiento propuesto conduce a una configuración energéticamente más estable o degenerada. El sistema \textbf{acepta el movimiento con probabilidad unitaria}: se almacena $\underline{s}'$ como el nuevo estado actual de la cadena y se reinicia el ciclo desde el Paso 2.
+    
+    \item[\textbf{\color{red}5)}] \textbf{Criterio de Activación Térmica ($\Delta H > 0$):} Si el movimiento propuesto impone un sobrecoste energético, la transición se ve condicionada por las fluctuaciones del baño térmico. Se selecciona un número pseudoaleatorio auxiliar $\alpha$ muestreado bajo una distribución uniforme continua en el intervalo abierto estándar:
+    \[
+    \alpha \sim U(0,1)
+    \]
+    
+    \item[\textbf{\color{red}6)}] \textbf{Aceptación Estocástica:} Si el umbral aleatorio satisface la desigualdad:
+    \[
+    \alpha < e^{-\beta \Delta H}
+    \]
+    Se acepta la transición a pesar del incremento energético. Se guarda $\underline{s}'$ como el siguiente eslabón de la trayectoria y se reinicia el ciclo.
+    
+    \item[\textbf{\color{red}7)}] \textbf{Rechazo y Conservación de Masa:} Si no se cumple la desigualdad anterior, el movimiento de prueba es denegado. El sistema permanece estático haciendo $\underline{s} = \underline{s}$. Se vuelve a registrar la configuración original $\underline{s}$ como el estado consecutivo de la serie cronológica (acumulando peso estadístico en el histograma de ocupación) y se reinicia el proceso.
+\end{enumerate}
+\end{teo}
+
+\chapter{Procesos de Renovación y CTRW}
+
+\section{Del paseo aleatorio discreto al proceso de renovación}
+
+\begin{definicion}
+Un \textbf{paseo aleatorio discreto} es una sucesión $\{X_i\}_{i=1}^\infty$ de variables i.i.d.\ en $\mathbb{R}$ que modelan la magnitud de cada salto espacial. La posición tras $m$ saltos es
+\begin{equation*}
+    Y_m = \sum_{i=1}^m X_i.
+\end{equation*}
+\end{definicion}
+
+\noindent
+Si $X_i\sim N(\mu,\sigma)$, por estabilidad Gaussiana $Y_m$ tiene densidad $f_{Y_m}(u)=f_{X_1}^{*m}(u)$ (convolución de orden $m$), con $\mathbb{E}[Y_m]=m\mu$ y $\mathrm{Var}[Y_m]=m\sigma^2$. La idea importante a retener no es el caso Gaussiano en sí, sino que \textbf{la densidad de una suma de variables i.i.d.\ es siempre la convolución iterada de la densidad base}, sea o no Gaussiana.
+
+\subsection*{Tiempos de espera y proceso de renovación}
+
+Para pasar a tiempo continuo se desacopla el "número de saltos" del "tiempo real" introduciendo tiempos de espera.
+
+\begin{definicion}
+Sea $\{J_i\}$ una sucesión i.i.d.\ de variables \textbf{estrictamente positivas} (tiempos de espera entre saltos). El instante del $m$-ésimo salto es
+\begin{equation*}
+    T_m = \sum_{i=1}^m J_i, \qquad T_0=0.
+\end{equation*}
+$\{T_m\}$ es un \textbf{proceso de renovación}: tras cada salto el "cronómetro" se reinicia con la misma distribución (el sistema "olvida" cuánto llevaba esperando).
+\end{definicion}
+
+\begin{definicion}
+El \textbf{proceso de conteo} asociado es
+\begin{equation*}
+    N(t) = \max\{n\in\mathbb{N}_0 : T_n \le t\},
+\end{equation*}
+es decir, cuántos saltos han ocurrido hasta el instante $t$. Sus trayectorias son \textbf{càdlàg} (continuas por la derecha, con límite por la izquierda).
+\end{definicion}
+
+\begin{ejemplo}
+Si $J_1\sim\mathrm{Exp}(\lambda)$, entonces $T_m$ sigue una \textbf{distribución de Erlang} (caso particular de la Gamma con parámetro de forma entero):
+\begin{equation*}
+    f_{T_m}(u) = \lambda^m u^{m-1}\frac{e^{-\lambda u}}{(m-1)!}, \quad u\ge 0.
+\end{equation*}
+\end{ejemplo}
+
+\section{El proceso CTRW: subordinando el espacio al tiempo}
+
+\begin{definicion}[CTRW]
+El \textbf{paseo aleatorio en tiempo continuo} (Continuous Time Random Walk) es el proceso compuesto
+\begin{equation*}
+    Y(t) = Y_{N(t)} = \sum_{i=1}^{N(t)} X_i,
+\end{equation*}
+es decir, la cadena de saltos espaciales $Y_m$ "subordinada" al reloj aleatorio $N(t)$.
+\end{definicion}
+
+\begin{observacion}
+Aunque $(Y_m)$ y $(T_m)$ son, cada una por separado, cadenas de Markov en su índice de pasos $m$, y aunque el par $(T_m,Y_m)$ es Markoviano si $(Y_m)\perp(T_m)$, el proceso final $(Y(t))_{t\ge0}$ \textbf{no es Markoviano en general}: la probabilidad de saltar depende de cuánto tiempo lleva ya esperando la partícula (su "edad"), no solo de su posición actual.
+\end{observacion}
+
+\section{Markov, semi-Markov y el rol de la edad $\gamma(t)$}
+
+Para formalizar esto se usa un \textbf{espacio filtrado} $(\Omega,\mathcal{F},\{\mathcal{F}_t\}_{t\ge0},P)$, donde $\mathcal{F}_t$ recoge toda la historia conocida hasta $t$. La propiedad de Markov clásica exige
+\begin{equation*}
+    P(X_s\in B \mid \mathcal{F}_t) = P(X_s\in B \mid X_t=x), \qquad s>t,
+\end{equation*}
+es decir, que el futuro solo dependa del presente, no de toda la historia.
+
+\noindent
+Para analizar el CTRW se definen, en torno al instante $t$ (entre el último salto $T_3$ y el próximo $T_4$, digamos):
+\begin{itemize}
+    \item \textbf{Edad} $\gamma(t)=t-T_3$: tiempo transcurrido desde el último salto. Es conocida (medible respecto a $\mathcal{F}_t$).
+    \item \textbf{Vida residual} $\sigma(t)=T_4-t$: tiempo que falta hasta el próximo salto. Es desconocida y depende de $\gamma(t)$.
+\end{itemize}
+
+\noindent
+Como la vida residual depende de la edad acumulada, el sistema es un \textbf{proceso semi-Markoviano}.
+
+\begin{prop}[Vectorización de Markov]
+Aunque $Y(t)$ por sí solo no es Markoviano, el par $(Y(t),\gamma(t))$ sí es un proceso de Markov en tiempo continuo: basta añadir la edad al espacio de estados para recuperar la falta de memoria.
+\end{prop}
+
+\begin{prop}[Condición de Markovianidad pura]
+\begin{equation*}
+    Y(t) \text{ es Markoviano} \iff J_i\sim \mathrm{Exp}(\lambda)\ \forall i.
+\end{equation*}
+La exponencial es la \textbf{única} distribución de espera sin memoria, así que es la única que evita tener que aumentar el espacio de estados con $\gamma(t)$.
+\end{prop}
+
+\section{Distribución unipuntual y la ecuación de Montroll-Weiss}
+
+\begin{definicion}
+$q(t,u)$ es la densidad de probabilidad de encontrar la partícula en la posición $u$ en el instante $t$ (\textbf{f.d.p.\ unipuntual} de $Y(t)$).
+\end{definicion}
+
+\noindent
+Calcular $q(t,u)$ directamente en $(t,u)$ es muy complicado por las infinitas convoluciones que involucra. La solución práctica es pasar al \textbf{espacio dual} aplicando Fourier en el espacio ($u\to k$) y Laplace en el tiempo ($t\to s$):
+
+\begin{itemize}
+    \item $f_{X_1}(u) \to \hat f_{X_1}(k)$ (función característica de los saltos)
+    \item $f_{J_1}(t) \to \widetilde f_{J_1}(s)$ (Laplace de los tiempos de espera)
+\end{itemize}
+
+\begin{teo}[Ecuación de Montroll-Weiss]
+Bajo desacoplamiento (saltos y esperas independientes), la solución en el espacio dual es
+\begin{equation*}
+    \widetilde{\hat q}(s,k) = \frac{\widetilde{\overline F}_{J_1}(s)}{1-\hat f_{X_1}(k)\,\widetilde f_{J_1}(s)},
+\end{equation*}
+donde $\widetilde{\overline F}_{J_1}(s)=\frac{1-\widetilde f_{J_1}(s)}{s}$ es la transformada de la función de supervivencia de $J_1$.
+\end{teo}
+
+\noindent
+\textbf{Protocolo de uso:} (1) calcular $\hat f_{X_1}(k)$ y $\widetilde f_{J_1}(s)$, (2) sustituir en la fórmula, (3) invertir Fourier-Laplace para volver al espacio real. Esta es la idea central de toda la sección: el acoplamiento espacio-temporal, intratable en el espacio real, se vuelve un simple cociente algebraico en el espacio dual.
+
+\section{Caso particular: esperas exponenciales $\Rightarrow$ Proceso de Poisson}
+
+\begin{ejemplo}
+Si $J_1\sim\mathrm{Exp}(\lambda)$, sustituyendo en Montroll-Weiss (sin la parte espacial) se obtiene tras invertir Laplace
+\begin{equation*}
+    \boxed{P(N(t)=n) = e^{-\lambda t}\frac{(\lambda t)^n}{n!}} \quad\Longrightarrow\quad N(t)\sim\mathrm{Poi}(\lambda t).
+\end{equation*}
+\end{ejemplo}
+
+\begin{observacion}
+Esto no es casualidad: la exponencial es la única ley sin memoria, así que es la única que convierte a $N(t)$ en un \textbf{proceso de Poisson}, caracterizado por tener \textbf{incrementos independientes y estacionarios}:
+\begin{equation*}
+    N(t_2)-N(t_1) \overset{d}{=} N(t_2-t_1), \qquad N(t_2)-N(t_1)\perp N(t_1).
+\end{equation*}
+Esta propiedad es la que define a los \textbf{procesos de Lévy} en general.
+\end{observacion}
+
+\section{Límite difusivo: del CTRW a la ecuación del calor}
+
+\noindent
+Existe una forma equivalente de $q(t,u)$ escrita directamente en $(t,x)$, la \textbf{ecuación de renovación semi-Markoviana}, que combina "la partícula aún no ha saltado" con "la partícula ya saltó y siguió moviéndose". Aplicando Fourier-Laplace a esa ecuación se recupera exactamente Montroll-Weiss (es la misma información, vista de otra forma).
+
+\noindent
+\textbf{Idea clave del límite a gran escala:} si los saltos tienen varianza finita y las esperas tienen media finita, cuando se observa el sistema a escalas grandes ($k,s\to 0$) las transformadas se aproximan por Taylor ($\hat f_{X_1}(k)\approx 1-k^2$, $\widetilde f_{J_1}(s)\approx 1-s$), y reescalando convenientemente se obtiene
+\begin{equation*}
+    \widetilde{\hat\mu}(s,k) \xrightarrow[c\to\infty]{} \frac{1}{k^2+s}.
+\end{equation*}
+
+\begin{teo}[Límite de difusión]
+Esta expresión, al deshacer las transformadas, equivale al \textbf{problema de Cauchy de la ecuación de difusión (del calor)}:
+\begin{equation*}
+    \left(\frac{\partial}{\partial t}-\frac{\partial^2}{\partial x^2}\right)u(t,x) = \delta(x)\delta(t), \qquad u(0,x)=\delta(x),
+\end{equation*}
+cuya solución es el núcleo del calor
+\begin{equation*}
+    u(t,x) = \frac{1}{\sqrt{2\pi t}}\, e^{-\frac{x^2}{2t}}.
+\end{equation*}
+\end{teo}
+
+\begin{observacion}
+Este resultado es la versión "macroscópica" del Teorema Central del Límite: a escalas grandes, \textbf{cualquier} CTRW desacoplado con saltos de varianza finita y esperas de media finita converge a un \textbf{Movimiento Browniano}, sin importar la forma exacta de las distribuciones base — solo importan sus primeros momentos.
+\end{observacion}
+
+\section{Resumen conceptual}
+
+\begin{itemize}
+    \item El \textbf{CTRW} combina un paseo aleatorio espacial discreto $(Y_m)$ con un reloj aleatorio dado por un \textbf{proceso de renovación} $(T_m, N(t))$.
+    \item El resultado, $Y(t)=Y_{N(t)}$, en general \textbf{no es Markoviano}: hace falta conocer la edad $\gamma(t)$ desde el último salto para predecir el futuro (proceso semi-Markoviano). Añadiendo $\gamma(t)$ al estado, se recupera Markov.
+    \item Solo cuando los tiempos de espera son \textbf{exponenciales} el proceso es Markoviano puro, y $N(t)$ se convierte en un \textbf{proceso de Poisson} (caso particular de proceso de Lévy).
+    \item La herramienta analítica central es pasar al \textbf{espacio dual de Fourier-Laplace}, donde la f.d.p.\ unipuntual se resuelve algebraicamente (\textbf{ecuación de Montroll-Weiss}).
+    \item A escalas grandes, todo CTRW desacoplado "razonable" (varianza de saltos y media de esperas finitas) converge a la \textbf{ecuación de difusión}, es decir, al \textbf{Movimiento Browniano}: es el análogo macroscópico del Teorema Central del Límite.
+\end{itemize}
+
+\chapter{Procesos Gaussianos}
+
+\section{Variable normal: lo básico}
+
+\begin{definicion}
+$X\sim N(\mu,\sigma^2)$ si tiene densidad
+\begin{equation*}
+    f_X(x) = \frac{1}{\sqrt{2\pi}\sigma}\, e^{-\frac{(x-\mu)^2}{2\sigma^2}}.
+\end{equation*}
+Aquí $\mu$ es la media y $\sigma^2$ la varianza. Estandarizando, $Z=\frac{X-\mu}{\sigma}\sim N(0,1)$.
+\end{definicion}
+
+\noindent
+Propiedades clave a recordar (sin entrar en el detalle de cada fórmula):
+\begin{itemize}
+    \item Las colas de la normal decaen muy rápido (tipo $e^{-x^2/2}$): es muy poco probable alejarse de la media.
+    \item Si $X,Y$ son normales \textbf{independientes}, su suma vuelve a ser normal: $X+Y\sim N(\mu_1+\mu_2,\sigma_1^2+\sigma_2^2)$.
+    \item Un límite de normales (independientes) vuelve a ser normal.
+\end{itemize}
+
+\section{Vector Gaussiano: la idea importante}
+
+\begin{definicion}
+$X=(X_1,\dots,X_n)$ es un \textbf{vector Gaussiano} si \textbf{cualquier} combinación lineal de sus componentes, $\sum_i c_iX_i$, es una variable normal.
+\end{definicion}
+
+\begin{observacion}
+\textbf{Ojo}: que cada componente $X_i$ sea normal por separado \textbf{no} significa que el vector sea Gaussiano (hay contraejemplos). Lo que define al vector Gaussiano es que se comporten bien \emph{en conjunto}, no solo de forma individual.
+\end{observacion}
+
+\noindent
+Un vector Gaussiano queda totalmente determinado por:
+\begin{itemize}
+    \item su \textbf{vector de medias} $m=E[X]$,
+    \item su \textbf{matriz de covarianzas} $C(X)=(\mathrm{Cov}(X_i,X_j))_{i,j}$.
+\end{itemize}
+
+\begin{prop}[La propiedad más útil]
+Si $X,Y$ son \textbf{conjuntamente Gaussianas}, entonces
+\begin{equation*}
+    X\perp\!\!\!\perp Y \quad\Longleftrightarrow\quad \mathrm{Cov}(X,Y)=0.
+\end{equation*}
+\end{prop}
+
+\noindent
+Es decir: en el mundo Gaussiano, ``no correlacionadas'' e ``independientes'' son lo mismo (en general, fuera del caso Gaussiano, covarianza cero NO implica independencia).
+
+\noindent
+Si la matriz $C$ es invertible, el vector tiene densidad multivariante (la generalización en $n$ dimensiones de la fórmula de la normal):
+\begin{equation*}
+    f_X(x) = \frac{1}{(2\pi)^{n/2}(\det C)^{1/2}} \exp\left(-\frac12\langle x-m,\, C^{-1}(x-m)\rangle\right).
+\end{equation*}
+(No es necesario memorizar la deducción, solo saber que existe y que generaliza la fórmula 1D.)
+
+\section{Proceso Gaussiano: lo que hay que saber}
+
+\begin{definicion}
+$(X_t)_{t\ge0}$ es un \textbf{proceso Gaussiano} si para cualquier elección finita de instantes $t_1,\dots,t_n$, el vector $(X_{t_1},\dots,X_{t_n})$ es un vector Gaussiano. Queda caracterizado por:
+\begin{itemize}
+    \item la \textbf{función de media} $m(t)=E[X_t]$,
+    \item la \textbf{función de covarianza} $K(s,t)=\mathrm{Cov}(X_s,X_t)$.
+\end{itemize}
+\end{definicion}
+
+\begin{observacion}
+Idea clave: si me dan cualquier función de media $m(t)$ y cualquier función $K(s,t)$ que sea simétrica y "positiva definida" (una condición técnica de consistencia), el \textbf{Teorema de Existencia (vía Kolmogorov)} garantiza que existe de verdad un proceso Gaussiano con esa media y esa covarianza. Esto es justo lo que permite construir el Movimiento Browniano en la sección siguiente.
+\end{observacion}
+
+\subsection*{Estacionariedad (idea básica)}
+Un proceso es \textbf{estacionario} si su comportamiento estadístico no cambia al desplazarlo en el tiempo. Hay una versión fuerte (toda la distribución es invariante) y una débil (solo la media y la covarianza son invariantes). \textbf{Dato importante:} para procesos Gaussianos, ambas nociones \textbf{coinciden} (porque la Gaussiana queda totalmente determinada por media y covarianza).
+
+\subsection*{Continuidad de las trayectorias (idea básica)}
+Existen resultados técnicos (Kolmogorov-Chentsov) que garantizan que, si los incrementos del proceso no crecen demasiado rápido, las trayectorias pueden tomarse \textbf{continuas} (de hecho Hölder-continuas). No hace falta el detalle, solo saber que esta propiedad es la que hace "razonable" dibujar trayectorias continuas de un proceso Gaussiano como el Movimiento Browniano.
+
+\section{Movimiento Browniano: el resultado central del tema}
+
+\begin{definicion}[Movimiento Browniano Estándar, MBE]
+Es un proceso Gaussiano $(B_t)_{t\ge0}$ con
+\begin{equation*}
+    E[B_t]=0, \qquad \mathrm{Cov}(B_s,B_t) = \min(s,t).
+\end{equation*}
+\end{definicion}
+
+\begin{observacion}
+De dónde viene: si tomamos un CTRW con saltos cada vez más pequeños pero cada vez más frecuentes (límite difusivo visto en el tema anterior), el proceso converge exactamente a este Movimiento Browniano. Es, en cierto sentido, "el ruido aleatorio más simple posible".
+\end{observacion}
+
+\noindent
+\textbf{Propiedades que hay que recordar (las importantes):}
+\begin{itemize}
+    \item $B_0=0$ y las trayectorias son continuas.
+    \item Para $s<t$: el incremento $B_t-B_s \sim N(0,t-s)$ — la varianza solo depende de \textbf{cuánto tiempo} ha pasado, no de en qué momento empieza.
+    \item Los incrementos en intervalos disjuntos son \textbf{independientes} (incrementos independientes y estacionarios).
+    \item Es un \textbf{proceso de Markov}: el futuro solo depende del valor actual, no de cómo se llegó hasta ahí.
+    \item Tiene propiedades de simetría útiles: se puede trasladar, reflejar ($-B_t$), reescalar ($\sqrt{c}\,B_{t/c}$) o invertir en el tiempo, y en todos los casos se obtiene de nuevo un Movimiento Browniano.
+\end{itemize}
+
+\subsection*{Martingala (idea básica)}
+Una \textbf{martingala} es un proceso cuya mejor predicción del futuro, sabiendo todo el pasado, es simplemente su valor actual: $E[Y_t\mid \mathcal{F}_s]=Y_s$ para $s<t$.
+
+\begin{teo}
+$(B_t)$ y $(B_t^2-t)$ son ambos martingalas.
+\end{teo}
+
+\begin{teo}[Caracterización de Lévy — muy útil en la práctica]
+Si un proceso $(X_t)$ cumple: empieza en $0$, tiene trayectorias continuas, y tanto $(X_t)$ como $(X_t^2-t)$ son martingalas, \textbf{entonces $(X_t)$ es un Movimiento Browniano}.
+\end{teo}
+
+\begin{observacion}
+Esto es muy práctico: en vez de comprobar la definición Gaussiana completa, basta verificar estas tres condiciones (más fáciles de chequear) para saber que un proceso dado es un Movimiento Browniano.
+\end{observacion}
+
+\section{Resumen en una frase por concepto}
+
+\begin{itemize}
+    \item \textbf{Vector Gaussiano:} todas sus combinaciones lineales son normales (no basta con que cada componente lo sea).
+    \item \textbf{Independencia $=$ covarianza cero}, pero solo si las variables son conjuntamente Gaussianas.
+    \item \textbf{Proceso Gaussiano:} cualquier conjunto finito de instantes da un vector Gaussiano; queda definido por su media y su covarianza, y siempre existe si la covarianza es "razonable" (positiva definida).
+    \item \textbf{Estacionariedad fuerte = débil} solo en el caso Gaussiano.
+    \item \textbf{Movimiento Browniano:} el proceso Gaussiano más simple (media 0, covarianza $\min(s,t)$); tiene incrementos independientes y normales, es Markoviano, y es una martingala. La caracterización de Lévy permite reconocerlo fácilmente sin pasar por la definición completa.
+\end{itemize}
+
+\include{Topic}
+\end{document}
+
+

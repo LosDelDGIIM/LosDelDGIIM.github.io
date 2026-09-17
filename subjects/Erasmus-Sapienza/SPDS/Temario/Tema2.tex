@@ -1,0 +1,847 @@
+\chapter{Stochastic Processes}
+\noindent
+Antes de empezar a trabajar con procesos estocásticos vamos a recordar los \tbf{axiomas de Kolmogoron}, que son las tres condiciones fundamentales que definen matemáticamente una medida de probabilidad. Dado un espacio muestral $\Omega$ y una colección de sucesos $\mathcal{F}$, tenemos
+
+\begin{itemize}
+    \item \tbf{Axioma de No Negatividad:} La probabilidad de cualquier suceso $A$ es un número real mayor o igual a cero
+    \begin{equation*}
+        P(A) \geq 0 \quad \forall A \in \mathcal{F}
+    \end{equation*}
+    \item \tbf{Axioma de Certidumbre:} La probabilidad de que ocurra el espacio muestral completo $\Omega$ (el suceso seguro) es exactamente igual a $1$
+    \begin{equation*}
+        P(\Omega) = 1
+    \end{equation*}
+    \item \tbf{Axioma de Aditividad Sigma ($\sigma$-aditividad):} Si tienes una secuencia infinita de sucesos mutuamente excluyentes o disjuntos entre sí ($A_i \cap A_j = \emptyset$ para todo $i \neq j$), la probabilidad de su unión es la suma de sus probabilidades individuales
+    \begin{equation*}
+        P\left(\bigcup_{i=1}^{\infty} A_i\right) = \sum_{i=1}^{\infty} P(A_i)
+    \end{equation*}
+\end{itemize}
+
+\noindent
+Tras constatar las limitaciones de los enfoques puramente deterministas para modelar sistemas complejos de alta dimensión, la Ciencia de Datos recurre al paradigma probabilístico formalizado a través de la teoría de la medida. 
+
+\begin{definicion}
+    Un \textbf{proceso estocástico} es una colección de variables aleatorias indexadas en el tiempo, definidas sobre un mismo espacio de probabilidad analítico $(\Omega, \mathcal{F}, \mathbb{P})$. En este espacio:
+    \begin{itemize}
+        \item $\Omega$ representa el espacio muestral que contiene todos los eventos elementales posibles $\omega$.
+        \item $\mathcal{F}$ constituye la $\sigma$-álgebra de sucesos medibles.
+        \item $\mathbb{P}$ denota la medida de probabilidad asignada a dichos sucesos.
+    \end{itemize}
+    \noindent
+    Matemáticamente, un proceso estocástico $X(\omega, t)$ se define como una función con un dominio bivariado que mapea el producto cartesiano del espacio muestral y el conjunto de indexación temporal hacia un espacio de estados observable en la recta real $\mathbb{R}$ (o $\mathbb{R}^d$ si es multidimensional):
+    \begin{equation}
+        X(\omega, t) : \ \Omega \times \mathbb{R}_0^+ \longrightarrow \mathbb{R}
+    \end{equation}
+\end{definicion}
+
+
+\noindent La comprensión profunda de este objeto matemático radica en su \textbf{naturaleza dual}, la cual se manifiesta dependiendo de qué variable se mantenga constante: el elemento aleatorio $\omega$ o el tiempo $t$.
+
+\subsection{Realización o Trayectoria ($ \bar{\omega} $ fijo, $t$ variable)}
+\noindent
+Si fijamos un evento elemental específico del estado de la naturaleza $\bar{\omega} \in \Omega$, el componente aleatorio se disipa por completo. La función resultante
+$$X(\bar{\omega}, t)$$
+es una función puramente determinista del tiempo denominada \textbf{realización}, \textbf{trayectoria} o \textit{sample path} del proceso estocástico. Esta curva representa la evolución histórica concreta que ha seguido el fenómeno bajo estudio.
+
+\subsection{Variable Aleatoria ($t = \bar{t}$ fijo, $\omega$ variable)}
+Si fijamos un instante de tiempo preciso $\bar{t} \in \mathbb{R}_0^+$ y permitimos que $\omega$ varíe a lo largo de todo el espacio muestral, el objeto matemático colapsa en una \textbf{variable aleatoria} tradicional[cite: 54, 56]. Para que esta variable sea matemáticamente válida, la función debe satisfacer la condición de \textbf{medibilidad} respecto a la $\sigma$-álgebra $\mathcal{F}$. Esto significa que la anti-imagen de cualquier conjunto de Borel $B \in \mathbb{R}$ debe ser un suceso integrable:
+\begin{equation}
+    X^{-1}(B, \bar{t}) = \{ \omega \in \Omega \mid X(\omega, \bar{t}) \in B \} \in \mathcal{F}
+\end{equation}
+Esta condición analítica asegura que siempre seremos capaces de asignar una medida de probabilidad válida a la ocurrencia de dicho estado en el tiempo.
+
+\begin{observacion}
+    Si el conjunto de indexación del proceso estocástico no representa el tiempo sino coordenadas espaciales continuas, el objeto se denomina \textbf{Campo Aleatorio} (\textit{Random Field}). Asimismo, si el índice abarca tanto coordenadas del espacio como del tiempo, se define formalmente como un campo aleatorio variable en el tiempo.
+\end{observacion}
+
+\section{Procesos de Tiempo Discreto y Espacio de Estados Finito}
+
+Una vez estructurado el marco teórico continuo, resulta indispensable estudiar la variante discreta y finita, la cual es la base de las aplicaciones computacionales y los modelos algorítmicos. Consideremos un proceso donde el espacio de estados es un \textbf{conjunto finito} de tamaño $g$[cite: 57, 58]:
+\begin{equation}
+    X_m = x_m \quad \text{donde } x_m \in S = \{1, 2, \dots, g\}
+\end{equation}
+Al muestrear el proceso en una secuencia ordenada de instantes temporales discretos, obtenemos la sucesión de variables aleatorias $X_1, X_2, \dots, X_m$. 
+
+Para caracterizar estadísticamente y de forma completa el comportamiento conjunto de estas variables, recurrimos a las llamadas \textbf{Distribuciones Finito-Dimensionales} (FDD).
+
+\subsection{Definición de la Distribución Conjunta}
+La distribución finito-dimensional para $m$ puntos en el tiempo se define como la probabilidad de la intersección lógica ($\cap$) de que cada variable aleatoria tome un valor específico del espacio de estados simultáneamente:
+\begin{equation}
+    P(X_1 = x_1, X_2 = x_2, \dots, X_m = x_m) = \mathbb{P}\big( \{X_1 = x_1\} \cap \{X_2 = x_2\} \cap \dots \cap \{X_m = x_m\} \big)
+\end{equation}
+\noindent
+Para que una familia de distribuciones finito-dimensionales defina un proceso estocástico consistente y bien estructurado, debe satisfacer obligatoriamente dos propiedades axiomáticas esenciales:
+
+\begin{prop}[\textbf{Simetría ante Permutaciones}]
+La distribución conjunta del vector de variables aleatorias debe ser estrictamente invariante respecto al orden en el que se listen o registren sus componentes dentro del operador de probabilidad[cite: 62, 66]. Sea $\sigma = (\sigma_1, \sigma_2, \dots, \sigma_m)$ una permutación arbitraria de los índices de tiempo, la igualdad funcional debe mantenerse inalterada:
+\begin{equation*}
+    \mathbb{P}\big( \{X_1 = x_1\} \cap \dots \cap \{X_m = x_m\} \big) = \mathbb{P}\big( \{X_{\sigma_1} = x_{\sigma_1}\} \cap \dots \cap \{X_{\sigma_m} = x_{\sigma_m}\} \big)
+\end{equation*}
+\end{prop}
+
+\begin{prop}[\textbf{Consistencia de Marginalización}]
+Si disponemos de la caracterización probabilística conjunta para un sistema de $m$ variables, debemos ser capaces de colapsar la dimensión del problema y recuperar con total fidelidad la distribución de un subconjunto menor de variables (por ejemplo, $m-1$ puntos)[cite: 63, 66]. Analíticamente, esto se logra aplicando el teorema de la probabilidad total, eliminando la variable no deseada (digamos, $X_2$) mediante la suma sobre todo su soporte finito admisible:
+\begin{equation*}
+    \sum_{x_2 \in \{1, 2, \dots, g\}} \mathbb{P}\big( \{X_1 = x_1\} \cap \{X_2 = x_2\} \cap \dots \cap \{X_m = x_m\} \big) = \mathbb{P}\big( \{X_1 = x_1\} \cap \dots \cap \{X_m = x_m\} \big)
+\end{equation*}
+\end{prop}
+
+Estas dos propiedades constituyen las hipótesis del \textbf{Teorema de Consistencia de Kolmogorov}, el cual asegura que a partir de una familia consistente de distribuciones finito-dimensionales que cumplan con la simetría y la marginalización, queda garantizada la existencia única de un proceso estocástico real en el espacio $(\Omega, \mathcal{F}, \mathbb{P})$.
+
+\section{Construcción Formal del Espacio Muestral Colectivo}
+
+Consideremos un proceso estocástico compuesto por tres variables aleatorias binarias o dicotómicas $X_1, X_2, X_3$ que modelan lanzamientos sucesivos de monedas (caras $H$ y cruces $T$) . 
+
+Para una única variable aleatoria elemental $X_i$, el espacio muestral es $\Omega = \{H, T\}$  y su $\sigma$-álgebra correspondiente es el conjunto de las partes $\mathcal{F} = \{\emptyset, \{H\}, \{T\}, \{H, T\}\}$ . Definimos la medida de probabilidad elemental mediante:
+\begin{equation}
+    P(\{H\}) = p, \qquad P(\{T\}) = 1 - p \quad \text{con } p \in (0,1) 
+\end{equation}
+La variable aleatoria se mapea numéricamente asignando $X_i(T) = 0$ y $X_i(H) = 1$ .
+
+Al extender el análisis a la combinación conjunta de las tres variables $X_1, X_2, X_3$, construimos el **espacio de probabilidad producto** $(\Omega_3, \mathcal{F}_3, \mathbb{P}_3)$ , donde:
+\begin{itemize}
+    \item El espacio muestral conjunto es el producto cartesiano de los espacios individuales, generando un total de $2^3 = 8$ resultados elementales (eventos atómicos) $\omega$ :
+    \begin{equation}
+        \Omega_3 = \Omega \times \Omega \times \Omega = \{H, T\}^3 = \{(H,H,H), (H,H,T), \dots, (T,T,T)\} 
+    \end{equation}
+    \item La $\sigma$-álgebra global $\mathcal{F}_3$ se genera a partir de la unión y complemento de todas las combinaciones de estos sucesos elementales . Esto se denota formalmente como la $\sigma$-álgebra generada por los conjuntos unitarios :
+    \begin{equation}
+        \mathcal{F}_3 = \sigma\big( \{(H,H,H)\}, \{(H,H,T)\}, \dots, \{(T,T,T)\} \big) 
+    \end{equation}
+    \item La medida de probabilidad global $\mathbb{P}_3$ es el producto tensorial de las medidas individuales :
+    \begin{equation}
+        \mathbb{P}_3 = \bigotimes_{i=1}^3 \mathbb{P} 
+    \end{equation}
+\end{itemize}
+
+\section{Distribución Finito-Dimensional y la Propiedad de Intercambiabilidad}
+
+Si asumimos provisionalmente que los ensayos son estadísticamente independientes, la probabilidad conjunta de que ocurra una secuencia de eventos específicos $\{X_1 = x_1\} \cap \{X_2 = x_2\} \cap \{X_3 = x_3\}$ se reduce al producto de sus probabilidades marginales :
+\begin{equation}
+    P(X_1 = x_1, X_2 = x_2, X_3 = x_3) = P(X_1 = x_1) \cdot P(X_2 = x_2) \cdot P(X_3 = x_3) 
+\end{equation}
+
+Dado que el espacio muestral conjunto contiene 8 casos posibles , para definir por completo esta distribución necesitaríamos en principio conocer $2^3 - 1 = 7$ números independientes (ya que la última probabilidad se deduce por complemento restando a la unidad: $1 - \sum P_i$) . 
+
+Sin embargo, al observar las asignaciones numéricas analíticas para cada una de las 8 secuencias (definiendo $q = 1-p$) , emerge una propiedad fundamental:
+\begin{equation}
+    \begin{aligned}
+        P(0,0,0) &= (1-p)^3 = q^3  \\
+        P(0,0,1) = P(0,1,0) = P(1,0,0) &= (1-p)^2 p = q^2 p  \\
+        P(0,1,1) = P(1,1,0) = P(1,0,1) &= (1-p) p^2 = q p^2  \\
+        P(1,1,1) &= p^3 
+    \end{aligned}
+\end{equation}
+
+
+\subsection*{El Concepto de Distribución Intercambiable (Exchangeable)}
+Nota cómo las secuencias que contienen **el mismo número de éxitos (1) y de fracasos (0) tienen exactamente la misma probabilidad**, sin importar el orden temporal en el que ocurrieron. Por ejemplo, $P(0,0,1) = P(0,1,0) = P(1,0,0)$ . Esta es la definición de una **Distribución Intercambiable** . 
+
+\begin{definicion}
+    A \textbf{exchangeable distribution} es aquella en la que cualquier permutación de una secuencia de variables aleatorias tiene exactamente la misma probabilidad. En otras palabras, las secuencias que contienen el mismo número de éxitos y fracasos comparten idéntica probabilidad, sin importar el orden temporal en el que ocurrieron.
+\end{definicion}
+
+Bajo esta condición, la suma de todas las intensidades probabilísticas se reduce notablemente mediante el desarrollo del binomio de Newton :
+\begin{equation}
+    \sum P(\omega) = (p+q)^3 = p^3 + 3p^2q + 3pq^2 + q^3 = 1 
+    \label{eq:binomio}
+\end{equation}
+
+
+\section{Demostración Analítica de la Consistencia de Marginalización}
+
+Para corroborar que nuestra estructura conjunta cumple con la propiedad axiomática de marginalización (consistencia de Kolmogorov), procedemos a colapsar la dimensión de la distribución eliminando la variable correspondiente al tercer lanzamiento, $X_3$, sumando sobre todo su soporte elemental $x_3 \in \{0, 1\}$ :
+\begin{equation}
+    P(X_1 = 0, X_2 = 0) = \sum_{x_3 \in \{0,1\}} P(X_1 = 0, X_2 = 0, X_3 = x_3) 
+\end{equation}
+
+Desglosando los términos correspondientes a la suma del soporte del tercer lanzamiento :
+\begin{equation}
+    P(X_1 = 0, X_2 = 0) = P(0,0,1) + P(0,0,0) 
+\end{equation}
+Sustituyendo los valores funcionales de la distribución previamente calculados :
+\begin{equation}
+    P(X_1 = 0, X_2 = 0) = (1-p)^2 p + (1-p)^3 
+\end{equation}
+Factorizando por término común la expresión cuadrática del fracaso, $(1-p)^2$ :
+\begin{equation}
+    P(X_1 = 0, X_2 = 0) = (1-p)^2 \big[ p + (1-p) \big] 
+\end{equation}
+Dado que el término entre corchetes se reduce a la unidad ($p + 1 - p = 1$), obtenemos el resultado final marginalizado :
+\begin{equation}
+    P(X_1 = 0, X_2 = 0) = (1-p)^2 \cdot [1] = (1-p)^2 
+\end{equation}
+
+\subsection*{Conclusión de la Demostración}
+El resultado corrobora perfectamente que la probabilidad conjunta de dos dimensiones coincide de manera idéntica con el producto de sus probabilidades marginales independientes: $P(X_1 = 0) \cdot P(X_2 = 0) = (1-p) \cdot (1-p) = (1-p)^2$ . La distribución finito-dimensional es consistente .
+
+\section{Modelos de Urnas e Intercambiabilidad Sin Independencia}
+
+Sea una urna que contiene inicialmente un total de $N$ bolas, divididas en $B$ bolas negras (black) y $W$ bolas blancas (white), de modo que $N = B + W$. Extraemos una muestra de tamaño $n$, donde se observan $b$ bolas negras y $w$ bolas blancas ($n = b + w$).
+\noindent
+Asignamos una variable aleatoria binaria $X_i$ para cada extracción $i$, de tal manera que:
+\begin{equation}
+    X_i = \begin{cases} 1 & \text{si se extrae una bola Negra ($B$)} \\ 0 & \text{si se extrae una bola Blanca ($W$)} \end{cases}
+\end{equation}
+
+\subsection{Muestreo Sin Reemplazo y la Distribución Hipergeométrica}
+
+En un esquema de extracción \textbf{sin reemplazo}, las probabilidades de cada extracción dependen de la historia pasada, eliminando la independencia estadística. 
+
+\subsection*{Análisis de Trayectorias}
+Evaluemos la probabilidad conjunta de obtener la secuencia específica blanca, blanca, negra ($W_1, W_2, B_3$):
+\begin{equation}
+    P(X_1 = 0, X_2 = 0, X_3 = 1) = \frac{W}{N} \cdot \frac{W-1}{N-1} \cdot \frac{B}{N-2} = \frac{4}{8} \cdot \frac{3}{7} \cdot \frac{4}{6}
+\end{equation}
+Si alteramos el orden cronológico de la secuencia a blanca, negra, blanca ($W_1, B_2, W_3$), la probabilidad conjunta es:
+\begin{equation}
+    P(X_1 = 0, X_2 = 1, X_3 = 0) = \frac{W}{N} \cdot \frac{B}{N-1} \cdot \frac{W-1}{N-2} = \frac{4}{8} \cdot \frac{4}{7} \cdot \frac{3}{6}
+\end{equation}
+
+\subsection*{Propiedad de Intercambiabilidad}
+A pesar de la falta de independencia, ambas secuencias arrojan exactamente el mismo valor numérico porque sus numeradores y denominadores contienen los mismos factores en diferente orden. Para una secuencia genérica ordenada con $w$ blancas primero y $b$ negras después, la probabilidad se formaliza mediante el \textbf{factorial descendente} (denotado como $x_{(y)} = x(x-1)\cdots(x-y+1)$):
+\begin{equation}
+    P(\underbrace{W_1, \dots, W_w}_{w}, \underbrace{B_{w+1}, \dots, B_n}_{b}) = \frac{W_{(w)} B_{(b)}}{N_{(n)}} = \frac{W(W-1)\cdots(W-w+1) \cdot B(B-1)\cdots(B-b+1)}{N(N-1)\cdots(N-n+1)}
+\end{equation}
+
+Dado que cualquier permutación de esta secuencia tiene la misma probabilidad, para hallar la probabilidad de obtener $w$ blancas y $b$ negras en \textit{cualquier} orden, multiplicamos por el coeficiente combinatorio $\binom{n}{w} = \frac{n!}{w!b!}$, resultando en la \textbf{Distribución Hipergeométrica}:
+\begin{equation}
+    P(w, b) = \frac{n!}{w!b!} \cdot \frac{W_{(w)} B_{(b)}}{N_{(n)}}
+\end{equation}
+
+
+\subsection{Muestreo con Reforzamiento: El Modelo de Urnas de Pólya}
+
+En el muestreo \textbf{con reforzamiento}, cada vez que se extrae una bola, se observa su color, se devuelve a la urna y \textbf{se añade una bola extra de ese mismo color}. Este mecanismo introduce una dependencia positiva (correlación).
+
+\subsection*{Análisis de Trayectorias}
+Evaluemos la probabilidad de la secuencia blanca, blanca, negra ($W_1, W_2, B_3$):
+\begin{equation}
+    P(W_1, W_2, B_3) = \frac{W}{N} \cdot \frac{W+1}{N+1} \cdot \frac{B}{N+2} = \frac{4}{8} \cdot \frac{5}{9} \cdot \frac{4}{10}
+\end{equation}
+
+\subsection*{Generalización y Factorial Ascendente}
+Para una secuencia genérica con $w$ blancas y $b$ negras, el comportamiento se modela mediante el \textbf{factorial ascendente} (denotado como $x^{(y)} = x(x+1)\cdots(x+y-1)$):
+\begin{equation}
+    P(W_1, \dots, W_w, B_{w+1}, \dots, B_n) = \frac{W^{(w)} B^{(b)}}{N^{(n)}}= \frac{W(W+1)\cdots(W+w-1) \cdot B(B+1)\cdots(B+b-1)}{N(N+1)\cdots(N+n-1)}
+\end{equation}
+
+Como el orden de los factores en el numerador no altera el producto, el proceso sigue siendo **intercambiable**. Multiplicando por todas las combinaciones posibles de ordenar la secuencia, obtenemos la \textbf{Distribución de Pólya}:
+\begin{equation}
+    P(w, b) = \frac{n!}{w!b!} \cdot \frac{W^{(w)} B^{(b)}}{N^{(n)}}
+\end{equation}
+
+
+\section{Modelos de Asignación Combinatoria}
+
+El análisis macroscópico de los procesos estocásticos en ciencia de datos requiere definir formalmente cómo se distribuyen e indexan un conjunto de datos u objetos dentro de un espacio de estados acotado. Formalmente, consideramos el problema de asignar $m$ objetos en $g$ categorías (o clases) diferenciables .
+
+Para estructurar este problema, definimos el marco de trabajo mediante las siguientes condiciones axiomáticas:
+\begin{enumerate}
+    \item Los $m$ objetos son discernibles y pueden ser etiquetados unívocamente con valores enteros del conjunto $\{1, 2, \dots, m\}$ .
+    \item Las $g$ categorías o clases son igualmente discernibles y se indexan mediante el conjunto $\{1, 2, \dots, g\}$ .
+\end{enumerate}
+
+Para realizar un seguimiento probabilístico del sistema, se pueden adoptar diferentes niveles de descripción matemática según el grado de detalle requerido.
+
+\subsection{Individual Description}
+
+La \textbf{descripción individual} constituye el nivel microscópico más detallado de asignación. En este enfoque, registramos de forma exacta y ordenada a qué categoría específica pertenece cada uno de los objetos examinados .
+
+Matemáticamente, definimos la variable de estado individual como:
+\begin{equation}
+    X_i = j \quad \longrightarrow \quad \text{El objeto $i$ se encuentra asignado a la categoría $j$} 
+\end{equation}
+
+El número total de configuraciones microscópicas u ordenaciones posibles para situar $m$ objetos en $g$ cajas está determinado por las variaciones con repetición, lo cual equivale a multiplicar el número de opciones de cajas disponibles para cada objeto :
+\begin{equation}
+    \text{Número total de combinaciones individuales} = g^m 
+\end{equation}
+
+\subsection*{Ejemplo Ilustrativo ($m=3$ objetos, $g=3$ categorías)}
+Consideremos el caso expuesto en la imagen donde disponemos de 3 objetos y 3 cajas . Una descripción individual específica sería determinar que el primer objeto está en la caja 2, el segundo en la caja 1, y el tercero en la caja 2 ($x_1=2, x_2=1, x_3=2$) . El total de mundos microscópicos posibles para este ejemplo es $3^3 = 27$ realizaciones .
+
+
+\subsection{Statistical Description}
+
+En muchas aplicaciones prácticas de la ciencia de datos, no nos interesa conocer la identidad exacta de qué objeto específico cayó dentro de una caja, sino únicamente el \textbf{conteo agregado} o la frecuencia final de ocupación de cada categoría . A este nivel intermedio se le denomina \textbf{descripción estadística} .
+
+Formalmente, definimos la variable de conteo macroscópico mediante:
+\begin{equation}
+    Y_i = m_i \quad \longrightarrow \quad \text{La categoría (caja) $i$ contiene exactamente $m_i$ objetos} 
+\end{equation}
+Sujeto a la restricción física de que la suma de todos los objetos en las categorías debe igualar al total de la muestra $m$ :
+\begin{equation}
+    \sum_{i=1}^{g} Y_i = m 
+\end{equation}
+
+El número total de descripciones estadísticas posibles corresponde al cálculo combinatorio de \textbf{combinaciones con repetición} (la clásica técnica de ``barras y estrellas''), modelada mediante el coeficiente combinatorio :
+\begin{equation}
+    \text{Total de descripciones estadísticas} = \binom{m+g-1}{m} = \binom{m+g-1}{g-1} = \frac{(m+g-1)!}{m!(g-1)!} 
+\end{equation}
+
+Para nuestro ejemplo base ($m=3, g=3$), el número de estados estadísticos es :
+\[
+\binom{3+3-1}{3} = \binom{5}{3} = 10 \text{ configuraciones macroscópicas} 
+\]
+Estas 10 configuraciones equivalen a los vectores de ocupación lineal mostrados en los apuntes : $(3,0,0)$, $(0,3,0)$, $(0,0,3)$, $(1,2,0)$, $(1,0,2)$, $(0,1,2)$, $(2,1,0)$, $(2,0,1)$, $(0,2,1)$ y $(1,1,1)$ .
+
+\subsection{Frequencies of frequencies descriptors (f.o.f.)}
+
+En el estudio macroscópico de asignación de $m$ objetos en $g$ categorías, el nivel máximo de compresión abstracta se alcanza mediante las \textbf{descripciones de frecuencias}. En este enfoque, se pierde por completo tanto la identidad de los objetos individuales como la identidad de las categorías particulares.
+
+\begin{definicion}
+Sea $Z_i$ la variable aleatoria que contabiliza la estructura global del sistema. Se define como:
+\begin{equation}
+    Z_i = j \quad \longrightarrow \quad \text{Existen exactamente $j$ categorías que contienen $i$ objetos}
+\end{equation}
+\end{definicion}
+
+\subsubsection{Ecuaciones Fundamentales de Restricción}
+
+Cualquier vector válido de frecuencias de frecuencias $\underline{Z} = (Z_0, Z_1, \dots, Z_m)$ debe satisfacer de manera obligatoria las siguientes dos leyes de conservación algebraica:
+
+\begin{prop}[\textbf{Conservación de Categorías}]
+La suma de todas las componentes del vector debe igualar al número total de categorías $g$ del sistema:
+\begin{equation}
+    \sum_{i=0}^{m} Z_i = g
+\end{equation}
+\end{prop}
+
+\begin{prop}[\textbf{Conservación de Objetos}]
+La suma ponderada de las componentes por su respectivo número de objetos debe igualar al tamaño total de la muestra $m$:
+\begin{equation}
+    \sum_{i=0}^{m} i \cdot Z_i = m
+\end{equation}
+\end{prop}
+
+---
+
+\begin{ejercicio}
+¿Cuál es el número de descripciones estadísticas (vectores de conteo de ocupación $\underline{Y}$) correspondientes a un vector de frecuencias de frecuencias dado $\underline{Z} = \underline{z}$? \\
+
+\noindent
+Dado que una descripción f.o.f. representa la estructura abstracta de ocupación sin importar qué etiqueta tenga cada caja, el número de formas distintas en que las categorías pueden ordenarse para cumplir dicha distribución se calcula mediante el coeficiente multinomial de permutación de categorías:
+\begin{equation}
+    \text{Número de descripciones estadísticas} = \frac{g!}{Z_0! \cdot Z_1! \cdot Z_2! \cdot \dots \cdot Z_m!}
+\end{equation}
+\end{ejercicio}
+
+\begin{ejemplo}
+    Para un estado donde una caja está vacía, otra tiene un objeto y otra tiene dos objetos, el vector f.o.f. es $\underline{z} = (1, 1, 1, 0)$. El número de descripciones estadísticas asociadas es:
+    \[
+    \text{Descripciones Estadísticas} = \frac{3!}{1! \cdot 1! \cdot 1! \cdot 0!} = 6
+    \]
+    Correspondientes a las permutaciones simétricas de ocupación del espacio de estados: $(1,2,0)$, $(2,1,0)$, $(1,0,2)$, $(2,0,1)$, $(0,1,2)$ y $(0,2,1)$.
+\end{ejemplo}
+
+
+\section{Probabilidades Predictivas}
+
+\begin{definicion}
+La \textbf{probabilidad predictiva} es la probabilidad condicional de que un proceso estocástico tome un estado específico en el futuro ($t=m$), dado que se conoce el registro histórico completo de sus realizaciones pasadas.
+\end{definicion}
+
+\subsubsection{Descomposición por la Regla de la Cadena}
+
+Utilizando la definición formal de probabilidad condicional ($P(A \cap B) = P(B \mid A)P(A)$), cualquier distribución conjunto o trayectoria finito-dimensional se puede descomponer recursivamente como el producto de una probabilidad inicial y una secuencia de probabilidades predictivas:
+
+\begin{equation*}
+    P(X_1 = x_1, \dots, X_m = x_m) = P(X_1 = x_1) \prod_{k=2}^{m} P(X_k = x_k \mid X_1 = x_1, \dots, X_{k-1} = x_{k-1})
+\end{equation*}
+
+Para un sistema de tres variables, la expansión exacta se escribe como:
+\begin{equation*}
+    P(X_1 = x_1, X_2 = x_2, X_3 = x_3) = P(X_3 = x_3 \mid X_2 = x_2, X_1 = x_1) \cdot P(X_2 = x_2 \mid X_1 = x_1) \cdot P(X_1 = x_1)
+\end{equation*}
+
+
+\begin{ejemplo}
+    Evaluación cronológica paso a paso de la trayectoria blanca, blanca, negra ($W, W, B$) en una urna con composición inicial $N = B + W$:
+
+    \begin{enumerate}
+        \item \textbf{Estado Inicial ($t=1$):} Probabilidad marginal de extraer la primera blanca:
+        \begin{equation}
+            P(X_1 = W) = \frac{W}{N}
+        \end{equation}
+        \item \textbf{Primera Predicción ($t=2$):} Condicionado a la primera blanca, se añade una bola extra de ese color ($W+1$ blancas, $N+1$ totales):
+        \begin{equation}
+            P(X_2 = W \mid X_1 = W) = \frac{W+1}{N+1}
+        \end{equation}
+        \item \textbf{Segunda Predicción ($t=3$):} Condicionado a la historia previa ($W,W$), el total de la urna sube a $N+2$. La cantidad de negras se mantiene intacta:
+        \begin{equation}
+            P(X_3 = B \mid X_1 = W, X_2 = W) = \frac{B}{N+2}
+        \end{equation}
+    \end{enumerate}
+
+    Multiplicando los tres factores predictivos secuenciales obtenemos la probabilidad conjunta de la trayectoria:
+    \begin{equation*}
+        P(W, W, B) = \frac{W}{N} \cdot \frac{W+1}{N+1} \cdot \frac{B}{N+2}
+    \end{equation*}
+    \begin{definicion}
+        Para cualquier paso temporal $m$, la probabilidad predictiva de observar un éxito (bola Negra) se calcula directamente sumando la memoria del proceso (éxitos acumulados $b = \sum x_i$) al estado inicial, usando la \tbf{fórmula de actualización generalizada}:
+        \begin{equation*}
+            P(X_m = B \mid X_1 = x_1, \dots, X_{m-1} = x_{m-1}) = \frac{B + b}{N + m - 1}
+        \end{equation*}
+    \end{definicion}
+\end{ejemplo}
+
+\section{El Proceso de Pólya Generalizado}
+
+
+Consideremos una urna generalizada que contiene bolas distribuidas en $g$ colores o categorías diferenciables . El estado inicial del sistema se parametriza mediante el número teórico de bolas asignado a cada componente :
+\begin{equation*}
+    \alpha_1 > 0, \ \alpha_2 > 0, \ \dots, \ \alpha_g > 0 
+\end{equation*}
+Aunque estos parámetros representan físicamente el conteo inicial de bolas (enteros), el formalismo matemático permite que $\alpha_i \in \mathbb{R}$ de forma continua sin alterar la validez del proceso . El volumen o masa total inicial de la urna se define como la suma indexada de sus componentes :
+\begin{equation*}
+    \alpha = \sum_{i=1}^{g} \alpha_i 
+\end{equation*}
+
+El proceso evoluciona de forma discreta paso a paso. En cada extracción, se observa el color de la bola, se devuelve a la urna y se añade una bola extra de esa misma categoría (mecanismo de reforzamiento positivo) . Tras haber efectuado un número $n$ de extracciones totales, denotamos como $n_i$ al número de bolas acumuladas del tipo $i$, cumpliendo la condición de conservación de la muestra :
+\begin{equation*}
+    n = \sum_{i=1}^{g} n_i \quad \text{donde } n_i = \sum_{j=1}^{n} I_{\{X_j = i\}} 
+\end{equation*}
+Aquí, $I_{\{X_j = i\}}$ representa la función indicadora que computa si la extracción en el tiempo $j$ perteneció a la clase $i$ .
+
+\subsection*{Probabilidad Predictiva Generalizada}
+Utilizando la regla de la cadena, la probabilidad condicional de que la siguiente bola extraída en el instante $n+1$ sea de la categoría específica $1$ depende de la historia acumulada a través de la siguiente probabilidad predictiva :
+\begin{equation*}
+    P(X_{n+1} = 1 \mid X_1 = x_1, \dots, X_n = x_n) = \frac{\alpha_1 + n_1}{\alpha + n} 
+\end{equation*}
+Esta asignación es matemáticamente consistente con los axiomas de Kolmogorov, ya que la suma de las probabilidades predictivas sobre todo el espacio de estados finito de las $g$ categorías normaliza estrictamente a la unidad :
+\begin{equation*}
+    \sum_{i=1}^{g} P(X_{n+1} = i \mid X_1 = x_1, \dots, X_n = x_n) = \frac{\sum_{i=1}^{g}(\alpha_i + n_i)}{\alpha + n} = \frac{\alpha + n}{\alpha + n} = 1 
+\end{equation*}
+
+
+\subsection{Distribución Finito-Dimensional y la Medida de Pólya Multivariante}
+
+Deseamos calcular la probabilidad conjunta de observar una trayectoria microscópica particular. Por conveniencia analítica y explotando la propiedad de **intercambiabilidad** del proceso, evaluamos la secuencia ordenada donde se agrupan primero los éxitos de la categoría 1, luego la categoría 2, hasta llegar a la componente $g$ :
+\begin{equation*}
+    P(\underbrace{1, \dots, 1}_{n_1}, \underbrace{2, \dots, 2}_{n_2}, \dots, \underbrace{g, \dots, g}_{n_g}) 
+\end{equation*}
+Aplicando el desarrollo multiplicativo de las probabilidades predictivas secuenciales, la estructura de la fracción conjunta se desglosa como :
+\begin{equation*}
+    \left[ \frac{\alpha_1}{\alpha} \dots \frac{\alpha_1+n_1-1}{\alpha+n_1-1} \right] \cdot \left[ \frac{\alpha_2}{\alpha+n_1} \dots \frac{\alpha_2+n_2-1}{\alpha+n_1+n_2-1} \right] \dots \left[ \frac{\alpha_g}{\alpha+n-n_g} \dots \frac{\alpha_g+n_g-1}{\alpha+n-1} \right] 
+\end{equation*}
+Asociando los factores de cada categoría mediante la definición del **factorial ascendente** ($x^{(y)} = x(x+1)\cdots(x+y-1)$), la probabilidad de esta trayectoria única se simplifica de forma compacta como :
+\begin{equation*}
+    P(\text{Trayectoria Ordenada}) = \frac{\alpha_1^{(n_1)} \alpha_2^{(n_2)} \dots \alpha_g^{(n_g)}}{\alpha^{(n)}} = \frac{1}{\alpha^{(n)}} \prod_{i=1}^{g} \alpha_i^{(n_i)} 
+\end{equation*}
+
+\subsection*{Función de Masa de Probabilidad de Ocupación Colectiva}
+Dado que el proceso es intercambiable, cualquier permutación de esta secuencia comparte exactamente la misma intensidad probabilística . El número de formas distintas en que podemos organizar $n$ objetos donde el color $i$ se repite $n_i$ veces se rige por el coeficiente multinomial $\frac{n!}{n_1! n_2! \dots n_g!}$ .
+
+Multiplicando la multiplicidad por la probabilidad de un solo camino, se define la probabilidad macroscópica del vector de conteo $\underline{Y}(n) = (n_1, \dots, n_g)$, dando origen a la **Distribución de Pólya Multivariante** :
+\begin{equation*}
+    P(\underline{Y}(n) = \underline{n}) = \frac{n!}{\alpha^{(n)}} \prod_{i=1}^{g} \frac{\alpha_i^{(n_i)}}{n_i!} 
+\end{equation*}
+
+
+\subsection{Consistencia de la Distribución: El Caso Marginal Bivariado}
+
+Para corroborar la consistencia interna del modelo bajo el colapso de dimensiones (marginalización), consideremos el caso donde agrupamos las categorías en dos macro-clases ($g=2$) . Sea la primera clase de interés $Y_1 = n_1$ y el residuo agrupado $Y_2 = n - n_1$ . Redefiniendo los parámetros de la urna bajo la condición $\alpha = \alpha_1 + \alpha_2 \implies \alpha_2 = \alpha - \alpha_1$, la probabilidad conjunta colapsa en :
+\begin{equation*}
+    P(Y_1 = n_1) = \frac{n!}{\alpha^{(n)}} \frac{\alpha_1^{(n_1)}}{n_1!} \frac{(\alpha - \alpha_1)^{(n - n_1)}}{(n - n_1)!} 
+\end{equation*}
+Reordenando los términos factoriales en la combinación binaria tradicional $\binom{n}{n_1} = \frac{n!}{n_1!(n-n_1)!}$, recuperamos la **Distribución Beta-Binomial discreta** (Pólya binaria) :
+\begin{equation*}
+    P(Y_1 = n_1) = \binom{n}{n_1} \frac{\alpha_1^{(n_1)} (\alpha - \alpha_1)^{(n - n_1)}}{\alpha^{(n)}} 
+\end{equation*}
+
+Si tomamos el límite asintótico donde la masa inicial de la urna tiende a infinito ($\alpha \to \infty$) lo que ocurre es que el sacar una bola de una categoría concreta y añadir una más de esta, no altera las probabilidades (hay millones de millones de bola y no cambia apenas la probabilidad), por lo que se mantienen las proporciones constantes 
+$$\dfrac{\alpha_1}{\alpha} \to p_1 \quad \text{ y } \quad \frac{\alpha_2}{\alpha} \to p_2$$
+el proceso pierde el efecto de reforzamiento y converge de forma exacta a la **Distribución Multinomial** de ensayos independientes .
+
+
+\subsection{Conexión con Procesos No Markovianos: El Elephant Random Walk}
+
+El tramo final de la hoja conecta el Proceso de Pólya con una aplicación física y biológica de vanguardia en ciencia de datos: el ***Elephant Random Walk*** (Caminata aleatoria del elefante) . Este modelo simula una caminata con **memoria infinita**, donde un agente decide su siguiente paso basándose en todo su recorrido histórico pasado .
+
+Si restringimos las variables de actualización predictiva a dos estados de movimiento dicotómicos $\{1, -1\}$ (donde $1$ representa dar un paso a la derecha y $-1$ representa un paso a la izquierda), las ecuaciones predictivas se mapean directamente con la urna de Pólya binaria :
+\begin{align*}
+    P(X_{n+1} = 1 \mid X_1 = x_1, \dots, X_n = x_n) &= \frac{\alpha_1 + n_1}{\alpha + n} \\
+    P(X_{n+1} = -1 \mid X_1 = x_1, \dots, X_n = x_n) &= \frac{\alpha_2 + n_2}{\alpha + n} = 1 - \frac{\alpha_1 + n_1}{\alpha + n}
+\end{align*}
+Este mapeo analítico demuestra que el *Elephant Random Walk* es, en esencia, un proceso de Pólya encubierto, heredando su propiedad de **intercambiabilidad** y permitiendo resolver analíticamente la posición asintótica del agente a pesar de romper la propiedad de Markov por su dependencia histórica absoluta .
+
+\section{Caminatas Aleatorias y la Versión Finita de de Finetti}
+
+\subsection{Comportamiento Asintótico del Elephant Random Walk}
+
+Consideremos una caminata aleatoria (\textit{random walk}) definida por la suma acumulada de un proceso de variables aleatorias binarias no independientes (no i.i.d.) $X_i \in \{-1, +1\}$ :
+\begin{equation*}
+    Z_n = \sum_{i=1}^{n} X_i 
+\end{equation*}
+
+Heredando las probabilidades predictivas del proceso de Pólya parametrizado por los valores iniciales de la urna ($\alpha_1, \alpha_2$), el comportamiento asintótico (límite casi seguro, c.s.) del agente exhibe tres regímenes dinámicos drásticamente diferentes según la simetría original del sistema :
+\begin{equation*}
+    \begin{array}{llll}
+        \alpha_1 > \alpha_2 & \implies & \lim_{n \to \infty} Z_n = +\infty & \text{c.s.} \\
+        \alpha_2 > \alpha_1 & \implies & \lim_{n \to \infty} Z_n = -\infty & \text{c.s.} \\
+        \alpha_1 = \alpha_2 & \implies & \lim_{n \to \infty} |Z_n| = +\infty & \text{c.s.}
+    \end{array}
+\end{equation*}
+
+\subsection*{Nota sobre la Convergencia Clásica}
+Si el sistema es estrictamente simétrico y los parámetros iniciales son masivos ($\alpha_1 = \alpha_2 \gg 1$), el efecto de memoria del reforzamiento se diluye. El proceso colapsa asintóticamente en una caminata aleatoria simétrica clásica estándar (\textit{unbiased random walk}) gobernada por variables $X_i$ independientes e idénticamente distribuidas (i.i.d.) .
+
+---
+
+\subsection{Propiedad Fundamental de la Distribución Hipergeométrica}
+
+Antes de abordar la representación general de de Finetti, es mandatorio aislar el comportamiento de un proceso intercambiable bajo el esquema de muestreo sin reemplazo (Distribución Hipergeométrica) . 
+
+\begin{lema}
+Dada una secuencia de variables binarias de longitud $n$ bajo una distribución hipergeométrica puramente determinista condicionada a registrar exactamente un número fijo de $h$ éxitos, la probabilidad conjunta de observar cualquier trayectoria microscópica específica es **uniforme** :
+\begin{equation*}
+    P\left(X_1 = x_1, \dots, X_n = x_n \ \middle| \ \sum_{i=1}^{n} X_i = h\right) = \frac{1}{\binom{n}{h}} 
+\end{equation*}
+\end{lema}
+
+\observacion{
+    Lo que realmente se esta representando en este lema, es que dado por ejemplo un número de lanzamientos de un moneda $n$ y un número de éxitos $h$ (que salga cara por ejemplo), la probabilidad de que salga una secuencia específica de caras y cruces es uniforme, es decir, todas las secuencias posibles que tengan exactamente $h$ caras y $n-h$ cruces tienen la misma probabilidad de ocurrir. Esto refleja la simetría del problema y la naturaleza combinatoria de las posibles secuencias.
+}
+
+\begin{observacion}
+    $\dbinom{n}{h}$ representa el número de formas distintas de elegir $h$ posiciones para los éxitos (caras) entre $n$ lanzamientos, y cada una de estas configuraciones es igualmente probable bajo la condición de tener exactamente $h$ éxitos.
+\end{observacion}
+
+\subsection*{Verificación Empírica mediante la Función de Masa}
+La función de masa de probabilidad hipergeométrica tradicional que computa la obtención de $h$ éxitos en $n$ extracciones a partir de una urna con $N$ elementos totales y $H$ éxitos iniciales cumple la simetría algebraica de conmutación de índices :
+\begin{equation*}
+    P(Y_n = h) = \frac{\binom{H}{h} \binom{N-H}{n-h}}{\binom{N}{n}} = \frac{\binom{n}{h} \binom{N-n}{H-h}}{\binom{N}{H}}
+\end{equation*}
+
+Si evaluamos casos frontera cerrados para una muestra fija de $n=3$, se demuestra la naturaleza uniforme del soporte condicional :
+\begin{itemize}
+    \item \textbf{Para $h=0$:} $P(Y_3 = 0 \mid H = 0) = 1 \implies P(0,0,0) = 1 = \frac{1}{\binom{3}{0}}$
+    \item \textbf{Para $h=1$:} $P(Y_3 = 1 \mid H = 1) = 1 \implies P(0,0,1) = P(0,1,0) = P(1,0,0) = \frac{1}{3} = \frac{1}{\binom{3}{1}}$
+    \item \textbf{Para $h=2$:} $P(Y_3 = 2 \mid H = 2) = 1 \implies P(1,1,0) = P(1,0,1) = P(0,1,1) = \frac{1}{3} = \frac{1}{\binom{3}{2}}$
+    \item \textbf{Para $h=3$:} $P(Y_3 = 3 \mid H = 3) = 1 \implies P(1,1,1) = 1 = \frac{1}{\binom{3}{3}}$
+\end{itemize}
+
+De este modo, queda demostrado que la probabilidad condicional de una trayectoria bajo el marco hipergeométrico depende de forma exclusiva de la masa del hipervolumen combinatorio :
+\begin{equation*}
+    P(X_1 = x_1, X_2 = x_2, \dots, X_n = x_n \mid H = h) = \begin{cases} \frac{1}{\binom{n}{h}} & \text{si } \sum_{i=1}^{n} X_i = h \\ 0 & \text{en otro caso} \end{cases}
+\end{equation*}
+
+\begin{small}
+\textbf{Intuición Física Asintótica:} En una urna que posea un número masivo de elementos ($N \to \infty$), las fronteras estadísticas entre el muestreo con o sin reemplazo se vuelven idénticas durante un horizonte temporal finito, ya que la remoción de unos pocos elementos apenas perturba las intensidades de probabilidad marginales.
+\end{small}
+
+\subsection{La Versión Finita del Teorema de de Finetti}
+
+El resultado hipergeométrico anterior es la pieza clave para demostrar el teorema fundamental de representación en espacios finitos .
+
+\begin{teo}[\textbf{Teorema de de Finetti - Versión Finita}]
+Sea $P$ una distribución de probabilidad estrictamente intercambiable sobre una secuencia de variables aleatorias binarias de longitud finita $n$. Entonces, existe una única distribución de probabilidad discreta a priori $\mu(h)$ definida sobre el soporte $\{0, 1, \dots, n\}$ tal que la probabilidad de cualquier trayectoria se puede expresar como una mixtura ponderada de densidades hipergeométricas uniformes :
+\begin{equation*}
+    P(X_1 = x_1, \dots, X_n = x_n) = \sum_{h=0}^{n} \frac{1}{\binom{n}{h}} \mu(h)
+\end{equation*}
+donde $\mu(h)$ es la distribución a priori, que indica el peso que le asignas a cada escenario. Contiene la ``verdadera naturaleza física'' del experimento particular (si la moneda está trucada, la composición inicial de la urna, etc.).
+\end{teo}
+
+\begin{proof}
+Definamos el suceso intersección que caracteriza la trayectoria microscópica completa como $A = \bigcap_{i=1}^{n} \{X_i = x_i\}$. Aplicando el teorema de la probabilidad total, podemos expandir la probabilidad de este evento condicionándolo sobre el número total de éxitos reales $h$ registrados por el proceso :
+\begin{equation*}
+    P(A) = \sum_{h=0}^{n} P\left(A \ \middle| \ \sum_{i=1}^{n} X_i = h\right) P\left(\sum_{i=1}^{n} X_i = h\right)
+\end{equation*}
+
+Por la hipótesis fundamental de **intercambiabilidad**, la distribución $P$ está obligada a asignar una probabilidad idéntica a cada una de las $\binom{n}{h}$ secuencias distintas que comparten exactamente el mismo número de éxitos $h$, sin importar su orden cronológico . Por consiguiente, la probabilidad condicional de observar la trayectoria exacta $A$ coincide de forma unívoca con la densidad de una distribución hipergeométrica pura :
+\begin{equation*}
+    P\left(A \ \middle| \ \sum_{i=1}^{n} X_i = h\right) = P_H\left(A \ \middle| \ \sum_{i=1}^{n} X_i = h\right) = \frac{1}{\binom{n}{h}}
+\end{equation*}
+
+Sustituyendo esta equivalencia geométrica en la sumatoria de la probabilidad total, y definiendo la medida de ponderación discreta como la probabilidad marginal del conteo de éxitos, $\mu(h) = P\left(\sum X_i = h\right)$, el teorema queda plenamente demostrado :
+\begin{equation*}
+    P(A) = \sum_{h=0}^{n} \frac{1}{\binom{n}{h}} \mu(h)
+\end{equation*}
+\end{proof}
+
+\noindent
+Para comprender la mecánica operacional de la versión finita del Teorema de de Finetti, analizamos el comportamiento de un proceso estocástico en tiempo discreto y espacio de estados finito, para ellos veámos el siguiente ejemplo. \\
+
+\begin{ejemplo}
+    Consideremos un experimento compuesto por $m=3$ variables aleatorias binarias, donde deseamos evaluar analíticamente la probabilidad de observar la trayectoria microscópica específica:
+    \begin{equation*}
+        (x_1, x_2, x_3) = (0, 1, 0)
+    \end{equation*}
+    \noindent
+    Si asumimos provisionalmente que los datos provienen de ensayos independientes e idénticamente distribuidos (i.i.d.) de Bernoulli con probabilidad de éxito $p$, la probabilidad conjunta real de dicha secuencia se calcula mediante el producto clásico de sus intensidades marginales:
+    \begin{equation*}
+        P(X_1 = 0, X_2 = 1, X_3 = 0) = (1-p) \cdot p \cdot (1-p) = (1-p)^2 p
+    \end{equation*}
+    El objetivo de este ejemplo es proyectar esta trayectoria sobre la sumatoria de mixtura de de Finetti para deducir la estructura analítica de la distribución a priori $\mu(h)$:
+    \begin{equation*}
+        P(0, 1, 0) = \sum_{h=0}^{3} P_H \left( X_1 = 0, X_2 = 1, X_3 = 0 \ \middle| \ \sum_{i=1}^{3} X_i = h \right) \cdot \mu(h)
+    \end{equation*}
+    Evaluamos de forma indexada el comportamiento del término de probabilidad condicional hipergeométrica $P_H$ para cada valor posible del número total de éxitos $h \in \{0, 1, 2, 3\}$:
+
+    \begin{enumerate}
+        \item \textbf{Para $h=0$:} El soporte condicional contiene de forma exclusiva a la secuencia $(0,0,0)$. Dado que nuestra trayectoria objetivo es $(0,1,0)$, la probabilidad de coincidencia es nula:
+        \begin{equation*}
+            P_H \left( (0,1,0) \ \middle| \ \sum X_i = 0 \right) = 0
+        \end{equation*}
+        
+        \item \textbf{Para $h=1$:} El espacio condicional contiene las $\binom{3}{1} = 3$ permutaciones uniformes con un único éxito: $\{(1,0,0), (0,1,0), (0,0,1)\}$. Al ser un proceso intercambiable, la masa se distribuye equitativamente, otorgando a cada camino un peso de $1/3$. Como nuestra secuencia pertenece a este conjunto, el término sobrevive:
+        \begin{equation*}
+            P_H \left( (0,1,0) \ \middle| \ \sum X_i = 1 \right) = \frac{1}{3}
+        \end{equation*}
+        
+        \item \textbf{Para $h=2$:} El soporte está restringido a las secuencias con dos éxitos: $\{(1,1,0), (0,1,1), (1,0,1)\}$. Al no corresponder con el conteo de nuestra secuencia, el término colapsa a cero:
+        \begin{equation*}
+            P_H \left( (0,1,0) \ \middle| \ \sum X_i = 2 \right) = 0
+        \end{equation*}
+        
+        \item \textbf{Para $h=3$:} El espacio condicional se reduce unívocamente al evento atómico $(1,1,1)$, resultando en:
+        \begin{equation*}
+            P_H \left( (0,1,0) \ \middle| \ \sum X_i = 3 \right) = 0
+        \end{equation*}
+    \end{enumerate}
+    Sustituyendo los coeficientes condicionales calculados dentro de la sumatoria general del teorema de representación, todos los sumandos se anulan con excepción del estado asociado a un único éxito ($h=1$):
+    \begin{equation*}
+        P(0,1,0) = 0 \cdot \mu(0) + \frac{1}{3} \cdot \mu(1) + 0 \cdot \mu(2) + 0 \cdot \mu(3) \implies P(0,1,0) = \frac{1}{3} \mu(1)
+    \end{equation*}
+    Igualando esta expresión con el valor real del proceso i.i.d. calculado al inicio, podemos despejar el valor de la componente $\mu(1)$:
+    \begin{equation*}
+        (1-p)^2 p = \frac{1}{3} \mu(1) \implies \mu(1) = 3(1-p)^2 p
+    \end{equation*}
+    Si generalizamos de forma sistemática este mismo procedimiento algebraico para el resto de las trayectorias del espacio muestral, el sistema mapea unívocamente los cuatro pesos del proceso:
+    \begin{align*}
+        \mu(0) &= (1-p)^3 = \binom{3}{0} p^0 (1-p)^3 \\
+        \mu(1) &= 3(1-p)^2 p = \binom{3}{1} p^1 (1-p)^2 \\
+        \mu(2) &= 3(1-p) p^2 = \binom{3}{2} p^2 (1-p)^1 \\
+        \mu(3) &= p^3 = \binom{3}{3} p^3 (1-p)^0
+    \end{align*}
+    La función de ponderación discreta $\mu(h)$ recuperada de forma automática por el teorema coincide de manera exacta con la función de masa de la \textbf{Distribución Binomial}. El experimento verifica que la suma de todas las intensidades probabilísticas cumple la condición de normalización del binomio de Newton:
+    \begin{equation*}
+        \sum_{h=0}^{3} \mu(h) = \mu(0) + \mu(1) + \mu(2) + \mu(3) = (1-p+p)^3 = 1
+    \end{equation*}
+\end{ejemplo}
+Antes de ver el siguiente teorema hay que tener claro la definición de integral de Stieltjes, que es una generalización de la integral de Riemann. La integral de Stieltjes permite integrar funciones con respecto a funciones de distribución, lo que es útil en probabilidad y estadística.
+
+\begin{definicion}[Integral de Riemann-Stieltjes]
+    La \tbf{integral de Riemann-Stieltjes} es una generalización de la integral clásica donde el integrando $f(\theta)$ se evalúa respecto a una función ponderadora $Q(\theta)$ (llamada \tbf{integrador}), en lugar de avanzar uniformemente sobre el eje $X$. Su expresión formal es
+    $$\int_{a}^{b} f(\theta) \, dQ(\theta)$$
+    El comportamiento y el valor del diferencial $dQ(\theta)$ dependen estrictamente de la naturaleza de la función $Q(\theta)$ a lo largo del eje $X$
+    \begin{itemize}
+        \item Si $Q(\theta)$ es una \underline{función continua y diferenciable}: el proceso se comporta como una integral clásica orientada al cálculo de áreas continuas, donde el diferencial se expande mediante la derivada ordinaria:
+        $$dQ(\theta) = Q'(\theta) \, d\theta$$
+        \item Si $Q(\theta)$ es una \underline{función escalonada pura} (\tbf{Caso de de Finetti}): la función solo cambia mediante saltos verticales discretos en ciertos nodos del eje $X$ y permanece completamente constante (plana) en los intervalos intermedios. Esto altera el diferencial de la siguiente manera:
+        \begin{itemize}
+            \item En los tramos planos ($Q(\theta)$ constante): no hay variación vertical, por lo que el diferencial se anula por completo:
+            $$dQ(\theta) = 0 \implies \int_{\text{tramo}} f(\theta) \cdot 0 = 0$$
+            \item En el punto exacto de un escalón ($\theta = \theta_k$): la función experimenta un salto vertical abrupto. El diferencial ``despierta'' y absorbe exactamente la magnitud o altura de dicho salto (que en probabilidad equivale a la masa discreta $P_k$):
+            $$dQ(\theta_k) = \Delta Q(\theta_k) = P(Y = y_k)$$
+        \end{itemize}
+    \end{itemize}
+\end{definicion}
+
+
+\begin{teo}[\textbf{Teorema de de Finetti}]
+Sea $\{X_i\}_{i \in \mathbb{N}^+}$ una sucesión infinita e intercambiable de variables aleatorias binarias ($X_i \in \{0, 1\}$). Entonces, existe una única función de distribución acumulada $Q(\theta)$ definida sobre el intervalo $[0, 1]$ tal que, para cualquier tamaño de muestra $n$, la distribución de probabilidad conjunta de la trayectoria viene dada por la mixtura integral:
+\begin{equation*}
+    P(X_1 = x_1, \dots, X_n = x_n) = \int_{0}^{1} \prod_{i=1}^{n} \theta^{x_i} (1 - \theta)^{1 - x_i} \, dQ(\theta)
+\end{equation*}
+
+\begin{proof}
+    Sea 
+    $$Y_m = \sum_{i=1}^{m} X_i$$ 
+    la variable macroscópica que contabiliza el número de éxitos en una submuestra de longitud $m$. Por la propiedad de intercambiabilidad, la probabilidad de observar un conteo de éxitos exacto $Y_m = y_m$ es el producto del coeficiente combinatorio por la intensidad de una única trayectoria microscópica:
+    \begin{equation*}
+        P(Y_m = y_m) = \binom{m}{y_m} P(X_1 = x_1, \dots, X_m = x_m)
+    \end{equation*}
+    Para proyectar este sistema hacia el infinito, introducimos una ventana de observación mayor de longitud $N$, tal que $N \geq m \geq y_m \geq 0$. Aplicando el teorema de la probabilidad total sobre el número total de éxitos intermedios $Y_N = y_N$, la distribución se expande como una mixtura condicionada a la distribución hipergeométrica:
+    \begin{equation*}
+        P(Y_m = y_m) = \sum_{y_N} P_H(Y_m = y_m \mid Y_N = y_N) \cdot P(Y_N = y_N)
+    \end{equation*}
+    donde tenemos que 
+    \begin{align*}
+        P_H(Y_m &= y_m \mid Y_N = y_N) = \frac{\binom{Y_N}{y_m} \binom{N - Y_N}{m - y_m}}{\binom{N}{m}}= \frac{\dfrac{Y_{N_{(y_m)}}}{y_m!} \cdot \dfrac{(N - Y_N)_{(m - y_m)}}{(m - y_m)!}}{\dfrac{N_{(m)}}{m!}}=\\
+        &=\binom{m}{y_m} \frac{Y_{N_{(y_m)}} \cdot (N - Y_N)_{(m - y_m)}}{N_{(m)}}
+    \end{align*}
+    Sustituyendo la masa de la distribución hipergeométrica expresada mediante la notación de \textbf{factoriales descendentes} ($x_{(y)} = x(x-1)\cdots(x-y+1)$), extraemos el coeficiente binomial y estructuramos la sumatoria:
+    \begin{equation*}
+        P(Y_m = y_m) = \binom{m}{y_m} \sum_{y_N} \frac{Y_{N_{(y_m)}} \cdot (N - Y_N)_{(m - y_m)}}{N_{(m)}} \cdot P(Y_N = y_N)
+    \end{equation*}
+    Para transformar esta suma discreta en un operador continuo, introducimos la función de distribución empírica escalonada $Q_N(\theta)$, cuyos saltos discretos ocurren en los nodos discretos 
+    $$\theta = \frac{Y_N}{N}$$ 
+    con magnitudes de probabilidad iguales a $P(Y_N = y_N)$. Al realizar este cambio de variable, la sumatoria se convierte formalmente en una integral de Stieltjes sobre el soporte continuo $[0, 1]$:
+    \begin{equation*}
+        P(Y_m = y_m) = \binom{m}{y_m} \int_{0}^{1} \frac{(\theta N)_{(y_m)} \cdot ((1 - \theta) N)_{(m - y_m)}}{N_{(m)}} \, dQ_N(\theta)
+    \end{equation*}
+    Estudiamos el comportamiento asintótico del integrando cuando el tamaño del bloque superior tiende a infinito ($N \to \infty$) mientras mantenemos fija la submuestra $m$. Sabiendo que para valores masivos $x \gg 1$ el factorial descendente se aproxima a la potencia tradicional ($x_{(m)} \approx x^m$), el cociente de combinaciones converge de forma determinista hacia el núcleo de una distribución binomial i.i.d.:
+    \begin{equation*}
+        \lim_{N \to \infty} \frac{(\theta N)_{(y_m)} \cdot ((1 - \theta) N)_{(m - y_m)}}{N_{(m)}} = \theta^{y_m} (1 - \theta)^{m - y_m} = \prod_{i=1}^{m} \theta^{x_i} (1 - \theta)^{1 - x_i}
+    \end{equation*}
+    donde la última igualdad se obtiene al reescribir el exponente de cada factor como una función indicadora de la trayectoria microscópica $x_i \in \{0, 1\}$, es decir, si el experimento $i$-ésimo es un éxito ($x_i = 1$) o un fracaso ($x_i = 0$). \\
+
+    \noindent
+    Para garantizar la validez matemática de intercambiar el operador de límite con el signo de la integral, recurrimos al \textbf{Teorema de Convergencia Dominada}, es decir, necesitamos demostrar que el integrando está acotado por una función integrable independiente de $N$. Dado que las fracciones hipergeométricas están acotadas superiormente por la unidad (cualquier probabilidad lo está), la integral de la función dominante converge de forma trivial:
+    \begin{equation*}
+        \int_{0}^{1} \frac{(\theta N)_{(y_m)} \cdot ((1 - \theta) N)_{(m - y_m)}}{N_{(m)}} \, dQ_N(\theta) \leq \int_{0}^{1} 1 \, dQ_N(\theta) = 1 < \infty
+    \end{equation*}
+    El cumplimiento de esta cota nos faculta para introducir el límite dentro de la integral:
+    \begin{equation*}
+        \lim_{N \to \infty} P(Y_m = y_m) = \binom{m}{y_m} \int_{0}^{1} \left[ \lim_{N \to \infty} \frac{(\theta N)_{(y_m)} \cdot ((1 - \theta) N)_{(m - y_m)}}{N_{(m)}} \right] \, dQ_N(\theta)
+    \end{equation*}
+    Finalmente, invocando el \textbf{Teorema de Selección de Helly} (Helly's Selection Theorem), se garantiza que la secuencia de medidas de probabilidad empíricas $Q_N(\theta)$ converge debilmente hacia una medida de probabilidad límite única $Q(\theta)$ en el intervalo compacto $[0, 1]$. Sustituyendo ambos límites, el teorema de representación queda plenamente demostrado:
+    \begin{align*}
+        P(Y_m = y_m) &= \binom{m}{y_m} \int_{0}^{1} \theta^{y_m} (1 - \theta)^{m - y_m} \, dQ(\theta) \implies \\
+        \implies P(X_1 = x_1, \dots, X_m = x_m) &= \int_{0}^{1} \prod_{i=1}^{m} \theta^{x_i} (1 - \theta)^{1 - x_i} \, dQ(\theta)
+    \end{align*}
+    donde hemos usado que
+    \begin{equation*}
+        P(X_1 = x_1, \dots, X_m = x_m) = \frac{P(Y_m = y_m)}{\binom{m}{y_m}}
+    \end{equation*}
+\end{proof}
+\end{teo}
+
+\observacion{
+    Si la medida de probabilidad $Q$ admite una función de densidad $q(\theta) = \frac{dQ}{d\theta}$, la ecuación puede expresarse en términos del formalismo bayesiano clásico como:
+    \begin{equation*}
+        P(X_1 = x_1, \dots, X_n = x_n) = \int_{0}^{1} \left[ \prod_{i=1}^{n} \theta^{x_i} (1 - \theta)^{1 - x_i} \right] \cdot q(\theta) \, d\theta
+    \end{equation*}
+    donde conceptualmente identificamos:
+    \begin{itemize}
+        \item \textbf{Distribución Conjunta Marginal / Posterior:} $P(X_1 = x_1, \dots, X_n = x_n)$.
+        \item \textbf{Verosimilitud de Ensayos Independientes (Likelihood):} $\prod_{i=1}^{n} \theta^{x_i} (1 - \theta)^{1 - x_i}$, que asume un comportamiento i.i.d. condicionado a un parámetro $\theta$ fijo.
+        \item \textbf{Distribución a Priori (Prior):} $q(\theta)d\theta$, que dota al parámetro de naturaleza aleatoria y actúa como la medida de ponderación de la mixtura.
+    \end{itemize}
+    El parámetro aleatorio $\theta$ se define formalmente como la proporción límite del conteo de éxitos ($Y_n = \sum_{i=1}^{n} X_i$) cuando el tamaño muestral tiende a infinito, cuya existencia queda garantizada bajo convergencia \textbf{casi segura (almost surely)} por la Ley Fuertísima de los Grandes Números para procesos intercambiables:
+    \begin{equation*}
+        \theta \overset{\text{def}}{=} \lim_{n \to \infty} \frac{Y_n}{n} \implies Q(\theta) = \lim_{n \to \infty} P\left( \frac{Y_n}{n} \leq \theta \right)
+    \end{equation*}
+}
+
+\section{Teorema de Helly-Bray y Johnson}
+\noindent
+El Teorema de Helly-Bray (y en un espectro más amplio, el Lema de Portmanteau) constituye el soporte analítico definitivo para validar el paso al límite en la demostración de Finetti infinita. Su propósito fundamental es establecer la equivalencia entre la convergencia en distribución de variables aleatorias y la convergencia de sus operadores de esperanza matemática sobre distintas clases de funciones de prueba. \\
+
+\noindent
+Sea $\{X_n\}_{n \in \mathbb{N}^+}$ una secuencia de variables aleatorias y $X$ la variable aleatoria límite. Las siguientes cuatro afirmaciones macroscópicas son matemáticamente equivalentes entre sí, sirviendo todas como definición operacional de la \textbf{convergencia débil}, denotada como 
+$$X_n \xrightarrow[n \to \infty]{d} X$$
+
+\begin{enumerate}
+    \item[\textbf{a)}] \textbf{Convergencia en Distribución clásica:}
+    Las funciones de distribución acumulada convergen en todos los puntos donde la función límite es continua:
+    \begin{equation*}
+        F_n(x) \xrightarrow[n \to \infty]{} F(x) \quad \forall x \in \mathcal{C}(F)
+    \end{equation*}
+
+    \item[\textbf{b)}] \textbf{Convergencia sobre Funciones Continuas con Soporte Compacto:}
+    Las esperanzas matemáticas convergen para toda función de prueba $h: \mathbb{R} \rightarrow \mathbb{R}$ que sea continua y difiera de cero estrictamente dentro de un conjunto cerrado y acotado (espacio compacto):
+    \begin{equation*}
+        \mathbb{E}[h(X_n)] \xrightarrow[n \to \infty]{} \mathbb{E}[h(X)]
+    \end{equation*}
+
+    \item[\textbf{c)}] \textbf{Convergencia sobre Funciones Continuas y Acotadas (Extensión de b):}
+    Las esperanzas convergen para toda función continua $h: \mathbb{R} \rightarrow \mathbb{R}$ cuya magnitud esté acotada globalmente ($|h(x)| \leq M < \infty$), garantizando que la masa de probabilidad no se escape en los extremos del soporte:
+    \begin{equation*}
+        \int_{\mathbb{R}} h(x) \, dF_n(x) \xrightarrow[n \to \infty]{} \int_{\mathbb{R}} h(x) \, dF(x)
+    \end{equation*}
+    es la usada en la demostración de Finetti.
+
+    \item[\textbf{d)}] \textbf{Convergencia sobre Funciones Medibles Acotadas casi seguro:}
+    Las esperanzas convergen para cualquier función medible y acotada $h$ cuyo conjunto de discontinuidades tenga medida cero respecto a la ley de probabilidad del límite (puntos de continuidad con masa $\mathbb{P}(\mathcal{C}_h) = 1$):
+    \begin{equation*}
+        \mathbb{E}[h(X_n)] \xrightarrow[n \to \infty]{} \mathbb{E}[h(X)]
+    \end{equation*}
+\end{enumerate}
+
+\subsection{Postulados y Teoremade Johnson}
+\noindent
+Dejando atrás el espacio de estados estrictamente binario ($0$-$1$), el formalismo de W.E. Johnson extiende el análisis estocástico predictivo hacia un entorno generalizado con $g$ categorías o colores simultáneos. Para monitorizar la influencia de la historia sobre las transiciones consecutivas, se introduce el \textbf{Coeficiente de Heterorrelevancia} $Q_j^i$.
+
+\begin{definicion}[Coeficiente de Heterorrelevancia]
+    El \textbf{coeficiente de heterorrelevancia} $Q_j^i$ es un operador estocástico que cuantifica la influencia relativa de la última categoría observada $j$ sobre la probabilidad predictiva de extraer la categoría $i$ en el siguiente paso, en comparación con la probabilidad marginal de extraer $i$ sin considerar el efecto inmediato de $j$, y viene dada de la siguiente manera
+
+    \begin{equation*}
+        Q_j^i(X_1 = x_1, \dots, X_m = x_m) = \frac{P(X_{m+2} = i \mid X_1 = x_1, \dots, X_m = x_m, X_{m+1} = j)}{P(X_{m+1} = i \mid X_1 = x_1, \dots, X_m = x_m)} \\
+    \end{equation*}
+\end{definicion}
+
+\noindent
+Para parametrizar el proceso de forma consistente, se establecen tres hipótesis restrictivas sobre la naturaleza del coeficiente:
+
+\subsubsection{Hipótesis 1: Independencia de la Última Observación}
+\noindent
+El coeficiente de heterorrelevancia evaluado en el instante $m+1$ es invariante ante la última categoría registrada $x_{m+1}$, dependiendo exclusivamente de la trayectoria acumulada previa de longitud $m$:
+\begin{equation*}
+    Q_j^i(X_1 = x_1, \dots, X_m = x_m, X_{m+1} = x_{m+1}) = Q_j^i(X_1 = x_1, \dots, X_m = x_m)
+\end{equation*}
+\textbf{Implicación Crítica:} Esta condición fuerza de forma directa la \textbf{intercambiabilidad bivariada local} de la secuencia, obligando a que el orden cronológico de aparición de dos categorías consecutivas ($i$ y $j$) no altere su intensidad de probabilidad conjunta condicional:
+\begin{align*}
+    P(X_{m+2} = i, X_{m+1} = j \mid X_1 = x_1, \dots, X_m = x_m) = P(X_{m+2} = j, X_{m+1} = i \mid X_1 = x_1, \dots, X_m = x_m)
+\end{align*}
+
+\subsubsection{Hipótesis 2: Homogeneidad Categórica del Coeficiente}
+\noindent
+El coeficiente se desliga de las etiquetas de las categorías específicas $i$ y $j$, volviéndose un factor escalar $Q_m$ que evoluciona únicamente en función del tiempo transcurrido (paso discreto $m$):
+\begin{equation*}
+    Q_m = Q_i^j(X_1 = x_1, \dots, X_m = x_m) \quad \forall i \neq j
+\end{equation*}
+
+\subsubsection{Hipótesis 3: Suficiencia del Conteo Marginal}
+\noindent
+La probabilidad predictiva de que la siguiente extracción pertenezca a la categoría $j$ se denota de forma compacta como $p(j \mid m_j, m)$. Esta intensidad depende única y exclusivamente del número absoluto de observaciones acumuladas de esa misma categoría ($m_j$) y del tiempo total transcurrido ($m$), ignorando la ordenación interna o la distribución de las categorías restantes:
+\begin{equation*}
+    P(X_{m+1} = j \mid X_1 = x_1, \dots, X_m = x_m) = p(j \mid m_j, m)
+\end{equation*}
+Bajo la convergencia de estas tres hipótesis, el Coeficiente de Heterorrelevancia temporal $Q_m$ se reduce elegantemente al cociente de intensidades predictivas acopladas según el avance temporal del conteo de éxitos:
+\begin{equation*}
+    Q_m = \frac{p(k \mid m_k, m+1)}{p(k \mid m_k, m)}
+\end{equation*}
+
+\begin{teo}[Teorema de Johnson]
+    Bajo esta hipótesis, dada por sus tres postulados, el coeficiente de heterorrelevancia temporal $Q_m$ se colapsa a la forma explícita
+    \[ Q_m = \frac{\alpha + m}{\alpha + m + 1} \] 
+    lo que implica que la probabilidad predictiva de la categoría $j$ se puede expresar como 
+    \[ p(j \mid m_j, m) = \frac{\alpha_j + m_j}{\alpha + m}\]
+    donde $\alpha$ y $\alpha_j$ se calculan durante la demostración.
+\begin{proof}
+    No se estudiará de cara al examen.
+\end{proof}
+\end{teo}
+
+\observacion{
+    Lo que demuestra el teorema es que tu predicción del futuro siempre será un promedio ponderado (combinación convexa) entre tu intuición inicial ($\alpha_j/\alpha$) y la evidencia de los datos reales ($m_j/m$).
+}
+
+\begin{observacion}
+    Esta forma de $p(j \mid m_j, m)$ conduce al proceso de Pólya generalizado que ya hemos visto.
+\end{observacion}
+
+\noindent
+El resultado fundamental del teorema, expresado como:
+\begin{equation*}
+    P(X_{m+1} = j \mid m_j, m) = \frac{m_j + \alpha_j}{m + \alpha}
+\end{equation*}
+indica que la probabilidad predictiva es una función lineal racional que amalgama dos fuerzas estadísticas distintas: la información histórica observada (los datos reales empíricos) y la información teórica inicial (el modelo bayesiano a priori). \\
+
+\noindent
+Podemos reescribir esta probabilidad predictiva exacta como una \textbf{combinación convexa} (un promedio ponderado) que ilustra de forma transparente la transición del aprendizaje inductivo:
+\begin{equation*}
+    P(X_{m+1} = j \mid m_j, m) = \left( \frac{m}{m + \alpha} \right) \left( \frac{m_j}{m} \right) + \left( \frac{\alpha}{m + \alpha} \right) \left( \frac{\alpha_j}{\alpha} \right)
+\end{equation*}
+Al desglosar esta equivalencia, identificamos la convergencia de dos componentes:
+\begin{enumerate}
+    \item $\frac{m_j}{m}$: La \textbf{frecuencia relativa empírica} (la proporción real de éxitos observada en la muestra).
+    \item $\frac{\alpha_j}{\alpha}$: La \textbf{probabilidad a priori pura} (la creencia inicial del investigador antes de iniciar el experimento).
+\end{enumerate}
+Esta formulación en combinación convexa justifica analíticamente cómo interactúa el flujo temporal del proceso estocástico con el conocimiento almacenado:
+
+\begin{itemize}
+    \item \textbf{Régimen de Datos Escasos ($m \to 0$):} Cuando el tamaño de la muestra real es nulo o despreciable, el peso del primer término se desvanece, provocando que la predicción dependa exclusivamente de la estructura a priori del investigador:
+    \begin{equation*}
+        \lim_{m \to 0} P(X_{m+1} = j \mid m_j, m) = \frac{\alpha_j}{\alpha}
+    \end{equation*}
+    
+    \item \textbf{Régimen de Datos Masivos ($m \to \infty$):} Cuando el horizonte temporal avanza hacia el infinito, el factor de ponderación empírica tiende a la unidad ($\frac{m}{m+\alpha} \to 1$), mientras que el peso de la opinión a priori se diluye por completo hacia cero. El sistema olvida su sesgo inicial y la predicción converge exactamente a la proporción real observada en los datos:
+    \begin{equation*}
+        \lim_{m \to \infty} P(X_{m+1} = j \mid m_j, m) = \frac{m_j}{m}
+    \end{equation*}
+\end{itemize}
+El Teorema de Johnson demuestra que \textbf{la regla predictiva de la Urna de Pólya Generalizada es la única solución matemática consistente} para un proceso predictivo multi-categoría que sea simétrico (intercambiable) y que reduzca la historia a conteos marginales suficientes. 
