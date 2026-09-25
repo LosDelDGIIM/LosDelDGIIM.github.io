@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>LosDelDGIIM | Test</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+
+    <link rel="icon" href="../../../../assets/Icon.png">
+
+    
+    
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous"></script>
+    <script type="text/javascript" async
+            src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+          
+</head>
+<body>
+
+<div class="container">
+    <div class="form-row">
+        <div class="container">
+            <h1>Sistemas Empotrados - Test Práctica 9: Driver UART por Interrupciones (Capa L1)</h1>
+<ul>
+<li><strong>Descripción:</strong> Preguntas Tipo Test de la Práctica 9: Driver UART L1 basado en interrupciones, búferes circulares, funciones callback y regiones críticas.</li>
+</ul>
+<hr>
+<ol>
+<li>
+<p>La función de inicialización de la uart debe configurar el controlador de interrupciones para asignar las peticiones de interrupción de las uart a las entradas de interrupción de la CPU. ¿A cuál de ellas mapea cada uart?</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="1" data-content="0" /> Las dos uart a la entrada FIQ</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> La uart1 a la entrada IRQ y la uart2 a la entrada FIQ</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> La uart1 a la entrada FIQ y la uart2 a la entrada IRQ</label></li>
+<li><label><input type="radio" data-question="0" data-content="1" /> Las dos uart a la entrada IRQ</label></li>
+</ul>
+</li>
+<li>
+<p>¿Cómo sabe la ISR si la petición de interrupción de la uart se debe a la recepción de datos?</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="1" data-content="0" /> Consultando el número de bytes recibidos en la cola HW de recepción del dispositivo (campo Rx_fifo_addr_diff del registro RxCON)</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Probando a leer datos de la cola HW del dispositivo</label></li>
+<li><label><input type="radio" data-question="0" data-content="1" /> Consultando el bit RxRdy del registro USTAT</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Consultando el bit TxRdy del registro USTAT</label></li>
+</ul>
+</li>
+<li>
+<p>En un driver L1, la función de envío bloqueante del driver de la uart...</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="1" data-content="0" /> Funcionará correctamente sin necesidad de modificación</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Debe reescribirse para bloquearse si no hay huecos en la cola HW de envío</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Debe reescribirse para que escriba el dato en el búfer de envío en lugar de en la cola HW del dispositivo</label></li>
+<li><label><input type="radio" data-question="0" data-content="1" /> Debe reescribirse para mandar a la cola HW de envío todos los caracteres del búfer circular de envío antes de encolar en la cola HW el carácter</label></li>
+</ul>
+</li>
+<li>
+<p>En un driver L1, la función de recepción bloqueante del driver de la uart...</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="1" data-content="0" /> Debe ser modificada para mover todos los caracteres recibidos del búfer circular a la cola HW de recepción antes de pasar a bloquearse.</label></li>
+<li><label><input type="radio" data-question="0" data-content="1" /> Debe ser modificada para consultar si hay datos en el búfer de recepción antes de pasar a bloquearse hasta que llegue un nuevo dato a a la uart</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Funcionará correctamente sin necesidad de ser modificada</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Debe ser modificada para bloquearse si la cola HW de recepción está vacía</label></li>
+</ul>
+</li>
+<li>
+<p>Dado que el driver L1 de la uart está basado en sendos búferes circulares de envío y recepción que son compartidos tanto por las funciones send y receive como por la ISR, es necesario que las funciones send y receive accedan a su búfer correspondiente dentro de una sección crítica para evitar condiciones de carrera con la ISR. Por lo tanto...</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="1" data-content="0" /> La uart no podrá interrumpir a la función receive nunca</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> La uart podrá interrumpir a la función receive si ha recibido nuevos datos</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> La uart podrá interrumpir a la función receive siempre</label></li>
+<li><label><input type="radio" data-question="0" data-content="1" /> La uart podrá interrumpir a la función receive si necesita datos para enviar</label></li>
+</ul>
+</li>
+<li>
+<p>¿En qué nivel inhibe/restaura interrupciones la función uart_send para acceder de forma segura al búfer de envío del driver de la uart?</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="0" data-content="1" /> En la uart, inhibiendo/restaurtando la petición de interrupciones por parte de su transmisor</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> En el procesador del sistema, inhibiendo/restaurando la recepción de interrupciones en el registro de control</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> En el controlador de interrupciones, inhibiendo/restaurando las peticiones de interrupción de la uart.</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> No es necesario inhibir interrupciones para acceder al búfer</label></li>
+</ul>
+</li>
+<li>
+<p>Una de las funcionalidades que añaden las funciones de nivel 1 de un driver es el chequeo de errores en los parámetros. En el caso de que algún parámetro sea erróneo, la función retornará...</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="1" data-content="0" /> 2</label></li>
+<li><label><input type="radio" data-question="0" data-content="1" /> -1</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> 0</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> 1</label></li>
+</ul>
+</li>
+<li>
+<p>¿Cómo sabe la ISR del driver de la uart si la aplicación ha instalado una función callback de recepción en la uart2?</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="1" data-content="0" /> La ISR no debe comprobar nada. El driver debe tener definidas callbacks para todas las uart del sistema</label></li>
+<li><label><input type="radio" data-question="0" data-content="1" /> Comprobando si el puntero a función almacenado en uart_callbacks[uart_2].rx_callback tiene un valor distinto de NULL</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Comprobando si el puntero a función almacenado en uart_2_rx_callback tiene un valor distinto de NULL</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Comprobando si el puntero a función almacenado en uart_rx_callbacks[uart_2] tiene un valor distinto de NULL</label></li>
+</ul>
+</li>
+<li>
+<p>En la aplicación de prueba del driver L1 de la uart que se propone en el ejercicio de la práctica 9, El estado de los leds que deben parpadear se modifica en...</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="1" data-content="0" /> La función callback de envío</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> La ISR del driver de la uart</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> La aplicación</label></li>
+<li><label><input type="radio" data-question="0" data-content="1" /> La función callback de recepción</label></li>
+</ul>
+</li>
+<li>
+<p>La función callback de recepción del driver de la uart es invocada por...</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="1" data-content="0" /> La uart</label></li>
+<li><label><input type="radio" data-question="0" data-content="1" /> La ISR del driver</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> La función uart_receive</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Cualquier función de la aplicación</label></li>
+</ul>
+</li>
+<li>
+<p>2.Lo primero que debe hacer una ISR es reconocer que está sirviendo la interrupción para que el dispositivo deje de solicitar la atención de la CPU.¿Cómo reconoce la ISR de la uart de la Econotag que está atendiendo una peticion interrupcion causada por una recepcion de datos?</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="0" data-content="1" /> Consultando los bits correspondientes en el registro USTAT</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Escribiendo un 1 en el registro de control del ARM</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Llamando a la función printf</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Desactivando la alimentación del periférico</label></li>
+</ul>
+</li>
+<li>
+<p>¿Cómo sabe la ISR del driver de la uart si la aplicación ha instalado una función callback de recepción en la uart2?</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="1" data-content="0" /> Comprobando si el puntero a función almacenado en uart_callbacks[uart_2].rx_callback tiene un valor distinto de NULL</label></li>
+<li><label><input type="radio" data-question="0" data-content="1" /> asasa</label></li>
+</ul>
+</li>
+<li>
+<p>En la aplicación de prueba del driver L1 de la uart que se propone en el ejercicio de la práctica 9, El estado de los leds que deben parpadear se modifica en...</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="0" data-content="1" /> La función callback de recepción</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> La función main mediante espera activa</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> La función callback de envío</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> La rutina de reset</label></li>
+</ul>
+</li>
+<li>
+<p>En un driver L1, la función de recepción bloqueante del driver de la uart..</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="0" data-content="1" /> Debe ser modificada para consultar si hay datos en el búfer de recepción antes de pasar a bloquearse hasta que llegue un dato a la UART</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Debe deshabilitar las interrupciones durante toda su ejecución</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Debe leer directamente del registro HW sin consultar el búfer</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> No puede convivir con funciones de recepción no bloqueantes</label></li>
+</ul>
+</li>
+<li>
+<p>¿Qué hace la ISR de la uart en el caso de que el dispositivo solicite más datos para enviar pero no haya más datos en el bufer circular de envio del driver?</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="0" data-content="1" /> Desactivar la petición de interrupciones del dispositivo debidas a falta de datos que enviar</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Enviar caracteres nulos de relleno continuamente</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Bloquear la CPU hasta que lleguen nuevos datos</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Reiniciar la UART por completo</label></li>
+</ul>
+</li>
+<li>
+<p>¿Cuantas ISR hay definidas en el driver de la uart de la Econotag?</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="0" data-content="1" /> 2</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> 1</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> 4</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> 5</label></li>
+</ul>
+</li>
+<li>
+<p>En caso de éxito, ¿qué valor retorna la funcion uart send?</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="0" data-content="1" /> El número de bytes que se han podido copiar al búfer circular de envío del driver</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Siempre el valor 0</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> La dirección del búfer circular</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Un puntero a la estructura uart_regs_t</label></li>
+</ul>
+</li>
+<li>
+<p>¿Cómo sabe la ISR si la petición de interrupción de la uart se debe a la recepción de datos?</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="0" data-content="1" /> Consultando el bit RxRdy del registro USTAT.</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> dsds</label></li>
+</ul>
+</li>
+<li>
+<p>¿Cuántas ISR hay definidas en el driver de la uart de la Econotag?</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="0" data-content="1" /> 2</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> 1</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> 3</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> 56</label></li>
+</ul>
+</li>
+<li>
+<p>Indica qué código fijan las funciones del driver de la uart en la variable global errno en el caso de que reciban un identificador de uart no válido en el sistema</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="0" data-content="1" /> ENODEV</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> EINVAL</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> EBADF</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> EIO</label></li>
+</ul>
+</li>
+<li>
+<p>Lo primero que debe hacer una ISR es reconocer que está sirviendo la interrupción para que el dispositivo deje de solicitar la atención de la CPU. ¿Cómo reconoce la ISR de la uart de la Econotag que está atendiendo una petición interrupción causada por una recepción del datos?</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="0" data-content="1" /> Leyendo los datos recibidos de la cola HW de la UART</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Enviando una trama de confirmación por el puerto serie</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Modificando el bit I del registro CPSR</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Esperando a que el emisor finalice la transmisión</label></li>
+</ul>
+</li>
+<li>
+<p>El uso de funciones callback...</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="0" data-content="1" /> Mejora las prestaciones de E/S de la aplicación al permitir un desacoplo y notificación asíncrona</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Obliga a que la aplicación realice espera activa sobre el dispositivo</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Elimina la necesidad de utilizar interrupciones en el sistema</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> Solo puede emplearse en sistemas operativos de propósito general</label></li>
+</ul>
+</li>
+<li>
+<p>¿Cómo sabe la ISR si la petición de interrupción de la uart se debe a la recepción de datos?</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="0" data-content="1" /> Consultando el bit RxRdy del registro USTAT</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> sdsfdgqwqw</label></li>
+</ul>
+</li>
+<li>
+<p>¿Qué hace la ISR de la uart en el caso de que el dispositivo solicite más datos para enviar pero no haya más datos en el búfer circular de envío del driver?</p>
+<ul class="radio-list">
+<li><label><input type="radio" data-question="0" data-content="1" /> Desactivar la petición de interrupciones del dispositivo debidas a falta de datos que enviar</label></li>
+<li><label><input type="radio" data-question="1" data-content="0" /> tytyt</label></li>
+</ul>
+</li>
+</ol>
+        </div>
+    </div>
+    <div id="tg-msg" class="alert" role="alert" style="display: none">
+        <span id="tg-correct-questions"></span> Correct! <br /><b>Rating: <span id="tg-score"></span>%</b>
+    </div>
+    <div class="row">
+        <button id="show-answers" class="btn btn-link">Mostrar respuestas correctas</button>
+    </div>
+    <div class="row">
+        <button id="reset-questions" class="btn btn-link">Reiniciar todo</button>
+    </div>
+    <div class="row">
+        <button id="reorder-questions" class="btn btn-link">Orden Inicial y Fijado</button>
+    </div>
+    <script type="text/javascript">$(function () {
+    // Guardar el orden inicial de las preguntas y opciones
+    var initialQuestions = [];
+    var initialOptions = [];
+
+    // Guardar el orden inicial de las preguntas y opciones al cargar la página
+    $('ol').each(function (i, ol) {
+        var $ol = $(ol);
+        initialQuestions[i] = $ol.children('li').toArray();
+    });
+    $('ul.radio-list').each(function (i, ul) {
+        var $ul = $(ul);
+        initialOptions[i] = $ul.children('li').toArray();
+    });
+
+
+    $('ul.radio-list, ul.checklist, ul.textbox').each(function (i, el) {
+        var questionClass = $(this).attr('class');
+        $(this).parent().addClass('question-row').addClass(questionClass);
+        if (questionClass == 'radio-list') {
+            $(this).find('input[type="radio"]').attr('name', 'radio-question-' + i);
+        }
+    });
+
+    function checkQuestion(question) {
+        var self = question;
+
+        // Single Question.
+        if (self.hasClass('radio-list')) {
+            if (self.find('input[type="radio"][data-content="1"]:checked').length == 1) {
+                self.addClass('text-success');
+                self.removeClass('text-danger'); // Eliminar la marca de respuesta incorrecta
+                self.find('input[type="radio"]').attr('disabled', true);
+            } else {
+                self.removeClass('text-success'); // Eliminar la marca de respuesta correcta
+                self.addClass('text-danger');
+            }
+        }
+        // Textbox Question.
+        if (self.hasClass('textbox')) {
+            var textbox = self.find('input[type="text"]');
+            var correct_text = String(textbox.data("content")).trim().split("").reverse().join("");
+            if (String(textbox.val()).trim().toLowerCase() == correct_text.toLowerCase()) {
+                self.addClass('text-success');
+                self.removeClass('text-danger'); // Eliminar la marca de respuesta incorrecta
+                self.find('input[type="text"]').attr('disabled', true);
+            } else {
+                self.removeClass('text-success'); // Eliminar la marca de respuesta correcta
+                self.addClass('text-danger');
+                textbox.parent().find("i.text-correct").html(correct_text);
+            }
+        }
+        // Multiple selection Questions.
+        if (self.hasClass('checklist')) {
+            var total_corrects = self.find('input[type="checkbox"][data-content="1"]').length;
+            var total_incorrects = self.find('input[type="checkbox"][data-content="0"]').length;
+            var correct_selected = self.find('input[type="checkbox"][data-content="1"]:checked').length;
+            var incorrect_selected = self.find('input[type="checkbox"][data-content="0"]:checked').length;
+            var qc = +((correct_selected / total_corrects) - (incorrect_selected / total_incorrects)).toFixed(2);
+            if (qc < 0) {
+                qc = 0;
+            }
+            if (qc == 0) {
+                self.removeClass('text-success'); // Eliminar la marca de respuesta correcta
+                self.removeClass('text-warning');
+                self.addClass('text-danger');
+            } else if (qc > 0 && qc < 1) {
+                self.removeClass('text-success'); // Eliminar la marca de respuesta correcta
+                self.removeClass('text-danger'); // Eliminar la marca de respuesta incorrecta
+                self.addClass('text-warning');
+            } else {
+                self.removeClass('text-warning'); // Eliminar la marca de respuesta parcialmente correcta
+                self.removeClass('text-danger'); // Eliminar la marca de respuesta incorrecta
+                self.addClass('text-success');
+                self.removeClass('text-danger'); // Eliminar la marca de respuesta incorrecta
+                self.find('input[type="checkbox"]').attr('disabled', true);
+            }
+        }
+    }
+
+    $(document).on('change', 'li.question-row input', function () {
+        var question = $(this).closest('li.question-row');
+        checkQuestion(question);
+    });
+
+    $('#reset-questions').on('click', function () {
+        $('li.question-row').removeClass('text-success').removeClass('text-danger').removeClass('text-warning');
+        $('i.text-correct').html('');
+        $('li.question-row input').prop('checked', false);
+        $('li.question-row input[type="text"]').val('');
+        $('li.question-row input').attr('disabled', false);
+    });
+
+    // Función para mostrar todas las respuestas correctas
+    $('#show-answers').on('click', function () {
+        $('li.question-row').each(function () {
+            var question = $(this);
+
+            // Mostrar respuestas correctas para preguntas de tipo radio
+            if (question.hasClass('radio-list')) {
+                question.find('input[type="radio"][data-content="1"]').prop('checked', true);
+                question.addClass('text-success');
+                question.find('input[type="radio"]').attr('disabled', true); // Bloquear inputs
+            }
+
+            // Mostrar respuestas correctas para preguntas de tipo checkbox
+            if (question.hasClass('checklist')) {
+                question.find('input[type="checkbox"][data-content="1"]').prop('checked', true);
+                question.addClass('text-success');
+                question.find('input[type="checkbox"]').attr('disabled', true); // Bloquear inputs
+            }
+
+            // Mostrar respuestas correctas para preguntas de tipo textbox
+            if (question.hasClass('textbox')) {
+                var textbox = question.find('input[type="text"]');
+                var correct_text = String(textbox.data("content")).trim();
+                textbox.val(correct_text);
+                question.addClass('text-success');
+                textbox.attr('disabled', true); // Bloquear inputs
+            }
+        });
+    });
+
+    
+    // Función para mezclar las preguntas
+    function shuffleQuestions() {
+        $('ol').each(function() {
+            var ol = $(this);
+            var liArr = ol.children('li');
+            liArr.sort(function() {
+                return (Math.round(Math.random()) - 0.5);
+            }).detach().appendTo(ol);
+        });
+    }
+
+    function shuffleOptions() {
+    $('ul.radio-list').each(function() {
+        var ul = $(this);
+        var liArr = ul.children('li');
+
+        // Verificar si la lista tiene exactamente dos opciones
+        if (liArr.length === 2) {
+            var options = liArr.map(function() {
+                return $(this).text().trim().toLowerCase();
+            }).get();
+
+            // Comprobar si las opciones son "verdadero" y "falso" (o "true" y "false")
+            if ((options.includes('verdadero') && options.includes('falso')) ||
+                (options.includes('v') && options.includes('f')) ||
+                (options.includes('t') && options.includes('f')) ||
+                (options.includes('Sí') && options.includes('No')) ||
+                (options.includes('true') && options.includes('false'))) {
+                return; // No mezclar si son Verdadero/Falso
+            }
+        }
+
+        // Mezclar las opciones si no es un caso de Verdadero/Falso
+        liArr.sort(function() {
+        return (Math.round(Math.random()) - 0.5);
+        }).detach().appendTo(ul);
+    });
+    }
+
+    // Llamar a las funciones para mezclar las preguntas y las opciones al cargar la página
+    shuffleQuestions();
+    shuffleOptions();
+
+
+
+    // Función para restaurar el orden inicial de preguntas y opciones
+    function restoreInitialOrder() {
+        // Restaurar preguntas
+        $('ol').each(function(i, ol) {
+            $(ol).empty();
+            $(ol).append(initialQuestions[i]);
+        });
+        // Restaurar opciones
+        $('ul.radio-list').each(function(i, ul) {
+            $(ul).empty();
+            $(ul).append(initialOptions[i]);
+        });
+    }
+    $('#reorder-questions').on('click', function () {
+        restoreInitialOrder();
+    });
+});</script>
+</div>
+</body>
+</html>
