@@ -9,7 +9,7 @@ Por tanto, sólo hablaremos de los extremos
 Siempre dentro de un paquete de transporte va un paquete de aplicación.
 
 Cualquier nivel de transporte sea el que sea tendrá multiplexación y demultiplexación.
-Esto significa que multiplexamos (juntar informacion de muchos procesos en la misma tarjeta) mucha información en un mismo cable y los demultiplexamos en el final (los sacamos de la tarjeta de red y lo distribuimos entre los procesos que necesitan la infomación).
+Esto significa que multiplexamos (juntar información de muchos procesos en la misma tarjeta) mucha información en un mismo cable y los demultiplexamos en el final (los sacamos de la tarjeta de red y lo distribuimos entre los procesos que necesitan la información).
 
 
 Únicamente los equipos extremos cuentan con la capacidad de tener procesamiento a nivel de transporte.
@@ -344,8 +344,8 @@ Lo que se hace es buscar un RTT filtrado (en promedio), no el RTT como tal.
 Lo que se hace es:
 RTT_nuevo = alpha * RTT_viejo + (1-alpha) * RTT_medio, con alpha en [0,1]
 Ver diap. 28.
-Tambien vamos calculando la desviacion:
-Desviacion_nueva = (1-x) * Desvicion_vieja + x * |RTT_medio - RTT_nuevo|
+También vamos calculando la desviación:
+Desviacion_nueva = (1-x) * Desviacion_vieja + x * |RTT_medio - RTT_nuevo|
 
 Finalmente, el Timeout = RTT_nuevo + 4 * Desviacion_nueva
 
