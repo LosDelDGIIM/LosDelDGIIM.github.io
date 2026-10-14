@@ -1,5 +1,7 @@
 \chapter{Detección de Datos Anómalos. Problema de la falta de simetría. Transformaciones.}
+% // TODO: Antes de esto hay un archivo de R con varias cosas
 
+% // TODO: Reescribir esto
 \section{Transformaciones}
 \noindent
 Imaginémonos que hemos detectado anomalías en una distribución, que pueden ser de dos tipos:
@@ -13,7 +15,7 @@ Estas pueden suceder ambas a la vez.\\
 Si aplicamos una transformaciona a los datos $T(X)$, es posible que corrijamos la asimetría y la existencia de los datos anómalos. Cuando aplicamos una transformación debemos tener en cuenta cómo se afectan las distancias entre los datos.\\
 
 \noindent
-La única distancia que no cambia la distancia entre los puntos es una transformación lineal, que solo cambia la escala de la distancia, mediante traslaciones y/o rotaciones. Los tipos de transformaciones que vamos a tener son:
+La única distancia que no cambia la distancia entre los puntos es una transformación lineal, que solo cambia la escala de la distancia, mediante traslaciones y/o rotaciones, pero no cambia ``la forma''. Las usaremos para cambiar el dominio de nuestras distribuciones. Los tipos de transformaciones que vamos a tener son:
 \begin{itemize}
     \item Transformaciones lineales, para cambiar los dominios de las transformaciones.
     \item Transformaciones monótonas no lineales.
@@ -21,6 +23,139 @@ La única distancia que no cambia la distancia entre los puntos es una transform
 \end{itemize}
 
 \noindent
-Sabemos que siempre es posible tener una transformación lineal $h:[a,b]\to [c,d]$. Las transformaciones cóncavas y convexas permiten transformar distancias, por ejemplo para valores pequeños permite acercarlos tras la transformación y para valores grandes permite alejarlos.
+Las transformaciones no lineales modificarán las distancias entre los datos.
 
-% El miércoles pone un ejercicio sin IA
+\noindent
+Sabemos que siempre es posible tener una transformación lineal $h:[a,b]\to [c,d]$. Las transformaciones cóncavas y convexas permiten transformar distancias, por ejemplo las cóncavas para valores pequeños permite acercarlos tras la transformación y para valores grandes permite alejarlos. Las convexas hacen lo contrario.
+
+\noindent
+Las transformaciones cóncavas pueden servirnos para resolver problemas con distribuciones asimétricas a la izquierda y con colas largas a la derecha y datos anómalos a derecha. 
+
+\noindent
+Podemos encontrar también funciones que pasen de convexa a cóncava (como una S), que para datos alejados del centro los junta y para los datos del centro no. La función seno en [-pi/2, pi/2]. Raíces impares con dominio centrado en cero. O tambien cóncava-convexa, con potencias impares, logaritmos plegados o raíces plegadas, que se escriben como sale en la diapositiva.
+
+\section{Escala de Tukey}
+Tukey creó un tipo de transformaciones para resolver esto. Esta escala podemos copiarla, que va desde la identidad ($x$), teniendo a la izquierda funciones cóncavas y a la derecha convexas.\\
+
+\noindent
+Cuidado con aplicar transformaciones: Podemos pasar de tener una distribución asimétrica a la izquierda a tener una a la derecha por pasarnos.\\
+
+¿Cuándo aplicar este procedimiento? Cuando podamos trabajar con los datos transformados sin problemas. Ejemplo: Los microarrays trabajan con los logaritmos, no con los datos transformados.
+
+% // TODO: Ejemplo de consumo de helados
+
+\section{Análisis de Varianza}
+\noindent
+El test ANOVA era para estudiar una variable continua y separada en grupos. Cuando se dan una serie de condiciones, el objetivo era ver si la distribución de cada grupo era la misma o no. El constrate se basa en las hipótesis:
+\begin{itemize}
+    \item Que las distribuciones de cada grupo sean normales, que puede rebajarse a que sean más o menos unimodales y simétricas.
+    \item Que las varianzas de todas las distribuciones sean iguales.
+\end{itemize}
+Cuando no pasa esto hay que pasar a test no paramétricos, peron no son muy fiables, porque tienen poca potencia.\\
+
+\noindent
+Siempre que sea posible aplicar transformaciones, hay transformaciones que permiten conservar la normalidad (si la hubiera) pero modificar las varianzas para que todas sean iguales, con el objetivo de aplicar ANOVA. 
+
+\noindent
+Tukey puso en marcha un grupo de transformaciones, que se basan en el logaritmo de la mediana y el IRQ. Por cada grupo tenemos un punto en un plano 2D. Si tenemos varios puntos y calculamos la pendiente de la recta uniendo los puntos más extremales, dio una tabla para aplicar transformaciones a los datos homocedásticos. Esto ha mejorado y en SPSS están estas transformaciones.\\
+
+\section{Estimación no paramétrica} % // TODO: No sé  cómo se llama exactamente
+\noindent
+Tenemos una variable $X$ continua. Sus funciones de densidad y de distribución son:
+\begin{equation*}
+    F(x) = P[X\leq x] = \int_{-\infty}^{+\infty} F(x)~dx \qquad f(x) = F'(x)
+\end{equation*}
+Imaginemos que nuestra intención es encontrar la función de densidad de $X$. Tenemos que:
+\begin{equation*}
+    f(x) = \frac{\partial }{\partial x}F(x) = \lim_{h\to 0} \frac{F(x+h)-F(x-h)}{2h} = \lim_{h\to 0} =  \frac{P[x-h\leq X \leq X+h]}{2h}
+\end{equation*}
+Podemos usar el concepto de distribución empírica, una aproximación a la función de distribución:
+\begin{equation*}
+    \hat{F}(x) = \frac{1}{N} \# \{X : X\leq x\}
+\end{equation*}
+Así, si tenemos una muestra $\tilde{X} = \{x_1, \ldots, x_n\}$ tenemos:
+\begin{equation*}
+    \hat{F}(x) = \frac{1}{n} \# \{x_i : x_i\leq x\}
+\end{equation*}
+Así, podemos escribir para un $h$ pequeño:
+\begin{equation*}
+    \hat{f}_n(x) = \frac{1}{2nh} \# \{x_i : x-h\leq x_i \leq x+h\}
+\end{equation*}
+Y podemos reescribir la condición $x-h\leq x_i\leq x+h$ como $\left|\frac{x-x_i}{h}\right|\leq 1$, por lo que:
+\begin{equation*}
+    \hat{f}_n(x) = \frac{1}{2nh}\# \left\{x_i :\left|\frac{x-x_i}{h}\right|\leq 1 \right\}
+\end{equation*}
+Si ahora definimos $W:\mathbb{R}\to\mathbb{R}$ dada por:
+\begin{equation*}
+    W(x) = \left\{\begin{array}{ll}
+            \nicefrac{1}{2} & |x| \leq 1 \\
+            0 & x > 1
+    \end{array}\right.
+\end{equation*}
+A esta función la llamaremos núcleo.
+\begin{ejercicio}
+    Demostrar que $W$ es una función de densidad.
+\end{ejercicio}
+Podemos escribir:
+\begin{equation*}
+    \hat{f}_n(x) = \frac{1}{nh}\sum_{i=1}^{n}W\left(\frac{x-x_i}{h}\right)
+\end{equation*}
+Lo que estamos haciendo es dado un punto $x$, mirar los puntos que hay dentro del intervalo $[x-h,x+h]$ y dividirlo entre el total de puntos que hay ($n$). Estamos dando a cada punto la misma importancia. Si $h$ es convenientemente pequeño aproximamos esta función. Estamos haciendo un recubrimiento por núcleo. En este caso asigna a cada punto la misma probabilidad.
+
+Dado un punto $x$ y un $h$, podemos definir esta función evaluada en $x$. Se llama 
+
+% Se llaman nucleos porque repites y luego sumas
+
+\begin{ejercicio}
+    Demostrar que $\hat{f}_n$ para $h\in \mathbb{R}^+$ fijo es función de densidad.
+\end{ejercicio}
+
+\noindent
+Tenemos diferentes tipos de núcleos:
+\begin{description}
+    \item [Uniforme.] 
+        \begin{equation*}
+            K(x) = \left\{\begin{array}{ll}
+                    \nicefrac{1}{2} & |x|\leq 1 \\
+                    0 & x > 1
+            \end{array}\right.
+        \end{equation*}
+    \item [Triangular.] 
+        \begin{equation*}
+            K(x) = \left\{\begin{array}{ll}
+                    1-|x| & |x|\leq 1 \\
+                    0 & x > 1
+            \end{array}\right.
+        \end{equation*}
+    \item [Epanechnikov.] 
+        \begin{equation*}
+            K(x) = \left\{\begin{array}{ll}
+                    \nicefrac{3}{4}(1-x^2) & |x|\leq 1 \\
+                    0 & x > 1
+            \end{array}\right.
+        \end{equation*}
+    \item [Biweight.] 
+        \begin{equation*}
+            K(x) = \left\{\begin{array}{ll}
+                    \nicefrac{15}{16}{(1-x^2)}^{2} & |x|\leq 1 \\
+                    0 & x > 1
+            \end{array}\right.
+        \end{equation*}
+    \item [Triweight.] 
+        \begin{equation*}
+            K(x) = \left\{\begin{array}{ll}
+                    \nicefrac{35}{32}{(1-x^2)}^{3} & |x|\leq 1 \\
+                    0 & x > 1
+            \end{array}\right.
+        \end{equation*}
+    \item [Gaussian.] 
+        \begin{equation*}
+            K(x) = {(2\pi)}^{\nicefrac{-1}{2}} exp\{\nicefrac{-x^2}{2}\}, \quad x\in \mathbb{R}
+        \end{equation*}
+\end{description}
+
+Y definiremos siempre:
+\begin{equation*}
+    \hat{f}(x) = \frac{1}{nh} \sum_{i=1}^{n}K(x,h)
+\end{equation*}
+Es aprovechar la idea de Darboux (Riemman) para aproximar el área debajo de una función $f(x)$ por sumas de áreas de rectángulos, pero usando rectángulos de distinta anchura.
