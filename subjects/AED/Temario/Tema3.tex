@@ -1,0 +1,67 @@
+\chapter{Multidimensional Scaling}
+
+% TODO: Preguntar a Gemini: "Explícame qué es el MDS: para qué sirve y cuál es el procedimiento"
+% Es una técnica que dada una matriz de distancias es capaz de representar en dimensiones bajas dichos puntos, recuerda a PCA
+
+Propósitos:
+\begin{description}
+    \item [Visualización.] A partir de un conjunto de similaridades entre elementos, queremos encontrar una configuración que lo represente en un espacio de dimensión reducida. Si tuviéramos una matriz de distancias euclídeas, 10 puntos se pueden representar de manera exacta en dimensión 9 (es posible que en menos, pero en dimensión 9 seguro). Lo interesante es encontrar una representación preservando la mayor de información en dimensión 2 o 3 para ver las relaciones entre los elementos.
+
+        Ejemplo. Se montó una matriz de distancias entre las ciudades principales de Francia y se construyó un mapa de Francia. Podemos obtener el mapa de Francia y tratar de proyectar la configuración de las ciudades sobre el mapa. Podemos tratar de variar la matriz por movimientos rígidos para que encaje bien sobre el mapa.
+    \item [Mapa psicoloógico.] No solamente queremos representarlo sino interpretar qué pasa para ver las relaciones entre los elementos.
+
+        Ejemplo. Le preguntaron a 18 estudiantes que evaluaran en 1971 (ordenaran) un valor de similaridad entre diferentes naciones presentadas por pares (por ejemplo, si nos dan Francia y China y nos piden decir 1 si son iferentes y 9 muy parecidas), conseguimos una matriz $9\times 9$. Con dicha matriz y a partir de dicha escala, se hizo la media de las puntuaciones (para evitar errores o puntuaciones) y sacaron un esquema. Él quería ver en el subconsciente de los alumnos. Terminó de pintar los datos (se pinta para que las distancias entre los puntos se parezca ante la información, están sometidos respecto a un movimiento rígido, por lo que los ejes no son representativos. O bien se tiene un ojo clínico para mover los ejes o hay otras técnicas que intentan explicar otras variables). En este ejemplo se observa una diagonal de países subdesarrollados y desarrollados o bien comunistas u occidentales. Los alumnos sacaron inconscientemente estas dos dimensiones.
+    \item [Más complicada.] Usar MDS como una herramienta para resolver problemas.
+
+        Ejemplo. Cuando tenemos un proceso (medir la radiación solar en la British Columbia de Canadá), son series temporales que miden los datos de las estaciones. Las estaciones se colocan en determinadas zonas. La idea es encontrar (interpolar) el valor de la radiación en cada instante de tiempo en un sitio que no se puede muestrear. Esto se hace utilizando el variagrama muestral (que es una distancia euclídea el cuadrado de valores temporales). Con esto se estima el valor de la covarianza muestral del proceso con el que se puede hacer \textit{krigging} para estimar los valores del proceso en la zona no observada. Problema: el proceso tiene que ser estacionario o isotrópico (es decir, que las diferencias en los valores solamente depende de lo alejadas que están, no de la posición geográfica). Y esto no ocurre, puesto que el estar en el norte o en el sur varía la radiación. A esta gente se le ocurrió coger la información, obtener una distancia euclídea al cuadrado entre las estaciones donde las distancias están en función de los valores de la radiación. Con este valor, ir a un MDS (que solo depende de las distancias, por lo que ya es un proceso isotrópico) e invertar un spline plano y estimar el proceso. Cuando tenga los valores, hacer \textit{krigging} y obtener los valores.
+\end{description}
+
+¿Cómo se hace el MDS? % TODO: ejemplo_1
+
+\section{Disimilaridad}
+En líneas generales, supondremos que tenemos una matriz simétrica (el problema de la asimetría de matrices que deberían ser simétricas es común y hay muchas técnicas para hacer la matriz simétrica. Una técnica es coger la media de ambos datos. La mejor técnica que publicó Vera es pensar que tenemos dos factores conocidos y ambos apuntan a una variable lantente, arrastrándola como un dato y se mete en un modelo de ecuaciones estructurales). Supondremos también que el valor que tengan lo distinto de dos elementos sea más grande que el valor de la diagonal. Otra cosa es que los valores de las diagonalaes sean 0, es decir, el valor mínimo de disimilaridad es 0.\\
+
+\section{Métrica}
+No toda función que cumpla la desigualdad triangular es una distancia euclídea: imagina tres puntos $P_1,P_2,P_3$ a distancia 2 de cada uno de los otros (es decir, un triángulo rectángulo de lado 2). Si ahora introducimos un cuarto punto $P_4$ a distancia $1.1$ de los otros puntos, es imposible dibujar estos puntos en $\mathbb{R}^3$, y el razonamiento puede probarse que da igual las dimensiones que se tienen que siempre será imposible representar los 4 puntos.
+
+\begin{equation*}
+    \left(\begin{array}{cccc}
+        0 & 2 & 2 & 1.1 \\
+        2 & 0 & 2 & 1.1 \\
+        2 & 2 & 0 & 1.1 \\
+        1.1 & 1.1 & 1.1 & 0 
+    \end{array}\right)
+\end{equation*}
+
+Es una distancia, pues todas son positivas, simétricas y cumplen la desigualdad triangular, pero no se puede dibujar en ningún número de dimensiones.
+
+\section{Tipos}
+\begin{description}
+    \item [Distancia Euclídea Ponderada.] 
+        \begin{equation*}
+            \delta_{rs} = \sqrt{\sum_{i=1}^{n}w_i{(x_{ri}-x_{si})}^{2}}
+        \end{equation*}
+        Se le da distinta importancia (peso) a cada eje de ordenadas, $w = (w_1,w_2,\ldots,w_n)$
+    \item [Minkowski distance.] 
+        \begin{equation*}
+            \delta_{rs} = \sqrt{\sum_{i=1}^{n}w_i{(x_{ri}-x_{si})}^{2}}
+        \end{equation*}
+    \item [Angular separation.]
+        \begin{equation*}
+            \delta_{rs} = 1-\cos(ang(x_r,x_s))
+        \end{equation*}
+    \item [Linear correlation.]
+        \begin{equation*}
+            \delta_{rs} = 1 - \rho_{rs}^2
+        \end{equation*}
+\end{description}
+
+Se puede hacer un MDS que aproxime a cualquier distancia. La solución la da el Teorema de Schoenberg ó Young y Householder. El Teorema caracteriza cuándo una distancia se corresponde con una distancia euclídea. La matriz tiene que ser simétrica, sus entradas tienen que ser no negativas, la diagonal principal debe ser nula y debe ser semidefinida positiva. Este Teorema da pie a la solución clásica del MDS.
+
+% TODO: ejemplo_1. Sección 3
+
+\section{Unfolding}
+Son relaciones entre filas y columnas. Se pone a personas en las filas y en las columnas se pone un tipo de desayuno. A cada uno se nos pide ordenar en función preferencia.
+Con esta información (o información de similaridad entre ellos), podemos encontrar una representación de filas y columnas donde se muestre la relación entre ellas.
+
+
