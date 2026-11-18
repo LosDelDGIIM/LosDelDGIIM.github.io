@@ -159,8 +159,7 @@
         \begin{cases}
             1, & \text{si } \lambda(x_1, \dots, x_n) > k \\
             \gamma, & \text{si } \lambda(x_1, \dots, x_n) = k \\
-            0, & \text{si } \lambda(x_1, \dots, x_n) < k\\
-            \gamma, & \text{si } (x_1, \dots, x_n) \notin \{0,1\}^n
+            0, & \text{si } \lambda(x_1, \dots, x_n) < k
         \end{cases}
     \end{equation*}
     
@@ -181,7 +180,139 @@
         \ln g(t) &= t \ln\left(\frac{p_1}{p_0}\right) + (n-t) \ln\left(\frac{1-p_1}{1-p_0}\right)\\
         \dfrac{d}{dt} \ln g(t) &= \ln\left(\frac{p_1}{p_0}\right) - \ln\left(\frac{1-p_1}{1-p_0}\right) = \ln\left(\frac{p_1(1-p_0)}{p_0(1-p_1)}\right)>0
     \end{align*}
-    donde en la última desigualdad se ha usado que $p_1>p_0$.
+    donde en la última desigualdad se ha usado que $p_1>p_0$. Por tanto, $\ln g(t)$ es estrictamente creciente en $t$, y por ende, $g(t)$ también lo es. Esto implica que, para cada $k>0$, existe un único valor crítico $k'=g^{-1}(k)$. Para traducir las desigualdades del Test de Neyman-Pearson en términos del estadístico $T$, vemos gráficamente la Figura~\ref{fig:razon_verosimilitudes}.
+    \begin{figure}[ht]
+        \centering
+        \begin{tikzpicture}[>=Stealth, scale=1.15]
+
+            % --- Definición de estilos ---
+            \tikzset{
+                eje/.style={->, thick, black},
+                guia/.style={dashed, thick, black!80},
+                reg_sup/.style={ultra thick, orange!90!black},
+                reg_inf/.style={ultra thick, red!75!black},
+                punto_crit/.style={fill=cyan!80!blue, draw=black, thick}
+            }
+
+            % --- 1. Ejes de coordenadas ---
+            \draw[eje] (-0.4, 0) -- (5.5, 0) node[right] {$T = \sum\limits_{i=1}^n X_i$};
+            \draw[eje] (0, -0.4) -- (0, 4.3) node[above] {$\lambda = g(T)$};
+
+            % --- 2. Curva creciente g(y) ---
+            % Usamos una función exponencial suave g(x) = 0.45 * exp(0.42 * x)
+            \draw[very thick, red!75!black, domain=0.2:3.2, samples=100] 
+                plot (\x, {0.45 * exp(0.42 * \x)});
+            \draw[very thick, orange!90!black, domain=3.2:4.8, samples=100] 
+                plot (\x, {0.45 * exp(0.42 * \x)}) 
+                node[above right, black] {$g(t)$ creciente};
+
+            % --- 3. Coordenadas del punto de corte (k', k) ---
+            % Para x = 3.2, y = 0.45 * exp(0.42 * 3.2) ≈ 1.725
+            \def\kprima{3.2}
+            \def\kval{1.725}
+
+            % Líneas discontinuas de proyección
+            \draw[guia] (0, \kval) -- (\kprima, \kval) -- (\kprima, 0);
+
+            % Punto sobre la curva
+            \filldraw[punto_crit] (\kprima, \kval) circle (2.2pt);
+
+            % --- 4. Regiones coloreadas sobre los ejes ---
+            % Eje vertical (lambda): lambda > k (arriba) y lambda < k (abajo)
+            \draw[reg_sup] (0, \kval) -- (0, 3.9);
+            \draw[reg_inf] (0, 0) -- (0, \kval);
+
+            % Eje horizontal (T): T > k' (derecha) y T < k' (izquierda)
+            \draw[reg_sup] (\kprima, 0) -- (5.1, 0);
+            \draw[reg_inf] (0, 0) -- (\kprima, 0);
+
+            % --- 5. Etiquetas de los puntos críticos ---
+            \filldraw[punto_crit] (0, \kval) circle (2pt) node[left=4pt, black] {$k$};
+            \filldraw[punto_crit] (\kprima, 0) circle (2pt) node[below=4pt, black] {$k'$};
+
+            % --- 6. Etiquetas de las regiones (como en los apuntes) ---
+            % Etiquetas en el eje vertical
+            \node[left=4pt, orange!90!black, font=\small] at (0, 2.85) {$\lambda > k$};
+            \node[left=4pt, red!75!black, font=\small] at (0, 0.85) {$\lambda < k$};
+
+            % Etiquetas en el eje horizontal
+            \node[below=4pt, orange!90!black, font=\small] at (4.2, 0) {$T > k'$};
+            \node[below=4pt, red!75!black, font=\small] at (1.6, 0) {$T < k'$};
+
+        \end{tikzpicture}
+        \caption{Correspondencia entre la razón de verosimilitudes $\lambda$ y el estadístico $T$.}
+        \label{fig:razon_verosimilitudes}
+    \end{figure}
+    
+    Por tanto, el Test de Neyman-Pearson se puede reescribir en términos del estadístico $T$ como:
+    \begin{equation*}
+        \varphi(x_1, \dots, x_n) =
+        \begin{cases}
+            1, & \text{si } T(x_1, \dots, x_n) > k' \\
+            \gamma, & \text{si } T(x_1, \dots, x_n) = k' \\
+            0, & \text{si } T(x_1, \dots, x_n) < k'
+        \end{cases}
+    \end{equation*}
+
+    Como se pide un test de tamaño $\alpha = 0.05$, debemos elegir $k'$ y $\gamma$ de manera que:
+    \begin{align*}
+        \alpha = 0.05 &= \sup_{p\in \Theta_0} E_{p}[\varphi(X_1, \dots, X_n)] = E_{p_0}[\varphi(X_1, \dots, X_n)] = \\&= P_{p_0}[T > k'] + \gamma P_{p_0}[T = k'] + \gamma \cancel{P_{p_0}[(X_1, \dots, X_n) \notin \{0,1\}^n]}
+    \end{align*}
+
+    Por tanto, despejando $\gamma$ obtenemos:
+    \begin{align*}
+        \gamma &= \frac{\alpha - P_{p_0}[T > k']}{P_{p_0}[T = k']}
+    \end{align*}
 
 
+    Sabiendo que $T \rightsquigarrow \cc{B}(n, p)$, buscamos los valores de $k'$ que nos permiten obtener $\gamma\in [0,1]$. Para $n=5$ y $p_0 = \nicefrac{1}{2}$, tenemos:
+    \begin{align*}
+        P_{p_0}[T > 5] &= 0 \\
+        P_{p_0}[T > 4] &= P_{p_0}[T = 5] = \binom{5}{5}\left(\frac{1}{2}\right)^5 = \frac{1}{32} = 0.03125 \\
+        P_{p_0}[T > 3] &= P_{p_0}[T = 4] + P_{p_0}[T = 5] = \binom{5}{4}\left(\frac{1}{2}\right)^5 + \binom{5}{5}\left(\frac{1}{2}\right)^5 = \frac{5 + 1}{32} = \frac{6}{32} = 0.1875
+    \end{align*}
+
+    Por tanto:
+    \begin{itemize}
+        \item Si $k' = 5$, entonces:
+        \begin{equation*}
+            \gamma = \frac{0.05 - 0}{P_{p_0}[T = 5]} = \frac{0.05}{0.03125} = 1.6 > 1
+        \end{equation*}
+        \item Si $k' = 4$, entonces:
+        \begin{equation*}
+            \gamma = \frac{0.05 - 0.03125}{P_{p_0}[T = 4]} = \frac{0.01875}{0.15625} = 0.12 \in [0,1]
+        \end{equation*}
+        \item Si $k' = 3$, entonces:
+        \begin{equation*}
+            \gamma = \frac{0.05 - 0.1875}{P_{p_0}[T = 3]} < 0
+        \end{equation*}
+    \end{itemize}
+
+    Por tanto, el test más potente de tamaño $\alpha = 0.05$ se obtiene fijando $k' = 4$ y $\gamma = 0.12$. El test resultante es:
+    \begin{equation*}
+        \varphi(x_1, \dots, x_n) =
+        \begin{cases}
+            1, & \text{si } T(x_1, \dots, x_n) > 4 \\
+            0.12, & \text{si } T(x_1, \dots, x_n) = 4 \\
+            0, & \text{si } T(x_1, \dots, x_n) < 4
+        \end{cases}
+    \end{equation*}
+
+    Por el Lema de Neyman-Pearson, este test es el más potente de tamaño $\alpha = 0.05$ para contrastar $H_0: p = \nicefrac{1}{2}$ frente a $H_1: p = \nicefrac{3}{4}$.
 \end{ejemplo}
+
+
+\begin{ejercicio} % // TODO: Hacer
+    Sea $(X_1, \dots, X_n)$ una m.a.s. de $X$ cuya función de densidad viene dada por:
+    \begin{equation*}
+        f_\theta(x) = e^{\theta - x} \quad x \geq \theta
+    \end{equation*}
+
+    Encontrar el test más potente de tamaño $\alpha$ para resolver el problema de contraste:
+    \begin{align*}
+        \begin{cases}
+        H_0: \theta = \theta_0 \\
+        H_1: \theta = \theta_1
+        \end{cases}
+    \end{align*}
+\end{ejercicio}
