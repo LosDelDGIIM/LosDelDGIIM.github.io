@@ -148,7 +148,9 @@
         &= p^{\sum\limits_{i=1}^{n} x_i}(1-p)^{n-\sum\limits_{i=1}^{n} x_i}>0\qquad \forall (x_1, \dots, x_n) \in \{0,1\}^n
     \end{align*}
 
-    Notemos que, si $(x_1, \dots, x_n) \notin \{0,1\}^n$, entonces $f_p^n (x_1, \dots, x_n) = 0$ para cualquier $p\in[0,1]$. En cuyo caso se tiene que $f_1^n (x_1, \dots, x_n) = f_0^n (x_1, \dots, x_n) = 0$. Para $(x_1, \dots, x_n) \in \{0,1\}^n$, se define la razón de verosimilitudes:
+    Notemos que, si $(x_1, \dots, x_n) \notin \{0,1\}^n$, entonces $f_p^n (x_1, \dots, x_n) = 0$ para cualquier $p\in[0,1]$, en cuyo caso se tiene que $f_1^n (x_1, \dots, x_n) = f_0^n (x_1, \dots, x_n) = 0$ y, por tanto, el valor asignado no modifica la potencia ni el tamaño del test.\\
+    
+    Para $(x_1, \dots, x_n) \in \{0,1\}^n$, se define la razón de verosimilitudes:
     \begin{equation*}
         \lambda(x_1, \dots, x_n) = \frac{f_1^n(x_1, \dots, x_n)}{f_0^n(x_1, \dots, x_n)}
     \end{equation*}
@@ -159,8 +161,7 @@
         \begin{cases}
             1, & \text{si } \lambda(x_1, \dots, x_n) > k \\
             \gamma, & \text{si } \lambda(x_1, \dots, x_n) = k \\
-            0, & \text{si } \lambda(x_1, \dots, x_n) < k\\
-            \gamma, & \text{si } (x_1, \dots, x_n) \notin \{0,1\}^n
+            0, & \text{si } \lambda(x_1, \dots, x_n) < k
         \end{cases}
     \end{equation*}
     
@@ -181,7 +182,759 @@
         \ln g(t) &= t \ln\left(\frac{p_1}{p_0}\right) + (n-t) \ln\left(\frac{1-p_1}{1-p_0}\right)\\
         \dfrac{d}{dt} \ln g(t) &= \ln\left(\frac{p_1}{p_0}\right) - \ln\left(\frac{1-p_1}{1-p_0}\right) = \ln\left(\frac{p_1(1-p_0)}{p_0(1-p_1)}\right)>0
     \end{align*}
-    donde en la última desigualdad se ha usado que $p_1>p_0$.
+    donde en la última desigualdad se ha usado que $p_1>p_0$. Por tanto, $\ln g(t)$ es estrictamente creciente en $t$, y por ende, $g(t)$ también lo es. Esto implica que, para cada $k>0$, existe un único valor crítico $k'=g^{-1}(k)$. Para traducir las desigualdades del Test de Neyman-Pearson en términos del estadístico $T$, vemos gráficamente la Figura~\ref{fig:razon_verosimilitudes}.
+    \begin{figure}[ht]
+        \centering
+        \begin{tikzpicture}[>=Stealth, scale=1.15]
+
+            % --- Definición de estilos ---
+            \tikzset{
+                eje/.style={->, thick, black},
+                guia/.style={dashed, thick, black!80},
+                reg_sup/.style={ultra thick, orange!90!black},
+                reg_inf/.style={ultra thick, red!75!black},
+                punto_crit/.style={fill=cyan!80!blue, draw=black, thick}
+            }
+
+            % --- 1. Ejes de coordenadas ---
+            \draw[eje] (-0.4, 0) -- (5.5, 0) node[right] {$T = \sum\limits_{i=1}^n X_i$};
+            \draw[eje] (0, -0.4) -- (0, 4.3) node[above] {$\lambda = g(T)$};
+
+            % --- 2. Curva creciente g(y) ---
+            % Usamos una función exponencial suave g(x) = 0.45 * exp(0.42 * x)
+            \draw[very thick, red!75!black, domain=0.2:3.2, samples=100] 
+                plot (\x, {0.45 * exp(0.42 * \x)});
+            \draw[very thick, orange!90!black, domain=3.2:4.8, samples=100] 
+                plot (\x, {0.45 * exp(0.42 * \x)}) 
+                node[above right, black] {$g(t)$ creciente};
+
+            % --- 3. Coordenadas del punto de corte (k', k) ---
+            % Para x = 3.2, y = 0.45 * exp(0.42 * 3.2) ≈ 1.725
+            \def\kprima{3.2}
+            \def\kval{1.725}
+
+            % Líneas discontinuas de proyección
+            \draw[guia] (0, \kval) -- (\kprima, \kval) -- (\kprima, 0);
+
+            % Punto sobre la curva
+            \filldraw[punto_crit] (\kprima, \kval) circle (2.2pt);
+
+            % --- 4. Regiones coloreadas sobre los ejes ---
+            % Eje vertical (lambda): lambda > k (arriba) y lambda < k (abajo)
+            \draw[reg_sup] (0, \kval) -- (0, 3.9);
+            \draw[reg_inf] (0, 0) -- (0, \kval);
+
+            % Eje horizontal (T): T > k' (derecha) y T < k' (izquierda)
+            \draw[reg_sup] (\kprima, 0) -- (5.1, 0);
+            \draw[reg_inf] (0, 0) -- (\kprima, 0);
+
+            % --- 5. Etiquetas de los puntos críticos ---
+            \filldraw[punto_crit] (0, \kval) circle (2pt) node[left=4pt, black] {$k$};
+            \filldraw[punto_crit] (\kprima, 0) circle (2pt) node[below=4pt, black] {$k'$};
+
+            % --- 6. Etiquetas de las regiones (como en los apuntes) ---
+            % Etiquetas en el eje vertical
+            \node[left=4pt, orange!90!black, font=\small] at (0, 2.85) {$\lambda > k$};
+            \node[left=4pt, red!75!black, font=\small] at (0, 0.85) {$\lambda < k$};
+
+            % Etiquetas en el eje horizontal
+            \node[below=4pt, orange!90!black, font=\small] at (4.2, 0) {$T > k'$};
+            \node[below=4pt, red!75!black, font=\small] at (1.6, 0) {$T < k'$};
+
+        \end{tikzpicture}
+        \caption{Correspondencia entre la razón de verosimilitudes $\lambda$ y el estadístico $T$.}
+        \label{fig:razon_verosimilitudes}
+    \end{figure}
+    
+    Por tanto, el Test de Neyman-Pearson se puede reescribir en términos del estadístico $T$ como:
+    \begin{equation*}
+        \varphi(x_1, \dots, x_n) =
+        \begin{cases}
+            1, & \text{si } T(x_1, \dots, x_n) > k' \\
+            \gamma, & \text{si } T(x_1, \dots, x_n) = k' \\
+            0, & \text{si } T(x_1, \dots, x_n) < k'
+        \end{cases}
+    \end{equation*}
+
+    Como se pide un test de tamaño $\alpha = 0.05$, debemos elegir $k'$ y $\gamma$ de manera que:
+    \begin{align*}
+        \alpha = 0.05 &= \sup_{p\in \Theta_0} E_{p}[\varphi(X_1, \dots, X_n)] = E_{p_0}[\varphi(X_1, \dots, X_n)] = \\&= P_{p_0}[T > k'] + \gamma P_{p_0}[T = k'] + c\cdot \cancel{P_{p_0}[(X_1, \dots, X_n) \notin \{0,1\}^n]}
+    \end{align*}
+
+    Por tanto, despejando $\gamma$ obtenemos:
+    \begin{align*}
+        \gamma &= \frac{\alpha - P_{p_0}[T > k']}{P_{p_0}[T = k']}
+    \end{align*}
 
 
+    Sabiendo que $T \rightsquigarrow \cc{B}(n, p)$, buscamos los valores de $k'$ que nos permiten obtener $\gamma\in [0,1]$. Para $n=5$ y $p_0 = \nicefrac{1}{2}$, tenemos:
+    \begin{align*}
+        P_{p_0}[T > 5] &= 0 \\
+        P_{p_0}[T > 4] &= P_{p_0}[T = 5] = \binom{5}{5}\left(\frac{1}{2}\right)^5 = \frac{1}{32} = 0.03125 \\
+        P_{p_0}[T > 3] &= P_{p_0}[T = 4] + P_{p_0}[T = 5] = \binom{5}{4}\left(\frac{1}{2}\right)^5 + \binom{5}{5}\left(\frac{1}{2}\right)^5 = \frac{5 + 1}{32} = \frac{6}{32} = 0.1875
+    \end{align*}
+
+    Por tanto:
+    \begin{itemize}
+        \item Si $k' = 5$, entonces:
+        \begin{equation*}
+            \gamma = \frac{0.05 - 0}{P_{p_0}[T = 5]} = \frac{0.05}{0.03125} = 1.6 > 1
+        \end{equation*}
+        \item Si $k' = 4$, entonces:
+        \begin{equation*}
+            \gamma = \frac{0.05 - 0.03125}{P_{p_0}[T = 4]} = \frac{0.01875}{0.15625} = 0.12 \in [0,1]
+        \end{equation*}
+        \item Si $k' = 3$, entonces:
+        \begin{equation*}
+            \gamma = \frac{0.05 - 0.1875}{P_{p_0}[T = 3]} < 0
+        \end{equation*}
+    \end{itemize}
+
+    Por tanto, el test más potente de tamaño $\alpha = 0.05$ se obtiene fijando $k' = 4$ y $\gamma = 0.12$. El test resultante es:
+    \begin{equation*}
+        \varphi(x_1, \dots, x_n) =
+        \begin{cases}
+            1, & \text{si } T(x_1, \dots, x_n) > 4 \\
+            0.12, & \text{si } T(x_1, \dots, x_n) = 4 \\
+            0, & \text{si } T(x_1, \dots, x_n) < 4
+        \end{cases}
+    \end{equation*}
+
+    Por el Lema de Neyman-Pearson, este test es el más potente de tamaño $\alpha = 0.05$ para contrastar $H_0: p = \nicefrac{1}{2}$ frente a $H_1: p = \nicefrac{3}{4}$.
+\end{ejemplo}
+
+\begin{ejercicio}
+    Sea $(X_1, \dots, X_n)$ una m.a.s. de una variable aleatoria continua $X$ cuya función de densidad viene dada por:
+    \begin{equation*}
+        f_\theta(x) = e^{\theta - x}\qquad x \geq \theta
+    \end{equation*}
+    Encontrar el test más potente de tamaño $\alpha$ para resolver el problema de contraste:
+    \begin{align*}
+        \begin{cases}
+        H_0: \theta = \theta_0 \\
+        H_1: \theta = \theta_1
+        \end{cases}
+    \end{align*}
+
+    En base al Lema de Neyman-Pearson (LNP), el test uniformemente más potente (TUMP) de tamaño $\alpha$ para un contraste de hipótesis simple frente a simple viene dado por:
+    \begin{equation*}
+        \varphi(X_1, \dots, X_n) =
+        \begin{cases}
+            1, & \text{si } f_1^n(X_1, \dots, X_n) > k f_0^n(X_1, \dots, X_n) \\
+            \gamma, & \text{si } f_1^n(X_1, \dots, X_n) = k f_0^n(X_1, \dots, X_n) \\
+            0, & \text{si } f_1^n(X_1, \dots, X_n) < k f_0^n(X_1, \dots, X_n)
+        \end{cases}
+    \end{equation*}
+    donde $f_0^n \equiv f_{\theta_0}^n$ y $f_1^n \equiv f_{\theta_1}^n$. Calculamos en primer lugar la función de densidad conjunta de la muestra. Como $(X_1, \dots, X_n)$ son i.i.d.,  se tiene:
+    \begin{align*}
+        f_\theta^n(x_1, \dots, x_n) &= \prod_{i=1}^{n} f_\theta(x_i) = \prod_{i=1}^{n} e^{\theta - x_i} = e^{n\theta - \sum\limits_{i=1}^{n} x_i}\qquad x_i \geq \theta, \forall i=1,\dots,n
+    \end{align*}
+
+    Como la condición $x_i \ge \theta$ para todo $i=1,\dots,n$ equivale a que el mínimo muestral cumpla $x_{(1)} \ge \theta$, se tiene que:
+    \begin{equation*}
+        f_\theta^n(x_1, \dots, x_n) = e^{n\theta - \sum\limits_{i=1}^{n} x_i} \,\ind_{\bb{R}^+_0}(x_{(1)} - \theta)
+    \end{equation*}
+
+    Bajo cada una de las hipótesis, las densidades conjuntas son:
+    \begin{align*}
+        f_0^n(x_1, \dots, x_n) &= e^{n\theta_0 - \sum\limits_{i=1}^{n} x_i} \,\ind_{\bb{R}^+_0}(x_{(1)} - \theta_0) \\
+        f_1^n(x_1, \dots, x_n) &= e^{n\theta_1 - \sum\limits_{i=1}^{n} x_i} \,\ind_{\bb{R}^+_0}(x_{(1)} - \theta_1)
+    \end{align*}
+
+    Veamos cuándo se anula cada una de las densidades conjuntas:
+    \begin{itemize}
+        \item $f_0^n(x_1, \dots, x_n) = 0$ si y solo si $x_{(1)} < \theta_0$
+        \item $f_1^n(x_1, \dots, x_n) = 0$ si y solo si $x_{(1)} < \theta_1$
+    \end{itemize}
+
+    Dado que el soporte de $f_0^n$ y $f_1^n$ depende del parámetro, distinguimos dos casos según el orden entre $\theta_0$ y $\theta_1$.
+
+    % =========================================================================
+    % CASO 1: \theta_0 < \theta_1
+    % =========================================================================
+    \begin{description}
+    \item[Caso $\theta_0 < \theta_1$:]
+
+    Analizamos dónde se anulan las densidades conjuntas según el valor del mínimo muestral $x_{(1)}$ (véase la Figura~\ref{fig:soporte_caso1}):
+    \begin{figure}[ht]
+        \centering
+        \begin{tikzpicture}[>=Stealth, scale=1.1]
+            \draw[->, thick] (-0.5, 0) -- (7.5, 0) node[right] {$x_{(1)}$};
+            
+            % Puntos theta_0 y theta_1
+            \filldraw[black] (2, 0) circle (2pt) node[below=4pt] {$\theta_0$};
+            \filldraw[black] (5, 0) circle (2pt) node[below=4pt] {$\theta_1$};
+            
+            % Etiquetas de f_0 y f_1 en cada tramo
+            \node[above=4pt, font=\small] at (0.75, 0.55) {$f_1^n = 0$};
+            \node[above=4pt, font=\small] at (0.75, 0.05) {$f_0^n = 0$};
+            
+            \node[above=4pt, font=\small] at (3.5, 0.55) {$f_1^n = 0$};
+            \node[above=4pt, font=\small] at (3.5, 0.05) {$f_0^n > 0$};
+            
+            \node[above=4pt, font=\small] at (6.2, 0.55) {$f_1^n > 0$};
+            \node[above=4pt, font=\small] at (6.2, 0.05) {$f_0^n > 0$};
+
+            % Divisiones verticales sutiles
+            \draw[dashed, gray] (2, -0.2) -- (2, 1.1);
+            \draw[dashed, gray] (5, -0.2) -- (5, 1.1);
+        \end{tikzpicture}
+        \caption{Positividad de $f_0^n$ y $f_1^n$ según el mínimo muestral $x_{(1)}$ cuando $\theta_0 < \theta_1$.}
+        \label{fig:soporte_caso1}
+    \end{figure}
+
+    Observamos que si $x_{(1)} < \theta_0$, se tiene $f_1^n = f_0^n = 0$ (suceso de probabilidad nula bajo ambas hipótesis, donde fijamos $\varphi = 0$, aunque su valor no es relevante). En cambio, para $x_{(1)} \ge \theta_0$ se cumple $f_0^n > 0$, por lo que podemos dividir por $f_0^n$ y definir la razón de verosimilitudes:
+    \begin{equation*}
+        \lambda(x_1, \dots, x_n) = \frac{f_1^n(x_1, \dots, x_n)}{f_0^n(x_1, \dots, x_n)}
+    \end{equation*}
+
+    Si $\theta_0 \le x_{(1)} < \theta_1$, entonces $f_1^n = 0$ y $f_0^n > 0$, por lo que $\lambda = 0$. En cambio, si $x_{(1)} \ge \theta_1$, entonces $f_1^n > 0$ y $f_0^n > 0$, por lo que:
+    \begin{align*}
+        \lambda(x_1, \dots, x_n) &= \frac{f_1^n(x_1, \dots, x_n)}{f_0^n(x_1, \dots, x_n)} = \frac{e^{n\theta_1 - \sum\limits_{i=1}^{n} x_i}}{e^{n\theta_0 - \sum\limits_{i=1}^{n} x_i}} = e^{n(\theta_1 - \theta_0)}
+    \end{align*}
+
+    Por tanto, la razón de verosimilitudes $\lambda$ queda:
+    \begin{equation*}
+        \lambda(x_1, \dots, x_n) =
+        \begin{cases}
+            0, & \text{si } \theta_0 \le x_{(1)} < \theta_1 \\
+            e^{n(\theta_1 - \theta_0)}, & \text{si } x_{(1)} \ge \theta_1
+        \end{cases}
+    \end{equation*}
+
+
+    El Test de Neyman-Pearson se expresa entonces en términos de $\lambda$ como:
+    \begin{equation*}
+        \varphi(x_1, \dots, x_n) =
+        \begin{cases}
+            1, & \text{si } x_{(1)} \ge \theta_0 \text{ y } \lambda(x_1, \dots, x_n) > k \\
+            \gamma, & \text{si } x_{(1)} \ge \theta_0 \text{ y } \lambda(x_1, \dots, x_n) = k \\
+            0, & \text{en otro caso}
+        \end{cases}
+    \end{equation*}
+
+    Como $\lambda$ únicamente toma los valores $0$ y $e^{n(\theta_1 - \theta_0)}$ (Figura~\ref{fig:lambda_caso1}), solo debemos estudiar dos posibles elecciones para la constante $k$: $k = 0$ o $k = e^{n(\theta_1 - \theta_0)}$.
+
+    \begin{figure}[ht]
+        \centering
+        \begin{tikzpicture}[>=Stealth, scale=1.1]
+            \draw[->, thick] (-0.4, 0) -- (7.2, 0) node[right] {$X_{(1)}$};
+            \draw[->, thick] (0, -0.4) -- (0, 2.8) node[above] {$\lambda$};
+
+            \def\thcero{2.0}
+            \def\thuno{4.5}
+            \def\altura{1.9}
+
+            \draw[dashed, thick, black!75] (0, \altura) -- (\thuno, \altura) -- (\thuno, 0);
+            \draw[dashed, thick, black!75] (\thcero, \altura) -- (\thcero, 0);
+
+            \draw[ultra thick, red!75!black] (\thcero, 0) -- (\thuno, 0);
+            \draw[ultra thick, red!75!black] (\thuno, \altura) -- (6.8, \altura);
+
+            \filldraw[red!75!black] (\thcero, 0) circle (2.2pt) node[below=4pt, black] {$\theta_0$};
+            \filldraw[red!75!black] (\thuno, 0) circle (2.2pt) node[below=4pt, black] {$\theta_1$};
+            \filldraw[red!75!black] (\thuno, \altura) circle (2.2pt);
+
+            \node[left=4pt] at (0, \altura) {$e^{n(\theta_1 - \theta_0)}$};
+        \end{tikzpicture}
+        \caption{Representación gráfica de la razón de verosimilitudes $\lambda$ en función de $X_{(1)}$ para $\theta_0 < \theta_1$.}
+        \label{fig:lambda_caso1}
+    \end{figure}
+
+    \begin{itemize}
+        \item \textbf{Subcaso 1.a: Elección $k = 0$.} Sustituyendo $k = 0$ en $\varphi$ (restringido al soporte $X_{(1)} \ge \theta_0$):
+        \begin{equation*}
+            \varphi(X_1, \dots, X_n) =
+            \begin{cases}
+                1, & \text{si } \lambda > 0 \iff X_{(1)} \ge \theta_1 \\
+                \gamma, & \text{si } \lambda = 0 \iff \theta_0 \le X_{(1)} < \theta_1 \\
+                0, & \text{si } \lambda < 0 \text{ (nunca) o } X_{(1)} < \theta_0
+            \end{cases}
+        \end{equation*}
+        Determinamos $\gamma$ imponiendo que el test tenga tamaño $\alpha$:
+        \begin{equation*}
+            \alpha = E_{\theta_0}[\varphi(X_1, \dots, X_n)] = 1 \cdot P_{\theta_0}[X_{(1)} \ge \theta_1] + \gamma \, P_{\theta_0}[\theta_0 \le X_{(1)} < \theta_1]
+        \end{equation*}
+        Calculamos la probabilidad de la cola superior bajo $H_0$:
+        \begin{align*}
+            P_{\theta_0}[X_{(1)} \ge \theta_1] &= P_{\theta_0}[X_1 \ge \theta_1, \dots, X_n \ge \theta_1] = \left(P_{\theta_0}[X \ge \theta_1]\right)^n \\
+            &= \left( \int_{\theta_1}^{+\infty} e^{\theta_0 - x} \, dx \right)^n = \left( \Big[-e^{\theta_0 - x}\Big]_{\theta_1}^{+\infty} \right)^n = \left(e^{\theta_0 - \theta_1}\right)^n = e^{n(\theta_0 - \theta_1)}
+        \end{align*}
+        Como $P_{\theta_0}[X_{(1)} \ge \theta_0] = 1$, por complementariedad se tiene:
+        \begin{equation*}
+            P_{\theta_0}[\theta_0 \le X_{(1)} < \theta_1] = 1 - P_{\theta_0}[X_{(1)} \ge \theta_1] = 1 - e^{n(\theta_0 - \theta_1)}
+        \end{equation*}
+        Sustituyendo en la ecuación del tamaño y despejando $\gamma$:
+        \begin{equation*}
+            \alpha = e^{n(\theta_0 - \theta_1)} + \gamma \left(1 - e^{n(\theta_0 - \theta_1)}\right) \implies \gamma = \frac{\alpha - e^{n(\theta_0 - \theta_1)}}{1 - e^{n(\theta_0 - \theta_1)}}
+        \end{equation*}
+        Para que $\gamma \in [0, 1]$ sea una probabilidad válida (observando que $\gamma \le 1$ se cumple siempre pues $\alpha \le 1$), debemos imponer $\gamma \ge 0$, lo que equivale a la restricción sobre el tamaño:
+        \begin{equation*}
+            \alpha \ge e^{n(\theta_0 - \theta_1)}
+        \end{equation*}
+        Bajo esta condición, el TUMP de tamaño $\alpha$ es:
+        \begin{equation*}
+            \varphi(X_1, \dots, X_n) =
+            \begin{cases}
+                1, & \text{si } X_{(1)} \ge \theta_1 \\
+                \dfrac{\alpha - e^{n(\theta_0 - \theta_1)}}{1 - e^{n(\theta_0 - \theta_1)}}, & \text{si } \theta_0 \le X_{(1)} < \theta_1 \\
+                0, & \text{si } X_{(1)} < \theta_0
+            \end{cases}
+        \end{equation*}
+        Su potencia bajo $H_1$ (donde $P_{\theta_1}[X_{(1)} \ge \theta_1] = 1$ y $P_{\theta_1}[\theta_0 \le X_{(1)} < \theta_1] = 0$) es máxima:
+        \begin{equation*}
+            \beta_\varphi(\theta_1) = E_{\theta_1}[\varphi(X_1, \dots, X_n)] = 1 \cdot \cancelto{1}{P_{\theta_1}[X_{(1)} \ge \theta_1]} + \gamma \, \cancelto{0}{P_{\theta_1}[\theta_0 \le X_{(1)} < \theta_1]} = 1
+        \end{equation*}
+
+        \item \textbf{Subcaso 1.b: Elección $k = e^{n(\theta_1 - \theta_0)}$.} Sustituyendo este valor de $k$ en $\varphi$, de la Figura~\ref{fig:lambda_caso1} se obtiene:
+        \begin{equation*}
+            \varphi(X_1, \dots, X_n) =
+            \begin{cases}
+                1, & \text{si } \lambda > e^{n(\theta_1 - \theta_0)} \text{ (nunca)} \\
+                \gamma, & \text{si } \lambda = e^{n(\theta_1 - \theta_0)} \iff X_{(1)} \ge \theta_1 \\
+                0, & \text{si } \lambda < e^{n(\theta_1 - \theta_0)} \text{ o } X_{(1)} < \theta_0 \iff \le X_{(1)} < \theta_1
+            \end{cases}
+        \end{equation*}
+        Imponiendo tamaño $\alpha$:
+        \begin{equation*}
+            \alpha = E_{\theta_0}[\varphi(X_1, \dots, X_n)] = \gamma \, P_{\theta_0}[X_{(1)} \ge \theta_1] = \gamma \, e^{n(\theta_0 - \theta_1)} \implies \gamma = \frac{\alpha}{e^{n(\theta_0 - \theta_1)}}
+        \end{equation*}
+        Aquí $\gamma \ge 0$ se cumple trivialmente, y exigir $\gamma \le 1$ conduce a la condición complementaria:
+        \begin{equation*}
+            \alpha \le e^{n(\theta_0 - \theta_1)}
+        \end{equation*}
+        El TUMP para este rango de tamaños es:
+        \begin{equation*}
+            \varphi(X_1, \dots, X_n) =
+            \begin{cases}
+                \dfrac{\alpha}{e^{n(\theta_0 - \theta_1)}}, & \text{si } X_{(1)} \ge \theta_1 \\
+                0, & \text{si } X_{(1)} < \theta_1
+            \end{cases}
+        \end{equation*}
+        Y su potencia bajo $H_1$ resulta:
+        \begin{equation*}
+            \beta_\varphi(\theta_1) = E_{\theta_1}[\varphi(X_1, \dots, X_n)] = \frac{\alpha}{e^{n(\theta_0 - \theta_1)}} \, \cancelto{1}{P_{\theta_1}[X_{(1)} \ge \theta_1]} = \frac{\alpha}{e^{n(\theta_0 - \theta_1)}}
+        \end{equation*}
+    \end{itemize}
+
+    Como conclusión, el TUMP de tamaño $\alpha$ para contrastar $H_0: \theta = \theta_0$ frente a $H_1: \theta = \theta_1$ cuando $\theta_0 < \theta_1$ es:
+    \begin{itemize}
+        \item Si $\alpha \ge e^{n(\theta_0 - \theta_1)}$:
+        \begin{equation*}
+            \varphi(X_1, \dots, X_n) =
+            \begin{cases}
+                1, & \text{si } X_{(1)} \ge \theta_1 \\
+                \dfrac{\alpha - e^{n(\theta_0 - \theta_1)}}{1 - e^{n(\theta_0 - \theta_1)}}, & \text{si } \theta_0 \le X_{(1)} < \theta_1 \\
+                0, & \text{si } X_{(1)} < \theta_0
+            \end{cases}
+        \end{equation*}
+        con potencia $\beta_\varphi(\theta_1) = 1$.
+        \item Si $\alpha \le e^{n(\theta_0 - \theta_1)}$:
+        \begin{equation*}
+            \varphi(X_1, \dots, X_n) =
+            \begin{cases}
+                \dfrac{\alpha}{e^{n(\theta_0 - \theta_1)}}, & \text{si } X_{(1)} \ge \theta_1 \\
+                0, & \text{si } X_{(1)} < \theta_1
+            \end{cases}
+        \end{equation*}
+        con potencia $\beta_\varphi(\theta_1) = \dfrac{\alpha}{e^{n(\theta_0 - \theta_1)}}$.
+    \end{itemize}
+
+    % =========================================================================
+    % CASO 2: \theta_1 < \theta_0
+    % =========================================================================
+    \item[Caso $\theta_1 < \theta_0$:]
+
+    Analizamos nuevamente la positividad de $f_0^n$ y $f_1^n$ según el mínimo muestral $x_{(1)}$ (Figura~\ref{fig:soporte_caso2}):
+    \begin{figure}[ht]
+        \centering
+        \begin{tikzpicture}[>=Stealth, scale=1.1]
+            \draw[->, thick] (-0.5, 0) -- (7.5, 0) node[right] {$x_{(1)}$};
+            
+            \filldraw[black] (2, 0) circle (2pt) node[below=4pt] {$\theta_1$};
+            \filldraw[black] (5, 0) circle (2pt) node[below=4pt] {$\theta_0$};
+            
+            \node[above=4pt, font=\small] at (0.75, 0.55) {$f_1^n = 0$};
+            \node[above=4pt, font=\small] at (0.75, 0.05) {$f_0^n = 0$};
+            
+            \node[above=4pt, font=\small] at (3.5, 0.55) {$f_1^n > 0$};
+            \node[above=4pt, font=\small] at (3.5, 0.05) {$f_0^n = 0$};
+            
+            \node[above=4pt, font=\small] at (6.2, 0.55) {$f_1^n > 0$};
+            \node[above=4pt, font=\small] at (6.2, 0.05) {$f_0^n > 0$};
+
+            \draw[dashed, gray] (2, -0.2) -- (2, 1.1);
+            \draw[dashed, gray] (5, -0.2) -- (5, 1.1);
+        \end{tikzpicture}
+        \caption{Positividad de $f_0^n$ y $f_1^n$ según el mínimo muestral $x_{(1)}$ cuando $\theta_1 < \theta_0$.}
+        \label{fig:soporte_caso2}
+    \end{figure}
+
+    En la región $\theta_1 \le x_{(1)} < \theta_0$, tenemos $f_1^n > 0$ y $f_0^n = 0$. Aunque ahí no podemos definir el cociente $\lambda = f_1^n / f_0^n$, en el LNP se verifica $f_1^n > 0 = k f_0^n$ para todo $k \ge 0$ (es imposible que el dato proceda de $H_0$), por lo que el test rechaza $H_0$ directamente con probabilidad $1$. Además, en la región $x_{(1)} < \theta_1$, ambos son nulos, luego fijamos $\varphi = 0$ (aunque su valor no es relevante). En la región $x_{(1)} \ge \theta_0$, ambos son positivos y la razón de verosimilitudes es constante (Figura~\ref{fig:lambda_caso2}):
+    \begin{equation*}
+        \lambda(x_1, \dots, x_n) = \frac{f_1^n(x_1, \dots, x_n)}{f_0^n(x_1, \dots, x_n)} = e^{n(\theta_1 - \theta_0)}, \quad \text{para } x_{(1)} \ge \theta_0
+    \end{equation*}
+
+    \begin{figure}[ht]
+        \centering
+        \begin{tikzpicture}[>=Stealth, scale=1.1]
+            \draw[->, thick] (-0.4, 0) -- (7.2, 0) node[right] {$X_{(1)}$};
+            \draw[->, thick] (0, -0.4) -- (0, 2.8) node[above] {$\lambda$};
+
+            \def\thuno{2.0}
+            \def\thcero{4.5}
+            \def\altura{1.9}
+
+            \draw[dashed, thick, black!75] (0, \altura) -- (\thcero, \altura) -- (\thcero, 0);
+            \draw[ultra thick, red!75!black] (\thcero, \altura) -- (6.8, \altura);
+
+            \filldraw[black] (\thuno, 0) circle (2pt) node[below=4pt] {$\theta_1$};
+            \filldraw[red!75!black] (\thcero, 0) circle (2.2pt) node[below=4pt, black] {$\theta_0$};
+            \filldraw[red!75!black] (\thcero, \altura) circle (2.2pt);
+
+            \node[left=4pt] at (0, \altura) {$e^{n(\theta_1 - \theta_0)}$};
+        \end{tikzpicture}
+        \caption{Representación gráfica de $\lambda$ en la región $X_{(1)} \ge \theta_0$ para $\theta_1 < \theta_0$.}
+        \label{fig:lambda_caso2}
+    \end{figure}
+
+    Al ser $\lambda$ constante en $X_{(1)} \ge \theta_0$, la única elección relevante es $k = e^{n(\theta_1 - \theta_0)}$, con lo que el test queda:
+    \begin{equation*}
+        \varphi(X_1, \dots, X_n) =
+        \begin{cases}
+            1, & \text{si } \theta_1 \le X_{(1)} < \theta_0 \\
+            1 & \text{si } \lambda(X_1, \dots, X_n) > k\ \text{(nunca)} \\
+            \gamma, & \text{si } \lambda(X_1, \dots, X_n) = k \iff X_{(1)} \ge \theta_0 \\
+            0, & \text{si } \lambda(X_1, \dots, X_n) < k \text{ o } X_{(1)} < \theta_1 \iff X_{(1)} < \theta_1
+        \end{cases}
+    \end{equation*}
+    Imponiendo tamaño $\alpha$:
+    \begin{equation*}
+        \alpha = E_{\theta_0}[\varphi(X_1, \dots, X_n)] = 1 \cdot \cancelto{0}{P_{\theta_0}[\theta_1 \le X_{(1)} < \theta_0]} + \gamma \, \cancelto{1}{P_{\theta_0}[X_{(1)} \ge \theta_0]} \implies \gamma = \alpha
+    \end{equation*}
+    Por lo tanto, el test más potente de tamaño $\alpha$ para $\theta_1 < \theta_0$ es:
+    \begin{equation*}
+        \varphi(X_1, \dots, X_n) =
+        \begin{cases}
+            1, & \text{si } \theta_1 \le X_{(1)} < \theta_0 \\
+            \alpha, & \text{si } X_{(1)} \ge \theta_0 \\
+            0, & \text{si } X_{(1)} < \theta_1
+        \end{cases}
+    \end{equation*}
+    Calculamos su potencia bajo $H_1$:
+    \begin{align*}
+        \beta_\varphi(\theta_1) &= E_{\theta_1}[\varphi(X_1, \dots, X_n)] = 1 \cdot P_{\theta_1}[\theta_1 \le X_{(1)} < \theta_0] + \alpha \, P_{\theta_1}[X_{(1)} \ge \theta_0]
+    \end{align*}
+    
+    Al igual que antes, calculamos la probabilidad de la cola superior bajo $H_1$:
+    \begin{align*}
+        P_{\theta_1}[X_{(1)} \ge \theta_0] &= P_{\theta_1}[X_1 \ge \theta_0, \dots, X_n \ge \theta_0] = \left(P_{\theta_1}[X \ge \theta_0]\right)^n \\
+        &= \left( \int_{\theta_0}^{+\infty} e^{\theta_1 - x} \, dx \right)^n = \left( e^{\theta_1 - \theta_0} \right)^n = e^{n(\theta_1 - \theta_0)}
+    \end{align*}
+    Por complementariedad:
+    \begin{equation*}
+        P_{\theta_1}[\theta_1 \le X_{(1)} < \theta_0] = 1 - P_{\theta_1}[X_{(1)} \ge \theta_0] = 1 - e^{n(\theta_1 - \theta_0)}
+    \end{equation*}
+    Sustituyendo en la ecuación de la potencia:
+    \begin{align*}
+        \beta_\varphi(\theta_1) & = \left(1 - e^{n(\theta_1 - \theta_0)}\right) + \alpha \, e^{n(\theta_1 - \theta_0)}
+    \end{align*}
+\end{description}
+    
+    Aunque hemos resuelto el problema de contraste para un tamaño $\alpha$ fijo, es habitual que se pida el test más potente a un \textbf{nivel de significación} $\alpha'$ (es decir, exigiendo $\alpha \le \alpha'$). En tal caso, debemos elegir $\alpha \in [0, \alpha']$ de modo que maximice la potencia $\beta_\varphi(\theta_1)$:
+    \begin{enumerate}
+        \item \textbf{Si $\theta_1 < \theta_0$:} La potencia $\beta_\varphi(\theta_1) = (1 - e^{n(\theta_1 - \theta_0)}) + \alpha \, e^{n(\theta_1 - \theta_0)}$ es estrictamente creciente en $\alpha$, luego se maximiza tomando $\alpha = \alpha'$.
+        
+        \item \textbf{Si $\theta_0 < \theta_1$ y $\alpha' \le e^{n(\theta_0 - \theta_1)}$:} Todo tamaño $\alpha \le \alpha'$ cumple $\alpha \le e^{n(\theta_0 - \theta_1)}$ (Subcaso 1.b). Su potencia $\beta_\varphi(\theta_1) = \dfrac{\alpha}{e^{n(\theta_0 - \theta_1)}}$ es estrictamente creciente en $\alpha$, por lo que el máximo se alcanza de nuevo en $\alpha = \alpha'$.
+        
+        \item \textbf{Si $\theta_0 < \theta_1$ y $\alpha' > e^{n(\theta_0 - \theta_1)}$:} Podemos elegir $\alpha$ por debajo o por encima del umbral $e^{n(\theta_0 - \theta_1)}$ (Figura~\ref{fig:nivel_alpha}).
+        \begin{figure}[ht]
+            \centering
+            \begin{tikzpicture}[>=Stealth, scale=1.1]
+                \draw[->, thick] (-0.4, 0) -- (7.2, 0) node[right] {$\alpha$};
+                \filldraw[black] (0, 0) circle (2pt) node[below=4pt] {$0$};
+                \filldraw[black] (3.2, 0) circle (2pt) node[below=4pt] {$e^{n(\theta_0 - \theta_1)}$};
+                \filldraw[black] (6.0, 0) circle (2pt) node[below=4pt] {$\alpha'$};
+                
+                \node[above=4pt, font=\small] at (1.6, 0.1) {Subcaso 1.b};
+                \node[above=4pt, font=\small] at (4.6, 0.1) {Subcaso 1.a};
+            \end{tikzpicture}
+            \caption{Elección del tamaño $\alpha \le \alpha'$ cuando $\alpha' > e^{n(\theta_0 - \theta_1)}$.}
+            \label{fig:nivel_alpha}
+        \end{figure}
+        
+        Hay que comparar la potencia de ambos subcasos:
+        \begin{itemize}
+            \item Si tomamos $\alpha\leq e^{n(\theta_0 - \theta_1)}\leq \alpha'$, estamos en el subcaso 1.b, y la potencia es:
+            \begin{equation*}
+                \beta_\varphi(\theta_1) = \frac{\alpha}{e^{n(\theta_0 - \theta_1)}}
+            \end{equation*}
+
+            Esta es una función estrictamente creciente de $\alpha$, por lo que se maximiza tomando $\alpha = e^{n(\theta_0 - \theta_1)}$. En tal caso, se obtiene la potencia máxima $\beta_\varphi(\theta_1) = 1$, y el test más potente de tamaño $\alpha = e^{n(\theta_0 - \theta_1)}$ es:
+            \begin{equation*}
+                \varphi(X_1, \dots, X_n) =
+                \begin{cases}
+                    1, & \text{si } X_{(1)} \ge \theta_1 \\
+                    0, & \text{si } X_{(1)} < \theta_1
+                \end{cases}
+            \end{equation*}
+
+            \item Si tomamos $e^{n(\theta_0 - \theta_1)} \leq \alpha \leq \alpha'$, estamos en el subcaso 1.a, y la potencia es $1$, luego cualquier $\alpha$ en este rango nos da la potencia máxima. Para minimizar el tamaño, elegimos $\alpha = e^{n(\theta_0 - \theta_1)}$, obteniendo el mismo test que en el caso anterior.
+        \end{itemize}
+    \end{enumerate}
+\end{ejercicio}
+
+
+\begin{ejemplo}
+    Sea $X$ la variable aleatoria que mide el número de accidentes por semana, y supongamos que $X\rightsquigarrow \cc{P}(\theta)$ con $\theta \leq 2.5$. Después de modificaciones en la vía se desea comprobar si la media de accidentes sigue sin superar $2.5$, para lo cual se realiza un estudio del número de accidentes en $4$ semanas obteniendo los valores $4$, $3$, $2$ y $3$. Resolver el problema de contraste planteado al nivel de significación de $0.05$.\\
+
+    Fijamos $\theta_0 = 2.5$, y planteamos el contraste de hipótesis:
+    \begin{align*}
+        \begin{cases}
+        H_0: \theta \leq \theta_0 \\
+        H_1: \theta > \theta_0
+        \end{cases}
+    \end{align*}
+
+    Empleamos el Test de Razón de Verosimilitudes (TRV) para contrastar las hipótesis, que es:
+    \begin{equation*}
+        \varphi(x_1, \dots, x_n) =
+        \begin{cases}
+            1, & \text{si } \lambda(x_1, \dots, x_n) < c \\
+            0, & \text{si } \lambda(x_1, \dots, x_n) \geq c
+        \end{cases}
+    \end{equation*}
+    donde $c\in \left]0,1\right]$ es una constante que se determina a partir del nivel de significación $\alpha$ y $\lambda(x_1, \dots, x_n)$ es la razón de verosimilitudes:
+    \begin{equation*}
+        \lambda(x_1, \dots, x_n) = \frac{\sup\limits_{\theta\in\Theta_0} L_{x_1, \dots, x_n}(\theta)}{\sup\limits_{\theta\in\Theta} L_{x_1, \dots, x_n}(\theta)}
+    \end{equation*}
+
+    Calculamos la función de verosimilitud:
+    \begin{equation*}
+        L_{x_1, \dots, x_n}(\theta) = \prod\limits_{i=1}^{n} f_\theta(x_i) = \prod\limits_{i=1}^{n} \frac{e^{-\theta}\theta^{x_i}}{x_i!} = \frac{e^{-n\theta}\theta^{\sum\limits_{i=1}^{n} x_i}}{\prod\limits_{i=1}^{n} x_i!}\qquad \forall \theta > 0
+    \end{equation*}
+
+    Como son valores positivos y el logaritmo es una función estrictamente creciente, podemos calcular el supremo del logaritmo:
+    \begin{align*}
+        \ln \left(L_{x_1, \dots, x_n}(\theta)\right) &= -n\theta + \left(\sum\limits_{i=1}^{n} x_i\right)\ln(\theta) - \sum\limits_{i=1}^{n} \ln(x_i!) \\
+        \frac{d}{d\theta} \ln \left(L_{x_1, \dots, x_n}(\theta)\right) &= -n + \frac{\sum\limits_{i=1}^{n} x_i}{\theta} = 0 \Longrightarrow \theta = \frac{\sum\limits_{i=1}^{n} x_i}{n} = \ol{X}
+    \end{align*}
+
+    Por tanto, dicha función tiene un único extremo relativo, que es un máximo local, en ${\theta} = \ol{X}$.
+    \begin{itemize}
+        \item \textbf{Supremo sobre $\Theta=\bb{R}$:} 
+        
+        Sabemos que se trata de un máximo local, por lo que:
+        \begin{equation*}
+            \sup\limits_{\theta\in\Theta} L_{x_1, \dots, x_n}(\theta) = L_{x_1, \dots, x_n}(\ol{X})
+        \end{equation*}
+
+        \item \textbf{Supremo sobre $\Theta_0=\left]0,\theta_0\right]$:}
+        
+        Hay que distinguir dos casos:
+        \begin{itemize}
+            \item Si $\ol{X} \leq \theta_0$, el supremo se alcanza en $\theta = \ol{X}$, que pertenece a $\Theta_0$. Por tanto:
+            \begin{equation*}
+                \sup\limits_{\theta\in\Theta_0} L_{x_1, \dots, x_n}(\theta) = L_{x_1, \dots, x_n}(\ol{X})
+            \end{equation*}
+
+            Por tanto, la razón de verosimilitudes queda:
+            \begin{equation*}
+                \lambda(x_1, \dots, x_n) = \frac{L_{x_1, \dots, x_n}(\ol{X})}{L_{x_1, \dots, x_n}(\ol{X})} = 1
+            \end{equation*}
+
+            Por tanto, el test de razón de verosimilitudes queda:
+            \begin{equation*}
+                \varphi(x_1, \dots, x_n) =
+                \begin{cases}
+                    1, & \text{si } 1 < c \text{ (nunca)} \\
+                    0, & \text{si } 1 \geq c
+                \end{cases}
+            \end{equation*}
+
+            Este test se puede simplificar a:
+            \begin{equation*}
+                \varphi(x_1, \dots, x_n) = 0
+            \end{equation*}
+
+            Como vemos, este test no rechaza $H_0$ para ningún valor de la muestra cumpliendo $\ol{X} \leq \theta_0$, por lo que no es necesario calcular el valor de $c$ a partir del nivel de significación $\alpha$.
+
+            \item Si $\ol{X} > \theta_0$, el supremo se alcanza en $\theta = \theta_0$, que es el límite superior de $\Theta_0$. Por tanto:
+            \begin{equation*}
+                \sup\limits_{\theta\in\Theta_0} L_{x_1, \dots, x_n}(\theta) = L_{x_1, \dots, x_n}(\theta_0)
+            \end{equation*}
+
+            Por tanto, la razón de verosimilitudes queda:
+            \begin{align*}
+                \lambda(x_1, \dots, x_n) &= \frac{L_{x_1, \dots, x_n}(\theta_0)}{L_{x_1, \dots, x_n}(\ol{X})} = \frac{e^{-n\theta_0}\theta_0^{\sum\limits_{i=1}^{n} x_i}}{\cancel{\prod\limits_{i=1}^{n} x_i!}} \cdot \frac{\cancel{\prod\limits_{i=1}^{n} x_i!}}{e^{-n\ol{X}}\ol{X}^{\sum\limits_{i=1}^{n} x_i}} = e^{-n(\theta_0 - \ol{X})}\left(\frac{\theta_0}{\ol{X}}\right)^{\sum\limits_{i=1}^{n} x_i}
+                =\\&= e^{-n(\theta_0 - \ol{X})}\left(\frac{\theta_0}{\ol{X}}\right)^{n\ol{X}}
+            \end{align*}
+
+            Por tanto, el test de razón de verosimilitudes queda:
+            \begin{equation*}
+                \varphi(x_1, \dots, x_n) =
+                \begin{cases}
+                    1, & \text{si } \lambda(x_1, \dots, x_n) < c \\
+                    0, & \text{si } \lambda(x_1, \dots, x_n) \geq c
+                \end{cases}
+            \end{equation*}
+            donde $c\in \left]0,1\right]$ es una constante que se determina a partir del nivel de significación $\alpha$. Buscamos estudiar la monotonía de $\lambda$ en función de $\ol{X}$. Como se trata de términos positivos, podemos estudiar la monotonía del logaritmo de $\lambda$:
+            \begin{align*}
+                \ln(\lambda(x_1, \dots, x_n)) &= -n(\theta_0 - \ol{X}) + n\ol{X}\ln(\theta_0) - n\ol{X}\ln(\ol{X}) = -n(\theta_0 - \ol{X}) + n\ol{X}\ln\left(\frac{\theta_0}{\ol{X}}\right)
+            \end{align*}
+            Derivando respecto a $\ol{X}$:
+            \begin{align*}
+                \frac{d}{d\ol{X}} \ln(\lambda(x_1, \dots, x_n)) &= n + n\ln\left(\frac{\theta_0}{\ol{X}}\right) + n\ol{X}\left(-\frac{1}{\ol{X}}\right) = n + n\ln\left(\frac{\theta_0}{\ol{X}}\right) - n = n\ln\left(\frac{\theta_0}{\ol{X}}\right)
+            \end{align*}
+            Como $\ln\left(\frac{\theta_0}{\ol{X}}\right) < 0$ para $\ol{X} > \theta_0$, se concluye que $\lambda$ es estrictamente decreciente en $\ol{X}$ para $\ol{X} > \theta_0$. La correspondencia entre $\lambda$ y $\ol{X}$ se representa gráficamente en la Figura~\ref{fig:razon_verosimilitudes_poisson}.
+            \begin{figure}[ht]
+                \centering
+                \begin{tikzpicture}[>=Stealth, scale=1.15]
+
+                    % --- Definición de estilos ---
+                    \tikzset{
+                        eje/.style={->, thick, black},
+                        guia/.style={dashed, thick, black!80},
+                        reg_rechazo/.style={ultra thick, orange!90!black},
+                        reg_acepta/.style={ultra thick, red!75!black},
+                        punto_crit/.style={fill=cyan!80!blue, draw=black, thick}
+                    }
+
+                    % --- 1. Ejes de coordenadas ---
+                    \draw[eje] (-0.4, 0) -- (5.8, 0) node[right] {$\ol{X}$};
+                    \draw[eje] (0, -0.4) -- (0, 4.1) node[above] {$\lambda$};
+
+                    % --- 2. Coordenadas clave ---
+                    % Nivel lambda = 1 en y = 3.2; umbral theta_0 en x = 1.3
+                    % Curva decreciente para x >= 1.3: g(x) = 3.2 * exp(-0.55 * (x - 1.3))
+                    % Punto crítico k' = 3.1 -> c = 3.2 * exp(-0.55 * 1.8) ≈ 1.189
+                    \def\thetacero{1.3}
+                    \def\uno{3.2}
+                    \def\kprima{3.1}
+                    \def\cval{1.189}
+
+                    % --- 3. Curva de razón de verosimilitudes ---
+                    % Tramo constante igual a 1 para X_barra <= theta_0
+                    \draw[guia, black!45] (0, \uno) -- (\thetacero, \uno) -- (\thetacero, 0);
+                    \draw[very thick, red!75!black] (0.15, \uno) -- (\thetacero, \uno);
+
+                    % Tramo estrictamente decreciente para X_barra > theta_0
+                    \draw[very thick, red!75!black, domain=\thetacero:\kprima, samples=100] 
+                        plot (\x, {\uno * exp(-0.55 * (\x - \thetacero))});
+                    \draw[very thick, orange!90!black, domain=\kprima:5.1, samples=100] 
+                        plot (\x, {\uno * exp(-0.55 * (\x - \thetacero))}) ;
+
+                    % --- 4. Líneas discontinuas de proyección ---
+                    \draw[guia] (0, \cval) -- (\kprima, \cval) -- (\kprima, 0);
+
+                    % --- 5. Regiones coloreadas sobre los ejes ---
+                    % Eje vertical (lambda): lambda > c (arriba, hasta 1) y lambda < c (abajo, rechazo)
+                    \draw[reg_acepta] (0, \cval) -- (0, \uno);
+                    \draw[reg_rechazo] (0, 0) -- (0, \cval);
+
+                    % Eje horizontal (X_barra): theta_0 < X_barra < k' (acepta) y X_barra > k' (rechazo)
+                    \draw[reg_acepta] (\thetacero, 0) -- (\kprima, 0);
+                    \draw[reg_rechazo] (\kprima, 0) -- (5.3, 0);
+
+                    % --- 6. Puntos y etiquetas de los valores críticos ---
+                    \filldraw[punto_crit] (\kprima, \cval) circle (2.2pt);
+                    \filldraw[punto_crit] (0, \uno) circle (1.8pt) node[left=4pt, black] {$1$};
+                    \filldraw[punto_crit] (0, \cval) circle (2pt) node[left=4pt, black] {$c$};
+                    \filldraw[punto_crit] (\thetacero, 0) circle (1.8pt) node[below=4pt, black] {$\theta_0$};
+                    \filldraw[punto_crit] (\kprima, 0) circle (2pt) node[below=4pt, black] {$k'$};
+
+                    % --- 7. Etiquetas de las regiones ---
+                    % Etiquetas en el eje vertical
+                    \node[left=4pt, red!75!black, font=\small] at (0, 2.2) {$\lambda > c$};
+                    \node[left=4pt, orange!90!black, font=\small] at (0, 0.6) {$\lambda < c$};
+
+                    % Etiquetas en el eje horizontal
+                    \node[below=4pt, red!75!black, font=\small] at (2.2, 0) {$\ol{X} < k'$};
+                    \node[below=4pt, orange!90!black, font=\small] at (4.2, 0) {$\ol{X} > k'$};
+
+                \end{tikzpicture}
+                \caption{Correspondencia entre la razón de verosimilitudes $\lambda$ y $\ol{X}$ para $\ol{X} > \theta_0$.}
+                \label{fig:razon_verosimilitudes_poisson}
+            \end{figure}
+
+            De esta figura se deduce que el test de razón de verosimilitudes puede reescribirse en función de $\ol{X}$:
+            \begin{equation*}
+                \varphi(x_1, \dots, x_n) =
+                \begin{cases}
+                    1, & \text{si } \ol{X} > k' \\
+                    0, & \text{si } \ol{X} \leq k'
+                \end{cases}
+            \end{equation*}
+            donde $k'$ es el valor crítico que se determina a partir del nivel de significación $\alpha$. Puesto que se desconoce la distribución de $\ol{X}$, no se puede calcular $k'$ de forma directa. Sin embargo, por la reproductividad de la distribución de Poisson, sabemos que $n\ol{X} \rightsquigarrow \cc{P}(n\theta)$. Puesto que se trata de una función estrictamente creciente, podemos reescribir el test en función de $n\ol{X}$:
+            \begin{equation*}
+                \varphi(x_1, \dots, x_n) =
+                \begin{cases}
+                    1, & \text{si } n\ol{X} > k \\
+                    0, & \text{si } n\ol{X} \leq k
+                \end{cases}
+            \end{equation*}
+            donde $k = n k'$ es el valor crítico que se determina a partir del nivel de significación $\alpha$. Imponiendo el nivel de significación $\alpha$, se necesita que:
+            \begin{align*}
+                \alpha &\geq \sup_{\theta \in \Theta_0} E_\theta[\varphi(X_1, \dots, X_n)] = \sup_{\theta \leq \theta_0} P_\theta[n\ol{X} > k] = \sup_{\theta \leq \theta_0} \left(1 - P_\theta[n\ol{X} \leq k]\right) =\\&= 1 - \inf_{\theta \leq \theta_0} P_\theta[n\ol{X} \leq k]
+                = 1- \inf_{\theta \leq \theta_0} \sum\limits_{i=0}^{\lfloor k \rfloor} P_\theta[n\ol{X} = i] = 1 - \inf_{\theta \leq \theta_0} \sum\limits_{i=0}^{\lfloor k \rfloor} \frac{e^{-n\theta}(n\theta)^i}{i!}
+            \end{align*}
+
+            Comprobemos que la función $\theta \mapsto P_\theta[n\ol{X} \leq k]$ es estrictamente decreciente en $\left]0, +\infty\right[$. Derivamos respecto a $\theta$ separando el término $i = 0$:
+            \begin{align*}
+                \frac{d}{d\theta} P_\theta[n\ol{X} \leq k] &= \frac{d}{d\theta} \left(e^{-n\theta} + \sum\limits_{i=1}^{\lfloor k \rfloor} \frac{e^{-n\theta}(n\theta)^i}{i!}\right) =\\&= -n e^{-n\theta} + \sum\limits_{i=1}^{\lfloor k \rfloor} \left(\frac{n^i e^{-n\theta}\theta^{i-1}}{(i-1)!} - \frac{n^{i+1} e^{-n\theta}\theta^i}{i!}\right)
+            \end{align*}
+            Observamos que se trata de una suma telescópica en la que se cancelan todos los términos intermedios, quedando únicamente el último:
+            \begin{equation*}
+                \frac{d}{d\theta} P_\theta[n\ol{X} \leq k] = -\frac{n^{m+1} e^{-n\theta}\theta^m}{m!} < 0 \qquad \forall \theta > 0.
+            \end{equation*}
+            Por tanto, $P_\theta[n\ol{X} \leq k]$ es estrictamente decreciente en $\theta$, por lo que su ínfimo sobre $\Theta_0 = \left]0, \theta_0\right]$ (y, equivalentemente, el supremo de la función de potencia) se alcanza en el extremo $\theta = \theta_0$. Así, la condición de tamaño queda:
+            \begin{equation*}
+                1 - \sum\limits_{i=0}^{\lfloor k \rfloor} \frac{e^{-n\theta_0}(n\theta_0)^i}{i!} \leq \alpha \iff \sum\limits_{i=0}^{\lfloor k \rfloor} \frac{e^{-n\theta_0}(n\theta_0)^i}{i!} \geq 1 - \alpha.
+            \end{equation*}
+            
+
+            Esta ecuación tiene infinitas soluciones, pero sabemos que también se busca maximizar la potencia del test en $H_1$. La potencia del test en $H_1$ es:
+            \begin{equation*}
+                \beta_\varphi(\theta) = P_\theta[n\ol{X}> k]
+            \end{equation*}
+            Como $P_\theta[n\ol{X}> k]$ es estrictamente decreciente en $k$, se concluye que el valor crítico $k$ debe ser el menor entero que cumpla la ecuación anterior.\\
+
+            En nuestro caso, tenemos $n=4$, $\theta_0 = 2.5$ y $\alpha = 0.05$. Por tanto, el valor crítico $k$ debe cumplir:
+            \begin{equation*}
+                \sum\limits_{i=0}^{k} \frac{e^{-10}(10)^i}{i!} \geq 0.95
+            \end{equation*}
+            Calculando la suma, se obtiene que el menor entero $k$ que cumple la ecuación es $k=15$. Por tanto, el test de razón de verosimilitudes queda:
+            \begin{equation*}
+                \varphi(x_1, \dots, x_n) =
+                \begin{cases}
+                    1, & \text{si } n\ol{X} > 15 \\
+                    0, & \text{si } n\ol{X} \leq 15
+                \end{cases}
+            \end{equation*}
+
+            Transformando de nuevo a $\ol{X}$, se obtiene:
+            \begin{equation*}
+                \varphi(x_1, \dots, x_n) =
+                \begin{cases}
+                    1, & \text{si } \ol{X} > 3.75 \\
+                    0, & \text{si } \ol{X} \leq 3.75
+                \end{cases}
+            \end{equation*}
+        \end{itemize}
+    \end{itemize}
+
+    Estudiamos ahora el caso de la muestra obtenida: $4$, $3$, $2$ y $3$. Calculamos la media muestral:
+    \begin{equation*}
+        \ol{X} = \frac{4 + 3 + 2 + 3}{4} = 3
+    \end{equation*}
+    Como $\ol{X} = 3 > \theta_0 = 2.5$, el test a considerar es:
+    \begin{equation*}
+        \varphi(x_1, \dots, x_n) =
+        \begin{cases}
+            1, & \text{si } \ol{X} > 3.75 \\
+            0, & \text{si } \ol{X} \leq 3.75
+        \end{cases}
+    \end{equation*}
+
+    Como $\ol{X} = 3 \leq 3.75$, se concluye que no se rechaza $H_0$ al nivel de significación del $5\%$. Por tanto, no hay evidencia suficiente para afirmar que la media de accidentes por semana supere los $2.5$ accidentes.
 \end{ejemplo}
